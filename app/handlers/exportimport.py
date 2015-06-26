@@ -36,6 +36,7 @@ from backend.backendservice import backendservices
 from backend.common.config import AgentTypes
 
 import webapp2
+from db_models.export_job import ExportJobWrapper
 
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
@@ -57,19 +58,6 @@ def versionCmp(version1, version2):
     def normalize(v):
         return [int(x) for x in re.sub(r'(\.0+)*$','', v).split(".")]
     return cmp(normalize(version1), normalize(version2))
-
-class ExportJobWrapper(db.Model):
-    user_id = db.StringProperty()
-    startTime = db.StringProperty()
-    status = db.StringProperty()
-    outData = db.StringProperty()
-
-    def delete(self):
-        try:
-            os.remove(self.outData)
-        except Exception as e:
-            sys.stderr.write("ExportJobWrapper.delete(): {0}\n".format(e))
-        super(ExportJobWrapper, self).delete()
 
 class SuperZip:
     def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = [], stochOptimJobsToDownload = [], spatialJobsToDownload = []):
@@ -505,7 +493,7 @@ class SuperZip:
                 raise Exception("Model name already in use")
 
         stochKitModel = stochss.stochkit.StochMLDocument.fromString(modelj["model"]).toModel(name)
-        modelDb = modeleditor.StochKitModelWrapper.createFromStochKitModel(handler, stochKitModel)
+        modelDb = modeleditor.createStochKitModelWrapperFromStochKitModel(handler, stochKitModel)
 
         if "isSpatial" in modelj:
             modelDb.isSpatial = modelj["isSpatial"]
@@ -896,22 +884,7 @@ class ExportPage(BaseHandler):
 import re
 import urllib
 
-class ImportJobWrapper(db.Model):
-    user_id = db.StringProperty()
-    status = db.StringProperty()
-    zipFile = db.StringProperty()
-    headerFile = db.StringProperty()
-
-    def delete(self):
-        try:
-            os.remove(self.zipFile)
-        except Exception as e:
-            sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
-        try:
-            os.remove(self.headerFile)
-        except Exception as e:
-            sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
-        super(ImportJobWrapper, self).delete()
+from db_models.import_job import ImportJobWrapper
 
 class ImportPage(BaseHandler):
 

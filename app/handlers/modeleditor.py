@@ -15,7 +15,7 @@ import time
 import datetime
 from google.appengine.api import users
 
-from stochssapp import BaseHandler, ObjectProperty
+from stochssapp import BaseHandler
 
 import stochss.stochkit
 import stochss.model
@@ -26,201 +26,120 @@ import mesheditor
 import webapp2
 import exportimport
 
-class SBMLImportErrorLogs(db.Model):
-    """
-    A wrapper for the StochKit Model object
-    """
-    user_id = db.StringProperty()
-    modelId = db.IntegerProperty()
-    fileName = db.StringProperty()
-    date = db.StringProperty()
-    errors = ObjectProperty()
+from db_models.model import StochKitModelWrapper
+from db_models.sbml_import_logs import SBMLImportErrorLogs
 
-class StochKitModelWrapper(db.Model):
-    """
-    A wrapper for the StochKit Model object
-    """
-    user_id = db.StringProperty()
-    name = db.StringProperty()
-    type = db.StringProperty()
-    species = ObjectProperty()
-    parameters = ObjectProperty()
-    reactions = ObjectProperty()
-    isSpatial = db.BooleanProperty()
-    units = db.StringProperty()
-    spatial = ObjectProperty()
-    zipFileName = db.StringProperty()
-    is_public = db.BooleanProperty()
+def createStochKitModelWrapperFromStochKitModel(handler, model, public = False):
+    species = []
+    parameters = []
+    reactions = []
+    
+    meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE user_id = :1", handler.user.user_id()).get()
+    
+    def fixName(name):
+        if re.match('^[^a-zA-Z_]', name):
+            name = 'a' + name
+      
+        return re.sub('[^a-zA-Z0-9_]', '', name)
 
-    def delete(self):
-        if self.zipFileName:
-            if os.path.exists(self.zipFileName):
-                os.remove(self.zipFileName)
+    spatial = {
+        'initial_conditions' : [],
+        'mesh_wrapper_id' : meshWrapperDb.key().id(),
+        'reactions_subdomain_assignments': {},
+        'species_diffusion_coefficients': {},
+        'species_subdomain_assignments': {}
+    }
+    
+    for specieName, specie in model.listOfSpecies.items():
+        name = fixName(specie.name)
+        species.append({ 'name' : name, 'initialCondition' : specie.initial_value })
+        spatial['species_diffusion_coefficients'][name] = 0.0
+        spatial['species_subdomain_assignments'][name] = meshWrapperDb.uniqueSubdomains
+        
+    for parameterName, parameter in model.listOfParameters.items():
+        parameter.evaluate()
+        name = fixName(parameter.name)
+        parameters.append({ 'name' : name, 'value' : parameter.value })
 
-        super(StochKitModelWrapper, self).delete()
+    modelType = 'massaction'
+    for reactionName, reaction in model.listOfReactions.items():
+        outReaction = {}
+        
+        reactants = []
+        products = []
 
-    # Create a regular Stochkit model from the JSON formatted one
-    def createStochKitModel(self):
-        sModel = stochss.stochkit.StochKitModel(self.name)
-        sModel.units = self.units
+        totalReactants = 0
+        reactantCount = len(reaction.reactants.items())
+        productCount = len(reaction.products.items())
+        for reactantName, stoichiometry in reaction.reactants.items():
+            reactantName = fixName(reactantName)
+            reactants.append({ 'specie' : reactantName, 'stoichiometry' : stoichiometry })
+            totalReactants += stoichiometry
 
-        for specie in self.species:
-            sModel.addSpecies(stochss.model.Species(specie['name'], specie['initialCondition']))
-
-        for parameter in self.parameters:
-            sModel.addParameter(stochss.model.Parameter(parameter['name'], parameter['value']))
-
-        for reaction in self.reactions:
-            inReactants = {}
-            for reactant in reaction['reactants']:
-                if reactant['specie'] not in inReactants:
-                    inReactants[reactant['specie']] = 0
-
-                inReactants[reactant['specie']] += reactant['stoichiometry']
-
-            inProducts = {}
-            for product in reaction['products']:
-                if product['specie'] not in inProducts:
-                    inProducts[product['specie']] = 0
-
-                inProducts[product['specie']] += product['stoichiometry']
-
-            reactants = dict([(sModel.getSpecies(reactant[0]), reactant[1]) for reactant in inReactants.items()])
-
-            products = dict([(sModel.getSpecies(product[0]), product[1]) for product in inProducts.items()])
-            
-            if(reaction['type'] == 'custom'):
-                sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, reaction['equation'], False, None, None))
-            else:
-                sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))
-
-        return sModel
-
-    def toJSON(self):
-        return { "name" : self.name,
-                 "id" : self.key().id(),
-                 "units" : self.units,
-                 "type" : self.type,
-                 "species" : self.species,
-                 "parameters" : self.parameters,
-                 "reactions" : self.reactions,
-                 "isSpatial" : self.isSpatial,
-                 "spatial" : self.spatial,
-                 "is_public" : self.is_public }
-
-    @staticmethod
-    def createFromStochKitModel(handler, model, public = False):
-        species = []
-        parameters = []
-        reactions = []
-
-        mesheditor.setupMeshes(handler)
-        meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE user_id = :1", handler.user.user_id()).get()
-
-        def fixName(name):
-            if re.match('^[^a-zA-Z_]', name):
-                name = 'a' + name
-
-            return re.sub('[^a-zA-Z0-9_]', '', name)
-
-        spatial = {
-          'initial_conditions' : [],
-          'mesh_wrapper_id' : meshWrapperDb.key().id(),
-          'reactions_subdomain_assignments': {},
-          'species_diffusion_coefficients': {},
-          'species_subdomain_assignments': {}
-          }
-
-        for specieName, specie in model.listOfSpecies.items():
-            name = fixName(specie.name)
-            species.append({ 'name' : name, 'initialCondition' : specie.initial_value })
-            spatial['species_diffusion_coefficients'][name] = 0.0
-            spatial['species_subdomain_assignments'][name] = meshWrapperDb.uniqueSubdomains
-
-        for parameterName, parameter in model.listOfParameters.items():
-            parameter.evaluate()
-            name = fixName(parameter.name)
-            parameters.append({ 'name' : name, 'value' : parameter.value })
-
-        modelType = 'massaction'
-        for reactionName, reaction in model.listOfReactions.items():
-            outReaction = {}
-
-            reactants = []
-            products = []
-
-            totalReactants = 0
-            reactantCount = len(reaction.reactants.items())
-            productCount = len(reaction.products.items())
-            for reactantName, stoichiometry in reaction.reactants.items():
-                reactantName = fixName(reactantName)
-                reactants.append({ 'specie' : reactantName, 'stoichiometry' : stoichiometry })
-                totalReactants += stoichiometry
-
-            for productName, stoichiometry in reaction.products.items():
-                productName = fixName(productName)
-                products.append({ 'specie' : productName, 'stoichiometry' : stoichiometry })
+        for productName, stoichiometry in reaction.products.items():
+            productName = fixName(productName)
+            products.append({ 'specie' : productName, 'stoichiometry' : stoichiometry })
                 
-            if reaction.massaction == True:
-                outReaction['type'] = 'massaction'
-                outReaction['rate'] = fixName(reaction.marate.name)
+        if reaction.massaction == True:
+            outReaction['type'] = 'massaction'
+            outReaction['rate'] = fixName(reaction.marate.name)
 
-                if reactantCount == 0 and productCount == 1:
-                    outReaction['type'] = 'creation'
-                elif reactantCount == 1 and productCount == 0:
-                    outReaction['type'] = 'destruction'
-                elif reactantCount == 2 and productCount == 1:
-                    outReaction['type'] = 'merge'
-                elif reactantCount == 1 and productCount == 1 and totalReactants == 1:
-                    outReaction['type'] = 'change'
-                elif reactantCount == 1 and productCount == 1 and totalReactants == 2:
-                    outReaction['type'] = 'dimerization'
-                elif reactantCount == 1 and productCount == 2:
-                    outReaction['type'] = 'split'
-                elif reactantCount == 2 and productCount == 2:
-                    outReaction['type'] = 'four'
+            if reactantCount == 0 and productCount == 1:
+                outReaction['type'] = 'creation'
+            elif reactantCount == 1 and productCount == 0:
+                outReaction['type'] = 'destruction'
+            elif reactantCount == 2 and productCount == 1:
+                outReaction['type'] = 'merge'
+            elif reactantCount == 1 and productCount == 1 and totalReactants == 1:
+                outReaction['type'] = 'change'
+            elif reactantCount == 1 and productCount == 1 and totalReactants == 2:
+                outReaction['type'] = 'dimerization'
+            elif reactantCount == 1 and productCount == 2:
+                outReaction['type'] = 'split'
+            elif reactantCount == 2 and productCount == 2:
+                outReaction['type'] = 'four'
 
-                if totalReactants > 2:
-                    raise Exception("Error in Reaction {0}: StochKit mass action reactions cannot have more than 2 total reacting particles. Total stoichiometry for this reaction is {1}".format(reactionName, totalRreactants))
-            else:
-                modelType = 'custom'
-                outReaction['type'] = 'custom'
-                outReaction['equation'] = reaction.propensity_function
+            if totalReactants > 2:
+                raise Exception("Error in Reaction {0}: StochKit mass action reactions cannot have more than 2 total reacting particles. Total stoichiometry for this reaction is {1}".format(reactionName, totalRreactants))
+        else:
+            modelType = 'custom'
+            outReaction['type'] = 'custom'
+            outReaction['equation'] = reaction.propensity_function
 
-            outReaction['reactants'] = reactants
-            outReaction['products'] = products
-            outReaction['name'] = fixName(reaction.name)
+        outReaction['reactants'] = reactants
+        outReaction['products'] = products
+        outReaction['name'] = fixName(reaction.name)
 
-            spatial['reactions_subdomain_assignments'][fixName(reaction.name)] = meshWrapperDb.uniqueSubdomains
+        spatial['reactions_subdomain_assignments'][fixName(reaction.name)] = meshWrapperDb.uniqueSubdomains
 
-            reactions.append(outReaction)
+        reactions.append(outReaction)
 
-        names = [modelt['name'] for modelt in ModelManager.getModels(handler)]
+    names = [modelt['name'] for modelt in ModelManager.getModels(handler)]
 
-        modelDb = StochKitModelWrapper()
+    modelDb = StochKitModelWrapper()
 
         
-        tmpName = fixName(model.name)
-        while tmpName in names:
-            tmpName = fixName(model.name) + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
-        name = tmpName
+    tmpName = fixName(model.name)
+    while tmpName in names:
+        tmpName = fixName(model.name) + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
+    name = tmpName
 
-        modelDb.user_id = handler.user.user_id()
-        modelDb.name = name
-        modelDb.type = modelType
-        modelDb.species = species
-        modelDb.parameters = parameters
-        modelDb.reactions = reactions
-        modelDb.isSpatial = False
-        modelDb.units = model.units
-        modelDb.spatial = spatial
-        modelDb.zipFileName = None
-        modelDb.is_public = public
-
-        modelDb.put()
-
-        return modelDb
-
+    modelDb.user_id = handler.user.user_id()
+    modelDb.name = name
+    modelDb.type = modelType
+    modelDb.species = species
+    modelDb.parameters = parameters
+    modelDb.reactions = reactions
+    modelDb.isSpatial = False
+    modelDb.units = model.units
+    modelDb.spatial = spatial
+    modelDb.zipFileName = None
+    modelDb.is_public = public
+    
+    modelDb.put()
+    
+    return modelDb
+    
 class ModelManager():
     @staticmethod
     def getModels(handler, public = False):
@@ -561,7 +480,7 @@ class ImportFromXMLPage(BaseHandler):
             if len(stochKitModel.listOfParameters) == 0 and len(stochKitModel.listOfSpecies) == 0 and len(stochKitModel.listOfReactions) == 0:
                 raise Exception("No parameters, species, or reactions detected in model. This XML file is probably not a StochKit Model")
 
-            modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
+            modelDb = createStochKitModelWrapperFromStochKitModel(self, stochKitModel)
             
             self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
         except Exception as e:
@@ -614,7 +533,7 @@ class ImportFromSBMLPage(BaseHandler):
 
             #stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
             model, errors = stochss.SBMLconverter.convert(filename)
-            modelDb = StochKitModelWrapper.createFromStochKitModel(self, model)
+            modelDb = createStochKitModelWrapperFromStochKitModel(self, model)
 
             modelDb.units = model.units
             modelDb.put()

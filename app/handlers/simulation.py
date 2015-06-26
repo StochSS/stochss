@@ -20,7 +20,7 @@ from stochss.model import *
 from stochss.stochkit import *
 
 from stochssapp import BaseHandler
-from modeleditor import StochKitModelWrapper, ObjectProperty
+from modeleditor import StochKitModelWrapper
 
 import modeleditor
 
