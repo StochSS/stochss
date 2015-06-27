@@ -518,4 +518,4 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec $MYPYTHON "$STOCHSS_HOME/launchapp.py" 1 $0
+exec $MYPYTHON "$STOCHSS_HOME/launchapp.py" mac $0 $1

@@ -7,7 +7,8 @@ from google.appengine.ext import db
 class VMStateModelException(Exception):
     pass
 
-from common.config import AgentTypes
+from backend.common.config import AgentTypes
+
 
 class VMStateModel(db.Model):
     SUPPORTED_INFRA = [AgentTypes.EC2, AgentTypes.FLEX]
@@ -107,7 +108,7 @@ class VMStateModel(db.Model):
                         .filter('ec2_secret_key =', ec2_credentials['EC2_SECRET_KEY'])
 
                 if 'reservation_id' in params and params['reservation_id'] != None:
-                    logging.info('For agent {0}, filtering with (res_id = {1})'.format(infra, params['reservation_id']))
+                    logging.debug('_get_all_entities(): For agent {0}, filtering with (res_id = {1})'.format(infra, params['reservation_id']))
                     entities.filter('res_id = ', params['reservation_id'])
 
                 return entities
@@ -187,7 +188,7 @@ class VMStateModel(db.Model):
         Args
             params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
         '''
-        logging.info('fail_active')
+        logging.debug('fail_active()')
 
         try:
             entities = VMStateModel._get_all_entities(params)
@@ -201,15 +202,56 @@ class VMStateModel(db.Model):
             logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))
 
     @staticmethod
+    def cleanup_flex_old_flex_entries(user_id):
+        '''
+        update all flex vms that , and delete those entried
+        Args
+            params
+        '''
+        logging.debug('cleanup_flex_old_flex_entries()')
+        try:
+            if user_id != None:
+                entities = VMStateModel.all()
+                entities.filter('user_id =', user_id)
+                entities.filter('infra = ', 'flex')
+                for e in entities:
+                    logging.debug('Deleting {0}'.format(e.ins_type))
+                    e.delete()
+
+        except Exception as e:
+            logging.exception("Error deleteing flex VMStateModel entities in db {0}".format(e))
+
+    @staticmethod
+    def delete_terminated(user_id):
+        '''
+        update all vms that are in 'terminated' state, and delete those entried
+        Args
+            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
+        '''
+        logging.debug('delete_terminated()')
+        try:
+            if user_id != None:
+                entities = VMStateModel.all()
+                entities.filter('user_id =', user_id)
+                entities.filter('state =', VMStateModel.STATE_TERMINATED)
+                for e in entities:
+                    logging.debug('Deleting {0}'.format(e.ins_type))
+                    e.delete()
+
+        except Exception as e:
+            logging.exception("Error deleteing terminated VMStateModel entities in db {0}".format(e))
+
+
+    @staticmethod
     def terminate_not_active(params):
         '''
         update all vms that are in 'failed' or 'unknown' state in the last launch to 'terminated'.
         Args
             params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
         '''
-        logging.info('terminate_not_active')
+        logging.debug('terminate_not_active')
         try:
-            logging.info('Terminating vms with FAILED state')
+            logging.debug('Terminating vms with FAILED state')
             entities = VMStateModel._get_all_entities(params)
             entities.filter('state =', VMStateModel.STATE_FAILED)
 
@@ -220,7 +262,7 @@ class VMStateModel(db.Model):
             logging.error("Error in updating non-active vms with FAILED state to terminated in db! {0}".format(e))
 
         try:
-            logging.info('Terminating vms with UNKNOWN state')
+            logging.debug('Terminating vms with UNKNOWN state')
             entities = VMStateModel._get_all_entities(params)
             entities.filter('state =', VMStateModel.STATE_UNKNOWN)
 
@@ -379,6 +421,7 @@ class VMStateModel(db.Model):
             credentials    the dictionary containing access_key and secret_key pair of the agent
         '''
         logging.info('For agent {0}, Start Synchronizing DB...'.format(agent.AGENT_NAME))
+        logging.debug("synchronize() parameters={0}".format(parameters))
         instance_list = agent.describe_instances(parameters)
 
         entities = VMStateModel._get_all_entities(params=parameters)

@@ -327,7 +327,7 @@ var run = function()
 
                           if(data.job.output_location != null)
                           {                          
-                              $( "#access" ).text( '<i class="icon-download-alt"></i> Access input data for debugging' );
+                              $( "#access" ).html( '<i class="icon-download-alt"></i> Access input data for debugging' );
                               $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,
                                                msg : "Packing up data... (will forward you to file when ready)" } );
@@ -354,7 +354,7 @@ var run = function()
                           }
                           else
                           {
-                              $( "#access" ).text( '<i class="icon-download-alt"></i>No input data available for debugging' );
+                              $( "#access" ).html( '<i class="icon-download-alt"></i>No input data available for debugging' );
                               $( "#access" ).prop("disabled",true);
                           }
                       }

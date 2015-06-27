@@ -15,6 +15,7 @@ import zipfile
 import tempfile
 import logging
 import time
+import re
 import sys
 import simulation
 import modeleditor
@@ -35,22 +36,28 @@ from backend.backendservice import backendservices
 from backend.common.config import AgentTypes
 
 import webapp2
+from db_models.export_job import ExportJobWrapper
 
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
 
-class ExportJobWrapper(db.Model):
-    userId = db.StringProperty()
-    startTime = db.StringProperty()
-    status = db.StringProperty()
-    outData = db.StringProperty()
+def getEither(d, k1, k2):
+    if k1 in d:
+        return d[k1]
+    else:
+        return d[k2]
 
-    def delete(self):
-        try:
-            os.remove(self.outData)
-        except Exception as e:
-            sys.stderr.write("ExportJobWrapper.delete(): {0}\n".format(e))
-        super(ExportJobWrapper, self).delete()
+def changeKeys(d, k1, k2):
+    if k1 in d:
+        tmp = d[k1]
+        d[k2] = tmp
+        del k1
+
+#From: http://stackoverflow.com/questions/1714027/version-number-comparison
+def versionCmp(version1, version2):
+    def normalize(v):
+        return [int(x) for x in re.sub(r'(\.0+)*$','', v).split(".")]
+    return cmp(normalize(version1), normalize(version2))
 
 class SuperZip:
     def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = [], stochOptimJobsToDownload = [], spatialJobsToDownload = []):
@@ -148,73 +155,68 @@ class SuperZip:
 
         self.addBytes('models/{0}.json'.format(model.name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addStochKitJob(self, job, globalOp = False, ignoreStatus = False):
-        stochkit_job = job.stochkit_job
-
+    def addStochKitJob(self, job, globalOp = False, ignoreStatus = False, handler = None):
         # Only export finished jobs unless flag says to export them all
-        if stochkit_job.status == "Finished" or ignoreStatus:
+        if job.status == "Finished" or ignoreStatus:
+            indata = json.loads(job.indata)
             # These are fields shared among all jobs
             jsonJob = { "version" : self.version,
                         "name" : job.name,
                         "user_id" : job.user_id,
                         "stdout" : job.stdout,
                         "stderr" : job.stderr,
-                        # These are things contained in the stochkit_job object
-                        "type" : stochkit_job.type,
-                        "status" : stochkit_job.status,
+                        "type" : indata["type"],
+                        "status" : job.status,
+                        "startTime" : job.startTime,
                         "modelName" : job.modelName,
-                        "startDate" : job.startDate,
-                        "final_time" : stochkit_job.final_time,
-                        "increment" : stochkit_job.increment,
-                        "units" : job.stochkit_job.units,
-                        "realizations" : stochkit_job.realizations,
-                        "exec_type" : stochkit_job.exec_type,
-                        "store_only_mean" : stochkit_job.store_only_mean,
-                        "label_column_names" : stochkit_job.label_column_names,
-                        "create_histogram_data" : stochkit_job.create_histogram_data,
-                        "epsilon" : stochkit_job.epsilon,
-                        "threshold" : stochkit_job.threshold,
-                        "pid" : stochkit_job.pid,
-                        "result" : stochkit_job.result }
+                        "final_time" : indata["final_time"],
+                        "increment" : indata["increment"],
+                        "units" : indata["units"],
+                        "realizations" : indata["realizations"],
+                        "exec_type" : indata["exec_type"],
+                        "epsilon" : indata["epsilon"],
+                        "seed" : indata["seed"],
+                        "threshold" : indata["threshold"],
+                        "pid" : job.pid,
+                        "result" : job.result }
             # For cloud jobs, we need to include the output_url and possibly grab the results from S3
-            if stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES:
-                #jsonJob["output_url"] = job.stochkit_job.output_url
+            if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                #jsonJob["output_url"] = job.outputURL
                 # Only grab S3 data if user wants us to
                 #print 'globalOP', globalOp
                 if (job.name in self.stochKitJobsToDownload) or globalOp:
-                    if stochkit_job.output_location is None or (stochkit_job.output_location is not None and not os.path.exists(stochkit_job.output_location)):
+                    if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
-                        service = backendservices()
-                        service.fetchOutput(stochkit_job.pid, stochkit_job.output_url)
+                        service = backendservices(handler.user_data)
+                        service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                         # Unpack it to its local output location
-                        os.system('tar -xf' +stochkit_job.uuid+'.tar')
-                        stochkit_job.output_location = os.path.dirname(os.path.abspath(__file__))+'/../output/'+stochkit_job.uuid
-                        stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
+                        os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
+                        job.outData = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
                         # Update the DB entry
                         job.put()
                         # Clean up
-                        os.remove(stochkit_job.uuid+'.tar')
+                        os.remove('{0}.tar'.format(job.cloudDatabaseID))
+
+                if job.outData is not None:
                     # Add its data to the zip archive
-                    outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), stochkit_job.output_location)
+                    outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.outData)
                     jsonJob["output_location"] = outputLocation
             # For local jobs, we need to include the output location in the zip archive
-            elif stochkit_job.resource == 'Local':
-                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), stochkit_job.output_location)
+            elif job.resource == 'Local':
+                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.outData)
                 jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
                 jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
                 jsonJob["output_location"] = outputLocation
-            # Also be sure to include any extra attributes of job
-            if job.attributes:
-                jsonJob.update(job.attributes)
+
             # Add the JSON to the zip archive
             self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addStochOptimJob(self, job, globalOp = False):
+    def addStochOptimJob(self, job, globalOp = False, handler = None):
         jsonJob = { "version" : self.version,
-                    "userId" : job.userId,
+                    "user_id" : job.user_id,
                     "pid" : job.pid,
                     "startTime" : job.startTime,
-                    "jobName" : job.jobName,
+                    "name" : job.name,
                     "modelName" : job.modelName,
                     "indata" : json.loads(job.indata),
                     "nameToIndex" : json.loads(job.nameToIndex),
@@ -222,12 +224,12 @@ class SuperZip:
                     "status" : job.status }
         
         # For cloud jobs, we need to include the output_url and possibly grab the results from S3
-        if job.resource in stochoptim.StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+        if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             #jsonJob["output_url"] = job.outputURL
             # Only grab S3 data if user wants us to
-            if (job.jobName in self.stochOptimJobsToDownload) or globalOp:
+            if (job.name in self.stochOptimJobsToDownload) or globalOp:
                 # Grab the remote files
-                service = backendservices()
+                service = backendservices(handler.user_data)
                 service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                 # Unpack it to its local output location...
                 
@@ -243,34 +245,34 @@ class SuperZip:
 
         # Only add the folder if it actually exists
         if job.outData is not None and os.path.exists(job.outData):
-            outputLocation = self.addFolder('stochOptimJobs/data/{0}'.format(job.jobName), job.outData)
+            outputLocation = self.addFolder('stochOptimJobs/data/{0}'.format(job.name), job.outData)
             jsonJob["outData"] = outputLocation
 
             jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
             jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
 
-        self.addBytes('stochOptimJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+        self.addBytes('stochOptimJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
     
-    def addSensitivityJob(self, job, globalOp = False, ignoreStatus = False):
+    def addSensitivityJob(self, job, globalOp = False, ignoreStatus = False, handler = None):
         if job.status == "Finished" or ignoreStatus:
             # Shared fields
             jsonJob = { "version" : self.version,
-                        "userId" : job.userId,
-                        "jobName" : job.jobName,
+                        "user_id" : job.user_id,
+                        "name" : job.name,
                         "modelName" : job.modelName,
                         "startTime" : job.startTime,
                         "indata" : json.loads(job.indata),
                         "status" : job.status }
             if job.resource == "local":
-                outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
+                outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.name), job.outData)
                 jsonJob["outData"] = outputLocation
-            elif job.resource in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+            elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 #jsonJob["outputURL"] = job.outputURL
                 # Only grab S3 data if user wants us to
-                if (job.jobName in self.sensitivityJobsToDownload) or globalOp:
+                if (job.name in self.sensitivityJobsToDownload) or globalOp:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
-                        service = backendservices()
+                        service = backendservices(handler.user_data)
                         service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                         # Unpack it to its local output location
                         os.system('tar -xf' +job.cloudDatabaseID+'.tar')
@@ -280,16 +282,18 @@ class SuperZip:
                         job.put()
                         # Clean up
                         os.remove(job.cloudDatabaseID+'.tar')
-                    outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
-                    jsonJob["outData"] = outputLocation
-            self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addSpatialJob(self, job, globalOp = False):
+                if job.outData is not None:
+                    outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.name), job.outData)
+                    jsonJob["outData"] = outputLocation
+            self.addBytes('sensitivityJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+
+    def addSpatialJob(self, job, globalOp = False, handler = None):
         jsonJob = { "version" : self.version,
-                    "userId" : job.userId,
+                    "user_id" : job.user_id,
                     "pid" : job.pid,
                     "startTime" : job.startTime,
-                    "jobName" : job.jobName,
+                    "name" : job.name,
                     "modelName" : job.modelName,
                     "indata" : json.loads(job.indata),
                     "outData" : job.outData,
@@ -297,15 +301,14 @@ class SuperZip:
                     "uuid" : job.uuid,
                     "status" : job.status }
         
-        if job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
-            #jsonJob["output_url"] = job.output_url
+        if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             # Only grab S3 data if user wants us to
-            if (job.jobName in self.spatialJobsToDownload) or globalOp:
+            if (job.name in self.spatialJobsToDownload) or globalOp:
                 if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                     # Grab the output from S3 if we need to
-                    service = backendservices()
+                    service = backendservices(handler.user_data)
                     # Fetch
-                    service.fetchOutput(job.cloud_id, job.output_url)
+                    service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                     # Unpack
                     os.system('tar -xf' +job.uuid+'.tar')
                     # Record location
@@ -317,47 +320,51 @@ class SuperZip:
 
         # Only add the folder if it actually exists
         if job.outData is not None and os.path.exists(job.outData):
-            outputLocation = self.addFolder('spatialJobs/data/{0}'.format(job.jobName), job.outData)
+            outputLocation = self.addFolder('spatialJobs/data/{0}'.format(job.name), job.outData)
             jsonJob["outData"] = outputLocation
 
             jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
             jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
 
-        self.addBytes('spatialJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+        self.addBytes('spatialJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
         pass
 
     def extractSpatialJob(self, path, userId = None, handler = None, rename = None):
         jsonJob = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
 
-        zipPath = jsonJob["outData"]
+        changeKeys(jsonJob, 'out_data', 'outData')
+        changeKeys(jsonJob, 'userId', 'user_id')
+        changeKeys(jsonJob, 'jobName', 'name')
 
+        zipPath = jsonJob["outData"]
 
         job = spatial.SpatialJobWrapper()
 
-        jobNames = [x.jobName for x in db.Query(spatial.SpatialJobWrapper).filter('userId =', handler.user.user_id()).run()]
+        jobNames = [x.name for x in db.Query(spatial.SpatialJobWrapper).filter('user_id =', handler.user.user_id()).run()]
 
         #print jobNames
 
-        if jsonJob["jobName"] in jobNames:
+        if jsonJob["name"] in jobNames:
             if rename:
 
                 i = 1
-                tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                tryName = '{0}_{1}'.format(jsonJob["name"], i)
 
                 while tryName in jobNames:
                     i = i + 1
-                    tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                    tryName = '{0}_{1}'.format(jsonJob["name"], i)
                     
-                jsonJob["jobName"] = tryName
+                jsonJob["name"] = tryName
 
-        if jsonJob["userId"] not in [x.user_id() for x in User.query().fetch()]:
-            jsonJob["userId"] = handler.user.user_id()
+        if jsonJob["user_id"] not in [x.user_id() for x in User.query().fetch()]:
+            jsonJob["user_id"] = handler.user.user_id()
 
         if userId:
-            jsonJob["userId"] = userId
+            jsonJob["user_id"] = userId
 
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+            
 
         for name in self.zipfb.namelist():
             if re.search('^{0}/.*$'.format(zipPath), name):
@@ -370,8 +377,16 @@ class SuperZip:
                 fhandle.write(self.zipfb.read(name))
                 fhandle.close()
 
-        job.userId = jsonJob["userId"]
-        job.jobName = jsonJob["jobName"]
+        if versionCmp(jsonJob["version"], "1.6.0") < 0:
+            r = open(os.path.join(outPath, "return_code"), 'w')
+            if jsonJob["status"].lower() == "finished":
+                r.write('0')
+            else:
+                r.write('1')
+            r.close()
+
+        job.user_id = jsonJob["user_id"]
+        job.name = jsonJob["name"]
         job.startTime = jsonJob["startTime"]
         job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
         job.indata = json.dumps(jsonJob["indata"])
@@ -387,6 +402,8 @@ class SuperZip:
     def extractStochKitModel(self, path, userId = None, handler = None, rename = None):
         modelj = json.loads(self.zipfb.read(path))
         modelj["model"] = self.zipfb.read(modelj["model"])
+
+        changeKeys(modelj, 'userId', 'user_id')
 
         if modelj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
             modelj["user_id"] = handler.user.user_id()
@@ -412,7 +429,7 @@ class SuperZip:
                     i, subdomain = line.split(',')
                     subdomainsData.append(int(float(subdomain)))
 
-            names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
+            names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('user_id =', handler.user.user_id()).run()]
             tmpName = os.path.basename(modelj["meshFile"]).split(".")[0]
             i = 0
             while tmpName in names:
@@ -420,7 +437,7 @@ class SuperZip:
                 i += 1
             
             meshDb = mesheditor.MeshWrapper()
-            meshDb.userId = handler.user.user_id()
+            meshDb.user_id = handler.user.user_id()
             meshDb.name = tmpName
             meshDb.description = ""
             meshDb.meshFileId = int(meshFileId)
@@ -476,7 +493,7 @@ class SuperZip:
                 raise Exception("Model name already in use")
 
         stochKitModel = stochss.stochkit.StochMLDocument.fromString(modelj["model"]).toModel(name)
-        modelDb = modeleditor.StochKitModelWrapper.createFromStochKitModel(handler, stochKitModel)
+        modelDb = modeleditor.createStochKitModelWrapperFromStochKitModel(handler, stochKitModel)
 
         if "isSpatial" in modelj:
             modelDb.isSpatial = modelj["isSpatial"]
@@ -513,6 +530,9 @@ class SuperZip:
         jobj = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
 
+        changeKeys(jobj, 'out_data', 'outData')
+        changeKeys(jobj, 'userId', 'user_id')
+        changeKeys(jobj, 'jobName', 'name')
         #print "Rename: ", rename
 
         zipPath = jobj["output_location"]
@@ -540,8 +560,17 @@ class SuperZip:
                 fhandle.write(self.zipfb.read(name))
                 fhandle.close()
 
+        if versionCmp(jobj["version"], "1.6.0") < 0:
+            r = open(os.path.join(outPath, "return_code"), 'w')
+            if jobj["status"].lower() == "finished":
+                r.write('0')
+            else:
+                r.write('1')
+            r.close()
+
         jobj["modelName"] = jobj["modelName"] if "modelName" in jobj else None
 
+        jobj["resource"] = 'Local'
         jobj["output_location"] = outPath
         jobj["stdout"] = "{0}/stdout".format(outPath)
         jobj["stderr"] = "{0}/stderr".format(outPath)
@@ -552,32 +581,35 @@ class SuperZip:
         jsonJob = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
         
-        zipPath = jsonJob["outData"]
+        changeKeys(jsonJob, 'out_data', 'outData')
+        changeKeys(jsonJob, 'userId', 'user_id')
+        changeKeys(jsonJob, 'jobName', 'name')
 
+        zipPath = jsonJob["outData"]
 
         job = stochoptim.StochOptimJobWrapper()
 
-        jobNames = [x.jobName for x in db.Query(stochoptim.StochOptimJobWrapper).filter('userId =', handler.user.user_id()).run()]
+        jobNames = [x.name for x in db.Query(stochoptim.StochOptimJobWrapper).filter('user_id =', handler.user.user_id()).run()]
 
         #print jobNames
 
-        if jsonJob["jobName"] in jobNames:
+        if jsonJob["name"] in jobNames:
             if rename:
 
                 i = 1
-                tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                tryName = '{0}_{1}'.format(jsonJob["name"], i)
 
                 while tryName in jobNames:
                     i = i + 1
-                    tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                    tryName = '{0}_{1}'.format(jsonJob["name"], i)
                     
-                jsonJob["jobName"] = tryName
+                jsonJob["name"] = tryName
 
-        if jsonJob["userId"] not in [x.user_id() for x in User.query().fetch()]:
-            jsonJob["userId"] = handler.user.user_id()
+        if jsonJob["user_id"] not in [x.user_id() for x in User.query().fetch()]:
+            jsonJob["user_id"] = handler.user.user_id()
 
         if userId:
-            jsonJob["userId"] = userId
+            jsonJob["user_id"] = userId
 
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
 
@@ -592,8 +624,16 @@ class SuperZip:
                 fhandle.write(self.zipfb.read(name))
                 fhandle.close()
 
-        job.userId = jsonJob["userId"]
-        job.jobName = jsonJob["jobName"]
+        if versionCmp(jsonJob["version"], "1.6.0") < 0:
+            r = open(os.path.join(outPath, "return_code"), 'w')
+            if jsonJob["status"].lower() == "finished":
+                r.write('0')
+            else:
+                r.write('1')
+            r.close()
+
+        job.user_id = jsonJob["user_id"]
+        job.name = jsonJob["name"]
         job.startTime = jsonJob["startTime"]
         job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
         job.indata = json.dumps(jsonJob["indata"])
@@ -609,30 +649,34 @@ class SuperZip:
     def extractSensitivityJob(self, path, userId = None, handler = None, rename = None):
         jsonJob = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
+
+        changeKeys(jsonJob, 'out_data', 'outData')
+        changeKeys(jsonJob, 'userId', 'user_id')
+        changeKeys(jsonJob, 'jobName', 'name')
         
         zipPath = jsonJob["outData"]
 
         job = sensitivity.SensitivityJobWrapper()
 
-        jobNames = [x.jobName for x in db.Query(sensitivity.SensitivityJobWrapper).filter('userId =', handler.user.user_id()).run()]
+        jobNames = [x.name for x in db.Query(sensitivity.SensitivityJobWrapper).filter('user_id =', handler.user.user_id()).run()]
 
-        if jsonJob["jobName"] in jobNames:
+        if jsonJob["name"] in jobNames:
             if rename:
 
                 i = 1
-                tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                tryName = '{0}_{1}'.format(jsonJob["name"], i)
 
                 while tryName in jobNames:
                     i = i + 1
-                    tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                    tryName = '{0}_{1}'.format(jsonJob["name"], i)
                     
-                jsonJob["jobName"] = tryName
+                jsonJob["name"] = tryName
 
-        if jsonJob["userId"] not in [x.user_id() for x in User.query().fetch()]:
-            jsonJob["userId"] = handler.user.user_id()
+        if jsonJob["user_id"] not in [x.user_id() for x in User.query().fetch()]:
+            jsonJob["user_id"] = handler.user.user_id()
 
         if userId:
-            jsonJob["userId"] = userId
+            jsonJob["user_id"] = userId
 
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
 
@@ -647,8 +691,16 @@ class SuperZip:
                 fhandle.write(self.zipfb.read(name))
                 fhandle.close()
 
-        job.userId = jsonJob["userId"]
-        job.jobName = jsonJob["jobName"]
+        if versionCmp(jsonJob["version"], "1.6.0") < 0:
+            r = open(os.path.join(outPath, "return_code"), 'w')
+            if jsonJob["status"].lower() == "finished":
+                r.write('0')
+            else:
+                r.write('1')
+            r.close()
+
+        job.user_id = jsonJob["user_id"]
+        job.name = jsonJob["name"]
         job.startTime = jsonJob["startTime"]
         job.indata = json.dumps(jsonJob["indata"])
         job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
@@ -700,12 +752,10 @@ class ExportPage(BaseHandler):
             jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
 
             for job in jobs:
-                stochkit_job = job.stochkit_job
-
-                if stochkit_job.status == "Finished":
-                    if stochkit_job.resource == 'Local':
+                if job.status == "Finished":
+                    if job.resource == 'Local':
                         numberOfFiles += 1
-                        totalSize += get_size(job.stochkit_job.output_location)
+                        totalSize += get_size(job.job.outData)
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps( { "numberOfFiles" : numberOfFiles, "totalSize" : totalSize } ))
@@ -746,7 +796,7 @@ class ExportPage(BaseHandler):
                                                   "msg" : "Non-admin users cannot export all data" }) )
                 return
 
-            exportJob.userId = self.user.user_id()
+            exportJob.user_id = self.user.user_id()
             exportJob.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
             exportJob.status = "Running -- Exporting Models"
             exportJob.outData = None
@@ -775,28 +825,28 @@ class ExportPage(BaseHandler):
 
             ###jobs
             if not globalOp:
-                jobs = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1", self.user.user_id()).run()
+                jobs = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE user_id = :1", self.user.user_id()).run()
             else:
                 jobs = db.GqlQuery("SELECT * FROM StochOptimJobWrapper").run()
 
             for job in jobs:
-                szip.addStochOptimJob(job, globalOp)
+                szip.addStochOptimJob(job, globalOp, handler = self)
 
             if not globalOp:
-                jobs = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1", self.user.user_id()).run()
+                jobs = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1", self.user.user_id()).run()
             else:
                 jobs = db.GqlQuery("SELECT * FROM SpatialJobWrapper").run()
 
             for job in jobs:
-                szip.addSpatialJob(job, globalOp)
+                szip.addSpatialJob(job, globalOp, handler = self)
 
             if not globalOp:
-                jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id()).run()
+                jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1", self.user.user_id()).run()
             else:
                 jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper").run()
 
             for job in jobs:
-                szip.addSensitivityJob(job, globalOp)
+                szip.addSensitivityJob(job, globalOp, handler = self)
 
             if not globalOp:
                 jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).run()
@@ -804,7 +854,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").run()
 
             for job in jobs:
-                szip.addStochKitJob(job, globalOp)
+                szip.addStochKitJob(job, globalOp, handler = self)
 
             szip.close()
 
@@ -834,22 +884,7 @@ class ExportPage(BaseHandler):
 import re
 import urllib
 
-class ImportJobWrapper(db.Model):
-    userId = db.StringProperty()
-    status = db.StringProperty()
-    zipFile = db.StringProperty()
-    headerFile = db.StringProperty()
-
-    def delete(self):
-        try:
-            os.remove(self.zipFile)
-        except Exception as e:
-            sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
-        try:
-            os.remove(self.headerFile)
-        except Exception as e:
-            sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
-        super(ImportJobWrapper, self).delete()
+from db_models.import_job import ImportJobWrapper
 
 class ImportPage(BaseHandler):
 
@@ -877,157 +912,132 @@ class ImportPage(BaseHandler):
 
         resource = None
 
-        if self.user_data.is_flex_cloud_info_set:
-            self.user_data.update_flex_cloud_machine_info_from_db()
-            flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+        service = backendservices(self.user_data)
 
-            backend_service = backendservices()
-            if backend_service.is_flex_queue_head_running(flex_queue_head_machine):
-                resource = "{}-cloud".format(AgentTypes.FLEX)
+        # Get all the cloud jobs
+        stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
+        stochkit_jobs = [job for job in stochkit_jobs
+                         if job.resource is not None and job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
+                         and job.status == "Finished"
+                         and job.outData is None]
 
-        if resource == None:
-            if self.user_data.valid_credentials:
-                resource = "{}-cloud".format(AgentTypes.EC2)
+        # Create the dictionary to pass to backend to check for sizes
+        output_results_to_check = {}
+        for cloud_job in stochkit_jobs:
+            output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
 
-        if resource:
-            # Get all the cloud jobs
-            stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1",
-                                                                            self.user.user_id()).fetch(100000)
-            stochkit_jobs = [job for job in stochkit_jobs
-                                if ((job.stochkit_job.resource == resource)
-                                    and (resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES))
-                                    and job.stochkit_job.status == "Finished"]
+        # Sensitivity Jobs
+        sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1", self.user.user_id())
+        sensi_jobs = [job for job in sensi_jobs
+                      if job.resource is not None and job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
+                      and job.status == "Finished"
+                      and job.outData is None]
+        for cloud_job in sensi_jobs:
+            output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
 
-            # Create the dictionary to pass to backend to check for sizes
-            output_results_to_check = {}
-            for cloud_job in stochkit_jobs:
-                output_results_to_check[cloud_job.key().id()] = cloud_job.stochkit_job.output_url
+        # StochOptim Jobs
+        stochoptim_jobs_query = stochoptim.StochOptimJobWrapper.all()
+        stochoptim_jobs_query.filter("user_id =", self.user.user_id())
+        stochoptim_jobs_query.filter("status =", "Finished")
+        stochoptim_jobs = []
+        for cloud_job in stochoptim_jobs_query.run():
+            if cloud_job.resource is None or cloud_job.resource not in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                continue
+            if cloud_job.outputURL is None or cloud_job.outData is not None:
+                continue
 
-            # Sensitivity Jobs
-            sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
-            sensi_jobs = [job for job in sensi_jobs
-                          if ((job.resource == resource)
-                              and (job.resource in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES))
-                          and job.status == "Finished"]
-            for cloud_job in sensi_jobs:
-                output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
+            output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
+            stochoptim_jobs.append(cloud_job)
 
-            # StochOptim Jobs
-            stochoptim_jobs_query = stochoptim.StochOptimJobWrapper.all()
-            stochoptim_jobs_query.filter("userId =", self.user.user_id())
-            stochoptim_jobs_query.filter("status =", "Finished")
-            stochoptim_jobs = []
-            for cloud_job in stochoptim_jobs_query.run():
-                if (cloud_job.resource != resource) \
-                        or (cloud_job.resource not in stochoptim.StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES):
-                    continue
-                if cloud_job.outputURL is None:
-                    #print vars(cloud_job)
-                    continue
+        # Spatial Jobs
+        spatial_jobs_query = spatial.SpatialJobWrapper.all()
+        spatial_jobs_query.filter("user_id =", self.user.user_id())
+        spatial_jobs_query.filter("status =", "Finished")
+        spatial_jobs = []
+        for cloud_job in spatial_jobs_query.run():
+            if cloud_job.resource is None or cloud_job.resource not in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                continue
+            if cloud_job.outputURL is None or cloud_job.outData is not None:
+                continue
 
-                output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
-                stochoptim_jobs.append(cloud_job)
+            output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
+            spatial_jobs.append(cloud_job)
 
-            # Spatial Jobs
-            spatial_jobs_query = spatial.SpatialJobWrapper.all()
-            spatial_jobs_query.filter("userId =", self.user.user_id())
-            spatial_jobs_query.filter("status =", "Finished")
-            spatial_jobs = []
-            for cloud_job in spatial_jobs_query.run():
-                if (cloud_job.resource != resource) \
-                        or (cloud_job.resource not in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES):
-                    continue
-                if cloud_job.output_url is None:
-                    #print vars(cloud_job)
-                    continue
+        job_sizes = service.getSizeOfOutputResults(output_results_to_check)
 
-                output_results_to_check[cloud_job.key().id()] = cloud_job.output_url
-                spatial_jobs.append(cloud_job)
+        logging.info('job_sizes = \n{}'.format(pprint.pformat(job_sizes)))
 
-            # Get all the job sizes from the backend
-            service = backendservices()
-            if resource == simulation.StochKitJob.FLEX_CLOUD_RESOURCE:
-                job_sizes = service.getSizeOfOutputResults(output_results_to_check, AgentTypes.FLEX)
-
-            elif resource == simulation.StochKitJob.EC2_CLOUD_RESOURCE:
-                credentials = self.user_data.getCredentials()
-                job_sizes = service.getSizeOfOutputResults(output_results_to_check, AgentTypes.EC2, credentials)
-
-            logging.info('job_sizes = \n{}'.format(pprint.pformat(job_sizes)))
-
-            # Add all of the relevant jobs to the context so they will be rendered on the page
-            context["stochkit_jobs"] = []
-            context["sensitivity_jobs"] = []
-            context["stochoptim_jobs"] = []
-            context["spatial_jobs"] = []
-            for cloud_job in stochkit_jobs:
-                job_name = cloud_job.name
-                job_id = cloud_job.key().id()
-                if job_id in job_sizes:
-                    # These are the relevant jobs
-                    if job_sizes[job_id] is None:
-                        size = 0
-                        no_data = True
-                    else:
-                        size = float(job_sizes[job_id])
-                        no_data = False
-                    print "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajkas;asfkdfk;skd;fasdkjl;fads;klf;ak"
-                    print ""
-                    print ""
-                    context["stochkit_jobs"].append({
-                        'name': job_name,
-                        'exec_type': cloud_job.stochkit_job.exec_type,
-                        'size': '{0} KB'.format(round(size/1024, 1)),
-                        'no_data' : no_data
-                    })
-            for cloud_job in sensi_jobs:
-                job_name = cloud_job.jobName
-                job_id = cloud_job.key().id()
-                if job_id in job_sizes:
-                    if job_sizes[job_id] is None:
-                        size = 0
-                        no_data = True
-                    else:
-                        size = float(job_sizes[job_id])
-                        no_data = False
-                    context["sensitivity_jobs"].append({
-                        'name': job_name,
-                        'exec_type': 'sensitivity_jobs',
-                        'size': '{0} KB'.format(round(size/1024, 1)),
-                        'no_data' : no_data
-                    })
-            for cloud_job in stochoptim_jobs:
-                job_name = cloud_job.jobName
-                job_id = cloud_job.key().id()
-                if job_id in job_sizes:
-                    if job_sizes[job_id] is None:
-                        size = 0
-                        no_data = True
-                    else:
-                        size = float(job_sizes[job_id])
-                        no_data = False
-                    context["stochoptim_jobs"].append({
-                        'name': job_name,
-                        'exec_type': 'mcem2',
-                        'size': '{0} KB'.format(round(size/1024, 1)),
-                        'no_data' : no_data
-                    })
-            for cloud_job in spatial_jobs:
-                job_name = cloud_job.jobName
-                job_id = cloud_job.key().id()
-                if job_id in job_sizes:
-                    if job_sizes[job_id] is None:
-                        size = 0
-                        no_data = True
-                    else:
-                        size = float(job_sizes[job_id])
-                        no_data = False
-                    context["spatial_jobs"].append({
-                        'name': job_name,
-                        'exec_type': 'spatial',
-                        'size': '{0} KB'.format(round(size/1024, 1)),
-                        'no_data' : no_data
-                    })
+        # Add all of the relevant jobs to the context so they will be rendered on the page
+        context["stochkit_jobs"] = []
+        context["sensitivity_jobs"] = []
+        context["stochoptim_jobs"] = []
+        context["spatial_jobs"] = []
+        for cloud_job in stochkit_jobs:
+            job_name = cloud_job.name
+            job_id = cloud_job.key().id()
+            indata = json.loads(cloud_job.indata)
+            if job_id in job_sizes:
+                # These are the relevant jobs
+                if job_sizes[job_id] is None:
+                    size = 0
+                    no_data = True
+                else:
+                    size = float(job_sizes[job_id])
+                    no_data = False
+                context["stochkit_jobs"].append({
+                    'name': job_name,
+                    'exec_type': indata["exec_type"],
+                    'size': '{0} KB'.format(round(size/1024, 1)),
+                    'no_data' : no_data
+                })
+        for cloud_job in sensi_jobs:
+            job_name = cloud_job.name
+            job_id = cloud_job.key().id()
+            if job_id in job_sizes:
+                if job_sizes[job_id] is None:
+                    size = 0
+                    no_data = True
+                else:
+                    size = float(job_sizes[job_id])
+                    no_data = False
+                context["sensitivity_jobs"].append({
+                    'name': job_name,
+                    'exec_type': 'sensitivity_jobs',
+                    'size': '{0} KB'.format(round(size/1024, 1)),
+                    'no_data' : no_data
+                })
+        for cloud_job in stochoptim_jobs:
+            job_name = cloud_job.name
+            job_id = cloud_job.key().id()
+            if job_id in job_sizes:
+                if job_sizes[job_id] is None:
+                    size = 0
+                    no_data = True
+                else:
+                    size = float(job_sizes[job_id])
+                    no_data = False
+                context["stochoptim_jobs"].append({
+                    'name': job_name,
+                    'exec_type': 'mcem2',
+                    'size': '{0} KB'.format(round(size/1024, 1)),
+                    'no_data' : no_data
+                })
+        for cloud_job in spatial_jobs:
+            job_name = cloud_job.name
+            job_id = cloud_job.key().id()
+            if job_id in job_sizes:
+                if job_sizes[job_id] is None:
+                    size = 0
+                    no_data = True
+                else:
+                    size = float(job_sizes[job_id])
+                    no_data = False
+                context["spatial_jobs"].append({
+                    'name': job_name,
+                    'exec_type': 'spatial',
+                    'size': '{0} KB'.format(round(size/1024, 1)),
+                    'no_data' : no_data
+                })
         return self.render_response('exportimport.html', **context)
 
     def post(self):
@@ -1044,7 +1054,7 @@ class ImportPage(BaseHandler):
                 
                 path = os.path.abspath(os.path.dirname(__file__))
                 [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', prefix = filename + "_", suffix = suffix)
-                job.userId = self.user.user_id()
+                job.user_id = self.user.user_id()
                 job.status = "Writing file on server"
                 job.zipFile = tmpfile
 
@@ -1101,7 +1111,7 @@ class ImportPage(BaseHandler):
 
                 jobs = []
 
-                for job in db.GqlQuery("SELECT * FROM ImportJobWrapper WHERE userId = :1", self.user.user_id()).run():
+                for job in db.GqlQuery("SELECT * FROM ImportJobWrapper WHERE user_id = :1", self.user.user_id()).run():
                     #Using os open here cause normal Python open is failing
                     try:
                         fdescript = os.open(job.headerFile, os.O_RDONLY)
@@ -1118,6 +1128,19 @@ class ImportPage(BaseHandler):
                         contents += part;
 
                     headers = json.loads(contents)
+
+                    for typeName, importType in headers.items():
+                        if type(importType) == type({}):
+                            for name, contents in importType.items():
+                                if type(contents) == type({}):
+                                    keys = list(contents.keys())
+                                    for key in keys:
+                                        if 'userId' in contents:
+                                            contents['user_id'] = contents['userId']
+
+                                        if 'jobName' in contents:
+                                            contents['name'] = contents['jobName']
+
                     os.close(fdescript)
 
                     try:
@@ -1184,7 +1207,7 @@ class ImportPage(BaseHandler):
                     totalObjects += 1
 
                     if userId == None:
-                        userID = headers['models'][name]["user_id"]
+                        userID = getEither(headers['models'][name], "user_id", "userId")
 
                         if userID not in validUsers:
                             userID = userId
@@ -1192,7 +1215,8 @@ class ImportPage(BaseHandler):
                         userID = userId
 
                     rename = False
-                    dbName = headers['models'][name]["name"]
+                    
+                    dbName = getEither(headers['models'][name], "name", "jobName")
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
                     if len(jobs) > 0:
@@ -1229,14 +1253,14 @@ class ImportPage(BaseHandler):
                     totalObjects += 1
 
                     if userId == None:
-                        userID = headers['stochkitJobs'][name]["user_id"]
+                        userID = getEither(headers['stochkitJobs'][name], "user_id", "userId")
 
                         if userID not in validUsers:
                             userID = userId
                     else:
                         userID = userId
 
-                    dbName = headers['stochkitJobs'][name]["name"]
+                    dbName = getEither(headers['stochkitJobs'][name], "name", "jobName")
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
                     rename = False
@@ -1263,15 +1287,15 @@ class ImportPage(BaseHandler):
                     totalObjects += 1
 
                     if userId == None:
-                        userID = headers['sensitivityJobs'][name]["userId"]
+                        userID = getEither(headers['sensitivityJobs'][name], "user_id", "userId")
 
                         if userID not in validUsers:
                             userID = userId
                     else:
                         userID = userId
 
-                    dbName = headers['sensitivityJobs'][name]["jobName"]
-                    jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", userID, dbName).run())
+                    dbName = getEither(headers['sensitivityJobs'][name], "name", "jobName")
+                    jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
                     rename = False
 
@@ -1295,15 +1319,15 @@ class ImportPage(BaseHandler):
                     totalObjects += 1
 
                     if userId == None:
-                        userID = headers['stochOptimJobs'][name]["userId"]
+                        userID = getEither(headers['stochOptimJobs'][name], "user_id", "userId")
 
                         if userID not in validUsers:
                             userID = userId
                     else:
                         userID = userId
 
-                    dbName = headers['stochOptimJobs'][name]["jobName"]
-                    jobs = list(db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2", userID, dbName).run())
+                    dbName = getEither(headers['stochOptimJobs'][name], "name", "jobName")
+                    jobs = list(db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
                     rename = False
 
@@ -1327,15 +1351,16 @@ class ImportPage(BaseHandler):
                     totalObjects += 1
 
                     if userId == None:
-                        userID = headers['spatialJobs'][name]["userId"]
+                        userID = getEither(headers['spatialJobs'][name], "user_id", "userId")
+#["user_id"]
 
                         if userID not in validUsers:
                             userID = userId
                     else:
                         userID = userId
 
-                    dbName = headers['spatialJobs'][name]["jobName"]
-                    jobs = list(db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1 AND jobName = :2", userID, dbName).run())
+                    dbName = getEither(headers['spatialJobs'][name], "name", "jobName")
+                    jobs = list(db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
                     rename = False
 

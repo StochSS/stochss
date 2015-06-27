@@ -48,7 +48,7 @@ class DataReproductionPage(BaseHandler):
                 job_type = self.request.get('job_type')
                 
                 if job_type == 'stochkit':
-                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloud_id = :2", self.user.user_id(),uuid).get()       
+                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(),uuid).get()       
                     job.output_stored = 'False'
                     job.put()
                 elif job_type == 'sensitivity':
@@ -57,7 +57,7 @@ class DataReproductionPage(BaseHandler):
                     job.outData = None
                     job.put()
                 elif job_type == 'spatial':
-                    job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloud_id =', uuid).get()  
+                    job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
                     job.output_stored = 'False'
                     job.outData = None
                     job.put()   
@@ -103,7 +103,7 @@ class DataReproductionPage(BaseHandler):
         
             if job_type == 'stochkit':
               
-                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloud_id = :2", self.user.user_id(),uuid).get()       
+                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(),uuid).get()       
             
         
                 try:        
@@ -198,7 +198,7 @@ class DataReproductionPage(BaseHandler):
                 return  
         
             elif job_type == 'spatial':
-                job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloud_id =', uuid).get()  
+                job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
             
                 try:
                     ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())

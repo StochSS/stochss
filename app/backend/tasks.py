@@ -378,8 +378,15 @@ def master_task(task_id, params, database, storage_agent):
         result = {
             'uuid': task_id
         }
+        try:
+            import multiprocessing
+            core_count = multiprocessing.cpu_count()
+            params["paramstring"] += " --cores {0}".format(core_count)
+        except Exception as e:
+            logging.exception(e)
         paramstr = params['paramstring']
         output_dir = "output/{0}".format(task_id)
+        return_code_file = "output/{0}/return_code".format(task_id)
         create_dir_str = "mkdir -p {0}".format(output_dir)  #output_dir+"/result"
         print create_dir_str
         os.system(create_dir_str)
@@ -475,7 +482,10 @@ def master_task(task_id, params, database, storage_agent):
                     signal.signal(signal.SIGTERM, handler)
                     # Wait on program execution...
                     stdout, stderr = p.communicate() # wait for process to complete
-
+                    return_code = p.wait()
+                    if return_code_file is not None:
+                        with open(return_code_file, 'w+') as fd:
+                            fd.write(str(return_code))
                 except Exception as e:
                     logging.error('Error: {}'.format(str(e)))
                     logging.error(traceback.format_exc())
@@ -666,7 +676,7 @@ def with_temp_file(file_names):
 
 
 
-def execute_task(exec_str):
+def execute_task(exec_str, return_code_file=None):
     try:
         p = subprocess.Popen(exec_str, shell=True)
         pid = p.pid
@@ -677,7 +687,10 @@ def execute_task(exec_str):
         logging.info("creating PID file '{0}'".format(pid_file))
         with open(pid_file, 'w+') as fd:
             fd.write(str(pid))
-        p.wait() # wait for process to complete
+        return_code = p.wait() # wait for process to complete
+        if return_code_file is not None:
+            with open(return_code_file, 'w+') as fd:
+                fd.write(str(return_code))
     except Exception as e:
         logging.error(e)
     finally:
@@ -735,6 +748,9 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
             os.system(create_dir_str)
         create_dir_str = "mkdir -p output/%s/result " % uuidstr
         os.system(create_dir_str)
+        
+        return_code_file = "output/{0}/return_code".format(uuidstr)
+
 
         filename = os.path.join('output', uuidstr, '{0}.xml'.format(uuidstr))
         with open(filename, 'w') as f:
@@ -783,7 +799,7 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
 
         timestarted = datetime.now()
         # os.system(exec_str)
-        execute_task(exec_str)
+        execute_task(exec_str, return_code_file=return_code_file)
         timeended = datetime.now()
 
         results = os.listdir("output/{0}/result".format(uuidstr))

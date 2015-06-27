@@ -23,16 +23,16 @@ import traceback
 import urllib2
 import json
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..' ))
+from db_models.user_data import UserData
+
 from google.appengine.ext import db
 from kombu import Queue, Exchange
 
 from common.config import AgentTypes, AgentConfig, FlexConfig, JobDatabaseConfig
 import common.helper as helper
 from databases.flex_db import FlexDB
-from vm_state_model import VMStateModel
-
-__author__ = 'mengyuan, dev'
-__email__ = 'gmy.melissa@gmail.com, dnath@cs.ucsb.edu'
+from db_models.vm_state_model import VMStateModel
 
 BACKEND_NAME = 'backendthread'
 BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)
@@ -97,10 +97,18 @@ class FlexBackendWorker(BackendWorker):
 
         return queue_head_machine
 
+    def __get_user_data(self, user_id):
+        user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", user_id).get()
+        if user_data is None:
+            raise Exception("Can not find UserData for user_id = '{0}'".format(user_id))
+        return user_data
+
     def prepare_vms(self, parameters):
         logging.info('\n\nprepare_vms:\n\n{0}'.format(pprint.pformat(parameters)))
 
         queue_head_machine = parameters[self.PARAM_FLEX_QUEUE_HEAD]
+
+        user_data = self.__get_user_data(parameters['user_id'])
 
         if self.PARAM_FLEX_CLOUD_MACHINE_INFO not in parameters \
                 or parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] == None \
@@ -108,12 +116,16 @@ class FlexBackendWorker(BackendWorker):
 
             logging.error('Error: No {0} param!'.format(self.PARAM_FLEX_CLOUD_MACHINE_INFO))
             VMStateModel.fail_active(parameters)
+            # Report Error
+            user_data.flex_cloud_status = False
+            user_data.flex_cloud_info_msg = 'Invalid Parameters'
+            user_data.put()
             return
 
         flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
 
         all_flex_vms = VMStateModel.get_all(parameters)
-        logging.info('\n\nall_flex_vms =\n{}'.format(all_flex_vms))
+        logging.debug('\n\nall_flex_vms =\n{}'.format(all_flex_vms))
         all_flex_vm_map = {vm['pub_ip']:vm for vm in all_flex_vms}
 
         filtered_flex_machine_info = []
@@ -126,9 +138,15 @@ class FlexBackendWorker(BackendWorker):
 
         if len(filtered_flex_machine_info) < 1:
             logging.info('Nothing to do!')
+            user_data.flex_cloud_status = False
+            user_data.flex_cloud_info_msg = 'No nodes to prepare'
+            user_data.put()
             return
 
-        logging.info('\n\nfiltered_flex_machine_info =\n{}'.format(pprint.pformat(filtered_flex_machine_info)))
+        logging.debug('\n\nfiltered_flex_machine_info =\n{}'.format(pprint.pformat(filtered_flex_machine_info)))
+        user_data.flex_cloud_status = True 
+        user_data.flex_cloud_info_msg = 'Flex Cloud configured. Waiting for workers to become available...'
+        user_data.put()
 
         parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] = filtered_flex_machine_info
 
@@ -138,16 +156,20 @@ class FlexBackendWorker(BackendWorker):
                                                                                 parameters=parameters)
 
         logging.info('public_ips = {}'.format(public_ips))
-        logging.info('private_ips = {}'.format(private_ips))
+        logging.debug('private_ips = {}'.format(private_ips))
         logging.info('instance_ids = {}'.format(instance_ids))
-        logging.info('keyfiles = {}'.format(keyfiles))
-        logging.info('usernames = {}'.format(usernames))
+        logging.debug('keyfiles = {}'.format(keyfiles))
+        logging.debug('usernames = {}'.format(usernames))
 
 
 
         if queue_head_machine == None or (queue_head_machine['ip'] not in public_ips and queue_head_machine['ip'] not in running_flex_ips):
             logging.error('Found no viable ssh-able/running queue head machine!')
             VMStateModel.fail_active(parameters)
+            # Report Failure
+            user_data.flex_cloud_status = False
+            user_data.flex_cloud_info_msg = 'Error connecting to the queue head via SSH'
+            user_data.put()
             return
 
         if queue_head_machine['ip'] not in running_flex_ips:
@@ -155,6 +177,10 @@ class FlexBackendWorker(BackendWorker):
             if result == False:
                 logging.error('Error: could not prepare queue head! Failing other creating nodes.')
                 VMStateModel.fail_active(parameters)
+                # Report Failure
+                user_data.flex_cloud_status = False
+                user_data.flex_cloud_info_msg = 'Error preparing the queue head'
+                user_data.put()
                 return
 
         self.__prepare_workers(public_ips, parameters)
@@ -166,12 +192,20 @@ class FlexBackendWorker(BackendWorker):
         if len(connected_public_ips) == 0 or len(connected_public_ips) == []:
             logging.info('No vm was reachable!')
             VMStateModel.fail_active(parameters)
+            # Report Failure
+            user_data.flex_cloud_status = False
+            user_data.flex_cloud_info_msg = 'Can not connect with any machines'
+            user_data.put()
             return
 
         if queue_head_machine['ip'] not in connected_public_ips \
                 and queue_head_machine['ip'] not in running_flex_ips:
             logging.info('queue_head_machine with ip {0} was not reachable!'.format(queue_head_machine['ip']))
             VMStateModel.fail_active(parameters)
+            # Report Failure
+            user_data.flex_cloud_status = False
+            user_data.flex_cloud_info_msg = 'Can not connect to queue head'
+            user_data.put()
             return
 
         helper.update_celery_config_with_queue_head_ip(queue_head_ip=queue_head_machine['ip'],
@@ -180,6 +214,9 @@ class FlexBackendWorker(BackendWorker):
         self.__configure_celery(params=parameters, public_ips=public_ips, instance_ids=instance_ids,
                                                                         queue_head_ip=queue_head_machine['ip'])
 
+        # Report Success
+        user_data.flex_cloud_status = True
+        user_data.flex_cloud_info_msg = 'Successfully deployed Flex Cloud'
         return
 
 

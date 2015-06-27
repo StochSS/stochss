@@ -1,12 +1,8 @@
-'''
-Created on Dec 11, 2014
-
-@author: gumengyuan
-'''
 import boto.dynamodb
 from base_db import BaseDB
 from boto.dynamodb import condition
 import logging
+import traceback
 
 
 class DynamoDB(BaseDB):
@@ -21,7 +17,7 @@ class DynamoDB(BaseDB):
     def describetask(self, taskids, tablename):
         res = {}
         try:
-            logging.info('describetask: taskids = {0} and tablename {1}'.format(str(taskids), tablename))
+            logging.debug('describetask: taskids = {0} and tablename {1}'.format(str(taskids), tablename))
 
             dynamo = boto.connect_dynamodb(aws_access_key_id=self.access_key,
                                            aws_secret_access_key=self.secret_key)
@@ -30,6 +26,8 @@ class DynamoDB(BaseDB):
                 return res
 
             table = dynamo.get_table(tablename)
+            if not isinstance(taskids, list):
+                taskids = [taskids]
             for taskid in taskids:
                 try:
                     item = table.get_item(hash_key=taskid)
@@ -44,7 +42,7 @@ class DynamoDB(BaseDB):
             return res
 
     def removetask(self, tablename, taskid):
-        logging.info('inside removetask method with tablename = {0} and taskid = {1}'.format(tablename, taskid))
+        logging.debug('inside removetask method with tablename = {0} and taskid = {1}'.format(tablename, taskid))
         try:
             dynamo = boto.connect_dynamodb(aws_access_key_id=self.access_key,
                                            aws_secret_access_key=self.secret_key)
@@ -56,7 +54,7 @@ class DynamoDB(BaseDB):
                 return True
 
             else:
-                logging.info('exiting removetask with error : table doesn\'t exists')
+                logging.debug('exiting removetask with error : table doesn\'t exists')
                 return False
 
         except Exception, e:
@@ -64,7 +62,7 @@ class DynamoDB(BaseDB):
             return False
 
     def remove_tasks_by_attribute(self, tablename, attribute_name, attribute_value):
-        logging.info('remove_tasks_by_attribute: tablename = {0} attribute_name = {1} attribute_value = {2}'.format(tablename,
+        logging.debug('remove_tasks_by_attribute: tablename = {0} attribute_name = {1} attribute_value = {2}'.format(tablename,
                                                                                                   attribute_name,
                                                                                                   attribute_value))
         try:
@@ -79,33 +77,33 @@ class DynamoDB(BaseDB):
                 return True
 
             else:
-                logging.info('exiting removetask with error : table doesn\'t exists')
+                logging.debug('exiting removetask with error : table doesn\'t exists')
                 return False
 
         except Exception, e:
             logging.error('exiting removetask with error {0}'.format(str(e)))
 
     def createtable(self, tablename):
-        logging.info('inside create table method with tablename :: {0}'.format(tablename))
+        logging.debug('inside create table method with tablename :: {0}'.format(tablename))
 
         if tablename == None:
             raise Exception('Please provide valid tablename!')
 
         try:
-            logging.info('connecting to dynamodb')
+            logging.debug('connecting to dynamodb')
             dynamo = boto.connect_dynamodb(aws_access_key_id=self.access_key,
                                            aws_secret_access_key=self.secret_key)
 
             # check if table already exisits
-            logging.info('checking if table {0} exists'.format(tablename))
+            logging.debug('checking if table {0} exists'.format(tablename))
 
             if not self.tableexists(tablename):
-                logging.info('creating table schema')
+                logging.debug('creating table schema')
                 myschema = dynamo.create_schema(hash_key_name='taskid', hash_key_proto_value=str)
                 dynamo.create_table(name=tablename, schema=myschema, read_units=6, write_units=4)
 
             else:
-                logging.info("table already exists")
+                logging.debug("table already exists")
 
             return True
 
@@ -121,13 +119,13 @@ class DynamoDB(BaseDB):
             tables = dynamo.list_tables()
 
             if tablename not in tables:
-                logging.info("table with name: {0} doesn't exist!".format(tablename))
+                logging.debug("table with name: {0} doesn't exist!".format(tablename))
                 return False
             else:
                 return True
 
         except Exception, e:
-            logging.error('tableexists failed with error {0}'.format(str(e)))
+            logging.exception('tableexists failed with error {0}'.format(e))
             return False
 
     def getEntry(self, attribute_name=str(), attribute_value=str(), table_name=str()):
@@ -154,7 +152,7 @@ class DynamoDB(BaseDB):
          update the status
         '''
         try:
-            logging.info('inside update entry method with taskid = {0} and data = {1}'.format(taskid, str(data)))
+            logging.debug('inside update entry method with taskid = {0} and data = {1}'.format(taskid, str(data)))
             dynamo = boto.connect_dynamodb(aws_access_key_id=self.access_key,
                                            aws_secret_access_key=self.secret_key)
 

@@ -12,6 +12,7 @@ from boto.ec2.cloudwatch import MetricAlarm
 from utils import utils
 from common.config import AgentTypes, AgentConfig
 import logging
+logging.getLogger('boto').setLevel(logging.CRITICAL)
 
 import httplib
 

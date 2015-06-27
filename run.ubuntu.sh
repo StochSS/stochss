@@ -18,6 +18,8 @@ elif [ $# -eq 1 ]; then
         mode="run"
     elif [ "$1" = "--install" ]; then
         mode="install"
+    elif [ "$1" = "--debug" ]; then
+        mode="debug"
     else
         echo "Error: Invalid argument '$1'!"
         echo "$help_message"
@@ -564,7 +566,7 @@ echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-if [ "$mode" = "run" ]; then
+if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
     exec python "$STOCHSS_HOME/launchapp.py" $0 $1
