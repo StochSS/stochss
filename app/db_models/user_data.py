@@ -110,13 +110,14 @@ class UserData(db.Model):
                 idN = machine['database_id']
                 vms = VMStateModel.get_by_id(idN)
                 logging.debug('all_vms_map = {0}'.format(all_vms_map))
-                if vms.res_id == self.reservation_id:
+                if vms and vms.res_id == self.reservation_id:
                     machine['state'] = vms.state
                     machine['description'] = vms.description
                 else:
-                    logging.error('From VMStateModel, reservation_id = {0} != user_data.reservation_id'.format(
-                        vms.res_id
-                    ))
+                    if vms:
+                        logging.error('From VMStateModel, reservation_id = {0} != user_data.reservation_id'.format(
+                            vms.res_id
+                        ))
                     machine['state'] = VMStateModel.STATE_UNKNOWN
                     machine['description'] = VMStateModel.STATE_UNKNOWN
 
