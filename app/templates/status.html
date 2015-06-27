@@ -16,14 +16,8 @@
 <div class="span9">
     <div class="row-fluid">
 	<div class"span9">
-            <h2><a data-toggle="modal" class="show" href="#help_modal1" style="text-decoration: none"> Job Status <i class="icon-question-sign"></i></a>
-                {% set help_modal_id = "help_modal1" %}
-                {% set help_modal_title = "Status" %}
-                {% set help_modal_message = "A local job can have status 'Running', 'Finished' or 'Failed'. A Cloud job can in addition have status 'Pending'. A pending job is one that has not yet been assigned a compute node by the task queue system. This can be either because all nodes are busy, or because no nodes have been launched yet. In the latter case, launching nodes will cause the job to start running. " %}
-                {% include "help_modal.html" %}
-                {{help_modal|safe}}
-            </h2>
-            
+            <h1>Job Status</h1>
+            <br>
             <div id="msg" style="display: none;"></div>
             <form class ="well form" action="/status" method="get">
                 {% if all_jobs %}

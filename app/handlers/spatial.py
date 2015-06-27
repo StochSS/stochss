@@ -49,8 +49,6 @@ cm = matplotlib.cm.ScalarMappable()
 
 from db_models.spatial_job import SpatialJobWrapper
 
-
-
 class SpatialPage(BaseHandler):
     # This tells the big server that a user must be logged in to view this page
     def authentication_required(self):

@@ -52,7 +52,7 @@ class SpatialJobWrapper(db.Model):
             result = pickle.load(fd)
 
             if not self.preprocessedDir:
-                self.preprocessedDir = '../preprocessed/{0}/'.format(self.key().id())
+                self.preprocessedDir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../output/preprocessed/{0}/'.format(self.key().id())))
 
             #print "Directory:", self.preprocessedDir
 
