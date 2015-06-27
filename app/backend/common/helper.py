@@ -486,6 +486,11 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
                 params["cost_analysis_table"] = JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME
                 database.updateEntry(taskid=task_id, data=data, tablename=params["db_table"])
 
+                if ec2_access_key is None:
+                    ec2_access_key = ''
+                if ec2_secret_key is None:
+                    ec2_secret_key = ''
+
                 celery_task = tasks.task.apply_async(
                     args=[task_id, params, agent_type, database, storage_agent, ec2_access_key, ec2_secret_key],
                     queue=celery_queue_name, routing_key=celery_routing_key)

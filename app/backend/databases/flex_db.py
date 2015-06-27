@@ -137,10 +137,14 @@ class FlexDB(BaseDB):
                     create_schema_sql = fin.read().replace('\n', ' ')
 
                 logging.debug('create_schema_sql =\n{}'.format(create_schema_sql))
-
+                list_of_create_schema_sql = create_schema_sql.split(';')
+ 
                 db = self.__open_db_connection()
-                with closing(db.cursor()) as db_cursor:
-                    db_cursor.execute(create_schema_sql, multi=True)
+                for sql in list_of_create_schema_sql:
+                    logging.debug('SQL.executing: {0}'.format(sql))
+                    with closing(db.cursor()) as db_cursor:
+                        ret = db_cursor.execute(sql)
+                        logging.debug('db_cursor.execute(sql)={0}'.format(ret))
                 db.commit()
 
                 logging.debug('StochSS Schema creation successful!')
