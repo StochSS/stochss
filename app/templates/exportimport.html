@@ -29,7 +29,7 @@
       checkboxes[i].checked = source.checked;
     }
   }
-					    </script>
+</script>
 
 <div class="span9">
     <div class="row-fluid">
@@ -83,261 +83,261 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
-                                {% endif %}
-                                {% if sensitivity_jobs %}
-                                <div class="control-group">
-                                    <label class="control-label" for="sensitivity-jobs-table">Cloud Deterministic Sensitivity Analysis Simulations:</label>
-                                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='sensitivity-jobs-table'>
-                                        <thead>
-                                            <tr>
-                                                <th width="40pt"><input type="checkbox" onClick="toggleSensitivityJobs(this)"/></th>
-                                                <th>Job name </th>
-                                                <th width="200pt">Output size </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for job in sensitivity_jobs %}
-                                            {% if job.no_data %}
-                                            <tr>
-                                                <td><input type="checkbox" disabled> </td>
-                                                <td><span>{{job.name}}</span></td>
-                                                <td><font color="red">No data stored for job</font></td>
-                                            </tr>
-                                            {% else %}
-                                            <tr>
-                                                <td><input type="checkbox" name="select_sensitivity_job" value="{{job.name}}"> </td>
-                                                <td><span>{{job.name}}</span></td>
-                                                <td><span>{{job.size}}</span></td>
-                                            </tr>
-                                            {% endif %}
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {% endif %}
-                                {% if stochoptim_jobs %}
-                                <div class="control-group">
-                                    <label class="control-label" for="sensitivity-jobs-table">Cloud Parameter Estimation Jobs:</label>
-                                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='sensitivity-jobs-table'>
-                                        <thead>
-                                            <tr>
-                                                <th width="40pt"><input type="checkbox" onClick="toggleStochOptimJobs(this)"/></th>
-                                                <th>Job name </th>
-                                                <th width="200pt">Output size </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for job in stochoptim_jobs %}
-                                            {% if job.no_data %}
-                                            <tr>
-                                                <td><input type="checkbox" disabled> </td>
-                                                <td><span>{{job.name}}</span></td>
-                                                <td><font color="red">No data stored for job</font></td>
-                                            </tr>
-                                            {% else %}
-                                            <tr>
-                                                <td><input type="checkbox" name="select_stochoptim_job" value="{{job.name}}"> </td>
-                                                <td><span>{{job.name}}</span></td>
-                                                <td><span>{{job.size}}</span></td>
-                                            </tr>
-                                            {% endif %}
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {% endif %}
-                                {% if spatial_jobs %}
-                                <div class="control-group">
-                                    <label class="control-label" for="spatial-jobs-table">Cloud Spatial Simulations:</label>
-                                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='spatial-jobs-table'>
-                                        <thead>
-                                            <tr>
-                                                <th width="40pt"><input type="checkbox" onClick="toggleSpatialJobs(this)"/></th>
-                                                <th>Job name </th>
-                                                <th width="200pt">Output size </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for job in spatial_jobs %}
-                                            {% if job.no_data %}
-                                            <tr>
-                                                <td><input type="checkbox" disabled> </td>
-                                                <td><span>{{job.name}}</span></td>
-                                                <td><font color="red">No data stored for job</font></td>
-                                            </tr>
-                                            {% else %}
-                                            <tr>
-                                                <td><input type="checkbox" name="select_spatial_job" value="{{job.name}}"> </td>
-                                                <td><span>{{job.name}}</span></td>
-                                                <td><span>{{job.size}}</span></td>
-                                            </tr>
-                                            {% endif %}
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {% endif %}
-                                <button class="btn-primary btn-large" id="export">Export</button>
-				<br>
-				<br>
-				<div class="alert alert-info" style="margin-bottom: 0px">
-				    <strong>Alert!</strong> Only cloud data selected above will be exported!
-				</div>
+                            </div>
+                            {% endif %}
+                            {% if sensitivity_jobs %}
+                            <div class="control-group">
+                                <label class="control-label" for="sensitivity-jobs-table">Cloud Deterministic Sensitivity Analysis Simulations:</label>
+                                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='sensitivity-jobs-table'>
+                                    <thead>
+                                        <tr>
+                                            <th width="40pt"><input type="checkbox" onClick="toggleSensitivityJobs(this)"/></th>
+                                            <th>Job name </th>
+                                            <th width="200pt">Output size </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for job in sensitivity_jobs %}
+                                        {% if job.no_data %}
+                                        <tr>
+                                            <td><input type="checkbox" disabled> </td>
+                                            <td><span>{{job.name}}</span></td>
+                                            <td><font color="red">No data stored for job</font></td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td><input type="checkbox" name="select_sensitivity_job" value="{{job.name}}"> </td>
+                                            <td><span>{{job.name}}</span></td>
+                                            <td><span>{{job.size}}</span></td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+                            {% if stochoptim_jobs %}
+                            <div class="control-group">
+                                <label class="control-label" for="sensitivity-jobs-table">Cloud Parameter Estimation Jobs:</label>
+                                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='sensitivity-jobs-table'>
+                                    <thead>
+                                        <tr>
+                                            <th width="40pt"><input type="checkbox" onClick="toggleStochOptimJobs(this)"/></th>
+                                            <th>Job name </th>
+                                            <th width="200pt">Output size </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for job in stochoptim_jobs %}
+                                        {% if job.no_data %}
+                                        <tr>
+                                            <td><input type="checkbox" disabled> </td>
+                                            <td><span>{{job.name}}</span></td>
+                                            <td><font color="red">No data stored for job</font></td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td><input type="checkbox" name="select_stochoptim_job" value="{{job.name}}"> </td>
+                                            <td><span>{{job.name}}</span></td>
+                                            <td><span>{{job.size}}</span></td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+                            {% if spatial_jobs %}
+                            <div class="control-group">
+                                <label class="control-label" for="spatial-jobs-table">Cloud Spatial Simulations:</label>
+                                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='spatial-jobs-table'>
+                                    <thead>
+                                        <tr>
+                                            <th width="40pt"><input type="checkbox" onClick="toggleSpatialJobs(this)"/></th>
+                                            <th>Job name </th>
+                                            <th width="200pt">Output size </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for job in spatial_jobs %}
+                                        {% if job.no_data %}
+                                        <tr>
+                                            <td><input type="checkbox" disabled> </td>
+                                            <td><span>{{job.name}}</span></td>
+                                            <td><font color="red">No data stored for job</font></td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td><input type="checkbox" name="select_spatial_job" value="{{job.name}}"> </td>
+                                            <td><span>{{job.name}}</span></td>
+                                            <td><span>{{job.size}}</span></td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+                            <button class="btn-primary btn-large" id="export">Export</button>
+			    <br>
+			    <br>
+			    <div class="alert alert-info" style="margin-bottom: 0px">
+				<strong>Alert!</strong> Only cloud data selected above will be exported!
 			    </div>
                         </form>
-                    </div>
+		    </div>
+                </div>
                     
-                    <div class="tab-pane" id="tab2">
-			<div class="well well-large">
-                            <h3> Import a Backup Archive </h3>
-                            <br />
+                <div class="tab-pane" id="tab2">
+		    <div class="well well-large">
+                        <h3> Import a Backup Archive </h3>
+                        <br />
 
-                            1. Upload an archive:
-                            <br />
-                            <br />
-                            <input id="fileupload" type="file" name="files[]" multiple>
-                            <div id="progresses"></div>
-                            <!-- The global progress bar -->
+                        1. Upload an archive:
+                        <br />
+                        <br />
+                        <input id="fileupload" type="file" name="files[]" multiple>
+                        <div id="progresses"></div>
+                        <!-- The global progress bar -->
 
-                            <div id="archiveSelectDiv" style="display: none;">
-				<br />
+                        <div id="archiveSelectDiv" style="display: none;">
+			    <br />
 
-				2. Select an archive to import:
-				<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
-                                    <thead>
-					<tr>
-                                            <th width="40pt"></th>
-                                            <th width="40pt">Select</th>
-                                            <th>Archive Name</th>
-					</tr>
-                                    </thead>
-                                    <tbody id="archiveSelect">
-                                    </tbody>
-				</table>
+			    2. Select an archive to import:
+			    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                                <thead>
+				    <tr>
+                                        <th width="40pt"></th>
+                                        <th width="40pt">Select</th>
+                                        <th>Archive Name</th>
+				    </tr>
+                                </thead>
+                                <tbody id="archiveSelect">
+                                </tbody>
+			    </table>
 
-				<br />
+			    <br />
 
-				3. Verify overwrite behavior: <br />
-				When importing new data with the same name as old data already in database,
-				<select id="overwriteType">
-                                    <option value="keepOld">keep old data</option>
-                                    <option value="overwriteOld">overwrite with new data</option>
-                                    <!--<option value="renameOld">rename old data</option>-->
-                                    <option value="renameNew">rename new data</option>
-				</select>
-				.
+			    3. Verify overwrite behavior: <br />
+			    When importing new data with the same name as old data already in database,
+			    <select id="overwriteType">
+                                <option value="keepOld">keep old data</option>
+                                <option value="overwriteOld">overwrite with new data</option>
+                                <!--<option value="renameOld">rename old data</option>-->
+                                <option value="renameNew">rename new data</option>
+			    </select>
+			    .
 
-				<br />
-				<br />
+			    <br />
+			    <br />
 
-				4. Select members of the archive to import:
-				<table id="importTable" width="100%">
-                                    <tr class="modelContainerTr">
-					<th>Models</th>
-                                    </tr>
-                                    <tr class="modelContainerTr">
-					<td valign="top">
-                                            <table  cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
-						<thead>
-                                                    <tr>
-							<th width="40pt">Import</th>
-							<th>Model</th>
-							<th width="100pt">Type</th>
-							<th width="100pt">Version</th>
-                                                    </tr>
-						</thead>
-						<tbody id="modelContainer">
-						</tbody>
-                                            </table>
-					</td>
-                                    </tr>
-                                    <tr class="stochkitContainerTr">
-					<th>Stochkit Jobs</th>
-                                    </tr>
-                                    <tr class="stochkitContainerTr">
-					<td valign="top">
-                                            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
-						<thead>
-                                                    <tr>
-							<th width="40pt">Import</th>
-							<th>Job name</th>
-							<th width="100pt">Type</th>
-							<th width="100pt">Version</th>
-                                                    </tr>
-						</thead>
-						<tbody id="stochkitJobContainer">
-						</tbody>
-                                            </table>
-					</td>
-                                    </tr>
-                                    <tr class="sensitivityContainerTr">
-					<th>Sensitivity Jobs</th>
-                                    </tr>
-                                    <tr class="sensitivityContainerTr">
-					<td valign="top">
-                                            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
-						<thead>
-                                                    <tr>
-							<th width="40pt">Import</th>
-							<th>Job name</th>
-							<th width="100pt">Version</th>
-                                                    </tr>
-						</thead>
-						<tbody id="sensitivityJobContainer">
-						</tbody>
-                                            </table>
-					</td>
-                                    </tr>
-                                    <tr class="stochOptimContainerTr">
-					<th>StochOptim Jobs</th>
-                                    </tr>
-                                    <tr class="stochOptimContainerTr">
-					<td valign="top">
-                                            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
-						<thead>
-                                                    <tr>
-							<th width="40pt">Import</th>
-							<th>Job name</th>
-							<th width="100pt">Version</th>
-                                                    </tr>
-						</thead>
-						<tbody id="stochOptimJobContainer">
-						</tbody>
-                                            </table>
-					</td>
-                                    </tr>
-                                    <tr class="spatialContainerTr">
-					<th>Spatial Jobs</th>
-                                    </tr>
-                                    <tr class="spatialContainerTr">
-					<td valign="top">
-                                            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
-						<thead>
-                                                    <tr>
-							<th width="40pt">Import</th>
-							<th>Job name</th>
-							<th width="100pt">Version</th>
-                                                    </tr>
-						</thead>
-						<tbody id="spatialJobContainer">
-						</tbody>
-                                            </table>
-					</td>
-                                    </tr>
-				</table>
-				<br />
-				<button class="btn-primary btn-large" id="import">Import</button>
-                            </div>			    
-			</div>
-                    </div>
+			    4. Select members of the archive to import:
+			    <table id="importTable" width="100%">
+                                <tr class="modelContainerTr">
+				    <th>Models</th>
+                                </tr>
+                                <tr class="modelContainerTr">
+				    <td valign="top">
+                                        <table  cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
+					    <thead>
+                                                <tr>
+						    <th width="40pt">Import</th>
+						    <th>Model</th>
+						    <th width="100pt">Type</th>
+						    <th width="100pt">Version</th>
+                                                </tr>
+					    </thead>
+					    <tbody id="modelContainer">
+					    </tbody>
+                                        </table>
+				    </td>
+                                </tr>
+                                <tr class="stochkitContainerTr">
+				    <th>Stochkit Jobs</th>
+                                </tr>
+                                <tr class="stochkitContainerTr">
+				    <td valign="top">
+                                        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
+					    <thead>
+                                                <tr>
+						    <th width="40pt">Import</th>
+						    <th>Job name</th>
+						    <th width="100pt">Type</th>
+						    <th width="100pt">Version</th>
+                                                </tr>
+					    </thead>
+					    <tbody id="stochkitJobContainer">
+					    </tbody>
+                                        </table>
+				    </td>
+                                </tr>
+                                <tr class="sensitivityContainerTr">
+				    <th>Sensitivity Jobs</th>
+                                </tr>
+                                <tr class="sensitivityContainerTr">
+				    <td valign="top">
+                                        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
+					    <thead>
+                                                <tr>
+						    <th width="40pt">Import</th>
+						    <th>Job name</th>
+						    <th width="100pt">Version</th>
+                                                </tr>
+					    </thead>
+					    <tbody id="sensitivityJobContainer">
+					    </tbody>
+                                        </table>
+				    </td>
+                                </tr>
+                                <tr class="stochOptimContainerTr">
+				    <th>StochOptim Jobs</th>
+                                </tr>
+                                <tr class="stochOptimContainerTr">
+				    <td valign="top">
+                                        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
+					    <thead>
+                                                <tr>
+						    <th width="40pt">Import</th>
+						    <th>Job name</th>
+						    <th width="100pt">Version</th>
+                                                </tr>
+					    </thead>
+					    <tbody id="stochOptimJobContainer">
+					    </tbody>
+                                        </table>
+				    </td>
+                                </tr>
+                                <tr class="spatialContainerTr">
+				    <th>Spatial Jobs</th>
+                                </tr>
+                                <tr class="spatialContainerTr">
+				    <td valign="top">
+                                        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
+					    <thead>
+                                                <tr>
+						    <th width="40pt">Import</th>
+						    <th>Job name</th>
+						    <th width="100pt">Version</th>
+                                                </tr>
+					    </thead>
+					    <tbody id="spatialJobContainer">
+					    </tbody>
+                                        </table>
+				    </td>
+                                </tr>
+			    </table>
+			    <br />
+			    <button class="btn-primary btn-large" id="import">Import</button>
+                        </div>			    
+		    </div>
+                </div>
 
-                    {% if isAdminUser %}
-                    <input id="globalOp" type="checkbox">Operate on all system data (admin only)
-                    {% endif %}
-                    <div id="msg"></div>
-		</div>
-            </div>
-	</div>
+                {% if isAdminUser %}
+                <input id="globalOp" type="checkbox">Operate on all system data (admin only)
+                {% endif %}
+                <div id="msg"></div>
+	    </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -349,6 +349,7 @@
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <link rel="stylesheet" href="/static/css/nv.d3.css">
 
+<script src="/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>

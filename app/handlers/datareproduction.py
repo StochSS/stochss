@@ -13,6 +13,7 @@ import logging
 import shutil
 from backend import tasks
 from backend.backendservice import backendservices
+from backend.common.config import AgentTypes
 
 DEFAULT_BUCKET_NAME = ''
 
@@ -47,7 +48,7 @@ class DataReproductionPage(BaseHandler):
                 job_type = self.request.get('job_type')
                 
                 if job_type == 'stochkit':
-                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloud_id = :2", self.user.user_id(),uuid).get()       
+                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(),uuid).get()       
                     job.output_stored = 'False'
                     job.put()
                 elif job_type == 'sensitivity':
@@ -56,7 +57,7 @@ class DataReproductionPage(BaseHandler):
                     job.outData = None
                     job.put()
                 elif job_type == 'spatial':
-                    job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloud_id =', uuid).get()  
+                    job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
                     job.output_stored = 'False'
                     job.outData = None
                     job.put()   
@@ -102,7 +103,7 @@ class DataReproductionPage(BaseHandler):
         
             if job_type == 'stochkit':
               
-                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloud_id = :2", self.user.user_id(),uuid).get()       
+                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(),uuid).get()       
             
         
                 try:        
@@ -121,7 +122,9 @@ class DataReproductionPage(BaseHandler):
                     logging.info("OUT_PUT SIZE: {0}".format(params['output_size']))
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid, instance_type)  #calls task(taskid,params,access_key,secret_key)
+                    cloud_result = service.submit_cloud_task(params=params, agent_type=AgentTypes.EC2,
+                                                       ec2_access_key=access_key, ec2_secret_key=secret_key,
+                                                       uuid=uuid, instance_type=instance_type)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -165,7 +168,11 @@ class DataReproductionPage(BaseHandler):
                     params = ct.get_input()
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+
+                    # execute task in cloud
+                    cloud_result = service.submit_cloud_task(params=params, agent_type="ec2",
+                                                       ec2_access_key=access_key, ec2_secret_key=secret_key,
+                                                       uuid=uuid)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -191,7 +198,7 @@ class DataReproductionPage(BaseHandler):
                 return  
         
             elif job_type == 'spatial':
-                job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloud_id =', uuid).get()  
+                job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
             
                 try:
                     ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())
@@ -206,7 +213,10 @@ class DataReproductionPage(BaseHandler):
                     params = ct.get_input()
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+
+                    # execute task in cloud
+                    cloud_result = service.submit_cloud_task(params=params, agent_type="ec2",
+                                                       ec2_access_key=access_key, ec2_secret_key=secret_key, uuid=uuid)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]

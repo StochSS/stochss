@@ -19,6 +19,7 @@ from stochss.stochkit import *
 from stochssapp import BaseHandler
 
 from backend.backendservice import backendservices
+from backend.databases.dynamo_db import DynamoDB
 
 import time
 
@@ -35,36 +36,8 @@ except ImportError:
 
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
-        
-class SensitivityJobWrapper(db.Model):
-    userId = db.StringProperty()
-    pid = db.IntegerProperty()
-    startTime = db.StringProperty()
-    jobName = db.StringProperty()
-    modelName = db.StringProperty()
-    indata = db.TextProperty()
-    outData = db.StringProperty()
-    status = db.StringProperty()
-    zipFileName = db.StringProperty()
-    resource = db.StringProperty()
-    cloudDatabaseID = db.StringProperty()
-    celeryPID = db.StringProperty()
-    outputURL = db.StringProperty()
-    exceptionMessage = db.StringProperty()
-    output_stored = db.StringProperty()
+from db_models.sensitivity_job import SensitivityJobWrapper
 
-    def delete(self):
-        if self.outData:
-            if os.path.exists(self.outData):
-                shutil.rmtree(self.outData)
-
-        if self.zipFileName:
-            if os.path.exists(self.zipFileName):
-                os.remove(self.zipFileName)
-                
-            
-
-        super(SensitivityJobWrapper, self).delete()
 
 class SensitivityPage(BaseHandler):
     """ Render a page that lists the available models. """    
@@ -78,8 +51,8 @@ class SensitivityPage(BaseHandler):
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
             
             jsonJob = { "id": int(self.request.get('id')),
-                        "userId" : job.userId,
-                        "jobName" : job.jobName,
+                        "userId" : job.user_id,
+                        "jobName" : job.name,
                         "startTime" : job.startTime,
                         "indata" : json.loads(job.indata),
                         "outData" : job.outData,
@@ -89,12 +62,12 @@ class SensitivityPage(BaseHandler):
                         "output_stored": job.output_stored,
                         "modelName" : job.modelName }
             
-            if self.user.user_id() != job.userId:
+            if self.user.user_id() != job.user_id:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.status == "Finished":
-                if job.resource == "cloud" and job.outData is None:
+                if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.outData is None:
                     # Let the user decide if they want to download it
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
@@ -158,7 +131,7 @@ class SensitivityPage(BaseHandler):
                 except IOError as ioe:
                     logging.error("caught error {0}".format(ioe))
                     job.status = "Failed"
-                    print "put job.status = Failed"
+                    logging.error("put job.status = Failed")
                     job.put()
                     
             if job.status == "Failed":
@@ -188,7 +161,7 @@ class SensitivityPage(BaseHandler):
         elif reqType == "getFromCloud":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
 
-            service = backendservices()
+            service = backendservices(self.user_data)
             service.fetchOutput(job.cloudDatabaseID, job.outputURL)
             # Unpack it to its local output location
             os.system('tar -xf' +job.cloudDatabaseID+'.tar')
@@ -208,7 +181,7 @@ class SensitivityPage(BaseHandler):
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
             
             if not job.zipFileName:
-                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.jobName + "_")
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
                 
                 job.zipFileName = szip.getFileName()
 
@@ -231,12 +204,12 @@ class SensitivityPage(BaseHandler):
         elif reqType == "delJob":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
 
-            if self.user.user_id() != job.userId:
+            if self.user.user_id() != job.user_id:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(["Not the right user"]))
                 return
 
-            job.delete()
+            job.delete(self)
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ "status" : True,
                                              "msg" : "Job deleted"}));
@@ -244,7 +217,7 @@ class SensitivityPage(BaseHandler):
         elif reqType == "newJob":
             data = json.loads(self.request.get('data'))
 
-            job = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
+            job = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), data["jobName"].strip()).get()
 
             if job != None:
                 self.response.write(json.dumps({"status" : False,
@@ -255,36 +228,21 @@ class SensitivityPage(BaseHandler):
                 # Either local or cloud
                 if data["resource"] == "local":
                     job = self.runLocal(data)
+
                 elif data["resource"] == "cloud":
-                    backend_services = backendservices()
-                    compute_check_params = {
-                        "infrastructure": "ec2",
-                        "credentials": self.user_data.getCredentials(),
-                        "key_prefix": self.user.user_id()
-                    }
-                    if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                        job, cloud_result = self.runCloud(data)
-                        if not job:
-                            e = cloud_result["exception"]
-                            self.response.write(json.dumps({"status" : False,
-                                            "msg" : 'Cloud execution failed: '+str(e)}))
-                            return
-                    else:
-                        return self.response.write(json.dumps({
-                            "status": False,
-                            "msg": "You must have at least one active compute node to run in the cloud."
-                        }))
+                    job = self.runCloud(data)
                 else:
-                    return self.response.write(json.dumps({"status" : False,
-                                                           "msg" : "Unrecognized resource requested: {0}".format(data.resource)}))
+                    raise Exception("Unknown resource {0}".format(data["resource"]))
+
                 self.response.write(json.dumps( { "status" : True,
                                                   "msg" : "Job launched",
-                                                  "kind" : job.kind(),
                                                   "id" : job.key().id() }))
+                return
             except Exception as e:
-                traceback.print_exc()
+                logging.exception(e)
                 self.response.write(json.dumps({ "status" : False,
                                                  "msg" : "Error: {0}".format(e) }))
+                return
         else:
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "No data submitted"}))
@@ -294,10 +252,10 @@ class SensitivityPage(BaseHandler):
         '''
         job = SensitivityJobWrapper()
         job.resource = "local"
-        job.userId = self.user.user_id()
+        job.user_id = self.user.user_id()
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
+        job.name = data["jobName"]
         job.modelName = model.name
         
         runtime = float(data["time"])
@@ -345,23 +303,26 @@ class SensitivityPage(BaseHandler):
         args = "--sensi -m {0} --parameters {1} -t {2} --out-dir {3} -i {4}".format(modelFileName, " ".join(parameters), runtime, dataDir + '/result', int(runtime / dt))
 
         ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
-        exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, ode)
+        exstring = '{0}/backend/wrapper.py {1}/stdout {1}/stderr {1}/return_code {2}'.format(basedir, dataDir, ode)
 
-        handle = subprocess.Popen(exstring.split())
+        handle = subprocess.Popen(exstring.split(), preexec_fn=os.setsid)
         job.pid = handle.pid
 
         job.put()
         return job
     
     def runCloud(self, data):
-        '''
-        '''
         job = SensitivityJobWrapper()
-        job.resource = "cloud"
-        job.userId = self.user.user_id()
+
+        service = backendservices(self.user_data)
+
+        if not service.isOneOrMoreComputeNodesRunning():
+            raise Exception('No cloud computing resources found')
+
+        job.user_id = self.user.user_id()
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
+        job.name = data["jobName"]
         job.status = "Pending"
         job.modelName = model.name
 
@@ -391,24 +352,24 @@ class SensitivityPage(BaseHandler):
         params = {
             "job_type": "sensitivity",
             "document": str( stochkitmodel.serialize() ),
-            "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format( " ".join(parameters), runtime, int(runtime / dt)),
+            "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format(
+                                " ".join(parameters), runtime, int(runtime / dt)
+                            ),
             "bucketname": self.user_data.getBucketName()
         }
-        service = backendservices()
-        db_credentials = self.user_data.getCredentials()
-        # Set the environmental variables 
-        os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-        os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+
         # Send the task to the backend
-        cloud_result = service.executeTask(params, "ec2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
+        cloud_result = service.submit_cloud_task(params)
+
         # if not cloud_result["success"]:
         if not cloud_result["success"]:
             return None, cloud_result
             
         job.cloudDatabaseID = cloud_result["db_id"]
         job.celeryPID = cloud_result["celery_pid"]
+        job.resource = cloud_result['resource']
         job.outData = None
         job.zipFileName = None
         job.output_stored = 'True'
         job.put()
-        return job, None
+        return job

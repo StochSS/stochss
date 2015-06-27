@@ -1193,11 +1193,8 @@ Spatial.Controller = Backbone.View.extend(
 
                 $( "#accessOutput" ).show();
                 // Add event handler to access button
-                if(data['resource'] == 'cloud' && !data['outData'])
+                if ((data['resource'] == 'ec2-cloud' || data['resource'] == 'flex-cloud') && !data['outData'])
                 {
-
-                    console.log("at finished");
-                    console.log("at resource");
                     $( "#access" ).html('<i class="icon-download-alt"></i> Fetch Data from Cloud');                    
                     $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
 

@@ -18,6 +18,8 @@ elif [ $# -eq 1 ]; then
         mode="run"
     elif [ "$1" = "--install" ]; then
         mode="install"
+    elif [ "$1" = "--debug" ]; then
+        mode="debug"
     else
         echo "Error: Invalid argument '$1'!"
         echo "$help_message"
@@ -261,6 +263,9 @@ function check_and_install_deps {
     if ! check_lib "libsbml";then
         install_lib_pip "python-libsbml"
     fi
+    if ! check_lib "mysql";then
+        install_lib_pip "mysql-connector-python"
+    fi
 }
 
 function check_dolfin {
@@ -293,7 +298,7 @@ function install_dolfin {
     fi
 }
 
-function check_spatial_installation {
+function check_python_package_installation {
     check_and_install_deps
     echo "Checking for FEniCS/Dolfin"
     if check_dolfin; then
@@ -326,10 +331,10 @@ function check_spatial_installation {
 
 #####################
 
-if check_spatial_installation;then
-    echo "Spatial libraries installed correctly"
+if check_python_package_installation;then
+    echo "Python packages installed correctly"
 else
-    echo "Error checking the spatial libraries"
+    echo "Error checking the Python packages"
     exit 1
 fi
 #####################
@@ -561,9 +566,9 @@ echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-if [ "$mode" = "run" ]; then
+if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $1
 fi
 

@@ -30,7 +30,7 @@ var run = function()
                       if(data.status == "Finished")
                       {
                           //console.log(data);
-                          if (data.job.resource == "cloud" && data.job.outData == null)
+                          if ((data.job.resource == "flex-cloud" || data.job.resource == "ec2-cloud") && data.job.outData == null)
                           {
                               $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,

@@ -12,20 +12,20 @@
 	<div class="row-fluid">
 		<div class="span10">
     
-            <h2> Job summary: <span style="COLOR:green;">{{stochkit_job.name}}</span></h2>
+            <h2> Job summary: <span style="COLOR:green;">{{job.name}}</span></h2>
             </br>
             <div class="well">
                         
             <h3>Metadata</h3>
                 <p class="thispage">
-                Resource:</t> {{stochkit_job.resource}}
+                Resource:</t> {{job.resource}}
                 <!--</br>
-                Number of trajectories: stochkit_job.realizations-->
+                Number of trajectories: job.realizations-->
                 </br>
-                Simulation endtime: {{stochkit_job.final_time}}
+                Simulation endtime: {{job.indata.final_time}}
                 </br>
                 {% if local_data %}
-                Stochkit input file: </span> <a href="/output/servestatic?filename={{stochkit_job.output_location}}/{{stochkit_job.uuid}}.xml" class="thispage"> {{stochkit_job.uuid}}.xml </a>
+                Stochkit input file: </span> <a href="/output/servestatic?filename={{job.output_location}}/{{job.uuid}}.xml" class="thispage"> {{job.uuid}}.xml </a>
                 {% endif %}
                 </p>
             </div>
@@ -34,7 +34,7 @@
             {% if local_data %}
             <div class="well">
                 <h3> Visualization </h3>
-                <span class="thispage"><a href="/output/visualize?job_folder={{stochkit_job.output_location}}&exec_type={{stochkit_job.exec_type}}&units={{stochkit_job.units}}" class="thispage"> Plot trajectories</a>
+                <span class="thispage"><a href="/output/visualize?job_folder={{job.output_location}}&exec_type={{job.exec_type}}&units={{job.units}}" class="thispage"> Plot trajectories</a>
                 </br>
                </div>
             {% endif %}
@@ -43,7 +43,7 @@
             <div class="well">
                 <h3> Debug Info </h3>
                 <hr>
-                {% if stochkit_job.resource == "Cloud" %}
+                {% if job.resource | lower == "cloud" %}
                 <h5>Cloud Exception</h5>
                 <pre>{{exception_message}}</pre>
                 <hr>
@@ -61,7 +61,7 @@
                 <form id="fetchoutputform" action="/output/{{job_name}}.tgz" method="post">
                     <h3>Output</h3>
                     <br />
-                    {% if stochkit_job.resource == "Cloud" and not (local_data or debug) %}
+                    {% if job.resource | lower == "cloud" and not (local_data or debug) %}
                     <button type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
                     <input type="hidden" name="fetch_remote" value="fetch_remote">
                     <input type="hidden" name="job_name" value="{{job_name}}">
