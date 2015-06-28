@@ -633,9 +633,7 @@ class EC2CredentialsPage(BaseHandler):
         context = dict(result, **context)
 
 
-        logging.debug('*'*80)
-        logging.debug("context['active_vms'] = '{0}'".format(context['active_vms']))
-        logging.debug('*'*80)
+        logging.debug("credentials.__get_ec2_context() context['active_vms'] = '{0}'".format(context['active_vms']))
         return context
 
 

@@ -51,7 +51,7 @@ INS_TYPES_EC2 = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c
 class VMStateSyn(db.Model):
     last_syn = db.DateTimeProperty()
     infra = db.StringProperty()
-
+    thread_id = db.IntegerProperty()  #So only one thread is active per infra
 
 class BackendWorker(object):
     def prepare_vms(self, parameters):
@@ -895,12 +895,12 @@ class SynchronizeDB(webapp2.RequestHandler):
         self.parameters = pickle.loads(str(req_parameters))
 
         self.is_start = False
-
-        id = background_thread.start_new_background_thread(self.begin, [])
-        logging.info('Started a background thread to synchronize db. id: {0} agent: {1}'.format(id, self.agent_type))
+        self.thread_id = background_thread.start_new_background_thread(self.begin, [])
+        logging.info('Started a background thread to synchronize db. id: {0} agent: {1} parameters : {2}'.format(self.thread_id, self.agent_type, self.parameters))
         return
 
     def begin(self):
+        self.initialize_vm_state_db()
         if not self.is_start:
             self._run()
 
@@ -910,28 +910,66 @@ class SynchronizeDB(webapp2.RequestHandler):
             self.is_start = True
 
     def _run(self):
+        logging.debug('='*80)
+        logging.debug('SynchronizeDB._run() thread_id={0} agent_type={1} parameters={2}'.format(self.thread_id, self.agent_type, self.parameters))
         self.is_start = False
         VMStateModel.synchronize(agent=self.agent, parameters=self.parameters)
-        self._write_time()
-        self._start()
+        if self.update_vm_state_db():
+            self._start()
+        logging.debug('-'*80)
 
-    def _write_time(self):
+    def initialize_vm_state_db(self):
+        try:
+            now = datetime.datetime.now()
+            logging.info('For agent {0} Initializing VM state db'.format(self.agent_type))
+            syn = VMStateSyn.all().filter('infra =', self.agent.AGENT_NAME)
+
+            if syn.count() == 0:
+                e = VMStateSyn(last_syn=now, thread_id=self.thread_id, infra=self.agent.AGENT_NAME)
+                e.put()
+                return True
+            else:
+                e = syn.get()
+                e.thread_id = self.thread_id
+                e.put()
+
+        except Exception as e:
+            logging.error('Error: have errors in write date time to db_syn. {0}'.format(e))
+            return False
+
+    def update_vm_state_db(self):
         try:
             now = datetime.datetime.now()
             logging.info('For agent {0} updating synchronization time to db_syn: {1}'.format(self.agent_type, now))
             syn = VMStateSyn.all().filter('infra =', self.agent.AGENT_NAME)
 
             if syn.count() == 0:
-                e = VMStateSyn(last_syn=now, infra=self.agent.AGENT_NAME)
+                e = VMStateSyn(last_syn=now, thread_id=self.thread_id, infra=self.agent.AGENT_NAME)
+                e.put()
+                return True
             else:
                 e = syn.get()
                 logging.info('For agent {0}, old last_syn = {1}'.format(self.agent_type, e.last_syn))
                 e.last_syn = now
+                e.put()
+                if e.thread_id == self.thread_id:
+                    return True
+                else:
+                    logging.debug('Last request of VMStateSyn for infra={0} was by thread_id={1}, I am thread_id={2}. Exiting.'.format(e.infra, e.thread_id, self.thread_id))
+                    return False
 
-            e.put()
 
         except Exception as e:
             logging.error('Error: have errors in write date time to db_syn. {0}'.format(e))
+            return False
+
+
+    def __get_user_data(self):
+        user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.parameters['user_id']).get()
+        if user_data is None:
+            raise Exception("Can not find UserData for user_id = '{0}'".format(self.parameters['user_id']))
+        return user_data
+
 
 
 # @staticmethod

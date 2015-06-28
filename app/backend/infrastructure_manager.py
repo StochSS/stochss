@@ -248,6 +248,7 @@ class InfrastructureManager(object):
             return self.__generate_response(True, 'Succeeded in sending request to backend server.')
 
     def synchronize_db(self, params, force=False):
+        logging.debug('synchronize_db(force={0}) param={1}'.format(force, params))
         last_time = None
         set_gap_large = False
         try:
@@ -256,10 +257,6 @@ class InfrastructureManager(object):
                 last_time = e.last_syn
             else:
                 last_time = datetime.datetime.now() - datetime.timedelta(1)
-            #         file = open(backend_handler.DB_SYN_PATH)
-            #         line = file.readline()
-            #         date_string = re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}', line).group(0)
-            #         last_time = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
         except Exception as e:
             logging.error('Error: have errors in opening db_syn file. {0}'.format(e))
             return
