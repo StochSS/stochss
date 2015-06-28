@@ -77,33 +77,24 @@ class DataReproductionPage(BaseHandler):
         
         elif req_type == 'rerun':
         
-            service = backendservices()
-        
-            compute_check_params = {
-                    "infrastructure": "ec2",
-                    "credentials": self.user_data.getCredentials(),
-                    "key_prefix": self.user.user_id()
-            }
+            service = backendservices(self.user_data)
         
             job_type = self.request.get('job_type')
             uuid = self.request.get('uuid')
-            instance_type = self.request.get('instance_type')
 
             logging.info('job uuid: '.format(uuid))
             
-            if not self.user_data.valid_credentials or not service.isOneOrMoreComputeNodesRunning(compute_check_params, instance_type):
+            if not self.user_data.valid_credentials or not service.isOneOrMoreComputeNodesRunning():
                 self.response.write(json.dumps({
                     'status': False,
                     'msg': 'There is no '+instance_type+' node running. *Launch one node? '
                 }))
                 return
-            
-            
-          
+        
         
             if job_type == 'stochkit':
               
-                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(),uuid).get()       
+                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(), uuid).get()       
             
         
                 try:        
@@ -122,9 +113,7 @@ class DataReproductionPage(BaseHandler):
                     logging.info("OUT_PUT SIZE: {0}".format(params['output_size']))
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.submit_cloud_task(params=params, agent_type=AgentTypes.EC2,
-                                                       ec2_access_key=access_key, ec2_secret_key=secret_key,
-                                                       uuid=uuid, instance_type=instance_type)
+                    cloud_result = service.submit_cloud_task(params=params)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -134,9 +123,9 @@ class DataReproductionPage(BaseHandler):
                                  }
                         return result 
                     # The celery_pid is the Celery Task ID.
-                    job.stochkit_job.celery_pid = cloud_result["celery_pid"]
-                    job.stochkit_job.status = 'Running'
-                    job.stochkit_job.output_location = None
+                    job.celeryPID = cloud_result["celery_pid"]
+                    job.status = 'Running'
+                    job.outData = None
                     job.output_stored = 'True'
             
                     job.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")

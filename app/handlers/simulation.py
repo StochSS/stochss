@@ -81,6 +81,7 @@ class JobManager():
                         "epsilon" : indata["epsilon"],
                         "threshold" : indata["threshold"],
                         "seed" : indata["seed"],
+                        "cloudDatabaseID" : job.cloudDatabaseID,
                         "pid" : job.pid,
                         "result" : job.result }
 
@@ -115,6 +116,7 @@ class JobManager():
                     "resource" : job.resource,
                     "epsilon" : indata["epsilon"],
                     "threshold" : indata["threshold"],
+                    "cloudDatabaseID" : job.cloudDatabaseID,
                     "seed" : indata["seed"],
                     "pid" : job.pid,
                     "result" : job.result }
@@ -434,6 +436,9 @@ class SimulatePage(BaseHandler):
             
             if job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
+
+                stdout = ""
+                stderr = ""
                 
                 if job.outData is not None:
                     if os.path.isfile(job.outData + '/stdout'):

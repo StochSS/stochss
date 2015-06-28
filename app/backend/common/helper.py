@@ -417,8 +417,8 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
     This method instantiates celery tasks in the cloud.
     Returns return value from celery async call and the task ID
     '''
-    if 'bucket_name' not in params:
-        params['bucketname'] = ''
+    #if 'bucket_name' not in params:
+    #    params['bucketname'] = ''
     logging.debug('execute_cloud_task: params =\n\n{0}'.format(pprint.pformat(params)))
     logging.debug('agent_type = {}'.format(agent_type))
 

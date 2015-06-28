@@ -285,7 +285,7 @@
     	
     	<% if (resource == "flex-cloud" || resource == "ec2-cloud") { %>
     		<% if(output_stored == "True"){ %>
-    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid=<%= pid %>', 'delete', '/simulate?id=<%=id%>');"> Delete Output</button>
+    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid=<%= cloudDatabaseID %>', 'delete', '/simulate?id=<%=id%>');"> Delete Output</button>
     		<% }else{ %>
     		<p>No output stored.</p>
     		<% } %>		
@@ -309,7 +309,7 @@
 				<option name="instance_type" value="c3.xlarge">c3.xlarge</option>
 			 </select>
 			 </br>
-			 <button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= pid %>', 'rerun', '/status');"> Reproduce Results</button>
+			 <button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= cloudDatabaseID %>', 'rerun', '/status');"> Reproduce Results</button>
     		 <% } %>
 
     		 <button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=stochkit&id=<%= id %>';"> Cost Analysis</button>
