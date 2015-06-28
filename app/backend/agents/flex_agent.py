@@ -120,24 +120,13 @@ class FlexAgent(BaseAgent):
     def __deregister_flex_vm(self, ip, username, keyfile, parameters, queue_head_ip, force=False):
 
         try:
-            deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
-            command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
-            logging.debug('deregister_command =\n{}'.format(deregister_command))
-            os.system(deregister_command)
-#            url = "https://{ip}/deregister".format(ip=ip)
-#            data = json.dumps({
-#                'queue_head_ip': queue_head_ip
-#            })
-#            req = urllib2.Request(url=url, data=data, headers={'Content-Type': 'application/json'})
-#            f = urllib2.urlopen(req, timeout=10)
-#            response = json.loads(f.read())
-#            f.close()
-#
-#            logging.debug('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
-#            if response['status'] == 'success':
-#                logging.debug('Successfully deregistered Flex VM with ip={}'.format(ip))
-#            else:
-#                logging.debug('Failed to deregister Flex VM with ip={}'.format(ip))
+            if self.__check_network_ports(ip, [22]):
+                deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
+                command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
+                logging.debug('deregister_command =\n{}'.format(deregister_command))
+                os.system(deregister_command)
+            else:
+                logging.debug('Flex VM is not accessible via SSH, can not execute deregister command')
 
         except Exception as e:
             logging.exception('Failed to deregister Flex VM: {0}'.format(e))

@@ -215,8 +215,10 @@ class FlexBackendWorker(BackendWorker):
                                                                         queue_head_ip=queue_head_machine['ip'])
 
         # Report Success
-        user_data.flex_cloud_status = True
-        user_data.flex_cloud_info_msg = 'Successfully deployed Flex Cloud'
+        logging.debug('Flex Cloud Deployed')
+        user_data.flex_cloud_status = True 
+        user_data.flex_cloud_info_msg = 'Flex Cloud Deployed'
+        user_data.put()
         return
 
 
@@ -378,7 +380,8 @@ class FlexBackendWorker(BackendWorker):
                             terminate_ins_ids.append(ins_id)
 
                     # terminate timeout instances
-                    self.agent.deregister_some_instances(parameters, terminate_ins_ids)
+                    # Deregister should only be done at the request of the user.
+                    #self.agent.deregister_some_instances(parameters, terminate_ins_ids)
 
                     # update db with failure information
                     VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED,

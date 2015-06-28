@@ -142,10 +142,6 @@ function prepare_flex_cloud() {
 }
 
 function refresh_flex_cloud() {
-    var flex_cloud_machine_info = get_flex_cloud_info_input();
-    if (flex_cloud_machine_info == null) {
-        return
-    }
 
     var jsonDataToBeSent = {};
     jsonDataToBeSent['action'] = 'refresh_flex_cloud';
@@ -356,10 +352,7 @@ window.onload = function () {
 
     $( '#prepare_flex_button' ).click( prepare_flex_cloud );
     $( '#deregister_flex_button' ).click( deregister_flex_cloud );
-
-    $( '#refresh_flex_button' ).click( function() {
-        document.location.reload();
-    } );
+    $( '#refresh_flex_button' ).click( refresh_flex_cloud );
 
     cont.render();
 };
