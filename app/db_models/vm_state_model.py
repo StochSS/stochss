@@ -256,6 +256,7 @@ class VMStateModel(db.Model):
             entities.filter('state =', VMStateModel.STATE_FAILED)
 
             for e in entities:
+                logging.debug('\tTerminating {0}'.format(e.ins_id))
                 e.state = VMStateModel.STATE_TERMINATED
                 e.put()
         except Exception as e:
@@ -267,6 +268,7 @@ class VMStateModel(db.Model):
             entities.filter('state =', VMStateModel.STATE_UNKNOWN)
 
             for e in entities:
+                logging.debug('\tTerminating {0}'.format(e.ins_id))
                 e.state = VMStateModel.STATE_TERMINATED
                 e.put()
 
@@ -441,7 +443,7 @@ class VMStateModel(db.Model):
                         e.put()
                     break
 
-            if not found:
+            if not found and parameters['infrastructure'] == AgentTypes.EC2:
                 e.state = VMStateModel.STATE_TERMINATED
                 e.decription = VMStateModel.DESCRI_NOT_FOUND
                 e.put()

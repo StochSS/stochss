@@ -190,6 +190,7 @@ class FlexCredentialsPage(BaseHandler):
         return result
 ##############
     def refresh_flex_cloud(self, user_id):
+        logging.debug('refresh_flex_cloud')
         service = backendservices(self.user_data)
         service.describe_machines_from_db(AgentTypes.FLEX, force=True)
 
@@ -223,19 +224,20 @@ class FlexCredentialsPage(BaseHandler):
                     if machine['state'] != 'running':
                         all_running = False
             
-                if terminated:
-                    self.deregister_flex_cloud(self.user.user_id())
-
-                    self.user_data.flex_cloud_status = False
-                    self.user_data.flex_cloud_info_msg = 'Flex Cloud failed to deploy'
-                    self.user_data.put()
-
-                    self.user_data.update_flex_cloud_machine_info_from_db(service)
-                    flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
-                elif all_running:
-                    self.user_data.flex_cloud_status = True
-                    self.user_data.flex_cloud_info_msg = 'Flex Cloud Deployed'
-                    self.user_data.put()
+# Don't change the state of the system on every page load...
+#                if terminated:
+#                    self.deregister_flex_cloud(self.user.user_id())
+#
+#                    self.user_data.flex_cloud_status = False
+#                    self.user_data.flex_cloud_info_msg = 'Flex Cloud failed to deploy'
+#                    self.user_data.put()
+#
+#                    self.user_data.update_flex_cloud_machine_info_from_db(service)
+#                    flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+#                elif all_running:
+#                    self.user_data.flex_cloud_status = True
+#                    self.user_data.flex_cloud_info_msg = 'Flex Cloud Deployed'
+#                    self.user_data.put()
         # We must ensure queue head is first element in this list for GUI to work properly
         flex_cloud_machine_info = sorted(flex_cloud_machine_info, key=lambda x: x['queue_head'], reverse=True)
 
@@ -631,9 +633,7 @@ class EC2CredentialsPage(BaseHandler):
         context = dict(result, **context)
 
 
-        logging.debug('*'*80)
-        logging.debug("context['active_vms'] = '{0}'".format(context['active_vms']))
-        logging.debug('*'*80)
+        logging.debug("credentials.__get_ec2_context() context['active_vms'] = '{0}'".format(context['active_vms']))
         return context
 
 

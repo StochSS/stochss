@@ -20,6 +20,8 @@ from tasks import *
 
 from flex_state import FlexVMState
 from db_models.vm_state_model import VMStateModel
+from db_models.user_data import UserData
+from google.appengine.ext import db
 
 
 class FlexAgent(BaseAgent):
@@ -120,24 +122,13 @@ class FlexAgent(BaseAgent):
     def __deregister_flex_vm(self, ip, username, keyfile, parameters, queue_head_ip, force=False):
 
         try:
-            deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
-            command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
-            logging.debug('deregister_command =\n{}'.format(deregister_command))
-            os.system(deregister_command)
-#            url = "https://{ip}/deregister".format(ip=ip)
-#            data = json.dumps({
-#                'queue_head_ip': queue_head_ip
-#            })
-#            req = urllib2.Request(url=url, data=data, headers={'Content-Type': 'application/json'})
-#            f = urllib2.urlopen(req, timeout=10)
-#            response = json.loads(f.read())
-#            f.close()
-#
-#            logging.debug('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
-#            if response['status'] == 'success':
-#                logging.debug('Successfully deregistered Flex VM with ip={}'.format(ip))
-#            else:
-#                logging.debug('Failed to deregister Flex VM with ip={}'.format(ip))
+            if self.__check_network_ports(ip, [22]):
+                deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
+                command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
+                logging.debug('deregister_command =\n{}'.format(deregister_command))
+                os.system(deregister_command)
+            else:
+                logging.debug('Flex VM is not accessible via SSH, can not execute deregister command')
 
         except Exception as e:
             logging.exception('Failed to deregister Flex VM: {0}'.format(e))
@@ -250,6 +241,12 @@ class FlexAgent(BaseAgent):
         logging.debug('get_instance_state() state = {0}'.format(state))
         return state
 
+    def __get_user_data(self, parameters):
+        user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", parameters['user_id']).get()
+        if user_data is None:
+            raise Exception("Can not find UserData for user_id = '{0}'".format(parameters['user_id']))
+        return user_data
+
     def describe_instances(self, parameters, prefix=''):
         """
         Retrieves the list of running instances
@@ -261,9 +258,18 @@ class FlexAgent(BaseAgent):
           A tuple of the form (public_ips, private_ips, instances) where each
           member is a list.
         """
-        logging.debug('params = \n{0}'.format(pprint.pformat(parameters)))
+        logging.debug('flex_agent.describe_instances() params = \n{0}'.format(pprint.pformat(parameters)))
         machines = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         instance_list = []
+
+        try:
+            user_data = self.__get_user_data(parameters)
+            if not user_data.is_flex_cloud_info_set:
+                return instance_list
+        except Exception as e:
+            logging.exception(e)
+            return instance_list
+        
 
         for machine in machines:
             instance = {}
