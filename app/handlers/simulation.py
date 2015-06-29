@@ -81,6 +81,7 @@ class JobManager():
                         "epsilon" : indata["epsilon"],
                         "threshold" : indata["threshold"],
                         "seed" : indata["seed"],
+                        "cloudDatabaseID" : job.cloudDatabaseID,
                         "pid" : job.pid,
                         "result" : job.result }
 
@@ -115,6 +116,7 @@ class JobManager():
                     "resource" : job.resource,
                     "epsilon" : indata["epsilon"],
                     "threshold" : indata["threshold"],
+                    "cloudDatabaseID" : job.cloudDatabaseID,
                     "seed" : indata["seed"],
                     "pid" : job.pid,
                     "result" : job.result }
@@ -265,7 +267,7 @@ class SimulatePage(BaseHandler):
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
             service = backendservices(self.user_data)
-            service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+            service.fetchOutput(job)
             
             # Unpack it to its local output location
             os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
@@ -434,6 +436,9 @@ class SimulatePage(BaseHandler):
             
             if job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
+
+                stdout = ""
+                stderr = ""
                 
                 if job.outData is not None:
                     if os.path.isfile(job.outData + '/stdout'):

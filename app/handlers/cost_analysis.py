@@ -20,11 +20,10 @@ from stochssapp import BaseHandler
 ALL_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm3.medium', 'm3.large', 'c3.large', 'c3.xlarge']
 
 def get_all_jobs_time_cost(uuid, access_key, secret_key):
-    
     database = DynamoDB(access_key, secret_key)
     results = database.getEntry(attribute_name='uuid', attribute_value=uuid,
                                 table_name=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME)
-             
+
     jobs = []
     if results is None:
         return jobs
@@ -34,7 +33,7 @@ def get_all_jobs_time_cost(uuid, access_key, secret_key):
         for result in results:
             logging.info('result = {0}'.format(result))
             job = {}
-            job['agent'] = result['infrastructure']
+            job['agent'] = result['agent']
             job['instance_type'] = result['instance_type']
             if job['instance_type'] in seen_instance_types:
                 continue
@@ -111,15 +110,9 @@ class CostAnalysisPage(BaseHandler):
             credentials =  self.user_data.getCredentials()
             access_key = credentials['EC2_ACCESS_KEY']
             secret_key = credentials['EC2_SECRET_KEY']
-            backend_services = backendservice.backendservices()
+            backend_services = backendservice.backendservices(self.user_data)
             
-            compute_check_params = {
-                    "infrastructure": AgentTypes.EC2,
-                    "credentials": credentials,
-                    "key_prefix": self.user.user_id()
-            }
-            
-            if not self.user_data.valid_credentials or not backend_services.isOneOrMoreComputeNodesRunning(compute_check_params, instance_type):
+            if not self.user_data.valid_credentials or not backend_services.isOneOrMoreComputeNodesRunning(instance_type):
                 logging.info('You must have at least one active '+instance_type+' compute node to run in the cloud.')
                 self.response.write(json.dumps({
                     'status': False,
@@ -142,10 +135,9 @@ class CostAnalysisPage(BaseHandler):
                 
                     params = ct.get_input()
                     
+                    params['cost_analysis_uuid'] = uuid
                     
-                    cloud_result = backend_services.submit_cloud_task(params=params, agent_type=AgentTypes.EC2,
-                                                                ec2_access_key=access_key, ec2_secret_key=secret_key,
-                                                                task_id=uuid, instance_type=instance_type, cost_replay=True)
+                    cloud_result = backend_services.submit_cloud_task(params, agent_type = AgentTypes.EC2, instance_type = instance_type, cost_replay = True)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -191,14 +183,14 @@ class CostAnalysisPage(BaseHandler):
         if job_type == 'stochkit':
             job = simulation.StochKitJobWrapper.get_by_id(int(id))
             name= job.name
-            uuid = job.stochkit_job.pid
+            uuid = job.cloudDatabaseID
         elif job_type == 'spatial':
             job = spatial.SpatialJobWrapper.get_by_id(int(id))
-            name = job.jobName
+            name = job.name
             uuid = job.cloudDatabaseID
         elif job_type == 'sensitivity':
             job = sensitivity.SensitivityJobWrapper.get_by_id(int(id))
-            name = job.jobName
+            name = job.name
             uuid = job.cloudDatabaseID
         else:
             name = ''

@@ -90,8 +90,8 @@ class StatusPage(BaseHandler):
             jobs = list(all_stochkit_jobs.run())
             jobs = sorted(jobs,
                           key=lambda x:
-                                (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S')
-                                     if hasattr(x, 'startDate') and x.startDate != None else datetime.datetime.now()),
+                                (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
+                                     if hasattr(x, 'startTime') and x.startTime != None else datetime.datetime.now()),
                           reverse=True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number

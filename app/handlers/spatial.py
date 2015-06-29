@@ -275,7 +275,7 @@ class SpatialPage(BaseHandler):
                 job = SpatialJobWrapper.get_by_id(int(jobID))
                 service = backendservices(self.user_data)
                 # Fetch
-                service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+                service.fetchOutput(job)
                 # Unpack
                 os.system('tar -xf' +job.uuid+'.tar')
                 # Record location

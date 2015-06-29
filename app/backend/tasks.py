@@ -718,18 +718,14 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
 
         if agent == AgentTypes.EC2:
             logging.info('Trying to track via CloudTracker...')
-            try:
-                # Initialize cloudtracker with the task's UUID
-                ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
-                if_tracking = ct.if_tracking()
 
-                logging.info('This is the first time to execute the job? '.format(if_tracking))
-                if if_tracking:
-                    ct.track_input(params)
+            # Initialize cloudtracker with the task's UUID
+            ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
+            if_tracking = ct.if_tracking()
 
-            except Exception:
-                print "Error initializing tracking"
-
+            logging.info('This is the first time to execute the job? '.format(if_tracking))
+            if if_tracking:
+                ct.track_input(params)
 
         logging.info('task to be executed at remote location')
         print 'inside celery task method'
@@ -737,7 +733,7 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
                 'message': 'Task Executing in cloud'}
 
         # will have prefix for cost-anaylsis job
-        # taskid = '{0}{1}'.format(task_prefix, taskid)
+        taskid = '{0}{1}'.format(task_prefix, taskid)
 
         database.updateEntry(taskid=taskid, data=data, tablename=params["db_table"])
         paramstr = params['paramstring']
