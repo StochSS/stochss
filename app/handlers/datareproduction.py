@@ -42,10 +42,6 @@ class DataReproductionPage(BaseHandler):
             
             
             try:
-                #delete the output tar file
-                s3_helper.delete_file(self.user_data.getBucketName(), 'output/'+uuid+'.tar', access_key, secret_key)
-                logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(self.user_data.getBucketName(), uuid))
-                
                 job_type = self.request.get('job_type')
                 
                 if job_type == 'stochkit':
@@ -61,8 +57,11 @@ class DataReproductionPage(BaseHandler):
                     job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
                     job.output_stored = 'False'
                     job.outData = None
-                    job.put()   
+                    job.put()
                 
+                service = backendservices(self.user_data)
+                service.deleteTaskOutput(job)
+
                 # delete the local output if any
                 output_path = os.path.join(os.path.dirname(__file__), '../output/')
                 if os.path.exists(str(output_path)+uuid):
@@ -99,7 +98,7 @@ class DataReproductionPage(BaseHandler):
                 job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(), uuid).get()       
             
         
-                try:        
+                try:
                     logging.info('start to rerun the job {0}'.format(str(uuid)))
                     # Set up CloudTracker with user credentials and specified UUID to rerun the job
                     ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())

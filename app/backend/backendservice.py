@@ -326,7 +326,22 @@ class backendservices(object):
         if job.resource == self.EC2_CLOUD_RESOURCE:
             credentials = self.get_credentials()
             bucket_name = self.user_data.S3_bucket_name
+            # delete dynamodb entries for cost analysis
+            database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
+                                               attribute_name='uuid', attribute_value=job.cloudDatabaseID)
+            # delete rerun folder
             s3_helper.delete_folder(bucket_name, job.cloudDatabaseID, credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
+        self.deleteTaskOutput(job)
+
+    def deleteTaskOutput(self, job):
+        '''
+        @param job's data to delete
+        '''
+        database = self.get_database(job)
+        # this removes task information from DB.
+        if job.resource == self.EC2_CLOUD_RESOURCE:
+            credentials = self.get_credentials()
+            bucket_name = self.user_data.S3_bucket_name
             # delete the output tar file
             storage_agent = S3StorageAgent(bucket_name=bucket_name,
                                            ec2_access_key=credentials['EC2_ACCESS_KEY'],
@@ -334,9 +349,6 @@ class backendservices(object):
             filename = 'output/' + job.cloudDatabaseID + '.tar'
             logging.debug('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucket_name, job.cloudDatabaseID))
             storage_agent.delete_file(filename=filename)
-            # delete dynamodb entries for cost analysis
-            database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
-                                               attribute_name='uuid', attribute_value=job.cloudDatabaseID)
         elif job.resource == backendservices.FLEX_CLOUD_RESOURCE:
             flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
             # delete the output tar file
@@ -347,6 +359,7 @@ class backendservices(object):
             storage_agent.delete_file(filename=filename)
         else:
             raise Exception("Unknown job Resource '{0}'".format(self.resource))
+
 
     def stopTaskLocal(self, pids):
         """
