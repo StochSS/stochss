@@ -298,19 +298,8 @@
         <br />
     	<% if (resource == "ec2-cloud") { %>
     		<% if(output_stored != "True"){ %>
-    		<p> Reproduction Node Type: </p>
-    		<select id="instance_type" style="width: 100pt;">
-				<option name="instance_type" value="t1.micro" selected>t1.micro</option>
-				<option name="instance_type" value="m1.small">m1.small</option>
-				<option name="instance_type" value="m3.medium">m3.medium</option>
-				<option name="instance_type" value="m3.large">m3.large</option>
-				<% %>
-				<option name="instance_type" value="c3.large">c3.large</option>
-				<option name="instance_type" value="c3.xlarge">c3.xlarge</option>
-			 </select>
-			 </br>
-			 <button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= cloudDatabaseID %>', 'rerun', '/status');"> Reproduce Results</button>
-    		 <% } %>
+		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= cloudDatabaseID %>', 'rerun', '/status');"> Reproduce Results</button>
+    		<% } %>
 
     		 <button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=stochkit&id=<%= id %>';"> Cost Analysis</button>
 
