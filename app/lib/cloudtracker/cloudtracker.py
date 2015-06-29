@@ -1,6 +1,7 @@
 import boto.ec2
 import os, sys
 from s3_helper import *
+import logging
 ####################
 # Helper functions #
 ####################
@@ -83,7 +84,7 @@ def get_output_size(path):
 class CloudTracker:
 	''' Assigns a job uuid to this instance of CloudTracker'''
 	def __init__(self, access_key, secret_key, tracking_number, bucketname):
-		print "Initialized CloudTracker instance with uuid " + tracking_number + ", bucketname " + bucketname
+		logging.debug("Initialized CloudTracker instance with uuid " + tracking_number + ", bucketname " + bucketname)
 		self.access_key = access_key
 		self.secret_key = secret_key
 		self.uuid = tracking_number
@@ -91,7 +92,7 @@ class CloudTracker:
 
 	''' Gathers EC2 metadata and stores it in a manifest file in a new S3 directory'''
 	def if_tracking(self):
-		print "if need tracking?"	
+		logging.debug("if_tracking() bucket={0} uuid={1}".format(self.bucketname, self.uuid))
 		if if_file_exist(self.bucketname, self.uuid + "/manifest", self.access_key, self.secret_key):
 			return False
 		else:
@@ -101,7 +102,7 @@ class CloudTracker:
 	''' Executable name and input parameters are stored in the manifest file '''
 	''' Input files are stored alongside the manifest file in a subfolder called files/ '''
 	def track_input(self, params):
-		print "Tracking inputs..."
+		logging.debug("track_input() params={0}".format(params))
 		# create the manifest file
 		create_file(self.bucketname, self.uuid + "/manifest", params, self.access_key, self.secret_key)
 		
@@ -110,7 +111,7 @@ class CloudTracker:
 
 	''' Store execution time, output dataset size, and location of output directory to the manifest file'''
 	def track_output(self, output_dir):
-		print "Tracking outputs..."
+		logging.debug('track_output() output_dir={0}'.format(output_dir))
 		# Calculate total execution time of a job
 		exec_time = (datetime.now() - self.timer).total_seconds()
 		# Calculate the total size of the job output
@@ -123,8 +124,7 @@ class CloudTracker:
 	''' Gathers provenance information from storage based on provided uuid '''
 	''' Uses user data script to download input files to the instance and run the same executable with identical input parameters '''
 	def get_input(self):
-
-		print "running job with uuid " + self.uuid
+		logging.debug("get_input(): running job with uuid " + self.uuid)
 		# Retrieve manifest file from S3 bucket
 		params = get_metadata(self.bucketname, self.uuid + "/manifest", self.access_key, self.secret_key)
 # 		print params

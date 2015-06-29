@@ -151,7 +151,10 @@ class backendservices(object):
 
 
         # if there is no taskid explicit, create one the first run
-        task_id = str(uuid.uuid4())
+        if 'rerun_uuid' in params and params['rerun_uuid'] is not None:
+            task_id = params['rerun_uuid']
+        else:
+            task_id = str(uuid.uuid4())
 
         logging.debug('submit_cloud_task: task_id = {}'.format(task_id))
 

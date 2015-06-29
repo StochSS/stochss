@@ -27,7 +27,6 @@ class DataReproductionPage(BaseHandler):
 #         self.render_response('reproduce.html', **context)
         
     def post(self):
-        
         self.response.content_type = 'application/json'
         req_type = self.request.get('req_type')
         
@@ -39,6 +38,8 @@ class DataReproductionPage(BaseHandler):
         
         if req_type == 'delOutput':
             uuid = self.request.get('uuid')
+            logging.debug('delOutput: uuid={0}'.format(uuid))
+            
             
             try:
                 #delete the output tar file
@@ -81,6 +82,7 @@ class DataReproductionPage(BaseHandler):
         
             job_type = self.request.get('job_type')
             uuid = self.request.get('uuid')
+            logging.debug('rerun: uuid={0}'.format(uuid))
 
             logging.info('job uuid: '.format(uuid))
             
@@ -113,6 +115,7 @@ class DataReproductionPage(BaseHandler):
                     logging.info("OUT_PUT SIZE: {0}".format(params['output_size']))
                 
                     time = datetime.datetime.now()
+                    params['rerun_uuid'] = uuid
                     cloud_result = service.submit_cloud_task(params=params)
                     
                     if not cloud_result["success"]:
@@ -159,9 +162,8 @@ class DataReproductionPage(BaseHandler):
                     time = datetime.datetime.now()
 
                     # execute task in cloud
-                    cloud_result = service.submit_cloud_task(params=params, agent_type="ec2",
-                                                       ec2_access_key=access_key, ec2_secret_key=secret_key,
-                                                       uuid=uuid)
+                    params['rerun_uuid'] = uuid
+                    cloud_result = service.submit_cloud_task(params=params)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -204,8 +206,8 @@ class DataReproductionPage(BaseHandler):
                     time = datetime.datetime.now()
 
                     # execute task in cloud
-                    cloud_result = service.submit_cloud_task(params=params, agent_type="ec2",
-                                                       ec2_access_key=access_key, ec2_secret_key=secret_key, uuid=uuid)
+                    params['rerun_uuid'] = uuid
+                    cloud_result = service.submit_cloud_task(params=params)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
