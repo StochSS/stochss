@@ -200,7 +200,7 @@ def config_celery_queues(agent_type, instance_types):
 
 def __execute_cloud_cost_analysis_task(params, agent_type, instance_type, task_id, database,
                                        ec2_access_key, ec2_secret_key, start_time,
-                                       celery_queue_name, celery_routing_key):
+                                       celery_queue_name, celery_routing_key, storage_agent):
     result = {}
     result["db_id"] = task_id
 
@@ -210,7 +210,7 @@ def __execute_cloud_cost_analysis_task(params, agent_type, instance_type, task_i
         'status': 'pending',
         'start_time': start_time.strftime('%Y-%m-%d %H:%M:%S'),
         'message': "Task sent to Cloud",
-        'infrastructure': agent_type,
+        'agent': agent_type,
         'instance_type': instance_type,
         'uuid': task_id
     }
@@ -221,7 +221,7 @@ def __execute_cloud_cost_analysis_task(params, agent_type, instance_type, task_i
     database.updateEntry(taskid='{0}{1}'.format(taskid_prefix, task_id),
                          data=data, tablename=params["db_table"])
 
-    cost_analysis_task = tasks.task.apply_async(args=[task_id, params, agent_type, database,
+    cost_analysis_task = tasks.task.apply_async(args=[task_id, params, agent_type, database, storage_agent,
                                                       ec2_access_key, ec2_secret_key, taskid_prefix],
                                                 queue=celery_queue_name,
                                                 routing_key=celery_routing_key)
@@ -474,7 +474,8 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
                                                                 ec2_access_key=ec2_access_key,
                                                                 ec2_secret_key=ec2_secret_key, start_time=start_time,
                                                                 celery_queue_name=celery_queue_name,
-                                                                celery_routing_key=celery_routing_key)
+                                                                celery_routing_key=celery_routing_key,
+                                                                storage_agent=storage_agent)
                 else:
                     raise Exception("cost replay not supported for agent type = {0}".format(agent_type))
 

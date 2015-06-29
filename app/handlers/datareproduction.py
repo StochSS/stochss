@@ -49,12 +49,12 @@ class DataReproductionPage(BaseHandler):
                     job.output_stored = 'False'
                     job.put()
                 elif job_type == 'sensitivity':
-                    job = sensitivity.SensitivityJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
+                    job = sensitivity.SensitivityJobWrapper.all().filter('user_id =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
                     job.output_stored = 'False'
                     job.outData = None
                     job.put()
                 elif job_type == 'spatial':
-                    job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
+                    job = spatial.SpatialJobWrapper.all().filter('user_id =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
                     job.output_stored = 'False'
                     job.outData = None
                     job.put()
@@ -144,7 +144,7 @@ class DataReproductionPage(BaseHandler):
                 return
         
             elif job_type == 'sensitivity':
-                job = sensitivity.SensitivityJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
+                job = sensitivity.SensitivityJobWrapper.all().filter('user_id =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
             
                 try:
                     ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())
@@ -188,7 +188,7 @@ class DataReproductionPage(BaseHandler):
                 return  
         
             elif job_type == 'spatial':
-                job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
+                job = spatial.SpatialJobWrapper.all().filter('user_id =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
             
                 try:
                     ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())

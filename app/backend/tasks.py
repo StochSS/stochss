@@ -733,7 +733,7 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
                 'message': 'Task Executing in cloud'}
 
         # will have prefix for cost-anaylsis job
-        # taskid = '{0}{1}'.format(task_prefix, taskid)
+        taskid = '{0}{1}'.format(task_prefix, taskid)
 
         database.updateEntry(taskid=taskid, data=data, tablename=params["db_table"])
         paramstr = params['paramstring']

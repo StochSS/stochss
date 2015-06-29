@@ -12,10 +12,10 @@ class Price:
     COST_TABLE_PER_HOUR = {
         "ec2": {
             "t1.micro": 0.013,
-            "m1.small": 0.026,
-            "m3.medium": 0.070,
-            "m3.large": 0.140,
+            "m1.small": 0.044,
+            "m3.medium": 0.067,
+            "m3.large": 0.133,
             "c3.large": 0.105,
-            "c3.xlarge": 0.210
+            "c3.xlarge": 0.21
         }
     }

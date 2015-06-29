@@ -153,6 +153,8 @@ class backendservices(object):
         # if there is no taskid explicit, create one the first run
         if 'rerun_uuid' in params and params['rerun_uuid'] is not None:
             task_id = params['rerun_uuid']
+        elif cost_replay:
+            task_id = params['cost_analysis_uuid']
         else:
             task_id = str(uuid.uuid4())
 
