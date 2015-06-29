@@ -594,7 +594,7 @@ class StochOptimVisualization(BaseHandler):
             # Grab the remote files
             logging.debug('stochoptim.__fetch_cloud_output(): job_wrapper.cloudDatabaseID={0}'.format(job_wrapper.cloudDatabaseID))
             logging.debug('stochoptim.__fetch_cloud_output(): job_wrapper.outputURL={0}'.format(job_wrapper.outputURL))
-            service.fetchOutput(job_wrapper.cloudDatabaseID, job_wrapper.outputURL)
+            service.fetchOutput(job_wrapper)
             # Unpack it to its local output location...
             try:
                 os.system('tar -xf' +job_wrapper.cloudDatabaseID+'.tar')

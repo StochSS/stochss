@@ -188,7 +188,7 @@ class SuperZip:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
                         service = backendservices(handler.user_data)
-                        service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+                        service.fetchOutput(job)
                         # Unpack it to its local output location
                         os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
                         job.outData = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
@@ -230,7 +230,7 @@ class SuperZip:
             if (job.name in self.stochOptimJobsToDownload) or globalOp:
                 # Grab the remote files
                 service = backendservices(handler.user_data)
-                service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+                service.fetchOutput(job)
                 # Unpack it to its local output location...
                 
                 os.system('tar -xf' +job.cloudDatabaseID+'.tar')
@@ -273,7 +273,7 @@ class SuperZip:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
                         service = backendservices(handler.user_data)
-                        service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+                        service.fetchOutput(job)
                         # Unpack it to its local output location
                         os.system('tar -xf' +job.cloudDatabaseID+'.tar')
                         job.outData = os.path.dirname(os.path.abspath(__file__))+'/../output/'+job.cloudDatabaseID
@@ -308,7 +308,7 @@ class SuperZip:
                     # Grab the output from S3 if we need to
                     service = backendservices(handler.user_data)
                     # Fetch
-                    service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+                    service.fetchOutput(job)
                     # Unpack
                     os.system('tar -xf' +job.uuid+'.tar')
                     # Record location

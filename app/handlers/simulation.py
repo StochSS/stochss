@@ -267,7 +267,7 @@ class SimulatePage(BaseHandler):
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
             service = backendservices(self.user_data)
-            service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+            service.fetchOutput(job)
             
             # Unpack it to its local output location
             os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))

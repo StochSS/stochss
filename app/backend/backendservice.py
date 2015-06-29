@@ -868,7 +868,7 @@ class backendservices(object):
         return result
 
 
-    def fetchOutput(self, taskid, outputurl):
+    def fetchOutput(self, job):
         '''
         This method gets the output file from S3 and extracts it to the output 
         directory
@@ -876,6 +876,8 @@ class backendservices(object):
         @return: True : if successful or False : if failed 
         '''
         try:
+            taskid = job.cloudDatabaseID
+            outputurl = job.outputURL
             logging.debug("fetchOutput: taskid: {0} and url: {1}".format(taskid, outputurl))
 
             filename = "{0}.tar".format(taskid)
@@ -917,6 +919,8 @@ class backendservices(object):
                 logging.error('unable to download file. Returning result as False')
                 return False
 
+            # Delete the output on the cloud
+            self.deleteTaskOutput(job)
             return True
 
         except Exception, e:

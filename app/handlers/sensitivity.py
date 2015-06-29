@@ -162,7 +162,7 @@ class SensitivityPage(BaseHandler):
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
 
             service = backendservices(self.user_data)
-            service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+            service.fetchOutput(job)
             # Unpack it to its local output location
             os.system('tar -xf' +job.cloudDatabaseID+'.tar')
             job.outData = os.path.dirname(os.path.abspath(__file__))+'/../output/'+job.cloudDatabaseID
