@@ -670,7 +670,7 @@ class EC2CredentialsPage(BaseHandler):
             
         logging.debug('*'*80)
         logging.debug("Cleaning up TERMINATED entries in the DB")
-        VMStateModel.delete_terminated(user_id)
+        #VMStateModel.delete_terminated(user_id)
         logging.debug('*'*80)
 
         key_prefix = AgentConfig.get_agent_key_prefix(AgentTypes.EC2, key_prefix=user_id)
@@ -717,7 +717,7 @@ class EC2CredentialsPage(BaseHandler):
                 
         elif head_node:
             params['vms'] = [head_node]
-                      
+        
         res, msg = service.start_ec2_vms(params)
         if res == True:
             result = {
