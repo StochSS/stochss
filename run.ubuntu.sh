@@ -107,32 +107,6 @@ function check_pyurdme {
     return 1 #False
 }
 
-function download_pyurdme {
-    ZIP_URL="https://github.com/pyurdme/pyurdme/archive/stochss.zip"
-    TMPDIR=$(mktemp -d /tmp/tmp.XXXXXX)
-    ZIP_FILE="$TMPDIR/pyurdme.zip"
-    CMD="curl -o $ZIP_FILE -L $ZIP_URL"
-    echo $CMD
-    eval $CMD
-    if [[ -e "$ZIP_FILE" ]];then
-        wd=`pwd`
-        cd "$STOCHSS_HOME/app/lib" || return 1
-        CMD="unzip $ZIP_FILE > /dev/null"
-        echo $CMD
-        eval $CMD
-        if [[ $? != 0 ]];then
-            rm $ZIP_FILE
-            cd $wd
-            return 1 #False
-        fi
-        rm $ZIP_FILE
-        cd $wd
-        return 0 #True
-    else
-        return 1 #False
-    fi
-}
-
 function check_lib {
     if [ -z "$1" ];then
         return 1 #False
@@ -228,13 +202,17 @@ function install_lib_pip {
     if ! check_pip;then
         install_pip
     fi
-    echo "We need install the following packages: $1"
-    read -p "Do you want me to try to install required package(s) with pip (y/n): " answer
+    if [ -z "$2" ];then
+        echo "We need to install package $1"
+    else
+        echo "We need to install package $1 with flags '$2'"
+    fi
+    read -p "Do you want me to try to install required package with pip (y/n): " answer
     if [ $? != 0 ]; then
         exit -1
     fi
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="sudo pip install $1"
+        CMD="sudo pip install $2 $1"
         echo $CMD
         eval $CMD
         if [ $? != 0 ]; then
@@ -264,7 +242,7 @@ function check_and_install_deps {
         install_lib_pip "python-libsbml"
     fi
     if ! check_lib "mysql";then
-        install_lib_pip "mysql-connector-python"
+        install_lib_pip "mysql-connector-python" "--allow-external mysql-connector-python"
     fi
 }
 
@@ -317,14 +295,8 @@ function check_python_package_installation {
     if check_pyurdme; then
         echo "PyURDME detected successfully"
     else
-        echo "PyURDME not installed, attempting local install"
-        download_pyurdme
-        if check_pyurdme; then
-            echo "PyURDME detected successfully"
-        else
-            echo "PyURDME not installed, Failing (check if all required python modules are installed)."
-            return 1 #False
-        fi
+        echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
+        return 1 #False
     fi
     return 0 #True
 }

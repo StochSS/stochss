@@ -113,39 +113,6 @@ function check_pyurdme {
     return 1 #False
 }
 
-function download_pyurdme {
-    DIRECTORY="$STOCHSS_HOME/app/lib/pyurdme-stochss"
-    if [ -d "$DIRECTORY" ]; then
-        echo "$DIRECTORY found, pyurdme already downloaded locally (remove directory to re-download)"
-        return 0 #True
-    else
-        ZIP_URL="https://github.com/pyurdme/pyurdme/archive/stochss.zip"
-        TMPDIR=$(mktemp -d /tmp/tmp.XXXXXX)
-        ZIP_FILE="$TMPDIR/pyurdme.zip"
-        CMD="curl -o $ZIP_FILE -L $ZIP_URL"
-        echo $CMD
-        eval $CMD
-        if [[ -e "$ZIP_FILE" ]];then
-            wd=`pwd`
-            cd "$STOCHSS_HOME/app/lib" || return 1
-            pwd
-            CMD="unzip $ZIP_FILE > /dev/null"
-            echo $CMD
-            eval $CMD
-            if [[ $? != 0 ]];then
-                rm $ZIP_FILE
-                cd $wd
-                return 1 #False
-            fi
-            rm $ZIP_FILE
-            cd $wd
-            return 0 #True
-        else
-            return 1 #False
-        fi
-    fi
-}
-
 function check_python_dependencies {
     deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
@@ -189,14 +156,8 @@ function check_python_installation {
     if check_pyurdme; then
         echo "PyURDME detected successfully.<br />"
     else
-        echo "PyURDME not installed, attempting local install.<br />"
-        download_pyurdme
-        if check_pyurdme; then
-            echo "PyURDME detected successfully.<br />"
-        else
-            echo "PyURDME not installed, Failing (check if all required python modules are installed).<br />"
-            return 1 #False
-        fi
+        echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
+        return 1 #False
     fi
     return 0 #True
 }
