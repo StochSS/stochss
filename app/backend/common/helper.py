@@ -139,7 +139,7 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
     SSH_RETRY_COUNT = 8
     SSH_RETRY_WAIT = 3
 
-    cmd = "ssh -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=key_file, ip=ip,
+    cmd = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=key_file, ip=ip,
                                                                                         username=username)
     logging.info(cmd)
     for x in range(0, SSH_RETRY_COUNT):
