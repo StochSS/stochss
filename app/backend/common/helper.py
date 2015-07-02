@@ -152,13 +152,13 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
         logging.debug('output = {0}'.format(output))
 
         if output.startswith('Warning:') or output.startswith(os.path.join('/home', username)):
-            logging.info("ssh connected to {0}".format(ip))
+            logging.debug("ssh successfully connected to {0}".format(ip))
             return True
         else:
-            logging.info("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
+            logging.debug("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
             time.sleep(SSH_RETRY_WAIT)
 
-    logging.info('Timeout waiting to connect to node via SSH.')
+    logging.error('Timeout waiting to connect to {0} via SSH.'.format(ip))
     return False
 
 

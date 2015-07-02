@@ -327,9 +327,9 @@ class VMStateModel(db.Model):
             ins_ids   a list of instance ids that are going to be set with
             res_id    the reservation id that is based on
         '''
-        logging.info('update_ins_ids:\nins_ids = {0}\nres_id = {1}'.format(ins_ids, res_id))
-        logging.info('update_ins_ids:\nfrom_state = {0}\nto_state = {1}'.format(from_state, to_state))
-        logging.debug('\n\nparams =\n{0}'.format(pprint.pformat(params)))
+        logging.info('update_ins_ids: ins_ids = {0} res_id = {1}'.format(ins_ids, res_id))
+        logging.info('update_ins_ids: from_state = {0} to_state = {1}'.format(from_state, to_state))
+        logging.debug('params = {0}'.format(params))
 
         try:
             entities = VMStateModel._get_all_entities(params)
@@ -359,9 +359,9 @@ class VMStateModel(db.Model):
             keyfiles  a list of keyfiles that is corresponding to this set of instance ids
         '''
         logging.info(
-            'update_ips:\n\nins_ids = {0}\npub_ips = {1}\npri_ips = {2}\nins_types = {3}\nkeyfiles = {keyfiles}'.format(
+            'update_ips: ins_ids = {0} pub_ips = {1} pri_ips = {2} ins_types = {3} keyfiles = {keyfiles}'.format(
                 ins_ids, pub_ips, pri_ips, ins_types, keyfiles=keyfiles))
-        logging.debug('\n\nparams = {}'.format(pprint.pformat(params)))
+        logging.debug('params = {}'.format(params))
 
         try:
             if keyfiles is None:
@@ -394,8 +394,8 @@ class VMStateModel(db.Model):
             state     the state that is going to be set to the instances
             description    (optional) the description to the state
         '''
-        logging.info('set_state:\nins_ids = {0}\nstate = {1}\ndescription = {2}'.format(ins_ids, state, description))
-        logging.debug('set_state:\nparams =\n{0}'.format(pprint.pformat(params)))
+        logging.info('set_state: ins_ids = {0} state = {1} description = {2}'.format(ins_ids, state, description))
+        logging.debug('set_state: params = {0}'.format(params))
         try:
             for ins_id in ins_ids:
                 entities = VMStateModel._get_all_entities(params)

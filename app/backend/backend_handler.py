@@ -69,7 +69,7 @@ class FlexBackendWorker(BackendWorker):
 
 
     def __init__(self, agent, infra_manager, reservation_id):
-        logging.info('agent = {0}, infra_manager = {1} reservation_id = {2}'.format(agent,
+        logging.info('FlexBackendWorker(agent = {0}, infra_manager = {1} reservation_id = {2})'.format(agent,
                                                                                     infra_manager, reservation_id))
         self.agent = agent
         self.agent_type = self.agent.AGENT_NAME
@@ -85,14 +85,20 @@ class FlexBackendWorker(BackendWorker):
             if machine[self.PARAM_IS_QUEUE_HEAD]:
                 if queue_head_machine != None:
                     logging.error('Error: Multiple queue heads !')
-                    VMStateModel.fail_active(parameters)
+                    #VMStateModel.fail_active(parameters)
+                    user_data.flex_cloud_status = False
+                    user_data.flex_cloud_info_msg = 'Error: Multiple queue heads'
+                    user_data.put()
                     return None
                 else:
                     queue_head_machine = machine
 
         if queue_head_machine == None:
             logging.error('Error: No queue head !')
-            VMStateModel.fail_active(parameters)
+            #VMStateModel.fail_active(parameters)
+            user_data.flex_cloud_status = False
+            user_data.flex_cloud_info_msg = 'Error: No queue head'
+            user_data.put()
             return None
 
         return queue_head_machine
@@ -104,7 +110,7 @@ class FlexBackendWorker(BackendWorker):
         return user_data
 
     def prepare_vms(self, parameters):
-        logging.info('\n\nprepare_vms:\n\n{0}'.format(pprint.pformat(parameters)))
+        logging.debug('prepare_vms(): parameters={0}'.format(parameters))
 
         queue_head_machine = parameters[self.PARAM_FLEX_QUEUE_HEAD]
 
@@ -115,7 +121,7 @@ class FlexBackendWorker(BackendWorker):
                 or parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] == []:
 
             logging.error('Error: No {0} param!'.format(self.PARAM_FLEX_CLOUD_MACHINE_INFO))
-            VMStateModel.fail_active(parameters)
+            #VMStateModel.fail_active(parameters)
             # Report Error
             user_data.flex_cloud_status = False
             user_data.flex_cloud_info_msg = 'Invalid Parameters'
@@ -125,7 +131,7 @@ class FlexBackendWorker(BackendWorker):
         flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
 
         all_flex_vms = VMStateModel.get_all(parameters)
-        logging.debug('\n\nall_flex_vms =\n{}'.format(all_flex_vms))
+        logging.debug('all_flex_vms ={}'.format(all_flex_vms))
         all_flex_vm_map = {vm['pub_ip']:vm for vm in all_flex_vms}
 
         filtered_flex_machine_info = []
@@ -137,13 +143,13 @@ class FlexBackendWorker(BackendWorker):
                 running_flex_ips.append(machine['ip'])
 
         if len(filtered_flex_machine_info) < 1:
-            logging.info('Nothing to do!')
+            logging.debug('Nothing to do!')
             user_data.flex_cloud_status = False
             user_data.flex_cloud_info_msg = 'No nodes to prepare'
             user_data.put()
             return
 
-        logging.debug('\n\nfiltered_flex_machine_info =\n{}'.format(pprint.pformat(filtered_flex_machine_info)))
+        logging.debug('filtered_flex_machine_info ={}'.format(filtered_flex_machine_info))
         user_data.flex_cloud_status = True 
         user_data.flex_cloud_info_msg = 'Flex Cloud configured. Waiting for workers to become available...'
         user_data.put()
@@ -155,9 +161,9 @@ class FlexBackendWorker(BackendWorker):
                                                                                 num_vms=num_vms_to_prepare,
                                                                                 parameters=parameters)
 
-        logging.info('public_ips = {}'.format(public_ips))
+        logging.debug('public_ips = {}'.format(public_ips))
         logging.debug('private_ips = {}'.format(private_ips))
-        logging.info('instance_ids = {}'.format(instance_ids))
+        logging.debug('instance_ids = {}'.format(instance_ids))
         logging.debug('keyfiles = {}'.format(keyfiles))
         logging.debug('usernames = {}'.format(usernames))
 
@@ -165,7 +171,7 @@ class FlexBackendWorker(BackendWorker):
 
         if queue_head_machine == None or (queue_head_machine['ip'] not in public_ips and queue_head_machine['ip'] not in running_flex_ips):
             logging.error('Found no viable ssh-able/running queue head machine!')
-            VMStateModel.fail_active(parameters)
+            #VMStateModel.fail_active(parameters)
             # Report Failure
             user_data.flex_cloud_status = False
             user_data.flex_cloud_info_msg = 'Error connecting to the queue head via SSH'
@@ -176,7 +182,7 @@ class FlexBackendWorker(BackendWorker):
             result = self.__prepare_queue_head(queue_head_machine, parameters)
             if result == False:
                 logging.error('Error: could not prepare queue head! Failing other creating nodes.')
-                VMStateModel.fail_active(parameters)
+                #VMStateModel.fail_active(parameters)
                 # Report Failure
                 user_data.flex_cloud_status = False
                 user_data.flex_cloud_info_msg = 'Error preparing the queue head'
@@ -190,8 +196,7 @@ class FlexBackendWorker(BackendWorker):
                                                                         usernames=usernames, parameters=parameters)
 
         if len(connected_public_ips) == 0 or len(connected_public_ips) == []:
-            logging.info('No vm was reachable!')
-            VMStateModel.fail_active(parameters)
+            logging.error('No vm was reachable!')
             # Report Failure
             user_data.flex_cloud_status = False
             user_data.flex_cloud_info_msg = 'Can not connect with any machines'
@@ -200,8 +205,7 @@ class FlexBackendWorker(BackendWorker):
 
         if queue_head_machine['ip'] not in connected_public_ips \
                 and queue_head_machine['ip'] not in running_flex_ips:
-            logging.info('queue_head_machine with ip {0} was not reachable!'.format(queue_head_machine['ip']))
-            VMStateModel.fail_active(parameters)
+            logging.error('queue_head_machine with ip {0} was not reachable!'.format(queue_head_machine['ip']))
             # Report Failure
             user_data.flex_cloud_status = False
             user_data.flex_cloud_info_msg = 'Can not connect to queue head'
@@ -285,33 +289,34 @@ class FlexBackendWorker(BackendWorker):
         connected_instance_ids = []
 
         for (pub_ip, ins_id, keyfile, username) in zip(public_ips, instance_ids, keyfiles, usernames):
-            logging.info('connecting to ip: {0}...'.format(pub_ip))
+            logging.debug('connecting to ip: {0}...'.format(pub_ip))
             success = helper.wait_for_ssh_connection(key_file=keyfile, ip=pub_ip, username=username)
 
             if success == True:
-                logging.info('{0} is successfully added'.format(pub_ip))
+                logging.debug('connected to {0}'.format(pub_ip))
                 connected_public_ips.append(pub_ip)
                 connected_instance_ids.append(ins_id)
 
+        # WRONG!!!! Never shut down anything
         # if there are some vms not able to be connected via ssh,
         # just shut them down explicitly
-        if len(public_ips) != len(connected_public_ips):
-            logging.info('Time out on ssh to {0} instances. They will be terminated.'.format(
-                len(public_ips) - len(connected_public_ips)))
-
-            try:
-                terminate_ins_ids = []
-                for ins_id in instance_ids:
-                    if ins_id not in connected_instance_ids:
-                        terminate_ins_ids.append(ins_id)
-                self.agent.deregister_some_instances(parameters, terminate_ins_ids)
-
-                # update db with failed vms
-                VMStateModel.set_state(parameters, terminate_ins_ids,
-                                       VMStateModel.STATE_FAILED,
-                                       VMStateModel.DESCRI_TIMEOUT_ON_SSH)
-            except:
-                raise Exception("Errors in terminating instances that cannot be connected via ssh.")
+#        if len(public_ips) != len(connected_public_ips):
+#            logging.info('Time out on ssh to {0} instances. They will be terminated.'.format(
+#                len(public_ips) - len(connected_public_ips)))
+#
+#            try:
+#                terminate_ins_ids = []
+#                for ins_id in instance_ids:
+#                    if ins_id not in connected_instance_ids:
+#                        terminate_ins_ids.append(ins_id)
+#                self.agent.deregister_some_instances(parameters, terminate_ins_ids)
+#
+#                # update db with failed vms
+#                VMStateModel.set_state(parameters, terminate_ins_ids,
+#                                       VMStateModel.STATE_FAILED,
+#                                       VMStateModel.DESCRI_TIMEOUT_ON_SSH)
+#            except:
+#                raise Exception("Errors in terminating instances that cannot be connected via ssh.")
 
         public_ips = None
         instance_ids = None
@@ -333,7 +338,7 @@ class FlexBackendWorker(BackendWorker):
         logging.info('Start polling task for infrastructure = {0}'.format(parameters['infrastructure']))
 
         ins_ids = self.agent.describe_instances_launched(parameters)
-        logging.info("ins_ids = {0}".format(ins_ids))
+        logging.debug("ins_ids = {0}".format(ins_ids))
 
         # update db with new instance ids and 'pending'
         VMStateModel.update_ins_ids(parameters, ins_ids, self.reservation_id, from_state=VMStateModel.STATE_CREATING,
@@ -350,10 +355,10 @@ class FlexBackendWorker(BackendWorker):
             public_ips, private_ips, instance_ids, \
             instance_types, keyfiles, usernames = self.agent.describe_unprepared_instances(parameters)
 
-            logging.info("public_ips = {0}".format(public_ips))
+            logging.debug("public_ips = {0}".format(public_ips))
             logging.debug("private_ips = {0}".format(private_ips))
-            logging.info("instance_ids = {0}".format(instance_ids))
-            logging.info("instance_types = {0}".format(instance_types))
+            logging.debug("instance_ids = {0}".format(instance_ids))
+            logging.debug("instance_types = {0}".format(instance_types))
             logging.debug("keyfiles = {0}".format(keyfiles))
             logging.debug("usernames = {0}".format(usernames))
 
@@ -367,7 +372,7 @@ class FlexBackendWorker(BackendWorker):
             else:
                 if x < FlexBackendWorker.POLL_COUNT - 1:
                     time.sleep(FlexBackendWorker.POLL_WAIT_TIME)
-                    logging.info('Polling task: sleep 5 seconds...')
+                    logging.debug('Polling task: sleep 5 seconds...')
 
                 else:
                     VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keyfiles)
@@ -464,7 +469,7 @@ class FlexBackendWorker(BackendWorker):
             #     f.close()
             #
             #     response = json.loads(data_recv)
-            #     logging.info('response =\n{}'.format(pprint.pformat(response)))
+            #     logging.info('response ={}'.format(pprint.pformat(response)))
             #
             #     if response['status'] == 'success':
             #         success = True
@@ -521,10 +526,10 @@ class EC2BackendWorker(BackendWorker):
         Args:
         parameters      A dictionary of parameters
         """
-        logging.info("\n\nprepare_vms:\n\nparameters = \n{0}\n".format(pprint.pformat(parameters)))
+        logging.debug("prepare_vms(): nparameters = {0}".format(parameters))
 
         if not parameters["vms"] and 'head_node' not in parameters:
-            logging.info("No vms are waiting to be prepared or head_node is not specified!")
+            logging.error("No vms are waiting to be prepared or head_node is not specified!")
             return
 
         try:
@@ -661,7 +666,7 @@ class EC2BackendWorker(BackendWorker):
             for vm in all_vms:
                 if vm != None and vm['state'] == 'running':
                     if vm['key_name'].endswith(queue_head_tag) and vm['key_name'].startswith(key_prefix):
-                        logging.info('Found queue head:\n{0}'.format(pprint.pformat(vm)))
+                        logging.info('Found queue head: {0}'.format(pprint.pformat(vm)))
                         return True
             return False
 
@@ -670,7 +675,7 @@ class EC2BackendWorker(BackendWorker):
             return False
 
     def __prepare_queue_head(self, parameters):
-        logging.debug("\n\n__prepare_queue_head: parameters = \n{0}".format(pprint.pformat(parameters)))
+        logging.debug("__prepare_queue_head(): parameters = {0}".format(pprint.pformat(parameters)))
 
         num_vms = 0
 
@@ -678,9 +683,6 @@ class EC2BackendWorker(BackendWorker):
             logging.info("Queue head is not running, so create a new queue head...")
             if 'head_node' not in parameters:
                 logging.error("Head node is needed to run StochSS!")
-                # if there is no head node running, and the current worker nodes are not tagged 'head node'
-                # then just fail all 'creating' ones
-                VMStateModel.fail_active(parameters)
                 return None, None
 
             num_vms = self.__launch_ec2_queue_head(parameters)
@@ -910,13 +912,11 @@ class SynchronizeDB(webapp2.RequestHandler):
             self.is_start = True
 
     def _run(self):
-        logging.debug('='*80)
         logging.debug('SynchronizeDB._run() thread_id={0} agent_type={1} parameters={2}'.format(self.thread_id, self.agent_type, self.parameters))
         self.is_start = False
         VMStateModel.synchronize(agent=self.agent, parameters=self.parameters)
         if self.update_vm_state_db():
             self._start()
-        logging.debug('-'*80)
 
     def initialize_vm_state_db(self):
         try:
