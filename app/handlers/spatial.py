@@ -168,8 +168,6 @@ class SpatialPage(BaseHandler):
 
                 logging.debug('Spatial.get(onlyColorRange): sTime={0} eTime={0}'.format(sTime,eTime))
 
-                print "opening", f
-
                 with h5py.File(f, 'r') as dataFile:
                     dataTmp = {}
 

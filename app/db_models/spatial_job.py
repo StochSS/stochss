@@ -39,7 +39,6 @@ class SpatialJobWrapper(db.Model):
 
 
     def preprocess(self, trajectory):      
-        print "Preprocessing ... "
         ''' Job is already processed check '''
         if (self.preprocessed is not None and trajectory in self.preprocessed) and self.preprocessedDir and os.path.exists(self.preprocessedDir):
             return
@@ -53,8 +52,6 @@ class SpatialJobWrapper(db.Model):
 
             if not self.preprocessedDir:
                 self.preprocessedDir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../output/preprocessed/{0}/'.format(self.key().id())))
-
-            #print "Directory:", self.preprocessedDir
 
             if not os.path.exists(self.preprocessedDir):
                 os.makedirs(self.preprocessedDir)
