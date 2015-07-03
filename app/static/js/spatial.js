@@ -996,6 +996,9 @@ Spatial.Controller = Backbone.View.extend(
         handleTrajectorySelectChange : function(event)
         {   
             this.trajectory = Number( $( event.target ).val() );
+
+            this.cache = {};
+
             this.acquireNewData();
         },
 
