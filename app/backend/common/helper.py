@@ -143,7 +143,7 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
 #    cmd = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=key_file, ip=ip,
 #                                                                                        username=username)
     cmd = get_remote_command(username, ip, key_file, "pwd")
-    logging.info(cmd)
+    logging.debug(cmd)
     for x in range(0, SSH_RETRY_COUNT):
         p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT, close_fds=True)

@@ -304,7 +304,7 @@ class FlexAgent(BaseAgent):
         Returns:
           A tuple of the form (instances, public_ips, private_ips)
         """
-        logging.debug('flex_agent.prepare_instances()')
+        logging.debug('flex_agent.prepare_instances() parameters={0}'.format(parameters))
         try:
 
             flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]

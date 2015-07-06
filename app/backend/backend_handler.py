@@ -227,6 +227,9 @@ class FlexBackendWorker(BackendWorker):
 
 
     def __prepare_queue_head(self, queue_head_machine, parameters):
+        logging.debug('*'*80)
+        logging.debug('*'*80)
+        logging.debug('__prepare_queue_head(queue_head_machine={0}, parameters={1})'.format(queue_head_machine, parameters))
         keyfile = queue_head_machine['keyfile']
         if not os.path.exists(keyfile):
             logging.error('Queue head keyfile: {0} does not exist!'.format(keyfile))
@@ -240,6 +243,8 @@ class FlexBackendWorker(BackendWorker):
             logging.info('Queue Head with ip {0} is successfully ssh-able'.format(queue_head_machine['ip']))
         else:
             logging.error('Queue Head ssh failed!')
+            logging.debug('-'*80)
+            logging.debug('-'*80)
             return False
 
         try:
@@ -257,14 +262,21 @@ class FlexBackendWorker(BackendWorker):
             database = FlexDB(password=parameters[self.PARAM_FLEX_DB_PASSWORD], ip=queue_head_machine['ip'])
             database.createtable(JobDatabaseConfig.TABLE_NAME)
 
+            logging.debug('-'*80)
+            logging.debug('-'*80)
             return True
 
         except Exception as e:
             logging.error(e)
+            logging.debug('-'*80)
+            logging.debug('-'*80)
             return False
 
 
     def __prepare_workers(self, public_ips, parameters):
+        logging.debug('*'*80)
+        logging.debug('*'*80)
+        logging.debug('__prepare_workers(public_ips={0}, parameters={1})'.format(public_ips, parameters))
         try:
             flex_cloud_machine_info = []
             for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
@@ -283,6 +295,8 @@ class FlexBackendWorker(BackendWorker):
 
         except Exception as e:
             logging.error(e)
+        logging.debug('-'*80)
+        logging.debug('-'*80)
 
     def __verify_flex_instances_via_ssh(self, instance_ids, keyfiles, public_ips, usernames, parameters):
         connected_public_ips = []
@@ -666,7 +680,7 @@ class EC2BackendWorker(BackendWorker):
             for vm in all_vms:
                 if vm != None and vm['state'] == 'running':
                     if vm['key_name'].endswith(queue_head_tag) and vm['key_name'].startswith(key_prefix):
-                        logging.info('Found queue head: {0}'.format(pprint.pformat(vm)))
+                        logging.info('Found queue head: {0}'.format(vm))
                         return True
             return False
 
@@ -675,7 +689,7 @@ class EC2BackendWorker(BackendWorker):
             return False
 
     def __prepare_queue_head(self, parameters):
-        logging.debug("__prepare_queue_head(): parameters = {0}".format(pprint.pformat(parameters)))
+        logging.debug("__prepare_queue_head(): parameters = {0}".format(parameters))
 
         num_vms = 0
 
