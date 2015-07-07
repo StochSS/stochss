@@ -332,6 +332,9 @@ function retry_command {
     exit -1
 }
 
+echo "Running 'instant-clean'"
+instant-clean
+
 echo -n "Testing if StochKit2 built... "
 
 rundir=$(mktemp -d /tmp/tmp.XXXXXX)

@@ -268,6 +268,9 @@ function check_spatial_installation {
         return 1 #False
     fi
 
+    echo "Running 'instant-clean'"
+    /Applications/FEniCS.app/Contents/Resources/bin/instant-clean
+
     if check_pyurdme; then
         echo "PyURDME detected successfully.<br />"
     else
