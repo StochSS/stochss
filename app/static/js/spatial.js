@@ -1083,7 +1083,7 @@ Spatial.Controller = Backbone.View.extend(
                             if( selectedOption == 'population')
                                 {
                                     this.showPopulation  = true;
-                                    this.updateMsg( { status : false, msg : "Warning: populations plotted in cells are not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
+                                    this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
                                 }
                             else
                                 {
