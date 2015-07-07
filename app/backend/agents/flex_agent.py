@@ -336,7 +336,7 @@ class FlexAgent(BaseAgent):
                 logging.debug("[{0}] [{1}] [{2}] [is_queue_head:{3}]".format(ip, keyfile, username, is_queue_head))
 
                 scp_command = \
-                    'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
+                    'scp -o \'UserKnownHostsFile=/dev/null\' -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
                         keyfile=keyfile,
                         source=queue_head_keyfile,
                         target="{username}@{ip}:{remote_queue_head_keyfile}".format(
@@ -380,7 +380,7 @@ class FlexAgent(BaseAgent):
                 with open(bash_script_filename, 'w') as bash_script_file:
                     bash_script_file.write(bash_script)
 
-                scp_command = 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
+                scp_command = 'scp -o \'UserKnownHostsFile=/dev/null\' -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
                     keyfile=keyfile,
                     source=bash_script_filename,
                     target="{username}@{ip}:~/stochss_init.sh".format(username=username,
@@ -434,7 +434,7 @@ class FlexAgent(BaseAgent):
 
     @staticmethod
     def get_remote_command_string(ip, username, keyfile, command):
-        return "ssh -o 'StrictHostKeyChecking no' -i {keyfile} {username}@{ip} \"{command}\"".format(keyfile=keyfile,
+        return "ssh -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' -i {keyfile} {username}@{ip} \"{command}\"".format(keyfile=keyfile,
                                                                                                      username=username,
                                                                                                      command=command,
                                                                                                      ip=ip)
