@@ -31,18 +31,18 @@ class UserData(db.Model):
     is_amazon_db_table = db.BooleanProperty()
 
     # Private Cloud Machine Info
-    flex_cloud_machine_info = db.StringProperty(default="[]")
+    flex_cloud_machine_info = db.TextProperty(default="[]")
     valid_flex_cloud_info = db.BooleanProperty(default=False)
     is_flex_cloud_info_set = db.BooleanProperty(default=False)
     flex_db_password = db.StringProperty()
 
     flex_cloud_status = db.BooleanProperty()
-    flex_cloud_info_msg = db.StringProperty()
+    flex_cloud_info_msg = db.TextProperty()
 
     # reservation ID for Flex Cloud
     reservation_id = db.StringProperty()
 
-    env_variables = db.StringProperty()
+    env_variables = db.TextProperty()
 
 
     def setCredentials(self, credentials):

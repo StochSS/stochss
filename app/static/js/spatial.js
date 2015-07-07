@@ -23,7 +23,11 @@ Spatial.Controller = Backbone.View.extend(
                 html_ele.prop('class', 'alert alert-success');
             else
                 html_ele.prop('class', 'alert alert-error');
-            html_ele.show();
+
+            if(data.msg.length > 0)
+                html_ele.show();
+            else
+                html_ele.hide();
         },
 
         initialize : function(attributes)
@@ -54,7 +58,7 @@ Spatial.Controller = Backbone.View.extend(
 
             // Initializing cache
             this.cache = {};
-            this.showPopulation = true;
+            this.showPopulation = false;
             this.cacheRange = undefined;
             this.maxLimit = undefined;
         },
@@ -992,6 +996,9 @@ Spatial.Controller = Backbone.View.extend(
         handleTrajectorySelectChange : function(event)
         {   
             this.trajectory = Number( $( event.target ).val() );
+
+            this.cache = {};
+
             this.acquireNewData();
         },
 
@@ -1076,10 +1083,12 @@ Spatial.Controller = Backbone.View.extend(
                             if( selectedOption == 'population')
                                 {
                                     this.showPopulation  = true;
+                                    this.updateMsg( { status : false, msg : "Warning: populations plotted in cells are not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
                                 }
                             else
                                 {
                                     this.showPopulation  = false;
+                                    this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
                                 }
 
                             this.cache = {}

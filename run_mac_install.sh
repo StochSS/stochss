@@ -37,7 +37,7 @@ function install_lib {
     if [ "$1" = "libsbml" ]; then
 	CMD="sudo CFLAGS=\"-I$LIBXML\" pip install python-libsbml"
     elif [ "$1" = "mysql-connector-python" ]; then
-	CMD="sudo pip install --allow-all-external $1"
+	CMD="sudo pip install --allow-external $1 $1"
     else
 	CMD="sudo pip install $1"
     fi

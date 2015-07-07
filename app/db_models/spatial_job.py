@@ -7,6 +7,7 @@ import pickle
 import h5py
 from google.appengine.ext import db
 
+import object_property
 
 class SpatialJobWrapper(db.Model):
 
@@ -21,7 +22,7 @@ class SpatialJobWrapper(db.Model):
     outData = db.StringProperty() # THis is a path to the output data on the filesystem
     status = db.StringProperty()
     
-    preprocessed = db.BooleanProperty()
+    preprocessed = object_property.ObjectProperty()
     preprocessedDir = db.StringProperty() # THis is a path to the output data on the filesystem
     
     zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
@@ -38,10 +39,8 @@ class SpatialJobWrapper(db.Model):
 
 
     def preprocess(self, trajectory):      
-        print "Preprocessing ... "
         ''' Job is already processed check '''
-        if self.preprocessed == True and self.preprocessedDir and os.path.exists(self.preprocessedDir):
-            #print "Job is preprocessed"
+        if (self.preprocessed is not None and trajectory in self.preprocessed) and self.preprocessedDir and os.path.exists(self.preprocessedDir):
             return
 
         ''' Unpickle data file '''
@@ -53,8 +52,6 @@ class SpatialJobWrapper(db.Model):
 
             if not self.preprocessedDir:
                 self.preprocessedDir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../output/preprocessed/{0}/'.format(self.key().id())))
-
-            #print "Directory:", self.preprocessedDir
 
             if not os.path.exists(self.preprocessedDir):
                 os.makedirs(self.preprocessedDir)
@@ -82,7 +79,10 @@ class SpatialJobWrapper(db.Model):
             
             hdf5File.close()
 
-        self.preprocessed = True
+        if self.preprocessed is None:
+            self.preprocessed = set()
+
+        self.preprocessed.add(trajectory)
         self.put()
         return
 

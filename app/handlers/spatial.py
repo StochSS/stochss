@@ -159,14 +159,15 @@ class SpatialPage(BaseHandler):
                 resultJS = {}
                 data = {}
 
-                if not job.preprocessed or not os.path.exists(job.preprocessedDir):
+                if job.preprocessed is None or trajectory not in job.preprocessed or not os.path.exists(job.preprocessedDir):
                     job.preprocess(trajectory)
+
                 f = os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory))
 
                 limits = {}
 
                 logging.debug('Spatial.get(onlyColorRange): sTime={0} eTime={0}'.format(sTime,eTime))
-                
+
                 with h5py.File(f, 'r') as dataFile:
                     dataTmp = {}
 

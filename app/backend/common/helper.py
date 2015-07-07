@@ -89,10 +89,11 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type,
     # write to the process' terminal, screen provides this terminal.
     celery_cmd = "sudo screen -d -m bash -c '{0}'".format(command)
 
-    cmd = "ssh -o 'StrictHostKeyChecking no' -i {key_file} {username}@{ip} \"{cmd}\"".format(key_file=key_file,
-                                                                                             ip=ip,
-                                                                                             username=username,
-                                                                                             cmd=celery_cmd)
+#    cmd = "ssh -o 'StrictHostKeyChecking no' -i {key_file} {username}@{ip} \"{cmd}\"".format(key_file=key_file,
+#                                                                                             ip=ip,
+#                                                                                             username=username,
+#                                                                                            cmd=celery_cmd)
+    cmd = get_remote_command(username, ip, key_file, celery_cmd)
     logging.info(cmd)
     success = os.system(cmd)
     logging.debug("success = {0}".format(success))
@@ -139,8 +140,9 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
     SSH_RETRY_COUNT = 8
     SSH_RETRY_WAIT = 3
 
-    cmd = "ssh -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=key_file, ip=ip,
-                                                                                        username=username)
+#    cmd = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=key_file, ip=ip,
+#                                                                                        username=username)
+    cmd = get_remote_command(username, ip, key_file, "pwd")
     logging.info(cmd)
     for x in range(0, SSH_RETRY_COUNT):
         p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
