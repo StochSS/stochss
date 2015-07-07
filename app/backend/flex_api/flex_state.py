@@ -25,17 +25,30 @@ class FlexVMState(object):
     VALID_STATES = [UNPREPARED, RUNNING]
 
     @staticmethod
+    def get_broker_url():
+        with open('/home/ubuntu/celeryconfig.py') as fd:
+            for line in fd:
+                if line.startswith('BROKER_URL'):
+                    return line.split(' = ')[1].replace('"','').rstrip()
+        return None
+
+    @staticmethod
     def get_state_info():
         public_ip = get_public_ip()
         logging.info('self public_ip = {}'.format(public_ip))
         celery_hostname = public_ip.replace('.', '_')
+        broker_url = FlexVMState.get_broker_url()
+        sys.stderr.write("get_state_info(): public_ip={0} celery_hostname={1} broker_url={2}".format(public_ip, celery_hostname, broker_url))
+        sys.stderr.flush()
 
         try:
             commands = [
                 'rm -f /tmp/celery_report',
-                'celery inspect stats -d {celery_hostname} > /tmp/celery_report'.format(celery_hostname=celery_hostname)
+                'celery inspect stats -b {broker_url} -d {celery_hostname} > /tmp/celery_report'.format(celery_hostname=celery_hostname, broker_url=broker_url)
             ]
             command = ';'.join(commands)
+            sys.stderr.write("get_state_info(): command={0}".format(command))
+            sys.stderr.flush()
             os.system(command)
 
             with open('/tmp/celery_report') as fin:
