@@ -202,6 +202,18 @@ class VMStateModel(db.Model):
             logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))
 
     @staticmethod
+    def get_by_ip(ip):
+        ''' Get a VM by its IP address. '''
+        try:
+            entities = VMStateModel.all()
+            entities.filter('pub_ip =', ip)
+            for e in entities:
+                return e
+            return None
+        except Exception as e:
+            logging.error("get_by_ip(): Error {0}".format(e))
+
+    @staticmethod
     def cleanup_flex_old_flex_entries(user_id):
         '''
         update all flex vms that , and delete those entried

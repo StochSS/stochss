@@ -428,7 +428,7 @@ class backendservices(object):
             # NOTE: We need to make sure that the RabbitMQ server is running if any compute
             # nodes are running as we are using the AMQP broker option for Celery.
 
-            VMStateModel.terminate_not_active(params)
+            #VMStateModel.terminate_not_active(params)
 
             # 2. get user_id, infra, ec2 credentials
 

@@ -214,30 +214,8 @@ class FlexCredentialsPage(BaseHandler):
             service = backendservices(self.user_data)
             self.user_data.update_flex_cloud_machine_info_from_db(service)
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+        
 
-            if self.user_data.is_flex_cloud_info_set:
-                terminated = True
-                all_running = True
-                for machine in flex_cloud_machine_info:
-                    if machine['state'] != 'terminated' and machine['state'] != 'inaccessible':
-                        terminated = False
-                    if machine['state'] != 'running':
-                        all_running = False
-            
-# Don't change the state of the system on every page load...
-#                if terminated:
-#                    self.deregister_flex_cloud(self.user.user_id())
-#
-#                    self.user_data.flex_cloud_status = False
-#                    self.user_data.flex_cloud_info_msg = 'Flex Cloud failed to deploy'
-#                    self.user_data.put()
-#
-#                    self.user_data.update_flex_cloud_machine_info_from_db(service)
-#                    flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
-#                elif all_running:
-#                    self.user_data.flex_cloud_status = True
-#                    self.user_data.flex_cloud_info_msg = 'Flex Cloud Deployed'
-#                    self.user_data.put()
         # We must ensure queue head is first element in this list for GUI to work properly
         flex_cloud_machine_info = sorted(flex_cloud_machine_info, key=lambda x: x['queue_head'], reverse=True)
 
@@ -249,10 +227,6 @@ class FlexCredentialsPage(BaseHandler):
         # Check if the flex cloud credentials are valid.
         context['flex_cloud_status'] = self.user_data.flex_cloud_status
         context['flex_cloud_info_msg'] = self.user_data.flex_cloud_info_msg
-#        if self.user_data.is_flex_cloud_info_set:
-#            if not self.user_data.valid_flex_cloud_info:
-#                context['flex_cloud_status'] = True
-#                context['flex_cloud_info_msg'] = 'Flex Cloud configured. Waiting for workers to become available...'
 
         # Get Flex SSH Key Info
         flex_ssh_key_info = self.__get_flex_ssh_key_info()
