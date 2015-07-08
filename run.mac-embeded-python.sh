@@ -269,7 +269,7 @@ function check_spatial_installation {
     fi
 
     echo "Running 'instant-clean'"
-    /Applications/FEniCS.app/Contents/Resources/bin/instant-clean
+    "$STOCHSS_HOME/../fenics/bin/instant-clean"
 
     if check_pyurdme; then
         echo "PyURDME detected successfully.<br />"
