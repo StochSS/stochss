@@ -12,34 +12,34 @@
                 <h3> Select model to simulate </h3>
                 <br />
                 <table class="table table-striped table-bordered mainTable">
-                  <thead>
-                    <tr>
-                      <th width="25px"></th>
-                      <th width="200px">Name</th>
-                      <th>Properties</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                {% for item in all_models %}
-                    <tr>
-                      <td>
-                        <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" />
-                      </td>
-                      <td>
-                        {{ item.name }}
-                      </td>
-                      <td>
-			{% if item.units == "concentration" and not item.isSpatial %}
-			Mass action, concentration, non-spatial
-			{% elif item.units == "population" and not item.isSpatial %}
-			Mass action, population, non-spatial
-			{% elif item.units == "population" and item.isSpatial %}
-			Mass action, population, spatial
-			{% endif %}
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
+                    <thead>
+                        <tr>
+                            <th width="25px"></th>
+                            <th width="200px">Name</th>
+                            <th>Properties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in all_models %}
+                        <tr>
+                            <td>
+                                <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" />
+                            </td>
+                            <td>
+                                {{ item.name }}
+                            </td>
+                            <td>
+			        {% if item.units == "concentration" and not item.isSpatial %}
+			        Concentration, non-spatial
+			        {% elif item.units == "population" and not item.isSpatial %}
+			        Population, non-spatial
+			        {% elif item.units == "population" and item.isSpatial %}
+			        Population, spatial
+			        {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
                 <br />
                 <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
