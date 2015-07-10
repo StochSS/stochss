@@ -71,6 +71,15 @@ class StochKitModelWrapper(db.Model):
 
         return sModel
 
+    #def isMassAction(self):
+    #    isMassAction = True
+
+    #    for reaction in self.reactions:
+    #        if(reaction['type'] == 'custom'):
+    #            isMassAction = False
+
+    #    return isMassAction
+
     def toJSON(self):
         return { "name" : self.name,
                  "id" : self.key().id(),

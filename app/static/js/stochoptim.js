@@ -394,6 +394,23 @@ StochOptim.Controller = Backbone.View.extend(
                 if(typeof this.models != 'undefined')
                 {
                     data = this.models.models;
+
+                    for(var i in data)
+                    {
+                        var model = data[i];
+
+                        var isMassAction = true;
+                        for(var j in model.attributes.reactions)
+                        {
+                            if(model.attributes.reactions[j].type == 'custom')
+                            {
+                                isMassAction = false;
+                                break;
+                            }
+                        }
+
+                        model.attributes.isMassAction = isMassAction;
+                    }
                 } 
 
                 $( this.el ).html( modelSelectTemplate( { models : data } ) );
