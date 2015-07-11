@@ -55,7 +55,7 @@
                     <% for(var model in models) { %>
                     <tr>
                         <td>
-                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial) ? 'disabled' : '' %>/>
+                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial || models[model].attributes.isMassAction == false) ? 'disabled' : '' %>/>
                         </td>
                         <td>
                             <%= models[model].attributes.name %>
@@ -71,9 +71,15 @@
                             <% } %>
                         </td>
                         <td>
-                          <%= (models[model].attributes.units == 'population' && !models[model].attributes.isSpatial) ?  '<span style="color : green;">Model compatible with Stochoptim </span>' : '' %>
-                          <%= (models[model].attributes.units == 'concentration') ? '<span style="color : red;">StochOptim does not work with concentration models </span>' : '' %>
-                          <%= (models[model].attributes.isSpatial) ? '<span style="color : red;">StochOptim does not work with spatial models </span>' : '' %>
+                          <% if(models[model].attributes.units == 'population' && !models[model].attributes.isSpatial && models[model].attributes.isMassAction) { %>
+                          <span style="color : green;">Model compatible with Stochoptim</span>
+                          <% } else if(models[model].attributes.units == 'concentration') { %>
+                          <span style="color : red;">StochOptim does not work with concentration models</span>
+                          <% } else if(models[model].attributes.isMassAction == false) { %>
+                          <span style="color : red;">StochOptim does not work with non-mass action models</span>
+                          <% } else if(models[model].attributes.isSpatial) { %>
+                          <span style="color : red;">StochOptim does not work with spatial models</span>
+                          <% } %>
                         </td>
                     </tr>
                     <% } %>
