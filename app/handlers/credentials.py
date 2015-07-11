@@ -170,14 +170,10 @@ class FlexCredentialsPage(BaseHandler):
 
         service = backendservices(self.user_data)
 
-        res, msg, ids = service.prepare_flex_cloud_machines(params)
-
-        for idN, machine in zip(ids, flex_cloud_machine_info):
-            machine['database_id'] = idN
+        res, msg = service.prepare_flex_cloud_machines(params)
 
         self.user_data.set_flex_cloud_machine_info(flex_cloud_machine_info)
         self.user_data.flex_cloud_status = True
-        #self.user_data.flex_cloud_info_msg = 'Flex Cloud configured. Waiting for workers to become available...'
         self.user_data.flex_cloud_info_msg = 'Preparing Flex Cloud'
         self.user_data.put()
 

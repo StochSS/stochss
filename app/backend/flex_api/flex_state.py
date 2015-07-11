@@ -26,10 +26,13 @@ class FlexVMState(object):
 
     @staticmethod
     def get_broker_url():
-        with open('/home/ubuntu/celeryconfig.py') as fd:
-            for line in fd:
-                if line.startswith('BROKER_URL'):
-                    return line.split(' = ')[1].replace('"','').rstrip()
+        try:
+            with open('/home/ubuntu/celeryconfig.py') as fd:
+                for line in fd:
+                    if line.startswith('BROKER_URL'):
+                        return line.split(' = ')[1].replace('"','').rstrip()
+        except Exception as e:
+           logging.error('get_broker_url(): {0}'.format(e))
         return None
 
     @staticmethod
@@ -40,6 +43,10 @@ class FlexVMState(object):
         broker_url = FlexVMState.get_broker_url()
         sys.stderr.write("get_state_info(): public_ip={0} celery_hostname={1} broker_url={2}".format(public_ip, celery_hostname, broker_url))
         sys.stderr.flush()
+
+        if broker_url is None:
+            info = {'state': FlexVMState.UNPREPARED}
+            return info
 
         try:
             commands = [

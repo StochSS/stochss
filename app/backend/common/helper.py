@@ -142,21 +142,19 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
 
 #    cmd = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=key_file, ip=ip,
 #                                                                                        username=username)
-    cmd = get_remote_command(username, ip, key_file, "pwd")
+    cmd = get_remote_command(username, ip, key_file, "true")
     logging.debug(cmd)
     for x in range(0, SSH_RETRY_COUNT):
         p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT, close_fds=True)
 
-        output = p.stdout.read()
-        logging.debug('output = {0}'.format(output))
-
-        if output.startswith('Warning:') or output.startswith(os.path.join('/home', username)):
+        rc = p.wait()
+        if rc == 0:
             logging.debug("ssh successfully connected to {0}".format(ip))
             return True
-        else:
-            logging.debug("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
-            time.sleep(SSH_RETRY_WAIT)
+
+        logging.debug("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
+        time.sleep(SSH_RETRY_WAIT)
 
     logging.error('Timeout waiting to connect to {0} via SSH.'.format(ip))
     return False

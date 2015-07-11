@@ -65,13 +65,13 @@ class FlexAgent(BaseAgent):
             if not utils.has_parameter(param, parameters):
                 raise AgentConfigurationException('no ' + param)
 
-    def __get_flex_instance_id(self, public_ip):
+    def get_flex_instance_id(self, public_ip):
         return 'flex_{0}'.format(public_ip.replace('.', '_', 3))
 
     def describe_instances_launched(self, parameters):
         launched_ids = []
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
-            launched_ids.append(self.__get_flex_instance_id(machine['ip']))
+            launched_ids.append(self.get_flex_instance_id(machine['ip']))
 
         logging.debug('launched_ids = {0}'.format(launched_ids))
         return launched_ids
@@ -108,7 +108,7 @@ class FlexAgent(BaseAgent):
             logging.debug('describe_unprepared_instances() ip {0} has state {1}'.format(ip, state))
 
             if state == FlexVMState.UNPREPARED:
-                instance_ids.append(self.__get_flex_instance_id(ip))
+                instance_ids.append(self.get_flex_instance_id(ip))
                 public_ips.append(ip)
                 private_ips.append(ip)
                 instance_types.append(FlexConfig.INSTANCE_TYPE)
@@ -135,7 +135,7 @@ class FlexAgent(BaseAgent):
 #            logging.error(sys.exc_info())
 
         finally:
-            VMStateModel.set_state(params=parameters, ins_ids=[self.__get_flex_instance_id(public_ip=ip)],
+            VMStateModel.set_state(params=parameters, ins_ids=[self.get_flex_instance_id(public_ip=ip)],
                                    state=VMStateModel.STATE_TERMINATED, description='VM Deregistered.')
 
 
@@ -168,7 +168,7 @@ class FlexAgent(BaseAgent):
 
         machines_to_deregister = []
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
-            if self.__get_flex_instance_id(machine['ip']) in instance_ids:
+            if self.get_flex_instance_id(machine['ip']) in instance_ids:
                 machines_to_deregister.append(machine)
 
         logging.debug('machines_to_deregister:\n{0}'.format(pprint.pformat(machines_to_deregister)))
@@ -273,7 +273,7 @@ class FlexAgent(BaseAgent):
 
         for machine in machines:
             instance = {}
-            instance["id"] = self.__get_flex_instance_id(machine["ip"])
+            instance["id"] = self.get_flex_instance_id(machine["ip"])
             instance["public_ip"] = machine["ip"]
             instance["private_ip"] = machine["ip"]
 
@@ -324,7 +324,7 @@ class FlexAgent(BaseAgent):
 
                 username = machine['username']
                 is_queue_head = machine[self.PARAM_QUEUE_HEAD]
-                id = self.__get_flex_instance_id(public_ip=ip)
+                id = self.get_flex_instance_id(public_ip=ip)
 
                 if not os.path.exists(keyfile):
                     logging.error('Keyfile: {0} does not exist!'.format(keyfile))

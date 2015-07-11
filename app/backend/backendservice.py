@@ -424,44 +424,11 @@ class backendservices(object):
             i = InfrastructureManager(blocking=blocking)
             res = {}
 
-            # 1. change the status of 'failed' in the previous launch in db to 'terminated'
-            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
-            # nodes are running as we are using the AMQP broker option for Celery.
-
-            #VMStateModel.terminate_not_active(params)
-
-            # 2. get user_id, infra, ec2 credentials
-
-            user_id = self.__get_required_parameter(parameter_key='user_id', params=params)
-            infrastructure = self.__get_required_parameter(parameter_key='infrastructure', params=params)
-
-            ec2_access_key = ''
-            ec2_secret_key = ''
-
-            if 'credentials' in params:
-                if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
-                    ec2_access_key = params['credentials']['EC2_ACCESS_KEY']
-                    ec2_secret_key = params['credentials']['EC2_SECRET_KEY']
-
-            logging.debug('ec2_access_key = {0} ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
-
-            # 3. create exact number of entities in db for this launch, and set the status to 'creating'
-            num_vms = len(params['flex_cloud_machine_info'])
-            logging.debug('num_vms = {0}'.format(num_vms))
-
-            reservation_id = params['reservation_id']
-            logging.debug('flex: reservation_id = {0}'.format(reservation_id))
-
-            ids = self.__create_vm_state_model_entries(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
-                                                       infrastructure=infrastructure, num_vms=num_vms, user_id=user_id,
-                                                       reservation_id=reservation_id)
-
             # 4. Prepare Instances
-            params[VMStateModel.IDS] = ids
             res = i.prepare_instances(params)
 
             logging.debug("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
-            return True, None, ids
+            return True, ''
 
         except Exception, e:
             traceback.print_exc()
