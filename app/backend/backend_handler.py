@@ -133,8 +133,14 @@ class FlexBackendWorker(BackendWorker):
         user_data.put()
         
         # Initialize the VMstateModel db
+        all_accessible = True
         for machine in flex_cloud_machine_info:
-            vm_state = VMStateModel(state=VMStateModel.STATE_CREATING,
+            if self.agent.check_network_ports(machine['ip'], [22, 443]):
+                state = VMStateModel.STATE_ACCESSIBLE
+            else:
+                state = VMStateModel.STATE_INACCESSIBLE
+                all_accessible = False
+            vm_state = VMStateModel(state=state,
                                     infra=self.agent_type,
                                     ins_type=FlexConfig.INSTANCE_TYPE,
                                     pri_ip=machine['ip'],
@@ -145,6 +151,14 @@ class FlexBackendWorker(BackendWorker):
                                     user_id=parameters['user_id'],
                                     res_id=self.reservation_id)
             vm_state.put()
+            
+        if not all_accessible:
+            # Report Failure
+            user_data.flex_cloud_status = False
+            user_data.flex_cloud_info_msg = 'Error: not all workers are accessible'
+            user_data.put()
+            return
+        
 
         if queue_head_machine == None or not helper.wait_for_ssh_connection(queue_head_machine['keyfile'],queue_head_machine['ip'],username=queue_head_machine['username']):
             logging.error('Found no viable ssh-able/running queue head machine!')
@@ -198,8 +212,8 @@ class FlexBackendWorker(BackendWorker):
         user_data.flex_cloud_info_msg = 'Flex Cloud Deployed'
         user_data.put()
         
-        # For the update of the instance status
-        
+        # Force the update of the instance status
+        VMStateModel.synchronize(agent = self.agent, parameters = parameters)
         
         return
 
@@ -264,11 +278,12 @@ class FlexBackendWorker(BackendWorker):
         # Pass it line by line so theres no weird formatting errors from
         # trying to echo a multi-line file directly on the command line
 
+        logging.debug('__configure_celery() params={0}'.format(params))
         flex_cloud_machine_info = params[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         
         instance_types = []
         for machine in flex_cloud_machine_info:
-            vm = VMStateModel.get_by_ip(machine['ip'])
+            vm = VMStateModel.get_by_ip(machine['ip'], reservation_id=params['reservation_id'])
             commands = []
             my_ins_type = 'Unknown'
             commands.append('source ~/.bashrc')

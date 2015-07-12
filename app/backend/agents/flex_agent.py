@@ -122,7 +122,7 @@ class FlexAgent(BaseAgent):
     def __deregister_flex_vm(self, ip, username, keyfile, parameters, queue_head_ip, force=False):
 
         try:
-            if self.__check_network_ports(ip, [22]):
+            if self.check_network_ports(ip, [22]):
                 deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
                 command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
                 logging.debug('deregister_command =\n{}'.format(deregister_command))
@@ -184,7 +184,7 @@ class FlexAgent(BaseAgent):
                                       parameters=parameters,
                                       queue_head_ip=parameters[self.PARAM_FLEX_QUEUE_HEAD]['ip'])
 
-    def __check_network_ports(self, ip, ports):
+    def check_network_ports(self, ip, ports):
         logging.debug("Checking if ports = {0} are open for ip = '{1}'".format(ports, ip))
         PORT_TIMEOUT = 5
         for port in ports:
@@ -218,11 +218,11 @@ class FlexAgent(BaseAgent):
             #logging.debug('cmd = {0}'.format(cmd))
             #if os.system(cmd) != 0:
             #    logging.debug('get_instance_state() os.system({0}) == 0'.format(cmd))
-            if not self.__check_network_ports(ip, [22, 443]):
-                logging.debug('get_instance_state() __check_network_ports() == False')
+            if not self.check_network_ports(ip, [22, 443]):
+                logging.debug('get_instance_state() check_network_ports() == False')
                 state = VMStateModel.STATE_INACCESSIBLE
             else:
-                logging.debug('get_instance_state() __check_network_ports() == True')
+                logging.debug('get_instance_state() check_network_ports() == True')
                 state = VMStateModel.STATE_ACCESSIBLE
 
                 url = self.__get_flex_vm_state_url(ip)

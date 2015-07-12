@@ -202,11 +202,13 @@ class VMStateModel(db.Model):
             logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))
 
     @staticmethod
-    def get_by_ip(ip):
+    def get_by_ip(ip, reservation_id=None):
         ''' Get a VM by its IP address. '''
         try:
             entities = VMStateModel.all()
             entities.filter('pub_ip =', ip)
+            if reservation_id is not None:
+                entities.filter('res_id = ', reservation_id)
             for e in entities:
                 return e
             return None

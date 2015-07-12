@@ -101,7 +101,7 @@ class FlexCredentialsPage(BaseHandler):
             'reservation_id': self.user_data.reservation_id
         }
         self.user_data.flex_cloud_status = True
-        self.user_data.flex_cloud_info_msg = 'Deregistering Flex Cloud'
+        self.user_data.flex_cloud_info_msg = 'Stopping Flex Cloud'
         self.user_data.put()
 
         result = service.deregister_flex_cloud(parameters=params, blocking=True)
@@ -111,19 +111,10 @@ class FlexCredentialsPage(BaseHandler):
             self.user_data.valid_flex_cloud_info = False
             self.user_data.is_flex_cloud_info_set = False
 
-            # delete state, description from old_flex_cloud_machine_info
-            old_flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
-            for machine in old_flex_cloud_machine_info:
-                if 'state' in machine:
-                    del machine['state']
-                if 'description' in machine:
-                    del machine['description']
-
-            self.user_data.set_flex_cloud_machine_info(old_flex_cloud_machine_info)
             self.user_data.reservation_id = None
             self.user_data.flex_db_password = None
-            self.user_data.flex_cloud_status = None
-            self.user_data.flex_cloud_info_msg = ''
+            self.user_data.flex_cloud_status = True
+            self.user_data.flex_cloud_info_msg = 'Flex Cloud Stopped'
             self.user_data.put()
         else:
             logging.error('deregister_flex_cloud failed!')

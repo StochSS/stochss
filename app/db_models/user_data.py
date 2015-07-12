@@ -105,10 +105,7 @@ class UserData(db.Model):
             logging.debug('flex: all_vms_map =\n{0}'.format(all_vms_map))
 
             for machine in flex_cloud_machine_info:
-                #if 'database_id' not in machine:
-                #    continue
-                #idN = machine['database_id']
-                vms = VMStateModel.get_by_ip(machine['ip'])
+                vms = VMStateModel.get_by_ip(machine['ip'], reservation_id=self.reservation_id)
                 if vms is None:
                     logging.debug('machine={0} vms=NONE'.format(machine))
                 else:
