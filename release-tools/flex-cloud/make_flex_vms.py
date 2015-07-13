@@ -96,7 +96,7 @@ class ShellCommand(object):
         else:
             thread.join()
             if self.process.returncode != 0:
-                raise ShellCommandException("return code = {0}".format(self.process.returncode))
+                raise ShellCommandException("return code = {0} stdout={1} stderr={1}".format(self.process.returncode, self.process.stdout.read(), self.process.stderr.read()))
 
 
 class VirtualMachine(object):
