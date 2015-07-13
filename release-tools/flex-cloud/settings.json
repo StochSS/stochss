@@ -5,7 +5,7 @@
     },
     "log": {
         "type": "file",
-        "stdout": "make_flex_vm_stdout.log",
+        "stdout": "make_flex_vm_stderr.log",
         "stderr": "make_flex_vm_stderr.log"
     },
     "dependencies": [

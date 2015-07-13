@@ -95,8 +95,9 @@ class ShellCommand(object):
                     print 'Process return code =', self.process.returncode
         else:
             thread.join()
+            self.process.wait()
             if self.process.returncode != 0:
-                raise ShellCommandException("return code = {0} stdout={1} stderr={1}".format(self.process.returncode, self.process.stdout.read(), self.process.stderr.read()))
+                raise ShellCommandException("Command Failed: '{1}' return code = {0} ".format(self.process.returncode, self.cmd))
 
 
 class VirtualMachine(object):
@@ -125,7 +126,8 @@ class VirtualMachine(object):
         self.start_time = time.time()
 
         try:
-            self.__is_machine_reachable()
+            if not self.__is_machine_reachable():
+                return
             self.__enable_network_ports()
             self.__check_network_ports()
             self.__try_install_dependencies()
@@ -419,8 +421,11 @@ class VirtualMachine(object):
             trial += 1
 
     def __is_machine_reachable(self):
-        self.__wait_until_successful_ssh()
-        print 'Machine with ip: {0} reachable.'.format(self.ip)
+        if self.__wait_until_successful_ssh():
+            print 'Machine with ip: {0} reachable.'.format(self.ip)
+            return True
+        print 'Machine with ip: {0} NOT reachable.'.format(self.ip)
+        return False
 
     def __update_instance(self):
         header = 'Updating instance...'
@@ -451,11 +456,10 @@ class VirtualMachine(object):
 
 
     def __wait_until_successful_ssh(self):
-        command = 'echo Machine with ip {0} is up!'.format(self.ip)
+        command = 'true'
 
         trial = 0
         while trial < self.NUM_SSH_TRIALS:
-            time.sleep(5)
             header = 'Trying to ssh into {0} #{1} ...'.format(self.ip, trial + 1)
             if self.verbose:
                 print header
@@ -463,16 +467,21 @@ class VirtualMachine(object):
             try:
                 self.__run_remote_command(command=command, log_header=header)
                 print "Machine with ip {0} is up!".format(self.ip)
-                break
-            except ShellCommandException:
+                return True
+            except ShellCommandException as e:
+                print 'SSH failed to connect to {0}, trying again'.format(self.ip)
                 if self.verbose:
-                    print 'SSH failed!'
+                    print "\t{0}".format(e)
 
-            except:
-                traceback.print_stack()
-                break
+            except Exception as e:
+                print "Caught exception {0}".format(e)
+                #traceback.print_stack()
+                traceback.print_exc()
+                return False
 
             trial += 1
+            time.sleep(5)
+        return False
 
 
     def __reboot_machine(self):
@@ -669,29 +678,29 @@ class FlexVMMaker(object):
             raise Exception('Machine info needed!')
 
         self.machine_info = options['machine_info']
-        settings = options['settings']
-        self.dependencies = settings['dependencies']
-        self.python_packages = settings['python_packages']
-        self.git_repo = settings['git_repo']
+        self.settings = options['settings']
+        self.dependencies = self.settings['dependencies']
+        self.python_packages = self.settings['python_packages']
+        self.git_repo = self.settings['git_repo']
 
         self.verbose = options['verbose']
 
         print 'GIT REPO: {0}'.format(self.git_repo['url'])
         print 'BRANCH: {0}'.format(self.git_repo['branch'])
 
-        if "log" in settings:
-            self.log_type = settings["log"]["type"]
+        if "log" in self.settings:
+            self.log_type = self.settings["log"]["type"]
         else:
             self.log_type = "screen"
 
         if self.log_type == "file":
-            stdout_log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), settings["log"]["stdout"])
-            print 'stdout_log_filename: {0}'.format(stdout_log_filename)
-            self.stdout_log = open(stdout_log_filename, 'w')
+            self.stdout_log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.settings["log"]["stdout"])
+            print 'stdout_log_filename: {0}'.format(self.stdout_log_filename)
+            self.stdout_log = open(self.stdout_log_filename, 'w')
 
-            stderr_log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), settings["log"]["stderr"])
-            print 'stderr_log_filename: {0}'.format(stderr_log_filename)
-            self.stderr_log = open(stderr_log_filename, 'w')
+            self.stderr_log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.settings["log"]["stderr"])
+            print 'stderr_log_filename: {0}'.format(self.stderr_log_filename)
+            self.stderr_log = open(self.stderr_log_filename, 'w')
 
         else:
             self.stdout_log = None
@@ -702,12 +711,15 @@ class FlexVMMaker(object):
 
     def __cleanup(self):
         if self.log_type == "file":
-            self.stdout_log.close()
-            self.stderr_log.close()
+            try:
+                self.stdout_log.close()
+                self.stderr_log.close()
+            except:
+                pass
 
     def run(self):
         self.overall_start_time = time.time()
-
+        success = True
         for machine in self.machine_info:
             ip = machine['ip']
             username = machine['username']
@@ -728,10 +740,17 @@ class FlexVMMaker(object):
                                 dependencies=self.dependencies, python_packages=self.python_packages,
                                 git_repo=self.git_repo, log_type=self.log_type,
                                 stdout_log=self.stdout_log, stderr_log=self.stderr_log, verbose=self.verbose)
-            vm.make_flex_vm()
+            if not vm.make_flex_vm():
+                success = False
+                break
 
         self.__cleanup()
-        print 'Completed all machines in {} seconds.'.format(time.time() - self.overall_start_time)
+        if success:
+            print 'Completed all machines in {} seconds.'.format(time.time() - self.overall_start_time)
+        else:
+            print "Error configuring some machines, see error logs for more details"
+            print self.stdout_log_filename
+            print self.stderr_log_filename
 
 
 def cleanup_local_files():
