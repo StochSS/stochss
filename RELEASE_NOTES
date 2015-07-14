@@ -1,5 +1,12 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.6.0
+=============================
+- Enhancements of the visualization of spatial simulations 
+- FlexCloud:  run ‘cloud’ jobs on dedicated hardware (in addition to using EC2)
+- Import SBML models
+- Many bug fixes and stability enhancements
+
 1.5.1
 =============================
 - Bugfix release
