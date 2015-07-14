@@ -502,8 +502,8 @@ def master_task(task_id, params, database, storage_agent):
                     os.system("touch {0}".format(last_command_completed_file))
                 
                 execution_time = (datetime.now() - execution_start).total_seconds()
-                print "Should be empty:", stdout
-                print "Should be empty:", stderr
+                #print "Should be empty:", stdout
+                #print "Should be empty:", stderr
                 print "Return code:", p.returncode
         # Done
         logging.info("Master: finished execution of executable")
@@ -678,8 +678,27 @@ def with_temp_file(file_names):
 
 def execute_task(exec_str, return_code_file=None):
     try:
-        p = subprocess.Popen(exec_str, shell=True)
+        p = subprocess.Popen(exec_str, shell=True, preexec_fn=os.setsid)
         pid = p.pid
+
+        # Handler that should catch the first SIGTERM signal and then kill
+        # off all subprocesses
+        def handler(signum, frame, *args):
+            print 'execute_task(): Caught signal:', signum
+            # try to kill subprocesses off...
+            try:
+                print 'Sending SIGTERM to process group {0}'.format(p.pid)
+                os.killpg(p.pid, signal.SIGTERM)
+                p.terminate()
+            except Exception as e:
+                print '******************************************************************'
+                print "Exception:", e
+                print traceback.format_exc()
+                print '******************************************************************'
+
+        # Register the handler with SIGTERM signal
+        signal.signal(signal.SIGTERM, handler)
+
         if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
             os.mkdir(TaskConfig.STOCHSS_PID_DIR)
         # create pid file
