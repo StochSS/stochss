@@ -300,19 +300,7 @@ Spatial.Controller = Backbone.View.extend(
             this.camera2.lookAt( this.scene2.position );
         },
 
-
-        // This event gets fired when the user selects a csv data file
-        meshDataPreview : function(data)
-        {
-            console.log("meshDataPreview : function(data)");
-
-            if (!window.WebGLRenderingContext) {
-                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-                        <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-                        <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
-                return;
-            }
-
+        webGLWorks: function() {
             if(typeof(this.webGL) == 'undefined')
             {
                 var canvas = document.createElement('canvas');
@@ -320,45 +308,14 @@ Spatial.Controller = Backbone.View.extend(
                 delete canvas;
             }
 
-            if (!this.webGL) {
-                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
-                <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-                <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
-                <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
-                </ul></center>');
-                return;  
-            }
+            return Boolean(window.WebGLRenderingContext) && this.webGL;
+        },
 
-
+        // This event gets fired when the user selects a csv data file
+        meshDataPreview : function(data)
+        {
             if(!this.renderer)
             {
-
-                if (!window.WebGLRenderingContext) {
-                    // Browser has no idea what WebGL is. Suggest they
-                    // get a new browser by presenting the user with link to
-                    // http://get.webgl.org
-                    $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-                        <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-                        <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
-                    return;
-                }
-
-                var canvas = document.createElement('canvas');
-
-                gl = canvas.getContext("webgl");
-                delete canvas;
-                if (!gl) {
-                    // Browser could not initialize WebGL. User probably needs to
-                    // update their drivers or get a new browser. Present a link to
-                    // http://get.webgl.org/troubleshooting
-                    $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
-                        <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-                        <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
-                        <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
-                    </ul></center>');
-                    return;  
-                }
-
                 var dom = $( "#meshPreview" ).empty();
                 var width = dom.width(); this.d_width = width;
                 var height = 0.75 * width; this.d_height = height;
@@ -654,6 +611,11 @@ Spatial.Controller = Backbone.View.extend(
 
             console.log(" updateCache : function("+start+", "+stop+")");
 
+            if(!this.webGLWorks())
+            {
+                console.log('WebGL not working. Short circuiting ajax calls');
+                return;
+            }
 
             $.ajax( { type : "GET",
                       url : "/spatial",
@@ -1014,7 +976,54 @@ Spatial.Controller = Backbone.View.extend(
                 var jobInfoTemplate = _.template( $( "#jobInfoTemplate" ).html() );
 
                 $( "#jobInfo" ).html( jobInfoTemplate(this.jobInfo) )
+
+                $( "#accessOutput" ).show();
+                // Add event handler to access button
+                if ((data['resource'] == 'ec2-cloud' || data['resource'] == 'flex-cloud') && !data['outData'])
+                {
+                    $( "#access" ).html('<i class="icon-download-alt"></i> Fetch Data from Cloud');                    
+                    $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
+
+		    $( "#accessVtk" ).hide();
+		    $( "#accessCsv" ).hide();
+                }
+                else
+                {
+                    $( "#access" ).html('<i class="icon-download-alt"></i> Access Local Data');
+                    $( "#access" ).click(_.bind(this.handleAccessDataButton, this));
+
+		    $( "#accessVtk" ).show();
+                    $( "#accessVtk" ).click(_.bind(this.handleAccessVtkDataButton, this));
+
+		    $( "#accessCsv" ).show();
+                    $( "#accessCsv" ).click(_.bind(this.handleAccessCsvDataButton, this));
+                }
                 
+                console.log("meshDataPreview : function(data)");
+                if (!window.WebGLRenderingContext) {
+                    // Browser has no idea what WebGL is. Suggest they
+                    // get a new browser by presenting the user with link to
+                    // http://get.webgl.org
+                    $( "#plotRegion" ).html('<center><h2 style="color: red;">Error: WebGL Not Supported</h2><br /> \
+                        <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+                    $( '#plotRegion' ).show();
+                    return;
+                }
+
+                if (!this.webGLWorks()) {
+                    // Browser could not initialize WebGL. User probably needs to
+                    // update their drivers or get a new browser. Present a link to
+                    // http://get.webgl.org/troubleshooting
+                    $( "#plotRegion" ).html('<center><h2 style="color: red;">Error: WebGL Disabled</h2><br /> \
+<ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+<li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+</ul></center>');
+                    $( '#plotRegion' ).show();
+                    return false;
+                }
+
                 if(typeof data.status != 'undefined')
                 {
                     updateMsg( data );
@@ -1198,28 +1207,6 @@ Spatial.Controller = Backbone.View.extend(
                 else
                 {
                     $( '#error' ).show();
-                }
-
-                $( "#accessOutput" ).show();
-                // Add event handler to access button
-                if ((data['resource'] == 'ec2-cloud' || data['resource'] == 'flex-cloud') && !data['outData'])
-                {
-                    $( "#access" ).html('<i class="icon-download-alt"></i> Fetch Data from Cloud');                    
-                    $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
-
-		    $( "#accessVtk" ).hide();
-		    $( "#accessCsv" ).hide();
-                }
-                else
-                {
-                    $( "#access" ).html('<i class="icon-download-alt"></i> Access Local Data');
-                    $( "#access" ).click(_.bind(this.handleAccessDataButton, this));
-
-		    $( "#accessVtk" ).show();
-                    $( "#accessVtk" ).click(_.bind(this.handleAccessVtkDataButton, this));
-
-		    $( "#accessCsv" ).show();
-                    $( "#accessCsv" ).click(_.bind(this.handleAccessCsvDataButton, this));
                 }
             }
         }

@@ -108,10 +108,10 @@
     </script>
 
 <script type="text/template" id="jobInfoTemplate">
-	<ol class="breadcrumb">
-  		<li><a href="/status">Job Status</a></li>
-  		<li class="active"><%= name %></a></li>
-	</ol>
+    <ol class="breadcrumb">
+  	<li><a href="/status">Job Status</a></li>
+  	<li class="active"><%= name %></a></li>
+    </ol>
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <br />
     <div class="well">
@@ -174,9 +174,7 @@
             </tr>
         </table>
         <div class="row">
-            <table class="span10" style="border: 1px solid rgb(221, 221, 221);">
-                <tr>
-                    <td>
+            <div class="span10" style="border: 1px solid rgb(221, 221, 221);">
                         <div id="meshPreviewMsg"><CENTER><H1>Loading...</H1></CENTER></div>
                         
 
@@ -230,10 +228,37 @@
                         </div>
                         <div id="inset"></div>
                         <div id="meshPreview" style="z-index=-2"></div>
-                    </td>
+        
+        <div id="domainControls" class="well" style="clear:both; display: none; margin-bottom: 0px;">
+
+            <span><b>Domain Clipping Controls</b> </span><br/>
+            <table>
+                
+                <tr>
+                    <td> <span> Clip: </span </td>
+                                             <td> <input type="checkbox" id="planeXCheck"/>X-plane </td> 
+                    <td><input type="checkbox" id="planeYCheck"/>Y-plane </td>
+                    <td><input type="checkbox" id="planeZCheck"/>Z-plane </td>
                 </tr>
-            </table>
-             
+                
+                <tr>
+                    <td><span> Flip: </span></td>
+                    <td><input type="checkbox" id="planeXFlip"/>X-plane </td> 
+                    <td><input type="checkbox" id="planeYFlip"/>Y-plane </td>
+                    <td><input type="checkbox" id="planeZFlip"/>Z-plane </td>
+                </tr>
+            </table> 
+            
+            <span> X-Axis </span>
+            <input id="planeXSelect" type="range" min="-5" max="+5" step="1" value="0">
+            
+            <span> Y-Axis </span>
+            <input id="planeYSelect" type="range" min="-5" max="+5" step="1" value="0">
+            
+            <span> Z-Axis </span>
+            <input id="planeZSelect" type="range" min="-5" max="+5" step="1" value="0">
+        </div>
+        </div>
 
 
             <div class="span1">
@@ -243,48 +268,21 @@
             </div>
         </div>
 
-    </div>
+        <br>
 
-    <div id="error" style="clear:both; display: none;">
-        Stdout:<br />
-        <pre><%= stdout %></pre>
-        
-        Stderr:<br />
-        <pre><%= stderr %></pre>
-    </div>
-      
-    <div id="msg" style="clear:both; display: none;"></div>
-    <div id="accessOutput" class="well" style="clear:both; display: none;">
-        
-        <div id="domainControls" class="button-container button-container-left" style="clear:both; display: none;">
-
-        <span><b>Domain Clipping Controls</b> </span><br/>
-        <table>
-        
-          <tr>
-              <td> <span> Clip: </span </td>
-            <td> <input type="checkbox" id="planeXCheck"/>X-plane </td> 
-            <td><input type="checkbox" id="planeYCheck"/>Y-plane </td>
-            <td><input type="checkbox" id="planeZCheck"/>Z-plane </td>
-        </tr>
-        
-        <tr>
-            <td><span> Flip: </span></td>
-            <td><input type="checkbox" id="planeXFlip"/>X-plane </td> 
-            <td><input type="checkbox" id="planeYFlip"/>Y-plane </td>
-            <td><input type="checkbox" id="planeZFlip"/>Z-plane </td>
-        </tr>
-        </table> 
-        
-        <span> X-Axis </span>
-        <input id="planeXSelect" type="range" min="-5" max="+5" step="1" value="0">
-        
-        <span> Y-Axis </span>
-        <input id="planeYSelect" type="range" min="-5" max="+5" step="1" value="0">
-
-        <span> Z-Axis </span>
-        <input id="planeZSelect" type="range" min="-5" max="+5" step="1" value="0">
+        <div id="error" style="clear:both; display: none;">
+            Stdout:<br />
+            <pre><%= stdout %></pre>
+            
+            Stderr:<br />
+            <pre><%= stderr %></pre>
+            <br>
         </div>
+    </div>
+        
+    <div id="msg" style="clear:both; display: none;"></div>
+
+    <div id="accessOutput" class="well" style="clear:both; display: none;">
         
         <h3>Output</h3>
         <br />
