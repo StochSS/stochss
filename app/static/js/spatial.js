@@ -628,6 +628,12 @@ Spatial.Controller = Backbone.View.extend(
                                    timeEnd: stop} )},
                       success : _.bind(function(data) {
                           try {
+                              if(_.has(data, "status") && !data.status)
+                              {
+                                  this.updateMsg( { status : false, msg : data.msg }, "meshMsg" );
+                                  return;
+                              }
+
                               if(typeof(data.colors) == 'undefined')
                                   return
 
@@ -683,16 +689,22 @@ Spatial.Controller = Backbone.View.extend(
         },
 
         handleGetMesh : function(data) {
-            try{
-            $( '#speciesSelect' ).empty();
-            this.meshData = data.mesh;
-
-            this.updateCache(0, this.cacheRange);
-
-            var sortedSpecies = data.species.sort();
-            this.setUpSpeciesSelect(sortedSpecies);
+            try {
+                if(_.has(data, "status") && !data.status)
+                {
+                    this.updateMsg( { status : false, msg : data.msg }, "meshMsg" );
+                    return;
+                }
+                
+                $( '#speciesSelect' ).empty();
+                this.meshData = data.mesh;
+                
+                this.updateCache(0, this.cacheRange);
+                
+                var sortedSpecies = data.species.sort();
+                this.setUpSpeciesSelect(sortedSpecies);
             }
-          
+            
             catch(err)
             {
                 this.updateMsg( { status : false, msg : 'Error retrieving mesh from server: ' + err.message} ,"meshMsg");
