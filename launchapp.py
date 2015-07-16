@@ -13,7 +13,7 @@ import uuid
 source_exec = sys.argv[1]
 
 mac = False
-if len(sys.argv) == 3:
+if 'mac' in sys.argv:
     mac = True
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -34,7 +34,7 @@ if os.path.isfile('app/update'):
     else:
         sys.stdout.write('Updating application now...')
     sys.stdout.flush()
-    
+
     h = subprocess.Popen('git stash'.split())
     h.communicate()
     if h.returncode != 0:
@@ -44,7 +44,7 @@ if os.path.isfile('app/update'):
             print "<br />"
         sys.stdout.flush()
         exit(-1)
-        
+
     h = subprocess.Popen('git pull'.split())
     h.communicate()
     if h.returncode != 0:
@@ -55,7 +55,7 @@ if os.path.isfile('app/update'):
         sys.stdout.flush()
         exit(-1)
 
-    #print "Success"
+    # print "Success"
     print "Done updating, relaunching {0}...".format(source_exec)
     if mac:
         print "<br />"
@@ -83,22 +83,32 @@ if req:
             print "<font color=red>"
 
         print "There seems to be another webserver already running on localhost:8080"
-        
+
         if mac:
             print "</font><br />"
 
         exit(-1)
 
-h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
 h.communicate()
 
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
 
 # Deploy the app on localhost
-#print path
+# print path
 def startserver():
-    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(path)).split(), stdout = stdout, stderr = stderr)
+    import sys
+    if '--debug' in sys.argv:
+        h = subprocess.Popen((
+                         "python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(
+                             path)).split(), stdout=stdout, stderr=stderr)
+    else:
+        h = subprocess.Popen((
+                         "python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(
+                             path)).split(), stdout=stdout, stderr=stderr)
+
 
 startserver()
 
@@ -106,6 +116,7 @@ print "Starting admin server at: http://localhost:8000"
 if mac:
     print "<br />"
 sys.stdout.flush()
+
 
 def clean_up_and_exit(signal, stack):
     print "Killing webserver proces..."
@@ -122,6 +133,7 @@ def clean_up_and_exit(signal, stack):
         exit(0)
     else:
         exit(-1)
+
 
 signal.signal(signal.SIGHUP, clean_up_and_exit)
 signal.signal(signal.SIGINT, clean_up_and_exit)
@@ -165,17 +177,17 @@ for tryy in range(0, 20):
 
                 sys.stdout.flush()
                 serverUp = False
-            break;
+            break
         else:
             ret = h.poll()
-        
-        # Sometimes the server fails to start for weird reason, make sure it keeps trying to start
+
+            # Sometimes the server fails to start for weird reason, make sure it keeps trying to start
             if ret is not None:
                 if ret != 0:
                     startserver()
-                
+
     time.sleep(2)
-    print "Checking if launched -- try " + str(tryy + 1) +" of 20"
+    print "Checking if launched -- try " + str(tryy + 1) + " of 20"
     if mac:
         print "<br />"
     sys.stdout.flush()

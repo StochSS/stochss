@@ -7,6 +7,7 @@ MY_PATH="`pwd`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
+LIBXML="$(xcodebuild -version Path -sdk macosx)/usr/include/libxml2"
 
 
 #################
@@ -15,8 +16,13 @@ function check_for_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
-    RET=`python -c "import $1" 2>/dev/null`
-    RC=$?
+    if [ "$1" = "mysql-connector-python" ]; then
+        RET=`python -c "import mysql.connector" 2>/dev/null`
+        RC=$?
+    else
+        RET=`python -c "import $1" 2>/dev/null`
+        RC=$?
+    fi
     if [[ $RC != 0 ]];then
         return 1 #False
     fi
@@ -28,12 +34,13 @@ function install_lib {
         return 1 #False
     fi
     export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-    if [ "$1" = "h5py" ]; then
-        pkg="$1==2.4.0b1"
+    if [ "$1" = "libsbml" ]; then
+	CMD="sudo CFLAGS=\"-I$LIBXML\" pip install python-libsbml"
+    elif [ "$1" = "mysql-connector-python" ]; then
+	CMD="sudo pip install --allow-external $1 $1"
     else
-        pkg="$1"
+	CMD="sudo pip install $1"
     fi
-    CMD="sudo pip install $pkg"
     echo $CMD >> run_mac_install.log
     eval $CMD
 }
@@ -42,7 +49,7 @@ function check_and_install_dependencies {
     if ! check_pip;then
         install_pip
     fi
-    deps=("numpy" "scipy" "matplotlib" "h5py")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep" >> run_mac_install.log

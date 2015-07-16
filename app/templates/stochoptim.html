@@ -23,6 +23,7 @@
 <link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
 
+<script type="text/javascript" src="/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/d3.v3.js"></script>
 <script type="text/javascript" src = "/static/js/nv.d3.js"></script>
@@ -34,6 +35,8 @@
 
 <script id="modelSelectTemplate" type="text/template">
     <div id="modelSelect">
+        <h1>Model Editor</h1>
+        <br>
         <div class="well">
             <% if(typeof models != 'undefined' && models.length > 0) { %>
             <h3> Select model to analyze </h3>
@@ -52,7 +55,7 @@
                     <% for(var model in models) { %>
                     <tr>
                         <td>
-                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial) ? 'disabled' : 'checked' %>/>
+                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial || models[model].attributes.isMassAction == false) ? 'disabled' : '' %>/>
                         </td>
                         <td>
                             <%= models[model].attributes.name %>
@@ -68,9 +71,15 @@
                             <% } %>
                         </td>
                         <td>
-                          <%= (models[model].attributes.units == 'population' && !models[model].attributes.isSpatial) ?  '<span style="color : green;">Model compatible with Stochoptim </span>' : '' %>
-                          <%= (models[model].attributes.units == 'concentration') ? '<span style="color : red;">StochOptim does not work with concentration models </span>' : '' %>
-                          <%= (models[model].attributes.isSpatial) ? '<span style="color : red;">StochOptim does not work with spatial models </span>' : '' %>
+                          <% if(models[model].attributes.units == 'population' && !models[model].attributes.isSpatial && models[model].attributes.isMassAction) { %>
+                          <span style="color : green;">Model compatible with Stochoptim</span>
+                          <% } else if(models[model].attributes.units == 'concentration') { %>
+                          <span style="color : red;">StochOptim does not work with concentration models</span>
+                          <% } else if(models[model].attributes.isMassAction == false) { %>
+                          <span style="color : red;">StochOptim does not work with non-mass action models</span>
+                          <% } else if(models[model].attributes.isSpatial) { %>
+                          <span style="color : red;">StochOptim does not work with spatial models</span>
+                          <% } %>
                         </td>
                     </tr>
                     <% } %>
@@ -116,6 +125,10 @@
         <!--List parameters that can be parameter-swept-->
         Select parameters to estimate:<br />
         <div id="activate"></div>
+	<div class="btn-group">
+	    <button class="btn btn-small selectAll">Select All</button>
+	    <button class="btn btn-small clearAll">Clear All</button>
+	</div>
 
         <br />
         <!--List of valid datafiles to include-->

@@ -25,7 +25,6 @@ class Cytosol(dolfin.SubDomain):
     def inside(self,x,on_boundary):
         return not on_boundary
 
-
 class simple_diffusion2(pyurdme.URDMEModel):
     """ One species diffusing on the boundary of a sphere and one species
         diffusing inside the sphere. """
@@ -38,7 +37,7 @@ class simple_diffusion2(pyurdme.URDMEModel):
 
         self.add_species([A,B])
 
-        # A circle
+        # Import a circle mesh
         self.mesh = pyurdme.URDMEMesh.read_dolfin_mesh("circle.xml")
         
         # A mesh function for the cells
@@ -77,14 +76,9 @@ if __name__ == '__main__':
     model = simple_diffusion2()
     result = model.run()
 
-    # Write mesh and subdomain files for the StochSS UI
-    sd = model.get_subdomain_vector()
-    with open("simple_diffusion_subdomains.txt",'w') as fd:
-        for ndx,val in enumerate(sd):
-            fd.write("{0},{1}\n".format(ndx,val))
-
-    # For visualization in Paraview
+    # Write output in Paraview compatible format.
     result.export_to_vtk(species="B",folder_name="Bout")
     result.export_to_vtk(species="A",folder_name="Aout")
+
 
 

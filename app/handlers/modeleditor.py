@@ -10,182 +10,136 @@ import os
 import traceback
 import re
 import random
+import tempfile
 import time
+import datetime
 from google.appengine.api import users
 
-from stochssapp import BaseHandler, ObjectProperty
+from stochssapp import BaseHandler
 
 import stochss.stochkit
 import stochss.model
 import stochss.examplemodels
+import stochss.SBMLconverter
 import mesheditor
 
 import webapp2
 import exportimport
 
-class StochKitModelWrapper(db.Model):
-    """
-    A wrapper for the StochKit Model object
-    """
-    user_id = db.StringProperty()
-    name = db.StringProperty()
-    type = db.StringProperty()
-    species = ObjectProperty()
-    parameters = ObjectProperty()
-    reactions = ObjectProperty()
-    isSpatial = db.BooleanProperty()
-    units = db.StringProperty()
-    spatial = ObjectProperty()
-    zipFileName = db.StringProperty()
-    is_public = db.BooleanProperty()
+from db_models.model import StochKitModelWrapper
+from db_models.sbml_import_logs import SBMLImportErrorLogs
 
-    def delete(self):
-        if self.zipFileName:
-            if os.path.exists(self.zipFileName):
-                os.remove(self.zipFileName)
+def createStochKitModelWrapperFromStochKitModel(handler, model, public = False):
+    species = []
+    parameters = []
+    reactions = []
+    
+    meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE user_id = :1", handler.user.user_id()).get()
+    
+    def fixName(name):
+        if re.match('^[^a-zA-Z_]', name):
+            name = 'a' + name
+      
+        return re.sub('[^a-zA-Z0-9_]', '', name)
 
-        super(StochKitModelWrapper, self).delete()
+    spatial = {
+        'initial_conditions' : [],
+        'mesh_wrapper_id' : meshWrapperDb.key().id(),
+        'reactions_subdomain_assignments': {},
+        'species_diffusion_coefficients': {},
+        'species_subdomain_assignments': {}
+    }
+    
+    for specieName, specie in model.listOfSpecies.items():
+        name = fixName(specie.name)
+        species.append({ 'name' : name, 'initialCondition' : specie.initial_value })
+        spatial['species_diffusion_coefficients'][name] = 0.0
+        spatial['species_subdomain_assignments'][name] = meshWrapperDb.uniqueSubdomains
+        
+    for parameterName, parameter in model.listOfParameters.items():
+        parameter.evaluate()
+        name = fixName(parameter.name)
+        parameters.append({ 'name' : name, 'value' : parameter.value })
 
-    # Create a regular Stochkit model from the JSON formatted one
-    def createStochKitModel(self):
-        sModel = stochss.stochkit.StochKitModel(self.name)
-        sModel.units = self.units
+    modelType = 'massaction'
+    for reactionName, reaction in model.listOfReactions.items():
+        outReaction = {}
+        
+        reactants = []
+        products = []
 
-        for specie in self.species:
-            sModel.addSpecies(stochss.model.Species(specie['name'], specie['initialCondition']))
+        totalReactants = 0
+        reactantCount = len(reaction.reactants.items())
+        productCount = len(reaction.products.items())
+        for reactantName, stoichiometry in reaction.reactants.items():
+            reactantName = fixName(reactantName)
+            reactants.append({ 'specie' : reactantName, 'stoichiometry' : stoichiometry })
+            totalReactants += stoichiometry
 
-        for parameter in self.parameters:
-            sModel.addParameter(stochss.model.Parameter(parameter['name'], parameter['value']))
-
-        for reaction in self.reactions:
-            inReactants = {}
-            for reactant in reaction['reactants']:
-                if reactant['specie'] not in inReactants:
-                    inReactants[reactant['specie']] = 0
-
-                inReactants[reactant['specie']] += reactant['stoichiometry']
-
-            inProducts = {}
-            for product in reaction['products']:
-                if product['specie'] not in inProducts:
-                    inProducts[product['specie']] = 0
-
-                inProducts[product['specie']] += product['stoichiometry']
-
-            reactants = dict([(sModel.getSpecies(reactant[0]), reactant[1]) for reactant in inReactants.items()])
-
-            products = dict([(sModel.getSpecies(product[0]), product[1]) for product in inProducts.items()])
-            
-            if(reaction['type'] == 'custom'):
-                sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, reaction['equation'], False, None, None))
-            else:
-                sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))
-
-        return sModel
-
-    def toJSON(self):
-        return { "name" : self.name,
-                 "id" : self.key().id(),
-                 "units" : self.units,
-                 "type" : self.type,
-                 "species" : self.species,
-                 "parameters" : self.parameters,
-                 "reactions" : self.reactions,
-                 "isSpatial" : self.isSpatial,
-                 "spatial" : self.spatial,
-                 "is_public" : self.is_public }
-
-    @staticmethod
-    def createFromStochKitModel(handler, model, public = False):
-        species = []
-        parameters = []
-        reactions = []
-
-        mesheditor.setupMeshes(handler)
-        meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).get()
-
-        def fixName(name):
-            if re.match('^[^a-zA-Z_]', name):
-                name = 'a' + name
-
-            return re.sub('[^a-zA-Z0-9_]', '', name)
-
-        spatial = {
-          'initial_conditions' : [],
-          'mesh_wrapper_id' : meshWrapperDb.key().id(),
-          'reactions_subdomain_assignments': {},
-          'species_diffusion_coefficients': {},
-          'species_subdomain_assignments': {}
-          }
-
-        for specieName, specie in model.listOfSpecies.items():
-            name = fixName(specie.name)
-            species.append({ 'name' : name, 'initialCondition' : specie.initial_value })
-            spatial['species_diffusion_coefficients'][name] = 0.0
-            spatial['species_subdomain_assignments'][name] = meshWrapperDb.uniqueSubdomains
-
-        for parameterName, parameter in model.listOfParameters.items():
-            parameter.evaluate()
-            name = fixName(parameter.name)
-            parameters.append({ 'name' : name, 'value' : parameter.value })
-
-        modelType = 'massaction'
-        for reactionName, reaction in model.listOfReactions.items():
-            outReaction = {}
-
-            reactants = []
-            products = []
-
-            for reactantName, stoichiometry in reaction.reactants.items():
-                reactantName = fixName(reactantName)
-                reactants.append({ 'specie' : reactantName, 'stoichiometry' : stoichiometry })
-
-            for productName, stoichiometry in reaction.products.items():
-                productName = fixName(productName)
-                products.append({ 'specie' : productName, 'stoichiometry' : stoichiometry })
+        for productName, stoichiometry in reaction.products.items():
+            productName = fixName(productName)
+            products.append({ 'specie' : productName, 'stoichiometry' : stoichiometry })
                 
-            if reaction.massaction == True:
-                outReaction['type'] = 'massaction'
-                outReaction['rate'] = fixName(reaction.marate.name)
-            else:
-                modelType = 'custom'
-                outReaction['type'] = 'custom'
-                outReaction['equation'] = reaction.propensity_function
+        if reaction.massaction == True:
+            outReaction['type'] = 'massaction'
+            outReaction['rate'] = fixName(reaction.marate.name)
 
-            outReaction['reactants'] = reactants
-            outReaction['products'] = products
-            outReaction['name'] = fixName(reaction.name)
+            if reactantCount == 0 and productCount == 1:
+                outReaction['type'] = 'creation'
+            elif reactantCount == 1 and productCount == 0:
+                outReaction['type'] = 'destruction'
+            elif reactantCount == 2 and productCount == 1:
+                outReaction['type'] = 'merge'
+            elif reactantCount == 1 and productCount == 1 and totalReactants == 1:
+                outReaction['type'] = 'change'
+            elif reactantCount == 1 and productCount == 1 and totalReactants == 2:
+                outReaction['type'] = 'dimerization'
+            elif reactantCount == 1 and productCount == 2:
+                outReaction['type'] = 'split'
+            elif reactantCount == 2 and productCount == 2:
+                outReaction['type'] = 'four'
 
-            spatial['reactions_subdomain_assignments'][fixName(reaction.name)] = meshWrapperDb.uniqueSubdomains
+            if totalReactants > 2:
+                raise Exception("Error in Reaction {0}: StochKit mass action reactions cannot have more than 2 total reacting particles. Total stoichiometry for this reaction is {1}".format(reactionName, totalRreactants))
+        else:
+            modelType = 'custom'
+            outReaction['type'] = 'custom'
+            outReaction['equation'] = reaction.propensity_function
 
-            reactions.append(outReaction)
+        outReaction['reactants'] = reactants
+        outReaction['products'] = products
+        outReaction['name'] = fixName(reaction.name)
 
-        names = [modelt['name'] for modelt in ModelManager.getModels(handler)]
+        spatial['reactions_subdomain_assignments'][fixName(reaction.name)] = meshWrapperDb.uniqueSubdomains
 
-        modelDb = StochKitModelWrapper()
+        reactions.append(outReaction)
+
+    names = [modelt['name'] for modelt in ModelManager.getModels(handler)]
+
+    modelDb = StochKitModelWrapper()
 
         
-        tmpName = fixName(model.name)
-        while tmpName in names:
-            tmpName = fixName(model.name) + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
-        name = tmpName
+    tmpName = fixName(model.name)
+    while tmpName in names:
+        tmpName = fixName(model.name) + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
+    name = tmpName
 
-        modelDb.user_id = handler.user.user_id()
-        modelDb.name = name
-        modelDb.type = modelType
-        modelDb.species = species
-        modelDb.parameters = parameters
-        modelDb.reactions = reactions
-        modelDb.isSpatial = False
-        modelDb.units = model.units
-        modelDb.spatial = spatial
-        modelDb.zipFileName = None
-        modelDb.is_public = public
-
-        modelDb.put()
-
-        return modelDb
-
+    modelDb.user_id = handler.user.user_id()
+    modelDb.name = name
+    modelDb.type = modelType
+    modelDb.species = species
+    modelDb.parameters = parameters
+    modelDb.reactions = reactions
+    modelDb.isSpatial = False
+    modelDb.units = model.units
+    modelDb.spatial = spatial
+    modelDb.zipFileName = None
+    modelDb.is_public = public
+    
+    modelDb.put()
+    
+    return modelDb
+    
 class ModelManager():
     @staticmethod
     def getModels(handler, public = False):
@@ -239,73 +193,6 @@ class ModelManager():
                 
         return jsonModel
 
-    #@staticmethod
-    #def createModel(handler, model, rename = None):
-    #    userID = None
-
-        # Set up defaults
-    #    if 'isSpatial' not in model or 'spatial' not in model:
-    #        model['isSpatial'] = False
-    #        model['spatial'] = { 'subdomains' : [],
-    #                             'mesh_wrapper_id' : None,
-    #                             'species_diffusion_coefficients' : {} ,
-    #                             'species_subdomain_assignments' : {} ,
-    #                             'reactions_subdomain_assignments' : {},
-    #                             'initial_conditions' : [] }
-
-    #    if 'is_public' not in model:
-    #        model['is_public'] = False
-
-    #    if 'user_id' in model:
-    #        userID = model['user_id']
-    #    else:
-    #        userID = handler.user.user_id()
-
-        # Make sure name isn't taken, or build one that isn't taken
-    #    if "name" in model:
-    #        tryName = model["name"]
-    #        if tryName in [x.name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
-    #            if rename:
-    #                i = 1
-    #                tryName = '{0}_{1}'.format(model["name"], i)
-
-    #                while tryName in [x.name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
-    #                    i = i + 1
-    #                    tryName = '{0}_{1}'.format(model["name"], i)
-    #            else:
-    #                return None
-
-    #    modelWrap = StochKitModelWrapper()
-
-    #    if rename:
-    #        model["name"] = tryName
-
-    #    if "name" in model:
-    #        name = model["name"]
-    #    else:
-    #        raise Exception("Why is this code here? modeleditor.py 185")
-            #name = "tmpname"
-
-    #    if 'isSpatial' in model:
-    #        modelWrap.isSpatial = model['isSpatial']
-
-    #    if 'spatial' in model:
-    #        modelWrap.spatial = model['spatial']
-
-    #    modelWrap.name = name
-
-    #    modelWrap.species = model["species"]
-    #    modelWrap.parameters = model["parameters"]
-    #    modelWrap.reactions = model["reactions"]
-    #    modelWrap.type = model["type"]
-    #    modelWrap.spatial = model["spatial"]
-    #    modelWrap.isSpatial = model["isSpatial"]
-    #    modelWrap.is_public = model["is_public"]
-    #    modelWrap.units = model["units"]
-    #    modelWrap.user_id = userID
-
-    #    return modelWrap.put().id()
-
     @staticmethod
     def deleteModel(handler, model_id):
         model = StochKitModelWrapper.get_by_id(model_id)
@@ -357,41 +244,42 @@ class ModelManager():
         if 'spatial' in jsonModel:
             modelWrap.spatial = jsonModel['spatial']
 
-            # Make sure we have access to a copy of the mesh
-            meshDbCurrent = mesheditor.MeshWrapper.get_by_id(modelWrap.spatial["mesh_wrapper_id"])
+            # Make sure we have access to a copy of the mesh (if it exists)
+            if "mesh_wrapper_id" in modelWrap.spatial and modelWrap.spatial["mesh_wrapper_id"]:
+                meshDbCurrent = mesheditor.MeshWrapper.get_by_id(modelWrap.spatial["mesh_wrapper_id"])
 
-            if createModel:
-                if meshDbCurrent.userId != userID:
-                    meshDb = mesheditor.MeshWrapper()
+                if createModel:
+                    if meshDbCurrent.user_id != userID:
+                        meshDb = mesheditor.MeshWrapper()
 
-                    meshDb.userId = userID
+                        meshDb.user_id = userID
 
 
-                    names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
+                        names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('user_id =', handler.user.user_id()).run()]
                     
-                    tmpName = meshDbCurrent.name
-                    i = 0
-                    while tmpName in names:
-                        tmpName = meshDbCurrent.name + '_' + str(i)
-                        i += 1
+                        tmpName = meshDbCurrent.name
+                        i = 0
+                        while tmpName in names:
+                            tmpName = meshDbCurrent.name + '_' + str(i)
+                            i += 1
 
-                    meshDb.name = tmpName
-                    meshDb.description = meshDbCurrent.description
-                    meshDb.meshFileId = meshDbCurrent.meshFileId
-                    meshDb.subdomains = meshDbCurrent.subdomains
-                    meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
-                    meshDb.undeletable = meshDbCurrent.undeletable
-                    meshDb.ghost = False
+                        meshDb.name = tmpName
+                        meshDb.description = meshDbCurrent.description
+                        meshDb.meshFileId = meshDbCurrent.meshFileId
+                        meshDb.subdomains = meshDbCurrent.subdomains
+                        meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
+                        meshDb.undeletable = False#meshDbCurrent.undeletable
+                        meshDb.ghost = False
+                        
+                        meshDb.put()
                     
-                    meshDb.put()
+                        modelWrap.spatial["mesh_wrapper_id"] = meshDb.key().id()
+                    else:
+                        meshDbCurrent.ghost = False
+                        meshDbCurrent.put()
 
-                    modelWrap.spatial["mesh_wrapper_id"] = meshDb.key().id()
-                else:
-                    meshDbCurrent.ghost = False
-                    meshDbCurrent.put()
-
-            # This is maintained here!
-            modelWrap.subdomains = meshDbCurrent.uniqueSubdomains
+                # This is maintained here!
+                modelWrap.subdomains = meshDbCurrent.uniqueSubdomains
 
         if 'is_public' not in jsonModel:
             jsonModel['is_public'] = False
@@ -540,39 +428,39 @@ class PublicModelPage(BaseHandler):
         return True
     
     def get(self):
-        try:
-            self.importExamplePublicModels()
-        except:
-            traceback.print_exc()
-            print "ERROR: Failed to import example public models"
+        #importExamplePublicModels(self)
 
         self.render_response('publicLibrary.html')
 
-    def importExamplePublicModels(self):
+def importExamplePublicModels(handler):
+    try:
         path = os.path.abspath(os.path.dirname(__file__))
         szip = exportimport.SuperZip(zipFileName = path + "/../../examples/examples.zip")
-
+    
         toImport = {}
         for name in szip.zipfb.namelist():
             if re.search('models/[a-zA-Z0-9\-_]*\.json$', name):
                 toImport[json.loads(szip.zipfb.read(name))['name']] = name
 
-        names = [model['name'] for model in ModelManager.getModels(self, public = True)]
+        names = [model['name'] for model in ModelManager.getModels(handler, public = True)]
 
         for name in set(toImport.keys()) - set(names):
             path = toImport[name]
-            modelDb = szip.extractStochKitModel(path, "", self, rename = True)
+            modelDb = szip.extractStochKitModel(path, "", handler, rename = True)
             modelDb.user_id = ""
             modelDb.name = name
             modelDb.is_public = True
             modelDb.put()
-
+        
             if modelDb.isSpatial:
                 meshDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
-                meshDb.undeletable = True
+                #meshDb.undeletable = True
                 meshDb.put()
 
         szip.close()
+    except:
+        traceback.print_exc()
+        print "ERROR: Failed to import example public models"
 
 class ImportFromXMLPage(BaseHandler):
     def authentication_required(self):
@@ -582,14 +470,111 @@ class ImportFromXMLPage(BaseHandler):
         self.render_response('importFromXML.html')
 
     def post(self):
-        storage = self.request.POST['datafile']
+        try:
+            storage = self.request.POST['datafile']
 
-        name = storage.filename.split('.')[0]
+            name = storage.filename.split('.')[0]
 
-        stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
-        modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
+            stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
 
-        self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
+            if len(stochKitModel.listOfParameters) == 0 and len(stochKitModel.listOfSpecies) == 0 and len(stochKitModel.listOfReactions) == 0:
+                raise Exception("No parameters, species, or reactions detected in model. This XML file is probably not a StochKit Model")
+
+            modelDb = createStochKitModelWrapperFromStochKitModel(self, stochKitModel)
+            
+            self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
+        except Exception as e:
+            traceback.print_exc()
+            result = {}
+            result['status'] = False
+            result['msg'] = 'Error: {0}'.format(e)
+
+            self.render_response("importFromXML.html", **result)
+
+class ImportFromSBMLPage(BaseHandler):
+    def authentication_required(self):
+        return True
+    
+    def get(self):
+        if 'reqType' in self.request.GET:
+            if self.request.get('reqType') == 'delete':
+                errorLogsId = int(self.request.get('id'));
+                    
+                errorLogsDb = SBMLImportErrorLogs.get_by_id(errorLogsId)
+
+                errorLogsDb.delete()
+                    
+                self.redirect("/importFromSBML")
+
+        errorLogsDbQuery = list(db.GqlQuery("SELECT * FROM SBMLImportErrorLogs WHERE user_id = :1", self.user.user_id()).run())
+        errorLogsDbQuery = sorted(errorLogsDbQuery, key = lambda x : (datetime.datetime.strptime(x.date, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'date') and x.date != None else datetime.datetime.now()), reverse = True)
+
+        result = []
+
+        for error in errorLogsDbQuery:
+            modelDb = StochKitModelWrapper.get_by_id(error.modelId)
+            result.append( { 'id' : error.key().id(),
+                             'date' : error.date,
+                             'fileName' : error.fileName,
+                             'modelName' : modelDb.name if modelDb else None } )
+
+        self.render_response('importFromSBML.html', **{ "errors" : result })
+
+    def post(self):
+        try:
+            storage = self.request.POST['datafile']
+
+            name = storage.filename.split('.')[0]
+
+            tmp = tempfile.NamedTemporaryFile(delete = False)
+            filename = tmp.name
+            tmp.write(storage.file.read())
+            tmp.close()
+
+            #stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
+            model, errors = stochss.SBMLconverter.convert(filename)
+            modelDb = createStochKitModelWrapperFromStochKitModel(self, model)
+
+            modelDb.units = model.units
+            modelDb.put()
+
+            errorLogsDb = SBMLImportErrorLogs()
+            errorLogsDb.modelId = modelDb.key().id()
+            errorLogsDb.user_id = self.user.user_id()
+            errorLogsDb.fileName = storage.filename
+            errorLogsDb.errors = errors
+            errorLogsDb.date = time.strftime("%Y-%m-%d-%H-%M-%S")
+            errorLogsDb.put()
+
+            os.remove(filename)
+            
+            #self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
+            self.redirect("/SBMLErrorLogs?id={0}".format(errorLogsDb.key().id()))
+        except Exception as e:
+            traceback.print_exc()
+            result = {}
+            result['status'] = False
+            result['msg'] = 'Error: {0}'.format(e)
+
+            self.render_response("importFromSBML.html", **result)
+
+class SBMLErrorLogsPage(BaseHandler):
+    def authentication_required(self):
+        return True
+    
+    def get(self):
+        if 'id' in self.request.GET:
+            errorLogsId = int(self.request.get('id'));
+            errorLogsDb = SBMLImportErrorLogs.get_by_id(errorLogsId)
+
+            modelDb = StochKitModelWrapper.get_by_id(errorLogsDb.modelId)
+
+            result = { "db" : errorLogsDb,
+                       "modelName" : modelDb.name if modelDb else None }
+
+            print result["db"].errors
+
+        self.render_response('SBMLErrorLogs.html', **result)
 
 class ModelEditorPage(BaseHandler):
     """
@@ -636,9 +621,6 @@ class ModelEditorPage(BaseHandler):
 
             return
 
-        mesheditor.setupMeshes(self)
+        #mesheditor.setupMeshes(self)
 
-        #f = open('/home/bbales2/stochss/test/modelEditor/client/index.html')
-        #self.response.out.write(f.read())
-        #f.close()
         self.render_response('modelEditor.html')

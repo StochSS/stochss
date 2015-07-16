@@ -25,7 +25,7 @@ module.exports = View.extend({
         this.renderSubview(
             new CheckboxView({
                 name: 'checked',
-                template: '<span><span data-hook="label"></span><input type="checkbox"><span data-hook="message-container"><span data-hook="message-text"></span></span></span>&nbsp;',
+                template: '<span><span data-hook="label"></span> <input type="checkbox"><span data-hook="message-container"><span data-hook="message-text"></span></span></span>&nbsp;',
                 label: this.model.name,
                 value: checked,
                 required: false,

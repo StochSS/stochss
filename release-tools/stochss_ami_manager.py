@@ -134,8 +134,12 @@ class AmiManager:
             self.publish = options["publish"]
         else:
             self.publish = False
+
+        self.start_time = None
             
     def run(self):
+        self.start_time = time.time()
+
         try:
             self.__launch_instance()
 
@@ -470,7 +474,7 @@ class AmiManager:
         print '=================================================='
         print 'Terminating launched instance...'
         self.ec2_connection.terminate_instances(instance_ids=[self.instance_id])
-        print 'Done.'
+        print 'Done in {} seconds.'.format(time.time() - self.start_time)
 
     def __check_dependency_installation(self):
         header = 'Checking dependencies...'
@@ -597,7 +601,7 @@ def cleanup_local_files():
         os.remove(file)
 
 
-if __name__ == '__main__':
+def get_arg_parser():
     parser = argparse.ArgumentParser(description="StochSS AMI Manager Tool for creating StochSS Node AMIs from \
                                                   stochss git repo or deleting AMIs. It takes 10-15 minutes depending \
                                                   on network speed. Use <Ctrl+C> to kill running manager tool.")
@@ -621,6 +625,10 @@ if __name__ == '__main__':
     parser.add_argument('--enable-old-ami-layout', help="Enable Old StochSS AMI layout.",
                         dest="enable_old_ami_layout", action="store_true", default=False)
 
+    return parser
+
+if __name__ == '__main__':
+    parser = get_arg_parser()
     args = parser.parse_args(sys.argv[1:])
 
     if args.cleanup:

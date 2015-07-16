@@ -482,7 +482,7 @@
       <Type>mass-action</Type>
       <Rate>C20</Rate>
       <Reactants>
-        <SpeciesReference id="S19" stoichiometry="1.000000"/>
+        <SpeciesReference id="S19" stoichiometry="5.000000"/>
       </Reactants>
       <Products>
         <SpeciesReference id="S15" stoichiometry="1.000000"/>

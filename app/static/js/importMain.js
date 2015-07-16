@@ -54,7 +54,7 @@ Import.ArchiveSelect = Backbone.View.extend(
                         $.post("/import?reqType=delJob&id=" + id,
                                success = function(data)
                                {
-                                   location.reload();
+                                   window.location = '/import?tab=1';
                                });
                     }, this.data[i].id));
                 }
@@ -90,7 +90,7 @@ Import.ImportTable = Backbone.View.extend(
 
 	    this.sensitivityTemplate = _.template('<tr>\
 <td><input type="checkbox" /></td>\
-<td><%= job.jobName %></td>\
+<td><%= job.name %></td>\
 <td style="color: <%= color %>";><%= version %></td>\
 </tr>');
 

@@ -164,12 +164,14 @@ function install_lib {
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-	if [ "$1" = "h5py" ]; then
-            pkg="$1==2.4.0b1"
-	else
+        if [ "$1" = "h5py" ]; then
             pkg="$1"
-	fi
-	CMD="sudo $MYPYTHON $MYPIP install $pkg"
+        elif [ "$1" = "libsbml" ]; then
+            pkg="python-libsbml"
+        else
+            pkg="$1"
+        fi
+        CMD="sudo $MYPYTHON $MYPIP install $pkg"
         echo $CMD
         eval $CMD
     else
@@ -178,7 +180,7 @@ function install_lib {
 }
 
 function check_and_install_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -198,7 +200,7 @@ function check_and_install_dependencies {
 }
 
 function check_spatial_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -242,7 +244,7 @@ function install_pip {
 
 function install_dependencies_via_applescript {
     echo "Installing missing dependencies with Applescript. This will take a few minutes.<br />"
-    /usr/bin/env osascript run_mac_install-embeded-python.scpt
+    /usr/bin/env osascript run_mac_install-embedded-python.scpt
 }
 
 function check_spatial_installation {
@@ -265,6 +267,9 @@ function check_spatial_installation {
         echo "You can download FEniCS from http://fenicsproject.org/<br />"
         return 1 #False
     fi
+
+    echo "Running 'instant-clean'"
+    "$STOCHSS_HOME/../fenics/bin/instant-clean"
 
     if check_pyurdme; then
         echo "PyURDME detected successfully.<br />"
@@ -516,4 +521,4 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec $MYPYTHON "$STOCHSS_HOME/launchapp.py" 1 $0
+exec $MYPYTHON "$STOCHSS_HOME/launchapp.py" mac $0 $1

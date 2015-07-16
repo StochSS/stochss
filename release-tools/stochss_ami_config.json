@@ -1,5 +1,5 @@
 {
-    "base_ami_id": "ami-00ab0168",
+    "base_ami_id": "ami-1705f67c",
     "aws_region": "us-east-1",
     "instance_type": "c3.large",
     "instance_user": "ubuntu",
@@ -108,6 +108,8 @@
         {"name": "ply"},
         {"name": "redis"},
         {"name": "six"},
-        {"name": "boto",    "version": "2.9.0"}
+        {"name": "boto",    "version": "2.9.0"},
+        {"name": "python-libsbml"},
+        {"name": "mysql-connector-python"}
     ]
 }

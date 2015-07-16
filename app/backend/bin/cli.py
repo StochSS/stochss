@@ -145,8 +145,8 @@ class BackendCli:
 
         result = helper.execute_cloud_task(params=params,
                                            agent_type=self.AGENT_TYPE,
-                                           access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"],
-                                           secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
+                                           ec2_access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"],
+                                           ec2_secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
                                            task_id=task_id,
                                            instance_type=self.INSTANCE_TYPE,
                                            cost_replay=False,

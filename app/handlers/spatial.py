@@ -1,9 +1,15 @@
 from stochssapp import BaseHandler
 from modeleditor import ModelManager, StochKitModelWrapper
 import stochss
+import pprint
 import exportimport
-import backend.backendservice
 
+from backend.backendservice import backendservices
+from backend.common.config import AgentTypes, JobConfig, JobDatabaseConfig
+#from backend.storage.s3_storage import S3StorageAgent
+#from backend.storage.flex_storage import FlexStorageAgent
+#from backend.databases.flex_db import FlexDB
+#from backend.databases.dynamo_db import DynamoDB
 
 import mesheditor
 
@@ -12,7 +18,9 @@ from google.appengine.ext import db
 import copy
 import fileserver
 import json
-import os, sys
+import h5py
+import os
+import sys
 import re
 import signal
 import shlex
@@ -22,6 +30,7 @@ import time
 import logging
 import numbers
 import random
+import zipfile
 
 import pyurdme
 import pickle
@@ -30,113 +39,15 @@ import traceback
 import shutil
 import boto
 from boto.dynamodb import condition
-sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
-from s3_helper import *
+#sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
+#from s3_helper import *
+#import s3_helper
 
-class SpatialJobWrapper(db.Model):
-    # These are all the attributes of a job we use for local storage
-    userId = db.StringProperty()
-    pid = db.IntegerProperty()
-    cloud_id = db.StringProperty()
-    startTime = db.StringProperty()
-    jobName = db.StringProperty()
-    modelName = db.StringProperty() # This is a reference to the model. I should probably use a modelId instead. I'm not sure why I store it as a name
-    indata = db.TextProperty() # This is a dump of the json data sent from the html/js that was used to start the job. We save it
-    outData = db.StringProperty() # THis is a path to the output data on the filesystem
-    status = db.StringProperty()
-    zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
-    
-    # These are the cloud attributes
-    resource = db.StringProperty()
-    uuid = db.StringProperty()
-    output_url = db.StringProperty()
-    cloudDatabaseID = db.StringProperty()
-    celeryPID = db.StringProperty()
-    exception_message = db.StringProperty()
-    output_stored = db.StringProperty()
+import matplotlib.cm
 
-    # More attributes can obvs. be added
-    # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
-    def delete(self, credentials=None):
-        service = backend.backendservice.backendservices()
-        
-        if self.zipFileName:
-            if os.path.exists(self.zipFileName):
-                os.remove(self.zipFileName)
+cm = matplotlib.cm.ScalarMappable()
 
-        self.stop(credentials=credentials)        
-        #service.deleteTaskLocal([self.pid])
-        super(SpatialJobWrapper, self).delete()
-        
-        #delete the local output
-        output_path = os.path.join(os.path.dirname(__file__), '../output/')
-
-        if self.uuid:
-            if os.path.exists(str(output_path) + self.uuid):
-                shutil.rmtree(str(output_path) + self.uuid)
-        
-        if self.resource.lower() == "cloud":
-            try:
-                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2", credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY']).get()
-                
-                bucketname = user_data.S3_bucket_name
-                logging.info(bucketname)
-                #delete the folder that contains the replay sources
-                delete_folder(bucketname, self.cloud_id, credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY'])
-                logging.info('delete the rerun source folder {1} in bucket {0}'.format(bucketname, self.cloud_id))
-                #delete the output tar file
-                delete_file(bucketname, 'output/'+self.cloud_id+'.tar', credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY'])
-                logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.cloud_id))
-                
-                #delete dynamodb entries
-                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
-                table = dynamo.get_table("stochss_cost_analysis")
-                results = table.scan(scan_filter={'uuid' :condition.EQ(self.cloud_id)})
-                for result in results:
-                    result.delete()
-                    
-            except:
-                raise Exception('fail to delete cloud output or rerun sources.')  
-        
-
-    # Stop the job!
-    def stop(self, credentials=None):
-        if self.status == "Running":
-            if self.resource.lower() == "local":
-                try:
-                    os.killpg(int(self.pid), signal.SIGTERM)
-                except:
-                    pass
-            elif self.resource.lower() == "cloud":
-                service = backend.backendservice.backendservices()
-                stop_params = {
-                    'credentials': credentials,
-                    'ids': [(self.celeryPID, self.cloudDatabaseID)]
-                }
-                result = service.stopTasks(stop_params)
-                if result and result[self.cloudDatabaseID]:
-                    final_cloud_result = result[self.cloudDatabaseID]
-                    try:
-                        self.outputURL = final_cloud_result['output']
-                    except KeyError:
-                        pass
-                    self.status = "Finished"
-                    self.put()
-                    return True
-                else:
-                    # Something went wrong
-                    print '**************************************************************************************'
-                    print result
-                    print '**************************************************************************************'
-                    return False
-    
-    def mark_final_cloud_data(self):
-        flag_file = os.path.join(self.outData, ".final-cloud")
-        os.system("touch {0}".format(flag_file))
-    
-    def has_final_cloud_data(self):
-        flag_file = os.path.join(self.outData, ".final-cloud")
-        return os.path.exists(flag_file)
+from db_models.spatial_job import SpatialJobWrapper
 
 class SpatialPage(BaseHandler):
     # This tells the big server that a user must be logged in to view this page
@@ -144,12 +55,13 @@ class SpatialPage(BaseHandler):
         return True
     
     def get(self):
+        logging.debug('GET self.request.body = {}'.format(self.request.body))
         reqType = self.request.get('reqType')
 
         if reqType == 'getJobInfo':
             job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
-            if self.user.user_id() != job.userId:
+            if self.user.user_id() != job.user_id:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write({ "status" : False, "msg" : "Not the right user" })
 
@@ -180,47 +92,114 @@ class SpatialPage(BaseHandler):
                            "resource" : job.resource,
                            "modelName" : job.modelName,
                            "outData" : job.outData,
-                           "name" : job.jobName,
-                           "uuid": job.cloud_id,
+                           "name" : job.name,
+                           "uuid": job.cloudDatabaseID,
                            "output_stored": job.output_stored,
                            "stdout" : stdout,
                            "stderr" : stderr,
                            "indata" : json.loads(job.indata) })
 
+            logging.debug("result =\n\n{}".format(pprint.pformat(result)))
+
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             return
+
         elif reqType == 'timeData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
                 data = json.loads(self.request.get('data'))
 
+                logging.debug("data = {}".format(data))
+
                 trajectory = data["trajectory"]
-                timeIdx = data["timeIdx"]
+                timeIdx = data["timeIdx"]                
+                resultJS = {}
 
-                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
-                    result = pickle.load(fd)
-        
-                    species = result.model.get_species_map().keys()
+                #if not job.preprocessed or not os.path.exists(job.preprocessedDir):
+                job.preprocess(trajectory)
 
-                    threeJS = {}
-                    #print "exporting ", timeIdx
-
+                indir = job.preprocessedDir
                     
-                    for specie in species:
-                        concVals = result.get_species(specie, timeIdx, concentration=True)
-                        popVals = result.get_species(specie, timeIdx, concentration=False)
+                with open(os.path.join(indir, 'mesh.json') ,'r') as meshfile:
+                    mesh = json.load(meshfile)
 
-                        minIdx = numpy.argmin(concVals)
-                        maxIdx = numpy.argmax(concVals)
-
-                        threeJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx)),
-                                            "max" : int(popVals[maxIdx]),
-                                            "min" : int(popVals[minIdx]) }
+                f = os.path.join(indir, 'result{0}'.format(trajectory))
+                
+                with h5py.File(f, 'r') as dataFile:
+                    species = dataFile.keys()
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( threeJS ))
+                self.response.write(json.dumps({ "mesh" : mesh, "species" : species }))
+            
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: error fetching results {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+
+                self.response.write(json.dumps(result))
+            return
+        
+        elif reqType == 'onlyColorRange':
+            try:
+                job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+                data = json.loads(self.request.get('data'))
+                logging.debug('patial.get(onlyColorRange): data={0}'.format(data))
+                trajectory = data["trajectory"]
+                sTime= data["timeStart"]
+                eTime = data["timeEnd"]
+                #TODO: what is the right value here?
+                if eTime is None:
+                    eTime = 0
+                dataType = "population" if "showPopulation" in data and data["showPopulation"] else "concentration"
+
+                resultJS = {}
+                data = {}
+
+                if job.preprocessed is None or trajectory not in job.preprocessed or not os.path.exists(job.preprocessedDir):
+                    job.preprocess(trajectory)
+
+                f = os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory))
+
+                limits = {}
+
+                logging.debug('Spatial.get(onlyColorRange): sTime={0} eTime={0}'.format(sTime,eTime))
+
+                with h5py.File(f, 'r') as dataFile:
+                    dataTmp = {}
+
+                    for specie in dataFile.keys():
+                        data2 = dataFile[specie][dataType][sTime:eTime + 1]
+                        
+                        limits[specie] = { 'min' : dataFile[specie][dataType].attrs['min'],
+                                           'max' : dataFile[specie][dataType].attrs['max'] }
+
+                        cm.set_clim(dataFile[specie][dataType].attrs['min'], dataFile[specie][dataType].attrs['max'])
+                        rgbas = cm.to_rgba(data2, bytes = True).astype('uint32')
+
+                        rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
+
+                        #rgbaInts = numpy.zeros((rgbas.shape[0], rgbas.shape[1]))
+
+                        #for i in range(rgbas.shape[0]):
+                        #    for j in range(rgbas.shape[1]):
+                        #        rgbaInts[i, j] = int('0x%02x%02x%02x' % tuple(rgbas[i, j][0:3]), 0)
+
+                        dataTmp[specie] = []
+                        for i in range(rgbas.shape[0]):
+                            dataTmp[specie].append(list(rgbas[i].astype('int')))
+
+                    for i in range(len(dataTmp.values()[0])):
+                        data[sTime + i] = {}
+                        for specie in dataFile.keys():
+                            data[sTime + i][specie] = dataTmp[specie][i]
+
+                self.response.content_type = 'application/json'
+                self.response.write(json.dumps( { "colors" : data, "limits" : limits } ))
+
             except Exception as e:
                 traceback.print_exc()
                 result = {}
@@ -228,8 +207,9 @@ class SpatialPage(BaseHandler):
                 result['msg'] = 'Error: error fetching results {0}'.format(e)
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(result))
-            return
 
+            return
+        
         self.render_response('spatial.html')
 
     def post(self):
@@ -238,89 +218,65 @@ class SpatialPage(BaseHandler):
 
         if reqType == 'newJob':
             data = json.loads(self.request.get('data'))
-
-            job = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
+            logging.debug('data =\n{}'.format(pprint.pformat(data)))
+            job = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1 AND name = :2",
+                              self.user.user_id(), data["jobName"].strip()).get()
 
             if job != None:
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "Job name must be unique"}))
                 return
 
-            if data["resource"] == "local":
-                # This function (runLocal) takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
-                self.runLocal(data)
-                return
-            else:
-                backend_services = backend.backendservice.backendservices()
-                compute_check_params = {
-                    "infrastructure": "ec2",
-                    "credentials": self.user_data.getCredentials(),
-                    "key_prefix": self.user.user_id()
-                }
-                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    self.runCloud(data)
-                    return
+            try:
+                if data["resource"] == "local":
+                    result = self.runLocal(data)
+                elif data["resource"] == "cloud":
+                    result = self.runCloud(data)
                 else:
-                    self.response.write(json.dumps({
-                        'status': False,
-                        'msg': 'You must have at least one active compute node to run in the cloud.'
-                    }))
-                    return
+                    raise Exception("Unknown resource {0}".format(data["resource"]))
+                self.response.write(json.dumps({"status" : True,
+                                                "msg" : "Job launched",
+                                                "id" : result.key().id()}))
+                return
+            except Exception as e:
+                logging.exception(e)
+                result = {'status':False,
+                          'msg':'Error: {0}'.format(e)}
+                self.response.write(json.dumps(result))
+                return
+
+
         elif reqType == 'stopJob':
             jobID = json.loads(self.request.get('id'))
-
             jobID = int(jobID)
-
             job = SpatialJobWrapper.get_by_id(jobID)
-
-            if job.userId == self.user.user_id():
-                if job.resource.lower() == "cloud":
-                    if not self.user_data.valid_credentials:
-                        return self.response.write(json.dumps({
-                            'status': False,
-                            'msg': 'Could not stop the job '+stochkit_job.name +'. Invalid credentials.'
-                        }))
-                    credentials = self.user_data.getCredentials()
-                    success = job.stop(credentials={
-                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY']
-                    })
-                    if not success:
-                        return self.response.write(json.dumps({
-                            'status': False,
-                            'msg': 'Could not stop the job '+stochkit_job.name +'. Unexpected error.'
-                        }))
-                else:
-                    job.stop()
-            else:
+            try:
+                job.stop(self)
+            except Exception as e:
+                logging.execption(e)
                 self.response.write(json.dumps({"status" : False,
-                                                "msg" : "No permissions to delete this job (this should never happen)"}))
+                                                "msg" : "Error: {0}".format(e)}))
                 return
+
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
-
             jobID = int(jobID)
-
             job = SpatialJobWrapper.get_by_id(jobID)
-
-            if job.userId == self.user.user_id():
-                credentials = self.user_data.getCredentials()
-                job.delete(credentials={
-                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY']
-                    })
-            else:
+            try:
+                job.delete(self)
+            except Exception as e:
+                logging.exception(e)
                 self.response.write(json.dumps({"status" : False,
-                                                "msg" : "No permissions to delete this job (this should never happen)"}))
+                                                    "msg" : "Error: {0}".format(e)}))
                 return
+
         elif reqType == 'getDataCloud':
             try:
                 jobID = json.loads(self.request.get('id'))
                 job = SpatialJobWrapper.get_by_id(int(jobID))
-
-                service = backend.backendservice.backendservices()
+                service = backendservices(self.user_data)
                 # Fetch
-                service.fetchOutput(job.cloud_id, job.output_url)
+                service.fetchOutput(job)
                 # Unpack
                 os.system('tar -xf' +job.uuid+'.tar')
                 # Record location
@@ -329,7 +285,6 @@ class SpatialPage(BaseHandler):
                 os.remove(job.uuid+'.tar')
                 # Save the updated status
                 job.put()
-
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ 'status' : True,
                                                  'msg' : 'Job downloaded'}))
@@ -342,24 +297,114 @@ class SpatialPage(BaseHandler):
 
         elif reqType == 'getDataLocal':
             jobID = json.loads(self.request.get('id'))
+            jobID = int(jobID)
+            job = SpatialJobWrapper.get_by_id(jobID)
+            if not job.zipFileName:
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
+                job.zipFileName = szip.getFileName()
+                szip.addSpatialJob(job, True)
+                szip.close()
+                # Save the updated status
+                job.put()
+            relpath = '/' + os.path.relpath(job.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+        elif reqType == 'getVtkLocal':
+            def zipdir(path, ziph, prefix):
+                # ziph is zipfile handle
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        ziph.write(os.path.join(root, file), os.path.join(prefix, os.path.relpath(os.path.join(root, file), path)))
+
+            jobID = json.loads(self.request.get('id'))
+            jobID = int(jobID)
+            job = SpatialJobWrapper.get_by_id(jobID)
+            if not job.vtkFileName:
+                try:
+                    tmpDir = None
+                    indata = json.loads(job.indata)
+                    tmpDir = tempfile.mkdtemp(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'))
+                    for trajectory in range(indata["realizations"]):
+                        resultFile = open(str(job.outData + '/results/result{0}'.format(trajectory)))
+                        result = pickle.load(resultFile)
+                        resultFile.close()
+                        for specie in result.model.listOfSpecies:
+                            result.export_to_vtk(specie, os.path.join(tmpDir, "trajectory_{0}".format(trajectory), "species_{0}".format(specie)))
+
+                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'),
+                                                          prefix = job.name + "_",
+                                                          suffix = '.zip', delete = False)
+
+                    zipf = zipfile.ZipFile(tmpFile, "w")
+                    zipdir(tmpDir, zipf, os.path.basename(tmpFile.name))
+                    zipf.close()
+                    job.vtkFileName = tmpFile.name
+                    tmpFile.close()
+                    # Save the updated status
+                    job.put()
+                finally:
+                    if tmpDir and os.path.exists(tmpDir):
+                        logging.info("Getting cleaned up")
+                        shutil.rmtree(tmpDir)
+            
+            relpath = '/' + os.path.relpath(job.vtkFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+        elif reqType == 'getCsvLocal':
+            def zipdir(path, ziph, prefix):
+                # ziph is zipfile handle
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        ziph.write(os.path.join(root, file), os.path.join(prefix, os.path.relpath(os.path.join(root, file), path)))
+
+            jobID = json.loads(self.request.get('id'))
 
             jobID = int(jobID)
 
             job = SpatialJobWrapper.get_by_id(jobID)
 
-            if not job.zipFileName:
-                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.jobName + "_")
-                
-                job.zipFileName = szip.getFileName()
+            if not job.csvFileName:
+                try:
+                    tmpDir = None
 
-                szip.addSpatialJob(job, True)
-                
-                szip.close()
+                    indata = json.loads(job.indata)
 
-                # Save the updated status
-                job.put()
+                    tmpDir = tempfile.mkdtemp(dir=os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'))
+
+                    for trajectory in range(indata["realizations"]):
+                        resultFile = open(str(job.outData + '/results/result{0}'.format(trajectory)))
+                        result = pickle.load(resultFile)
+                        resultFile.close()
+
+                        result.export_to_csv(os.path.join(tmpDir, "trajectory_{0}".format(trajectory)).encode('ascii', 'ignore'))
+
+                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'),
+                                                          prefix = job.name + "_",
+                                                          suffix = '.zip', delete = False)
+
+                    zipf = zipfile.ZipFile(tmpFile, "w")
+                    zipdir(tmpDir, zipf, os.path.basename(tmpFile.name))
+                    zipf.close()
+
+                    job.csvFileName = tmpFile.name
+                    
+                    tmpFile.close()
+
+                    # Save the updated status
+                    job.put()
+                finally:
+                    if tmpDir and os.path.exists(tmpDir):
+                        logging.info("Getting cleaned up")
+                        shutil.rmtree(tmpDir)
             
-            relpath = '/' + os.path.relpath(job.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+            relpath = '/' + os.path.relpath(job.csvFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ 'status' : True,
@@ -463,139 +508,105 @@ class SpatialPage(BaseHandler):
 
     def runLocal(self, data):
         ''' Run a PyURDME run using local compute recources. '''
-        try:
-            #####
-            pymodel = self.construct_pyurdme_model(data)
-            #####
-            simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
-            simulation_realizations = data['realizations']
+        #####
+        pymodel = self.construct_pyurdme_model(data)
+        #####
+        simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
+        simulation_realizations = data['realizations']
 
-            # If the seed is negative, this means choose a seed >= 0 randomly
-            if int(data['seed']) < 0:
-                random.seed()
-                data['seed'] = random.randint(0, 2147483647)
+        # If the seed is negative, this means choose a seed >= 0 randomly
+        if int(data['seed']) < 0:
+            random.seed()
+            data['seed'] = random.randint(0, 2147483647)
 
-            simulation_seed = data['seed']
-            #####
+        simulation_seed = data['seed']
+        #####
 
-            path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.abspath(os.path.dirname(__file__))
 
-            basedir = path + '/../'
-            dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
-            job = SpatialJobWrapper()
-            job.userId = self.user.user_id()
-            job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            job.jobName = data["jobName"]
-            job.indata = json.dumps(data)
-            job.outData = dataDir
-            job.modelName = pymodel.name
-            job.resource = "local"
+        job = SpatialJobWrapper()
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = data["jobName"]
+        job.indata = json.dumps(data)
+        job.outData = dataDir
+        job.modelName = pymodel.name
+        job.resource = "local"
 
-            job.status = "Running"
+        job.status = "Running"
 
-            model_file_pkl = "{0}/model_file.pkl".format(dataDir)
-            result_dir = "{0}/results/".format(dataDir)
-            os.makedirs(result_dir)
+        model_file_pkl = "{0}/model_file.pkl".format(dataDir)
+        result_dir = "{0}/results/".format(dataDir)
+        os.makedirs(result_dir)
 
-            # searilize the model and write it to a file in the data dir
-            with open(model_file_pkl, 'w') as fd:
-                pickle.dump(pymodel, fd)
+        # searilize the model and write it to a file in the data dir
+        with open(model_file_pkl, 'w') as fd:
+            pickle.dump(pymodel, fd)
 
-            cmd = "{0}/../../pyurdme/pyurdme_wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
-            print cmd
-            exstring = '{0}/backend/wrapper.sh {1}/stdout.log {1}/stderr.log {2}'.format(basedir, dataDir, cmd)
-            handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
-            
-            job.pid = int(handle.pid)
-
-            job.put()
-            
-            self.response.write(json.dumps({"status" : True,
-                                            "msg" : "Job launched",
-                                            "id" : job.key().id()}))
-        except Exception as e:
-            traceback.print_exc()
-            self.response.write(json.dumps({"status" : False,
-                                            "msg" : "{0}".format(e)}))
-                                            #"msg" : "{0}: {1}".format(type(e).__name__, e)}))
-            return
+        cmd = "{0}/../../pyurdme/pyurdme_wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
+        logging.info("cmd =\n{}".format(cmd))
+        exstring = '{0}/backend/wrapper.py {1}/stdout.log {1}/stderr.log {1}/return_code {2}'.format(basedir, dataDir, cmd)
+        handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
+        
+        job.pid = int(handle.pid)
+        job.put()
+        return job
     
     # This takes in the unserialized JSON object data and runs a model!
     def runCloud(self, data):
-        '''
-        '''
-        try:
-            # If the seed is negative, this means choose a seed >= 0 randomly
-            if int(data['seed']) < 0:
-                random.seed()
-                data['seed'] = random.randint(0, 2147483647)
+        service = backendservices(self.user_data)
+        if not service.isOneOrMoreComputeNodesRunning():
+            raise Exception('No cloud computing resources found')
 
-            db_credentials = self.user_data.getCredentials()
-            # Set the environmental variables 
-            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+        # If the seed is negative, this means choose a seed >= 0 randomly
+        if int(data['seed']) < 0:
+            random.seed()
+            data['seed'] = random.randint(0, 2147483647)
 
-            if os.environ["AWS_ACCESS_KEY_ID"] == '':
-                result = {'status':False,'msg':'Access Key not set. Check : Settings > Cloud Computing'}
-                return self.response.write(json.dumps(result))
+        pymodel = self.construct_pyurdme_model(data)
+        #logging.info('DATA: {0}'.format(data))
+        #####
+        cloud_params = {
+            "job_type": "spatial",
+            "simulation_algorithm" : data['algorithm'],
+            "simulation_realizations" : data['realizations'],
+            "simulation_seed" : data['seed'],
+#            "bucketname" : self.user_data.getBucketName(),  #implys EC2, should be in backendservices
+            "paramstring" : '',
+        }
 
-            if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
-                result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
-                return self.response.write(json.dumps(result))
-                    ####
-            pymodel = self.construct_pyurdme_model(data)
-            #logging.info('DATA: {0}'.format(data))
-            #####
+        logging.debug('cloud_params = {}'.format(pprint.pformat(cloud_params)))
 
-            cloud_params = {
-                "job_type": "spatial",
-                "simulation_algorithm" : data['algorithm'],
-                "simulation_realizations" : data['realizations'],
-                "simulation_seed" : data['seed'],
-                "bucketname" : self.user_data.getBucketName(),
-                "paramstring" : '',
-            }
-            cloud_params['document'] = pickle.dumps(pymodel)
-            #logging.info('PYURDME: {0}'.format(cloud_params['document']))
-            # Set the environmental variables
-            os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
-            service = backend.backendservice.backendservices()
-            cloud_result = service.executeTask(cloud_params, "ec2", os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
-            if not cloud_result["success"]:
-                e = cloud_result["exception"]
-                self.response.write(json.dumps({"status" : False,
-                                                "msg" : "Cloud execution failed: {0}".format(e)}))
-                return
-            
-            celery_task_id = cloud_result["celery_pid"]
-            taskid = cloud_result["db_id"]
+        cloud_params['document'] = pickle.dumps(pymodel)
+        #logging.debug('PYURDME: {0}'.format(cloud_params['document']))
 
-            job = SpatialJobWrapper()
-            job.type = 'PyURDME Ensemble'
-            job.userId = self.user.user_id()
-            job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            job.jobName = data["jobName"]
-            job.indata = json.dumps(data)
-            job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
-            job.modelName = pymodel.name
-            job.resource = "cloud"
-            job.cloud_id = taskid
-            job.celeryPID = celery_task_id
-            job.status = "Running"
-            job.output_stored = "True"
-            job.put()
+        # Send the task to the backend
+        cloud_result = service.submit_cloud_task(params=cloud_params)
 
-            self.response.write(json.dumps({"status" : True,
-                                            "msg" : "Job launched",
-                                            "id" : job.key().id()}))
-            return
+        if not cloud_result["success"]:
+            e = cloud_result["exception"]
+            raise Exception("Cloud execution failed: {0}".format(e))
+        
+        celery_task_id = cloud_result["celery_pid"]
+        taskid = cloud_result["db_id"]
 
-        except Exception as e: 
-            traceback.print_exc()
-            self.response.write(json.dumps({"status" : False,
-                                            "msg" : "{0}".format(e)}))
-                                            #"msg" : "{0}: {1}".format(type(e).__name__, e)}))
-            return
+        job = SpatialJobWrapper()
+        job.type = 'PyURDME Ensemble'
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = data["jobName"]
+        job.indata = json.dumps(data)
+        job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
+        job.modelName = pymodel.name
+        job.resource = cloud_result['resource']
+        job.cloudDatabaseID = taskid
+        job.celeryPID = celery_task_id
+        job.status = "Running"
+        job.output_stored = "True"
+        job.put()
+
+        return job
 

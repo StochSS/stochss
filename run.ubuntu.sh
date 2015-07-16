@@ -18,6 +18,8 @@ elif [ $# -eq 1 ]; then
         mode="run"
     elif [ "$1" = "--install" ]; then
         mode="install"
+    elif [ "$1" = "--debug" ]; then
+        mode="debug"
     else
         echo "Error: Invalid argument '$1'!"
         echo "$help_message"
@@ -56,7 +58,7 @@ fi
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
 
-PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
+PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython libbz2-dev libhdf5-mpi-dev"
 if [ `getconf LONG_BIT` != 64 ]; then
     PKGS="gcc-multilib $PKGS"
 fi
@@ -105,32 +107,6 @@ function check_pyurdme {
     return 1 #False
 }
 
-function download_pyurdme {
-    ZIP_URL="https://github.com/pyurdme/pyurdme/archive/stochss.zip"
-    TMPDIR=$(mktemp -d /tmp/tmp.XXXXXX)
-    ZIP_FILE="$TMPDIR/pyurdme.zip"
-    CMD="curl -o $ZIP_FILE -L $ZIP_URL"
-    echo $CMD
-    eval $CMD
-    if [[ -e "$ZIP_FILE" ]];then
-        wd=`pwd`
-        cd "$STOCHSS_HOME/app/lib" || return 1
-        CMD="unzip $ZIP_FILE > /dev/null"
-        echo $CMD
-        eval $CMD
-        if [[ $? != 0 ]];then
-            rm $ZIP_FILE
-            cd $wd
-            return 1 #False
-        fi
-        rm $ZIP_FILE
-        cd $wd
-        return 0 #True
-    else
-        return 1 #False
-    fi
-}
-
 function check_lib {
     if [ -z "$1" ];then
         return 1 #False
@@ -144,6 +120,57 @@ function check_lib {
     fi
     echo "$1 not found"
     return 1 #False
+}
+function check_pip {
+    if which pip > /dev/null;then
+        echo "pip is installed on your system, using it<br />"
+        return 0 #True
+    else
+        echo "pip is not installed on your system<br />"
+        return 1 #False
+    fi
+}
+
+function install_pip {
+    echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
+    read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
+
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
+        echo $CMD
+        eval $CMD
+        CMD="sudo python get-pip.py"
+        echo $CMD
+        eval $CMD
+    else
+        exit -1
+    fi
+}
+function install_lib_h5py {
+    if ! check_pip;then
+        install_pip
+    fi
+    echo "We need install the following packages: h5py"
+    read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD='sudo CC="mpicc" pip install h5py'
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
+        echo "Exiting"
+        exit -1
+    fi
 }
 function install_lib {
     if [ -z "$1" ];then
@@ -168,9 +195,39 @@ function install_lib {
     fi
 }
 
+function install_lib_pip {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+    if ! check_pip;then
+        install_pip
+    fi
+    if [ -z "$2" ];then
+        echo "We need to install package $1"
+    else
+        echo "We need to install package $1 with flags '$2'"
+    fi
+    read -p "Do you want me to try to install required package with pip (y/n): " answer
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="sudo pip install $2 $1"
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
+        echo "Exiting"
+        exit -1
+    fi
+}
+
 function check_and_install_deps {
     if ! check_lib "h5py";then
-        install_lib "python-h5py"
+        install_lib_h5py
     fi
     if ! check_lib "numpy";then
         install_lib "python-numpy"
@@ -180,6 +237,12 @@ function check_and_install_deps {
     fi
     if ! check_lib "matplotlib";then
         install_lib "python-matplotlib"
+    fi
+    if ! check_lib "libsbml";then
+        install_lib_pip "python-libsbml"
+    fi
+    if ! check_lib "mysql";then
+        install_lib_pip "mysql-connector-python" "--allow-external mysql-connector-python"
     fi
 }
 
@@ -213,7 +276,7 @@ function install_dolfin {
     fi
 }
 
-function check_spatial_installation {
+function check_python_package_installation {
     check_and_install_deps
     echo "Checking for FEniCS/Dolfin"
     if check_dolfin; then
@@ -232,24 +295,18 @@ function check_spatial_installation {
     if check_pyurdme; then
         echo "PyURDME detected successfully"
     else
-        echo "PyURDME not installed, attempting local install"
-        download_pyurdme
-        if check_pyurdme; then
-            echo "PyURDME detected successfully"
-        else
-            echo "PyURDME not installed, Failing (check if all required python modules are installed)."
-            return 1 #False
-        fi
+        echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
+        return 1 #False
     fi
     return 0 #True
 }
 
 #####################
 
-if check_spatial_installation;then
-    echo "Spatial libraries installed correctly"
+if check_python_package_installation;then
+    echo "Python packages installed correctly"
 else
-    echo "Error checking the spatial libraries"
+    echo "Error checking the Python packages"
     exit 1
 fi
 #####################
@@ -274,6 +331,9 @@ function retry_command {
     echo "Failed to execute: \"$1\", Exiting"
     exit -1
 }
+
+echo "Running 'instant-clean'"
+instant-clean
 
 echo -n "Testing if StochKit2 built... "
 
@@ -481,9 +541,9 @@ echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-if [ "$mode" = "run" ]; then
+if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $1
 fi
 

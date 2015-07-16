@@ -45,10 +45,35 @@ module.exports = View.extend({
 
         this.highLightSubdomains(this.subdomains);
     },
+
+    generateSolidMesh : function(desiredSubdomain)
+    {
+    var sdmesh = this.model.mesh.subdomains;
+    var vtx = this.model.mesh.threeJsMesh.vertices;
+    var faces = this.model.mesh.threeJsMesh.faces;
+    
+    var sub_faces = [];
+    var sub_faces_idx = 0;
+    for(var f=0; f<faces.length/7; f++)
+        {
+            if(sdmesh[faces[f*7 + 1]] == desiredSubdomain && sdmesh[faces[f*7 + 2]] == desiredSubdomain && sdmesh[faces[f*7 + 3]] == desiredSubdomain)
+            {
+                var slice = faces.slice(f*7, f*7+7);
+                for(s = 0; s<slice.length; s++)
+                    sub_faces[sub_faces_idx++] = slice[s];
+            }
+        }
+
+    this.model.mesh.threeJsMesh.faces = sub_faces;
+
+
+    },
+
     highLightSubdomains : function(subdomains)
     {
         var subdomainLabels = this.model.mesh.subdomains;
 
+        
         var colors = new Array(subdomainLabels.length);
         
         for(var i = 0; i < subdomainLabels.length; i++)
@@ -62,10 +87,13 @@ module.exports = View.extend({
                 colors[i] = new THREE.Color( 0x000099 );
             }
         }
-
+        
+        this.meshDataPreview();
         this.redrawColors(colors);
     },
+    
     redrawColors : function(colors) {
+        
         for(var i = 0; i < this.mesh.geometry.faces.length; i++)
         {
             var faceIndices = ['a', 'b', 'c'];         
@@ -92,9 +120,9 @@ module.exports = View.extend({
         
         $( this.queryByHook('rotateUp_btn') ).click( _.bind(function() { this.controls.rotateUp(0.5);}, this) );
         $( this.queryByHook('rotateDown_btn') ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
-        $( this.queryByHook('rotateRight_btn') ).click( _.bind(function() { this.controls.rotateLeft(0.5);}, this) );
-        $( this.queryByHook('rotateLeft_btn') ).click( _.bind(function() { this.controls.rotateLeft(-0.5);}, this) );
-        $( this.queryByHook('reset_btn') ).click( _.bind(function() { this.controls.reset();this.camera.position.z = 1.5; }, this) ); 
+        $( this.queryByHook('rotateRight_btn') ).click( _.bind(function() { this.controls.rotateLeft(2.0);}, this) );
+        $( this.queryByHook('rotateLeft_btn') ).click( _.bind(function() { this.controls.rotateLeft(2.0);}, this) );
+        $( this.queryByHook('reset_btn') ).click( _.bind(function() { this.controls.reset(); this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2;; }, this) ); 
     },
 
     createText : function(letter, x, y, z){
@@ -227,8 +255,7 @@ module.exports = View.extend({
             controls.noZoom = true;
             // var controls = new THREE.OrbitControls( camera );
             //controls.addEventListener( 'change', render );
-            
-            camera.position.z = 1.5;
+        
             
             this.camera = camera;
             this.renderer = renderer;
@@ -257,6 +284,7 @@ module.exports = View.extend({
         scene.add(mesh);
 
         this.mesh = mesh;
+        this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2;
         
         delete loader;
         delete material;            
@@ -274,7 +302,7 @@ module.exports = View.extend({
         
         this.scene = scene;
 
-        this.highLightSubdomains([])
+        //this.highLightSubdomains([])
         
         if(!this.rendererInitialized)
         {

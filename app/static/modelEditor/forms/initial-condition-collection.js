@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -9,9 +10,12 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewInitialConditionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
+        if(this.baseModel.species.models.length > 0)
+        {
+            var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
         
-        this.selectView.select(model, true);
+            this.selectView.select(model, true);
+        }
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
@@ -54,7 +58,10 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
     },
     update : function()
     {
-        this.parent.update();
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     render: function()
     {
@@ -96,6 +103,8 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
         );
 
         //this.addForm.render();
+
+        this.listenTo(this.collection, "remove", _.bind(this.update, this));
 
         return this;
     }

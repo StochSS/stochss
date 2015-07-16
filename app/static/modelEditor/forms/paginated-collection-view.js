@@ -17,6 +17,12 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.subCollectionViews.views[i].updateValid();
                 }
 
+                var model = this.subCollectionViews.views[i].model;
+                var collection = model.collection
+
+                if(typeof(collection.get(model.cid, 'cid')) == "undefined")
+                    continue;
+
                 if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
                 {
                     valid = valid && this.subCollectionViews.views[i].valid;

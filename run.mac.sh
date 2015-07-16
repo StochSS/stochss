@@ -76,6 +76,23 @@ function check_dolfin {
     return 1 #False
 }
 
+function check_for_lib {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+    if [ "$1" = "mysql-connector-python" ]; then
+        RET=`python -c "import mysql.connector" 2>/dev/null`
+        RC=$?
+    else
+        RET=`python -c "import $1" 2>/dev/null`
+        RC=$?
+    fi
+    if [[ $RC != 0 ]];then
+        return 1 #False
+    fi
+    return 0 #True
+}
+
 function check_pyurdme_sub {
     RET=`python -c "import pyurdme" 2>/dev/null`
     RC=$?
@@ -96,104 +113,8 @@ function check_pyurdme {
     return 1 #False
 }
 
-function download_pyurdme {
-    DIRECTORY="$STOCHSS_HOME/app/lib/pyurdme-stochss"
-    if [ -d "$DIRECTORY" ]; then
-        echo "$DIRECTORY found, pyurdme already downloaded locally (remove directory to re-download)"
-        return 0 #True
-    else
-        ZIP_URL="https://github.com/pyurdme/pyurdme/archive/stochss.zip"
-        TMPDIR=$(mktemp -d /tmp/tmp.XXXXXX)
-        ZIP_FILE="$TMPDIR/pyurdme.zip"
-        CMD="curl -o $ZIP_FILE -L $ZIP_URL"
-        echo $CMD
-        eval $CMD
-        if [[ -e "$ZIP_FILE" ]];then
-            wd=`pwd`
-            cd "$STOCHSS_HOME/app/lib" || return 1
-            pwd
-            CMD="unzip $ZIP_FILE > /dev/null"
-            echo $CMD
-            eval $CMD
-            if [[ $? != 0 ]];then
-                rm $ZIP_FILE
-                cd $wd
-                return 1 #False
-            fi
-            rm $ZIP_FILE
-            cd $wd
-            return 0 #True
-        else
-            return 1 #False
-        fi
-    fi
-}
-
-function check_for_lib {
-    if [ -z "$1" ];then
-        return 1 #False
-    fi
-    RET=`python -c "import $1" 2>/dev/null`
-    RC=$?
-    if [[ $RC != 0 ]];then
-        return 1 #False
-    fi
-    return 0 #True
-}
-
-function install_lib {
-    if [ -z "$1" ];then
-        return 1 #False
-    fi
-    if check_pip;then
-        echo ""
-    else
-        install_pip
-    fi
-    echo "We need to install the python package: $1 from the python pip package manager."
-    read -p "Do you want me to try to use sudo to install required package [you may be prompted for the admin password] (y/n): " answer
-
-    if [ $? != 0 ]; then
-        exit -1
-    fi
-
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-	if [ "$1" = "h5py" ]; then
-            pkg="$1==2.4.0b1"
-	else
-            pkg="$1"
-	fi
-	CMD="sudo pip install $pkg"
-        echo $CMD
-        eval $CMD
-    else
-        exit -1
-    fi
-}
-
-function check_and_install_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py")
-    for dep in "${deps[@]}"
-    do
-        echo "Checking for $dep<br />"
-        if check_for_lib "$dep";then
-            echo "$dep detected successfully.<br />"
-        else
-            install_lib "$dep"
-            if check_for_lib "$dep";then
-                echo "$dep installed successfully.<br />"
-            else
-                echo "$dep install failed.<br />"
-                return 1 #False
-            fi
-        fi
-    done
-    return 0 #True
-}
-
-function check_spatial_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py")
+function check_python_dependencies {
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -204,35 +125,6 @@ function check_spatial_dependencies {
         fi
     done
     return 0 #True
-}
-function check_pip {
-    if which pip > /dev/null;then
-        echo "pip is installed on your system, using it<br />"
-        return 0 #True
-    else
-        echo "pip is not installed on your system<br />"
-        return 1 #False
-    fi
-}
-
-function install_pip {
-    echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
-    read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
-
-    if [ $? != 0 ]; then
-        exit -1
-    fi
-
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
-        echo $CMD
-        eval $CMD
-        CMD="sudo python get-pip.py"
-        echo $CMD
-        eval $CMD
-    else
-        exit -1
-    fi
 }
 
 function install_dependencies_via_applescript {
@@ -240,13 +132,13 @@ function install_dependencies_via_applescript {
     /usr/bin/env osascript run_mac_install.scpt
 }
 
-function check_spatial_installation {
-    if check_spatial_dependencies; then
-        echo "All spatial dependencies detected.<br />"
+function check_python_installation {
+    if check_python_dependencies; then
+        echo "All python dependencies detected.<br />"
     else
         install_dependencies_via_applescript
-        if check_spatial_dependencies; then
-            echo "All spatial dependencies detected.<br />"
+        if check_python_dependencies; then
+            echo "All python dependencies detected.<br />"
         else
             echo "Error: dependencies not installed, exiting.<br />"
             return 1 #False
@@ -261,28 +153,25 @@ function check_spatial_installation {
         return 1 #False
     fi
 
+    echo "Running 'instant-clean'"
+    /Applications/FEniCS.app/Contents/Resources/bin/instant-clean
+
     if check_pyurdme; then
         echo "PyURDME detected successfully.<br />"
     else
-        echo "PyURDME not installed, attempting local install.<br />"
-        download_pyurdme
-        if check_pyurdme; then
-            echo "PyURDME detected successfully.<br />"
-        else
-            echo "PyURDME not installed, Failing (check if all required python modules are installed).<br />"
-            return 1 #False
-        fi
+        echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
+        return 1 #False
     fi
     return 0 #True
 }
 
 #####################
 
-echo "Check if spatial libraries are installed.<br />"
-if check_spatial_installation;then
+echo "Check if python libraries are installed.<br />"
+if check_python_installation;then
     echo "Spatial libraries installed correctly.<br />"
 else
-    echo "Error checking the spatial libraries.<br />"
+    echo "Error checking the python libraries.<br />"
     exit 1
 fi
 #################
@@ -511,4 +400,4 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec python "$STOCHSS_HOME/launchapp.py" 1 $0
+exec python "$STOCHSS_HOME/launchapp.py" mac $0 $1
