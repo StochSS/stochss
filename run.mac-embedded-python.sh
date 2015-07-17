@@ -138,8 +138,13 @@ function check_for_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
-    RET=`$MYPYTHON -c "import $1" 2>/dev/null`
-    RC=$?
+    if [ "$1" = "mysql-connector-python" ]; then
+        RET=`$MYPYTHON -c "import mysql.connector" 2>/dev/null`
+        RC=$?
+    else
+        RET=`$MYPYTHON -c "import $1" 2>/dev/null`
+        RC=$?
+    fi
     if [[ $RC != 0 ]];then
         return 1 #False
     fi
@@ -180,7 +185,7 @@ function install_lib {
 }
 
 function check_and_install_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -200,7 +205,7 @@ function check_and_install_dependencies {
 }
 
 function check_spatial_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"

@@ -18,13 +18,19 @@ function check_for_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
-    RET=`$MYPYTHON -c "import $1" 2>/dev/null`
-    RC=$?
+    if [ "$1" = "mysql-connector-python" ]; then
+        RET=`$MYPYTHON -c "import mysql.connector" 2>/dev/null`
+        RC=$?
+    else
+        RET=`$MYPYTHON -c "import $1" 2>/dev/null`
+        RC=$?
+    fi
     if [[ $RC != 0 ]];then
         return 1 #False
     fi
     return 0 #True
 }
+
 
 function install_lib {
     if [ -z "$1" ];then
@@ -32,7 +38,9 @@ function install_lib {
     fi
     export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
     if [ "$1" = "libsbml" ]; then
-	CMD="$MYPYTHON CFLAGS=\"-I$LIBXML\" $MYPIP install python-libsbml"
+	CMD="CFLAGS=\"-I$LIBXML\" $MYPYTHON $MYPIP install python-libsbml"
+    elif [ "$1" = "mysql-connector-python" ]; then
+    CMD="$MYPYTHON $MYPIP install --allow-external $1 $1"
     else
 	CMD="$MYPYTHON $MYPIP install $1"
     fi
@@ -44,7 +52,7 @@ function check_and_install_dependencies {
     if ! check_pip;then
         install_pip
     fi
-    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep" >> run_mac_install.log
