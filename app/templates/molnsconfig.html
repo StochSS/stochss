@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Configure Cloud{% endblock %}
+
+{% block content %}
+<div class="span9">
+    <div class="row-fluid">
+        <!--
+            Initial JSON to fill page will appear in this Div
+          -->
+        <div style="display: none;" class="jsonData">
+            {{ json }}
+        </div>
+
+        <div class="loading">
+            Loading cloud configuration tool...
+        </div>
+
+        <div style="display: none;" class="content" border="1">
+            <table>
+                <tr>
+                    <th align="left">
+                        Provider Select
+                    </th>
+                </tr>
+                <tbody>
+                    <tr>
+                        <td>Provider type</td>
+                        <td>
+                            <select class="providerType">
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+                <tr>
+                    <th align="left">
+                        Provider Configuration
+                    </th>
+                </tr>
+                <tbody class="provider"></tbody>
+                <tr>
+                    <th align="left">
+                        Controller Configuration
+                    </th>
+                </tr>
+                <tbody class="controller"></tbody>
+                <tr>
+                    <th align="left">
+                        Worker Configuration
+                    </th>
+                </tr>
+                <tbody class="worker"></tbody>
+                <tr>
+                    <th align="left">
+                        MOLNs configuration
+                    </th>
+                </tr>
+                <tbody>
+                    <tr>
+                        <td>Password</td><td><input type="text" name="password"></td>
+                    </tr>
+                    <tr>
+                        <td>Add temporary worker nodes</td><td><input type="text" name="number"><button class="addWorkers">Add Workers</button>
+</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>
+                <button class="startCluster">Start</button>
+                <button class="stopCluster">Stop</button>
+            </div>
+            <hr>
+            <div style="width : 100%; background-color : #FAFAF0; color : #714D03; border : 4px double #AAAAA0;" class="processStatus">
+            </div>
+
+            <!--Style taken from http://www.html.am/html-codes/scrollboxes/html-scrollbox.cfm-->
+            <div style="width : 100%; height : 480px; overflow-x : hidden; overflow-y : scroll; background-color : #FAFAFA; color : #714D03; border : 4px double #AAAAAA;" class="messages">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src="/static/js/underscore.js"></script>
+<script type="text/javascript" src="/static/js/backbone.js"></script>
+<script type="text/javascript" src="/static/js/molnsconfig.js"></script>
+{% endblock %}

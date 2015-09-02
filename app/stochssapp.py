@@ -132,7 +132,6 @@ class BaseHandler(webapp2.RequestHandler):
         # Using memcache for storing sessions.
         self.session = self.session_store.get_session(name='mc_session',
                                                       factory=sessions_memcache.MemcacheSessionFactory)
-
         try:
             # Dispatch the request.
             webapp2.RequestHandler.dispatch(self)
@@ -287,6 +286,7 @@ from handlers.auth import *
 from handlers.admin import *
 import handlers.fileserver
 import handlers.spatial
+import handlers.molnsconfig
 from backend import pricing
 
 class MainPage(BaseHandler):
@@ -354,17 +354,15 @@ app = webapp2.WSGIApplication([
                                ('/meshes.*', handlers.mesheditor.MeshBackboneInterface),
                                ('/models/list.*', handlers.modeleditor.ModelBackboneInterface),
                                ('/stochkit/list.*', JobBackboneInterface),
-                               #('/modeleditor/converttopopulation', ConvertToPopulationPage),
-                               #('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
-                               #('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
-                               #('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
                                ('/modeleditor.*', handlers.modeleditor.ModelEditorPage),
                                ('/publicLibrary.*', handlers.modeleditor.PublicModelPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/spatial',handlers.spatial.SpatialPage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
-                               webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),#/<queryType>
+                               webapp2.Route('/molnsconfig', handler = handlers.molnsconfig.MolnsConfig),
+                               webapp2.Route('/molnsconfig/<reqType>', handler = handlers.molnsconfig.MolnsConfig),
+                               webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
                                webapp2.Route('/stochoptim/<queryType>/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
                                ## Fileserver handlers
                                # This route is for listing all files
