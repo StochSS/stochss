@@ -60,7 +60,7 @@ class MolnsConfigProcessWrapper(db.Model):
             return False
         else:
             # From http://stackoverflow.com/a/568285/3769360
-            if type(self.pid) == int:
+            if type(self.pid) == long:
                 try:
                     os.kill(self.pid, 0)
                 except OSError:
