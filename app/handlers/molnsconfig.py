@@ -143,6 +143,8 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
     def pollSystemState(self):
         output = []
 
+        config = molns.MOLNSConfig(db_file = self.getMolnsConfigPath())
+
         if 'process' in self.session:
             processId, functionName = self.session['process']
 

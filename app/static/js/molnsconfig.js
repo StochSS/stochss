@@ -5,30 +5,13 @@ $( function() {
         // Delegated events for creating new items, and clearing completed ones.
         events : {
             "click .startCluster" :  "startCluster",
-            "click .stopCluster" : "stopCluster",
-            "click .addWorkers" :  "addWorkers",
-            "change .providerType" : "changeProvider"
+            "click .stopCluster" : "stopCluster"
         },
 
         // At initialization we bind to the relevant events on the `Todos`
         // collection, when items are added or changed. Kick things off by
         // loading any preexisting todos that might be saved in *localStorage*.
         initialize : function() {
-        },
-
-        changeProvider : function() {
-            for(var providerType in this.ui)
-            {
-                this.ui[providerType]['providerBase'].hide();
-                this.ui[providerType]['controllerBase'].hide();
-                this.ui[providerType]['workerBase'].hide();
-            }
-
-            var providerType = $( '.providerType' ).val();
-
-            this.ui[providerType]['providerBase'].show();
-            this.ui[providerType]['controllerBase'].show();
-            this.ui[providerType]['workerBase'].show();
         },
 
         pollSystemState : _.once(function() {
@@ -106,98 +89,80 @@ $( function() {
             inner();
         }),
 
-        buildUI : function(state) {
-            var providerDiv = $( '.provider' );
-            var controllerDiv = $( '.controller' );
-            var workerDiv = $( '.worker' );
+        updateUI : function(state) {
+            this.state = state;
 
-            this.ui = {};
-
-            for(var providerType in state)
+            // Retrieve all values for the UI manually
+            for(var i = 0; i < state["EC2"]["controller"].length; i++)
             {
-                $( '.providerType' ).append( '<option value="' + providerType + '">' + providerType + '</option>' );
-
-                this.ui[providerType] = {};
-
-                this.ui[providerType]['provider'] = {};
-                this.ui[providerType]['controller'] = {};
-                this.ui[providerType]['worker'] = {};
-                
-                var providerBase = $( '<tbody></tbody>' );
-                this.ui[providerType]['providerBase'] = providerBase;
-                providerDiv.after( providerBase );
-                
-                var controllerBase = $( '<tbody></tbody>' );
-                this.ui[providerType]['controllerBase'] = controllerBase;
-                controllerDiv.after( controllerBase );
-                
-                var workerBase = $( '<tbody></tbody>' );
-                this.ui[providerType]['workerBase'] = workerBase;
-                workerDiv.after( workerBase );
-
-                template = _.template( '<tr><td><%= question %></td><td><input value="<%= value %>"></td></tr>' );
-
-                for(var key in state[providerType]['provider'])
+                if(this.state["EC2"]["controller"][i]["key"] == "instance_type")
                 {
-                    var newElement = template( state[providerType]['provider'][key] );
-                    
-                    this.ui[providerType]['provider'][key] = $( newElement ).appendTo( providerBase ).find('input');
-                }
-
-                for(var key in state[providerType]['controller'])
-                {
-                    var newElement = template( state[providerType]['controller'][key] );
-
-                    this.ui[providerType]['controller'][key] = $( newElement ).appendTo( controllerBase ).find('input');
-                }
-
-                for(var key in state[providerType]['worker'])
-                {
-                    var newElement = template( state[providerType]['worker'][key] );
-
-                    this.ui[providerType]['worker'][key] = $( newElement ).appendTo( workerBase ).find('input');
+                    $('input[name=headNode][value="' + this.state["EC2"]["controller"][i]["value"] + '"]').prop('checked', true);
+                    break;
                 }
             }
-        },
 
-        updateUI : function(state) {
-            for(var providerType in state)
+            for(var i = 0; i < state["EC2"]["worker"].length; i++)
             {
-                for(var key1 in {'provider' : 1, 'controller' : 1})
-                {
-                    for(var key2 in state[providerType][key1])
-                    {
-                        var element = this.ui[providerType][key1][key2];
-                        
-                        var newVal = state[providerType][key1][key2]['value'];
-                        
-                        if(element.val().trim() != newVal && newVal != "********")
-                            element.val(newVal);
-                    }
-                }
+                if(this.state["EC2"]["worker"][i]["key"] == "instance_type")
+                    $('input[name=workerNode][value="' + this.state["EC2"]["worker"][i]["value"] + '"]').prop('checked', true);
+
+                if(this.state["EC2"]["worker"][i]["key"] == "num_vms")
+                    $('input[name=workerCount]').val(this.state["EC2"]["worker"][i]["value"]);
+            }
+
+            for(var i = 0; i < state["EC2"]["provider"].length; i++)
+            {
+                if(this.state["EC2"]["provider"][i]["key"] == "aws_secret_key")
+                    $('input[name=aws_secret_key]').val(this.state["EC2"]["provider"][i]["value"]);
+                
+                if(this.state["EC2"]["provider"][i]["key"] == "aws_access_key")
+                    $('input[name=aws_access_key]').val(this.state["EC2"]["provider"][i]["value"]);
             }
         },
 
         extractStateFromUI : function() {
-            state = {};
+            var state = {};
 
-            for(var providerType in this.ui)
+            // Copy the default values that we last received from the server
+            for(var key1 in this.state)
             {
-                state[providerType] = {};
+                state[key1] = {};
 
-                for(var key1 in {'provider' : 1, 'controller' : 1, 'worker' : 1})
+                for(var key2 in this.state[key1])
                 {
-                    state[providerType][key1] = [];
-                    
-                    for(var key2 in this.ui[providerType][key1])
+                    state[key1][key2] = [];
+
+                    for(var i = 0; i < this.state[key1][key2].length; i++)
                     {
-                        var element = this.ui[providerType][key1][key2];
-                        
-                        state[providerType][key1][key2] = {};
-                        
-                        state[providerType][key1][key2]['value'] = element.val().trim();
+                        state[key1][key2].push(_.clone(this.state[key1][key2][i]));
                     }
                 }
+            }
+            
+            // Set all the fields from the UI manually
+            for(var i = 0; i < state["EC2"]["controller"].length; i++)
+            {
+                if(this.state["EC2"]["controller"][i]["key"] == "instance_type")
+                    state["EC2"]["controller"][i] = { "value" : $('input[name=headNode]:checked').val() };
+            }
+
+            for(var i = 0; i < state["EC2"]["worker"].length; i++)
+            {
+                if(this.state["EC2"]["worker"][i]["key"] == "instance_type")
+                    state["EC2"]["worker"][i]["value"] = $('input[name=workerNode]:checked').val();
+
+                if(this.state["EC2"]["worker"][i]["key"] == "num_vms")
+                    state["EC2"]["worker"][i]["value"] = $('input[name=workerCount]').val();
+            }
+
+            for(var i = 0; i < state["EC2"]["provider"].length; i++)
+            {
+                if(this.state["EC2"]["provider"][i]["key"] == "aws_secret_key")
+                    state["EC2"]["provider"][i]["value"] = $('input[name=aws_secret_key]').val();
+
+                if(this.state["EC2"]["provider"][i]["key"] == "aws_access_key")
+                    state["EC2"]["provider"][i]["value"] = $('input[name=aws_access_key]').val();
             }
 
             return state;
@@ -208,7 +173,8 @@ $( function() {
                       data : {
                           state : JSON.stringify(this.extractStateFromUI()),
                           pw : $( 'input[name=password]' ).val(),
-                          providerType : $( '.providerType' ).val()
+                          workerCount : $( 'input[name=workerCount]' ).val(),
+                          providerType : 'EC2'
                       },
                       success : _.bind(function(data) {
                           if(typeof(data['molns']) != 'undefined')
@@ -233,7 +199,7 @@ $( function() {
         stopCluster : function() {
             $.post( '/molnsconfig/stopMolns',
                     {
-                        providerType : $( '.providerType' ).val()
+                        providerType : 'EC2'
                     },
                     _.bind(function(data) {
                         if(typeof(data['molns']) != 'undefined')
@@ -251,28 +217,6 @@ $( function() {
                   );
         },
         
-        addWorkers : function() {
-            $.post( '/molnsconfig/addWorkers',
-                    {
-                        number : $( 'input[name=number]' ).val(),
-                        providerType : $( '.providerType' ).val()
-                    },
-                    _.bind(function(data) {
-                        if(typeof(data['molns']) != 'undefined')
-                        {
-                            this.updateUI(data['molns']);
-
-                            this.createMessage({ status : 2, msg : 'Add worker request successfully sent to Molns cluster' });
-                        }
-                        else
-                        {
-                            this.createMessage(data);
-                        }
-                    }, this),
-                    "json"
-                  );
-        },
-
         createMessage : function(data) {
             var dateString = '';
 
@@ -333,9 +277,7 @@ $( function() {
 
             if(typeof(data['molns']) != 'undefined')
             {
-                this.buildUI(data['molns']);
                 this.updateUI(data['molns']);
-                this.changeProvider();
                 
                 this.delegateEvents();
                 

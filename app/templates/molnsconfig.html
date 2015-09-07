@@ -16,59 +16,38 @@
         </div>
 
         <div style="display: none;" class="content" border="1">
-            <table>
-                <tr>
-                    <th align="left">
-                        Provider Select
-                    </th>
-                </tr>
-                <tbody>
-                    <tr>
-                        <td>Provider type</td>
-                        <td>
-                            <select class="providerType">
-                            </select>
-                        </td>
-                    </tr>
-                </tbody>
-                <tr>
-                    <th align="left">
-                        Provider Configuration
-                    </th>
-                </tr>
-                <tbody class="provider"></tbody>
-                <tr>
-                    <th align="left">
-                        Controller Configuration
-                    </th>
-                </tr>
-                <tbody class="controller"></tbody>
-                <tr>
-                    <th align="left">
-                        Worker Configuration
-                    </th>
-                </tr>
-                <tbody class="worker"></tbody>
-                <tr>
-                    <th align="left">
-                        MOLNs configuration
-                    </th>
-                </tr>
-                <tbody>
-                    <tr>
-                        <td>Password</td><td><input type="text" name="password"></td>
-                    </tr>
-                    <tr>
-                        <td>Add temporary worker nodes</td><td><input type="text" name="number"><button class="addWorkers">Add Workers</button>
-</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div>
-                <button class="startCluster">Start</button>
-                <button class="stopCluster">Stop</button>
+            <h1>Amazon EC2 Cloud Configuration</h1>
+            <br>
+
+            <div class="well well-large">
+                <label> Access Key </label>
+                <input class="span3" type="text" name="aws_access_key" autocomplete="off">
+                <label> Secret Key </label>
+                <input class="span3" type="text" name="aws_secret_key" autocomplete="off">
+                <div>
+                    <label> Head Node Type </label>
+                    <input type="radio" name="headNode" value="c3.large">c3.large<br><!-- molns EC2 provider default_instance_type -->
+                    <input type="radio" name="headNode" value="c3.xlarge">c3.xlarge
+                </div>
+                <br>
+                <div>
+                    <label> Worker Node Type </label><!-- molns EC2 worker instance_type -->
+                    <input type="radio" name="workerNode" value="m3.medium">m3.medium<br>
+                    <input type="radio" name="workerNode" value="m3.large">m3.large<br>
+                    <input type="radio" name="workerNode" value="c3.large">c3.large<br>
+                    <input type="radio" name="workerNode" value="c3.xlarge">c3.xlarge<br>
+                </div>
+                <br>
+                <label> Number of Workers </label><!-- molns EC2 worker num_vms -->
+                <input type="text" name="workerCount" value="0">
+            
+                <div>
+                    <button class="startCluster">Start</button>
+                    <button class="stopCluster">Stop</button>
+                </div>
+
             </div>
-            <hr>
+
             <div style="width : 100%; background-color : #FAFAF0; color : #714D03; border : 4px double #AAAAA0;" class="processStatus">
             </div>
 
