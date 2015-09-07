@@ -14,67 +14,29 @@ $( function() {
         initialize : function() {
         },
 
+        updateStateMessage : function (data) {
+            if (typeof(data) == 'undefined' || !_.has(data, 'status')) {
+                $('#stateMessage').hide();//text('').prop('class', '');
+                
+                return;
+            }
+
+            $('#stateMessage').html(data.msg);
+
+            if (data.status)
+                $('#stateMessage').prop('class', 'alert alert-success');
+            else
+                $('#stateMessage').prop('class', 'alert alert-error');
+
+            $('#stateMessage').show();
+        },
+
         pollSystemState : _.once(function() {
             var inner = _.bind(function() {
                 $.ajax( { url : '/molnsconfig/pollSystemState',
                           data : {},
                           success : _.bind(_.partial(function(inner, data) {
-                              var processRunning = false;
-
-                              if(typeof data['process']['name'] != 'string')
-                              {
-                                  $( '.processStatus' ).text( 'No process running' );
-
-                                  processRunning = false;
-                              }
-                              else if(data['process']['status'])
-                              {
-                                  $( '.processStatus' ).text( 'Function \'' + data['process']['name'] + '\' running' );
-
-                                  processRunning = true;
-                              }
-                              else
-                              {
-                                  $( '.processStatus' ).text( 'Function \'' + data['process']['name'] + '\' finished' )
-
-                                  processRunning = false;
-                              }
-
-                              if(processRunning)
-                              {
-                                  this.updateUI(data['molns']);
-
-                                  $( 'input, button, select' ).prop('disabled', true);
-                              }
-                              else
-                              {
-                                  $( 'input, button, select' ).prop('disabled', false);
-                              }
-
-                              for(var i = 0; i < data['messages'].length; i++)
-                              {
-                                  var msg = '';
-                                  
-                                  for(var c in data['messages'][i].msg)
-                                  {
-                                      if(data['messages'][i].msg[c] == '\n')
-                                      {
-                                          if(msg.length > 0)
-                                              this.handleMessage({ status : data['messages'][i].status, msg : msg });
-
-                                          msg = ''
-
-                                          this.createMessage();
-                                      }
-                                      else
-                                      {
-                                          msg += data['messages'][i].msg[c];
-                                      }
-                                  }
-                                  
-                                  if(msg.length > 0)
-                                      this.handleMessage({ status : data['messages'][i].status, msg : msg });
-                              }
+                              this.updateUI(data);
                            
                               setTimeout(_.bind(inner, this), 1000);
                           }, arguments.callee), this),
@@ -89,11 +51,11 @@ $( function() {
             inner();
         }),
 
-        updateUI : function(state) {
+        updateInputs : function(state) {
             this.state = state;
 
             // Retrieve all values for the UI manually
-            for(var i = 0; i < state["EC2"]["controller"].length; i++)
+            for(var i = 0; i < this.state["EC2"]["controller"].length; i++)
             {
                 if(this.state["EC2"]["controller"][i]["key"] == "instance_type")
                 {
@@ -102,7 +64,7 @@ $( function() {
                 }
             }
 
-            for(var i = 0; i < state["EC2"]["worker"].length; i++)
+            for(var i = 0; i < this.state["EC2"]["worker"].length; i++)
             {
                 if(this.state["EC2"]["worker"][i]["key"] == "instance_type")
                     $('input[name=workerNode][value="' + this.state["EC2"]["worker"][i]["value"] + '"]').prop('checked', true);
@@ -111,13 +73,156 @@ $( function() {
                     $('input[name=workerCount]').val(this.state["EC2"]["worker"][i]["value"]);
             }
 
-            for(var i = 0; i < state["EC2"]["provider"].length; i++)
+            for(var i = 0; i < this.state["EC2"]["provider"].length; i++)
             {
                 if(this.state["EC2"]["provider"][i]["key"] == "aws_secret_key")
                     $('input[name=aws_secret_key]').val(this.state["EC2"]["provider"][i]["value"]);
                 
                 if(this.state["EC2"]["provider"][i]["key"] == "aws_access_key")
                     $('input[name=aws_access_key]').val(this.state["EC2"]["provider"][i]["value"]);
+            }
+        },
+
+        updateUI : function(data) {
+            var molnsRunning = false;
+
+            instanceStatus = data['instanceStatus'];
+                    
+            var statusColumn = undefined;
+            for(var i = 0; i < instanceStatus['column_names'].length; i++)
+            {
+                if(instanceStatus['column_names'][i].toLowerCase() == 'status')
+                {
+                    statusColumn = i;
+                    break;
+                }
+            }
+
+            for(var i = 0; i < instanceStatus['data'].length; i++)
+            {
+                var status = instanceStatus['data'][i][statusColumn].toLowerCase();
+
+                if(!_.contains(['stopped', 'terminated'], status))
+                {
+                    molnsRunning = true;
+                    break;
+                }
+            }
+
+            var stateChange = false;
+            var firstRun = typeof(this.processRunning) == 'undefined';
+            var newProcessRunning = false;
+
+            if(typeof data['process']['name'] != 'string')
+            {
+                $( '.processStatus' ).text( 'No process running' );
+
+                newProcessRunning = false;
+            }
+            else if(data['process']['status'])
+            {
+                $( '.processStatus' ).text( 'Function \'' + data['process']['name'] + '\' running' );
+
+                newProcessRunning = true;
+            }
+            else
+            {
+                $( '.processStatus' ).text( 'Function \'' + data['process']['name'] + '\' finished' )
+
+                newProcessRunning = false;
+            }
+
+            if(this.processRunning != newProcessRunning)
+            {
+                stateChange = true;
+                this.processRunning = newProcessRunning;
+            }
+
+            if((this.processRunning || stateChange) && !firstRun)
+            {
+                this.updateInputs(data['molns']);
+
+                $( 'input, button, select' ).prop('disabled', true);
+
+                this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            }
+            else if(molnsRunning)
+            {
+                this.updateInputs(data['molns']);
+
+                $( 'input, button, select' ).prop('disabled', true);
+                $( '.stopCluster' ).prop('disabled', false);
+
+                this.updateStateMessage({ status : 'true', msg : 'Cluster running' });
+            }
+            else
+            {
+                if(firstRun)
+                    this.updateInputs(data['molns']);
+
+                $( 'input, button, select' ).prop('disabled', false);
+
+                this.updateStateMessage({ status : 'true', msg : 'Cluster stopped' });
+            }
+
+            if(molnsRunning)
+            {
+                //Build a table to show status of instances
+                if(_.has(instanceStatus, 'msg'))
+                {
+                    $( '.statusDiv' ).hide();
+                }
+                else
+                {
+                    var table = $( '.statusDiv table' );
+
+                    $( '.statusDiv' ).show();
+                    
+                    var rowTemplate = _.template("<tr> \
+<% for(var i = 0; i < row.length; i++) { %> \
+    <<%= tag %>><%= row[i] %></<%= tag %>> \
+<% } %> \
+</tr>");
+
+                    table.empty();
+                    
+                    table.append(rowTemplate({ tag : 'th', row : instanceStatus['column_names'] }));
+                    
+                    for(var i = 0; i < instanceStatus['data'].length; i++)
+                    {
+                        if(instanceStatus['data'][i][statusColumn].toLowerCase() != 'terminated')
+                            table.append(rowTemplate({ tag : 'td', row : instanceStatus['data'][i]}));
+                    }
+                }
+            }
+            else
+            {
+                $( '.statusDiv' ).hide();
+            }
+            
+            for(var i = 0; i < data['messages'].length; i++)
+            {
+                var msg = '';
+                
+                for(var c in data['messages'][i].msg)
+                {
+                    if(data['messages'][i].msg[c] == '\n')
+                    {
+                        if(msg.length > 0)
+                            this.handleMessage({ status : data['messages'][i].status, msg : msg });
+
+                        msg = ''
+
+                        this.createMessage();
+                    }
+                    else
+                    {
+                        msg += data['messages'][i].msg[c];
+                    }
+                }
+                
+                if(msg.length > 0)
+                    this.handleMessage({ status : data['messages'][i].status, msg : msg });
             }
         },
 
@@ -169,6 +274,10 @@ $( function() {
         },
                             
         startCluster : function() {
+            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            this.createMessage({ status : 2, msg : 'Sending molns cluster start request' });
+            $( '.startCluster' ).prop('disabled', true);
+
             $.ajax( { url : '/molnsconfig/startMolns',
                       data : {
                           state : JSON.stringify(this.extractStateFromUI()),
@@ -179,9 +288,9 @@ $( function() {
                       success : _.bind(function(data) {
                           if(typeof(data['molns']) != 'undefined')
                           {
-                              this.updateUI(data['molns']);
-                              
                               this.createMessage({ status : 2, msg : 'Molns cluster start request sent succesfully' });
+
+                              this.updateUI(data);
                           }
                           else
                           {
@@ -197,6 +306,10 @@ $( function() {
         },
 
         stopCluster : function() {
+            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            this.createMessage({ status : 2, msg : 'Sending molns cluster stop request' });
+            $( '.stopCluster' ).prop('disabled', true);
+
             $.post( '/molnsconfig/stopMolns',
                     {
                         providerType : 'EC2'
@@ -204,9 +317,9 @@ $( function() {
                     _.bind(function(data) {
                         if(typeof(data['molns']) != 'undefined')
                         {
-                            this.updateUI(data['molns']);
-                        
                             this.createMessage({ status : 2, msg : 'Molns cluster stop request sent successfully' });
+
+                            this.updateUI(data);
                         }
                         else
                         {
@@ -277,7 +390,7 @@ $( function() {
 
             if(typeof(data['molns']) != 'undefined')
             {
-                this.updateUI(data['molns']);
+                this.updateUI(data);
                 
                 this.delegateEvents();
                 

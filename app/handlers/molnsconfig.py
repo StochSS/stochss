@@ -1,4 +1,3 @@
-import cherrypy
 import jinja2
 import json
 import molns
@@ -145,6 +144,8 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
 
         config = molns.MOLNSConfig(db_file = self.getMolnsConfigPath())
 
+        controllerName = providerToNames['EC2']['controllerName']
+
         if 'process' in self.session:
             processId, functionName = self.session['process']
 
@@ -168,8 +169,15 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
             functionName = None
             is_alive = False
 
+        status = molns.MOLNSController.status_controller([controllerName], config)
+
+        #status = dict(zip(status['column_names'], zip(*status['data'])))
+
+        status['column_names'] = [s.capitalize() for s in status['column_names']]
+
         return {
             'molns': self.getMolnsState(),
+            'instanceStatus' : status,
             'messages': output,
             'process' : {
                 'name' :  functionName,
