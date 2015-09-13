@@ -273,6 +273,7 @@ except:
 from handlers.exportimport import *
 import handlers.modeleditor
 import handlers.stochoptim
+import handlers.parametersweep
 import handlers.mesheditor
 from handlers.simulation import *
 from handlers.sensitivity import *
@@ -360,6 +361,7 @@ app = webapp2.WSGIApplication([
                                ('/sensitivity',SensitivityPage),
                                ('/spatial',handlers.spatial.SpatialPage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
+                               ('/parametersweep', handlers.parametersweep.ParameterSweepPage),
                                webapp2.Route('/molnsconfig', handler = handlers.molnsconfig.MolnsConfig),
                                webapp2.Route('/molnsconfig/<reqType>', handler = handlers.molnsconfig.MolnsConfig),
                                webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),

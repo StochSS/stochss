@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title%}Manage Simulations{% endblock %}
+{% block csscontent %}{% endblock %}
+{% block content %}
+
+<div class="span9">
+    <div class="row-fluid">
+        <div id="stochoptim">
+            Loading model content...
+        </div>
+
+        <div style="display: none;" id="initialData">
+            {{ initialData }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<script type="text/javascript" src = "/static/js/jquery.csv-0.71.js"></script>
+<link rel="stylesheet" href="/static/css/nv.d3.css">
+
+<link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
+
+<script type="text/javascript" src="/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
+<script type="text/javascript" src = "/static/js/purl.js"></script>
+<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
+<script type="text/javascript" src = "/static/js/tablePlot.js"></script>
+<script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
+<script src="/static/js/jfu/js/jquery.fileupload.js"></script>
+<script type="text/javascript" src = "/static/js/fileserver.js"></script>
+<script type="text/javascript" src = "/static/js/stochoptim.js"></script>
+
+<script id="modelSelectTemplate" type="text/template">
+    <div id="modelSelect">
+        <h1>Model Editor</h1>
+        <br>
+        <div class="well">
+            <% if(typeof models != 'undefined' && models.length > 0) { %>
+            <h3> Select model to analyze </h3>
+            <br />
+            <table class="table table-striped table-bordered mainTable">
+                <thead>
+                    <tr>
+                        <th width="25px"></th>
+                        <th width="200px">Name</th>
+                        <th>Units</th>
+                        <th>Spatial</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for(var model in models) { %>
+                    <tr>
+                        <td>
+                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" />
+                        </td>
+                        <td>
+                            <%= models[model].attributes.name %>
+                        </td>
+                        <td>
+                            <%= models[model].attributes.units %>
+                        </td>
+                        <td>
+                            <% if(models[model].attributes.isSpatial) { %>
+                            True
+                            <% } else { %>
+                            False
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+
+            <br />
+            <button id="next" type="submit" class="btn-primary btn-large" disabled>Next&raquo;</button>
+            <% } else { %>
+            <h2>There are no models in the system.</h2><br />
+            <a style="font-size:18px;" href="/modeleditor"> Create a new model </a>
+            <% } %>
+        </div>
+    </div>
+</script>
+
+<!--<script id="csvSelectTemplate" type="text/template">
+    
+    </script>-->
+
+<script id="simulationConfTemplate" type="text/template">
+    <div class="well well-large">
+        <h2>
+            <a data-toggle="modal" href="#help_modal1" style="text-decoration: none">Run Parameter Sweep <i class="icon-question-sign"></i> </a>
+            
+            {% set help_modal_id = "help_modal1" %}
+            {% set help_modal_title = "Parameter sweep" %}
+            {% set help_modal_message = "The parameter sweep tool simulates a large number of models with different parameters and plots various functions of the results against the input parameters. This is the simplest way to uncover connections between parameter values and model behavior." %}
+            {% include "help_modal.html" %}
+            {{help_modal|safe}}
+            
+        </h2>
+
+        Model Name: <h2><%= model.attributes.name %></h2>
+        Units: <h3><%= model.attributes.units %></h3>
+        <hr />
+        <label>Name:</label>
+        <input type="text" class="span3" id="jobName" value="<%= model.attributes.name %>_job_<%= datestr %>" />
+        
+        <span class="help-block">This name will be used to reference the parameter sweep.</span>
+        <br />
+        
+        <!--List parameters that can be parameter-swept-->
+        Select two parameters to sweep over:<br />
+        <div>
+            <select id="parameterA"></select><br />
+            Sweep parameter from <input type="number" id="minValueA"> to <input type="number" id="maxValueA"> in <input id="stepsA" value="10"> steps (inclusive). Log scale <input id="logA" type="checkbox" />
+        </div>
+        <div>
+            <select id="parameterB"></select>
+            Sweep parameter from <input type="number" id="minValueB"> to <input type="number" id="maxValueB"> in <input id="stepsB" value="10"> steps (inclusive). Log scale <input id="logB" type="checkbox" />
+        </div>
+
+        Number of trajectories at each point: <input type="number" id="trajectories" value="1">
+
+        <br />
+
+        <input id= "seed" type = "number" step = "1" value = "1" /><br />
+            
+            <div id="msg"></div>
+
+            <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
+        </div>
+
+    </div>
+</script>
+{% endblock %}
