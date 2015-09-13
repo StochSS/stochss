@@ -1,5 +1,9 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.6.1
+=============================
+- Updated PyURDME to work with FEniCS 1.6
+
 1.6.0
 =============================
 - Spatial visualization now supports animation, wireframe rendering, and mesh slicing 
