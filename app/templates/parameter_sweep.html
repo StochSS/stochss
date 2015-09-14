@@ -22,20 +22,12 @@
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <script type="text/javascript" src = "/static/js/jquery.csv-0.71.js"></script>
-<link rel="stylesheet" href="/static/css/nv.d3.css">
 
 <link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
 
-<script type="text/javascript" src="/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
 <script type="text/javascript" src = "/static/js/purl.js"></script>
-<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
-<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
-<script type="text/javascript" src = "/static/js/tablePlot.js"></script>
-<script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
-<script src="/static/js/jfu/js/jquery.fileupload.js"></script>
-<script type="text/javascript" src = "/static/js/fileserver.js"></script>
-<script type="text/javascript" src = "/static/js/stochoptim.js"></script>
+<script type="text/javascript" src = "/static/js/parameter_sweep.js"></script>
 
 <script id="modelSelectTemplate" type="text/template">
     <div id="modelSelect">
@@ -79,7 +71,7 @@
             </table>
 
             <br />
-            <button id="next" type="submit" class="btn-primary btn-large" disabled>Next&raquo;</button>
+            <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
             <% } else { %>
             <h2>There are no models in the system.</h2><br />
             <a style="font-size:18px;" href="/modeleditor"> Create a new model </a>
@@ -115,27 +107,56 @@
         <br />
         
         <!--List parameters that can be parameter-swept-->
-        Select two parameters to sweep over:<br />
+        Configure two variable parameter sweep (minima and maxima are inclusive in sweep):<br />
+        <table class="table">
+            <tr>
+                <th>
+                    Sweep Variable
+                </th>
+                <th>
+                    Minimum value (inclusive)
+                </th>
+                <th>
+                    Maximum value (inclusive)
+                </th>
+                <th>
+                    Steps
+                </th>
+                <th>
+                    Log scale
+                </th>
+            </tr>
+            <tr>
+                <td><select class="input-small" id="parameterA"></select></td>
+                <td><input class="input-small" id="minValueA"></td>
+                <td><input class="input-small" id="maxValueA"></td>
+                <td><input class="input-small" type="number" id="stepsA" value="10"></td>
+                <td><input id="logA" type="checkbox" /></td>
+            </tr>
+            <tr>
+                <td><select class="input-small" id="parameterB"></select></td>
+                <td><input class="input-small" id="minValueB"></td>
+                <td><input class="input-small" id="maxValueB"></td>
+                <td><input class="input-small" type="number" id="stepsB" value="10"></td>
+                <td><input id="logB" type="checkbox" /></td>
+            </tr>
+        </table>
         <div>
-            <select id="parameterA"></select><br />
-            Sweep parameter from <input type="number" id="minValueA"> to <input type="number" id="maxValueA"> in <input id="stepsA" value="10"> steps (inclusive). Log scale <input id="logA" type="checkbox" />
         </div>
+
         <div>
-            <select id="parameterB"></select>
-            Sweep parameter from <input type="number" id="minValueB"> to <input type="number" id="maxValueB"> in <input id="stepsB" value="10"> steps (inclusive). Log scale <input id="logB" type="checkbox" />
+            Number of trajectories:<br />
+            <input class="input-small" type="number" id="trajectories" value="1">
         </div>
 
-        Number of trajectories at each point: <input type="number" id="trajectories" value="1">
-
-        <br />
-
-        <input id= "seed" type = "number" step = "1" value = "1" /><br />
+        <div>
+            Seed (use -1 for random seed):<br />
+            <input class="input-small" id="seed" type="number" step="1" value="-1" /><br />
+        </div>
             
-            <div id="msg"></div>
+        <div id="msg"></div>
 
-            <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
-        </div>
-
+        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
     </div>
 </script>
 {% endblock %}

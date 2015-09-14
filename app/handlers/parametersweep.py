@@ -41,7 +41,7 @@ class ParameterSweepPage(BaseHandler):
         return True
     
     def get(self):
-        self.render_response('parameter_sweep.html', **{ 'initialData' : json.dumps(modeleditor.ModelManager.getModels(self)) })
+        self.render_response('parameter_sweep.html', **{ 'initialData' : json.dumps(ModelManager.getModels(self)) })
 
     def post(self):
         reqType = self.request.get('reqType')

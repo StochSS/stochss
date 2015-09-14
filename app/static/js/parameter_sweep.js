@@ -15,42 +15,6 @@ function padStr(i) {
     return (i < 10) ? "0" + i : "" + i;
 }
 
-var mean = function(array)
-{
-    var sum = 0;
-
-    for(var a in array)
-    {
-        sum += array[a];
-    }
-
-    return sum / array.length;
-}
-
-var variance = function(array)
-{
-    var meanVal = mean(array);
-
-    var sum = 0;
-
-    for(var a in array)
-    {
-        var d = array[a] - meanVal;
-
-        sum += d * d;
-    }
-
-    return sum / array.length;
-}
-
-$( document ).ready( function() {
-    //loadTemplate("speciesEditorTemplate", "/model/speciesEditor.html");
-    //loadTemplate("parameterEditorTemplate", "/model/parameterEditor.html");
-    //loadTemplate("reactionEditorTemplate", "/model/reactionEditor.html");
-
-    waitForTemplates(run);
-});
-
 //Get and check inputs
 var checkAndGet = function(selectTable)
 {
@@ -63,128 +27,53 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
-    var execType = $( "input:radio[name=exec_type]:checked" ).val();
+    var stepsA = parseFloat($( "#stepsA" ).val());
 
-    var crossEntropyStep = $( "#crossEntropyStep" ).prop('checked') ? 1 : 0;
-    var emStep = $( "#emStep" ).prop('checked')? 1 : 0;
-    var uncertaintyStep = $( "#uncertaintyStep" ).prop('checked')? 1 : 0;
+    if(stepsA % 1 != 0 || stepsA < 2)
+    {
+        updateMsg( { status : false,
+                     msg : "Steps in sweep variable 1 must be an integer greater than or equal to two" } );
+        return false;
+    }
+
+    var stepsB = parseFloat($( "#stepsB" ).val());
+
+    if(stepsB % 1 != 0 || stepsA < 2)
+    {
+        updateMsg( { status : false,
+                     msg : "Steps in sweep variable 2 must be an integer greater than or equal to two" } );
+        return false;
+    }
 
     var seed = parseFloat($( "#seed" ).val());
 
-    if(seed % 1 != 0)
+    if(seed % 1 != 0 || seed < -1.0)
     {
         updateMsg( { status : false,
-                     msg : "Seed must be an integer" } );
+                     msg : "Seed must be an integer greater than or equal to -1" } );
         return false;
     }
 
-    var Kce = parseFloat($( "#Kce" ).val());
+    var trajectories = parseFloat($( "#trajectories" ).val());
 
-    if(Kce % 1 != 0)
+    if(trajectories % 1 != 0 || trajectories < 1)
     {
         updateMsg( { status : false,
-                     msg : "Kce must be an integer" } );
+                     msg : "Number of trajectories must be an integer greater than zero" } );
         return false;
     }
-
-    var Kem = parseFloat($( "#Kem" ).val());
-
-    if(Kem % 1 != 0)
-    {
-        updateMsg( { status : false,
-                     msg : "Kem must be an integer" } );
-        return false;
-    }
-
-    var Klik = parseFloat($( "#Klik" ).val());
-
-    if(Klik % 1 != 0)
-    {
-        updateMsg( { status : false,
-                     msg : "Klik must be an integer" } );
-        return false;
-    }
-
-    var Kcov = parseFloat($( "#Kcov" ).val());
-
-    if(Kcov % 1 != 0)
-    {
-        updateMsg( { status : false,
-                     msg : "Kcov must be an integer" } );
-        return false;
-    }
-
-    var rho = $( "#rho" ).val();
-    rho = parseFloat(rho);
-    
-    var perturb = $( "#perturb" ).val();
-    perturb = parseFloat(perturb);
-    
-    var alpha = $( "#alpha" ).val();
-    alpha = parseFloat(alpha);
-    
-    var beta = $( "#beta" ).val();
-    beta = parseFloat(beta);
-
-    var gamma = $( "#gamma" ).val();
-    gamma = parseFloat(gamma);
-
-    var k = parseFloat($( "#k" ).val());
-
-    if(k % 1 != 0)
-    {
-        updateMsg( { status : false,
-                     msg : "k must be an integer" } );
-        return false;
-    }
-
-    var pcutoff = $( "#pcutoff" ).val();
-    pcutoff = parseFloat(pcutoff);
-
-    var qcutoff = $( "#qcutoff" ).val();
-    qcutoff = parseFloat(qcutoff);
-
-    var numIter = parseFloat($( "#numIter" ).val());
-
-    if(numIter % 1 != 0)
-    {
-        updateMsg( { status : false,
-                     msg : "numIter must be an integer" } );
-        return false;
-    }
-
-    numIter = numIter;
-
-    var numConverge = parseFloat($( "#numConverge" ).val());
-
-    if(numConverge % 1 != 0)
-    {
-        updateMsg( { status : false,
-                     msg : "numConverge must be an integer" } );
-        return false;
-    }
-
-    numConverge = numConverge;
 
     return { jobName : jobName,
-             crossEntropyStep : crossEntropyStep,
-             emStep : emStep,
-             uncertaintyStep : uncertaintyStep,
-             seed : seed,
-             Kce : Kce,
-             Kem : Kem,
-             Klik : Klik,
-             Kcov : Kcov,
-             rho : rho,
-             perturb : perturb,
-             alpha : alpha,
-             beta : beta,
-             gamma : gamma,
-             k : k,
-             pcutoff : pcutoff,
-             qcutoff : qcutoff,
-             numIter : numIter,
-             numConverge : numConverge};
+             parameterA : $( "#parameterA" ).val(),
+             minValueA : $( "#minValueA" ).val(),
+             maxValueA : $( "#maxValueA" ).val(),
+             stepsA : stepsA,
+             parameterB : $( "#parameterB" ).val(),
+             minValueB : $( "#minValueB" ).val(),
+             maxValueB : $( "#maxValueB" ).val(),
+             stepsB : stepsB,
+             trajectories : trajectories,
+             seed : seed };
 }
 
 var updateMsg = function(data, msg)
@@ -227,6 +116,7 @@ ParameterSweep.Controller = Backbone.View.extend(
         el : $("#stochoptim"),
 
         events : {
+            "click #next" : "buttonClicked",
             "change #parameterA" : "selectParameter",
             "change #parameterB" : "selectParameter"
         },
@@ -277,11 +167,11 @@ ParameterSweep.Controller = Backbone.View.extend(
             var paramA = $( "#parameterA" ).val();
             var paramB = $( "#parameterB" ).val();
 
-            $( "#parameterA option" ).prop("enabled", true);
-            $( "#parameterB option" ).prop("enabled", true);
+            $( "#parameterA option" ).prop("disabled", false);
+            $( "#parameterB option" ).prop("disabled", false);
 
-            $( "#parameterB option[value=" + paramA + "]" ).prop("disabled", true);
-            $( "#parameterA option[value=" + paramB + "]" ).prop("disabled", true);
+            $( "#parameterB option[value=\"" + paramA + "\"]" ).prop("disabled", true);
+            $( "#parameterA option[value=\"" + paramB + "\"]" ).prop("disabled", true);
 
             var valA = this.values[paramA];
             var valB = this.values[paramB];
@@ -334,9 +224,6 @@ ParameterSweep.Controller = Backbone.View.extend(
 
                 $( this.el ).find( '.mainTable' ).css('border-bottom', '1px solid #ddd');
                 $( this.el ).find( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
-
-                this.nextButton = $( this.el ).find( "#next" )
-                this.nextButton.click( _.bind( this.buttonClicked, this) );
             }
             //If the user clicks next, then we take the model and ask the user how they want it StochOptim'ed
             else if(this.stage == this.SIMULATIONCONFIGURE)
@@ -345,7 +232,8 @@ ParameterSweep.Controller = Backbone.View.extend(
 
                 var simulationConfTemplate = _.template( $( "#simulationConfTemplate" ).html() );
 
-                $( this.el ).html( simulationConfTemplate() );
+                $( this.el ).html( simulationConfTemplate({ model : this.model,
+                                                            datestr : generate_datestr() }) );
 
                 var parameters = this.model.attributes.parameters;
 
@@ -360,10 +248,8 @@ ParameterSweep.Controller = Backbone.View.extend(
                     $( optionTemplate({ name : parameters[p].name }) ).appendTo( "#parameterA, #parameterB" );               
                 }
 
-                $( "#parameterA option" ).at(0).prop('selected', true);
-                $( "#parameterB option" ).at(1).prop('selected', false);
-
-                this.delegateEvents();
+                $( "#parameterA option" ).eq(0).prop('selected', true);
+                $( "#parameterB option" ).eq(1).prop('selected', true);
 
                 this.selectParameter();
 
@@ -378,11 +264,10 @@ ParameterSweep.Controller = Backbone.View.extend(
 
                     data.modelID = this.model.attributes.id;
                     data.resource = "local";
-                    data.activate = this.activate;
 
                     var url = "/parameter_sweep";
                     
-                    $.post( url = url,
+                    /*$.post( url = url,
                             data = { reqType : "newJob",
                                      data : JSON.stringify(data) }, //Watch closely...
                             success = function(data)
@@ -393,16 +278,15 @@ ParameterSweep.Controller = Backbone.View.extend(
                                     window.location = '/parameter_sweep/' + String(data.id);
                                 }
                             },
-                            dataType = "json" );
+                            dataType = "json" );*/
                 }, this));
             }
+            
+            this.delegateEvents();
         }
     }
 );
 
-var run = function()
-{
-    //var id = $.url().param("id");
-
-    var cont = new StochOptim.Controller();
-}
+$( document ).ready( function() {
+    var cont = new ParameterSweep.Controller();
+});
