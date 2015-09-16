@@ -100,7 +100,8 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             var minLabel = legend.append('text')
                 .attr('class', 'colorlegend-labels')
                 .attr('x', width + boxWidth / 2)
-                .attr('dy', '-0.25em')
+                .attr('y', height)
+                .attr('dy', '1em')
                 .style('text-anchor', 'middle')
                 .style('pointer-events', 'none')
                 .text(colorScale.domain()[0]);
@@ -108,8 +109,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             var maxLabel = legend.append('text')
                 .attr('class', 'colorlegend-labels')
                 .attr('x', width + boxWidth / 2)
-                .attr('y', height)
-                .attr('dy', '1em')
+                .attr('dy', '-0.25em')
                 .style('text-anchor', 'middle')
                 .style('pointer-events', 'none')
                 .text(colorScale.domain()[1]);
@@ -174,12 +174,22 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .attr("x", -height / 2)
                 .attr("y", 0)
                 .attr("dy", '-1em');
-            
+
+            //Tooltips taken from http://bl.ocks.org/biovisualize/1016860 and http://stackoverflow.com/questions/20644415/d3-appending-text-to-a-svg-rectangle and http://stackoverflow.com/questions/479591/svg-positioning
+
             var heatMap = svg.selectAll(".hour")
                 .data(this.listData)
-                .enter().append("rect")
+                .enter().append("svg")
                 .attr("x", function(d) { return (d[1]) * gridSizeX; })
                 .attr("y", function(d) { return (d[0]) * gridSizeY; })
+                .on('mouseover', function(d) {
+                    d3.select(this).select("text").attr('visibility', 'visible');
+                })
+                .on('mouseout', function(d) {
+                    d3.select(this).select("text").attr('visibility', 'hidden');
+                });
+            
+            heatMap.append("rect")
                 .attr("rx", 4)
                 .attr("ry", 4)
                 .attr("class", "hour bordered")
@@ -187,7 +197,14 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .attr("height", gridSizeY)
                 .style("fill", function(d) { return colorScale(d[2]); });
 
-            heatMap.append("title").text(function(d) { return d[2]; });
+            heatMap.append("text")
+                .text(function(d) { return "Value = " + d[2]; })
+                .style("text-anchor", "middle")
+                .style("font-size", 16)
+                .attr("fill", "#FFFFFF")
+                .attr("x", gridSizeX / 2)
+                .attr("y", gridSizeY / 2)
+                .attr('visibility', 'hidden');
         }
     }
 );
