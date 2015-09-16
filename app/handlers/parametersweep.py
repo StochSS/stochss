@@ -308,3 +308,55 @@ class ParameterSweepPage(BaseHandler):
 
         return job
 
+class ParameterSweepVisualizationPage(BaseHandler):
+    def authentication_required(self):
+        return True
+    
+    def get(self, jobID = None):
+        
+        jobID = int(jobID)
+
+        self.render_response('parameter_sweep_visualization.html', **{ 'initialData' : json.dumps([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [1, 2, 3, 4, 5], [6, 7, 8, 9, 0]]) })
+
+    def post(self, queryType, jobID):
+        job = StochOptimJobWrapper.get_by_id(int(jobID))
+
+        data = json.loads(self.request.get('data'));
+
+        parameters = data["parameters"]
+        modelName = job.modelName
+        proposedName = data["proposedName"]
+        
+        model = ModelManager.getModelByName(self, modelName);
+
+        del model["id"]
+
+        if ModelManager.getModelByName(self, proposedName):
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model name must be unique"}))
+            return
+
+        if not model:
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model '{0}' does not exist anymore. Possibly deleted".format(modelName) }))
+            return
+
+        model["name"] = proposedName
+
+        parameterByName = {}
+        for parameter in model["parameters"]:
+            parameterByName[parameter["name"]] = parameter
+
+        for parameter in parameters:
+            parameterByName[parameter]["value"] = str(parameters[parameter])
+
+        if ModelManager.updateModel(self, model):
+            self.response.write(json.dumps({"status" : True,
+                                            "msg" : "Model created",
+                                            "url" : "/modeleditor?model_edited={0}".format(proposedName) }))
+            return
+        else:
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model failed to be created, check logs"}))
+            return
+    

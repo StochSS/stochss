@@ -41,27 +41,6 @@ jinja_environment = jinja2.Environment(autoescape=True,
 
 from db_models.object_property import ObjectProperty
 
-#?class DictionaryProperty(db.Property):
-#?    """  A db property to store objects. """
-#?
-#?    def get_value_for_datastore(self, dict_prty):
-#?        result = super(DictionaryProperty, self).get_value_for_datastore(dict_prty)
-#?        result = pickle.dumps(dict_prty)
-#?        return db.Blob(result)
-#?
-#?    def make_value_from_datastore(self, value):
-#?        if value is None:
-#?            return None
-#?        return pickle.loads(value)
-#?
-#?    def empty(self, value):
-#?        return value is None
-
-
-
-
-
-
 class BaseHandler(webapp2.RequestHandler):
     """
     The base handler that extends the dispatch() method to start the session store and save all sessions at the end of a request:
@@ -362,6 +341,7 @@ app = webapp2.WSGIApplication([
                                ('/spatial',handlers.spatial.SpatialPage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
                                ('/parametersweep', handlers.parametersweep.ParameterSweepPage),
+                               webapp2.Route('/parametersweep/<jobID>', handler = handlers.parametersweep.ParameterSweepVisualizationPage),
                                webapp2.Route('/molnsconfig', handler = handlers.molnsconfig.MolnsConfig),
                                webapp2.Route('/molnsconfig/<reqType>', handler = handlers.molnsconfig.MolnsConfig),
                                webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
