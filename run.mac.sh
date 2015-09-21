@@ -50,6 +50,14 @@ fi
 echo "Yes<br />"
 
 #################
+function check_molns {
+    RET=`python -c "import molns" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
 # Check to see if the 'dolfin' python module is installed and active in this terminal.
 function check_dolfin_sub {
     RET=`python -c "import dolfin" 2>/dev/null`
@@ -162,6 +170,15 @@ function check_python_installation {
         echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
         return 1 #False
     fi
+
+    
+    if check_molns; then
+        echo "MOLNs detected successfully.<br />"
+    else
+        echo "Failed to detect MOLNs.<br />"
+        return 1 #False
+    fi
+
     return 0 #True
 }
 
@@ -399,5 +416,6 @@ ln -s "$STOCHOPTIM" stochoptim >& /dev/null
 echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
+
 
 exec python "$STOCHSS_HOME/launchapp.py" mac $0 $1
