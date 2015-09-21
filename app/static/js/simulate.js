@@ -492,6 +492,46 @@ var run = function()
                                    dataType = "json" );
                        }, selectTable));
 
+                       $( "#runMolns" ).click( _.partial( function(selectTable) {
+                           updateMsg( { status: true,
+                                        msg: "Running job in MOLNs cloud..." } );
+                           var data = checkAndGet(selectTable);
+
+                           if(!data)
+                               return;
+
+                           data.id = id;
+                           data.resource = "molns";
+
+                           var url = "";
+
+                           data.selections = selectTable.state.selections;
+
+                           if(data.execType == "sensitivity")
+                           {
+                               url = "/sensitivity";
+                           }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
+                           }
+                           else
+                           {
+                               url = "/simulate";
+                           }
+
+                           $.post( url = url,
+                                   data = { reqType : "newJob",
+                                            data : JSON.stringify(data) }, //Watch closely...
+                                   success = function(data)
+                                   {
+                                       updateMsg(data);
+                                       if(data.status)
+                                           window.location = '/status';
+                                   },
+                                   dataType = "json" );
+                       }, selectTable));
+
                        $( "#runCloud" ).click( _.partial( function(selectTable) {
                            updateMsg( { status: true,
                                         msg: "Running job in cloud..." } );

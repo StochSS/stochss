@@ -45,7 +45,7 @@ def startMolns(providerName, controllerName, workerName, providerType, password,
 
     molns.MOLNSProvider.provider_initialize(providerName, config)
     molns.MOLNSProvider.provider_get_config(name = providerName, provider_type = providerType, config = config)
-    molns.MOLNSController.start_controller([controllerName], config, password = password)
+    molns.MOLNSController.start_controller([controllerName], config, password = password, openWebBrowser=False)
     molns.MOLNSWorkerGroup.start_worker_groups([workerName], config)
 
 def stopMolns(controllerName, configFilename):
@@ -173,7 +173,10 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
 
         #status = dict(zip(status['column_names'], zip(*status['data'])))
 
-        status['column_names'] = [s.capitalize() for s in status['column_names']]
+        if 'column_names' in status:
+            status['column_names'] = [s.capitalize() for s in status['column_names']]
+        else:
+            status = {'type':'table', 'column_names':['name','status','type','provider','instance id', 'IP address'], 'data':[]}
 
         return {
             'molns': self.getMolnsState(),
