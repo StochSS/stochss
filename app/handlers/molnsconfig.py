@@ -169,14 +169,15 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
             functionName = None
             is_alive = False
 
-        status = molns.MOLNSController.status_controller([controllerName], config)
+        try:
+            status = molns.MOLNSController.status_controller([controllerName], config)
 
-        #status = dict(zip(status['column_names'], zip(*status['data'])))
-
-        if 'column_names' in status:
-            status['column_names'] = [s.capitalize() for s in status['column_names']]
-        else:
-            status = {'type':'table', 'column_names':['name','status','type','provider','instance id', 'IP address'], 'data':[]}
+            if 'column_names' in status:
+                status['column_names'] = [s.capitalize() for s in status['column_names']]
+            else:
+                status = {'type':'table', 'column_names':['Name','Status','Type','Provider','Instance id', 'IP address'], 'data':[]}
+        except:
+            status = {'type':'table', 'column_names':['Name','Status','Type','Provider','Instance id', 'IP address'], 'data':[]}
 
         return {
             'molns': self.getMolnsState(),

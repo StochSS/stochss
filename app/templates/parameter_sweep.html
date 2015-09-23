@@ -100,18 +100,24 @@
         Model Name: <h2><%= model.attributes.name %></h2>
         Units: <h3><%= model.attributes.units %></h3>
         <hr />
-        <label>Name:</label>
+        <label>Job name:</label>
         <input type="text" class="span3" id="jobName" value="<%= model.attributes.name %>_job_<%= datestr %>" />
-        
-        <span class="help-block">This name will be used to reference the parameter sweep.</span>
         <br />
         
+        <div>
+          <label>Sweep type:</label>
+          <input type="radio" name="variableCount" value="one" checked>One parameter<br>
+          <input type="radio" name="variableCount" value="two">Two parameter
+        </div>
+
+        <br>
+
         <!--List parameters that can be parameter-swept-->
-        Configure two variable parameter sweep (minima and maxima are inclusive in sweep):<br />
+        <label>Configure variable(s) (minima and maxima are inclusive in sweep):</label>
         <table class="table">
             <tr>
                 <th>
-                    Sweep Variable
+                  Sweep Variable
                 </th>
                 <th>
                     Minimum value (inclusive)
@@ -133,7 +139,7 @@
                 <td><input class="input-small" type="number" id="stepsA" value="10"></td>
                 <td><input id="logA" type="checkbox" /></td>
             </tr>
-            <tr>
+            <tr id="rowB">
                 <td><select class="input-small" id="parameterB"></select></td>
                 <td><input class="input-small" id="minValueB"></td>
                 <td><input class="input-small" id="maxValueB"></td>
@@ -141,22 +147,74 @@
                 <td><input id="logB" type="checkbox" /></td>
             </tr>
         </table>
+
         <div>
+            <h4>Select data to generate:</h4>
+
+            <p>All combinations of selected mappers and reducers will be run on the selected species. A parameter sweep produces, for a given parameter set, N time series trajectories for each point in parameter space. For visualization and analysis, each set of N time series trajectories must be turned into a single number (which can be visualized on a heatmap). The mapper turns each time series to a single number, and then the N numbers that result from that are reduced to a single number which is plotted in the heatmap.</p>
+
+            <div class="row">
+                <div class="span5">
+                    <h4>Mappers</h4>
+                    <input type="checkbox" name="mapper" id="mapMax" checked>Maximum<br>
+                    <input type="checkbox" name="mapper" id="mapMin" checked>Minimum<br>
+                    <input type="checkbox" name="mapper" id="mapAvg" checked>Average<br>
+                    <input type="checkbox" name="mapper" id="mapVar" checked>Variance<br>
+                </div>
+
+                <div class="span5">
+                    <h4>Reducers</h4>
+                    <input type="checkbox" name="reducer" id="mapMax" checked>Maximum<br>
+                    <input type="checkbox" name="reducer" id="mapMin" checked>Minimum<br>
+                    <input type="checkbox" name="reducer" id="mapAvg" checked>Average<br>
+                    <input type="checkbox" name="reducer" id="mapVar" checked>Variance<br>
+                </div>
+            </div>
+            
+            <br>
+            
+            <h4>Species</h4>
+            <div id="species">
+            </div>
+	    <div class="btn-group">
+		<button class="btn btn-small selectAll">Select All</button>
+		<button class="btn btn-small clearAll">Clear All</button>
+	    </div>
         </div>
+
+        <br>
+
+        Simulation time
+        <br />
+        <input type="text" class="input-small" disabled="disabled" value="0">
+        &nbsp; to &nbsp;
+        <input type="text" class="input-small" id="time" value="100">
+        &nbsp; store state every &nbsp;
+        <input type="text" class="input-small" id="increment" value="1.0"> &nbsp; time units.
 
         <div>
             Number of trajectories:<br />
             <input class="input-small" type="number" id="trajectories" value="1">
         </div>
 
-        <div>
-            Seed (use -1 for random seed):<br />
-            <input class="input-small" id="seed" type="number" step="1" value="-1" /><br />
+        <h3 class="advanced-settings">
+            <a data-toggle="collapse" data-target="#advanced-settings">
+                Advanced settings&raquo;
+            </a>
+        </h3>
+        
+        <div id="advanced-settings" class="collapse advanced-settings">
+            <label>
+              Seed
+              <input class="input-small" id="seed" type="number" step="1" value="-1" />
+              <span class='help-block'>Seed the random number generator (use -1 for random seed).</span>
+            </label>
         </div>
+        <br>
             
         <div id="msg"></div>
 
-        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
+        <button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run via Cloud </button>
     </div>
 </script>
 {% endblock %}

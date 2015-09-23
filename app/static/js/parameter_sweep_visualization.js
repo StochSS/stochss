@@ -37,25 +37,28 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
         {
             var visualizationTemplate = _.template( $( "#visualizationTemplate" ).html() );
             
-            $( this.el ).html( visualizationTemplate({ name : "hihi",
-                                                       resource : "hihi",
-                                                       jobStatus : "test",
-                                                       modelName : "haha",
+            $( this.el ).html( visualizationTemplate({ name : this.data.name,
+                                                       resource : this.data.resource,
+                                                       jobStatus : this.data.jobStatus,
+                                                       modelName : this.data.modelName,
+                                                       stdout : this.data.stdout,
                                                        model : this.model }) );
+
+            var matrix = this.data.matrix;
 
             var margin = { top: 50, right: 50, bottom: 100, left: 75 },
             width = $("#chart").width() - margin.left - margin.right - 75,
             height = width * 3 / 4,//300 - margin.top - margin.bottom,
-            gridSizeY = Math.floor(height / this.data.length),
-            gridSizeX = Math.floor(width / this.data[0].length);
+            gridSizeY = Math.floor(height / matrix.length),
+            gridSizeX = Math.floor(width / matrix[0].length);
 
             this.listData = [];
 
-            for(var i = 0; i < this.data.length; i++)
+            for(var i = 0; i < matrix.length; i++)
             {
-                for(var j = 0; j < this.data[0].length; j++)
+                for(var j = 0; j < matrix[0].length; j++)
                 {
-                    this.listData.push([i, j, this.data[i][j]]);
+                    this.listData.push([i, j, matrix[i][j]]);
                 }
             }
 
@@ -132,7 +135,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             //Draw the heatmap. This code is based directly on http://bl.ocks.org/tjdecke/5558084
 
             var yAxis = svg.selectAll(".yAxis")
-                .data(d3.range(this.data.length))
+                .data(d3.range(matrix.length))
                 .enter().append("text")
                 .text(function (d) { return d; })
                 .attr("x", "-0.25em")
@@ -141,7 +144,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
 
             var xAxis = svg.selectAll(".xAxis")
-                .data(d3.range(this.data[0].length))
+                .data(d3.range(matrix[0].length))
                 .enter().append("text")
                 .text(function(d) { return d; })
                 .attr("x", function(d, i) { return gridSizeX / 2 + i * gridSizeX; })

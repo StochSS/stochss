@@ -45,6 +45,33 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
+    var stepsB = parseFloat($( "#stepsB" ).val());
+
+    if(stepsB % 1 != 0 || stepsA < 2)
+    {
+        updateMsg( { status : false,
+                     msg : "Steps in sweep variable 2 must be an integer greater than or equal to two" } );
+        return false;
+    }
+
+    var maxTime = parseFloat($( "#maxTime" ).val());
+
+    if(maxTime <= 0)
+    {
+        updateMsg( { status : false,
+                     msg : "The final simulation time increment must be greater than zero" } );
+        return false;
+    }
+
+    var increment = parseFloat($( "#increment" ).val());
+
+    if(increment <= 0)
+    {
+        updateMsg( { status : false,
+                     msg : "The time increment must be greater than zero" } );
+        return false;
+    }
+
     var seed = parseFloat($( "#seed" ).val());
 
     if(seed % 1 != 0 || seed < -1.0)
@@ -68,10 +95,14 @@ var checkAndGet = function(selectTable)
              minValueA : $( "#minValueA" ).val(),
              maxValueA : $( "#maxValueA" ).val(),
              stepsA : stepsA,
+             logA : $( "#logA" ).prop('checked'),
              parameterB : $( "#parameterB" ).val(),
              minValueB : $( "#minValueB" ).val(),
              maxValueB : $( "#maxValueB" ).val(),
              stepsB : stepsB,
+             logB : $( "#logB" ).prop('checked'),
+             maxTime, maxTime,
+             increment : increment,
              trajectories : trajectories,
              seed : seed };
 }
@@ -118,7 +149,10 @@ ParameterSweep.Controller = Backbone.View.extend(
         events : {
             "click #next" : "buttonClicked",
             "change #parameterA" : "selectParameter",
-            "change #parameterB" : "selectParameter"
+            "change #parameterB" : "selectParameter",
+            "change input[name=variableCount]" : "selectVariableCount",
+            "click .selectAll" : "selectAllSpecies",
+            "click .clearAll" : "clearAllSpecies"
         },
 
         // These are the states of the controller
@@ -181,6 +215,26 @@ ParameterSweep.Controller = Backbone.View.extend(
 
             $( "#minValueB" ).val( "0.1 * " + valB );
             $( "#maxValueB" ).val( "10.0 * " + valB );
+        },
+
+        selectVariableCount : function()
+        {
+            this.variableCount = ($("input[name=variableCount]:checked").val() == "one") ? 1 : 2;
+
+            if(this.variableCount == 1)
+                $( '#rowB' ).hide();
+            else
+                $( '#rowB' ).show();
+        },
+
+        selectAllSpecies : function()
+        {
+            $( this.el ).find( "#species input" ).prop('checked', true);
+        },
+
+        clearAllSpecies : function()
+        {
+            $( this.el ).find( "#species input" ).prop('checked', false);
         },
 
         render : function()
@@ -251,9 +305,24 @@ ParameterSweep.Controller = Backbone.View.extend(
                 $( "#parameterA option" ).eq(0).prop('selected', true);
                 $( "#parameterB option" ).eq(1).prop('selected', true);
 
-                this.selectParameter();
+                var species = this.model.attributes.species;
 
-                $( "#runLocal" ).click( _.bind(function() {
+                var checkboxTemplate = _.template('<span><input type="checkbox" name="species" checked><%= name %><% if(!last) { %>, <% } else { %><% } %></span>');
+
+                this.speciesSelectCheckboxes = {};
+
+                for(var p in species)
+                {
+                    this.speciesSelectCheckboxes[species[p].name] = $( checkboxTemplate({ name : species[p].name, last : p == species.length - 1 }) ).appendTo( "#species" );               
+                }
+
+                $( "#parameterA option" ).eq(0).prop('selected', true);
+                $( "#parameterB option" ).eq(1).prop('selected', true);
+
+                this.selectParameter();
+                this.selectVariableCount();
+
+                $( "#runMolns" ).click( _.bind(function() {
                     updateMsg( { status: true,
                                  msg: "Running job locally..." } );
 
@@ -263,11 +332,20 @@ ParameterSweep.Controller = Backbone.View.extend(
                         return;
 
                     data.modelID = this.model.attributes.id;
-                    data.resource = "local";
+                    data.resource = "molns";
+                    data.variableCount = this.variableCount;
 
-                    var url = "/parameter_sweep";
+                    var speciesSelect = {};
+                    for(var name in this.speciesSelectCheckboxes)
+                    {
+                        speciesSelect[name] = this.speciesSelectCheckboxes[name].val();
+                    }
+
+                    data.speciesSelect = speciesSelect;
+
+                    var url = "/parametersweep";
                     
-                    /*$.post( url = url,
+                    $.post( url = url,
                             data = { reqType : "newJob",
                                      data : JSON.stringify(data) }, //Watch closely...
                             success = function(data)
@@ -275,10 +353,10 @@ ParameterSweep.Controller = Backbone.View.extend(
                                 updateMsg(data);
                                 if(data.status)
                                 {
-                                    window.location = '/parameter_sweep/' + String(data.id);
+                                    window.location = '/parametersweep/' + String(data.id);
                                 }
                             },
-                            dataType = "json" );*/
+                            dataType = "json" );
                 }, this));
             }
             
