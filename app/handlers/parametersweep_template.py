@@ -63,6 +63,8 @@ class Model(gillespy.Model):
 funcA = numpy.linspace if data['logA'] else numpy.logspace
 funcB = numpy.linspace if data['logB'] else numpy.logspace
 
+parameters = {{}}
+
 parameters[data['parameterA']] = funcA(data['minValueA'], data['maxValueA'], data['stepsA'])
 
 if data['variableCount'] != 1:
@@ -77,7 +79,7 @@ def mapAnalysis(result):
 
     return result.shape#mappedResults
 
-ret = sweep.run(mapper = mapAnalysis, store_realizations = False)
+ret = sweep.run(mapper = mapAnalysis, number_of_trajectories = 1, store_realizations = False, progress_bar = False)
 
 f = open('results', 'w')
 pickle.dump(ret, f)

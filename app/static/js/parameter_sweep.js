@@ -11,6 +11,20 @@ function generate_datestr() {
     return dateStr
 }
 
+function isNumber(value) {
+    if(value == null || typeof(value) == undefined || (typeof(value) == 'string' && value.length == 0))
+    {
+        return false;
+    }
+    
+    if(!(value < 0 || value > 0 || value == 0))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 function padStr(i) {
     return (i < 10) ? "0" + i : "" + i;
 }
@@ -27,21 +41,48 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
+    var minValueA = Number($( "#minValueA" ).val());
+
+    if(isNaN(minValueA))
+    {
+        updateMsg( { status : false,
+                     msg : "The minimum value for the first parameter must be a number" } );
+        return false;
+    }
+
+    var minValueB = Number($( "#minValueB" ).val());
+
+    if(isNaN(minValueB))
+    {
+        updateMsg( { status : false,
+                     msg : "The minimum value for the second parameter must be a number" } );
+        return false;
+    }
+
+    var maxValueA = Number($( "#maxValueA" ).val());
+
+    if(isNaN(maxValueA))
+    {
+        updateMsg( { status : false,
+                     msg : "The maximum value for the first parameter must be a number" } );
+        return false;
+    }
+
+    var maxValueB = Number($( "#maxValueB" ).val());
+
+    if(isNaN(maxValueB))
+    {
+        updateMsg( { status : false,
+                     msg : "The maximum value for the second parameter must be a number" } );
+        return false;
+    }
+
     var stepsA = parseFloat($( "#stepsA" ).val());
 
     if(stepsA % 1 != 0 || stepsA < 2)
     {
         updateMsg( { status : false,
                      msg : "Steps in sweep variable 1 must be an integer greater than or equal to two" } );
-        return false;
-    }
-
-    var stepsB = parseFloat($( "#stepsB" ).val());
-
-    if(stepsB % 1 != 0 || stepsA < 2)
-    {
-        updateMsg( { status : false,
-                     msg : "Steps in sweep variable 2 must be an integer greater than or equal to two" } );
         return false;
     }
 
@@ -92,13 +133,13 @@ var checkAndGet = function(selectTable)
 
     return { jobName : jobName,
              parameterA : $( "#parameterA" ).val(),
-             minValueA : $( "#minValueA" ).val(),
-             maxValueA : $( "#maxValueA" ).val(),
+             minValueA : minValueA,
+             maxValueA : maxValueA,
              stepsA : stepsA,
              logA : $( "#logA" ).prop('checked'),
              parameterB : $( "#parameterB" ).val(),
-             minValueB : $( "#minValueB" ).val(),
-             maxValueB : $( "#maxValueB" ).val(),
+             minValueB : minValueB,
+             maxValueB : maxValueB,
              stepsB : stepsB,
              logB : $( "#logB" ).prop('checked'),
              maxTime, maxTime,
@@ -112,10 +153,6 @@ var updateMsg = function(data, msg)
     if(typeof msg == 'undefined')
     {
         msg = "#msg";
-    }
-    else
-    {
-        msg = "#csvMsg";
     }
 
     if(!_.has(data, 'status'))
@@ -204,17 +241,45 @@ ParameterSweep.Controller = Backbone.View.extend(
             $( "#parameterA option" ).prop("disabled", false);
             $( "#parameterB option" ).prop("disabled", false);
 
-            $( "#parameterB option[value=\"" + paramA + "\"]" ).prop("disabled", true);
-            $( "#parameterA option[value=\"" + paramB + "\"]" ).prop("disabled", true);
+            if(this.variableCount == 2)
+            {
+                $( "#parameterB option[value=\"" + paramA + "\"]" ).prop("disabled", true);
+                $( "#parameterA option[value=\"" + paramB + "\"]" ).prop("disabled", true);
+            }
 
             var valA = this.values[paramA];
             var valB = this.values[paramB];
 
-            $( "#minValueA" ).val( "0.1 * " + valA );
-            $( "#maxValueA" ).val( "10.0 * " + valA );
+            $( '#speciesMsg' ).hide();
 
-            $( "#minValueB" ).val( "0.1 * " + valB );
-            $( "#maxValueB" ).val( "10.0 * " + valB );
+            if(!isNumber(valA) && !isNumber(valA) && this.variableCount == 2)
+            {
+                updateMsg( { status: false,
+                             msg: "'" + paramA + "' and '" + paramB + "' are not set to numbers, setting default minima and maxima to zero" }, '#speciesMsg' );
+
+                valA = 0.0;
+                valB = 0.0;
+            }
+            else if(!isNumber(valA))
+            {
+                updateMsg( { status: false,
+                             msg: "'" + paramA + "' is not a number, setting default minimum and maximum to zero" }, '#speciesMsg' );
+
+                valA = 0.0;
+            }
+            else if(!isNumber(valB) && this.variableCount == 2)
+            {
+                updateMsg( { status: false,
+                             msg: "'" + paramB + "' is not a number, setting default minimum and maximum to zero" }, '#speciesMsg' );
+
+                valB = 0.0;
+            }
+            
+            $( "#minValueA" ).val( 0.9 * valA );
+            $( "#maxValueA" ).val( 1.1 * valA );
+
+            $( "#minValueB" ).val( 0.9 * valB );
+            $( "#maxValueB" ).val( 1.1 * valB );
         },
 
         selectVariableCount : function()
@@ -225,6 +290,8 @@ ParameterSweep.Controller = Backbone.View.extend(
                 $( '#rowB' ).hide();
             else
                 $( '#rowB' ).show();
+
+            this.selectParameter();
         },
 
         selectAllSpecies : function()

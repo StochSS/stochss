@@ -114,6 +114,9 @@
 
         <!--List parameters that can be parameter-swept-->
         <label>Configure variable(s) (minima and maxima are inclusive in sweep):</label>
+            
+        <div id="speciesMsg"></div>
+
         <table class="table">
             <tr>
                 <th>
@@ -134,15 +137,15 @@
             </tr>
             <tr>
                 <td><select class="input-small" id="parameterA"></select></td>
-                <td><input class="input-small" id="minValueA"></td>
-                <td><input class="input-small" id="maxValueA"></td>
+                <td><input class="input-small" type="number" id="minValueA"></td>
+                <td><input class="input-small" type="number" id="maxValueA"></td>
                 <td><input class="input-small" type="number" id="stepsA" value="10"></td>
                 <td><input id="logA" type="checkbox" /></td>
             </tr>
             <tr id="rowB">
                 <td><select class="input-small" id="parameterB"></select></td>
-                <td><input class="input-small" id="minValueB"></td>
-                <td><input class="input-small" id="maxValueB"></td>
+                <td><input class="input-small" type="number" id="minValueB"></td>
+                <td><input class="input-small" type="number" id="maxValueB"></td>
                 <td><input class="input-small" type="number" id="stepsB" value="10"></td>
                 <td><input id="logB" type="checkbox" /></td>
             </tr>

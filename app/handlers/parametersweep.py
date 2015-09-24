@@ -63,12 +63,7 @@ class ParameterSweepPage(BaseHandler):
                 return
 
             try:
-                if data["resource"] == "local":
-                    # This function takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
-                    result = self.runLocal(data)
-                else:
-                    # cloud
-                    result = self.runCloud(data = data)
+                result = self.runMolns(data = data)
 
                 return self.response.write(json.dumps({
                     "status": True,
@@ -144,7 +139,7 @@ class ParameterSweepPage(BaseHandler):
         self.response.write(json.dumps({ 'status' : True,
                                          'msg' : 'Success'}))
 
-    def runCloud(self, data):
+    def runMolns(self, data):
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
 
         path = os.path.abspath(os.path.dirname(__file__))
@@ -191,13 +186,8 @@ class ParameterSweepPage(BaseHandler):
 
             program = os.path.join(dataDir, 'program.py')
             with open(program, 'w') as f:
-                print template
-                print json.dumps(templateData)
                 jsonString = json.dumps(templateData)
                 f.write(template.format(jsonString))
-
-            # I don't think this is necessary: http://stackoverflow.com/questions/7114059/does-closing-a-file-opened-with-os-fdopen-close-the-os-level-fd
-            #os.close(fd)
             
             molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
             if not molnsConfigDb:
@@ -231,14 +221,14 @@ class ParameterSweepVisualizationPage(BaseHandler):
 
         if molnsConfigDb and jobDb:
             config = molns.MOLNSConfig(config_dir=molnsConfigDb.folder)
-            job_status = molns.MOLNSExec.job_status([6], config)
+            job_status = molns.MOLNSExec.job_status([jobDb.molnsPID], config)
             log_status = molns.MOLNSExec.job_logs([jobDb.molnsPID], config)
 
             initialData['name'] = jobDb.name
             initialData['resource'] = jobDb.resource
             initialData['modelName'] = jobDb.modelName
             initialData['jobMsg'] = job_status['msg']
-            initialData['jobStatus'] = 'Running' if job_status['running'] else 'Not running'
+            initialData['jobStatus'] = 'Running' if job_status['running'] else 'Finished'
             initialData['stdout'] = log_status['msg']
 
         initialData['matrix'] = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [1, 2, 3, 4, 5], [6, 7, 8, 9, 0]]
