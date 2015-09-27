@@ -60,27 +60,35 @@ class Model(gillespy.Model):
 
         self.timespan(numpy.concatenate((numpy.arange(data['maxTime'] / data['increment']) * dt, [data['maxTime']])))
 
-funcA = numpy.linspace if data['logA'] else numpy.logspace
-funcB = numpy.linspace if data['logB'] else numpy.logspace
+with open('results', 'w') as f:
+    if data['variableCount'] != 1:
+        json.dump({{ 'Maximum' : [list(row) for row in 2 * numpy.ones((5, 5))],
+                    'Minimum' : [list(row) for row in 0.5 * numpy.ones((5, 5))] }}, f)
+    else:
+        json.dump({{ 'Maximum' : list(numpy.ones((5))),
+                    'Minimum' : list(numpy.ones((5))) }}, f)
 
-parameters = {{}}
+#funcA = numpy.linspace if data['logA'] else numpy.logspace
+#funcB = numpy.linspace if data['logB'] else numpy.logspace
 
-parameters[data['parameterA']] = funcA(data['minValueA'], data['maxValueA'], data['stepsA'])
+#parameters = {{}}
 
-if data['variableCount'] != 1:
-    parameters[data['parameterB']] = funcB(data['minValueB'], data['maxValueB'], data['stepsB'])
+#parameters[data['parameterA']] = funcA(data['minValueA'], data['maxValueA'], data['stepsA'])
 
-sweep = molnsutil.ParameterSweep(model_class = Model, parameters = parameters)
+#if data['variableCount'] != 1:
+#    parameters[data['parameterB']] = funcB(data['minValueB'], data['maxValueB'], data['stepsB'])
 
-def mapAnalysis(result):
+#sweep = molnsutil.ParameterSweep(model_class = Model, parameters = parameters)
+
+#def mapAnalysis(result):
     #mappedResults = {{}}
     #for i, specie in enumerate(species):
     #    mappedResults['maxVal'] = numpy.max(results[:, i + 1, :])
 
-    return result.shape#mappedResults
+#    return result.shape#mappedResults
 
-ret = sweep.run(mapper = mapAnalysis, number_of_trajectories = 1, store_realizations = False, progress_bar = False)
+#ret = sweep.run(mapper = mapAnalysis, number_of_trajectories = 1, store_realizations = False, progress_bar = False)
 
-f = open('results', 'w')
-pickle.dump(ret, f)
-f.close()
+#f = open('results', 'w')
+#pickle.dump(ret, f)
+#f.close()

@@ -15,45 +15,229 @@ function padStr(i) {
     return (i < 10) ? "0" + i : "" + i;
 }
 
+var updateMsg = function(data, msg)
+{
+    if(typeof msg == 'undefined')
+    {
+        msg = "#msg";
+    }
+
+    if(!_.has(data, 'status'))
+    {
+        $( msg ).text('').prop('class', '');
+
+        return;
+    }
+
+    var text = data.msg;
+
+    if(typeof text != 'string')
+    {
+        text = text.join('<br>')
+    }
+
+    $( msg ).html(text);
+    if(data.status)
+        $( msg ).prop('class', 'alert alert-success');
+    else
+        $( msg ).prop('class', 'alert alert-error');
+    $( msg ).show();
+};
+
 var ParameterSweepVisualization = ParameterSweepVisualization || {}
 
 ParameterSweepVisualization.Controller = Backbone.View.extend(
     {
-        el : $("#stochoptim"),
-
         events : {
         },
 
         initialize : function(attributes)
         {
             this.data = JSON.parse($( '#initialData' ).text());
-
-            this.render();
-
-            $( window ).resize(_.bind(this.render, this));
         },
-        
+
         render : function()
         {
+            this.el = $("#stochoptim")[0];
+            this.$el = $( this.el );
+
             var visualizationTemplate = _.template( $( "#visualizationTemplate" ).html() );
             
-            $( this.el ).html( visualizationTemplate({ name : this.data.name,
-                                                       resource : this.data.resource,
-                                                       jobStatus : this.data.jobStatus,
-                                                       modelName : this.data.modelName,
-                                                       stdout : this.data.stdout,
-                                                       model : this.model }) );
+            $( this.el ).html( visualizationTemplate(this.data) );
 
-            var matrix = this.data.matrix;
+            if(this.data.data)
+            {
+                if(this.data.inData.variableCount == 2)
+                {
+                    var template = _.template('<option><%= type %></option>');
+                    
+                    for(var type in this.data.data)
+                    {
+                        $( template( { type : type } ) ).appendTo( this.$el.find( "#outputSelect" ) );
+                    }
+                    
+                    
+                    this.$el.find( "#outputSelect" ).change(_.bind(this.updateGraphs, this));
+                }
+
+                $( window ).resize(_.bind(this.updateGraphs, this));
+                
+                this.updateGraphs();
+
+                this.$el.find( "#graphs" ).show();
+            }
+            else
+            {
+                this.$el.find( "#stdout" ).show();
+            }
+
+            $( "#accessOutput" ).show();
+            // Add event handler to access button
+            if (this.data['resource'] == 'molns' && !this.data.output_stored)
+            {
+                $( "#access" ).html('<i class="icon-download-alt"></i> Fetch Data from Cloud');
+                $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
+            }
+            else
+            {
+                $( "#access" ).html('<i class="icon-download-alt"></i> Access Local Data');
+                $( "#access" ).click(_.bind(this.handleAccessDataButton, this));
+            }
+        },
+
+        handleDownloadDataButton : function(event)
+        {
+            updateMsg( { status : true,
+                         msg : "Downloading data from cloud... (will refresh page when ready)" } );
+
+            $.ajax( { type : "POST",
+                      url : "/parametersweep",
+                      data : { reqType : "getDataCloud",
+                               id : this.data.id },
+                      success : function(data) {
+                          updateMsg(data);
+                          
+                          if(data.status)
+                              location.reload();
+                      },                      
+                      error: function(data)
+                      {
+                          updateMsg( { status : false,
+                                       msg : "Server error downloading cloud data" } );
+                      },
+                      dataType : 'json'
+                    });
+        },
+
+        handleAccessDataButton : function(event)
+        {
+            updateMsg( { status : true,
+                         msg : "Packing up data... (will forward you to file when ready)" } );
+
+            $.ajax( { type : "POST",
+                      url : "/parametersweep",
+                      data : { reqType : "getDataLocal",
+                               id : this.data.id },
+                      success : function(data) {
+                          updateMsg(data);
+                          
+                          if(data.status == true)
+                          {
+                              window.location = data.url;
+                          }
+                      },                      
+                      error: function(data)
+                      {
+                          updateMsg( { status : false,
+                                       msg : "Server error packaging up job data" } );
+                      },
+                      dataType : 'json'
+                    });
+        },
+        
+        updateGraphs : function()
+        {
+            if(this.data.inData.variableCount == 1)
+            {
+                this.updateLineGraph();
+            }
+            else
+            {
+                this.updateHeatmap();
+            }
+        },
+
+        updateLineGraph : function()
+        {
+            var plotData = [];
+
+            this.$el.find( '#chart' ).empty();
+            this.$el.find( "#graphs" ).show();
+
+            var width = $(".metadata").width();
+            var height = width * 3 / 4;
+
+            d3.select('#chart').append('svg')
+                .attr('width', width + 'px')
+                .attr('height', height + 'px');
+
+            for(var key in this.data.data)
+            {
+                var line = this.data.data[key];
+
+                var series = []
+                for(var i = 0; i < line.length; i++)
+                {
+                    var xval = this.data.inData.minValueA + i * (this.data.inData.maxValueA - this.data.inData.minValueA) / (line.length - 1);
+                    
+                    series.push( { x : xval, y : line[i] + Math.random() } );
+                }
+
+                plotData.push( { key : key,
+                                 values : series } );
+            }
+            
+            var chart = nv.models.lineChart()
+                .margin({left: 100})  //Adjust chart margins to give the x-axis some breathing room.
+                .useInteractiveGuideline(true)  //We want nice looking tooltips and a guideline!
+                .showLegend(true)       //Show the legend, allowing users to turn on/off line series.
+                .showYAxis(true)        //Show the y-axis
+                .showXAxis(true)        //Show the x-axis
+            ;
+            
+            chart.xAxis     //Chart x-axis settings
+                .axisLabel(this.data.inData["parameterA"])
+                .tickFormat(d3.format('.02f'));
+            
+            chart.yAxis     //Chart y-axis settings
+                .axisLabel('')
+                .tickFormat(d3.format('.02f'));
+            
+            d3.select('#chart svg')    //Select the <svg> element you want to render the chart in.   
+                .datum(plotData)         //Populate the <svg> element with chart data...
+                .call(chart);          //Finally, render the chart!
+            
+            //Update the chart when window resizes.
+            nv.utils.windowResize(function() { chart.update() });
+        },
+
+        updateHeatmap : function()
+        {
+            var key = this.$el.find( "#outputSelect" ).val().trim();
+
+            var matrix = this.data.data[key];
 
             var margin = { top: 50, right: 50, bottom: 100, left: 75 },
-            width = $("#chart").width() - margin.left - margin.right - 75,
+            width = $(".metadata").width() - margin.left - margin.right - 75,
             height = width * 3 / 4,//300 - margin.top - margin.bottom,
             gridSizeY = Math.floor(height / matrix.length),
             gridSizeX = Math.floor(width / matrix[0].length);
 
-            this.listData = [];
+            var numberBoxes = 20;
 
+            this.listData = [];
+            var colors = [];
+            
             for(var i = 0; i < matrix.length; i++)
             {
                 for(var j = 0; j < matrix[0].length; j++)
@@ -62,11 +246,8 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 }
             }
 
-            var colorScale = d3.scale
-                .linear()
-                .domain([0, d3.max(this.listData, function (d) { return d[2]; })])
-                .range(["red", "blue"]);
-
+            d3.select("#chart svg").remove();
+            
             var svg = d3.select("#chart").append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
@@ -74,32 +255,137 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
             
+            var legend = svg.append('g')
+                .attr('class', 'colorlegend')
+                .attr('x', width)
+                .attr('y', margin.top);
+
+            //Draw title
+            svg.append("text")
+                .attr("class", "title")
+                .text(key)
+                .style("text-anchor", "middle")
+                .style("dominant-baseline", "central")
+                .attr("x", width / 2)
+                .attr("y", "0")
+                .attr("dy", "-1em");
+            
+            //Draw xlabel
+            svg.append("text")
+                .attr("class", "label")
+                .text(this.data.inData["parameterA"])
+                .style("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height)
+                .attr("dy", '2em');
+
+            //Draw ylabel
+            svg.append("text")
+                .attr("class", "label")
+                .text(this.data.inData["parameterB"])
+                .style("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height / 2)
+                .attr("y", 0)
+                .attr("dy", '-1.4em');
+
+            //Draw y axis numbers
+            var yAxisValues = [];
+            var useExponential = false;
+
+            for(var i = 0; i < matrix.length; i++)
+            {
+                var val = this.data.inData.minValueB + i * (this.data.inData.maxValueB - this.data.inData.minValueB) / (matrix.length - 1);
+
+                yAxisValues.push(val);
+
+                if(Math.abs(val) < 0.01 && Math.abs(val) > 1e-15)
+                    useExponential = true;
+            }
+
+            if(useExponential)
+            {
+                formatter = function(val) { return val.toExponential(2); };
+            }
+            else
+            {
+                formatter = function(val) { return val.toFixed(2); };
+            }
+
+            svg.selectAll(".yAxis")
+                .data(yAxisValues.map( formatter ))
+                .enter().append("text")
+                .attr("class", "ticks")
+                .attr("transform", "rotate(-90)")
+                .text(function (d) { return d; })
+                .attr("x", function (d, i) { return -i * gridSizeY - gridSizeY / 2; })
+                .attr("y", "-0.25em");
+
+            //Draw x axis number
+            var xAxisValues = [];
+            var useExponential = false;
+
+            for(var i = 0; i < matrix[0].length; i++)
+            {
+                var val = this.data.inData.minValueA + i * (this.data.inData.maxValueA - this.data.inData.minValueA) / (matrix[0].length - 1);
+
+                xAxisValues.push(val);
+
+                if(Math.abs(val) < 0.01 && Math.abs(val) > 1e-15)
+                    useExponential = true;
+            }
+
+            if(useExponential)
+            {
+                formatter = function(val) { return val.toExponential(2); };
+            }
+            else
+            {
+                formatter = function(val) { return val.toFixed(2); };
+            }
+
+            svg.selectAll(".xAxis")
+                .data(xAxisValues.map( formatter ))
+                .enter().append("text")
+                .attr("class", "ticks")
+                .text(function(d) { return d; })
+                .attr("x", function(d, i) { return gridSizeX / 2 + i * gridSizeX; })
+                .attr("y", height)
+                .attr("dy", "1.0em");
+
+            d3.select("#legend")
+                .style("width", "50px")
+                .style("height", height + 'px')
+                .style("float", "left")
+                .style("margin-top", margin.top + 'px');
+
+            var colorScale = d3.scale
+                .linear()
+                .domain([0, d3.max(this.listData, function (d) { return d[2]; })])
+                .range(["blue", "red"]);
+            
             //Draw legend
             var min = colorScale.domain()[0];
             var max = colorScale.domain()[1];
 
             // This code for the legends is adapted from https://github.com/jgoodall/d3-colorlegend
-            var colors = [];
-
-            var numberBoxes = 20;
-            for (i = 0; i < numberBoxes ; i++) {
-                colors.push(colorScale(max + i * ((min - max) / numberBoxes)));
+            for (var i = 0; i < numberBoxes ; i++) {
+                colors[i] = colorScale(max + i * ((min - max) / numberBoxes));
             }
 
             var boxHeight = height / numberBoxes;
             var boxWidth = 25;
 
             // set up the legend graphics context
-            var legend = svg.append('g')
-                .attr('class', 'colorlegend')
-                .attr('x', width)
-                .attr('y', margin.top);
+            var legendSel = legend.selectAll('g.legend')
+                .data(colors);
             
-            var legendBoxes = legend.selectAll('g.legend')
-                .data(colors)
-                .enter().append('g');
+            var legendBoxes = legendSel.enter().append('g');
+            legendSel.exit().remove();
 
             // value labels
+            legend.selectAll('text.colorlegend-labels').remove();
+
             var minLabel = legend.append('text')
                 .attr('class', 'colorlegend-labels')
                 .attr('x', width + boxWidth / 2)
@@ -126,63 +412,11 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .attr('height', boxHeight)
                 .style('fill', function (d, i) { return colors[i]; });
 
-            d3.select("#legend")
-                .style("width", "50px")
-                .style("height", height + 'px')
-                .style("float", "left")
-                .style("margin-top", margin.top + 'px');
-
             //Draw the heatmap. This code is based directly on http://bl.ocks.org/tjdecke/5558084
+            var heatMapJoin = svg.selectAll(".rect")
+                .data(this.listData);
 
-            var yAxis = svg.selectAll(".yAxis")
-                .data(d3.range(matrix.length))
-                .enter().append("text")
-                .text(function (d) { return d; })
-                .attr("x", "-0.25em")
-                .attr("y", function (d, i) { return i * gridSizeY + gridSizeY / 2.0; })
-                .style("text-anchor", "end")
-                .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
-
-            var xAxis = svg.selectAll(".xAxis")
-                .data(d3.range(matrix[0].length))
-                .enter().append("text")
-                .text(function(d) { return d; })
-                .attr("x", function(d, i) { return gridSizeX / 2 + i * gridSizeX; })
-                .attr("y", height)
-                .attr("dy", "1em")
-                .style("text-anchor", "middle")
-                .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
-
-            var xlabel = svg.append("text")
-                .attr("class", "title")
-                .text("Output Metric")
-                .style("text-anchor", "middle")
-                .style("dominant-baseline", "central")
-                .attr("x", width / 2)
-                .attr("y", "0")
-                .attr("dy", "-1em");
-
-            var xlabel = svg.append("text")
-                .attr("class", "title")
-                .text("Parameter B")
-                .style("text-anchor", "middle")
-                .attr("x", width / 2)
-                .attr("y", height + margin.top);
-
-            var ylabel = svg.append("text")
-                .attr("class", "title")
-                .text("Parameter A")
-                .style("text-anchor", "middle")
-                .attr("transform", "rotate(-90)")
-                .attr("x", -height / 2)
-                .attr("y", 0)
-                .attr("dy", '-1em');
-
-            //Tooltips taken from http://bl.ocks.org/biovisualize/1016860 and http://stackoverflow.com/questions/20644415/d3-appending-text-to-a-svg-rectangle and http://stackoverflow.com/questions/479591/svg-positioning
-
-            var heatMap = svg.selectAll(".hour")
-                .data(this.listData)
-                .enter().append("svg")
+            heatMapJoin.enter().append("svg")
                 .attr("x", function(d) { return (d[1]) * gridSizeX; })
                 .attr("y", function(d) { return (d[0]) * gridSizeY; })
                 .on('mouseover', function(d) {
@@ -191,16 +425,18 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .on('mouseout', function(d) {
                     d3.select(this).select("text").attr('visibility', 'hidden');
                 });
-            
-            heatMap.append("rect")
+
+            heatMapJoin.exit().remove();
+
+            heatMapJoin.append("rect")
                 .attr("rx", 4)
                 .attr("ry", 4)
-                .attr("class", "hour bordered")
+                .attr("class", "rect bordered")
                 .attr("width", gridSizeX)
                 .attr("height", gridSizeY)
                 .style("fill", function(d) { return colorScale(d[2]); });
 
-            heatMap.append("text")
+            heatMapJoin.append("text")
                 .text(function(d) { return "Value = " + d[2]; })
                 .style("text-anchor", "middle")
                 .style("font-size", 16)
@@ -214,4 +450,6 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
 $( document ).ready( function() {
     var cont = new ParameterSweepVisualization.Controller();
+
+    cont.render();
 });

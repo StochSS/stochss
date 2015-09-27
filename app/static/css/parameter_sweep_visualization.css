@@ -3,8 +3,13 @@ rect.bordered {
     stroke-width:2px;   
 }
 
-text.title {
+text.title, text.label {
     font-size: 24pt;
+}
+
+text.ticks {
+    font-size: 16pt;
+    text-anchor : middle;
 }
 
 text.colorlegend-labels {

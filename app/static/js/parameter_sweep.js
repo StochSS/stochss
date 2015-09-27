@@ -420,7 +420,7 @@ ParameterSweep.Controller = Backbone.View.extend(
                                 updateMsg(data);
                                 if(data.status)
                                 {
-                                    window.location = '/parametersweep/' + String(data.id);
+                                    window.location = '/status';
                                 }
                             },
                             dataType = "json" );

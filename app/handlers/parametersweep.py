@@ -76,31 +76,12 @@ class ParameterSweepPage(BaseHandler):
                           'msg':'Error: {0}'.format(e)}
                 self.response.write(json.dumps(result))
                 return
-
-        elif reqType == 'stopJob':
-            jobID = json.loads(self.request.get('id'))
-
-            jobID = int(jobID)
-
-            job = StochOptimJobWrapper.get_by_id(jobID)
-
-            if job.user_id == self.user.user_id():
-                success = job.stop(self)
-                if not success:
-                    return self.response.write(json.dumps({
-                        'status': False,
-                        'msg': 'Could not stop the job '+job.name +'. Unexpected error.'
-                    }))
-            else:
-                self.response.write(json.dumps({"status" : False,
-                                                "msg" : "No permissions to delete this job (this should never happen)"}))
-                return
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
 
             jobID = int(jobID)
 
-            job = StochOptimJobWrapper.get_by_id(jobID)
+            job = ParameterSweepJobWrapper.get_by_id(jobID)
 
             if job.user_id == self.user.user_id():
                 job.delete(self)
@@ -108,12 +89,46 @@ class ParameterSweepPage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
                 return
+
+        elif reqType == 'getDataCloud':
+            try:
+                jobID = json.loads(self.request.get('id'))
+                job = ParameterSweepJobWrapper.get_by_id(int(jobID))
+
+                molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+
+                if not molnsConfigDb:
+                    return
+
+                molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+
+                log = molns.MOLNSExec.job_logs([job.molnsPID], molnsConfig)
+                      
+                with open(os.path.join(job.outData, 'stdout'), 'w') as f:
+                    f.write(log['msg'])
+                          
+                molns.MOLNSExec.fetch_job_results([job.molnsPID, "results", os.path.join(job.outData, 'results')], molnsConfig)
+
+                job.output_stored = True
+
+                # Save the updated status
+                job.put()
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : True,
+                                                 'msg' : 'Job downloaded'}))
+                return
+            except Exception as e:
+                traceback.print_exc()
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Error: {0}".format(e)}))
+                return
+
         elif reqType == 'getDataLocal':
             jobID = json.loads(self.request.get('id'))
 
             jobID = int(jobID)
 
-            job = StochOptimJobWrapper.get_by_id(jobID)
+            job = ParameterSweepJobWrapper.get_by_id(jobID)
 
             if not job.zipFileName:
                 szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
@@ -155,6 +170,7 @@ class ParameterSweepPage(BaseHandler):
         job.modelName = modelDb.name
         job.outData = dataDir
         job.status = "Pending"
+        job.output_stored = False
 
         # # execute cloud task
         try:
@@ -216,22 +232,16 @@ class ParameterSweepVisualizationPage(BaseHandler):
 
         initialData = {}
         
-        molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
         jobDb = ParameterSweepJobWrapper.get_by_id(jobID)
 
-        if molnsConfigDb and jobDb:
-            config = molns.MOLNSConfig(config_dir=molnsConfigDb.folder)
-            job_status = molns.MOLNSExec.job_status([jobDb.molnsPID], config)
-            log_status = molns.MOLNSExec.job_logs([jobDb.molnsPID], config)
+        initialData = jobDb.getJSON()
 
-            initialData['name'] = jobDb.name
-            initialData['resource'] = jobDb.resource
-            initialData['modelName'] = jobDb.modelName
-            initialData['jobMsg'] = job_status['msg']
-            initialData['jobStatus'] = 'Running' if job_status['running'] else 'Finished'
-            initialData['stdout'] = log_status['msg']
-
-        initialData['matrix'] = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [1, 2, 3, 4, 5], [6, 7, 8, 9, 0]]
+        if jobDb.status == 'Finished' and jobDb.output_stored:
+            with open(os.path.join(jobDb.outData, 'stdout'), 'r') as f:
+                initialData['stdout'] = f.read()
+                
+            with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
+                initialData['data'] = json.load(f)
 
         self.render_response('parameter_sweep_visualization.html', **{'initialData' : json.dumps(initialData)})
 

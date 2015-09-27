@@ -26,6 +26,8 @@ import simulation
 import spatial
 import stochoptim
 
+import molns
+
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        
@@ -153,16 +155,36 @@ class StatusPage(BaseHandler):
                 number = len(jobs) - number
                 allSpatialJobs.append(self.__process_getJobStatus(service,job, number))
         context['allSpatialJobs'] = allSpatialJobs
+
+        #Parameter Sweep Jobs
+        allParameterSweepJobs = []
+        allParameterSweepJobsQuery = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1", self.user.user_id())
+        if allParameterSweepJobsQuery != None:
+            jobs = list(allParameterSweepJobsQuery.run())
+            jobs = sorted(jobs,
+                          key=lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
+                                              if hasattr(x, 'startTime') and x.startTime != None else ''),
+                          reverse = True)
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+                allParameterSweepJobs.append(self.__process_getJobStatus(service,job, number))
+        context['allParameterSweepJobs'] = allParameterSweepJobs
     
         return context
 
     def __process_getJobStatus(self,service,job,number):
         try:
-            status = getJobStatus(service, job)
+            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+
+            if molnsConfigDb:
+                config = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+
+            status = getJobStatus(service, job, config)
         except Exception as e:
+            traceback.print_exc()
             status = {  "status" : 'Error: {0}'.format(e),
                         "name" : job.name,
-                        "uuid" : job.cloudDatabaseID,
+                        "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
                         "output_stored": None,
                         "resource": 'Error',
                         "id" : job.key().id()}
@@ -170,10 +192,10 @@ class StatusPage(BaseHandler):
         return status
 
 
-def getJobStatus(service, job):
+def getJobStatus(service, job, molnsConfig = None):
         logging.debug('status.getJobStatus() job = {0}'.format(job))
         logging.debug('status.getJobStatus() job.status={0} job.resource={1} job.outData={2}'.format(job.status, job.resource, job.outData))
-        indata = json.loads(job.indata)
+        #indata = json.loads(job.indata)
         file_to_check = "{0}/return_code".format(job.outData)
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
         logging.debug('status.getJobStatus() job.outData={0}'.format(job.outData))
@@ -213,7 +235,19 @@ def getJobStatus(service, job):
                 job.status = "Running"
             else:
                 job.status = "Failed"
+        elif job.resource.lower() == "molns":
+            if molnsConfig:
+                job_status = molns.MOLNSExec.job_status([job.molnsPID], molnsConfig)
+                  
+                status = 'Running' if job_status['running'] else 'Finished'
+                  
+                if status == 'Finished':
+                    with open(file_to_check, 'w') as f:
+                        f.write('0')
 
+                job.status = status
+            else:
+                job.status = 'Unknown'
 
         elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             # running in cloud
@@ -260,12 +294,10 @@ def getJobStatus(service, job):
 
         job.put()
         
-         
-
-        return {    "status" : job.status,
-                    "name" : job.name,
-                    "uuid" : job.cloudDatabaseID,
-                    "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
-                    "resource": job.resource,
-                    "id" : job.key().id()}
+        return { "status" : job.status,
+                 "name" : job.name,
+                 "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
+                 "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
+                 "resource": job.resource,
+                 "id" : job.key().id() }
 

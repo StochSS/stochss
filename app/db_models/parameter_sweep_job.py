@@ -3,6 +3,7 @@ import os
 import logging
 from google.appengine.ext import db
 from backend.backendservice import backendservices
+import json
 
 class ParameterSweepJobWrapper(db.Model):
     user_id = db.StringProperty()
@@ -14,16 +15,28 @@ class ParameterSweepJobWrapper(db.Model):
     outData = db.StringProperty()
     status = db.StringProperty()
     zipFileName = db.StringProperty()
+    output_stored = db.BooleanProperty()
     
     resource = db.StringProperty()
-    outputURL = db.StringProperty()
     molnsPID = db.IntegerProperty()
-    cloudDatabaseID = db.StringProperty()
-    celeryPID = db.StringProperty()
-    pollProcessPID = db.IntegerProperty()
+
+    def getJSON(self):
+        return { 'id' : self.key().id(),
+                 'user_id' : self.user_id,
+                 'pid' : self.pid,
+                 'startTime' : self.startTime,
+                 'name' : self.name,
+                 'modelName' : self.modelName,
+                 'inData' : json.loads(self.inData),
+                 'outData' : self.outData,
+                 'status' : self.status,
+                 'zipFileName' : self.zipFileName,
+                 'output_stored' : self.output_stored,
+            
+                 'resource' : self.resource,
+                 'molnsPID' : self.molnsPID }
 
     def delete(self, handler):
-        logging.debug("ParameterSweepJobWrapper(cloudDatabaseID={0})".format(self.cloudDatabaseID))
         if self.outData is not None and os.path.exists(self.outData):
             shutil.rmtree(self.outData)
         
@@ -35,28 +48,23 @@ class ParameterSweepJobWrapper(db.Model):
         except Exception as e:
             logging.exception(e)
         
-        # delete on cloud
-        if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            try:
-                service = backendservices(handler.user_data)
-                service.deleteTasks(self)
-            except Exception as e:
-                logging.error("Failed to delete cloud resources of job {0}".format(self.key().id()))
-                logging.error(e)
-
         try:
             super(ParameterSweepJobWrapper, self).delete()
         except db.NotSavedError as e:
             pass
 
+    
     def stop(self, handler):
         # TODO: Call the backend to kill and delete the job and all associated files.
         service = backendservices(handler.user_data)
 
-        if not self.resource:
-            return
+        if self.resource == "molns":
+            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", handler.user.user_id()).get()
 
-        if self.resource.lower() == 'local':
-            service.stopTaskLocal([self.pid])
-        elif self.resource.lower() == 'cloud':
-            service.stopTasks(self)
+            if not molnsConfigDb:
+                return
+
+            config = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+
+            # Stopping is deleting cloud data for this job type
+            molns.MOLNSExec.fetch_job_results([jobDb.molnsPID], config)
