@@ -6,28 +6,31 @@ import numpy
 # NOTE: THIS FILE IS INTERPRETTED AS A PYTHON FORMAT STRING
 # That means curly braces are a special character. To initialize a dict, use {{}}
 
-data = json.loads("""{0}""")
 
-name = data["name"]
-modelType = data["modelType"]
-species = data["species"]
-parameters = data["parameters"]
-reactions = data["reactions"]
-maxTime = data["maxTime"]
-increment = data["increment"]
+class StochSSModel(gillespy.Model):
+    json_data = json.loads("""{0}""")
+    def __init__(self, **kwargs):
+        modelType = self.json_data["modelType"]
+        species = self.json_data["species"]
+        parameters = self.json_data["parameters"]
+        reactions = self.json_data["reactions"]
+        maxTime = self.json_data["maxTime"]
+        increment = self.json_data["increment"]
 
-class Model(gillespy.Model):
-    def __init__(self, parameter_values = None):
-        gillespy.Model.__init__(self, name = name)
 
-        parameterByName = {{}}
+        gillespy.Model.__init__(self, name = self.json_data["name"])
+
+        parameterByName = {}
 
         for parameter in parameters:
-            parameterByName[parameter['name']] = gillespy.Parameter(name = parameter['name'], expression = parameter['value'])
+            if parameter['name'] in kwargs:
+                parameterByName[parameter['name']] = gillespy.Parameter(name = parameter['name'], expression = kwargs[parameter['name']])
+            else:
+                parameterByName[parameter['name']] = gillespy.Parameter(name = parameter['name'], expression = parameter['value'])
 
             self.add_parameter(parameterByName[parameter['name']])
 
-        speciesByName = {{}}
+        speciesByName = {}
 
         for specie in species:
             speciesByName[specie['name']] = gillespy.Species(name = specie['name'], initial_value = specie['initialCondition'])
@@ -35,14 +38,14 @@ class Model(gillespy.Model):
             self.add_species(speciesByName[specie['name']])
 
         for reaction in reactions:
-            inReactants = {{}}
+            inReactants = {}
             for reactant in reaction['reactants']:
                 if reactant['specie'] not in inReactants:
                     inReactants[reactant['specie']] = 0
 
                 inReactants[reactant['specie']] += reactant['stoichiometry']
 
-            inProducts = {{}}
+            inProducts = {}
             for product in reaction['products']:
                 if product['specie'] not in inProducts:
                     inProducts[product['specie']] = 0
@@ -54,41 +57,43 @@ class Model(gillespy.Model):
             products = dict([(speciesByName[product[0]], product[1]) for product in inProducts.items()])
             
             if(reaction['type'] == 'custom'):
-                self.add_reaction(gillespy.Reaction(name = stochss.model.Reaction(reaction['name'], reactants = reactants, products = products, propensity_function = reaction['equation'])))
+                self.add_reaction(gillespy.Reaction(name = reaction['name'], reactants = reactants, products = products, propensity_function = reaction['equation']))
             else:
-                self.add_reaction(gillespy.Reaction(name = stochss.model.Reaction(reaction['name'], reactants = reactants, products = products, rate = parameterByName[reaction['rate']])))
+                self.add_reaction(gillespy.Reaction(name = reaction['name'], reactants = reactants, products = products, rate = parameterByName[reaction['rate']]))
 
-        self.timespan(numpy.concatenate((numpy.arange(data['maxTime'] / data['increment']) * dt, [data['maxTime']])))
+        self.timespan(numpy.concatenate((numpy.arange(self.json_data['maxTime'] / self.json_data['increment']) * self.json_data['increment'], [self.json_data['maxTime']])))
 
-with open('results', 'w') as f:
-    if data['variableCount'] != 1:
-        json.dump({{ 'Maximum' : [list(row) for row in 2 * numpy.ones((5, 5))],
-                    'Minimum' : [list(row) for row in 0.5 * numpy.ones((5, 5))] }}, f)
-    else:
-        json.dump({{ 'Maximum' : list(numpy.ones((5))),
-                    'Minimum' : list(numpy.ones((5))) }}, f)
 
-#funcA = numpy.linspace if data['logA'] else numpy.logspace
-#funcB = numpy.linspace if data['logB'] else numpy.logspace
+#model = Model()
+#output = model.run()
+#print output
 
-#parameters = {{}}
 
-#parameters[data['parameterA']] = funcA(data['minValueA'], data['maxValueA'], data['stepsA'])
+funcA = numpy.linspace if StochSSModel.json_data['logA'] else numpy.logspace
+funcB = numpy.linspace if StochSSModel.json_data['logB'] else numpy.logspace
 
-#if data['variableCount'] != 1:
-#    parameters[data['parameterB']] = funcB(data['minValueB'], data['maxValueB'], data['stepsB'])
+parameters = {}
 
-#sweep = molnsutil.ParameterSweep(model_class = Model, parameters = parameters)
+parameters[StochSSModel.json_data['parameterA']] = funcA(StochSSModel.json_data['minValueA'], StochSSModel.json_data['maxValueA'], StochSSModel.json_data['stepsA'])
 
-#def mapAnalysis(result):
-    #mappedResults = {{}}
+if StochSSModel.json_data['variableCount'] != 1:
+    parameters[StochSSModel.json_data['parameterB']] = funcB(StochSSModel.json_data['minValueB'], StochSSModel.json_data['maxValueB'], StochSSModel.json_data['stepsB'])
+
+print "Parameters: ",parameters
+
+import uuid
+name = "StochSS_exec" + str(uuid.uuid4())
+sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
+
+def mapAnalysis(result):
+    #mappedResults = {}
     #for i, specie in enumerate(species):
     #    mappedResults['maxVal'] = numpy.max(results[:, i + 1, :])
+    return result.shape#mappedResults
 
-#    return result.shape#mappedResults
 
-#ret = sweep.run(mapper = mapAnalysis, number_of_trajectories = 1, store_realizations = False, progress_bar = False)
+ret = sweep.run(mapper = mapAnalysis, number_of_trajectories = 1, chunk_size = 1, store_realizations = False, progress_bar = False)
 
-#f = open('results', 'w')
-#pickle.dump(ret, f)
-#f.close()
+import pickle
+with open('results', 'w') as f:
+    pickle.dump(ret, f)
