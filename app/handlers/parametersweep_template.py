@@ -81,9 +81,10 @@ if StochSSModel.json_data['variableCount'] != 1:
 
 print "Parameters: ",parameters
 
-import uuid
-name = "StochSS_exec" + str(uuid.uuid4())
-sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
+#import uuid
+#name = "StochSS_exec" + str(uuid.uuid4())
+#sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
+sweep = molnsutil.ParameterSweep(model_class=StochSSModel, parameters=parameters)
 
 def mapAnalysis(result):
     #mappedResults = dict()
