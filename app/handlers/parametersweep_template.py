@@ -4,7 +4,7 @@ import molnsutil
 import numpy
 
 # NOTE: THIS FILE IS INTERPRETTED AS A PYTHON FORMAT STRING
-# That means curly braces are a special character. To initialize a dict, use {{}}
+# That means curly braces are a special character. To initialize a dict, use 'dict()'
 
 
 class StochSSModel(gillespy.Model):
@@ -20,7 +20,7 @@ class StochSSModel(gillespy.Model):
 
         gillespy.Model.__init__(self, name = self.json_data["name"])
 
-        parameterByName = {}
+        parameterByName = dict()
 
         for parameter in parameters:
             if parameter['name'] in kwargs:
@@ -30,7 +30,7 @@ class StochSSModel(gillespy.Model):
 
             self.add_parameter(parameterByName[parameter['name']])
 
-        speciesByName = {}
+        speciesByName = dict()
 
         for specie in species:
             speciesByName[specie['name']] = gillespy.Species(name = specie['name'], initial_value = specie['initialCondition'])
@@ -38,14 +38,14 @@ class StochSSModel(gillespy.Model):
             self.add_species(speciesByName[specie['name']])
 
         for reaction in reactions:
-            inReactants = {}
+            inReactants = dict()
             for reactant in reaction['reactants']:
                 if reactant['specie'] not in inReactants:
                     inReactants[reactant['specie']] = 0
 
                 inReactants[reactant['specie']] += reactant['stoichiometry']
 
-            inProducts = {}
+            inProducts = dict()
             for product in reaction['products']:
                 if product['specie'] not in inProducts:
                     inProducts[product['specie']] = 0
@@ -72,7 +72,7 @@ class StochSSModel(gillespy.Model):
 funcA = numpy.linspace if StochSSModel.json_data['logA'] else numpy.logspace
 funcB = numpy.linspace if StochSSModel.json_data['logB'] else numpy.logspace
 
-parameters = {}
+parameters = dict()
 
 parameters[StochSSModel.json_data['parameterA']] = funcA(StochSSModel.json_data['minValueA'], StochSSModel.json_data['maxValueA'], StochSSModel.json_data['stepsA'])
 
@@ -86,7 +86,7 @@ name = "StochSS_exec" + str(uuid.uuid4())
 sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
 
 def mapAnalysis(result):
-    #mappedResults = {}
+    #mappedResults = dict()
     #for i, specie in enumerate(species):
     #    mappedResults['maxVal'] = numpy.max(results[:, i + 1, :])
     return result.shape#mappedResults
