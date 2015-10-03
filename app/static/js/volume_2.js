@@ -20,6 +20,7 @@ Volume.Controller = Backbone.View.extend(
             this.selectedSpecies = undefined;
             this.trajectory = 0;
 
+            this.barymap = {}
             // Draw a screen so folks have something to see
             this.render();
 
@@ -112,17 +113,8 @@ Volume.Controller = Backbone.View.extend(
             console.log('Execution time: of this.makeInverseMap();' + time);
 
 
-
             var start = new Date().getTime();
-            
-            this.precalculateBaryCalc();
-            
-            var end = new Date().getTime();
-            var time = end - start;
-            console.log('Execution time: of this.precalculateBaryCalc();' + time);
-
-            var start = new Date().getTime();
-            // console.log(this.baryCalc([50, 250, 370, 473, 1058, 1297, 1337, 1359, 1572, 1591, 1768, 1847, 1877, 1965, 2029, 2065, 2189, 2201, 2210, 2246, 2495, 2518, 2535, 2548, 2583, 2600, 2629, 2728, 2798, 3037, 3054, 3100, 3238, 3256, 3258, 3261, 3262, 3389, 3564, 3591, 3592, 3593, 3648, 3650, 3736, 3914, 3917, 3930, 3997, 4214, 4274, 4275, 4276, 4559, 4560, 4646, 4647, 4649, 4650, 4651, 4652, 4653], [0.0595530456487, -0.145057212333, 0.00124758599452], this.colors.A))
+            //console.log(this.baryCalc([50, 250, 370, 473, 1058, 1297, 1337, 1359, 1572, 1591, 1768, 1847, 1877, 1965, 2029, 2065, 2189, 2201, 2210, 2246, 2495, 2518, 2535, 2548, 2583, 2600, 2629, 2728, 2798, 3037, 3054, 3100, 3238, 3256, 3258, 3261, 3262, 3389, 3564, 3591, 3592, 3593, 3648, 3650, 3736, 3914, 3917, 3930, 3997, 4214, 4274, 4275, 4276, 4559, 4560, 4646, 4647, 4649, 4650, 4651, 4652, 4653], [0.0595530456487, -0.145057212333, 0.00124758599452], this.colors.A))
             this.renderImage();
             var end = new Date().getTime();
             var time = end - start;
@@ -177,11 +169,11 @@ Volume.Controller = Backbone.View.extend(
           N = 40;
           console.log(" Constructing grid ");
           this.grid = new TupleDictionary();
-
+          this.voxelCoords = []
           for(var idx=0; idx < this.voxelTuples.length; idx++){
               var tuples = this.voxelTuples[idx];
               
-              var voxelCoords = [];
+              this.voxelCoords[idx] = []
               var xs = []; var ys =[]; var zs = [];
               for(var i=0; i<4; i++)
               {
@@ -189,10 +181,8 @@ Volume.Controller = Backbone.View.extend(
                 xs[i] = vertices['x'];
                 ys[i] = vertices['y'];
                 zs[i] = vertices['z'];
-                voxelCoords[i] = this.mesh.geometry.vertices[tuples[i]];
+                this.voxelCoords[idx][i] = vertices;
               }
-
-
 
               Array.max = function( array ){
                   return Math.max.apply( Math, array );
@@ -226,13 +216,6 @@ Volume.Controller = Backbone.View.extend(
                         var zcoord = Math.min(vminz + dz * iz, vmaxz);
                         var key = this.getKey(xcoord, ycoord, zcoord);
 
-                        if(key[0] == 0 && key[1] == 0 && key[2] == 0)
-                        {
-
-                          console.log('hiasfdasdf');
-                          1/0
-                        }
-
                         this.grid.put( key , idx );           
                     } 
                   } 
@@ -260,7 +243,8 @@ Volume.Controller = Backbone.View.extend(
 
               var matrix =  this.getMatrix( voxelCoords );
               this.inverseMap[idx] = new Array();
-              this.inverseMap[idx].push(this.getInverse(matrix));
+              mat1 = math.inv(matrix);
+              this.inverseMap[idx].push(mat1);
               this.inverseMap[idx].push(voxelCoords[3]);
           }
         },
@@ -276,7 +260,7 @@ Volume.Controller = Backbone.View.extend(
           result.push( [ v1['x'] - v4['x'], v2['x'] - v4['x'],  v3['x'] - v4['x'] ] ) 
           result.push( [ v1['y'] - v4['y'], v2['y'] - v4['y'],  v3['y'] - v4['y'] ] ) 
           result.push( [ v1['z'] - v4['z'], v2['z'] - v4['z'],  v3['z'] - v4['z'] ] ) 
-          return result
+          return math.matrix(result);
         },
 
         getInverse : function(A){
@@ -313,135 +297,96 @@ Volume.Controller = Backbone.View.extend(
             return inverse
         },
 
-        matmul : function(matrixIn, vecIn, vecOut)
-        {
-          for(var i=0; i< 3; i++)
-          {
-            for(var j=0; j< 3; j++)
-              {
-                vecOut[i] += matrixIn[i][j] * vecIn[j];
-              }
-          }
-          return vecOut;
-        },
+        precalculate: function(){
 
-        baryCalc: function(key, r){
-          if (key in this.baryMap)
-            return this.baryMap[key]
-
+        }
+        baryCalc: function(keys, r, data){
+          //console.log("At baryCalc");
+          //inverseMap, keys , (x, y, z), data
           var inval = 0;
-          inmatrix= this.inverseMap[key][0];
-          r4 =  [this.inverseMap[key][1].x, this.inverseMap[key][1].y, this.inverseMap[key][1].z];
-          var flag = true;
-
-          var val = [r[0] - r4[0], r[1] - r4[1], r[2] - r4[2]];
-          var s = 0;
-          var result = [0.0, 0.0, 0.0];
-
-          result = this.matmul(inmatrix, val, result);
-          for(var i = 0; i < 3; i++)
+          for(j in keys)
           {
-            s += result[i];
-            if (result[i] < 0.0 || result[i] > 1)
-              result = -1;
-          }
-          
-          if ((1.0 + 1e-8) < s)
-            result= -1;
+              key = keys[j];
+              inmatrix= this.inverseMap[key][0];
+              r4 =  [this.inverseMap[key][1].x, this.inverseMap[key][1].y, this.inverseMap[key][1].z];
+              var val = [r[0] - r4[0], r[1] - r4[1], r[2] - r4[2]];
+              var flag = true;
+              var result = math.multiply(val, inmatrix); 
+              s = 0;
+              result.forEach(function (value, index, matrix) {
+                if(value < 0.0 || value > 1)
+                  {s+=value; flag = false; break; }
+              });
 
-          this.baryMap[key] = result;
-          return result;
-        },
-
-        precalculateBaryCalc: function(){
-          xlimit = 100;
-          ylimit = 100;
-          zlimit = 100;
-          this.list = {}
-          this.baryMap = {}
-          for (var x=0; x<xlimit; x++)
-          {
-            for(var y=0; y<ylimit; y++)
-            {
-              for(var z=0; z<zlimit; z++)
+              var inval = 0;
+              if(flag && s <= 1.0 + 1e-8)
               {
-                var a_x = ((x / (xlimit)) * (this.maxx - this.minx) + this.minx);
-                var a_y = ((y / (ylimit)) * (this.maxy - this.miny) + this.miny);
-                var a_z = ((z / (zlimit)) * (this.maxz - this.minz) + this.minz);
-                var key  = this.getKey(a_x,a_y,a_z);
-                var keys = this.grid.get(key);
-                var inval = 0;
-                result = [];
-                if(typeof(keys) != "undefined")
-                { 
-                  var akeys = Array.from(keys);
-                  for(var i=0; i<akeys.length; i++)
-                  {
-                    result = this.baryCalc(akeys[i], [a_x, a_y, a_z]);
-                    if (result != -1)
-                        this.list[x+","+y+","+z] = [result, akeys[i]];
-                  }
+                  v1 =this.voxelTuples[key][0];
+                  v2 =this.voxelTuples[key][1];
+                  v3 =this.voxelTuples[key][2];
+                  v4 =this.voxelTuples[key][3];
+                  c1 = data[v1];
+                  c2 = data[v2];
+                  c3 = data[v3];
+                  c4 = data[v4];
+                  l4 = Math.max(0.0, 1 - s)
+                  
+                  inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
+                  return inval;
                 }
-              }
-            }
           }
+          return inval;
         },
 
 
 
         renderImage: function(){
-          var xlimit = 100;
-          var ylimit = 100;
-          var zlimit = 100;
-          
-          var im = new Array(xlimit);
-          for (var i = 0; i < xlimit; i++) {
-            im[i] = new Array(ylimit);
-            for(var j = 0; j< ylimit; j++)
-                im[i][j] = new Array(zlimit);
-          }
-
+          var xlimit = 50;
+          var ylimit = 50;
+          var zlimit = 50;
+          xrange = (this.maxx - this.minx) / xlimit;
+          yrange = (this.maxy - this.miny) / ylimit;
+          zrange = (this.maxz - this.minz) / zlimit;
           for(var t=0;t<1; t++){ 
               var data = this.colors["A"];
-              for(var key in this.list)
-              {
-                var coords = key.split(",");
-                x = parseInt(coords[0]);
-                y = parseInt(coords[1]);
-                z = parseInt(coords[2]);
 
-                result, k = this.list[key];
-                v1 =this.voxelTuples[k[1]][0];
-                v2 =this.voxelTuples[k[1]][1];
-                v3 =this.voxelTuples[k[1]][2];
-                v4 =this.voxelTuples[k[1]][3];
-                  
-                c1 = data[v1]
-                c2 = data[v2]
-                c3 = data[v3]
-                c4 = data[v4]
-                  
-                l1 =  result[0];
-                l2 = result[1];
-                l3 = result[2];
-                l4 = Math.max(0.0, 1 - (l1 + l2 + l3))
-                  
-                inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
-                im[x][y][z] = inval;
+              for(var l=0; l<zlimit; l++){
+                
+                var im = new Array(xlimit);
+                  for (var i = 0; i < xlimit; i++) {
+                    im[i] = new Array(ylimit);
+                  }
+
+                for(var j=0; j<ylimit; j++)
+                {
+                  for(var i=0; i<xlimit; i++)
+                  {
+                    var x = i * xrange + this.minx;
+                    var y = j * yrange + this.miny;
+                    var z = l * zrange + this.minz;
+                    var key  = this.getKey(x,y,z);
+                    var keys = this.grid.get(key);
+                    var keysList = [];
+                    var inval = 0;
+                    if(typeof(keys) != "undefined")
+                    {
+                            keys.forEach( function(a) { keysList.push(a); } )
+
+                            if(keysList.length > 0);
+                             inval = this.baryCalc(keysList, [x, y, z], data);
+                    }
+                    im[i][j] = inval;
+                  }
+                }
+                }
               }
-          }
-
         },
 
         render : function(data)
         {
-            var scene = new THREE.Scene();
-            var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-
-            var renderer = new THREE.WebGLRenderer();
-            document.getChi
-            renderer.setSize( window.innerWidth, window.innerHeight );
-            
+            if(typeof data != 'undefined')
+            {
+            }
         }
     }
 );
