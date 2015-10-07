@@ -111,7 +111,7 @@ Volume.Controller = Backbone.View.extend(
             var time = end - start;
             console.log('Execution time: of this.makeInverseMap();' + time);
 
-
+            this.N = 100;
 
             var start = new Date().getTime();
             
@@ -127,6 +127,12 @@ Volume.Controller = Backbone.View.extend(
             var end = new Date().getTime();
             var time = end - start;
             console.log('Execution time: of this.renderImage();' + time);
+
+            // var start = new Date().getTime();
+            // this.meshDataPreview();
+            // var end = new Date().getTime();
+            // var time = end - start;
+            // console.log('Execution time: of this.meshDataPreview();' + time);
             
         },
 
@@ -313,22 +319,7 @@ Volume.Controller = Backbone.View.extend(
             return inverse
         },
 
-        matmul : function(matrixIn, vecIn, vecOut)
-        {
-          for(var i=0; i< 3; i++)
-          {
-            for(var j=0; j< 3; j++)
-              {
-                vecOut[i] += matrixIn[i][j] * vecIn[j];
-              }
-          }
-          return vecOut;
-        },
-
         baryCalc: function(key, r){
-          if (key in this.baryMap)
-            return this.baryMap[key]
-
           var inval = 0;
           inmatrix= this.inverseMap[key][0];
           r4 =  [this.inverseMap[key][1].x, this.inverseMap[key][1].y, this.inverseMap[key][1].z];
@@ -338,7 +329,14 @@ Volume.Controller = Backbone.View.extend(
           var s = 0;
           var result = [0.0, 0.0, 0.0];
 
-          result = this.matmul(inmatrix, val, result);
+          for(var i=0; i< 3; i++)
+          {
+            for(var j=0; j< 3; j++)
+              {
+                result[i] += inmatrix[i][j] * val[j];
+              }
+          }
+
           for(var i = 0; i < 3; i++)
           {
             s += result[i];
@@ -349,15 +347,14 @@ Volume.Controller = Backbone.View.extend(
           if ((1.0 + 1e-8) < s)
             result= -1;
 
-          this.baryMap[key] = result;
           return result;
         },
 
         precalculateBaryCalc: function(){
-          xlimit = 100;
-          ylimit = 100;
-          zlimit = 100;
-          this.list = {}
+          var xlimit = this.N;
+          var ylimit = this.N;
+          var zlimit = this.N;
+          this.list = []
           this.baryMap = {}
           for (var x=0; x<xlimit; x++)
           {
@@ -379,7 +376,7 @@ Volume.Controller = Backbone.View.extend(
                   {
                     result = this.baryCalc(akeys[i], [a_x, a_y, a_z]);
                     if (result != -1)
-                        this.list[x+","+y+","+z] = [result, akeys[i]];
+                        this.list.push({ x : x, y : y, z : z, result : result, voxelKey : akeys[i] });
                   }
                 }
               }
@@ -387,64 +384,117 @@ Volume.Controller = Backbone.View.extend(
           }
         },
 
-
-
         renderImage: function(){
-          var xlimit = 100;
-          var ylimit = 100;
-          var zlimit = 100;
+          var xlimit = this.N;
+          var ylimit = this.N;
+          var zlimit = this.N;
           
-          var im = new Array(xlimit);
-          for (var i = 0; i < xlimit; i++) {
-            im[i] = new Array(ylimit);
-            for(var j = 0; j< ylimit; j++)
-                im[i][j] = new Array(zlimit);
+          var im = new Array(xlimit*ylimit*zlimit).fill(0);
+          var data = this.colors["A"];
+          for(var i = 0; i < this.list.length; i++)
+          {
+            var x = this.list[i].x;
+            var y = this.list[i].y;
+            var z = this.list[i].z;
+            var result = this.list[i].result;
+            var k = this.list[i].voxelKey;
+
+            v1 =this.voxelTuples[k][0];
+            v2 =this.voxelTuples[k][1];
+            v3 =this.voxelTuples[k][2];
+            v4 =this.voxelTuples[k][3];
+              
+            c1 = data[v1]
+            c2 = data[v2]
+            c3 = data[v3]
+            c4 = data[v4]
+              
+            l1 =  result[0];
+            l2 = result[1];
+            l3 = result[2];
+            l4 = Math.max(0.0, 1 - (l1 + l2 + l3))
+              
+            inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
+
+            im[(x*xlimit*ylimit)+(y*ylimit)+z] = inval;
+            
           }
-
-          for(var t=0;t<1; t++){ 
-              var data = this.colors["A"];
-              for(var key in this.list)
-              {
-                var coords = key.split(",");
-                x = parseInt(coords[0]);
-                y = parseInt(coords[1]);
-                z = parseInt(coords[2]);
-
-                result, k = this.list[key];
-                v1 =this.voxelTuples[k[1]][0];
-                v2 =this.voxelTuples[k[1]][1];
-                v3 =this.voxelTuples[k[1]][2];
-                v4 =this.voxelTuples[k[1]][3];
-                  
-                c1 = data[v1]
-                c2 = data[v2]
-                c3 = data[v3]
-                c4 = data[v4]
-                  
-                l1 =  result[0];
-                l2 = result[1];
-                l3 = result[2];
-                l4 = Math.max(0.0, 1 - (l1 + l2 + l3))
-                  
-                inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
-                im[x][y][z] = inval;
-              }
-          }
-
+         this.meshDataPreview(im);//this.meshDataPreview(data);
         },
 
-        render : function(data)
+        meshDataPreview : function(imdata)
         {
-            var scene = new THREE.Scene();
-            var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            console.log("meshDataPreview : function(data)"); 
+            var tgtCanvas = $( '.tgtCanvas' ).get(0);
+            var width = 1024;
+            var height =  1024;
 
-            var renderer = new THREE.WebGLRenderer();
-            document.getChi
-            renderer.setSize( window.innerWidth, window.innerHeight );
-            
-        }
-    }
-);
+            $( tgtCanvas ).prop('width', width).prop('height', height);
+
+            var tgtCtx = tgtCanvas.getContext('2d');
+
+            var min = _.min(imdata);
+            var max = _.max(imdata);
+
+            for(var i = 0; i < imdata.length; i++)
+            {
+              imdata[i] = (imdata[i] - min) / (max - min);
+            }
+
+            tgtData = tgtCtx.createImageData(width, height);
+            for(var i = 0; i < width; i++)
+            {
+              for(var j = 0; j < height; j++)
+              {
+                tgtData.data[4 * (j * width + i)] = 0;
+                tgtData.data[4 * (j * width + i) + 1] = 100;
+                tgtData.data[4 * (j * width + i) + 2] = 255;
+                tgtData.data[4 * (j * width + i) + 3] = 100;
+              }
+            }
+
+
+            var idx = 0;
+            var tiles = Math.floor(width / this.N);
+            var range2 = Math.floor(height / this.N);
+            var numslices = 10;
+            var offset = 24;
+
+            for(var z = 0; z < 100 ; z++)
+            {
+
+              for(var i = 0; i < this.N; i++)
+              {
+                for(var j = 0; j < this.N; j++)
+                {
+                      color1 = Math.floor(imdata[i*this.N*this.N+ j*this.N + z] * 255); 
+                      color2 = Math.floor(imdata[i*this.N*this.N+ j*this.N + z] * 255);
+                      color3 = 0;
+                      var idx = (i + j * width+ (z % tiles)* this.N);
+                      var rownum = Math.floor(z / tiles);
+                      // if(z % 10 == 0 && z!=0)
+                      //   {
+                      //     idx += (this.N * rownum * width);
+                      //   }
+                      // else
+                        idx += rownum* this.N * width ;
+                      tgtData.data[ 4 * idx] = color1;
+                      tgtData.data[ 4 * idx + 1] = color2;
+                      tgtData.data[ 4 * idx + 2] = color3;
+                      tgtData.data[ 4 * idx + 3] = 255;
+
+      //                  idx+=4;
+                    }
+                }
+                offset += this.N;
+              
+            }
+
+
+            tgtCtx.putImageData(tgtData, 0, 0);
+            //var threeJSTex = new THREE.DataTexture(texData, width, height);
+        },
+  });
 
 var run = function()
 {
