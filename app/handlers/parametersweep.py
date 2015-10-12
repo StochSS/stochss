@@ -107,7 +107,12 @@ class ParameterSweepPage(BaseHandler):
                 with open(os.path.join(job.outData, 'stdout'), 'w') as f:
                     f.write(log['msg'])
                           
-                molns.MOLNSExec.fetch_job_results([job.molnsPID, "results", os.path.join(job.outData, 'results')], molnsConfig)
+                try:
+                    molns.MOLNSExec.fetch_job_results([job.molnsPID, "results", os.path.join(job.outData, 'results')], molnsConfig)
+                except IOError as e:
+                    job.status = 'failed'
+                    logging.info('Could not fetch results: {0}'.format(e))
+                    sys.stderr.write('job.outData={0}\n'.format(job.outData))
 
                 job.output_stored = True
 
@@ -236,12 +241,25 @@ class ParameterSweepVisualizationPage(BaseHandler):
 
         initialData = jobDb.getJSON()
 
-        if jobDb.status == 'Finished' and jobDb.output_stored:
+        try:
             with open(os.path.join(jobDb.outData, 'stdout'), 'r') as f:
                 initialData['stdout'] = f.read()
+        except IOError as e:
+            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+            initialData['data'] = {}
+            if not molnsConfigDb:
+                initialData['stdout'] = 'ERROR: could not lookup molnsConfigDb'
+            molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+            log = molns.MOLNSExec.job_logs([jobDb.molnsPID], molnsConfig)
+            initialData['stdout'] = log['msg']
+
                 
-            with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
-                initialData['data'] = json.load(f)
+        if jobDb.output_stored:
+            try:
+                with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
+                    initialData['data'] = json.load(f)
+            except IOError as e:
+                initialData['data'] = {}
 
         self.render_response('parameter_sweep_visualization.html', **{'initialData' : json.dumps(initialData)})
 

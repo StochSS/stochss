@@ -5,7 +5,9 @@ $( function() {
         // Delegated events for creating new items, and clearing completed ones.
         events : {
             "click .startCluster" :  "startCluster",
-            "click .stopCluster" : "stopCluster"
+            "click .stopCluster" : "stopCluster",
+            "click .terminateCluster" : "terminateCluster",
+            "click .rebuildCluster" : "rebuildCluster"
         },
 
         // At initialization we bind to the relevant events on the `Todos`
@@ -152,6 +154,7 @@ $( function() {
 
                 $( 'input, button, select' ).prop('disabled', true);
                 $( '.stopCluster' ).prop('disabled', false);
+                $( '.terminateCluster' ).prop('disabled', false);
 
                 this.updateStateMessage({ status : 'true', msg : 'Cluster running' });
             }
@@ -305,10 +308,35 @@ $( function() {
                     } );
         },
 
+        rebuildCluster : function() {
+            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            this.createMessage({ status : 2, msg : 'Sending molns cluster rebuild request' });
+            $( '.rebuildCluster' ).prop('disabled', true);
+
+            $.post( '/molnsconfig/rebuildMolns',
+                    {
+                        providerType : 'EC2'
+                    },
+                    _.bind(function(data) {
+                        if(typeof(data['molns']) != 'undefined')
+                        {
+                            this.createMessage({ status : 2, msg : 'Molns cluster rebuild request sent successfully' });
+
+                            this.updateUI(data);
+                        }
+                        else
+                        {
+                            this.createMessage(data);
+                        }
+                    }, this),
+                    "json"
+                  );
+        },
         stopCluster : function() {
             this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
             this.createMessage({ status : 2, msg : 'Sending molns cluster stop request' });
             $( '.stopCluster' ).prop('disabled', true);
+            $( '.terminateCluster' ).prop('disabled', true);
 
             $.post( '/molnsconfig/stopMolns',
                     {
@@ -318,6 +346,31 @@ $( function() {
                         if(typeof(data['molns']) != 'undefined')
                         {
                             this.createMessage({ status : 2, msg : 'Molns cluster stop request sent successfully' });
+
+                            this.updateUI(data);
+                        }
+                        else
+                        {
+                            this.createMessage(data);
+                        }
+                    }, this),
+                    "json"
+                  );
+        },
+        terminateCluster : function() {
+            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            this.createMessage({ status : 2, msg : 'Sending molns cluster terminate request' });
+            $( '.stopCluster' ).prop('disabled', true);
+            $( '.terminateCluster' ).prop('disabled', true);
+
+            $.post( '/molnsconfig/terminateMolns',
+                    {
+                        providerType : 'EC2'
+                    },
+                    _.bind(function(data) {
+                        if(typeof(data['molns']) != 'undefined')
+                        {
+                            this.createMessage({ status : 2, msg : 'Molns cluster terminate request sent successfully' });
 
                             this.updateUI(data);
                         }

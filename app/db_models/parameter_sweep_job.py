@@ -4,6 +4,7 @@ import logging
 from google.appengine.ext import db
 from backend.backendservice import backendservices
 import json
+import molns
 
 class ParameterSweepJobWrapper(db.Model):
     user_id = db.StringProperty()
@@ -67,4 +68,7 @@ class ParameterSweepJobWrapper(db.Model):
             config = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
 
             # Stopping is deleting cloud data for this job type
-            molns.MOLNSExec.fetch_job_results([jobDb.molnsPID], config)
+            try:
+                molns.MOLNSExec.cleanup_job([jobDb.molnsPID], config)
+            except Exception as e:
+                logging.info("Error while deleting cloud data: {0}".format(e))

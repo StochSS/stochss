@@ -391,7 +391,7 @@ ParameterSweep.Controller = Backbone.View.extend(
 
                 $( "#runMolns" ).click( _.bind(function() {
                     updateMsg( { status: true,
-                                 msg: "Running job locally..." } );
+                                 msg: "Running job in the Molns cloud..." } );
 
                     var data = checkAndGet();
                     

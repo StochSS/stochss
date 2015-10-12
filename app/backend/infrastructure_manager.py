@@ -291,8 +291,8 @@ class InfrastructureManager(object):
                 'parameters': pickle.dumps(params),
             }
 
-            logging.info('\n\nAdding db syn task for agent = {}'.format(agent.AGENT_NAME))
-            taskqueue.add(url=InfrastructureManager.BACKEND_QUEUE_URL, params=from_fields, method='GET')
+            #logging.info('\n\nAdding db syn task for agent = {}'.format(agent.AGENT_NAME))
+            #taskqueue.add(url=InfrastructureManager.BACKEND_QUEUE_URL, params=from_fields, method='GET')
 
 
     def deregister_instances(self, parameters, terminate):
