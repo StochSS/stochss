@@ -3,19 +3,21 @@ import json
 import molnsutil
 import numpy
 
-# NOTE: THIS FILE IS INTERPRETTED AS A PYTHON FORMAT STRING
-# That means curly braces are a special character. To initialize a dict, use 'dict()'
-
+### NOTE the string '___JSON_STRING___' will be replaced by data from the model
 
 class StochSSModel(gillespy.Model):
-    json_data = json.loads("""{0}""")
+    json_data = json.loads("""___JSON_STRING___""")
     def __init__(self, **kwargs):
         modelType = self.json_data["modelType"]
         species = self.json_data["species"]
         parameters = self.json_data["parameters"]
         reactions = self.json_data["reactions"]
         maxTime = self.json_data["maxTime"]
+        if maxTime is None:
+            maxTime = 100
         increment = self.json_data["increment"]
+        if increment is None:
+            increment = 1
 
 
         gillespy.Model.__init__(self, name = self.json_data["name"])
@@ -61,7 +63,7 @@ class StochSSModel(gillespy.Model):
             else:
                 self.add_reaction(gillespy.Reaction(name = reaction['name'], reactants = reactants, products = products, rate = parameterByName[reaction['rate']]))
 
-        self.timespan(numpy.concatenate((numpy.arange(self.json_data['maxTime'] / self.json_data['increment']) * self.json_data['increment'], [self.json_data['maxTime']])))
+        self.timespan(numpy.concatenate((numpy.arange(maxTime / increment) * increment, [maxTime])))
 
 
 #model = Model()
@@ -83,6 +85,10 @@ print "Parameters: ",parameters
 
 import uuid
 name = "StochSS_exec" + str(uuid.uuid4())
+print "Name: ", name
+import sys
+sys.stdout.flush()
+
 sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
 #sweep = molnsutil.ParameterSweep(model_class=StochSSModel, parameters=parameters)
 
@@ -92,9 +98,13 @@ def mapAnalysis(result):
     #    mappedResults['maxVal'] = numpy.max(results[:, i + 1, :])
     return result.shape#mappedResults
 
-
+sys.stdout.write("Starting Parameter sweep\n")
+sys.stdout.flush()
 ret = sweep.run(mapper = mapAnalysis, number_of_trajectories = 1, chunk_size = 1, store_realizations = False, progress_bar = False)
 
 import pickle
+dat = []
+for r in ret:
+    dat.append({'parameters':r.parameters, 'result':r.result})
 with open('results', 'w') as f:
-    pickle.dump(ret, f)
+    pickle.dump(dat, f)

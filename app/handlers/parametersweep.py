@@ -19,6 +19,7 @@ import pprint
 import shlex
 import shutil
 import subprocess
+import pickle
 import tempfile
 import time
 import logging
@@ -101,20 +102,16 @@ class ParameterSweepPage(BaseHandler):
                     return
 
                 molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
-
-                log = molns.MOLNSExec.job_logs([job.molnsPID], molnsConfig)
-                      
-                with open(os.path.join(job.outData, 'stdout'), 'w') as f:
-                    f.write(log['msg'])
-                          
                 try:
+                    log = molns.MOLNSExec.job_logs([job.molnsPID], molnsConfig)
+                    with open(os.path.join(job.outData, 'stdout'), 'w') as f:
+                        f.write(log['msg'])
                     molns.MOLNSExec.fetch_job_results([job.molnsPID, "results", os.path.join(job.outData, 'results')], molnsConfig)
-                except IOError as e:
-                    job.status = 'failed'
+                    job.output_stored = True
+                except (IOError, molns.MOLNSException) as e:
                     logging.info('Could not fetch results: {0}'.format(e))
-                    sys.stderr.write('job.outData={0}\n'.format(job.outData))
+                
 
-                job.output_stored = True
 
                 # Save the updated status
                 job.put()
@@ -208,7 +205,7 @@ class ParameterSweepPage(BaseHandler):
             program = os.path.join(dataDir, 'program.py')
             with open(program, 'w') as f:
                 jsonString = json.dumps(templateData)
-                f.write(template.format(jsonString))
+                f.write(template.replace('___JSON_STRING___',jsonString))
             
             molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
             if not molnsConfigDb:
@@ -250,14 +247,18 @@ class ParameterSweepVisualizationPage(BaseHandler):
             if not molnsConfigDb:
                 initialData['stdout'] = 'ERROR: could not lookup molnsConfigDb'
             molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
-            log = molns.MOLNSExec.job_logs([jobDb.molnsPID], molnsConfig)
-            initialData['stdout'] = log['msg']
+            #TODO: Check if the molns service is active
+            try:
+                log = molns.MOLNSExec.job_logs([jobDb.molnsPID], molnsConfig)
+                initialData['stdout'] = log['msg']
+            except (IOError, molns.MOLNSException) as e:
+                initialData['stdout'] = str(e)
 
                 
         if jobDb.output_stored:
             try:
                 with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
-                    initialData['data'] = json.load(f)
+                    initialData['data'] = pickle.load(f)
             except IOError as e:
                 initialData['data'] = {}
 

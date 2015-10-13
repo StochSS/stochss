@@ -69,6 +69,6 @@ class ParameterSweepJobWrapper(db.Model):
 
             # Stopping is deleting cloud data for this job type
             try:
-                molns.MOLNSExec.cleanup_job([jobDb.molnsPID], config)
+                molns.MOLNSExec.cleanup_job([molnsConfigDb.molnsPID], config)
             except Exception as e:
                 logging.info("Error while deleting cloud data: {0}".format(e))
