@@ -197,13 +197,32 @@ class ParameterSweepPage(BaseHandler):
                 "maxValueB" : data['maxValueB'],
                 "stepsB" : data['stepsB'],
                 "logB" : data['logB'],
-                "variableCount" : data['variableCount']
+                "variableCount" : data['variableCount'],
+                "isSpatial" : modelDb.isSpatial
             };
+
+            if modelDb.isSpatial:
+                try:
+                    meshWrapperDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                except Exception as e:
+                    raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+
+                try:
+                    meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
+                    templateData["mesh"] = meshFileObj["data"]
+                except IOError as e: 
+                    raise Exception("Mesh file inaccessible. Try another mesh")
+
+                templateData['reaction_subdomain_assigments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assigments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
+                templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
+                templateData['subdomains'] = meshWrapperDb.subdomains
 
             program = os.path.join(dataDir, 'program.py')
             with open(program, 'w') as f:
                 jsonString = json.dumps(templateData)
-                f.write(template.format(jsonString))
+                f.write(template.format(jsonString, modelDb.isSpatial))
             
             molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
             if not molnsConfigDb:
