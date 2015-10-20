@@ -288,7 +288,11 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if job.status == "Finished" %}
+                                {% if job.status == "Running" %}
+
+                                <a href="/parametersweep/{{job.id}}">View Progress</a>
+
+                                {% elif job.status == "Finished" %}
                                 
                                 <a href="/parametersweep/{{job.id}}">View</a>
                                

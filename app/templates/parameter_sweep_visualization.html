@@ -9,8 +9,10 @@
             Loading output...
         </div>
 
-        <div style="display: none;" id="initialData">
+        <div style="display: none; border-style: solid; border-width: 1px; padding: 2px;">
+        <div  id="initialData">
             {{ initialData }}
+        </div>
         </div>
     </div>
 </div>
@@ -55,15 +57,16 @@
 
     </div>
 
+    <pre>Status :<%= status%></pre><BR>
+    <div style="border-style: solid; border-width: 1px; padding: 5px;" id="initialData">
+        <div id="stdout_show" style="display: inline;">Stdout: <%= stdout %></div>
+    </div><BR><BR>
     <% if(output_stored) { %>
 
     <div id="outputSelectDiv" style="display: none;">
       Select data to visualize:
       <select id="outputSelect"></select>
     </div>
-
-    <pre id="stdout" style="display: none;"><%= stdout %></pre>
-
     <div id="graphs" style="display: none;">
       <div id="legend"></div><div id="chart"></div>
     </div>
@@ -72,11 +75,13 @@
 
     <div id="msg" style="clear:both; display: none;"></div>
 
+    <% if(status == "Finished"){ %>
     <div id="accessOutput" class="well" style="clear:both; display: none;">        
         <h3>Output</h3>
         <br />
 
         <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     </div>
+    <% } %>
 </script>
 {% endblock %}

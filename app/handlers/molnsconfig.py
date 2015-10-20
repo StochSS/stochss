@@ -9,6 +9,9 @@ import traceback
 import tempfile
 import sys
 import pickle
+import logging
+import random
+import string
 
 if __name__ != "__main__":
     import stochssapp
@@ -45,13 +48,21 @@ def startMolns(providerName, controllerName, workerName, providerType, password,
 
     molns.MOLNSProvider.provider_initialize(providerName, config)
     molns.MOLNSProvider.provider_get_config(name = providerName, provider_type = providerType, config = config)
-    molns.MOLNSController.start_controller([controllerName], config, password = password, openWebBrowser=False)
+    molns.MOLNSController.start_controller([controllerName], config, password = password, openWebBrowser=False, reserved_cpus=1)
     molns.MOLNSWorkerGroup.start_worker_groups([workerName], config)
 
 def stopMolns(controllerName, configFilename):
     config = molns.MOLNSConfig(db_file = configFilename)
-
     molns.MOLNSController.stop_controller([controllerName], config)
+
+def terminateMolns(controllerName, configFilename):
+    config = molns.MOLNSConfig(db_file = configFilename)
+    molns.MOLNSController.terminate_controller([controllerName], config)
+
+def rebuildMolns(providerName, configFilename):
+    config = molns.MOLNSConfig(db_file = configFilename)
+    molns.MOLNSProvider.provider_rebuild([providerName], config)
+
 
 def addWorkers(workerName, number, configFilename):
     config = molns.MOLNSConfig(db_file = configFilename)
@@ -64,19 +75,25 @@ if __name__ == "__main__":
     # We disable stdout buffering, from https://www.turnkeylinux.org/blog/unix-buffering
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
 
     try:
         if funcname == 'startMolns':
             startMolns(*args)
         elif funcname == 'stopMolns':
             stopMolns(*args)
+        elif funcname == 'terminateMolns':
+            terminateMolns(*args)
+        elif funcname == 'rebuildMolns':
+            rebuildMolns(*args)
         elif funcname == 'addWorkers':
             addWorkers(*args)
     except Exception as e:
         with open(return_code, 'w') as f:
             f.write('1')
 
-        raise e
+        raise sys.exc_info()[1], None, sys.exc_info()[2]
     else:
         with open(return_code, 'w') as f:
             f.write('0')
@@ -114,6 +131,10 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
             self.response.write(json.dumps(self.updateMolnsState()))
         elif reqType == "stopMolns":
             self.response.write(json.dumps(self.stopMolns()))
+        elif reqType == "terminateMolns":
+            self.response.write(json.dumps(self.terminateMolns()))
+        elif reqType == "rebuildMolns":
+            self.response.write(json.dumps(self.rebuildMolns()))
         elif reqType == "addWorkers":
             self.response.write(json.dumps(self.addWorkers()))
         elif reqType == "startMolns":
@@ -190,7 +211,7 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
         }
 
     @logexceptions
-    def stopMolns(self):
+    def rebuildMolns(self):
         self.response.content_type = 'application/json'
 
         providerType = self.request.get('providerType')
@@ -204,10 +225,38 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
         if providerType not in molns.VALID_PROVIDER_TYPES:
             return { 'status' : False, 'msg' : 'Invalid provider type specified (shouldn\'t be possible)' }
 
+        providerName = providerToNames[providerType]['providerName']
+
+        self.runProcess('rebuildMolns', (providerName, self.getMolnsConfigPath()))
+
+        return self.pollSystemState()
+
+    @logexceptions
+    def stopMolns(self):
+        self.response.content_type = 'application/json'
+        providerType = self.request.get('providerType')
+        if 'process' in self.session:
+            process = MolnsConfigProcessWrapper.get_by_id(self.session['process'][0])
+            if process is not None and process.is_alive():
+                return { 'status' : False, 'msg' : 'Currently running process' }
+        if providerType not in molns.VALID_PROVIDER_TYPES:
+            return { 'status' : False, 'msg' : 'Invalid provider type specified (shouldn\'t be possible)' }
         controllerName = providerToNames[providerType]['controllerName']
-
         self.runProcess('stopMolns', (controllerName, self.getMolnsConfigPath()))
+        return self.pollSystemState()
 
+    @logexceptions
+    def terminateMolns(self):
+        self.response.content_type = 'application/json'
+        providerType = self.request.get('providerType')
+        if 'process' in self.session:
+            process = MolnsConfigProcessWrapper.get_by_id(self.session['process'][0])
+            if process is not None and process.is_alive():
+                return { 'status' : False, 'msg' : 'Currently running process' }
+        if providerType not in molns.VALID_PROVIDER_TYPES:
+            return { 'status' : False, 'msg' : 'Invalid provider type specified (shouldn\'t be possible)' }
+        controllerName = providerToNames[providerType]['controllerName']
+        self.runProcess('terminateMolns', (controllerName, self.getMolnsConfigPath()))
         return self.pollSystemState()
 
     @logexceptions
@@ -239,6 +288,13 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
         state = self.request.get('state')
         providerType = self.request.get('providerType')
         pw = self.request.get('pw')
+        if pw is None or pw == '':
+            pw = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+            logging.info('*'*80)
+            logging.info('*'*80)
+            logging.info("MolnsConfig.startMolns(pw={0})".format(pw))
+            logging.info('*'*80)
+            logging.info('*'*80)
 
         if 'process' in self.session:
             process = MolnsConfigProcessWrapper.get_by_id(self.session['process'][0])

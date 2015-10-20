@@ -295,12 +295,16 @@ class EC2Services:
                         print "Failed to launch EC2 instance with exception: " + str(e)
                         exit(-1)
             print "Launching new EC2 instance now. This may take a moment..."
+            user_data_script = "\n".join(['#!/bin/bash',
+                'echo "This is my startup script" > /tmp/startup_script',
+                'echo "Done"'])
             try:
                 reservation = self.conn.run_instances(
                     EC2Services.supported_ec2_regions[self.region],
                     key_name=key_pair,
                     instance_type='c3.large',
-                    security_groups=[security_group]
+                    security_groups=[security_group],
+                    #user_data=user_data_script
                 )
             except boto.exception.EC2ResponseError as e:
                 print "Failed to launch EC2 instance with exception: " + str(e)

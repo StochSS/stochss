@@ -16,7 +16,7 @@
         </div>
 
         <div style="display: none;" class="content" border="1">
-            <h1>Amazon EC2 Cloud Configuration</h1>
+            <h1>Molns Configuration: using EC2 Cloud</h1>
             <br>
 
             <div class="well well-large">
@@ -27,15 +27,16 @@
                 <div>
                     <label> Head Node Type </label>
                     <input type="radio" name="headNode" value="c3.large">c3.large<br><!-- molns EC2 provider default_instance_type -->
-                    <input type="radio" name="headNode" value="c3.xlarge">c3.xlarge
+                    <input type="radio" name="workerNode" value="m3.large">m3.large<br>
+                    <input type="radio" name="workerNode" value="m3.xlarge">m3.xlarge<br>
                 </div>
                 <br>
                 <div>
                     <label> Worker Node Type </label><!-- molns EC2 worker instance_type -->
-                    <input type="radio" name="workerNode" value="m3.medium">m3.medium<br>
-                    <input type="radio" name="workerNode" value="m3.large">m3.large<br>
                     <input type="radio" name="workerNode" value="c3.large">c3.large<br>
                     <input type="radio" name="workerNode" value="c3.xlarge">c3.xlarge<br>
+                    <input type="radio" name="workerNode" value="c3.4xlarge">c3.4xlarge<br>
+                    <input type="radio" name="workerNode" value="c3.8xlarge">c3.8xlarge<br>
                 </div>
                 <br>
                 <label> Number of Workers </label><!-- molns EC2 worker num_vms -->
@@ -44,6 +45,8 @@
                 <div>
                     <button class="btn btn-primary startCluster">Start Cluster</button>
                     <button class="btn btn-primary stopCluster">Stop Cluster</button>
+                    <button class="btn btn-primary terminateCluster">Terminate Cluster (data loss)</button>
+                    <button class="btn btn-primary rebuildCluster">Rebuild Cluster</button>
                 </div>
 
                 <br>

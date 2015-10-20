@@ -391,7 +391,7 @@ ParameterSweep.Controller = Backbone.View.extend(
 
                 $( "#runMolns" ).click( _.bind(function() {
                     updateMsg( { status: true,
-                                 msg: "Running job locally..." } );
+                                 msg: "Running job in the Molns cloud..." } );
 
                     var data = checkAndGet();
                     
@@ -405,7 +405,7 @@ ParameterSweep.Controller = Backbone.View.extend(
                     var speciesSelect = {};
                     for(var name in this.speciesSelectCheckboxes)
                     {
-                        speciesSelect[name] = this.speciesSelectCheckboxes[name].val();
+                        speciesSelect[name] = this.speciesSelectCheckboxes[name].find('input').prop('checked');
                     }
 
                     data.speciesSelect = speciesSelect;

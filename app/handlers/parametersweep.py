@@ -19,6 +19,7 @@ import pprint
 import shlex
 import shutil
 import subprocess
+import pickle
 import tempfile
 import time
 import logging
@@ -101,15 +102,16 @@ class ParameterSweepPage(BaseHandler):
                     return
 
                 molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+                try:
+                    log = molns.MOLNSExec.job_logs([job.molnsPID], molnsConfig)
+                    with open(os.path.join(job.outData, 'stdout'), 'w') as f:
+                        f.write(log['msg'])
+                    molns.MOLNSExec.fetch_job_results([job.molnsPID, "results", os.path.join(job.outData, 'results')], molnsConfig)
+                    job.output_stored = True
+                except (IOError, molns.MOLNSException) as e:
+                    logging.info('Could not fetch results: {0}'.format(e))
+                
 
-                log = molns.MOLNSExec.job_logs([job.molnsPID], molnsConfig)
-                      
-                with open(os.path.join(job.outData, 'stdout'), 'w') as f:
-                    f.write(log['msg'])
-                          
-                molns.MOLNSExec.fetch_job_results([job.molnsPID, "results", os.path.join(job.outData, 'results')], molnsConfig)
-
-                job.output_stored = True
 
                 # Save the updated status
                 job.put()
@@ -183,6 +185,7 @@ class ParameterSweepPage(BaseHandler):
                 "species" : modelDb.species,
                 "parameters" : modelDb.parameters,
                 "reactions" : modelDb.reactions,
+                "speciesSelect" : data['speciesSelect'],
                 "maxTime" : data['maxTime'],
                 "increment" : data['increment'],
                 "trajectories" : data['trajectories'],
@@ -222,7 +225,7 @@ class ParameterSweepPage(BaseHandler):
             program = os.path.join(dataDir, 'program.py')
             with open(program, 'w') as f:
                 jsonString = json.dumps(templateData)
-                f.write(template.format(jsonString, modelDb.isSpatial))
+                f.write(template.replace('___JSON_STRING___', jsonString))
             
             molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
             if not molnsConfigDb:
@@ -255,12 +258,29 @@ class ParameterSweepVisualizationPage(BaseHandler):
 
         initialData = jobDb.getJSON()
 
-        if jobDb.status == 'Finished' and jobDb.output_stored:
+        try:
             with open(os.path.join(jobDb.outData, 'stdout'), 'r') as f:
                 initialData['stdout'] = f.read()
+        except IOError as e:
+            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+            initialData['data'] = {}
+            if not molnsConfigDb:
+                initialData['stdout'] = 'ERROR: could not lookup molnsConfigDb'
+            molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+            #TODO: Check if the molns service is active
+            try:
+                log = molns.MOLNSExec.job_logs([jobDb.molnsPID], molnsConfig)
+                initialData['stdout'] = log['msg']
+            except (IOError, molns.MOLNSException) as e:
+                initialData['stdout'] = str(e)
+
                 
-            with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
-                initialData['data'] = json.load(f)
+        if jobDb.output_stored:
+            try:
+                with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
+                    initialData['data'] = pickle.load(f)
+            except IOError as e:
+                initialData['data'] = {}
 
         self.render_response('parameter_sweep_visualization.html', **{'initialData' : json.dumps(initialData)})
 
