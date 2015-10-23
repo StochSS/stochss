@@ -1,0 +1,50 @@
+  // New
+
+  float tilesX = floor(width / Nx);
+  float tmp = pos.z * Nz; // This is the tile number we care about
+  float tileNumber = floor(tmp);
+
+  float x1 = Nx * ( mod(tileNumber , tilesX)) ;// this is the X coordinate of the tile in the texture
+  float y1 = Ny * ( tilesX -1.0 -floor(tileNumber / tilesX)) ;// this is the Y coordinate of the tile in the texture
+
+
+  tileNumber = tileNumber + 1.0;
+
+  float x2 = x1 + Nx;// this is the X coordinate of the tile in the texture
+  float y2 = y1;// this is the Y coordinate of the tile in the texture
+
+  x1 = x1/width + pos.x/tilesX;
+  y1 = y1/height + pos.y/tilesX;
+  x2 = x2/width + pos.x/tilesX;
+  y2 = y2/height + pos.y/height;  
+
+  float z0 = texture2D(uTex, vec2(x1, y1)).r;
+  float z1 = texture2D(uTex, vec2(x2, y2)).r;
+
+
+
+// Old
+ float tilesX = floor(width / Nx);
+
+  float tmp = pos.z * Nz; // This is the tile number we care about
+
+  float tileNumber = floor(tmp);
+
+  float x1 = Nx * (pos.x + mod(tileNumber , tilesX)) ;// this is the X coordinate of the tile in the texture
+  float y1 = Ny * (pos.y + floor(tileNumber / tilesX)) ;// this is the Y coordinate of the tile in the texture
+
+
+  tileNumber = tileNumber + 1.0;
+
+  float x2 = Nx * (pos.x + mod(tileNumber,tilesX) );// this is the X coordinate of the tile in the texture
+  float y2 = Ny * (pos.y + floor(tileNumber/tilesX) );// this is the Y coordinate of the tile in the texture
+
+  x1 = x1 / width;
+  y1 = y1 / height;
+  x2 = x2 / width;
+  y2 = y2 / height;  
+
+  //float fy = offsetY / 1000.0 + pos.z / 10.0;
+  //float fx = offsetX / 1000.0 + pos.x / 10.0;
+  //float fy2 = y2 / 1000.0 + pos.z / 10.0;
+  //float fx2 = x2 / 1000.0 + pos.x / 10.0;

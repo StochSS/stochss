@@ -6,38 +6,26 @@ Volume.Controller = Backbone.View.extend(
 
         initialize : function(attributes)
         {
-            // Set up room for the model select stuff
-            // Pull in all the models from the internets
-            // Build the simulationConf page (don't need external info to make that happen)
             this.attributes = attributes;
-
-            // We gotta fetch this also!!
             this.jobInfo = undefined;
             this.meshData = undefined;
-
-            // These are our control states
             this.timeIdx = 0;
             this.selectedSpecies = undefined;
             this.trajectory = 0;
-
-            // Draw a screen so folks have something to see
-            this.render();
-
-            // Go get the csvFiles we have hosted
-            this.refreshData();
+            this.getJobInfo();
         },
 
-        refreshData : function()
+        getJobInfo : function()
         {
             $.ajax( { url : '/spatial',
             type : 'GET',
             reqType : 'json',
             data : { 'reqType' : 'getJobInfo',
             'id' : this.attributes.id },
-            success : _.bind(this.getMesh, this) } );
+            success : _.bind(this.getMeshInfo, this) } );
         },
 
-        getMesh : function() {
+        getMeshInfo : function() {
             $.when($.ajax( { type : "GET",
                       url : "/spatial",
                       data : { reqType : "timeData", 
@@ -60,83 +48,43 @@ Volume.Controller = Backbone.View.extend(
                                     }
                            }
                          )
-                  ).done( _.bind( this.getMeshVoxelData, this ) );
+                  ).done( _.bind( this.getMeshHandler, this ) );
         },
 
+        getMeshHandler : function(meshData, colorData) {
+            this.model = meshData;
+            var mesh = meshData[0].mesh;
+            this.species = meshData[0].species;
+            this.voxelTuples = meshData[0].voxelTuples;
+            this.colors = colorData[0].colors[4];
+            this.mesh = new THREE.JSONLoader().parse(mesh);
 
-        getMeshVoxelData : function(a1, a2) {
-            var mesh = a1[0].mesh;
-            this.species = a1[0].species;
-            this.colors = a2[0].colors[4];
+            console.log("calling this.setLimitHelper();")
+            this.setLimitHelper();
 
+            // console.log("calling this.constructGridHelper();")
+            // this.constructGridHelper();
 
-            var loader = new THREE.JSONLoader();
-            this.mesh = loader.parse(mesh);
-            
-            this.voxelTuples = a1[0].voxelTuples;
-            console.log("mesh is "+mesh);
+            // console.log("calling this.constructInverseMap();")
+            // this.constructInverseMap();
 
-            var start = new Date().getTime();
-            
-            this.initLimits();
+            // console.log("calling this.constructBaryMap();")
+            // this.constructBaryMap();
 
-            var end = new Date().getTime();
-            var time = end - start;
-            console.log('Execution time: of this.initLimits();' + time);
-            
-            
-            var start = new Date().getTime();
-            
-            this.getKey(0., 0., 0.);
-            
-            var end = new Date().getTime();
-            var time = end - start;
-            console.log('Execution time: of this.getKey(0., 0., 0.);' + time);
+            // console.log("calling this.constructImage();")
+            // var image = this.constructImage();
 
-
-            var start = new Date().getTime();
+            // console.log("calling this.getTexture");
+            // var canvasData = this.displayTexture(image);
             
-            this.makeGrid();
-            
-            var end = new Date().getTime();
-            var time = end - start;
-            console.log('Execution time: of this.makeGrid();' + time);
+            console.log("calling this.displayVolume");
+            this.displayVolume();
+            //this.mousetrap();
 
-
-            var start = new Date().getTime();
-            
-            this.makeInverseMap();
-            
-            var end = new Date().getTime();
-            var time = end - start;
-            console.log('Execution time: of this.makeInverseMap();' + time);
-
-            this.N = 100;
-
-            var start = new Date().getTime();
-            
-            this.precalculateBaryCalc();
-            
-            var end = new Date().getTime();
-            var time = end - start;
-            console.log('Execution time: of this.precalculateBaryCalc();' + time);
-
-            var start = new Date().getTime();
-            // console.log(this.baryCalc([50, 250, 370, 473, 1058, 1297, 1337, 1359, 1572, 1591, 1768, 1847, 1877, 1965, 2029, 2065, 2189, 2201, 2210, 2246, 2495, 2518, 2535, 2548, 2583, 2600, 2629, 2728, 2798, 3037, 3054, 3100, 3238, 3256, 3258, 3261, 3262, 3389, 3564, 3591, 3592, 3593, 3648, 3650, 3736, 3914, 3917, 3930, 3997, 4214, 4274, 4275, 4276, 4559, 4560, 4646, 4647, 4649, 4650, 4651, 4652, 4653], [0.0595530456487, -0.145057212333, 0.00124758599452], this.colors.A))
-            this.renderImage();
-            var end = new Date().getTime();
-            var time = end - start;
-            console.log('Execution time: of this.renderImage();' + time);
-
-            // var start = new Date().getTime();
-            // this.meshDataPreview();
-            // var end = new Date().getTime();
-            // var time = end - start;
-            // console.log('Execution time: of this.meshDataPreview();' + time);
-            
+            console.log("exit");
         },
 
-        initLimits: function(){
+        setLimitHelper: function(){
             var vertices = this.mesh.geometry.vertices;
             this.minx = vertices[0].x;
             this.maxx = vertices[0].x;
@@ -167,21 +115,40 @@ Volume.Controller = Backbone.View.extend(
               if(this.maxz < z)
                 this.maxz = z;
             } 
+
+            this.texWidth = 1199;
+            this.texHeight = 1199; 
+            var xrange = 1;//(this.maxx- this.minx);
+            var yrange = 1;//(this.maxy - this.miny);
+            var zrange = 1;//(this.maxz - this.minz);
+            
+            var i = 1;
+            for(i = this.texWidth; i > 0; i--)
+            {
+              var Nx = i;
+              var Ny = Math.floor(Nx * yrange / xrange);
+              var Nz = Math.floor(Nx * zrange / xrange);
+              var horizontal = Math.floor(this.texWidth/Nx);
+              var vertical = Math.floor(this.texHeight/Ny);
+              if((horizontal * vertical)> Nz) break;
+            }
+
+            this.Nx = 109;//i+1;
+            this.Ny = 109;//Math.floor(Nx * yrange / xrange);
+            this.Nz = 109;//Math.floor(Nx * zrange / xrange);
+
         },
 
-        getKey : function(x, y, z){
-            N = 40;
-
+        getKeyFromGrid: function(x, y, z){
+            N = 20;
             ix = parseInt( (  ( (x - this.minx)  * N ) / (this.maxx + 1e-5 - this.minx)  ) ) ;
             iy = parseInt( (  ( (y - this.miny)  * N ) / (this.maxy + 1e-5  - this.miny) ) ) ;
             iz = parseInt( (  ( (z - this.minz)  * N ) / (this.maxz + 1e-5 - this.minz)  ) );
             return new Array(ix, iy, iz);
         },
 
-    
-        makeGrid: function(){
-          N = 40;
-          console.log(" Constructing grid ");
+        constructGridHelper: function(){
+          N = 20;
           this.grid = new TupleDictionary();
 
           for(var idx=0; idx < this.voxelTuples.length; idx++){
@@ -197,8 +164,6 @@ Volume.Controller = Backbone.View.extend(
                 zs[i] = vertices['z'];
                 voxelCoords[i] = this.mesh.geometry.vertices[tuples[i]];
               }
-
-
 
               Array.max = function( array ){
                   return Math.max.apply( Math, array );
@@ -230,14 +195,7 @@ Volume.Controller = Backbone.View.extend(
                         var xcoord = Math.min(vminx + dx * ix, vmaxx);
                         var ycoord = Math.min(vminy + dy * iy, vmaxy);
                         var zcoord = Math.min(vminz + dz * iz, vmaxz);
-                        var key = this.getKey(xcoord, ycoord, zcoord);
-
-                        if(key[0] == 0 && key[1] == 0 && key[2] == 0)
-                        {
-
-                          console.log('hiasfdasdf');
-                          1/0
-                        }
+                        var key = this.getKeyFromGrid(xcoord, ycoord, zcoord);
 
                         this.grid.put( key , idx );           
                     } 
@@ -246,12 +204,10 @@ Volume.Controller = Backbone.View.extend(
                           
 
           }
-
-          console.log(" grid creation completed ");
-
         },
 
-        makeInverseMap: function(){
+
+        constructInverseMap: function(){
           this.inverseMap = {}
 
           for(var idx=0; idx < this.voxelTuples.length; idx++){
@@ -319,6 +275,40 @@ Volume.Controller = Backbone.View.extend(
             return inverse
         },
 
+        constructBaryMap: function(){
+          var xlimit = this.Nx;
+          var ylimit = this.Ny;
+          var zlimit = this.Nz;
+          this.list = []
+          this.baryMap = {}
+          for (var x=0; x<xlimit; x++)
+          {
+            for(var y=0; y<ylimit; y++)
+            {
+              for(var z=0; z<zlimit; z++)
+              {
+                var a_x = ((x / (xlimit-1)) * (this.maxx - this.minx) + this.minx);
+                var a_y = ((y / (ylimit-1)) * (this.maxy - this.miny) + this.miny);
+                var a_z = ((z / (zlimit-1)) * (this.maxz - this.minz) + this.minz);
+                var key  = this.getKeyFromGrid(a_x,a_y,a_z);
+                var keys = this.grid.get(key);
+                var inval = 0;
+                result = [];
+                if(typeof(keys) != "undefined")
+                { 
+                  var akeys = Array.from(keys);
+                  for(var i=0; i<akeys.length; i++)
+                  {
+                    result = this.baryCalc(akeys[i], [a_x, a_y, a_z]);
+                    if (result != -1)
+                        this.list.push({ x : x, y : y, z : z, result : result, voxelKey : akeys[i] });
+                  }
+                }
+              }
+            }
+          }
+        },
+
         baryCalc: function(key, r){
           var inval = 0;
           inmatrix= this.inverseMap[key][0];
@@ -350,44 +340,10 @@ Volume.Controller = Backbone.View.extend(
           return result;
         },
 
-        precalculateBaryCalc: function(){
-          var xlimit = this.N;
-          var ylimit = this.N;
-          var zlimit = this.N;
-          this.list = []
-          this.baryMap = {}
-          for (var x=0; x<xlimit; x++)
-          {
-            for(var y=0; y<ylimit; y++)
-            {
-              for(var z=0; z<zlimit; z++)
-              {
-                var a_x = ((x / (xlimit)) * (this.maxx - this.minx) + this.minx);
-                var a_y = ((y / (ylimit)) * (this.maxy - this.miny) + this.miny);
-                var a_z = ((z / (zlimit)) * (this.maxz - this.minz) + this.minz);
-                var key  = this.getKey(a_x,a_y,a_z);
-                var keys = this.grid.get(key);
-                var inval = 0;
-                result = [];
-                if(typeof(keys) != "undefined")
-                { 
-                  var akeys = Array.from(keys);
-                  for(var i=0; i<akeys.length; i++)
-                  {
-                    result = this.baryCalc(akeys[i], [a_x, a_y, a_z]);
-                    if (result != -1)
-                        this.list.push({ x : x, y : y, z : z, result : result, voxelKey : akeys[i] });
-                  }
-                }
-              }
-            }
-          }
-        },
-
-        renderImage: function(){
-          var xlimit = this.N;
-          var ylimit = this.N;
-          var zlimit = this.N;
+        constructImage: function(){
+          var xlimit = this.Nx;
+          var ylimit = this.Ny;
+          var zlimit = this.Nz;
           
           var im = new Array(xlimit*ylimit*zlimit).fill(0);
           var data = this.colors["A"];
@@ -399,100 +355,211 @@ Volume.Controller = Backbone.View.extend(
             var result = this.list[i].result;
             var k = this.list[i].voxelKey;
 
-            v1 =this.voxelTuples[k][0];
-            v2 =this.voxelTuples[k][1];
-            v3 =this.voxelTuples[k][2];
-            v4 =this.voxelTuples[k][3];
+            var v1 =this.voxelTuples[k][0];
+            var v2 =this.voxelTuples[k][1];
+            var v3 =this.voxelTuples[k][2];
+            var v4 =this.voxelTuples[k][3];
               
-            c1 = data[v1]
-            c2 = data[v2]
-            c3 = data[v3]
-            c4 = data[v4]
+            var c1 = data[v1]
+            var c2 = data[v2]
+            var c3 = data[v3]
+            var c4 = data[v4]
               
-            l1 =  result[0];
-            l2 = result[1];
-            l3 = result[2];
-            l4 = Math.max(0.0, 1 - (l1 + l2 + l3))
+            var l1 =  result[0];
+            var l2 = result[1];
+            var l3 = result[2];
+            var l4 = Math.max(0.0, 1 - (l1 + l2 + l3))
               
-            inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
+            var inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
 
-            im[(x*xlimit*ylimit)+(y*ylimit)+z] = inval;
+            im[(x*ylimit*zlimit)+(y*zlimit)+z] = inval;
             
           }
-         this.meshDataPreview(im);//this.meshDataPreview(data);
+          return im;
         },
 
-        meshDataPreview : function(imdata)
+        constructTexture: function(imdata, ctx, width, height)
         {
-            console.log("meshDataPreview : function(data)"); 
-            var tgtCanvas = $( '.tgtCanvas' ).get(0);
-            var width = 1024;
-            var height =  1024;
-
-            $( tgtCanvas ).prop('width', width).prop('height', height);
-
-            var tgtCtx = tgtCanvas.getContext('2d');
-
             var min = _.min(imdata);
             var max = _.max(imdata);
 
             for(var i = 0; i < imdata.length; i++)
-            {
               imdata[i] = (imdata[i] - min) / (max - min);
-            }
 
-            tgtData = tgtCtx.createImageData(width, height);
+            var tgtData = ctx.createImageData(width, height);
             for(var i = 0; i < width; i++)
             {
               for(var j = 0; j < height; j++)
               {
                 tgtData.data[4 * (j * width + i)] = 0;
-                tgtData.data[4 * (j * width + i) + 1] = 100;
+                tgtData.data[4 * (j * width + i) + 1] = 0;
                 tgtData.data[4 * (j * width + i) + 2] = 255;
-                tgtData.data[4 * (j * width + i) + 3] = 100;
+                tgtData.data[4 * (j * width + i) + 3] = 255;
               }
             }
 
-
             var idx = 0;
-            var tiles = Math.floor(width / this.N);
-            var range2 = Math.floor(height / this.N);
-            var numslices = 10;
-            var offset = 24;
+            var tiles = Math.floor(width / this.Nx);
 
-            for(var z = 0; z < 100 ; z++)
+            for(var z = 0; z < this.Nz ; z++)
             {
-
-              for(var i = 0; i < this.N; i++)
+              for(var i = 0; i < this.Nx; i++)
               {
-                for(var j = 0; j < this.N; j++)
+                for(var j = 0; j < this.Ny; j++)
                 {
-                      color1 = Math.floor(imdata[i*this.N*this.N+ j*this.N + z] * 255); 
-                      color2 = Math.floor(imdata[i*this.N*this.N+ j*this.N + z] * 255);
+                      color1 = Math.floor(imdata[i*this.Ny * this.Nz+ j*this.Nz +z] * 255); 
+                      color2 = Math.floor(imdata[i*this.Ny * this.Nz+ j*this.Nz +z] * 255);
                       color3 = 0;
-                      var idx = (i + j * width+ (z % tiles)* this.N);
+                      var idx = (i + j * width+ (z % tiles)* this.Nx);
                       var rownum = Math.floor(z / tiles);
-                      // if(z % 10 == 0 && z!=0)
-                      //   {
-                      //     idx += (this.N * rownum * width);
-                      //   }
-                      // else
-                        idx += rownum* this.N * width ;
+                      idx += rownum* this.Ny* width ;
                       tgtData.data[ 4 * idx] = color1;
                       tgtData.data[ 4 * idx + 1] = color2;
                       tgtData.data[ 4 * idx + 2] = color3;
                       tgtData.data[ 4 * idx + 3] = 255;
-
-      //                  idx+=4;
-                    }
-                }
-                offset += this.N;
-              
+                  }
+              }              
             }
+            return tgtData;
+        },
 
-
+        displayTexture : function(imdata)
+        { 
+            var tgtCanvas = $( '#tgtCanvas' ).get(0);
+            $( tgtCanvas ).prop('width', this.texWidth).prop('height', this.texHeight);
+            var tgtCtx = tgtCanvas.getContext('2d');
+            var tgtData = this.constructTexture(imdata, tgtCtx, this.texWidth, this.texHeight);
             tgtCtx.putImageData(tgtData, 0, 0);
-            //var threeJSTex = new THREE.DataTexture(texData, width, height);
+            return tgtCanvas;
+        },
+
+        loadTextFile: function(url) {
+            var result;
+            
+            $.ajax({
+                url:      url,
+                type:     "GET",
+                async:    false,
+                dataType: "text",
+                success:  function(data) {
+                    result = data;
+                }
+            });
+            
+            return result;
+        },
+
+
+        displayVolume : function(imdata)
+        {
+          g = {}
+          g.width =1024; g.height = 768;
+          
+          g.scene = new THREE.Scene();
+
+          g.camera = this.constructCamera(g.width, g.height);
+
+          g.camera.position.set(0, 0, -3);
+          g.camera.lookAt(new THREE.Vector3());      
+          
+          g.renderer = this.constructRenderer(g.width, g.height);
+          g.colorTex = THREE.ImageUtils.loadTexture("/static/img/jet.png");
+          g.colorTex.minFilter = g.colorTex.magFilter = THREE.LinearFilter;
+          g.colorTex.wrapS = g.colorTex.wrapT = THREE.ClampToEdgeWrapping;
+          g.colorTexDim =  new THREE.Vector3(347.0, 16.0, 0.0);
+
+          var imdata = THREE.ImageUtils.loadTexture( '/static/images/download5.png' );
+          g.voltex =  imdata; //new THREE.CanvasTexture( imdata );
+          g.voltex.wrapS = g.voltex.wrapT = THREE.ClampToEdgeWrapping;
+
+          g.voltex2 = imdata; // imdata );
+          g.voltex2.wrapS = g.voltex2.wrapT = THREE.ClampToEdgeWrapping;
+          g.volcol = new THREE.Vector3(1.0,1.0, 1.0);
+          g.voltexDim = new THREE.Vector3(this.Nx, this.Ny, this.Nz);
+          //g.offset = new THREE.Vector3(0.0, 0.0,0.0);
+
+          g.rtTexture = new THREE.WebGLRenderTarget( g.width, g.height, { minFilter: THREE.LinearFilter,
+                                                                        magFilter: THREE.NearestFilter,
+                                                                        format: THREE.RGBAFormat } );
+          
+          g.uniforms = {
+              uCamPos:    { type: "v3", value: g.camera.position },
+              uColor:     { type: "v3", value: g.volcol },
+              uTex:       { type: "t", value: g.voltex },
+              Nx:       { type: "f", value: this.Nx },
+              Ny:       { type: "f", value: this.Ny },
+              Nz:       { type: "f", value: this.Nz },
+              width:       { type: "f", value: this.texWidth },
+              height:       { type: "f", value: this.texHeight },
+              //depthTex:   { type: "t", value: g.rtTexture },
+              uTexDim:    { type: "v3", value: g.voltexDim },
+              uTex2:      { type: "t", value: g.voltex2 },
+              colorTex:   { type: "t", value : g.colorTex },
+              colorTexDim:{ type: "v3", value: g.colorTexDim },
+              uTMK:       { type: "f", value: 10.0 }
+          };
+
+          shader = new THREE.ShaderMaterial({
+              uniforms:       g.uniforms,
+              vertexShader:   this.loadTextFile( '/static/shaders/vol-vs.glsl' ), 
+              fragmentShader: this.loadTextFile( '/static/shaders/vol-fs.glsl' ),
+              //depthWrite: false,
+              transparent: true,
+              //side: THREE.DoubleSide
+          });
+
+
+          var geometry1 = new THREE.BoxGeometry(1.0,1.0,1.0);
+          g.mesh1 = new THREE.Mesh( geometry1, shader);// new THREE.MeshNormalMaterial());
+          g.scene.add( g.mesh1 );    
+
+
+          g.controls = new THREE.TrackballControls( g.camera);
+          g.controls.rotateSpeed = 1.0;
+          g.controls.zoomSpeed = 0.2;
+          g.controls.panSpeed = 0.8;
+          g.controls.noZoom = false;
+          g.controls.noPan = false;
+          g.controls.staticMoving = true;
+          g.controls.dynamicDampingFactor = 0.8;
+          g.controls.keys = [ 65, 83, 68 ];
+          g.controls.radius = ( g.width + g.height ) / 4;
+
+          this.g = g;
+          this.render(); 
+          this.animate();
+        },
+
+        animate : function() {
+          requestAnimationFrame( _.bind(this.animate, this) );
+          this.g.controls.update();
+          this.g.renderer.render( this.g.scene, this.g.camera );
+
+        },
+
+        constructRenderer: function(width, height)
+        {
+          var renderer = new THREE.WebGLRenderer({antialias: true});
+          renderer.setClearColor( 0xffffff, 1.0 );
+          renderer.setPixelRatio( window.devicePixelRatio );
+          renderer.setSize( width, height );
+          renderer.sortObjects = false;
+          return renderer;
+        },
+
+        constructCamera: function(width, height){
+          var c = {};
+          c.CAM_FOV  = 45;
+          c.CAM_NEAR = 1;
+          c.CAM_FAR  = 200; 
+          return new THREE.PerspectiveCamera( c.CAM_FOV, width/height, c.CAM_NEAR, c.CAM_FAR);      
+        },
+
+        render: function(g)
+        {
+          var container = document.getElementById("container");
+          container.appendChild( this.g.renderer.domElement );
+          this.g.renderer.render( this.g.scene, this.g.camera );
         },
   });
 

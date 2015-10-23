@@ -246,7 +246,7 @@ Spatial.Controller = Backbone.View.extend(
             
             // renderer
             var renderer2 = new THREE.WebGLRenderer({ alpha: true });
-            renderer2.setClearColor( 0x000000, 0 ); 
+            renderer2.setClearColor( 0xFFFFFF ); 
             renderer2.setSize( this.d_width/5, this.d_width/5);
             $( renderer2.domElement ).appendTo(dom2);
             
@@ -361,7 +361,7 @@ Spatial.Controller = Backbone.View.extend(
                 var camera = new THREE.PerspectiveCamera( 75, 4.0 / 3.0, 0.1, 1000 );
                 var renderer = new THREE.WebGLRenderer();
                 renderer.setSize( width, height);
-                renderer.setClearColor( 0xffffff, 0);
+                renderer.setClearColor( 0xffffff);
                 
                 var rendererDom = $( renderer.domElement ).appendTo(dom);
                 

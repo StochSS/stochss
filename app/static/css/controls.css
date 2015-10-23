@@ -7,7 +7,7 @@
   border-width: 1px;
 }
 
-[data-hook="container"], #container {
+#container {
   border-style: solid;
   border-color: #C6C6C6;
   border-radius: 5px;
@@ -30,3 +30,7 @@
     position: absolute;
     z-index: 1;
 }
+/*
+#tgtCanvas {
+    display: none;
+}*/
