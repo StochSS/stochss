@@ -6,22 +6,24 @@ except ImportError:
 import os
 from google.appengine.ext import db
 import boto
+from backend.common.config import AgentTypes
 from backend import backendservice
 from backend.pricing import Price
 from cloudtracker import CloudTracker
 import simulation, spatial, sensitivity
 import logging
 from backend.databases.dynamo_db import DynamoDB
+from backend.common.config import AgentTypes, JobDatabaseConfig
 
 from stochssapp import BaseHandler
 
 ALL_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm3.medium', 'm3.large', 'c3.large', 'c3.xlarge']
 
 def get_all_jobs_time_cost(uuid, access_key, secret_key):
-    
     database = DynamoDB(access_key, secret_key)
-    results = database.getEntry('uuid', uuid, backendservice.backendservices.COST_ANALYSIS_TABLE)
-             
+    results = database.getEntry(attribute_name='uuid', attribute_value=uuid,
+                                table_name=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME)
+
     jobs = []
     if results is None:
         return jobs
@@ -29,6 +31,7 @@ def get_all_jobs_time_cost(uuid, access_key, secret_key):
     try:
         seen_instance_types = {} # so we don't get duplicate entries
         for result in results:
+            logging.info('result = {0}'.format(result))
             job = {}
             job['agent'] = result['agent']
             job['instance_type'] = result['instance_type']
@@ -107,15 +110,9 @@ class CostAnalysisPage(BaseHandler):
             credentials =  self.user_data.getCredentials()
             access_key = credentials['EC2_ACCESS_KEY']
             secret_key = credentials['EC2_SECRET_KEY']
-            backend_services = backendservice.backendservices()
+            backend_services = backendservice.backendservices(self.user_data)
             
-            compute_check_params = {
-                    "infrastructure": "ec2",
-                    "credentials": credentials,
-                    "key_prefix": self.user.user_id()
-            }
-            
-            if not self.user_data.valid_credentials or not backend_services.isOneOrMoreComputeNodesRunning(compute_check_params, instance_type):
+            if not self.user_data.valid_credentials or not backend_services.isOneOrMoreComputeNodesRunning(instance_type):
                 logging.info('You must have at least one active '+instance_type+' compute node to run in the cloud.')
                 self.response.write(json.dumps({
                     'status': False,
@@ -138,8 +135,9 @@ class CostAnalysisPage(BaseHandler):
                 
                     params = ct.get_input()
                     
+                    params['cost_analysis_uuid'] = uuid
                     
-                    cloud_result = backend_services.executeTask(params, "ec2", access_key, secret_key, uuid, instance_type, True)  #calls task(taskid,params,access_key,secret_key)
+                    cloud_result = backend_services.submit_cloud_task(params, agent_type = AgentTypes.EC2, instance_type = instance_type, cost_replay = True)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -185,14 +183,14 @@ class CostAnalysisPage(BaseHandler):
         if job_type == 'stochkit':
             job = simulation.StochKitJobWrapper.get_by_id(int(id))
             name= job.name
-            uuid = job.stochkit_job.pid
+            uuid = job.cloudDatabaseID
         elif job_type == 'spatial':
             job = spatial.SpatialJobWrapper.get_by_id(int(id))
-            name = job.jobName
-            uuid = job.cloud_id
+            name = job.name
+            uuid = job.cloudDatabaseID
         elif job_type == 'sensitivity':
             job = sensitivity.SensitivityJobWrapper.get_by_id(int(id))
-            name = job.jobName
+            name = job.name
             uuid = job.cloudDatabaseID
         else:
             name = ''

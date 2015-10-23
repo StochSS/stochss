@@ -62,23 +62,23 @@ Volume.Controller = Backbone.View.extend(
             console.log("calling this.setLimitHelper();")
             this.setLimitHelper();
 
-            // console.log("calling this.constructGridHelper();")
-            // this.constructGridHelper();
+             console.log("calling this.constructGridHelper();")
+            this.constructGridHelper();
 
-            // console.log("calling this.constructInverseMap();")
-            // this.constructInverseMap();
+            console.log("calling this.constructInverseMap();")
+            this.constructInverseMap();
 
-            // console.log("calling this.constructBaryMap();")
-            // this.constructBaryMap();
+            console.log("calling this.constructBaryMap();")
+            this.constructBaryMap();
 
-            // console.log("calling this.constructImage();")
-            // var image = this.constructImage();
+            console.log("calling this.constructImage();")
+            var image = this.constructImage();
 
-            // console.log("calling this.getTexture");
-            // var canvasData = this.displayTexture(image);
+            console.log("calling this.getTexture");
+            var canvasData = this.displayTexture(image);
             
             console.log("calling this.displayVolume");
-            this.displayVolume();
+            this.displayVolume(canvasData);
             //this.mousetrap();
 
             console.log("exit");
@@ -116,11 +116,11 @@ Volume.Controller = Backbone.View.extend(
                 this.maxz = z;
             } 
 
-            this.texWidth = 1199;
-            this.texHeight = 1199; 
-            var xrange = 1;//(this.maxx- this.minx);
-            var yrange = 1;//(this.maxy - this.miny);
-            var zrange = 1;//(this.maxz - this.minz);
+            this.texWidth = 1024;
+            this.texHeight = 1024; 
+            var xrange = (this.maxx- this.minx);
+            var yrange = (this.maxy - this.miny);
+            var zrange = (this.maxz - this.minz);
             
             var i = 1;
             for(i = this.texWidth; i > 0; i--)
@@ -133,10 +133,15 @@ Volume.Controller = Backbone.View.extend(
               if((horizontal * vertical)> Nz) break;
             }
 
-            this.Nx = 109;//i+1;
-            this.Ny = 109;//Math.floor(Nx * yrange / xrange);
-            this.Nz = 109;//Math.floor(Nx * zrange / xrange);
+            this.Nx = i+1;
+            this.Ny = Math.floor(this.Nx * yrange / xrange);
+            this.Nz = Math.floor(this.Nx * zrange / xrange);
 
+            var horizontal = Math.floor(this.texWidth / this.Nx);
+            var vertical = Math.floor(this.texHeight / this.Ny);
+
+            this.texWidth = horizontal * this.Nx;
+            this.texHeight = this.Ny * Math.ceil(this.Nz / horizontal);
         },
 
         getKeyFromGrid: function(x, y, z){
@@ -459,7 +464,7 @@ Volume.Controller = Backbone.View.extend(
 
           g.camera = this.constructCamera(g.width, g.height);
 
-          g.camera.position.set(0, 0, -3);
+          g.camera.position.set(0, 0, -2);
           g.camera.lookAt(new THREE.Vector3());      
           
           g.renderer = this.constructRenderer(g.width, g.height);
@@ -468,8 +473,8 @@ Volume.Controller = Backbone.View.extend(
           g.colorTex.wrapS = g.colorTex.wrapT = THREE.ClampToEdgeWrapping;
           g.colorTexDim =  new THREE.Vector3(347.0, 16.0, 0.0);
 
-          var imdata = THREE.ImageUtils.loadTexture( '/static/images/download5.png' );
-          g.voltex =  imdata; //new THREE.CanvasTexture( imdata );
+            //var imdata = THREE.ImageUtils.loadTexture( '/static/images/download1.png' );
+          g.voltex =  new THREE.CanvasTexture( imdata );//imdata; //
           g.voltex.wrapS = g.voltex.wrapT = THREE.ClampToEdgeWrapping;
 
           g.voltex2 = imdata; // imdata );
@@ -508,8 +513,9 @@ Volume.Controller = Backbone.View.extend(
               //side: THREE.DoubleSide
           });
 
+          var maxDim = Math.max(this.Nx, this.Ny, this.Nz);
 
-          var geometry1 = new THREE.BoxGeometry(1.0,1.0,1.0);
+          var geometry1 = new THREE.BoxGeometry(this.Nx / maxDim, this.Ny / maxDim, this.Nz / maxDim);
           g.mesh1 = new THREE.Mesh( geometry1, shader);// new THREE.MeshNormalMaterial());
           g.scene.add( g.mesh1 );    
 

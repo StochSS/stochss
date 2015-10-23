@@ -138,8 +138,13 @@ function check_for_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
-    RET=`$MYPYTHON -c "import $1" 2>/dev/null`
-    RC=$?
+    if [ "$1" = "mysql-connector-python" ]; then
+        RET=`$MYPYTHON -c "import mysql.connector" 2>/dev/null`
+        RC=$?
+    else
+        RET=`$MYPYTHON -c "import $1" 2>/dev/null`
+        RC=$?
+    fi
     if [[ $RC != 0 ]];then
         return 1 #False
     fi
@@ -180,7 +185,7 @@ function install_lib {
 }
 
 function check_and_install_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -200,7 +205,7 @@ function check_and_install_dependencies {
 }
 
 function check_spatial_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -267,6 +272,9 @@ function check_spatial_installation {
         echo "You can download FEniCS from http://fenicsproject.org/<br />"
         return 1 #False
     fi
+
+    echo "Running 'instant-clean'"
+    "$STOCHSS_HOME/../fenics/bin/instant-clean"
 
     if check_pyurdme; then
         echo "PyURDME detected successfully.<br />"
@@ -518,4 +526,4 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec $MYPYTHON "$STOCHSS_HOME/launchapp.py" 1 $0
+exec $MYPYTHON "$STOCHSS_HOME/launchapp.py" mac $0 $1

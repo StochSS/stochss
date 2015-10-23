@@ -32,12 +32,15 @@ import tempfile, time
 import signal
 import pprint
 from cloudtracker import CloudTracker
+from common.config import AgentTypes
+
 from kombu import Exchange, Queue
 import time
 
 
 class TaskConfig:
-    STOCHSS_HOME = os.path.join('/home', 'ubuntu', 'stochss')
+    USERNAME = 'ubuntu'
+    STOCHSS_HOME = os.path.join('/','home',USERNAME, 'stochss')
     STOCHKIT_DIR = os.path.join(STOCHSS_HOME, 'StochKit')
     ODE_DIR = os.path.join(STOCHSS_HOME, 'ode')
     STOCHOPTIM_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
@@ -234,69 +237,131 @@ def poll_commands(queue_name):
         print "Polling process: done writing output files"
 
 
-def update_s3_bucket(task_id, bucket_name, output_dir, database):
-    print "S3 update process just started..."
+def update_output_store(task_id, bucket_name, output_dir, database, storage_agent):
+    print "Output update process just started..."
     # Wait 60 seconds initially for some output to build up
     time.sleep(60)
     while True:
         tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
         print "S3 update", tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, output_dir, bucket_name)
-        print "S3 update", copy_to_s3_str
-        os.system(copy_to_s3_str)
+
+        logging.info('Uploading output...')
+        trials = 0
+        output_url = None
+        while trials < 2 and output_url == None:
+            try:
+                output_url = storage_agent.upload_file(filename="{dir}.tar".format(dir=output_dir))
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error in file upload: {}'.format(e))
+                time.sleep(60)
+            finally:
+                trials += 1
+
+        logging.info("output_url = {}".format(output_url))
+
+
+        # copy_to_s3_str = "python {sccpy} -f {output_dir}.tar --ec2 {bucket_name}".format(sccpy=TaskConfig.SCCPY_PATH,
+        #                                                             output_dir=output_dir, bucket_name=bucket_name)
+        # print "S3 update", copy_to_s3_str
+        # os.system(copy_to_s3_str)
+
         data = {
             'uuid': task_id,
             'status': 'active',
             'message': 'Task executing in the cloud.',
-            'output': "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, output_dir)
+            'output': output_url
         }
-        database.updateEntry(task_id, data, "stochss")
+        database.updateEntry(taskid=task_id, data=data, tablename="stochss")
+
         # Update the output in S3 every 60 seconds...
         time.sleep(60)
 
 
-def handle_task_success(task_id, data, s3_data, bucket_name, database):
-    tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
+def handle_task_success(task_id, data, output_dir, bucket_name, database, storage_agent):
+    tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
     print tar_output_str
     os.system(tar_output_str)
-    copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
-    print copy_to_s3_str
-    return_code = os.system(copy_to_s3_str)
-    if return_code != 0:
-        print "S3 update conflict, waiting 60 seconds for retry..."
-        time.sleep(60)
-        return_code = os.system(copy_to_s3_str)
-    print "Return code after S3 retry is {0}".format(return_code)
-    cleanup_string = "rm -rf {0} {0}".format(s3_data)
+
+    logging.info('Uploading output...')
+    trials = 0
+    output_url = None
+    while trials < 2 and output_url == None:
+        try:
+            output_url = storage_agent.upload_file(filename="{dir}.tar".format(dir=output_dir))
+        except Exception as e:
+            logging.error(traceback.format_exc())
+            logging.error('Error in file upload: {}'.format(e))
+            time.sleep(60)
+        finally:
+            trials += 1
+
+    logging.info("output_url = {}".format(output_url))
+
+    # copy_to_s3_str = "python {sccpy} -f {output_dir}.tar --ec2 {2}".format(sccpy=TaskConfig.SCCPY_PATH,
+    #                                                                      output_dir=output_dir, bucket_name=bucket_name)
+    # print copy_to_s3_str
+    # return_code = os.system(copy_to_s3_str)
+    # if return_code != 0:
+    #     print "S3 update conflict, waiting 60 seconds for retry..."
+    #     time.sleep(60)
+    #     return_code = os.system(copy_to_s3_str)
+    # print "Return code after S3 retry is {0}".format(return_code)
+
+    cleanup_string = "rm -rf {0} {0}.tar".format(output_dir)
     print cleanup_string
     os.system(cleanup_string)
-    data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
-    database.updateEntry(task_id, data, "stochss")
+
+    data['output'] = output_url
+    database.updateEntry(taskid=task_id, data=data, tablename="stochss")
 
 
-def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None):
-    if s3_data and bucket_name:
-        tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
+def handle_task_failure(task_id, data, database, storage_agent, output_dir=None, bucket_name=None):
+    if output_dir and bucket_name:
+        tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
         print tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
-        print copy_to_s3_str
-        return_code = os.system(copy_to_s3_str)
-        if return_code != 0:
-            print "S3 update conflict, waiting 60 seconds for retry..."
-            time.sleep(60)
-            return_code = os.system(copy_to_s3_str)
-        print "Return code after S3 retry is {0}".format(return_code)
-        cleanup_string = "rm -rf {0} {0}".format(s3_data)
+
+        logging.info('Uploading output...')
+        trials = 0
+        output_url = None
+        while trials < 2 and output_url == None:
+            try:
+                output_url = storage_agent.upload_file(filename="{dir}.tar".format(dir=output_dir))
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error in file upload: {}'.format(e))
+                time.sleep(60)
+            finally:
+                trials += 1
+
+        logging.info("output_url = {}".format(output_url))
+
+
+        # copy_to_s3_str = "python {sccpy} -f {output_dir}.tar --ec2 {bucket_name}".format(sccpy=TaskConfig.SCCPY_PATH,
+        #                                                               output_dir=output_dir, bucket_name=bucket_name)
+        # print copy_to_s3_str
+        # return_code = os.system(copy_to_s3_str)
+        #
+        # if return_code != 0:
+        #     print "S3 update conflict, waiting 60 seconds for retry..."
+        #     time.sleep(60)
+        #     return_code = os.system(copy_to_s3_str)
+        #
+        # print "Return code after S3 retry is {0}".format(return_code)
+
+        cleanup_string = "rm -rf {0} {0}".format(output_dir)
         print cleanup_string
         os.system(cleanup_string)
-        data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
-    database.updateEntry(task_id, data, "stochss")
+
+        data['output'] = output_url
+
+    database.updateEntry(taskid=task_id, data=data, tablename="stochss")
 
 
 @celery.task(name='tasks.master_task')
-def master_task(task_id, params, database):
+def master_task(task_id, params, database, storage_agent):
     '''
     This task encapsulates the logic behind the new R program.
     '''
@@ -307,12 +372,21 @@ def master_task(task_id, params, database):
             'status': 'active',
             'message': 'Task executing in the cloud.'
         }
-        database.updateEntry(task_id, data, "stochss")
+
+        database.updateEntry(taskid=task_id, data=data, tablename="stochss")
+
         result = {
             'uuid': task_id
         }
+        try:
+            import multiprocessing
+            core_count = multiprocessing.cpu_count()
+            params["paramstring"] += " --cores {0}".format(core_count)
+        except Exception as e:
+            logging.exception(e)
         paramstr = params['paramstring']
         output_dir = "output/{0}".format(task_id)
+        return_code_file = "output/{0}/return_code".format(task_id)
         create_dir_str = "mkdir -p {0}".format(output_dir)  #output_dir+"/result"
         print create_dir_str
         os.system(create_dir_str)
@@ -344,8 +418,8 @@ def master_task(task_id, params, database):
         # and stderr in S3 bucket.
         bucket_name = params["bucketname"]
         update_process = Process(
-            target=update_s3_bucket,
-            args=(task_id, bucket_name, output_dir, database)
+            target=update_output_store,
+            args=(task_id, bucket_name, output_dir, database, storage_agent)
         )
         # Construct execution string and call it
         exec_str = "{0}/{1} --model {2} --data {3}".format(
@@ -365,6 +439,9 @@ def master_task(task_id, params, database):
         environ = os.environ.copy()
         if not environ.has_key('R_LIBS'):
             environ['R_LIBS'] = TaskConfig.STOCHOPTIM_R_LIB_DIR
+
+        pid_file = None
+        p = None
 
         with open(stdout, 'w') as stdout_fh:
             with open(stderr, 'w') as stderr_fh:
@@ -405,21 +482,32 @@ def master_task(task_id, params, database):
                     signal.signal(signal.SIGTERM, handler)
                     # Wait on program execution...
                     stdout, stderr = p.communicate() # wait for process to complete
+                    return_code = p.wait()
+                    if return_code_file is not None:
+                        with open(return_code_file, 'w+') as fd:
+                            fd.write(str(return_code))
                 except Exception as e:
-                    logging.error(e)
+                    logging.error('Error: {}'.format(str(e)))
+                    logging.error(traceback.format_exc())
+
                 finally:
+                    #clean up pid file
                     logging.info("[Master] deleting PID file '{0}'".format(pid_file))
-                    os.remove(pid_file) #clean up pid file
+                    if pid_file != None and os.path.exists(pid_file):
+                        os.remove(pid_file)
+
                     last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+
                     logging.info("[Master] touching file '{0}'".format(last_command_completed_file))
                     os.system("touch {0}".format(last_command_completed_file))
                 
                 execution_time = (datetime.now() - execution_start).total_seconds()
-                print "Should be empty:", stdout
-                print "Should be empty:", stderr
+                #print "Should be empty:", stdout
+                #print "Should be empty:", stderr
                 print "Return code:", p.returncode
         # Done
-        print "Master: finished execution of executable"
+        logging.info("Master: finished execution of executable")
+
         poll_process.terminate()
         update_process.terminate()
         # 0 means success
@@ -430,7 +518,8 @@ def master_task(task_id, params, database):
                 'status': 'failed',
                 'message': 'The executable failed with an exit status of {0}.'.format(p.returncode)
             }
-            handle_task_failure(task_id, data, database, output_dir, bucket_name)
+            handle_task_failure(task_id=task_id, data=data, database=database, output_dir=output_dir,
+                                bucket_name=bucket_name, storage_agent=storage_agent)
             return
         # Else just send final output to S3
         data = {
@@ -439,14 +528,15 @@ def master_task(task_id, params, database):
             'total_time': (datetime.now() - start_time).total_seconds(),
             'execution_time': execution_time
         }
-        handle_task_success(task_id, data, output_dir, bucket_name, database)
+        handle_task_success(task_id=task_id, data=data, output_dir=output_dir,
+                            bucket_name=bucket_name, database=database, storage_agent=storage_agent)
     except Exception, e:
         data = {
             'status': 'failed',
             'message': str(e),
             'traceback': traceback.format_exc()
         }
-        handle_task_failure(task_id, data, database)
+        handle_task_failure(task_id=task_id, data=data, database=database, storage_agent=storage_agent)
 
 
 @celery.task(name='tasks.slave_task')
@@ -586,10 +676,29 @@ def with_temp_file(file_names):
 
 
 
-def execute_task(exec_str):
+def execute_task(exec_str, return_code_file=None):
     try:
-        p = subprocess.Popen(exec_str, shell=True)
+        p = subprocess.Popen(exec_str, shell=True, preexec_fn=os.setsid)
         pid = p.pid
+
+        # Handler that should catch the first SIGTERM signal and then kill
+        # off all subprocesses
+        def handler(signum, frame, *args):
+            print 'execute_task(): Caught signal:', signum
+            # try to kill subprocesses off...
+            try:
+                print 'Sending SIGTERM to process group {0}'.format(p.pid)
+                os.killpg(p.pid, signal.SIGTERM)
+                p.terminate()
+            except Exception as e:
+                print '******************************************************************'
+                print "Exception:", e
+                print traceback.format_exc()
+                print '******************************************************************'
+
+        # Register the handler with SIGTERM signal
+        signal.signal(signal.SIGTERM, handler)
+
         if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
             os.mkdir(TaskConfig.STOCHSS_PID_DIR)
         # create pid file
@@ -597,7 +706,10 @@ def execute_task(exec_str):
         logging.info("creating PID file '{0}'".format(pid_file))
         with open(pid_file, 'w+') as fd:
             fd.write(str(pid))
-        p.wait() # wait for process to complete
+        return_code = p.wait() # wait for process to complete
+        if return_code_file is not None:
+            with open(return_code_file, 'w+') as fd:
+                fd.write(str(return_code))
     except Exception as e:
         logging.error(e)
     finally:
@@ -610,19 +722,22 @@ def execute_task(exec_str):
 
 
 @celery.task(name='stochss')
-def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""):
+def task(taskid, params, agent, database, storage_agent, access_key, secret_key, task_prefix=""):
     '''
     This is the actual work done by a task worker
     params    should contain at least 'bucketname'
     '''
+    uuidstr = taskid
+    res = {}
 
     try:
-        res = {}
-        uuidstr = taskid
-
         bucketname = params['bucketname']
         if_tracking = False
-        try:
+        ct = None
+
+        if agent == AgentTypes.EC2:
+            logging.info('Trying to track via CloudTracker...')
+
             # Initialize cloudtracker with the task's UUID
             ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
             if_tracking = ct.if_tracking()
@@ -631,17 +746,15 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             if if_tracking:
                 ct.track_input(params)
 
-        except Exception:
-            print "Error initializing tracking"
-
         logging.info('task to be executed at remote location')
         print 'inside celery task method'
-        data = {'status': 'active', 'message': 'Task Executing in cloud'}
+        data = {'status': 'active',
+                'message': 'Task Executing in cloud'}
 
         # will have prefix for cost-anaylsis job
-        taskid = task_prefix + taskid
+        taskid = '{0}{1}'.format(task_prefix, taskid)
 
-        database.updateEntry(taskid, data, params["db_table"])
+        database.updateEntry(taskid=taskid, data=data, tablename=params["db_table"])
         paramstr = params['paramstring']
 
         job_type = params['job_type']
@@ -650,6 +763,9 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             os.system(create_dir_str)
         create_dir_str = "mkdir -p output/%s/result " % uuidstr
         os.system(create_dir_str)
+        
+        return_code_file = "output/{0}/return_code".format(uuidstr)
+
 
         filename = os.path.join('output', uuidstr, '{0}.xml'.format(uuidstr))
         with open(filename, 'w') as f:
@@ -661,36 +777,44 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
         stderr = os.path.join('output', uuidstr, 'stderr.log')
 
         exec_str = ''
+
+        logging.info('job_type = {}'.format(job_type))
         if job_type == 'stochkit':
-            # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+            # The following executiong string is of the form :
+            # stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
             exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.STOCHKIT_DIR,
                                                                                                paramstr, xmlfilepath,
                                                                                                uuidstr, stderr, stdout)
         elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
-            logging.info('SENSITIVITY JOB!!!')
+            logging.info('sensitivity job')
             exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.ODE_DIR,
                                                                                                paramstr, xmlfilepath,
                                                                                                uuidstr, stderr, stdout)
         elif job_type == 'spatial':
-            cmd = "chown -R ubuntu output/{0}".format(uuidstr)
+            cmd = "chown -R {username} output/{uuidstr}".format(username=TaskConfig.USERNAME, uuidstr=uuidstr)
             print cmd
             os.system(cmd)
-            exec_str = "sudo -E -u ubuntu {0} {1} {2} {3} {4} {5} 2>{6} > {7}".format(TaskConfig.PYURDME_WRAPPER_PATH,
-                                                                                      xmlfilepath,
-                                                                                      os.path.join('output', uuidstr, 'results'),
-                                                                                      params['simulation_algorithm'],
-                                                                                      params['simulation_realizations'],
-                                                                                      params['simulation_seed'],
-                                                                                      stderr, stdout)
+            exec_str = \
+                "sudo -E -u {username} {pyurdme_wrapper} {model_xml_file} {output_dir} {sim_algorithm} {sim_realizations} {sim_seed} 2>{stderr} > {stdout}".format(
+                    username=TaskConfig.USERNAME,
+                    pyurdme_wrapper=TaskConfig.PYURDME_WRAPPER_PATH,
+                    model_xml_file=xmlfilepath,
+                    output_dir=os.path.join('output', uuidstr, 'results'),
+                    sim_algorithm=params['simulation_algorithm'],
+                    sim_realizations=params['simulation_realizations'],
+                    sim_seed=params['simulation_seed'],
+                    stderr=stderr,
+                    stdout=stdout)
 
         print "======================="
         print " Command to be executed : "
         print "{0}".format(exec_str)
         print "======================="
         print "To test if the command string was correct. Copy the above line and execute in terminal."
+
         timestarted = datetime.now()
-        #os.system(exec_str)
-        execute_task(exec_str)
+        # os.system(exec_str)
+        execute_task(exec_str, return_code_file=return_code_file)
         timeended = datetime.now()
 
         results = os.listdir("output/{0}/result".format(uuidstr))
@@ -700,101 +824,132 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
         filepath = os.path.join('output', uuidstr)
         absolute_file_path = os.path.abspath(filepath)
 
-        try:
-            if if_tracking:
-                ct.track_output(absolute_file_path)
-        except Exception, e:
-            print "CloudTracker Error: track_output"
-            print e
+        if agent == AgentTypes.EC2:
+            try:
+                if if_tracking:
+                    ct.track_output(absolute_file_path)
+            except Exception, e:
+                print "CloudTracker Error: track_output"
+                print e
 
-        data = {'status': 'active', 'message': 'Task finished. Generating output.'}
-        database.updateEntry(taskid, data, params["db_table"])
+        data = {'status': 'active',
+                'message': 'Task finished. Generating output.'}
+        database.updateEntry(taskid=taskid, data=data, tablename=params["db_table"])
         diff = timeended - timestarted
 
         if task_prefix != "":
             res['status'] = "finished"
             res['time_taken'] = "{0} seconds".format(diff.total_seconds())
         else:
-            print 'generating tar file'
-            create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
-            print create_tar_output_str
-            copy_to_s3_str = "python {2} output/{0}.tar {1}".format(uuidstr, bucketname, TaskConfig.SCCPY_PATH)
-            os.system(create_tar_output_str)
-            print 'copying file to s3 : {0}'.format(copy_to_s3_str)
-            os.system(copy_to_s3_str)
-            print 'removing xml file'
+
+            logging.info('Generating output tar file...')
+            output_dir = os.path.join("output", uuidstr)
+            output_tar_filename = os.path.join("output", "{}.tar".format(uuidstr))
+
+            create_output_tar_command = \
+                "tar -zcvf {output_tar_filename} {output_dir}".format(output_tar_filename=output_tar_filename,
+                                                                      output_dir=output_dir)
+            logging.info(create_output_tar_command)
+            os.system(create_output_tar_command)
+
+            output_url = storage_agent.upload_file(filename=output_tar_filename)
+            logging.info('output_url = {}'.format(output_url))
+
+            logging.info('Removing xml file...')
             removefilestr = "rm {0}".format(xmlfilepath)
             os.system(removefilestr)
-            removetarstr = "rm output/{0}.tar".format(uuidstr)
-            os.system(removetarstr)
-            removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
-            os.system(removeoutputdirstr)
+
+            logging.info('Removing output ...')
+            remove_output_command = \
+                "rm -r {output_tar_filename} {output_dir}".format(output_tar_filename=output_tar_filename,
+                                                                  output_dir=output_dir)
+            os.system(remove_output_command)
 
             # if there is some task prefix, meaning that it is cost replay,
             # update the table another way
             res['status'] = "finished"
             res['pid'] = uuidstr
-            res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr, bucketname)
+            res['output'] = output_url
             res['time_taken'] = "{0} seconds".format(diff.total_seconds())
 
-        database.updateEntry(taskid, res, params["db_table"])
+        database.updateEntry(taskid=taskid, data=res, tablename=params["db_table"])
         
-        # there is no "cost_analysis_table" in params in cost analysis task,
-        # but it there should have in normal task and rerun task.
-        if "cost_analysis_table" in params:
-            if "INSTANCE_TYPE" not in os.environ:
-                logging.error("Error: there is no INSTANCE_TYPE in environment variable.")
-                res['message'] = "Error: there is no INSTANCE_TYPE in environment variable."
-                return res
-        
-            result = database.getEntry('taskid', taskid, params["db_table"])
-            data = None
-            for one in result:
-                data = one
-                logging.info("{0} data in stochss table: {1}".format(taskid, one))
-                break
-            if data == None:
-                logging.error("Error: there is no data in stochss table with {0}.".format(taskid))
-                res['message'] = "EError: there is no data in stochss table with {0}.".format(taskid)
-                return res
-            
-            instance_type = os.environ["INSTANCE_TYPE"]
-            taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
-            taskid = taskid_prefix+taskid
-            cost_analysis_data = {
-                    'agent': agent,
-                    'instance_type': instance_type,
-                    'message': data['message'],
-                    'start_time': data['start_time'],
-                    'status': data['status'],
-                    'time_taken': data['time_taken'],
-                    'uuid': data['uuid']
-                    }
-            database.updateEntry(taskid, cost_analysis_data, params["cost_analysis_table"])
+
+        if agent == AgentTypes.EC2:
+            # there is no "cost_analysis_table" in params in cost analysis task,
+            # but it there should have in normal task and rerun task.
+
+            logging.info('Updating cost analysis table for normal/rerun task...')
+            if "cost_analysis_table" in params:
+                if "INSTANCE_TYPE" not in os.environ:
+                    logging.error("Error: there is no INSTANCE_TYPE in environment variable.")
+                    res['message'] = "Error: there is no INSTANCE_TYPE in environment variable."
+                    return res
+
+                result = database.getEntry('taskid', taskid, params["db_table"])
+                data = None
+                for one in result:
+                    data = one
+                    logging.info("{0} data in stochss table: {1}".format(taskid, one))
+                    break
+                if data == None:
+                    logging.error("Error: there is no data in stochss table with {0}.".format(taskid))
+                    res['message'] = "EError: there is no data in stochss table with {0}.".format(taskid)
+                    return res
+
+                instance_type = os.environ["INSTANCE_TYPE"]
+                taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
+                taskid = taskid_prefix+taskid
+                cost_analysis_data = {
+                        'agent': agent,
+                        'instance_type': instance_type,
+                        'message': data['message'],
+                        'start_time': data['start_time'],
+                        'status': data['status'],
+                        'time_taken': data['time_taken'],
+                        'uuid': data['uuid']
+                        }
+                database.updateEntry(taskid=taskid, data=cost_analysis_data, tablename=params["cost_analysis_table"])
     
 
     except Exception, e:
-        expected_output_dir = "output/%s" % uuidstr
+        logging.error('Error in stochss task: {}'.format(str(e)))
+        logging.error(traceback.format_exc())
+
+        expected_output_dir = os.path.join("output", uuidstr)
+        output_tar_filename = "{expected_output_dir}.tar".format(expected_output_dir=expected_output_dir)
+
         # First check for existence of output directory
         if os.path.isdir(expected_output_dir):
             # Then we should store this in S3 for debugging purposes
-            create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
-            os.system(create_tar_output_str)
-            bucketname = params['bucketname']
-            copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, expected_output_dir, bucketname)
-            os.system(copy_to_s3_str)
+            create_output_tar_command = \
+                "tar -zcvf {output_tar_filename} {expected_output_dir}".format(expected_output_dir=expected_output_dir,
+                                                                               output_tar_filename=output_tar_filename)
+            logging.info(create_output_tar_command)
+            os.system(create_output_tar_command)
+
+            logging.info('Uploading output...')
+            output_url = storage_agent.upload_file(filename="{dir}.tar".format(dir=expected_output_dir))
+            logging.info("output_url = {}".format(output_url))
+
             # Now clean up
-            remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
+            remove_output_str = \
+                "rm -r {output_tar_filename} {expected_output_dir}".format(output_tar_filename=output_tar_filename,
+                                                                        expected_output_dir=expected_output_dir)
             os.system(remove_output_str)
+
             # Update the DB entry
-            res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
+            res['output'] = output_url
             res['status'] = 'failed'
             res['message'] = str(e)
-            database.updateEntry(taskid, res, "stochss")
+
+            database.updateEntry(taskid=taskid, data=res, tablename="stochss")
+
         else:
             # Nothing to do here besides send the exception
-            data = {'status': 'failed', 'message': str(e)}
-            database.updateEntry(taskid, data, "stochss")
+            data = {'status': 'failed',
+                    'message': str(e)}
+            database.updateEntry(taskid=taskid, data=data, tablename="stochss")
         raise e
     return res
 

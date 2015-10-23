@@ -7,3 +7,4 @@ stdout.log
 *.pem
 app/stochss*.key
 ./release-tools/ami.json
+./backend/tmp/*

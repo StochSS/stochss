@@ -1,5 +1,16 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.6.1
+=============================
+- Updated PyURDME to work with FEniCS 1.6
+
+1.6.0
+=============================
+- Spatial visualization now supports animation, wireframe rendering, and mesh slicing 
+- FlexCloud:  run ‘cloud’ jobs on dedicated hardware (in addition to using EC2)
+- Import SBML models
+- Many bug fixes and stability enhancements
+
 1.5.1
 =============================
 - Bugfix release

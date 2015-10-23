@@ -13,6 +13,7 @@ import logging
 import shutil
 from backend import tasks
 from backend.backendservice import backendservices
+from backend.common.config import AgentTypes
 
 DEFAULT_BUCKET_NAME = ''
 
@@ -26,7 +27,6 @@ class DataReproductionPage(BaseHandler):
 #         self.render_response('reproduce.html', **context)
         
     def post(self):
-        
         self.response.content_type = 'application/json'
         req_type = self.request.get('req_type')
         
@@ -38,29 +38,30 @@ class DataReproductionPage(BaseHandler):
         
         if req_type == 'delOutput':
             uuid = self.request.get('uuid')
+            logging.debug('delOutput: uuid={0}'.format(uuid))
+            
             
             try:
-                #delete the output tar file
-                s3_helper.delete_file(self.user_data.getBucketName(), 'output/'+uuid+'.tar', access_key, secret_key)
-                logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(self.user_data.getBucketName(), uuid))
-                
                 job_type = self.request.get('job_type')
                 
                 if job_type == 'stochkit':
-                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloud_id = :2", self.user.user_id(),uuid).get()       
+                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(),uuid).get()       
                     job.output_stored = 'False'
                     job.put()
                 elif job_type == 'sensitivity':
-                    job = sensitivity.SensitivityJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
+                    job = sensitivity.SensitivityJobWrapper.all().filter('user_id =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
                     job.output_stored = 'False'
                     job.outData = None
                     job.put()
                 elif job_type == 'spatial':
-                    job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloud_id =', uuid).get()  
+                    job = spatial.SpatialJobWrapper.all().filter('user_id =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
                     job.output_stored = 'False'
                     job.outData = None
-                    job.put()   
+                    job.put()
                 
+                service = backendservices(self.user_data)
+                service.deleteTaskOutput(job)
+
                 # delete the local output if any
                 output_path = os.path.join(os.path.dirname(__file__), '../output/')
                 if os.path.exists(str(output_path)+uuid):
@@ -76,36 +77,28 @@ class DataReproductionPage(BaseHandler):
         
         elif req_type == 'rerun':
         
-            service = backendservices()
-        
-            compute_check_params = {
-                    "infrastructure": "ec2",
-                    "credentials": self.user_data.getCredentials(),
-                    "key_prefix": self.user.user_id()
-            }
+            service = backendservices(self.user_data)
         
             job_type = self.request.get('job_type')
             uuid = self.request.get('uuid')
-            instance_type = self.request.get('instance_type')
+            logging.debug('rerun: uuid={0}'.format(uuid))
 
             logging.info('job uuid: '.format(uuid))
             
-            if not self.user_data.valid_credentials or not service.isOneOrMoreComputeNodesRunning(compute_check_params, instance_type):
+            if not self.user_data.valid_credentials or not service.isOneOrMoreComputeNodesRunning():
                 self.response.write(json.dumps({
                     'status': False,
                     'msg': 'There is no '+instance_type+' node running. *Launch one node? '
                 }))
                 return
-            
-            
-          
+        
         
             if job_type == 'stochkit':
               
-                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloud_id = :2", self.user.user_id(),uuid).get()       
+                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND cloudDatabaseID = :2", self.user.user_id(), uuid).get()       
             
         
-                try:        
+                try:
                     logging.info('start to rerun the job {0}'.format(str(uuid)))
                     # Set up CloudTracker with user credentials and specified UUID to rerun the job
                     ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())
@@ -121,7 +114,8 @@ class DataReproductionPage(BaseHandler):
                     logging.info("OUT_PUT SIZE: {0}".format(params['output_size']))
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid, instance_type)  #calls task(taskid,params,access_key,secret_key)
+                    params['rerun_uuid'] = uuid
+                    cloud_result = service.submit_cloud_task(params=params)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -131,9 +125,9 @@ class DataReproductionPage(BaseHandler):
                                  }
                         return result 
                     # The celery_pid is the Celery Task ID.
-                    job.stochkit_job.celery_pid = cloud_result["celery_pid"]
-                    job.stochkit_job.status = 'Running'
-                    job.stochkit_job.output_location = None
+                    job.celeryPID = cloud_result["celery_pid"]
+                    job.status = 'Running'
+                    job.outData = None
                     job.output_stored = 'True'
             
                     job.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
@@ -150,7 +144,7 @@ class DataReproductionPage(BaseHandler):
                 return
         
             elif job_type == 'sensitivity':
-                job = sensitivity.SensitivityJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
+                job = sensitivity.SensitivityJobWrapper.all().filter('user_id =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
             
                 try:
                     ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())
@@ -165,7 +159,10 @@ class DataReproductionPage(BaseHandler):
                     params = ct.get_input()
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+
+                    # execute task in cloud
+                    params['rerun_uuid'] = uuid
+                    cloud_result = service.submit_cloud_task(params=params)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -191,7 +188,7 @@ class DataReproductionPage(BaseHandler):
                 return  
         
             elif job_type == 'spatial':
-                job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloud_id =', uuid).get()  
+                job = spatial.SpatialJobWrapper.all().filter('user_id =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()  
             
                 try:
                     ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())
@@ -206,7 +203,10 @@ class DataReproductionPage(BaseHandler):
                     params = ct.get_input()
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+
+                    # execute task in cloud
+                    params['rerun_uuid'] = uuid
+                    cloud_result = service.submit_cloud_task(params=params)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]

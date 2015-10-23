@@ -5,39 +5,41 @@
 <div class="span9">
     <div class="row-fluid">
         <div style="display : none;" id="modelSelect">
+            <h1>Simulation Manager</h1>
+            <br>
             <div class="well">
                 {% if all_models %}
                 <h3> Select model to simulate </h3>
                 <br />
                 <table class="table table-striped table-bordered mainTable">
-                  <thead>
-                    <tr>
-                      <th width="25px"></th>
-                      <th width="200px">Name</th>
-                      <th>Properties</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                {% for item in all_models %}
-                    <tr>
-                      <td>
-                        <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" />
-                      </td>
-                      <td>
-                        {{ item.name }}
-                      </td>
-                      <td>
-			{% if item.units == "concentration" and not item.isSpatial %}
-			Mass action, concentration, non-spatial
-			{% elif item.units == "population" and not item.isSpatial %}
-			Mass action, population, non-spatial
-			{% elif item.units == "population" and item.isSpatial %}
-			Mass action, population, spatial
-			{% endif %}
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
+                    <thead>
+                        <tr>
+                            <th width="25px"></th>
+                            <th width="200px">Name</th>
+                            <th>Properties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in all_models %}
+                        <tr>
+                            <td>
+                                <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" />
+                            </td>
+                            <td>
+                                {{ item.name }}
+                            </td>
+                            <td>
+			        {% if item.units == "concentration" and not item.isSpatial %}
+			        Concentration, non-spatial
+			        {% elif item.units == "population" and not item.isSpatial %}
+			        Population, non-spatial
+			        {% elif item.units == "population" and item.isSpatial %}
+			        Population, spatial
+			        {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
                 <br />
                 <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
@@ -281,40 +283,30 @@
         	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     	<% } %>
     	
-    	<% if (resource =="Cloud"){ %>
+    	<% if (resource == "flex-cloud" || resource == "ec2-cloud") { %>
     		<% if(output_stored == "True"){ %>
-    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid=<%= pid %>', 'delete', '/simulate?id=<%=id%>');"> Delete Output</button>
+    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid=<%= cloudDatabaseID %>', 'delete', '/simulate?id=<%=id%>');"> Delete Output</button>
     		<% }else{ %>
     		<p>No output stored.</p>
     		<% } %>		
     	<% } %>
     </div>
 
-    <% if(status != "Failed"){ %>
+    <% if(status != "Failed" && (resource == "ec2-cloud")) { %>
     <div class="well">
         <h3>Reproduction and Cost Analysis</h3>
         <br />
-    	<% if (resource =="Cloud"){ %>
+    	<% if (resource == "ec2-cloud") { %>
     		<% if(output_stored != "True"){ %>
-    		<p> Reproduction Node Type: </p>
-    		<select id="instance_type" style="width: 100pt;">
-				<option name="instance_type" value="t1.micro" selected>t1.micro</option>
-				<option name="instance_type" value="m1.small">m1.small</option>
-				<option name="instance_type" value="m3.medium">m3.medium</option>
-				<option name="instance_type" value="m3.large">m3.large</option>
-				<% %>
-				<option name="instance_type" value="c3.large">c3.large</option>
-				<option name="instance_type" value="c3.xlarge">c3.xlarge</option>
-			 </select>
-			 </br>
-			 <button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= pid %>', 'rerun', '/status');"> Reproduce Results</button>
-    		 <% } %>
-    		 
+		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= cloudDatabaseID %>', 'rerun', '/status');"> Reproduce Results</button>
+    		<% } %>
+
     		 <button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=stochkit&id=<%= id %>';"> Cost Analysis</button>
-    		
-    	<% } else{ %>
-    		<p>Local job. No reproduction and cost analysis available</p>
-    	<% } %>    	
+
+
+    	<% } else if (resource == "flex-cloud") { %>
+            <p>Flex Cloud job. No reproduction and cost analysis available</p>
+        <% } %>
     </div>
     <% } %>
         

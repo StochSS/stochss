@@ -68,6 +68,11 @@ vec3 toLocal(vec3 p) {
 
 
 float sampleVolTex(vec3 pos, sampler2D uTex) {
+  float maxDim = max(Nx, max(Ny, Nz));
+
+  pos.x = pos.x / (Nx / maxDim);
+  pos.y = pos.y / (Ny / maxDim);
+  pos.z = pos.z / (Nz / maxDim);
 
   float tilesX = floor(width / Nx);
   float tilesY = floor(width / Ny);
@@ -87,9 +92,9 @@ float sampleVolTex(vec3 pos, sampler2D uTex) {
   float offsetY =(height-tilesY*Ny); 
 
   x1 = (x1) / width;
-  y1 = (y1) / height;
+  y1 = (height - y1) / height;
   x2 = (x2) / width;
-  y2 = (y2) / height;  
+  y2 = (height - y2) / height;  
 
 
   float z0 = texture2D(uTex, vec2(x1, y1)).r;
@@ -98,14 +103,16 @@ float sampleVolTex(vec3 pos, sampler2D uTex) {
 }
 
 vec4 raymarchLight(vec3 ro, vec3 rd) {
+  float maxDim = max(Nx, max(Ny, Nz));
+
   vec3 step = rd * gStepSize;
   vec3 pos = ro;
   
   vec3 Argb = vec3(0.0);   // accumulated color
   float Aa = 0.0;         // accumulated alpha
   
-  float Of = 0.02;
-  float Lf = 10.0;
+  float Of = 0.1;
+  float Lf = 100.0;
 
 
   for (int i=0; i<MAX_STEPS; ++i) {
@@ -130,15 +137,23 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
    //if (pos.x < 0.0 )
     //Aa = 1.0;
  
-    if (pos.x >= 1.0 || pos.x < 0.0 || pos.y >= 1.0 || pos.y < 0.0 )
+    if ((pos.x / (Nx / maxDim)) >= 1.0 ||
+       (pos.x / (Nx / maxDim)) < 0.0 ||
+       (pos.y / (Ny / maxDim)) >= 1.0 ||
+       (pos.y / (Ny / maxDim)) < 0.0 ||
+       (pos.z / (Nz / maxDim)) >= 1.0 ||
+       (pos.z / (Nz / maxDim)) < 0.0 )
       break;
   }
   return vec4((Argb) * Lf, Aa);//ro, 1.0
 }
 
 void main() {
+  float maxDim = max(Nx, max(Ny, Nz));
+  vec3 shiftCornerToZero = vec3(Nx / (maxDim * 2.0), Ny / (maxDim * 2.0), Nz / (maxDim * 2.0));
+
   vec3 ro = vPos1n;
-  vec3 rd = normalize( ro - toLocal(uCamPos) );
+  vec3 rd = normalize( ro - (uCamPos + shiftCornerToZero) );
   gStepSize = ROOTTHREE / float(MAX_STEPS);
   gl_FragColor = raymarchLight(ro, rd);
 }

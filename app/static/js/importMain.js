@@ -90,7 +90,7 @@ Import.ImportTable = Backbone.View.extend(
 
 	    this.sensitivityTemplate = _.template('<tr>\
 <td><input type="checkbox" /></td>\
-<td><%= job.jobName %></td>\
+<td><%= job.name %></td>\
 <td style="color: <%= color %>";><%= version %></td>\
 </tr>');
 
