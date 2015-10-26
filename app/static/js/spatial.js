@@ -250,7 +250,7 @@ Spatial.Controller = Backbone.View.extend(
             
             // renderer
             var renderer2 = new THREE.WebGLRenderer({ alpha: true });
-            renderer2.setClearColor( 0xFFFFFF ); 
+            renderer2.setClearColor( 0xffffff ); 
             renderer2.setSize( this.d_width/5, this.d_width/5);
             $( renderer2.domElement ).appendTo(dom2);
             
@@ -323,7 +323,7 @@ Spatial.Controller = Backbone.View.extend(
                 var renderer = new THREE.WebGLRenderer();
                 renderer.setSize( width, height);
                 renderer.setClearColor( 0xffffff);
-                
+
                 var rendererDom = $( renderer.domElement ).appendTo(dom);
                 
                 var controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -367,10 +367,12 @@ Spatial.Controller = Backbone.View.extend(
                 fragmentShader: $('#fragmentshader').text(),
                 side : THREE.DoubleSide,
                 depthTest: true,
-                vertexColors: THREE.VertexColors,
+                vertexColors: THREE.FaceColors,
                 uniforms: uniforms,
-                wireframe: false
+                wireframe: false,
+                minFilter : THREE.LinearFilter
             } );
+
             
             this.mesh = new THREE.Mesh(this.model.geometry, material);
             
@@ -637,7 +639,11 @@ Spatial.Controller = Backbone.View.extend(
                               if(typeof(data.colors) == 'undefined')
                                   return
 
-                              var time = _.keys(data.colors).sort();
+                            keys = _.keys(data.colors).map(function(item) {
+                                return parseInt(item, 10);
+                            });
+
+                              var time = keys.sort();
 
                               if(time.length == 0)
                                   return
@@ -645,6 +651,8 @@ Spatial.Controller = Backbone.View.extend(
                                   var t = time[i]; 
                                   this.cache[t] = data.colors[t];
                               }
+
+                             // console.log("Are both colors the same ? ", this.compare(this.cache[0], this.cache[49]));
 
                               this.limits = data.limits;
 
@@ -657,7 +665,7 @@ Spatial.Controller = Backbone.View.extend(
                                   $("#minVal").html("Minimum voxel concentration: " + this.limits[this.selectedSpecies]["min"].toExponential(3));  
                               }
 
-                              this.handleMeshColorUpdate(this.cache[time[0]]);
+                              this.handleMeshColorUpdate(this.cache[this.timeIdx]);
 
                               if(!this.rendererInitialized)
                               {
@@ -673,6 +681,15 @@ Spatial.Controller = Backbone.View.extend(
                           }
                       }, this)
                     });
+        },
+
+        compare: function(A, B){
+            for(var i=0; i< A.length; i++)
+            {
+                if( A[i].r!= B[i].r || A[i].g != B[i].g || A[i].b != B[i].b)
+                    return false;
+            }
+            return true;
         },
 
         getMesh : function(){
@@ -783,19 +800,11 @@ Spatial.Controller = Backbone.View.extend(
             console.log("handleMeshColorUpdate : function(data)");
             var val = $( '#speciesSelect' ).val();
             this.redrawColors( data[val] );
-            this.mesh.geometry.colorsNeedUpdate = true;
-
             $( "#meshPreviewMsg" ).hide();
         },
 
         redrawColors : function(colors) {
             colors2 = [];
-
-            for(var i = 0; i < colors.length; i++)
-            {
-                colors2[i] = new THREE.Color(colors[i]);
-            }
-
             for(var i = 0; i < this.mesh.geometry.faces.length; i++)
             {
                 var faceIndices = ['a', 'b', 'c'];         
@@ -805,12 +814,13 @@ Spatial.Controller = Backbone.View.extend(
                 for( var j = 0; j < 3; j++ )  
                 {
                     var vertexIndex = face[ faceIndices[ j ] ];
-                    face.vertexColors[ j ] = colors2[vertexIndex];
+                    face.vertexColors[ j ] = new THREE.Color(colors[vertexIndex]); //new THREE.Color("rgb(" + Math.floor(Math.random() * 255) + ", 0, 0)");//
                 }
                 
             }
 
-
+            //this.mesh.geometry.facesNeedUpdate = true;
+            this.mesh.geometry.colorsNeedUpdate = true;
         },
 
         setUpSpeciesSelect: function(sortedSpecies)
@@ -996,18 +1006,18 @@ Spatial.Controller = Backbone.View.extend(
                     $( "#access" ).html('<i class="icon-download-alt"></i> Fetch Data from Cloud');                    
                     $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
 
-		    $( "#accessVtk" ).hide();
-		    $( "#accessCsv" ).hide();
+            $( "#accessVtk" ).hide();
+            $( "#accessCsv" ).hide();
                 }
                 else
                 {
                     $( "#access" ).html('<i class="icon-download-alt"></i> Access Local Data');
                     $( "#access" ).click(_.bind(this.handleAccessDataButton, this));
 
-		    $( "#accessVtk" ).show();
+            $( "#accessVtk" ).show();
                     $( "#accessVtk" ).click(_.bind(this.handleAccessVtkDataButton, this));
 
-		    $( "#accessCsv" ).show();
+            $( "#accessCsv" ).show();
                     $( "#accessCsv" ).click(_.bind(this.handleAccessCsvDataButton, this));
                 }
                 
@@ -1230,8 +1240,3 @@ var run = function()
     var id = $.url().param("id");
     var cont = new Spatial.Controller( { id : id } );
 }
-
-
-
-
-

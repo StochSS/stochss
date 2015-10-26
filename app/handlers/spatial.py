@@ -154,6 +154,7 @@ class SpatialPage(BaseHandler):
                 trajectory = data["trajectory"]
                 sTime= data["timeStart"]
                 eTime = data["timeEnd"]
+
                 #TODO: what is the right value here?
                 if eTime is None:
                     eTime = 0
@@ -185,16 +186,24 @@ class SpatialPage(BaseHandler):
 
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
 
-                        dataTmp[specie] = []
-                        for i in range(data2.shape[0]):
-                            dataTmp[specie].append(list(data2[i]))
-                        #for i in range(rgbas.shape[0]):
-                        #    dataTmp[specie].append(list(rgbas[i].astype('int')))
+                        #rgbaInts = numpy.zeros((rgbas.shape[0], rgbas.shape[1]))
 
-                    for i in range(len(dataTmp.values()[0])):
+                        #for i in range(rgbas.shape[0]):
+                        #    for j in range(rgbas.shape[1]):
+                        #        rgbaInts[i, j] = int('0x%02x%02x%02x' % tuple(rgbas[i, j][0:3]), 0)
+
+                        dataTmp[specie] = []
+                        for i in range(rgbas.shape[0]):
+                            dataTmp[specie].append(list(rgbas[i].astype('int')))
+
+
+                    data = {}
+                    for i in range(abs(eTime - sTime + 1)):
                         data[sTime + i] = {}
                         for specie in dataFile.keys():
-                            data[sTime + i][specie] = dataTmp[specie][i]
+                            data[sTime + i][specie] = dataTmp[specie][i] 
+
+                print "Data is :", data[sTime]["A"][sTime], data[sTime]["A"][eTime-1]
 
                 self.response.content_type = 'application/json'
                 self.response.write(json.dumps( { "colors" : data, "limits" : limits } ))
