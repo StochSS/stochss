@@ -366,11 +366,11 @@ Spatial.Controller = Backbone.View.extend(
                 vertexShader:   $('#vertexshader').text(),
                 fragmentShader: $('#fragmentshader').text(),
                 side : THREE.DoubleSide,
-                depthTest: true,
-                vertexColors: THREE.FaceColors,
+                //depthTest: true,
+                vertexColors: THREE.VertexColors,
                 uniforms: uniforms,
                 wireframe: false,
-                minFilter : THREE.LinearFilter
+                //minFilter : THREE.LinearFilter
             } );
 
             
@@ -818,8 +818,8 @@ Spatial.Controller = Backbone.View.extend(
                 }
                 
             }
-
-            //this.mesh.geometry.facesNeedUpdate = true;
+            
+            this.mesh.material.needsUpdate = true;
             this.mesh.geometry.colorsNeedUpdate = true;
         },
 
