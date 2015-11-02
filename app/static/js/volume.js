@@ -9,8 +9,9 @@ Volume.Controller = Backbone.View.extend(
             this.attributes = attributes;
             this.jobInfo = undefined;
             this.meshData = undefined;
-            this.timeIdx = 0;
             this.selectedSpecies = undefined;
+            
+            this.timeIdx = 5;
             this.trajectory = 0;
             this.getJobInfo();
         },
@@ -32,7 +33,7 @@ Volume.Controller = Backbone.View.extend(
                                id : this.attributes.id, 
                                data : JSON.stringify( {
                                    trajectory : 0,
-                                   timeIdx : 5 })
+                                   timeIdx : this.timeIdx })
                              } 
                            }
                          ),
@@ -42,9 +43,9 @@ Volume.Controller = Backbone.View.extend(
                                       id : this.attributes.id,
                                       data : JSON.stringify( {
                                           showPopulation : true,
-                                          trajectory : 0,
-                                          timeStart : 4,
-                                          timeEnd: 4 } )
+                                          trajectory : this.trajectory,
+                                          timeStart : this.timeIdx,
+                                          timeEnd: this.timeIdx } )
                                     }
                            }
                          )
@@ -56,13 +57,13 @@ Volume.Controller = Backbone.View.extend(
             var mesh = meshData[0].mesh;
             this.species = meshData[0].species;
             this.voxelTuples = meshData[0].voxelTuples;
-            this.colors = colorData[0].colors[4];
+            this.colors = colorData[0].colors[5];
             this.mesh = new THREE.JSONLoader().parse(mesh);
 
             console.log("calling this.setLimitHelper();")
             this.setLimitHelper();
 
-             console.log("calling this.constructGridHelper();")
+            console.log("calling this.constructGridHelper();")
             this.constructGridHelper();
 
             console.log("calling this.constructInverseMap();")
@@ -430,12 +431,13 @@ Volume.Controller = Backbone.View.extend(
 
         displayTexture : function(imdata)
         { 
-            var tgtCanvas = $( '#tgtCanvas' ).get(0);
-            $( tgtCanvas ).prop('width', this.texWidth).prop('height', this.texHeight);
-            var tgtCtx = tgtCanvas.getContext('2d');
+            var canvas1 = document.createElement('canvas');
+            canvas1.setAttribute('width', this.texWidth)
+            canvas1.setAttribute('height', this.texHeight);
+            var tgtCtx = canvas1.getContext('2d');
             var tgtData = this.constructTexture(imdata, tgtCtx, this.texWidth, this.texHeight);
             tgtCtx.putImageData(tgtData, 0, 0);
-            return tgtCanvas;
+            return canvas1;
         },
 
         loadTextFile: function(url) {
@@ -474,10 +476,10 @@ Volume.Controller = Backbone.View.extend(
           g.colorTexDim =  new THREE.Vector3(347.0, 16.0, 0.0);
 
             //var imdata = THREE.ImageUtils.loadTexture( '/static/images/download1.png' );
-          g.voltex =  new THREE.CanvasTexture( imdata );//imdata; //
+          g.voltex =  new THREE.Texture( imdata );//imdata; //
           g.voltex.wrapS = g.voltex.wrapT = THREE.ClampToEdgeWrapping;
 
-          g.voltex2 = imdata; // imdata );
+          g.voltex2 = imdata; 
           g.voltex2.wrapS = g.voltex2.wrapT = THREE.ClampToEdgeWrapping;
           g.volcol = new THREE.Vector3(1.0,1.0, 1.0);
           g.voltexDim = new THREE.Vector3(this.Nx, this.Ny, this.Nz);
@@ -496,7 +498,6 @@ Volume.Controller = Backbone.View.extend(
               Nz:       { type: "f", value: this.Nz },
               width:       { type: "f", value: this.texWidth },
               height:       { type: "f", value: this.texHeight },
-              //depthTex:   { type: "t", value: g.rtTexture },
               uTexDim:    { type: "v3", value: g.voltexDim },
               uTex2:      { type: "t", value: g.voltex2 },
               colorTex:   { type: "t", value : g.colorTex },
@@ -508,9 +509,7 @@ Volume.Controller = Backbone.View.extend(
               uniforms:       g.uniforms,
               vertexShader:   this.loadTextFile( '/static/shaders/vol-vs.glsl' ), 
               fragmentShader: this.loadTextFile( '/static/shaders/vol-fs.glsl' ),
-              //depthWrite: false,
               transparent: true,
-              //side: THREE.DoubleSide
           });
 
           var maxDim = Math.max(this.Nx, this.Ny, this.Nz);
@@ -539,8 +538,10 @@ Volume.Controller = Backbone.View.extend(
         animate : function() {
           requestAnimationFrame( _.bind(this.animate, this) );
           this.g.controls.update();
-          this.g.renderer.render( this.g.scene, this.g.camera );
-
+          if(volume)
+            this.g.renderer.render( this.g.scene, this.g.camera );
+          else
+            this.g.renderer.render(this.g.otherscene, this.g.camera)
         },
 
         constructRenderer: function(width, height)
@@ -563,17 +564,12 @@ Volume.Controller = Backbone.View.extend(
 
         render: function(g)
         {
-          var container = document.getElementById("container");
-          container.appendChild( this.g.renderer.domElement );
+          var dom = $( "#newMesh" ).empty();//document.getElementById("container");
+          $( this.g.renderer.domElement ).appendTo(dom);
+          //container.appendChild( this.g.renderer.domElement );
           this.g.renderer.render( this.g.scene, this.g.camera );
         },
   });
-
-var run = function()
-{
-    var id = $.url().param("id");
-    var cont = new Volume.Controller( { id : id } );
-}
 
 function TupleDictionary() {
   this.dict = {};
@@ -598,5 +594,3 @@ TupleDictionary.prototype = {
   return this.dict[ this.tupleToString(tuple) ];
  }
 };
-
-$( document ).ready( run );

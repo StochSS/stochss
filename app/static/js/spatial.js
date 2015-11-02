@@ -79,9 +79,15 @@ Spatial.Controller = Backbone.View.extend(
             this.renderer2.render(this.scene2, this.camera2);
             requestAnimationFrame(_.bind(this.renderFrame, this));
             this.controls.update();
-
         },
 
+        renderVolumeFrame : function() {
+            this.renderer.render(this.g.scene, this.g.camera);
+            this.updateWorldCamera();
+            this.renderer2.render(this.scene2, this.camera2);
+            requestAnimationFrame(_.bind(this.renderVolumeFrame, this));
+            g.controls.update();
+        },
 
         
         addGui : function() {
@@ -575,8 +581,6 @@ Spatial.Controller = Backbone.View.extend(
         */
 
         deleteCache : function(start1, stop1){
-
-
             console.log(" deleteCache : function("+start1+", "+stop1+")");
             
             var start = Math.max(0, start1);
@@ -683,15 +687,6 @@ Spatial.Controller = Backbone.View.extend(
                     });
         },
 
-        compare: function(A, B){
-            for(var i=0; i< A.length; i++)
-            {
-                if( A[i].r!= B[i].r || A[i].g != B[i].g || A[i].b != B[i].b)
-                    return false;
-            }
-            return true;
-        },
-
         getMesh : function(){
             $.ajax( { type : "GET",
                       url : "/spatial",
@@ -706,6 +701,8 @@ Spatial.Controller = Backbone.View.extend(
         },
 
         handleGetMesh : function(data) {
+
+            console.log("@handleGetMesh : function(data)");
             try {
                 if(_.has(data, "status") && !data.status)
                 {
@@ -714,12 +711,11 @@ Spatial.Controller = Backbone.View.extend(
                 }
                 
                 $( '#speciesSelect' ).empty();
+                this.data = data;
                 this.meshData = data.mesh;
                 
                 this.updateCache(0, this.cacheRange);
-                
-                var sortedSpecies = data.species.sort();
-                this.setUpSpeciesSelect(sortedSpecies);
+            
             }
             
             catch(err)
@@ -986,6 +982,82 @@ Spatial.Controller = Backbone.View.extend(
             this.acquireNewData();
         },
 
+        displayVolume: function(){
+            
+          console.log("Displaying Volume...");
+          this.Nx = 100; this.Ny = 100; this.Nz = 100; this.texWidth = 1000; this.textHeight = 1000;
+        
+          g = {}
+          g.width =this.d_width; g.height =this.d_height;
+          g.scene = new THREE.Scene();
+
+          g.colorTex = THREE.ImageUtils.loadTexture("/static/img/jet.png");
+          g.colorTexDim =  new THREE.Vector3(347.0, 16.0, 0.0);
+
+          var imdata =  THREE.ImageUtils.loadTexture("/static/images/download.png");
+          g.voltex =  new THREE.Texture( imdata );
+          g.voltex.wrapS = g.voltex.wrapT = THREE.ClampToEdgeWrapping;
+
+          g.voltex2 = imdata; 
+          g.voltex2.wrapS = g.voltex2.wrapT = THREE.ClampToEdgeWrapping;
+          g.volcol = new THREE.Vector3(1.0,1.0, 1.0);
+          g.voltexDim = new THREE.Vector3(this.Nx, this.Ny, this.Nz);
+
+          g.rtTexture = new THREE.WebGLRenderTarget( g.width, g.height, { minFilter: THREE.LinearFilter,
+                                                                        magFilter: THREE.NearestFilter,
+                                                                        format: THREE.RGBAFormat } );
+          g.camera = this.constructCamera(g.width, g.height);
+          g.camera.position.set(0, 0, -2);
+          g.camera.lookAt(new THREE.Vector3()); 
+
+          g.camera = this.camera;
+          
+          g.uniforms = {
+              uCamPos:    { type: "v3", value: g.camera.position },
+              uColor:     { type: "v3", value: g.volcol },
+              uTex:       { type: "t", value: g.voltex },
+              Nx:       { type: "f", value: this.Nx },
+              Ny:       { type: "f", value: this.Ny },
+              Nz:       { type: "f", value: this.Nz },
+              width:       { type: "f", value: this.texWidth },
+              height:       { type: "f", value: this.texHeight },
+              uTexDim:    { type: "v3", value: g.voltexDim },
+              uTex2:      { type: "t", value: g.voltex2 },
+              colorTex:   { type: "t", value : g.colorTex },
+              colorTexDim:{ type: "v3", value: g.colorTexDim },
+              uTMK:       { type: "f", value: 10.0 }
+          };
+
+          shader = new THREE.ShaderMaterial({
+              uniforms:       g.uniforms,
+              vertexShader:   this.loadTextFile( '/static/shaders/vol-vs.glsl' ), 
+              fragmentShader: this.loadTextFile( '/static/shaders/vol-fs.glsl' ),
+              transparent: true,
+          });
+
+          var maxDim = Math.max(this.Nx, this.Ny, this.Nz);
+
+          var geometry1 = new THREE.BoxGeometry(this.Nx / maxDim, this.Ny / maxDim, this.Nz / maxDim);
+          g.mesh1 = new THREE.Mesh( geometry1, shader);
+          g.scene.add( g.mesh1 ); 
+
+
+          g.controls = new THREE.TrackballControls( g.camera);
+          g.controls.rotateSpeed = 1.0;
+          g.controls.zoomSpeed = 0.2;
+          g.controls.panSpeed = 0.8;
+          g.controls.noZoom = false;
+          g.controls.noPan = false;
+          g.controls.staticMoving = true;
+          g.controls.dynamicDampingFactor = 0.8;
+          g.controls.keys = [ 65, 83, 68 ];
+          g.controls.radius = ( g.width + g.height ) / 4;
+
+          this.g = g;
+          this.renderVolumeFrame();
+
+        },
+
 
         render : function(data)
         {
@@ -1028,7 +1100,7 @@ Spatial.Controller = Backbone.View.extend(
                     // http://get.webgl.org
                     $( "#plotRegion" ).html('<center><h2 style="color: red;">Error: WebGL Not Supported</h2><br /> \
                         <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+                <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
                     $( '#plotRegion' ).show();
                     return;
                 }
@@ -1116,11 +1188,16 @@ Spatial.Controller = Backbone.View.extend(
                                     this.showPopulation  = true;
                                     this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
                                 }
-                            else
+                            else if( selectedOption == 'concentration')
                                 {
                                     this.showPopulation  = false;
                                     this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
                                 }
+
+                            else
+                            {
+                                this.displayVolume();
+                            }
 
                             this.cache = {}
                             this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
@@ -1223,6 +1300,7 @@ Spatial.Controller = Backbone.View.extend(
                         }, this));
 
                         $("#playSpeed").html( (1000/ this.playMeshInterval).toFixed(2) );
+
 
                     }
                 }
