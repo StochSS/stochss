@@ -35,6 +35,7 @@ Spatial.Controller = Backbone.View.extend(
             this.wireFlag = false;
             this.playFlag = false;
             this.playMeshInterval = 1000;
+            this.volumeRender = false;
             
             // Set up room for the model select stuff
             // Pull in all the models from the internets
@@ -74,21 +75,21 @@ Spatial.Controller = Backbone.View.extend(
         },
 
         renderFrame : function() {
-            this.renderer.render(this.scene, this.camera);
+            if(this.volumeRender == true)
+            {
+                this.renderer.render(this.volumeScene, this.camera);
+            }
+            else
+            {
+                this.renderer.render(this.scene, this.camera);
+            }
+
             this.updateWorldCamera();
             this.renderer2.render(this.scene2, this.camera2);
             requestAnimationFrame(_.bind(this.renderFrame, this));
             this.controls.update();
         },
 
-        renderVolumeFrame : function() {
-            this.g.renderer.render(this.g.scene, this.g.camera);
-            this.updateWorldCamera();
-            requestAnimationFrame(_.bind(this.renderVolumeFrame, this));
-            g.controls.update();
-        },
-
-        
         addGui : function() {
             $(" #container").show();
             $( '#zoomPlus_btn' ).click( _.bind(function() { this.controls.dollyOut();}, this) );
@@ -472,6 +473,8 @@ Spatial.Controller = Backbone.View.extend(
             $( "#meshPreviewMsg" ).hide();
 
             this.camera.position.z =  this.mesh.geometry.boundingSphere.radius* 2;
+
+            this.displayVolume();
         },
 
         /* 
@@ -1020,11 +1023,9 @@ Spatial.Controller = Backbone.View.extend(
           g.colorTexDim =  new THREE.Vector3(347.0, 16.0, 0.0);
 
           var imdata =  THREE.ImageUtils.loadTexture("/static/images/download.png");
-          g.voltex =  new THREE.Texture( imdata );
+          g.voltex =  imdata;// THREE.Texture( );
           g.voltex.wrapS = g.voltex.wrapT = THREE.ClampToEdgeWrapping;
 
-          g.voltex2 = imdata; 
-          g.voltex2.wrapS = g.voltex2.wrapT = THREE.ClampToEdgeWrapping;
           g.volcol = new THREE.Vector3(1.0,1.0, 1.0);
           g.voltexDim = new THREE.Vector3(this.Nx, this.Ny, this.Nz);
 
@@ -1047,9 +1048,6 @@ Spatial.Controller = Backbone.View.extend(
               width:       { type: "f", value: this.texWidth },
               height:       { type: "f", value: this.texHeight },
               uTexDim:    { type: "v3", value: g.voltexDim },
-              uTex2:      { type: "t", value: g.voltex2 },
-              colorTex:   { type: "t", value : g.colorTex },
-              colorTexDim:{ type: "v3", value: g.colorTexDim },
               uTMK:       { type: "f", value: 10.0 }
           };
 
@@ -1066,23 +1064,9 @@ Spatial.Controller = Backbone.View.extend(
           g.mesh1 = new THREE.Mesh( geometry1, shader);
           g.scene.add( g.mesh1 ); 
 
-
-          g.controls = new THREE.TrackballControls( g.camera);
-          g.controls.rotateSpeed = 1.0;
-          g.controls.zoomSpeed = 0.2;
-          g.controls.panSpeed = 0.8;
-          g.controls.noZoom = false;
-          g.controls.noPan = false;
-          g.controls.staticMoving = true;
-          g.controls.dynamicDampingFactor = 0.8;
-          g.controls.keys = [ 65, 83, 68 ];
-          g.controls.radius = ( g.width + g.height ) / 4;
-
           this.g = g;
-          var dom = $( "#newMesh" ).empty();
-          $( this.g.renderer.domElement ).appendTo(dom);
-          this.g.renderer.render( this.g.scene, this.g.camera );
-          this.renderVolumeFrame();
+
+          this.volumeScene = this.g.scene;
         },
 
 
@@ -1190,15 +1174,15 @@ Spatial.Controller = Backbone.View.extend(
                             selectedIndex =  $("#wireSelect")[0].options["selectedIndex"]
                             selectedOption = $("#wireSelect")[0].options[selectedIndex].value
                             if( selectedOption == 'solid')
-                                {
-                                 this.mesh.material.wireframe = false;
+                            {
+                                this.mesh.material.wireframe = false;
                                 this.mesh.material.needsUpdate = true;
-                                }
+                            }
                             else
-                                {
-                                    this.mesh.material.wireframe = true;
-                                    this.mesh.material.needsUpdate = true;
-                                }
+                            {
+                                this.mesh.material.wireframe = true;
+                                this.mesh.material.needsUpdate = true;
+                            }
 
                             this.cache = {}
                             this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
@@ -1211,19 +1195,20 @@ Spatial.Controller = Backbone.View.extend(
                             selectedIndex =  $("#unitSelect")[0].options["selectedIndex"]
                             selectedOption = $("#unitSelect")[0].options[selectedIndex].value
                             if( selectedOption == 'population')
-                                {
-                                    this.showPopulation  = true;
-                                    this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
-                                }
+                            {
+                                this.volumeRender = false;
+                                this.showPopulation  = true;
+                                this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
+                            }
                             else if( selectedOption == 'concentration')
-                                {
-                                    this.showPopulation  = false;
-                                    this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
-                                }
-
+                            {
+                                this.volumeRender = false;
+                                this.showPopulation  = false;
+                                this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
+                            }
                             else
                             {
-                                this.displayVolume();
+                                this.volumeRender = true;
                             }
 
                             this.cache = {}

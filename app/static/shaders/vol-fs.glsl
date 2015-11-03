@@ -40,10 +40,7 @@ uniform vec3 uCamPos;
 
 uniform vec3 uColor;      // color of volume
 uniform sampler2D uTex;   // 3D(2D) volume texture
-uniform sampler2D uTex2;   // 3D(2D) volume texture
-uniform sampler2D depthTex;   // 3D(2D) volume texture
 uniform vec3 uTexDim;     // dimensions of texture
-uniform sampler2D colorTex;
 
 uniform float uTMK;
 uniform float Nx;
@@ -111,27 +108,21 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
   vec3 Argb = vec3(0.0);   // accumulated color
   float Aa = 0.0;         // accumulated alpha
   
-  float Of = 0.1;
-  float Lf = 1.0;
+  float Of = 0.05;
+  float Lf = 100.0;
 
 
   for (int i=0; i<MAX_STEPS; ++i) {
-
     float Va = sampleVolTex(pos, uTex);
-    float Vb = sampleVolTex(pos, uTex2);
 
     float Sa = Va * Of ;
-    float Sb = Vb * Of ;
 
-    float Vr = Va;//vec3 (Va, 0, 0);
-    //vec3 Vblue = vec3 (0, 0, 0);
+    float Vr = Va;
 
     float Srgb = Vr * Sa;
-    //Srgb += Vblue * Sb;
 
-    Argb.r = Argb.r + (1.0 - Aa -0.05) * Srgb;
-    Aa += (Sa);
-    Aa += Sb;
+    Argb = Argb + (1.0 - Aa -0.05) * vec3(Srgb, 0.0, 0.0);
+    Aa += Sa;
     pos += step;
 
    //if (pos.x < 0.0 )
@@ -145,7 +136,7 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
        (pos.z / (Nz / maxDim)) < 0.0 )
       break;
   }
-  return vec4((Argb) * Lf, float(Argb.r == Argb.b));//(1.0, 0.0, 0.0, 1.0); //; ro, 1.0
+  return vec4((Argb) * Lf, Aa);//(1.0, 0.0, 0.0, 1.0); //; ro, 1.0
 }
 
 void main() {
