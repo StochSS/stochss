@@ -82,9 +82,8 @@ Spatial.Controller = Backbone.View.extend(
         },
 
         renderVolumeFrame : function() {
-            this.renderer.render(this.g.scene, this.g.camera);
+            this.g.renderer.render(this.g.scene, this.g.camera);
             this.updateWorldCamera();
-            this.renderer2.render(this.scene2, this.camera2);
             requestAnimationFrame(_.bind(this.renderVolumeFrame, this));
             g.controls.update();
         },
@@ -328,7 +327,7 @@ Spatial.Controller = Backbone.View.extend(
                 var camera = new THREE.PerspectiveCamera( 75, 4.0 / 3.0, 0.1, 1000 );
                 var renderer = new THREE.WebGLRenderer();
                 renderer.setSize( width, height);
-                renderer.setClearColor( 0xffffff);
+                renderer.setClearColor( 0xffffff, 1.0);
 
                 var rendererDom = $( renderer.domElement ).appendTo(dom);
                 
@@ -711,11 +710,10 @@ Spatial.Controller = Backbone.View.extend(
                 }
                 
                 $( '#speciesSelect' ).empty();
-                this.data = data;
                 this.meshData = data.mesh;
-                
                 this.updateCache(0, this.cacheRange);
-            
+                var sortedSpecies = data.species.sort();
+                this.setUpSpeciesSelect(sortedSpecies);            
             }
             
             catch(err)
@@ -982,13 +980,40 @@ Spatial.Controller = Backbone.View.extend(
             this.acquireNewData();
         },
 
+        loadTextFile: function(url) {
+            var result;
+            
+            $.ajax({
+                url:      url,
+                type:     "GET",
+                async:    false,
+                dataType: "text",
+                success:  function(data) {
+                    result = data;
+                }
+            });
+            
+            return result;
+        },
+
+        constructRenderer: function(width, height)
+        {
+          var renderer = new THREE.WebGLRenderer({antialias: true});
+          renderer.setClearColor( 0xffffff, 1.0 );
+          renderer.setPixelRatio( window.devicePixelRatio );
+          renderer.setSize( this.d_width , this.d_height );
+          renderer.sortObjects = false;
+          return renderer;
+        },
+
         displayVolume: function(){
             
           console.log("Displaying Volume...");
-          this.Nx = 100; this.Ny = 100; this.Nz = 100; this.texWidth = 1000; this.textHeight = 1000;
+          this.Nx = 100; this.Ny = 100; this.Nz = 100; this.texWidth = 1000; this.texHeight = 1000;
         
-          g = {}
+          g = {};
           g.width =this.d_width; g.height =this.d_height;
+          g.renderer = this.constructRenderer(g.width, g.height);
           g.scene = new THREE.Scene();
 
           g.colorTex = THREE.ImageUtils.loadTexture("/static/img/jet.png");
@@ -1006,7 +1031,7 @@ Spatial.Controller = Backbone.View.extend(
           g.rtTexture = new THREE.WebGLRenderTarget( g.width, g.height, { minFilter: THREE.LinearFilter,
                                                                         magFilter: THREE.NearestFilter,
                                                                         format: THREE.RGBAFormat } );
-          g.camera = this.constructCamera(g.width, g.height);
+          g.camera = new THREE.PerspectiveCamera( 45, g.width/g.height, 1, 200); 
           g.camera.position.set(0, 0, -2);
           g.camera.lookAt(new THREE.Vector3()); 
 
@@ -1054,8 +1079,10 @@ Spatial.Controller = Backbone.View.extend(
           g.controls.radius = ( g.width + g.height ) / 4;
 
           this.g = g;
+          var dom = $( "#newMesh" ).empty();
+          $( this.g.renderer.domElement ).appendTo(dom);
+          this.g.renderer.render( this.g.scene, this.g.camera );
           this.renderVolumeFrame();
-
         },
 
 

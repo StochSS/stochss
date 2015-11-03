@@ -112,7 +112,7 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
   float Aa = 0.0;         // accumulated alpha
   
   float Of = 0.1;
-  float Lf = 100.0;
+  float Lf = 1.0;
 
 
   for (int i=0; i<MAX_STEPS; ++i) {
@@ -123,13 +123,13 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
     float Sa = Va * Of ;
     float Sb = Vb * Of ;
 
-    vec3 Vr = vec3 (Va, 0, 0);
-    vec3 Vblue = vec3 (0, 0, 0);
+    float Vr = Va;//vec3 (Va, 0, 0);
+    //vec3 Vblue = vec3 (0, 0, 0);
 
-    vec3 Srgb = Vr * Sa;
-    Srgb += Vblue * Sb;
+    float Srgb = Vr * Sa;
+    //Srgb += Vblue * Sb;
 
-    Argb = Argb + (1.0 - Aa -0.05) * Srgb;
+    Argb.r = Argb.r + (1.0 - Aa -0.05) * Srgb;
     Aa += (Sa);
     Aa += Sb;
     pos += step;
@@ -145,7 +145,7 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
        (pos.z / (Nz / maxDim)) < 0.0 )
       break;
   }
-  return vec4((Argb) * Lf, Aa);//ro, 1.0
+  return vec4((Argb) * Lf, float(Argb.r == Argb.b));//(1.0, 0.0, 0.0, 1.0); //; ro, 1.0
 }
 
 void main() {

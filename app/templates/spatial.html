@@ -27,11 +27,13 @@
 <script type="text/javascript" src = "/static/js/nv.d3.js"></script>
 <script type="text/javascript" src = "/static/js/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
-<script type="text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
+<script type="text/javascript" src = "/static/js/three.js"></script>
+<script type="text/javascript" src="/static/js/TrackballControls.js"></script>
 <script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
 <script type="text/javascript" src = "/static/js/spatial.js"></script>
 <script type="text/javascript" src="/static/js/TrackballControls.js"></script>
 <script type="text/javascript" src="static/js/status.js"></script>
+
 
     <script type="x-shader/x-vertex" id="vertexshader">
 
@@ -230,6 +232,7 @@
                         </div>
                         <div id="inset"></div>
                         <div id="meshPreview" style="z-index=-2"></div>
+                        <div id="newMesh" style="z-index=-2"></div>
         
         <div id="domainControls" class="well" style="clear:both; display: none; margin-bottom: 0px;">
 
