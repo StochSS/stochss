@@ -136,7 +136,7 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
        (pos.z / (Nz / maxDim)) < 0.0 )
       break;
   }
-  return vec4((Argb) * Lf, Aa);//(1.0, 0.0, 0.0, 1.0); //; ro, 1.0
+  return vec4((Argb) * Lf, Aa); //
 }
 
 void main() {

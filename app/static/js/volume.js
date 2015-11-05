@@ -116,8 +116,8 @@ Volume.Controller = Backbone.View.extend(
                 this.maxz = z;
             } 
 
-            this.texWidth = 1024;
-            this.texHeight = 1024; 
+            this.texWidth = 128;
+            this.texHeight = 128; 
             var xrange = (this.maxx- this.minx);
             var yrange = (this.maxy - this.miny);
             var zrange = (this.maxz - this.minz);
@@ -457,6 +457,7 @@ Volume.Controller = Backbone.View.extend(
 
         displayVolume : function(imdata)
         {
+          console.log("At display Volume");
           g = {}
           g.width =1000; g.height = 768;
           
