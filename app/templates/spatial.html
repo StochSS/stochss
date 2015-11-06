@@ -230,11 +230,23 @@
 
                             </center>
                         </div>
-                        <canvas id="tgtCanvas"></canvas>
+                        <canvas id="tgtCanvas" style="display: none;"></canvas>
                         <div id="inset"></div>
                         <div id="newMesh"></div>
                         <div id="meshPreview" style="z-index=-2"></div>
-        
+
+        <div id="volumeControls" class="well" style="clear:both; display: none; margin-bottom: 0px;">
+
+            <span><b>Volume Rendering Controls</b> </span><br/>
+            
+            <span> Luminosity </span>
+            <input id="luminosityControls" type="range" min="100.0" max="1000.0" step="10.0" value="100.0">
+            
+            <span> Opacity </span>
+            <input id="opacityControls" type="range" min="0.0" max="1.0" step="0.1" value="0.05">
+            
+        </div>
+
         <div id="domainControls" class="well" style="clear:both; display: none; margin-bottom: 0px;">
 
             <span><b>Domain Clipping Controls</b> </span><br/>
@@ -242,7 +254,7 @@
                 
                 <tr>
                     <td> <span> Clip: </span </td>
-                                             <td> <input type="checkbox" id="planeXCheck"/>X-plane </td> 
+                    <td> <input type="checkbox" id="planeXCheck"/>X-plane </td> 
                     <td><input type="checkbox" id="planeYCheck"/>Y-plane </td>
                     <td><input type="checkbox" id="planeZCheck"/>Z-plane </td>
                 </tr>

@@ -76,7 +76,7 @@ Spatial.Controller = Backbone.View.extend(
 
         renderFrame : function() {
             if(this.volumeRender == true)
-            {
+            {   
                 this.renderer.render(this.g.scene, this.camera);
             }
             else
@@ -356,7 +356,8 @@ Spatial.Controller = Backbone.View.extend(
 
             var radius = this.model.geometry.boundingSphere.radius;
 
-            var uniforms =  { xval : {type: 'f', value: -radius}, 
+            var uniforms =  { 
+                              xval : {type: 'f', value: -radius}, 
                               yval : {type: 'f', value: -radius}, 
                               zval : {type: 'f', value: -radius},
                               xflag : {type: 'f', value: 0.0},
@@ -480,17 +481,33 @@ Spatial.Controller = Backbone.View.extend(
         hideMesh: function(){
             // To update uniforms
             console.log("hideMesh: function()");
-            var val = parseFloat( $("#planeXSelect").val() ) ;
 
-            this.mesh.material.uniforms.xval.value = val;
+            var valX = parseFloat( $("#planeXSelect").val() ) ;
+            var valY = parseFloat( $("#planeYSelect").val() ) ;
+            var valZ = parseFloat( $("#planeZSelect").val() ) ;
             
-            val = parseFloat( $("#planeYSelect").val() );
-            this.mesh.material.uniforms.yval.value = val;
-            
-            val = parseFloat( $("#planeZSelect").val() );
-            this.mesh.material.uniforms.zval.value = val;
-            
-            this.mesh.material.needsUpdate = true;
+            if(this.volumeRender)
+            {
+                this.g.mesh.material.uniforms.xval.value = valX;
+                this.g.mesh.material.uniforms.yval.value = valY;
+                this.g.mesh.material.uniforms.zval.value = valZ;
+                this.g.mesh.material.needsUpdate = true;
+                return;
+            }
+            else{
+                this.mesh.material.uniforms.xval.value = valX;
+                this.mesh.material.uniforms.yval.value = valY;
+                this.mesh.material.uniforms.zval.value = valZ;
+                this.mesh.material.needsUpdate = true;
+            }
+        },
+
+        handleVolumeSliderChange: function(event)
+        {
+            console.log("@handleVolumeSliderChange: function(event)");
+            this.g.mesh.material.uniforms.luminosity.value = parseFloat($("#luminosityControls").val());
+            this.g.mesh.material.uniforms.opacity.value =  parseFloat($("#opacityControls").val());
+            this.g.mesh.material.needsUpdate  = true;
         },
 
         handlePlaneSliderChange: function(event)
@@ -571,6 +588,12 @@ Spatial.Controller = Backbone.View.extend(
             slider.prop('step', (max - min)/15 ) ;
             slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
             slider.trigger('change');
+
+            var slider = $("#luminosityControls");
+            slider.on('change', _.throttle(_.bind(this.handleVolumeSliderChange, this), 1000));
+
+            var slider = $("#opacityControls");
+            slider.on('change', _.throttle(_.bind(this.handleVolumeSliderChange, this), 1000));
         },
 
         /*
@@ -1034,6 +1057,9 @@ Spatial.Controller = Backbone.View.extend(
 
             this.colors = this.cache[this.timeIdx];
 
+            // Display Volume Controls
+            $( '#volumeControls' ).show();
+            
             console.log("calling this.constructImage();")
             var imageAndRange = this.constructImage();
 
@@ -1079,8 +1105,8 @@ Spatial.Controller = Backbone.View.extend(
                 this.maxz = z;
             } 
 
-            this.texWidth = 128;
-            this.texHeight = 128; 
+            this.texWidth = 256*2;
+            this.texHeight = 256*2; 
             var xrange = (this.maxx- this.minx);
             var yrange = (this.maxy - this.miny);
             var zrange = (this.maxz - this.minz);
@@ -1432,12 +1458,21 @@ Spatial.Controller = Backbone.View.extend(
 
           g.volcol = new THREE.Vector3(1.0,1.0, 1.0);
           g.voltexDim = new THREE.Vector3(this.Nx, this.Ny, this.Nz);
-          // g.camera = new THREE.PerspectiveCamera( 45, g.width/g.height, 1, 200); 
-          // g.camera.position.set(0, 0, -2);
-          // g.camera.lookAt(new THREE.Vector3()); 
 
-          
+          this.luminosity = parseFloat($("#luminosityControls").val());
+          this.opacity = parseFloat($("#opacityControls").val());
+
+          var radius = this.model.geometry.boundingSphere.radius;
           g.uniforms = {
+              xval : {type: 'f', value: -radius}, 
+              yval : {type: 'f', value: -radius}, 
+              zval : {type: 'f', value: -radius},
+              xflag : {type: 'f', value: 0.0},
+              yflag : {type: 'f', value: 0.0}, 
+              zflag : {type: 'f', value: 0.0},
+              xflip : {type: 'f', value: 1.0},
+              yflip : {type: 'f', value: 1.0}, 
+              zflip : {type: 'f', value: 1.0},
               uCamPos:    { type: "v3", value: this.camera.position },
               uColor:     { type: "v3", value: g.volcol },
               uTex:       { type: "t", value: g.voltex },
@@ -1447,7 +1482,9 @@ Spatial.Controller = Backbone.View.extend(
               width:       { type: "f", value: this.texWidth },
               height:       { type: "f", value: this.texHeight },
               uTexDim:    { type: "v3", value: g.voltexDim },
-              uTMK:       { type: "f", value: 10.0 }
+              uTMK:       { type: "f", value: 10.0 },
+              luminosity:  {type: "f", value: this.luminosity},
+              opacity: {type:"f", value: this.opacity }
           };
 
           shader = new THREE.ShaderMaterial({
@@ -1459,10 +1496,12 @@ Spatial.Controller = Backbone.View.extend(
 
           var maxDim = Math.max(this.Nx, this.Ny, this.Nz);
 
-          var geometry1 = new THREE.BoxGeometry(this.Nx / maxDim, this.Ny / maxDim, this.Nz / maxDim);
-          g.mesh1 = new THREE.Mesh( geometry1, shader);
-          g.scene.add( g.mesh1 ); 
-
+          var geometry = new THREE.BoxGeometry(this.Nx / maxDim, this.Ny / maxDim, this.Nz / maxDim);
+          g.mesh = new THREE.Mesh( geometry , shader);
+          g.scene.add( g.mesh ); 
+          g.scene.add(planeX);g.scene.add(planeXEdges);
+          g.scene.add(planeY);g.scene.add(planeYEdges);
+          g.scene.add(planeZ);g.scene.add(planeZEdges);
           this.g = g;
 
         },
@@ -1539,6 +1578,7 @@ Spatial.Controller = Backbone.View.extend(
                 {
                     if(data['outData']){
                         $( '#plotRegion' ).show();
+
                         $( '#domainControls' ).show();
                         //Set up trajectory select
                         trajectorySelect = $("#trajectorySelect");
@@ -1595,12 +1635,14 @@ Spatial.Controller = Backbone.View.extend(
                             if( selectedOption == 'population')
                             {
                                 this.volumeRender = false;
+                                $( '#volumeControls' ).hide();
                                 this.showPopulation  = true;
                                 this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
                             }
                             else if( selectedOption == 'concentration')
                             {
                                 this.volumeRender = false;
+                                $( '#volumeControls' ).hide();
                                 this.showPopulation  = false;
                                 this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
                             }
@@ -1629,8 +1671,17 @@ Spatial.Controller = Backbone.View.extend(
                             planeX.visible = false; planeXEdges.visible = false;
                         }
                         planeX.position.x = $( "#planeXSelect" ).val();
-                        this.mesh.material.uniforms.xflag.value = val;
-                        this.mesh.material.needsUpdate = true;
+
+                        if(this.volumeRender)
+                        {
+                            this.g.mesh.material.uniforms.xflag.value = val;
+                            this.g.mesh.material.needsUpdate = true;
+                        }
+                        else
+                        {
+                            this.mesh.material.uniforms.xflag.value = val;
+                            this.mesh.material.needsUpdate = true;
+                        }
 
                         }, this));
 
@@ -1647,11 +1698,20 @@ Spatial.Controller = Backbone.View.extend(
 
                             else{
                                 planeY.visible = false; planeYEdges.visible = false;
-
                             }
+
                             planeY.position.z = $( "#planeYSelect" ).val();
-                            this.mesh.material.uniforms.yflag.value = val;
-                            this.mesh.material.needsUpdate = true;
+
+                            if(this.volumeRender)
+                            {
+                                this.g.mesh.material.uniforms.yflag.value = val;
+                                this.g.mesh.material.needsUpdate = true;
+                            }
+                            else
+                            {
+                                this.mesh.material.uniforms.yflag.value = val;
+                                this.mesh.material.needsUpdate = true;
+                            }
 
                         }, this));
 
@@ -1668,45 +1728,79 @@ Spatial.Controller = Backbone.View.extend(
                                 planeZ.visible = false; planeZEdges.visible = false;
 
                             }
+
                             planeZ.position.y = $( "#planeZSelect" ).val();
-                            this.mesh.material.uniforms.zflag.value = val;
-                            this.mesh.material.needsUpdate = true;
+                            if(this.volumeRender)
+                            {
+                                this.g.mesh.material.uniforms.zflag.value = val;
+                                this.g.mesh.material.needsUpdate = true;
+                            }
+                            else
+                            {
+
+                                this.mesh.material.uniforms.zflag.value = val;
+                                this.mesh.material.needsUpdate = true;
+                            }
                             
                         }, this));
 
                         var checkbox = $( "#planeXFlip" );
-                        checkbox.click(_.bind(function(){
+                        checkbox.click(_.bind(function(){ 
+
+                            var value = 0.0;
                             if($("#planeXFlip").is(':checked'))
+                                value = -1.0;
+                            else 
+                                value = 1.0;
+                            
+                            if(this.volumeRender)
                             {
-                                this.mesh.material.uniforms.xflip.value = -1.0;
-                            } else {
-                                this.mesh.material.uniforms.xflip.value = 1.0;
+                                this.g.mesh.material.uniforms.xflip.value = value;
+                                this.g.mesh.material.needsUpdate = true;
                             }
 
+                            this.mesh.material.uniforms.xflip.value = value;
                             this.mesh.material.needsUpdate = true;
                         }, this));
 
                         var checkbox = $( "#planeYFlip" );
                         checkbox.click(_.bind(function(){
-                            if($("#planeYFlip").is(':checked'))
-                            {
-                                this.mesh.material.uniforms.yflip.value = -1.0;
-                            } else {
-                                this.mesh.material.uniforms.yflip.value = 1.0;
-                            }
+                            
+                            var value = 0.0;
 
+                            if($("#planeYFlip").is(':checked'))
+                                value = -1.0;
+
+                            else
+                                value = 1.0;
+
+                            if(this.volumeRender)
+                            {
+                                this.g.mesh.material.uniforms.yflip.value = value;
+                                this.g.mesh.material.needsUpdate = true;
+                            }
+                            
+                            this.mesh.material.uniforms.yflip.value = value;
                             this.mesh.material.needsUpdate = true;
                         }, this));
 
                         var checkbox = $( "#planeZFlip" );
                         checkbox.click(_.bind(function(){
-                            if($("#planeZFlip").is(':checked'))
-                            {
-                                this.mesh.material.uniforms.zflip.value = -1.0;
-                            } else {
-                                this.mesh.material.uniforms.zflip.value = 1.0;
-                            }
+                            var value = 0.0;
 
+                            if($("#planeZFlip").is(':checked'))
+                                value = -1.0;
+
+                            else
+                                value = 1.0;
+
+                            if(this.volumeRender)
+                            {
+                                this.g.mesh.material.uniforms.zflip.value = value;
+                                this.g.mesh.material.needsUpdate = true;
+                            }
+                            
+                            this.mesh.material.uniforms.zflip.value = value;
                             this.mesh.material.needsUpdate = true;
                         }, this));
 

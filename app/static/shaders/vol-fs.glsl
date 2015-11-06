@@ -48,7 +48,23 @@ uniform float Ny;
 uniform float Nz;
 uniform float width;
 uniform float height;
+uniform float luminosity;
+uniform float opacity;
 
+
+uniform float xval;
+uniform float yval;
+uniform float zval;
+
+uniform float xflag;
+uniform float yflag;
+uniform float zflag;
+
+uniform float xflip;
+uniform float yflip;
+uniform float zflip;
+
+varying vec4 vColor;
 
 float gStepSize;
 float gStepFactor;
@@ -108,8 +124,8 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
   vec3 Argb = vec3(0.0);   // accumulated color
   float Aa = 0.0;         // accumulated alpha
   
-  float Of = 0.05;
-  float Lf = 100.0;
+  float Of = opacity;
+  float Lf = luminosity;
 
 
   for (int i=0; i<MAX_STEPS; ++i) {
@@ -140,11 +156,16 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
 }
 
 void main() {
-  float maxDim = max(Nx, max(Ny, Nz));
-  vec3 shiftCornerToZero = vec3(Nx / (maxDim * 2.0), Ny / (maxDim * 2.0), Nz / (maxDim * 2.0));
 
-  vec3 ro = vPos1n;
-  vec3 rd = normalize( ro - (uCamPos + shiftCornerToZero) );
-  gStepSize = ROOTTHREE / float(MAX_STEPS);
-  gl_FragColor = raymarchLight(ro, rd);
+  if(vColor.a < 0.9 ) 
+       discard;
+  else
+  {
+    float maxDim = max(Nx, max(Ny, Nz));
+    vec3 shiftCornerToZero = vec3(Nx / (maxDim * 2.0), Ny / (maxDim * 2.0), Nz / (maxDim * 2.0));
+    vec3 ro = vPos1n;
+    vec3 rd = normalize( ro - (uCamPos + shiftCornerToZero) );
+    gStepSize = ROOTTHREE / float(MAX_STEPS);
+    gl_FragColor = raymarchLight(ro, rd);
+  }
 }
