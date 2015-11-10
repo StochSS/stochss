@@ -1637,12 +1637,16 @@ Spatial.Controller = Backbone.View.extend(
                                 this.mesh.material.wireframe = false;
                                 this.mesh.material.needsUpdate = true;
                             }
-                            else
+                            else if( selectedOption == 'wireframe')
                             {
                                 this.mesh.material.wireframe = true;
                                 this.mesh.material.needsUpdate = true;
                             }
-
+                            else
+                            {
+                                this.volumeHandler();
+                                this.volumeRender = true;
+                            }
                             this.cache = {}
                             this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
                         }, this));
@@ -1669,12 +1673,7 @@ Spatial.Controller = Backbone.View.extend(
                                 this.showPopulation  = false;
                                 this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
                             }
-                            else
-                            {
-                                this.volumeHandler();
-                                this.volumeRender = true;
-                            }
-
+ 
                             this.cache = {}
                             this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
                         }, this));
