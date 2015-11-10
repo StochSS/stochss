@@ -1634,11 +1634,13 @@ Spatial.Controller = Backbone.View.extend(
                             selectedOption = $("#wireSelect")[0].options[selectedIndex].value
                             if( selectedOption == 'solid')
                             {
+                                this.volumeRender = false;
                                 this.mesh.material.wireframe = false;
                                 this.mesh.material.needsUpdate = true;
                             }
                             else if( selectedOption == 'wireframe')
                             {
+                                this.volumeRender = false;
                                 this.mesh.material.wireframe = true;
                                 this.mesh.material.needsUpdate = true;
                             }
