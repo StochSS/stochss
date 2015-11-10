@@ -141,9 +141,6 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
     Aa += Sa;
     pos += step;
 
-   //if (pos.x < 0.0 )
-    //Aa = 1.0;
- 
     if ((pos.x / (Nx / maxDim)) >= 1.0 ||
        (pos.x / (Nx / maxDim)) < 0.0 ||
        (pos.y / (Ny / maxDim)) >= 1.0 ||
@@ -152,20 +149,46 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
        (pos.z / (Nz / maxDim)) < 0.0 )
       break;
   }
-  return vec4((Argb) * Lf, Aa); //
+  return vec4(1.0,0.0,0.0, Aa); //(Argb) * Lf
 }
 
 void main() {
 
-  if(vColor.a < 0.9 ) 
-       discard;
-  else
-  {
+
+
     float maxDim = max(Nx, max(Ny, Nz));
     vec3 shiftCornerToZero = vec3(Nx / (maxDim * 2.0), Ny / (maxDim * 2.0), Nz / (maxDim * 2.0));
     vec3 ro = vPos1n;
     vec3 rd = normalize( ro - (uCamPos + shiftCornerToZero) );
     gStepSize = ROOTTHREE / float(MAX_STEPS);
     gl_FragColor = raymarchLight(ro, rd);
-  }
+
+
+      if(xflag == 1.0)
+    {
+        if(vPos1.x <= xval && xflip >= 0.0)
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+        if(vPos1.x > xval && xflip < 0.0)
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+    }            
+
+     if(yflag == 1.0)
+    {
+        if (vPos1.z <= yval && yflip >= 0.0)
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        if (vPos1.z > yval && yflip < 0.0)
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    }
+    
+    if(zflag == 1.0)
+    {
+        if( vPos1.y <= zval && zflip >= 0.0)
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+        if( vPos1.y > zval && zflip < 0.0)
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    }
+  
 }

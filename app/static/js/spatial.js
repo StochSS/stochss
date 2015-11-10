@@ -552,40 +552,59 @@ Spatial.Controller = Backbone.View.extend(
         },
 
         setupPlaneSliders : function(){
-
             console.log("setupPlaneSliders : function()");
+
+            var minX = 0;
+            var minY = 0;
+            var minZ = 0;
+            var maxX = 0;
+            var maxY = 0;
+            var maxZ = 0;
+
+            if(this.volumeRender)
+            {
+                minX = this.minx;
+                minY = this.minz;
+                minZ = this.miny;
+                maxX = this.maxx;
+                maxY = this.maxy;
+                maxZ = this.maxz;
+            }   
+            else{
+                minX = this.boundingBox.minx;
+                minY =  this.boundingBox.minz;
+                minZ =  this.boundingBox.miny;
+
+                maxX = this.boundingBox.maxx;
+                maxY =  this.boundingBox.maxz;
+                maxZ =  this.boundingBox.maxy;
+            } 
 
             // For plane X
             var slider = $( "#planeXSelect" );
-            var min = this.boundingBox.minx;
-            var max = this.boundingBox.maxx;
-            slider.prop('min', min);
-            slider.prop('max', max);
-            slider.val(min);
-            slider.prop('step', (max - min)/10 ) ;
+            slider.prop('min', minX);
+            slider.prop('max', maxX);
+            slider.val(minX);
+            slider.prop('step', (maxX - minX)/10 ) ;
             slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
             slider.trigger('change');
 
 
             // For plane Y
             var slider = $( "#planeYSelect" );
-            min = this.boundingBox.minz;
-            max = this.boundingBox.maxz;
-            slider.prop('min', min);
-            slider.prop('max', max);
-            slider.val(min);
-            slider.prop('step', (max - min)/15 ) ;
+            slider.prop('min', minZ);
+            slider.prop('max', maxZ);
+            slider.val(minZ);
+            slider.prop('step', (maxZ - minZ)/15 ) ;
             slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
             slider.trigger('change');
 
             // For plane z
             var slider = $( "#planeZSelect" );
-            min = this.boundingBox.miny;
-            max = this.boundingBox.maxy;
-            slider.prop('min', this.boundingBox.miny);
-            slider.prop('max', this.boundingBox.maxy);
-            slider.val(min);
-            slider.prop('step', (max - min)/15 ) ;
+            slider.prop('min', minY);
+            slider.prop('max', maxY);
+            slider.val(minY);
+            slider.prop('step', (maxY - minY)/15 ) ;
             slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
             slider.trigger('change');
 
@@ -1060,6 +1079,8 @@ Spatial.Controller = Backbone.View.extend(
             // Display Volume Controls
             $( '#volumeControls' ).show();
             
+            this.setupPlaneSliders();
+
             console.log("calling this.constructImage();")
             var imageAndRange = this.constructImage();
 
@@ -1091,7 +1112,7 @@ Spatial.Controller = Backbone.View.extend(
               var z = vertices[i]['z'];
               if(this.minx > x)
                 this.minx = x;
-              if(this.maxx < x)
+              if(this.minzx < x)
                 this.maxx = x;
 
               if(this.miny > y)
@@ -1105,8 +1126,8 @@ Spatial.Controller = Backbone.View.extend(
                 this.maxz = z;
             } 
 
-            this.texWidth = 256*2;
-            this.texHeight = 256*2; 
+            this.texWidth = 256;
+            this.texHeight = 256; 
             var xrange = (this.maxx- this.minx);
             var yrange = (this.maxy - this.miny);
             var zrange = (this.maxz - this.minz);
@@ -1636,6 +1657,7 @@ Spatial.Controller = Backbone.View.extend(
                             {
                                 this.volumeRender = false;
                                 $( '#volumeControls' ).hide();
+                                this.setupPlaneSliders();
                                 this.showPopulation  = true;
                                 this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
                             }
@@ -1643,6 +1665,7 @@ Spatial.Controller = Backbone.View.extend(
                             {
                                 this.volumeRender = false;
                                 $( '#volumeControls' ).hide();
+                                this.setupPlaneSliders();
                                 this.showPopulation  = false;
                                 this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
                             }
