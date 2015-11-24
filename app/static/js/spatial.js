@@ -36,7 +36,7 @@ Spatial.Controller = Backbone.View.extend(
             this.playFlag = false;
             this.playMeshInterval = 1000;
             this.volumeRender = false;
-            
+            this.dollyFlag = false;
             // Set up room for the model select stuff
             // Pull in all the models from the internets
             // Build the simulationConf page (don't need external info to make that happen)
@@ -77,10 +77,23 @@ Spatial.Controller = Backbone.View.extend(
         renderFrame : function() {
             if(this.volumeRender == true)
             {   
+                if(!this.dollyFlag)
+                {
+                    var scale = this.mesh.geometry.boundingSphere.radius * 2.0;
+                    this.controls.dollyIn(scale);
+                    this.dollyFlag = true;
+                }
+
                 this.renderer.render(this.g.scene, this.camera);
             }
             else
             {
+                if(this.dollyFlag)
+                {
+                    var scale = this.mesh.geometry.boundingSphere.radius * 2.0;
+                    this.controls.dollyOut(scale);
+                    this.dollyFlag = false;
+                }
                 this.renderer.render(this.scene, this.camera);
             }
 
@@ -1143,7 +1156,7 @@ Spatial.Controller = Backbone.View.extend(
               if((horizontal * vertical)> Nz) break;
             }
 
-            this.Nx = i+1;
+            this.Nx = Math.floor(i+1);
             this.Ny = Math.floor(this.Nx * yrange / xrange);
             this.Nz = Math.floor(this.Nx * zrange / xrange);
 
@@ -1517,7 +1530,7 @@ Spatial.Controller = Backbone.View.extend(
 
           var maxDim = Math.max(this.Nx, this.Ny, this.Nz);
 
-          var geometry = new THREE.BoxGeometry(this.Nx / maxDim, this.Ny / maxDim, this.Nz / maxDim);
+          var geometry = new THREE.BoxGeometry( this.Nx / maxDim, this.Ny / maxDim, this.Nz / maxDim );
           g.mesh = new THREE.Mesh( geometry , shader);
           g.scene.add( g.mesh ); 
           g.scene.add(planeX);g.scene.add(planeXEdges);
@@ -1644,7 +1657,7 @@ Spatial.Controller = Backbone.View.extend(
                                 this.mesh.material.wireframe = true;
                                 this.mesh.material.needsUpdate = true;
                             }
-                            else
+                            else if(selectedOption == 'volume')
                             {
                                 this.volumeHandler();
                                 this.volumeRender = true;
@@ -1661,16 +1674,13 @@ Spatial.Controller = Backbone.View.extend(
                             selectedOption = $("#unitSelect")[0].options[selectedIndex].value
                             if( selectedOption == 'population')
                             {
-                                this.volumeRender = false;
-                                $( '#volumeControls' ).hide();
+
                                 this.setupPlaneSliders();
                                 this.showPopulation  = true;
                                 this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
                             }
                             else if( selectedOption == 'concentration')
                             {
-                                this.volumeRender = false;
-                                $( '#volumeControls' ).hide();
                                 this.setupPlaneSliders();
                                 this.showPopulation  = false;
                                 this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
