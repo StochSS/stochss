@@ -47,7 +47,7 @@ Spatial.Controller = Backbone.View.extend(
             this.meshData = undefined;
 
             // These are our control states
-            this.timeIdx = 46;
+            this.timeIdx = 0;
             this.selectedSpecies = undefined;
             this.trajectory = 0;
 
