@@ -784,8 +784,8 @@ Spatial.Controller = Backbone.View.extend(
                 this.data = data;
                 this.meshData = data.mesh;
                 this.updateCache(0, this.cacheRange);
-                var sortedSpecies = data.species.sort();
-                this.setUpSpeciesSelect(sortedSpecies);            
+                this.sortedSpecies = data.species.sort();
+                this.setUpSpeciesSelect(this.sortedSpecies);            
             }
             
             catch(err)
@@ -898,6 +898,8 @@ Spatial.Controller = Backbone.View.extend(
 
         setUpSpeciesSelect: function(sortedSpecies)
         {
+
+
             console.log("setUpSpeciesSelect: function(sortedSpecies)");
             var speciesSelect = $("#speciesSelect");
 
@@ -1085,7 +1087,7 @@ Spatial.Controller = Backbone.View.extend(
           return renderer;
         },
 
-        volumeHandler : function() {
+        volumeHandler : function(both) {
 
             this.colors = this.cache[this.timeIdx];
 
@@ -1093,10 +1095,13 @@ Spatial.Controller = Backbone.View.extend(
             $( '#volumeControls' ).show();
             
             this.setupPlaneSliders();
-
-            console.log("calling this.constructImage();")
-            var imageAndRange = this.constructImage();
-
+            
+            console.log("calling this.constructImage();");
+            if(both)
+                var imageAndRange = this.constructAllImage();
+            else
+                var imageAndRange = this.constructImage();
+                
             console.log("calling this.getTexture");
             var canvasData = this.displayTexture(imageAndRange.imdata, imageAndRange.min, imageAndRange.max);
             
@@ -1369,16 +1374,78 @@ Spatial.Controller = Backbone.View.extend(
           return result;
         },
 
+        constructAllImage: function(){
+          var xlimit = this.Nx;
+          var ylimit = this.Ny;
+          var zlimit = this.Nz;
+          
+          var im = new Array(xlimit*ylimit*zlimit).fill(0);
+          var min = undefined;
+          var max = undefined;
+                  for(var i = 0; i < this.list.length; i++)
+                  {
+
+                    for(var s = 0; s < this.sortedSpecies.length; s++)  {
+                    var data= this.colors[this.sortedSpecies[s]];
+                
+                    var x = this.list[i].x;
+                    var y = this.list[i].y;
+                    var z = this.list[i].z;
+
+                    var result = this.list[i].result;
+                    var k = this.list[i].voxelKey;
+
+                    var v1 =this.voxelTuples[k][0];
+                    var v2 =this.voxelTuples[k][1];
+                    var v3 =this.voxelTuples[k][2];
+                    var v4 =this.voxelTuples[k][3];
+                      
+                    var c1 = data[v1];
+                    var c2 = data[v2];
+                    var c3 = data[v3];
+                    var c4 = data[v4];
+                      
+                    var l1 =  result[0];
+                    var l2 = result[1];
+                    var l3 = result[2];
+                    var l4 = Math.max(0.0, 1 - (l1 + l2 + l3))
+                      
+                    var inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
+
+                    if(inval < min || typeof(min) == 'undefined')
+                    {
+                        min = inval;
+                    }
+
+                    if(inval > max || typeof(max) == 'undefined')
+                    {
+                        max = inval;
+                    }
+
+                   var imidx  = ( x*ylimit*zlimit )+ ( y*zlimit )+ z;
+                   im[imidx] = inval;
+
+                    }
+            }
+
+            return { imdata : im,
+                min : min,
+                max : max 
+            }
+            
+        },
+
         constructImage: function(){
           var xlimit = this.Nx;
           var ylimit = this.Ny;
           var zlimit = this.Nz;
           
           var im = new Array(xlimit*ylimit*zlimit).fill(0);
-          var data = this.colors[this.selectedSpecies];
 
           var min = undefined;
           var max = undefined;
+
+         var data = this.colors[this.selectedSpecies];
           for(var i = 0; i < this.list.length; i++)
           {
             var x = this.list[i].x;
@@ -1688,6 +1755,16 @@ Spatial.Controller = Backbone.View.extend(
  
                             this.cache = {}
                             this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+                        }, this));
+
+                        var checkbox = $( "#showAllCheck" );
+                        checkbox.click(_.bind(function(){
+
+                            if(this.volumeRender)
+                            {
+                                var val = $( '#speciesSelect' ).val();
+                                this.volumeHandler(true);
+                            }
                         }, this));
 
                         var checkbox = $( "#planeXCheck" );
