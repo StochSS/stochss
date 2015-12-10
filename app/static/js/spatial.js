@@ -1087,7 +1087,7 @@ Spatial.Controller = Backbone.View.extend(
           return renderer;
         },
 
-        volumeHandler : function(both) {
+        volumeHandler : function() {
 
             this.colors = this.cache[this.timeIdx];
 
@@ -1097,7 +1097,7 @@ Spatial.Controller = Backbone.View.extend(
             this.setupPlaneSliders();
             
             console.log("calling this.constructImage();");
-            if(both)
+            if($("#showAllCheck").is(':checked'))
                 var imageAndRange = this.constructAllImage();
             else
                 var imageAndRange = this.constructImage();
@@ -1382,51 +1382,52 @@ Spatial.Controller = Backbone.View.extend(
           var im = new Array(xlimit*ylimit*zlimit).fill(0);
           var min = undefined;
           var max = undefined;
-                  for(var i = 0; i < this.list.length; i++)
-                  {
+          for(var i = 0; i < this.list.length; i++)
+          {
 
-                    for(var s = 0; s < this.sortedSpecies.length; s++)  {
-                    var data= this.colors[this.sortedSpecies[s]];
-                
-                    var x = this.list[i].x;
-                    var y = this.list[i].y;
-                    var z = this.list[i].z;
+            for(var s = 0; s < this.sortedSpecies.length; s++)  {
+                var data= this.colors[this.sortedSpecies[s]];
+            
+                var x = this.list[i].x;
+                var y = this.list[i].y;
+                var z = this.list[i].z;
 
-                    var result = this.list[i].result;
-                    var k = this.list[i].voxelKey;
+                var result = this.list[i].result;
+                var k = this.list[i].voxelKey;
 
-                    var v1 =this.voxelTuples[k][0];
-                    var v2 =this.voxelTuples[k][1];
-                    var v3 =this.voxelTuples[k][2];
-                    var v4 =this.voxelTuples[k][3];
-                      
-                    var c1 = data[v1];
-                    var c2 = data[v2];
-                    var c3 = data[v3];
-                    var c4 = data[v4];
-                      
-                    var l1 =  result[0];
-                    var l2 = result[1];
-                    var l3 = result[2];
-                    var l4 = Math.max(0.0, 1 - (l1 + l2 + l3))
-                      
-                    var inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
+                var v1 =this.voxelTuples[k][0];
+                var v2 =this.voxelTuples[k][1];
+                var v3 =this.voxelTuples[k][2];
+                var v4 =this.voxelTuples[k][3];
+                  
+                var c1 = data[v1];
+                var c2 = data[v2];
+                var c3 = data[v3];
+                var c4 = data[v4];
+                  
+                var l1 = result[0];
+                var l2 = result[1];
+                var l3 = result[2];
+                var l4 = Math.max(0.0, 1 - (l1 + l2 + l3))
+                  
+                var inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
 
-                    if(inval < min || typeof(min) == 'undefined')
-                    {
-                        min = inval;
-                    }
+                if(inval < min || typeof(min) == 'undefined')
+                {
+                    min = inval;
+                }
 
-                    if(inval > max || typeof(max) == 'undefined')
-                    {
-                        max = inval;
-                    }
+                if(inval > max || typeof(max) == 'undefined')
+                {
+                    max = inval;
+                }
 
-                   var imidx  = ( x*ylimit*zlimit )+ ( y*zlimit )+ z;
-                   im[imidx] = inval;
+                var imidx  = ( x*ylimit*zlimit )+ ( y*zlimit )+ z;
 
-                    }
+                if(im[imidx] % 127 == 0)
+                    im[imidx] = inval;
             }
+        }
 
             return { imdata : im,
                 min : min,
@@ -1757,14 +1758,10 @@ Spatial.Controller = Backbone.View.extend(
                             this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
                         }, this));
 
+
                         var checkbox = $( "#showAllCheck" );
                         checkbox.click(_.bind(function(){
-
-                            if(this.volumeRender)
-                            {
-                                var val = $( '#speciesSelect' ).val();
-                                this.volumeHandler(true);
-                            }
+                            this.volumeHandler();
                         }, this));
 
                         var checkbox = $( "#planeXCheck" );
@@ -1782,6 +1779,7 @@ Spatial.Controller = Backbone.View.extend(
                             planeX.visible = false; planeXEdges.visible = false;
                         }
                         planeX.position.x = $( "#planeXSelect" ).val();
+
 
                         if(this.volumeRender)
                         {
