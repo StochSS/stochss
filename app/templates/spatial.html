@@ -30,6 +30,7 @@
 <script type="text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
 <script type="text/javascript" src="/static/js/TrackballControls.js"></script>
 <script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
+<script type="text/javascript" src = "/static/js/MeshToTextureConverter.js"></script>
 <script type="text/javascript" src = "/static/js/spatial.js"></script>
 <script type="text/javascript" src="/static/js/TrackballControls.js"></script>
 <script type="text/javascript" src="static/js/status.js"></script>
@@ -230,7 +231,8 @@
 
                             </center>
                         </div>
-                        <canvas id="tgtCanvas"></canvas>
+
+                        <canvas style="display: none;" id="tgtCanvas"></canvas>
                         <div id="inset"></div>
                         <div id="newMesh"></div>
                         <div id="meshPreview" style="z-index=-2"></div>
@@ -245,10 +247,7 @@
             </div>
 
             <span> Opacity </span>
-            <input id="opacityControls" type="range" min="0.0" max="1.0" step="0.1" value="0.05">
-
-            <input type="checkbox" id="showAllCheck"/> Show all species </td>            
-            
+            <input id="opacityControls" type="range" min="0.0" max="10.0" step="0.1" value="0.05">
         </div>
 
         <div id="domainControls" class="well" style="clear:both; display: none; margin-bottom: 0px;">

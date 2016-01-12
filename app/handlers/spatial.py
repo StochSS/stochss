@@ -161,7 +161,6 @@ class SpatialPage(BaseHandler):
                 dataType = "population" if "showPopulation" in data and data["showPopulation"] else "concentration"
 
                 resultJS = {}
-                data = {}
 
                 if job.preprocessed is None or trajectory not in job.preprocessed or not os.path.exists(job.preprocessedDir):
                     job.preprocess(trajectory)
@@ -174,9 +173,12 @@ class SpatialPage(BaseHandler):
 
                 with h5py.File(f, 'r') as dataFile:
                     dataTmp = {}
+                    colorTmp = {}
 
                     for specie in dataFile.keys():
                         data2 = dataFile[specie][dataType][sTime:eTime + 1]
+
+                        dataTmp[specie] = data2
                         
                         limits[specie] = { 'min' : dataFile[specie][dataType].attrs['min'],
                                            'max' : dataFile[specie][dataType].attrs['max'] }
@@ -185,28 +187,28 @@ class SpatialPage(BaseHandler):
                         rgbas = cm.to_rgba(data2, bytes = True).astype('uint32')
 
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
-
+                        
                         #rgbaInts = numpy.zeros((rgbas.shape[0], rgbas.shape[1]))
 
                         #for i in range(rgbas.shape[0]):
                         #    for j in range(rgbas.shape[1]):
                         #        rgbaInts[i, j] = int('0x%02x%02x%02x' % tuple(rgbas[i, j][0:3]), 0)
 
-                        dataTmp[specie] = []
+                        colorTmp[specie] = []
                         for i in range(rgbas.shape[0]):
-                            dataTmp[specie].append(list(rgbas[i].astype('int')))
+                            colorTmp[specie].append(list(rgbas[i].astype('int')))
 
-
+                    colors = {}
                     data = {}
                     for i in range(abs(eTime - sTime + 1)):
+                        colors[sTime + i] = {}
                         data[sTime + i] = {}
                         for specie in dataFile.keys():
-                            data[sTime + i][specie] = dataTmp[specie][i] 
-
-                print "Data is :", data[sTime]["A"][sTime], data[sTime]["A"][eTime-1]
+                            colors[sTime + i][specie] = colorTmp[specie][i] 
+                            data[sTime + i][specie] = list(dataTmp[specie][i])
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( { "colors" : data, "limits" : limits } ))
+                self.response.write(json.dumps( { "colors" : colors, "raw" : data, "limits" : limits } ))
 
             except Exception as e:
                 traceback.print_exc()
