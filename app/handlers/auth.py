@@ -52,7 +52,7 @@ class SecretKeyHandler(BaseHandler):
         A POST to /secret_key means a new secret key should be generated from the string in the request body.
         '''
         # Dont allow requests from outside connections
-        if self.request.headers['Host'].find('localhost') == -1:
+#        if self.request.headers['Host'].find('localhost') == -1:
             return
         SecretKey.clear_stored_key()
         SecretKey(key_string=self.request.get('key_string')).put()
