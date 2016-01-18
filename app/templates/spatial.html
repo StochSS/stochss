@@ -9,29 +9,27 @@
         </div>
     </div>
 </div>
-
-
 {% endblock %}
 
 {% block jscontent %}
-<script type="text/javascript" src = "/static/js/underscore.js"></script>
-<script type="text/javascript" src = "/static/utils.js"></script>
-<script type="text/javascript" src = "/static/js/backbone.js"></script>
-<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<script type="text/javascript" src="/static/js/underscore.js"></script>
+<script type="text/javascript" src="/static/utils.js"></script>
+<script type="text/javascript" src="/static/js/backbone.js"></script>
+<script type="text/javascript" src="/static/model/stochkit.js"></script>
 <link rel="stylesheet" href="/static/css/nv.d3.css">
-<link rel="stylesheet" href="/static/css/controls.css">
-<script type="text/javascript" src = "/static/js/purl.js"></script>
-<script type="text/javascript" src = "/static/js/canvas2image.js"></script>
-<script type="text/javascript" src = "/static/js/splot.js"></script>
-<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
-<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
-<script type="text/javascript" src = "/static/js/sensitivity.js"></script>
-<script type="text/javascript" src = "/static/model/stochkit.js"></script>
-<script type="text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
+<link rel="stylesheet" href="/static/css/spatial.css">
+<script type="text/javascript" src="/static/js/purl.js"></script>
+<script type="text/javascript" src="/static/js/canvas2image.js"></script>
+<script type="text/javascript" src="/static/js/splot.js"></script>
+<script type="text/javascript" src="/static/js/d3.v3.js"></script>
+<script type="text/javascript" src="/static/js/nv.d3.js"></script>
+<script type="text/javascript" src="/static/js/sensitivity.js"></script>
+<script type="text/javascript" src="/static/model/stochkit.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
 <script type="text/javascript" src="/static/js/TrackballControls.js"></script>
-<script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
-<script type="text/javascript" src = "/static/js/MeshToTextureConverter.js"></script>
-<script type="text/javascript" src = "/static/js/spatial.js"></script>
+<script type="text/javascript" src="/static/js/OrbitControls.js"></script>
+<script type="text/javascript" src="/static/js/MeshToTextureConverter.js"></script>
+<script type="text/javascript" src="/static/js/spatial.js"></script>
 <script type="text/javascript" src="/static/js/TrackballControls.js"></script>
 <script type="text/javascript" src="static/js/status.js"></script>
 
@@ -114,7 +112,7 @@
 <script type="text/template" id="jobInfoTemplate">
     <ol class="breadcrumb">
   	<li><a href="/status">Job Status</a></li>
-  	<li class="active"><%= name %></a></li>
+  	<li class="active"><%= name %></li>
     </ol>
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <br />
@@ -141,10 +139,11 @@
         </div>
 
     </div>
-    
+
     <div id="meshMsg" style="clear:both; display: none;"></div>
-    <div id="plotRegion" style="display: none;">
-        <table>
+
+    <div id="plotRegion">
+        <table class="controls">
             <tr>
                 <td valign=top>
                     Select <span id="timeSelectDisplay"></span><br />
@@ -180,106 +179,102 @@
         </table>
         <div class="row">
             <div class="span10" style="border: 1px solid rgb(221, 221, 221);">
-                        <div id="meshPreviewMsg"><CENTER><H1>Loading...</H1></CENTER></div>
-                        
+                <div id="meshPreviewMsg">
+                    <center><h1>Loading...</h1></center>
+                </div>
 
-                        <div id="container" >
-                            <center>
-                            <div class="button-container  button-container-left">
+                <div id="container" class="controls">
+                    <center>
+                        <div class="button-container  button-container-left">
                             
-                                Animation <span id="playStats">stopped</span>:
-                                <button class="button" id="play_btn"><i class="icon-play"></i></button> 
-                                <button class="button" id="stop_btn"><i class="icon-stop"></i></button>
-                            </div>
-                            
-                            <div class="button-container">
-                            Animating <span id="playSpeed">1</span> fps:
-                                <button class="button" id="speedup_btn"><i class="icon-arrow-up"/></button>
-                                <button class="button" id="slowdown_btn"><i class="icon-arrow-down"/></button>
-                            
-                            </div>
-                            &nbsp;
-                            <div class="button-container" >
-                                <button class="button" id="zoomPlus_btn"><i class="icon-plus"></i></button> 
-                                Zoom
-                                <button class="button" id="zoomMinus_btn"><i class="icon-minus"></i></button> 
-                            </div>
-                            &nbsp; 
-                            <div class="button-container">
-                                <button class="button" id="panLeft_btn"><i class="icon-arrow-left"></i></button> 
-                                <button class="button" id="panUp_btn"><i class="icon-arrow-up"></i></button> 
-                                Pan
-                                <button class="button" id="panDown_btn"><i class="icon-arrow-down"></i></button>
-                                <button class="button" id="panRight_btn"><i class="icon-arrow-right"></i></button>
-                            </div>
-                            &nbsp; 
-                            <div class="button-container">
-                                <button class="button" id="rotateLeft_btn"><i class="icon-arrow-left"></i></button>
-                                <button class="button" id="rotateUp_btn"><i class=" icon-arrow-up"></i></button> 
-                                Rotate
-                                <button class="button" id="rotateDown_btn"><i class="icon-arrow-down"></i></button> 
-                                <button class="button" id="rotateRight_btn"><i class="icon-arrow-right"></i></button> 
-                            </div>
-                            
-                            &nbsp; 
-                            
-                            <div class="button-container">
-                                <button class="button" id="reset_btn">Reset</button>
-                            </div>
-
-
-
-                            </center>
+                            Animation <span id="playStats">stopped</span>:
+                            <button class="button" id="play_btn"><i class="icon-play"></i></button> 
+                            <button class="button" id="stop_btn"><i class="icon-stop"></i></button>
                         </div>
+                        
+                        <div class="button-container">
+                            Animating <span id="playSpeed">1</span> fps:
+                            <button class="button" id="speedup_btn"><i class="icon-arrow-up"/></button>
+                            <button class="button" id="slowdown_btn"><i class="icon-arrow-down"/></button>
+                            
+                        </div>
+                        &nbsp;
+                        <div class="button-container" >
+                            <button class="button" id="zoomPlus_btn"><i class="icon-plus"></i></button> 
+                            Zoom
+                            <button class="button" id="zoomMinus_btn"><i class="icon-minus"></i></button> 
+                        </div>
+                        &nbsp; 
+                        <div class="button-container">
+                            <button class="button" id="panLeft_btn"><i class="icon-arrow-left"></i></button> 
+                            <button class="button" id="panUp_btn"><i class="icon-arrow-up"></i></button> 
+                            Pan
+                            <button class="button" id="panDown_btn"><i class="icon-arrow-down"></i></button>
+                            <button class="button" id="panRight_btn"><i class="icon-arrow-right"></i></button>
+                        </div>
+                        &nbsp; 
+                        <div class="button-container">
+                            <button class="button" id="rotateLeft_btn"><i class="icon-arrow-left"></i></button>
+                            <button class="button" id="rotateUp_btn"><i class=" icon-arrow-up"></i></button> 
+                            Rotate
+                            <button class="button" id="rotateDown_btn"><i class="icon-arrow-down"></i></button> 
+                            <button class="button" id="rotateRight_btn"><i class="icon-arrow-right"></i></button> 
+                        </div>
+                        
+                        &nbsp; 
+                        
+                        <div class="button-container">
+                            <button class="button" id="reset_btn">Reset</button>
+                        </div>
+                    </center>
+                </div>
 
-                        <canvas style="display: none;" id="tgtCanvas"></canvas>
-                        <div id="inset"></div>
-                        <div id="newMesh"></div>
-                        <div id="meshPreview" style="z-index=-2"></div>
+                <canvas style="display: none;" id="tgtCanvas"></canvas>
+                <div id="inset"></div>
+                <div id="newMesh"></div>
+                <div id="meshPreview" width="100%" style="z-index=-2"></div>
 
-        <div id="volumeControls" class="well" style="clear:both; display: none; margin-bottom: 0px;">
+                <div id="volumeControls" class="controls well" style="clear:both; display: none; margin-bottom: 0px;">
+                    <span><b>Volume Rendering Controls</b> </span><br/>
+                    
+                    <div style="clear:both; display: none; margin-bottom: 0px;">
+                        <span> Luminosity </span>
+                        <input id="luminosityControls" type="range" min="0.0" max="100.0" step="10.0" value="10.0">
+                    </div>
 
-            <span><b>Volume Rendering Controls</b> </span><br/>
-            
-            <div style="clear:both; display: none; margin-bottom: 0px;">
-                <span> Luminosity </span>
-                <input id="luminosityControls" type="range" min="0.0" max="100.0" step="10.0" value="10.0">
+                    <span> Opacity </span>
+                    <input id="opacityControls" type="range" min="0.0" max="10.0" step="0.1" value="0.05">
+                </div>
+
+                <div id="domainControls" class="controls well" style="clear:both; display: none; margin-bottom: 0px;">
+                    <span><b>Domain Clipping Controls</b> </span><br/>
+                    <table>
+                        
+                        <tr>
+                            <td><span>Clip:</span></td>
+                            <td><input type="checkbox" id="planeXCheck">X-plane</td>
+                            <td><input type="checkbox" id="planeYCheck">Y-plane</td>
+                            <td><input type="checkbox" id="planeZCheck">Z-plane</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span>Flip:</span></td>
+                            <td><input type="checkbox" id="planeXFlip">X-plane</td> 
+                            <td><input type="checkbox" id="planeYFlip">Y-plane</td>
+                            <td><input type="checkbox" id="planeZFlip">Z-plane</td>
+                        </tr>
+                    </table> 
+                    
+                    <span> X-Axis </span>
+                    <input id="planeXSelect" type="range" min="-5" max="+5" step="1" value="0">
+                    
+                    <span> Y-Axis </span>
+                    <input id="planeYSelect" type="range" min="-5" max="+5" step="1" value="0">
+                    
+                    <span> Z-Axis </span>
+                    <input id="planeZSelect" type="range" min="-5" max="+5" step="1" value="0">
+                </div>
             </div>
-
-            <span> Opacity </span>
-            <input id="opacityControls" type="range" min="0.0" max="10.0" step="0.1" value="0.05">
-        </div>
-
-        <div id="domainControls" class="well" style="clear:both; display: none; margin-bottom: 0px;">
-
-            <span><b>Domain Clipping Controls</b> </span><br/>
-            <table>
-                
-                <tr>
-                    <td> <span> Clip: </span </td>
-                    <td> <input type="checkbox" id="planeXCheck"/>X-plane </td> 
-                    <td><input type="checkbox" id="planeYCheck"/>Y-plane </td>
-                    <td><input type="checkbox" id="planeZCheck"/>Z-plane </td>
-                </tr>
-                
-                <tr>
-                    <td><span> Flip: </span></td>
-                    <td><input type="checkbox" id="planeXFlip"/>X-plane </td> 
-                    <td><input type="checkbox" id="planeYFlip"/>Y-plane </td>
-                    <td><input type="checkbox" id="planeZFlip"/>Z-plane </td>
-                </tr>
-            </table> 
-            
-            <span> X-Axis </span>
-            <input id="planeXSelect" type="range" min="-5" max="+5" step="1" value="0">
-            
-            <span> Y-Axis </span>
-            <input id="planeYSelect" type="range" min="-5" max="+5" step="1" value="0">
-            
-            <span> Z-Axis </span>
-            <input id="planeZSelect" type="range" min="-5" max="+5" step="1" value="0">
-        </div>
-        </div>
 
 
             <div class="span1">
