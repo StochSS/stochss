@@ -238,9 +238,9 @@ function check_and_install_deps {
     if ! check_lib "matplotlib";then
         install_lib "python-matplotlib"
     fi
-    if ! check_lib "libsbml";then
-        install_lib_pip "python-libsbml"
-    fi
+    #if ! check_lib "libsbml";then
+     #   install_lib_pip "python-libsbml"
+    #fi
     if ! check_lib "mysql";then
         install_lib_pip "mysql-connector-python" "--allow-external mysql-connector-python"
     fi
