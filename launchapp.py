@@ -12,7 +12,10 @@ import uuid
 import socket
 
 source_exec = sys.argv[1]
-host_ip = socket.gethostbyname(socket.gethostname())
+try:
+    host_ip = sys.agrv[3]
+except:
+    host_ip = socket.gethostbyname(socket.gethostname())
 
 mac = False
 if 'mac' in sys.argv:
