@@ -204,7 +204,7 @@ if serverUp:
     admin_token = uuid.uuid4()
     generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
     os.system(generate_admin_token_command)
-    stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, vm_ip)
+    stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, host_ip)
     # Open web browser
 
     if mac:
@@ -222,7 +222,7 @@ if serverUp:
     sys.stdout.flush()
 
     try:
-        print "Navigate to {0} to access StochSS".format(stochss_url)
+        print "Navigate to http://{1}:8080/login?secret_key={0} to access StochSS".format(admin_token, vm_ip)
         if mac:
             print "<br />"
 
