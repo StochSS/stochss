@@ -12,10 +12,11 @@ import uuid
 import socket
 
 source_exec = sys.argv[1]
+host_ip = socket.gethostbyname(socket.gethostname())
 try:
-    host_ip = sys.agrv[3]
+    vm_ip = sys.agrv[3]
 except:
-    host_ip = socket.gethostbyname(socket.gethostname())
+    vm_ip = host_ip
 
 mac = False
 if 'mac' in sys.argv:
@@ -116,7 +117,7 @@ def startserver():
 
 startserver()
 
-print "Starting admin server at: http://{0}:8000".format(host_ip)
+print "Starting admin server at: http://{0}:8000".format(vm_ip)
 if mac:
     print "<br />"
 sys.stdout.flush()
@@ -203,7 +204,7 @@ if serverUp:
     admin_token = uuid.uuid4()
     generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
     os.system(generate_admin_token_command)
-    stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, host_ip)
+    stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, vm_ip)
     # Open web browser
 
     if mac:
