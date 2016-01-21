@@ -14,7 +14,7 @@ import socket
 source_exec = sys.argv[1]
 host_ip = socket.gethostbyname(socket.gethostname())
 try:
-    vm_ip = sys.agrv[3]
+    vm_ip = sys.argv[3]
 except:
     vm_ip = host_ip
 
