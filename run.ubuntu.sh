@@ -26,23 +26,23 @@ fi
 help_message="Usage: $0 [--run] [--install]"
 
 mode="run"
-if [ $# -ge 2 ]; then
-    echo "Error: $0 takes at most 1 argument."
-    echo "$help_message"
-    exit
-elif [ $# -eq 1 ]; then
-    if [ "$1" = "--run" ]; then
-        mode="run"
-    elif [ "$1" = "--install" ]; then
-        mode="install"
-    elif [ "$1" = "--debug" ]; then
-        mode="debug"
-    else
-        echo "Error: Invalid argument '$1'!"
-        echo "$help_message"
-        exit
-    fi
-fi
+#if [ $# -ge 2 ]; then
+ #   echo "Error: $0 takes at most 1 argument."
+  #  echo "$help_message"
+   # exit
+#if [ $# -eq 1 ]; then
+ if [ "$1" = "--run" ]; then
+     mode="run"
+ elif [ "$1" = "--install" ]; then
+     mode="install"
+ elif [ "$1" = "--debug" ]; then
+     mode="debug"
+ else
+     echo "Error: Invalid argument '$1'! (not really)"
+     echo "$help_message"
+ #    exit
+ fi
+#fi
 
 # Attempt to install StochKit 2.0.11
 #
