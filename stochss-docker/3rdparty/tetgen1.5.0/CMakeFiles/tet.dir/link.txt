@@ -1,0 +1,2 @@
+/usr/bin/ar cr libtet.a  CMakeFiles/tet.dir/tetgen.cxx.o CMakeFiles/tet.dir/predicates.cxx.o
+/usr/bin/ranlib libtet.a
