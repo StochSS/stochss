@@ -34,12 +34,12 @@ class SecretKey(db.Model):
     def isEqualToAdminKey(self):
         '''
         '''
-        #admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
-        try:
-            with open("admin_uuid.txt",'r') as file:
-                admin_key = file.read()
-        except:
-            admin_key = None
+        admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
+        # try:
+        #     with open("admin_uuid.txt",'r') as file:
+        #         admin_key = file.read()
+        # except:
+        #     admin_key = None
 
         if admin_key is None:
             return False
@@ -58,8 +58,8 @@ class SecretKeyHandler(BaseHandler):
         A POST to /secret_key means a new secret key should be generated from the string in the request body.
         '''
         # Dont allow requests from outside connections
-        if self.request.headers['Host'].find('localhost') == -1:
-            return
+        # if self.request.headers['Host'].find('localhost') == -1:
+        #     return
         SecretKey.clear_stored_key()
         SecretKey(key_string=self.request.get('key_string')).put()
         self.response.out.write('Successful secret key creation!')

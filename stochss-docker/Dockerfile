@@ -4,7 +4,8 @@
 # https://registry.hub.docker.com/u/fenicsproject/stable-src/
 # Author:
 # Jack S. Hale <jack.hale@uni.lu>
-FROM phusion/baseimage:0.9.15
+#FROM phusion/baseimage:0.9.15
+FROM ubuntu:14.04
 MAINTAINER Aviral Takkar
 
 ENV HOME /root
@@ -64,7 +65,9 @@ RUN apt-get install -yy \
 # Install sympy using pip instead of Ubuntu packages, much smaller footprint.
 RUN pip install sympy
 
-RUN add-apt-repository ppa:fenics-packages/fenics && \
+RUN apt-get -y install python-software-properties && \
+    apt-get -y install software-properties-common && \
+    add-apt-repository ppa:fenics-packages/fenics && \
     apt-get update && \
     apt-get -y install fenics && \
     apt-get -y install cython python-h5py
@@ -75,13 +78,13 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set the HOME environment variable, otherwise import dolfin crashes
-RUN echo "/root" > /etc/container_environment/HOME
+#RUN echo "/root" > /etc/container_environment/HOME
 
 # Enable X11 forwarding for plotting
 # RUN echo "X11Forwarding yes" >> /etc/ssh/sshd_config
 
 # Set LIBGL_ALWAYS_INDIRECT to suppress libGL warning message.
-RUN echo "y" > /etc/container_environment/LIBGL_ALWAYS_INDIRECT
+#RUN echo "y" > /etc/container_environment/LIBGL_ALWAYS_INDIRECT
 
 # Put environment variables into
 RUN echo "source /usr/local/share/dolfin/dolfin.conf" >> /etc/bash.bashrc
@@ -95,15 +98,28 @@ RUN wget https://github.com/aviral26/stochss/archive/master.tar.gz && \
     cd stochss-master && \
     apt-get update && \
     apt-get install libbz2-dev && \
+    apt-get install uuid-runtime && \
     pip install python-libsbml && \
     pip install boto && \
     pip install celery && \
     pip install setuptools --upgrade && \
     pip install http://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-2.0.4.zip#md5=3df394d89300db95163f17c843ef49df && \
-    chmod 777 docker_hacks.sh && \
-    ./docker_hacks.sh && \
+    apt-get -yy install \
+    gcc-multilib \
+    gcc \
+    g++ \
+    make \
+    libxml2-dev \
+    git \
+    r-base-core \
+    libgsl0-dev \
+    build-essential \
+    python-dev \
+    python-setuptools \
+    cython \
+    libbz2-dev \
+    libhdf5-mpi-dev && \
     chmod 777 run.ubuntu.sh
-
 
 
 EXPOSE 8000
