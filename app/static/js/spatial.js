@@ -284,7 +284,7 @@ Spatial.Controller = Backbone.View.extend( {
         
         dir = new THREE.Vector3( 0, 1.0, 0 );
         origin = new THREE.Vector3( 0, 0, 0 ); 
-        hex = 0x0000ff; 
+        hex = 0x00ff00; 
         material = new THREE.LineBasicMaterial({ color: hex });
         geometry = new THREE.Geometry();
         geometry.vertices.push( origin, dir );
@@ -294,7 +294,7 @@ Spatial.Controller = Backbone.View.extend( {
         
         dir = new THREE.Vector3( 0, 0, 1.0 );
         origin = new THREE.Vector3( 0, 0, 0 ); 
-        hex = 0x00ff00; 
+        hex = 0x0000ff; 
         material = new THREE.LineBasicMaterial({ color: hex });
         geometry = new THREE.Geometry();
         geometry.vertices.push( origin, dir );
@@ -349,15 +349,15 @@ Spatial.Controller = Backbone.View.extend( {
         var radius = this.geometry.boundingSphere.radius;
 
         var uniforms =  { 
-            xval : {type: 'f', value: -radius}, 
-            yval : {type: 'f', value: -radius}, 
-            zval : {type: 'f', value: -radius},
-            xflag : {type: 'f', value: 0.0},
-            yflag : {type: 'f', value: 0.0}, 
-            zflag : {type: 'f', value: 0.0},
-            xflip : {type: 'f', value: 1.0},
-            yflip : {type: 'f', value: 1.0}, 
-            zflip : {type: 'f', value: 1.0}
+            xval : { type: 'f', value: -radius }, 
+            yval : { type: 'f', value: -radius }, 
+            zval : { type: 'f', value: -radius },
+            xflag : { type: 'f', value: 0.0 },
+            yflag : { type: 'f', value: 0.0 }, 
+            zflag : { type: 'f', value: 0.0 },
+            xflip : { type: 'f', value: 1.0 },
+            yflip : { type: 'f', value: 1.0 }, 
+            zflip : { type: 'f', value: 1.0 }
         };
 
         var material = new THREE.ShaderMaterial( {
@@ -374,8 +374,6 @@ Spatial.Controller = Backbone.View.extend( {
         this.mesh = new THREE.Mesh(this.geometry, material);
 
         this.m2texLow = new MeshToTexture.Converter(this.mesh, this.data.voxelTuples, 0.0, 1.0, 256, 256);
-        
-        this.setupPlaneSliders();
 
         /* 
            GRID
@@ -384,55 +382,49 @@ Spatial.Controller = Backbone.View.extend( {
 
         // PLANE - X
         var planeX = new THREE.Mesh(
-            new THREE.PlaneGeometry(this.boundingBox.maxy - this.boundingBox.miny,
-                                    this.boundingBox.maxz - this.boundingBox.minz),
+            new THREE.PlaneGeometry(this.boundingBox.y.max - this.boundingBox.y.min,
+                                    this.boundingBox.z.max - this.boundingBox.z.min),
             new THREE.MeshBasicMaterial({
-                color: 0xffffff,
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0
+                color: 0xff0000,
+                side: THREE.DoubleSide
             })
         );
 
         planeX.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2.0);
-        var planeXEdges = new THREE.EdgesHelper(planeX, 0x0000ff);
+        var planeXEdges = new THREE.EdgesHelper(planeX, 0xff0000);
         planeXEdges.material.linewidth = 2;
-        planeX.visible = $("#planeXCheck").is(':checked'); 
+        planeX.visible = false;
         planeXEdges.visible = $("#planeXCheck").is(':checked');
 
         // PLANE - Y
         var planeY= new THREE.Mesh(
-            new THREE.PlaneGeometry(this.boundingBox.maxx - this.boundingBox.minx,
-                                    this.boundingBox.maxy - this.boundingBox.miny),
+            new THREE.PlaneGeometry(this.boundingBox.x.max - this.boundingBox.x.min,
+                                    this.boundingBox.y.max - this.boundingBox.y.min),
             new THREE.MeshBasicMaterial({
                 color: 0xffffff,
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0
+                side: THREE.DoubleSide
             })
         );
 
+        planeY.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2.0);
         var planeYEdges = new THREE.EdgesHelper(planeY, 0x00ff00);
         planeYEdges.material.linewidth = 2;
-        planeY.visible = $("#planeYCheck").is(':checked');
+        planeY.visible = false;
         planeYEdges.visible = $("#planeYCheck").is(':checked');
         
         // PLANE - Z
         planeZ = new THREE.Mesh(
-            new THREE.PlaneGeometry(this.boundingBox.maxx - this.boundingBox.minx,
-                                    this.boundingBox.maxz - this.boundingBox.minz),
+            new THREE.PlaneGeometry(this.boundingBox.x.max - this.boundingBox.x.min,
+                                    this.boundingBox.z.max - this.boundingBox.z.min),
             new THREE.MeshBasicMaterial({
                 color: 0xffffff,
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0
+                side: THREE.DoubleSide
             })
         );
 
-        planeZ.rotateOnAxis( new THREE.Vector3(1,0,0), (Math.PI/2) );
-        planeZEdges = new THREE.EdgesHelper( planeZ, 0xff0000 ); 
+        var planeZEdges = new THREE.EdgesHelper(planeZ, 0x0000ff); 
         planeZEdges.material.linewidth = 2;
-        planeZ.visible = $("#planeZCheck").is(':checked');
+        planeZ.visible = false;
         planeZEdges.visible = $("#planeZCheck").is(':checked');
 
         scene.add(this.mesh);
@@ -444,6 +436,36 @@ Spatial.Controller = Backbone.View.extend( {
         scene.add(planeZ);
         scene.add(planeZEdges);
 
+        this.planes = {
+            x : {
+                rectangle : planeX,
+                edges : planeXEdges,
+                uniforms : {
+                    val : uniforms.xval,
+                    flag : uniforms.xflag,
+                    flip : uniforms.xflip
+                }
+            },
+            y : {
+                rectangle : planeY,
+                edges : planeYEdges,
+                uniforms : {
+                    val : uniforms.yval,
+                    flag : uniforms.yflag,
+                    flip : uniforms.yflip
+                }
+            },
+            z : {
+                rectangle : planeZ,
+                edges : planeZEdges,
+                uniforms : {
+                    val : uniforms.zval,
+                    flag : uniforms.zflag,
+                    flip : uniforms.zflip
+                }
+            }
+        };
+
         delete loader;
         delete material;            
         
@@ -451,7 +473,7 @@ Spatial.Controller = Backbone.View.extend( {
 
         $( "#meshPreviewMsg" ).hide();
 
-        this.camera.position.z =  this.mesh.geometry.boundingSphere.radius* 2;
+        this.camera.position.z = this.mesh.geometry.boundingSphere.radius* 2;
     },
 
     /* 
@@ -484,111 +506,44 @@ Spatial.Controller = Backbone.View.extend( {
     handleVolumeSliderChange: function(event)
     {
         this.g.mesh.material.uniforms.luminosity.value = parseFloat($("#luminosityControls").val());
-        this.g.mesh.material.uniforms.opacity.value =  parseFloat($("#opacityControls").val());
+        this.g.mesh.material.uniforms.opacity.value = parseFloat($("#opacityControls").val());
         this.g.mesh.material.needsUpdate  = true;
     },
 
-    handlePlaneSliderChange: function(event)
+    handlePlaneSliderChange: function(which, event)
     {
-        var change = false;
+        var plane = this.planes[which];
 
-        if(planeX.visible){
-            var val = $("#planeXSelect").val();
-            planeX.position.x = val; 
-            planeXEdges.position.x =  val; 
-            planeX.geometry.verticesNeedUpdate = true;
-            planeXEdges.geometry.verticesNeedUpdate = true;
-            change = true;
-        }
-
-        if(planeY.visible)
-        {
-            var val = $("#planeYSelect").val();
-            planeY.position.z = val; 
-            planeYEdges.position.z =  val; 
-            planeY.geometry.verticesNeedUpdate = true;
-            planeYEdges.geometry.verticesNeedUpdate = true;
-            change = true;
-        }
-
-        if(planeZ.visible)
-        {
-            var val = $("#planeZSelect").val();
-            planeZ.position.y = val; 
-            planeZEdges.position.z =  val; 
-            planeZ.geometry.verticesNeedUpdate = true;
-            planeZEdges.geometry.verticesNeedUpdate = true;
-            change = true;                
-        }
-
-        if(change){
-            this.hideMesh();
-        }
-
+        // The use of 'which' as an indexer here is super hacky. It could easily fail at some point
+        //   rectangle.position is a THREE JS datastructure, not a StochSS one
+        plane.rectangle.position[which] = plane.slider.val();
+        plane.uniforms.val.value = plane.slider.val();
+        this.mesh.material.needsUpdate = true;
+        plane.rectangle.geometry.verticesNeedUpdate = true;
+        //plane.edges.position[which] = plane.slider.val();
+        //plane.edges.geometry.verticesNeedUpdate = true;
     },
 
-    setupPlaneSliders : function(){
-        var minX = 0;
-        var minY = 0;
-        var minZ = 0;
-        var maxX = 0;
-        var maxY = 0;
-        var maxZ = 0;
+    handleVisibleCheckboxClick : function(which, event)
+    {
+        var plane = this.planes[which];
 
-        if(this.volumeRender)
-        {
-            minX = this.minx;
-            minY = this.minz;
-            minZ = this.miny;
-            maxX = this.maxx;
-            maxY = this.maxy;
-            maxZ = this.maxz;
-        }
-        else
-        {
-            minX = this.boundingBox.minx;
-            minY = this.boundingBox.minz;
-            minZ = this.boundingBox.miny;
+        var checkbox = plane.visibleCheckbox; // Should also be available as $( event.target )
 
-            maxX = this.boundingBox.maxx;
-            maxY = this.boundingBox.maxz;
-            maxZ = this.boundingBox.maxy;
-        } 
-
-        var slider = $( "#planeXSelect" );
-        slider.prop('min', minX);
-        slider.prop('max', maxX);
-        slider.val(minX);
-        slider.prop('step', (maxX - minX) / 10);
-        slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
-
-        var slider = $( "#planeYSelect" );
-        slider.prop('min', minZ);
-        slider.prop('max', maxZ);
-        slider.val(minZ);
-        slider.prop('step', (maxZ - minZ) / 15);
-        slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
-
-        var slider = $( "#planeZSelect" );
-        slider.prop('min', minY);
-        slider.prop('max', maxY);
-        slider.val(minY);
-        slider.prop('step', (maxY - minY) / 15);
-        slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
-
-        var slider = $("#luminosityControls");
-        slider.on('change', _.throttle(_.bind(this.handleVolumeSliderChange, this), 1000));
-
-        var slider = $("#opacityControls");
-        slider.on('change', _.throttle(_.bind(this.handleVolumeSliderChange, this), 1000));
-    },
-
-    deleteCache : function(start1, stop1){
-        console.log(" deleteCache : function("+start1+", "+stop1+")");
+        plane.edges.visible = checkbox.is(':checked');
         
-        var start = Math.max(0, start1);
-        var idx = start; 
+        plane.uniforms.flag.value = checkbox.is(':checked') * 1.0; // Cast boolean to float
+        this.mesh.material.needsUpdate = true;
 
+        //TODO: Fix for volume rendering
+        //plane.uniforms.flag.value = checkbox.is(':checked') * 1.0;
+        //this.g.mesh.material.needsUpdate = true;
+    },
+
+    deleteCache : function(start1, stop1)
+    {
+        var start = Math.max(0, start1);
+        var idx = start;
 
         if(stop1 == -1)
         {
@@ -602,16 +557,17 @@ Spatial.Controller = Backbone.View.extend( {
             delete this.cache[idx];
             idx = idx + 1;
         }
-
     },
 
-    replaceCache : function(stime1, etime1, stime2, etime2){
+    replaceCache : function(stime1, etime1, stime2, etime2)
+    {
         console.log("replaceCache : function("+stime1+","+stime2+")");
         this.deleteCache(stime1, etime1);
         this.updateCache(stime2, etime2);
     },
 
-    updateCache : function(start1, stop1, colorFlag){
+    updateCache : function(start1, stop1, colorFlag)
+    {
         var start = start1;
         var stop = Math.min(stop1, this.maxLimit);
 
@@ -707,14 +663,12 @@ Spatial.Controller = Backbone.View.extend( {
             var loader = new THREE.JSONLoader();
             var geometry = loader.parse(data.mesh).geometry;
         
-            this.boundingBox = {};
-
-            var minx = undefined;
-            var maxx = undefined;
-            var miny = undefined;
-            var maxy = undefined;
-            var minz = undefined;
-            var maxz = undefined;
+            var minx = geometry.vertices[0].x;
+            var maxx = minx;
+            var miny = geometry.vertices[0].y;
+            var maxy = miny;
+            var minz = geometry.vertices[0].z;
+            var maxz = minz;
             
             for(var i = 0; i < geometry.vertices.length; i++)
             {
@@ -732,14 +686,11 @@ Spatial.Controller = Backbone.View.extend( {
                 maxz = ( maxz < z ? z: maxz );
             }
             
-            this.boundingBox.minx = minx;
-            this.boundingBox.maxx = maxx;
-            
-            this.boundingBox.miny = miny;
-            this.boundingBox.maxy = maxy;
-        
-            this.boundingBox.minz = minz;
-            this.boundingBox.maxz = maxz;
+            this.boundingBox = {
+                x : { min : minx, max : maxx },
+                y : { min : miny, max : maxy },
+                z : { min : minz, max : maxz }
+            };
 
             this.geometry = geometry;
 
@@ -749,8 +700,6 @@ Spatial.Controller = Backbone.View.extend( {
             this.constructControls();
 
             this.updateCache(0, this.cacheRange);
-            this.sortedSpecies = data.species.sort();
-            this.setUpSpeciesSelect(this.sortedSpecies);            
         }
         catch(err)
         {
@@ -857,37 +806,6 @@ Spatial.Controller = Backbone.View.extend( {
         }
         this.mesh.material.needsUpdate = true;
         this.mesh.geometry.colorsNeedUpdate = true;
-    },
-
-    setUpSpeciesSelect: function(sortedSpecies)
-    {
-
-
-        console.log("setUpSpeciesSelect: function(sortedSpecies)");
-        var speciesSelect = $("#speciesSelect");
-
-        speciesSelect.off('change');
-        speciesSelect.on('change', _.bind(this.handleSpeciesSelect, this));
-
-        for(var i in sortedSpecies) {
-            var specie = sortedSpecies[i];
-
-            var input = $( '<option value="' + specie + '">' + specie + '</option>' ).appendTo( speciesSelect );
-            //var input = $( '<div><input type="radio" name="speciesSelect" value="' + specie + '"> ' + specie + '</div>' ).appendTo( $( '#speciesSelect' ) ).find( 'input' );
-
-            // Select default
-            if(typeof this.selectedSpecies === 'undefined')
-            {
-                this.selectedSpecies = specie;
-            }
-
-            if(this.selectedSpecies == specie)
-            {
-                speciesSelect.val(this.selectedSpecies);
-                input.trigger('change');
-            }
-        }
-
     },
 
     handleSpeciesSelect : function(event)
@@ -1115,6 +1033,7 @@ Spatial.Controller = Backbone.View.extend( {
         var geometry = new THREE.BoxGeometry( Nx / maxDim, Ny / maxDim, Nz / maxDim );
         g.mesh = new THREE.Mesh( geometry , shader);
         g.scene.add( g.mesh ); 
+
         g.scene.add(planeX);
         g.scene.add(planeXEdges);
         g.scene.add(planeY);
@@ -1215,231 +1134,136 @@ Spatial.Controller = Backbone.View.extend( {
     
     constructControls : function()
     {
-        //if(data['outData']){
-            //Set up trajectory select
-            trajectorySelect = $("#trajectorySelect");
-            for(var i = 0; i < this.jobInfo.indata.realizations; i++)
+        //Set up trajectory select
+        trajectorySelect = $("#trajectorySelect");
+        for(var i = 0; i < this.jobInfo.indata.realizations; i++)
+        {
+            $( '<option value="' + i + '">Trajectory ' + i + '</option>' ).appendTo( trajectorySelect );
+        }
+        
+        trajectorySelect.off('change');
+        trajectorySelect.on('change', _.bind(this.handleTrajectorySelectChange, this));
+
+        //Set up slider
+        var slider = $( '#timeSelect' );
+
+        slider.prop('max', this.jobInfo.indata.time);
+        slider.val(slider.prop('max'));
+        slider.prop('step', this.jobInfo.indata.increment);
+
+        this.maxLimit = this.jobInfo.indata.time;
+
+        //Add event handler to slider
+        slider.off('change');
+        slider.on('change', _.throttle(_.bind(this.handleTimeChange, this), 1000));
+        this.changeTime(this.timeIdx);
+
+        // Set up species selector
+        var speciesSelect = $("#speciesSelect");
+
+        var sortedSpecies = this.data.species.sort();
+
+        for(var i in sortedSpecies) {
+            var specie = sortedSpecies[i];
+
+            var input = $( '<option value="' + specie + '">' + specie + '</option>' ).appendTo( speciesSelect );
+
+            // Select default
+            if(typeof this.selectedSpecies === 'undefined')
             {
-                $( '<option value="' + i + '">Trajectory ' + i + '</option>' ).appendTo( trajectorySelect );
+                this.selectedSpecies = specie;
+            }
+        }
+
+        speciesSelect.off('change');
+        speciesSelect.on('change', _.bind(this.handleSpeciesSelect, this));
+
+        this.selectSpecies(this.selectedSpecies);
+
+        // Set up radio buttons
+        var wireSelect = $("#wireSelect");
+        wireSelect.change(_.bind(function(){
+            console.log('unitSelect.click');
+            selectedIndex =  $("#wireSelect")[0].options["selectedIndex"]
+            selectedOption = $("#wireSelect")[0].options[selectedIndex].value
+            if( selectedOption == 'solid')
+            {
+                this.volumeRender = false;
+                this.mesh.material.wireframe = false;
+                this.mesh.material.needsUpdate = true;
+            }
+            else if( selectedOption == 'wireframe')
+            {
+                this.volumeRender = false;
+                this.mesh.material.wireframe = true;
+                this.mesh.material.needsUpdate = true;
+            }
+            else if(selectedOption == 'volume')
+            {
+                this.updateVolumeRenderData(this.cache[this.timeIdx].raw[this.selectedSpecies]);
+                this.volumeRender = true;
+            }
+            this.cache = {}
+            this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+        }, this));
+
+        var drawUnits = $("#unitSelect");
+        drawUnits.change(_.bind(function(){
+            console.log('unitSelect.click');
+            selectedIndex =  $("#unitSelect")[0].options["selectedIndex"]
+            selectedOption = $("#unitSelect")[0].options[selectedIndex].value
+            if( selectedOption == 'population')
+            {
+
+                this.showPopulation  = true;
+                this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
+            }
+            else if( selectedOption == 'concentration')
+            {
+                this.showPopulation  = false;
+                this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
             }
             
-            trajectorySelect.off('change');
-            trajectorySelect.on('change', _.bind(this.handleTrajectorySelectChange, this));
+            this.cache = {}
+            this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+        }, this));
 
-            //Set up slider
-            var slider = $( '#timeSelect' );
+        this.planes['x'].visibleCheckbox = $( '#planeXCheck' );
+        this.planes['x'].flipCheckbox = $( '#planeXFlip' );
+        this.planes['x'].slider = $( '#planeXSlider' );
+        this.planes['y'].visibleCheckbox = $( '#planeYCheck' );
+        this.planes['y'].flipCheckbox = $( '#planeYFlip' );
+        this.planes['y'].slider = $( '#planeYSlider' );
+        this.planes['z'].visibleCheckbox = $( '#planeZCheck' );
+        this.planes['z'].flipCheckbox = $( '#planeZFlip' );
+        this.planes['z'].slider = $( '#planeZSlider' );
 
-            slider.prop('max', this.jobInfo.indata.time);
-            slider.val(slider.prop('max'));
-            slider.prop('step', this.jobInfo.indata.increment);
+        for(var which in this.planes)
+        {
+            var plane = this.planes[which];
 
-            this.maxLimit = this.jobInfo.indata.time;
+            plane.visibleCheckbox.click(_.bind(_.partial(this.handleVisibleCheckboxClick, which), this));
+            plane.flipCheckbox.click(_.bind(_.partial(this.handleFlipCheckboxClick, which), this));
 
-            //Add event handler to slider
-            slider.off('change');
-            slider.on('change', _.throttle(_.bind(this.handleTimeChange, this), 1000));
-            this.changeTime(this.timeIdx);
+            var min = this.boundingBox[which].min,
+            max = this.boundingBox[which].max;
 
-            // Set up radio buttons
+            var slider = plane.slider;
 
-            var wireSelect = $("#wireSelect");
-            wireSelect.change(_.bind(function(){
-                console.log('unitSelect.click');
-                selectedIndex =  $("#wireSelect")[0].options["selectedIndex"]
-                selectedOption = $("#wireSelect")[0].options[selectedIndex].value
-                if( selectedOption == 'solid')
-                {
-                    this.volumeRender = false;
-                    this.mesh.material.wireframe = false;
-                    this.mesh.material.needsUpdate = true;
-                }
-                else if( selectedOption == 'wireframe')
-                {
-                    this.volumeRender = false;
-                    this.mesh.material.wireframe = true;
-                    this.mesh.material.needsUpdate = true;
-                }
-                else if(selectedOption == 'volume')
-                {
-                    this.updateVolumeRenderData(this.cache[this.timeIdx].raw[this.selectedSpecies]);
-                    this.volumeRender = true;
-                }
-                this.cache = {}
-                this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
-            }, this));
+            slider.prop('min', min);
+            slider.prop('max', max);
+            slider.val(min);
+            slider.prop('step', (max - min) / 20);
+            slider.on('change', _.throttle(_.bind(_.partial(this.handlePlaneSliderChange, which), this), 1000));
+        }            
 
-            var drawUnits = $("#unitSelect");
-            drawUnits.change(_.bind(function(){
-                console.log('unitSelect.click');
-                selectedIndex =  $("#unitSelect")[0].options["selectedIndex"]
-                selectedOption = $("#unitSelect")[0].options[selectedIndex].value
-                if( selectedOption == 'population')
-                {
+        var slider = $("#luminosityControls");
+        slider.on('change', _.throttle(_.bind(this.handleVolumeSliderChange, this), 1000));
 
-                    this.showPopulation  = true;
-                    this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
-                }
-                else if( selectedOption == 'concentration')
-                {
-                    this.showPopulation  = false;
-                    this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
-                }
-                
-                this.cache = {}
-                this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
-            }, this));
+        var slider = $("#opacityControls");
+        slider.on('change', _.throttle(_.bind(this.handleVolumeSliderChange, this), 1000));
 
-            var checkbox = $( "#planeXCheck" );
-            checkbox.click(_.bind(function(){
-                
-                console.log('checkbox x click');
-                var val = 0.0;
-                if($("#planeXCheck").is(':checked'))
-                {
-                    planeX.visible = true; planeXEdges.visible = true; 
-                    val = 1.0;
-                }
-
-                else{
-                    planeX.visible = false; planeXEdges.visible = false;
-                }
-                planeX.position.x = $( "#planeXSelect" ).val();
-
-
-                if(this.volumeRender)
-                {
-                    this.g.mesh.material.uniforms.xflag.value = val;
-                    this.g.mesh.material.needsUpdate = true;
-                }
-                else
-                {
-                    this.mesh.material.uniforms.xflag.value = val;
-                    this.mesh.material.needsUpdate = true;
-                }
-
-            }, this));
-
-            var checkbox = $( "#planeYCheck" );
-            checkbox.click(_.bind(function(){ 
-                console.log('checkbox y click');
-                
-                var val = 0.0;
-                if($("#planeYCheck").is(':checked'))
-                {
-                    planeY.visible = true; planeYEdges.visible = true;
-                    val = 1.0;
-                }
-
-                else{
-                    planeY.visible = false; planeYEdges.visible = false;
-                }
-
-                planeY.position.z = $( "#planeYSelect" ).val();
-
-                if(this.volumeRender)
-                {
-                    this.g.mesh.material.uniforms.yflag.value = val;
-                    this.g.mesh.material.needsUpdate = true;
-                }
-                else
-                {
-                    this.mesh.material.uniforms.yflag.value = val;
-                    this.mesh.material.needsUpdate = true;
-                }
-
-            }, this));
-
-            var checkbox = $( "#planeZCheck" );
-            checkbox.click(_.bind(function(){
-                console.log('checkbox z click');
-                var val = 0.0;
-                if($("#planeZCheck").is(':checked'))
-                {
-                    planeZ.visible = true; planeZEdges.visible = true; val = 1.0;
-                }
-
-                else{
-                    planeZ.visible = false; planeZEdges.visible = false;
-
-                }
-
-                planeZ.position.y = $( "#planeZSelect" ).val();
-                if(this.volumeRender)
-                {
-                    this.g.mesh.material.uniforms.zflag.value = val;
-                    this.g.mesh.material.needsUpdate = true;
-                }
-                else
-                {
-
-                    this.mesh.material.uniforms.zflag.value = val;
-                    this.mesh.material.needsUpdate = true;
-                }
-                
-            }, this));
-
-            var checkbox = $( "#planeXFlip" );
-            checkbox.click(_.bind(function(){ 
-
-                var value = 0.0;
-                if($("#planeXFlip").is(':checked'))
-                    value = -1.0;
-                else 
-                    value = 1.0;
-                
-                if(this.volumeRender)
-                {
-                    this.g.mesh.material.uniforms.xflip.value = value;
-                    this.g.mesh.material.needsUpdate = true;
-                }
-
-                this.mesh.material.uniforms.xflip.value = value;
-                this.mesh.material.needsUpdate = true;
-            }, this));
-
-            var checkbox = $( "#planeYFlip" );
-            checkbox.click(_.bind(function(){
-                
-                var value = 0.0;
-
-                if($("#planeYFlip").is(':checked'))
-                    value = -1.0;
-
-                else
-                    value = 1.0;
-
-                if(this.volumeRender)
-                {
-                    this.g.mesh.material.uniforms.yflip.value = value;
-                    this.g.mesh.material.needsUpdate = true;
-                }
-                
-                this.mesh.material.uniforms.yflip.value = value;
-                this.mesh.material.needsUpdate = true;
-            }, this));
-
-            var checkbox = $( "#planeZFlip" );
-            checkbox.click(_.bind(function(){
-                var value = 0.0;
-
-                if($("#planeZFlip").is(':checked'))
-                    value = -1.0;
-
-                else
-                    value = 1.0;
-
-                if(this.volumeRender)
-                {
-                    this.g.mesh.material.uniforms.zflip.value = value;
-                    this.g.mesh.material.needsUpdate = true;
-                }
-                
-                this.mesh.material.uniforms.zflip.value = value;
-                this.mesh.material.needsUpdate = true;
-            }, this));
-
-            $("#playSpeed").html( (1000/ this.playMeshInterval).toFixed(2) );
-        //}
+        $("#playSpeed").html( (1000/ this.playMeshInterval).toFixed(2) );
 
         $( '.controls' ).show();
         $( '#meshPreviewMsg' ).hide();

@@ -61,9 +61,9 @@
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
 
-            if(xflag == 1.0)
+            if(xflag > 0.0)
             {
-                if(position.x <= xval && xflip >= 0.0)
+                if(position.x <= xval)// && xflip >= 0.0)
                     vColor = vec4(0.0, 0.0, 0.0, 0.0);
 
                 if(position.x > xval && xflip < 0.0)
@@ -266,13 +266,13 @@
                     </table> 
                     
                     <span> X-Axis </span>
-                    <input id="planeXSelect" type="range" min="-5" max="+5" step="1" value="0">
+                    <input id="planeXSlider" type="range" min="-5" max="+5" step="1" value="0">
                     
                     <span> Y-Axis </span>
-                    <input id="planeYSelect" type="range" min="-5" max="+5" step="1" value="0">
+                    <input id="planeYSlider" type="range" min="-5" max="+5" step="1" value="0">
                     
                     <span> Z-Axis </span>
-                    <input id="planeZSelect" type="range" min="-5" max="+5" step="1" value="0">
+                    <input id="planeZSlider" type="range" min="-5" max="+5" step="1" value="0">
                 </div>
             </div>
 
