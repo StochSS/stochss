@@ -1,8 +1,8 @@
 import logging
-import socketY
+import socket
 from google.appengine.ext import ndb
 from google.appengine.ext import db
-
+import os
 from webapp2_extras.auth import InvalidAuthIdError, InvalidPasswordError
 from webapp2_extras import security
 
@@ -36,7 +36,8 @@ class SecretKey(db.Model):
         '''
         #admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
         try:
-            with open("admin_uuid.txt",'r') as file:
+            basename = os.path.dirname(os.path.abspath(__file__))
+            with open(os.path.join(basename,"admin_uuid.txt"),'r') as file:
                 admin_key = file.read()
         except:
             admin_key = None

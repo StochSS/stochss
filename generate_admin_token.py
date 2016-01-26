@@ -14,11 +14,7 @@ def print_usage_and_exit():
 def main(key):
     '''
     '''
-    url = "http://{0}:8080/secret_key".format(host_ip)
-    values = { 'key_string': key }
-    data = urllib.urlencode(values)
-    request = urllib2.Request(url, data)
-    response = urllib2.urlopen(request)
+    uuidgen > app/handlers/admin_uuid.txt
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
