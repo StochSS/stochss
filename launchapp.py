@@ -204,7 +204,7 @@ if serverUp:
     admin_token = uuid.uuid4()
     try:
         with open('app/handlers/admin_uuid.txt', 'w') as file:
-            file.write(str(admin_token)
+            file.write(str(admin_token))
     except Exception as e:
         print " File write error: cannot create admin token {0}".format(str(e))
     # generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
