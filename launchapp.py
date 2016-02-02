@@ -201,16 +201,16 @@ for tryy in range(0, 20):
 
 if serverUp:
     # Create an admin token
-    admin_token = uuid.uuid4()
-    try:
-        with open('app/handlers/admin_uuid.txt', 'w') as file:
-            file.write(str(admin_token))
-    except Exception as e:
-        print " File write error: cannot create admin token {0}".format(str(e))
+    #admin_token = uuid.uuid4()
+    #try:
+     #   with open('app/handlers/admin_uuid.txt', 'w') as file:
+      #      file.write(str(admin_token))
+    #except Exception as e:
+     #   print " File write error: cannot create admin token {0}".format(str(e))
     # generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
     # os.system(generate_admin_token_command)
     stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, host_ip)
-    # Open web browser
+    # Open web browserterminal
 
     if mac:
         wbrowser = subprocess.Popen('open {0}'.format(stochss_url).split())

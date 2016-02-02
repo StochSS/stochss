@@ -97,6 +97,7 @@ RUN wget https://github.com/aviral26/stochss/archive/master.tar.gz && \
     tar xfz master.tar.gz && \
     cd stochss-master && \
     apt-get update && \
+    apt-get install curl && \
     apt-get install libbz2-dev && \
     apt-get install uuid-runtime && \
     pip install python-libsbml && \
