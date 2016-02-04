@@ -20,19 +20,14 @@ precision highp float;
 //---------------------------------------------------------
 
 // 32 48 64 96 128
-#define MAX_STEPS 100
-//#define uTMK 20.0
-#define TM_MIN 0.05
+#define MAX_STEPS 128
 
 
 //---------------------------------------------------------
 // SHADER VARS
 //---------------------------------------------------------
 
-varying vec3 vPos0; // position in world coords
-varying vec3 vPos1; // position in object coords
-varying vec2 vUv;
-varying vec3 vPos1n; // normalized 0 to 1, for texture lookup
+varying vec3 vPos1; // normalized 0 to 1, for texture lookup
 
 uniform vec3 uOffset; // TESTDEBUG
 
@@ -42,7 +37,6 @@ uniform vec3 uColor;      // color of volume
 uniform sampler2D uTex;   // 3D(2D) volume texture
 uniform vec3 uTexDim;     // dimensions of texture
 
-uniform float uTMK;
 uniform float Nx;
 uniform float Ny;
 uniform float Nz;
@@ -51,20 +45,13 @@ uniform float height;
 uniform float luminosity;
 uniform float opacity;
 
+uniform float minx;
+uniform float miny;
+uniform float minz;
 
-uniform float xval;
-uniform float yval;
-uniform float zval;
-
-uniform float xflag;
-uniform float yflag;
-uniform float zflag;
-
-uniform float xflip;
-uniform float yflip;
-uniform float zflip;
-
-varying vec4 vColor;
+uniform float maxx;
+uniform float maxy;
+uniform float maxz;
 
 float gStepSize;
 float gStepFactor;
@@ -74,35 +61,24 @@ float gStepFactor;
 // PROGRAM
 //---------------------------------------------------------
 
-// TODO: convert world to local volume space
-vec3 toLocal(vec3 p) {
-  return p + vec3(0.5);
-}
-
-
 float sampleVolTex(vec3 pos, sampler2D uTex) {
-  float maxDim = max(Nx, max(Ny, Nz));
-
-  pos.x = pos.x / (Nx / maxDim);
-  pos.y = pos.y / (Ny / maxDim);
-  pos.z = pos.z / (Nz / maxDim);
+  pos.x = pos.x;
+  pos.y = pos.y;
+  pos.z = pos.z;
 
   float tilesX = floor(width / Nx);
-  float tilesY = floor(width / Ny);
 
   float tmp = pos.z * Nz; // This is the tile number we care about
 
   float tileNumber = floor(tmp);
 
-  float x1 = Nx * ( pos.x + mod(tileNumber , tilesX)) ;// this is the X coordinate of the tile in the texture
+  float x1 = Nx * ( pos.x + mod(tileNumber, tilesX)) ;// this is the X coordinate of the tile in the texture
   float y1 = Ny * ( pos.y + floor(tileNumber / tilesX)) ;// this is the Y coordinate of the tile in the texture
 
   tileNumber = tileNumber + 1.0;
 
-  float x2 = Nx * (pos.x + mod(tileNumber,tilesX ) );// this is the X coordinate of the tile in the texture
-  float y2 = Ny * (pos.y + floor(tileNumber/tilesX) );// this is the Y coordinate of the tile in the texture
-  float offsetX =(width-tilesX*Nx); 
-  float offsetY =(height-tilesY*Ny); 
+  float x2 = Nx * (pos.x + mod(tileNumber, tilesX));// this is the X coordinate of the tile in the texture
+  float y2 = Ny * (pos.y + floor(tileNumber / tilesX));// this is the Y coordinate of the tile in the texture
 
   x1 = (x1) / width;
   y1 = (height - y1) / height;
@@ -116,10 +92,10 @@ float sampleVolTex(vec3 pos, sampler2D uTex) {
 }
 
 vec4 raymarchLight(vec3 ro, vec3 rd) {
-  float maxDim = max(Nx, max(Ny, Nz));
-
   vec3 step = rd * gStepSize;
   vec3 pos = ro;
+
+  float eps = 0.001;
   
   vec3 Argb = vec3(0.0);   // accumulated color
   float Aa = 0.0;         // accumulated alpha
@@ -127,68 +103,54 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
   float Of = opacity;
   float Lf = luminosity;
 
+  bool inside = false;
 
   for (int i=0; i<MAX_STEPS; ++i) {
+    bool outside = (pos.x > (1.0 + eps) ||
+       (pos.x) < -eps ||
+       (pos.y) > (1.0 + eps) ||
+       (pos.y) < -eps ||
+       (pos.z) > (1.0 + eps) ||
+       (pos.z) < -eps);
+
+    if(outside && i >= 2)
+    {
+         break;
+    }
+
     float Va = sampleVolTex(pos, uTex);
 
-    float Sa = Va * Of ;
+    float Sa = Va * Of;
 
     float Vr = Va;
 
     float Srgb = Vr * Sa;
 
-    Argb = Argb + (1.0 - Aa -0.05) * vec3(Srgb, 0.0, 0.0);
+    //Argb = Argb + (1.0 - Aa) * vec3(Srgb, 0.0, 0.0);
     Aa += Sa;
     pos += step;
-
-    if ((pos.x / (Nx / maxDim)) >= 1.0 ||
-       (pos.x / (Nx / maxDim)) < 0.0 ||
-       (pos.y / (Ny / maxDim)) >= 1.0 ||
-       (pos.y / (Ny / maxDim)) < 0.0 ||
-       (pos.z / (Nz / maxDim)) >= 1.0 ||
-       (pos.z / (Nz / maxDim)) < 0.0 )
-      break;
   }
+
   return vec4(1.0, 0.0, 0.0, Aa); //(Argb) * Lf
 }
 
 void main() {
+    vec3 ro = vPos1;
 
+    vec3 rd = normalize(ro - uCamPos);
 
+    ro.x = (ro.x - minx) / (maxx - minx);
+    ro.y = (ro.y - miny) / (maxy - miny);
+    ro.z = (ro.z - minz) / (maxz - minz);
 
-    float maxDim = max(Nx, max(Ny, Nz));
-    vec3 shiftCornerToZero = vec3(Nx / (maxDim * 2.0), Ny / (maxDim * 2.0), Nz / (maxDim * 2.0));
-    vec3 ro = vPos1n;
-    vec3 rd = normalize( ro - (uCamPos + shiftCornerToZero) );
+    rd.x = rd.x / (maxx - minx);
+    rd.y = rd.y / (maxy - miny);
+    rd.z = rd.z / (maxz - minz);
+
     gStepSize = ROOTTHREE / float(MAX_STEPS);
+    //if(ro.x < 0.0)
+    //    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+    //else
+    //        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     gl_FragColor = raymarchLight(ro, rd);
-
-
-      if(xflag == 1.0)
-    {
-        if(vPos1.x <= xval && xflip >= 0.0)
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-
-        if(vPos1.x > xval && xflip < 0.0)
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-
-    }            
-
-     if(yflag == 1.0)
-    {
-        if (vPos1.z <= yval && yflip >= 0.0)
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-        if (vPos1.z > yval && yflip < 0.0)
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-    }
-    
-    if(zflag == 1.0)
-    {
-        if( vPos1.y <= zval && zflip >= 0.0)
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-
-        if( vPos1.y > zval && zflip < 0.0)
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-    }
-  
 }

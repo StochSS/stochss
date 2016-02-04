@@ -104,8 +104,7 @@ class SpatialPage(BaseHandler):
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             return
-
-        elif reqType == 'timeData':
+        elif reqType == 'getMeshData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
@@ -145,8 +144,7 @@ class SpatialPage(BaseHandler):
 
                 self.response.write(json.dumps(result))
             return
-        
-        elif reqType == 'onlyColorRange':
+        elif reqType == 'getTimeSeriesData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
                 data = json.loads(self.request.get('data'))

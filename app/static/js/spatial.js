@@ -41,7 +41,7 @@ Spatial.Controller = Backbone.View.extend( {
 
         // We gotta fetch this also!!
         this.jobInfo = undefined;
-        this.meshData = undefined;
+        this.mesh = undefined;
 
         // These are our control states
         this.timeIdx = 0;
@@ -72,27 +72,7 @@ Spatial.Controller = Backbone.View.extend( {
 
     // This is the render loop
     renderLoop : function() {
-        if(this.volumeRender == true)
-        {   
-            if(!this.dollyFlag)
-            {
-                var scale = this.mesh.geometry.boundingSphere.radius * 2.0;
-                this.controls.dollyIn(scale);
-                this.dollyFlag = true;
-            }
-
-            this.renderer.render(this.g.scene, this.camera);
-        }
-        else
-        {
-            if(this.dollyFlag)
-            {
-                var scale = this.mesh.geometry.boundingSphere.radius * 2.0;
-                this.controls.dollyOut(scale);
-                this.dollyFlag = false;
-            }
-            this.renderer.render(this.scene, this.camera);
-        }
+        this.renderer.render(this.scene, this.camera);
 
         // Update the axes camera to match the regular camera
         this.axes.camera.position.subVectors( this.camera.position, this.controls.target );
@@ -139,7 +119,7 @@ Spatial.Controller = Backbone.View.extend( {
         this.bufferCount = 0;
         this.playCount = 0;
 
-        this.playLoopInterval = setInterval(_.bind(this.play, this), this.playMeshInterval);
+        this.playLoopInterval = setInterval(_.bind(this.playLoop, this), this.playMeshInterval);
     },
 
     stop: function(){
@@ -181,7 +161,7 @@ Spatial.Controller = Backbone.View.extend( {
         }
     },
 
-    playLoop: function(dt){
+    playLoop : function(dt){
         if(this.playFlag){
             // stopping animation when time limit is reached
             if(this.timeIdx > this.maxLimit)
@@ -193,12 +173,9 @@ Spatial.Controller = Backbone.View.extend( {
             // Loading value from cache
             else if(this.cache[this.timeIdx])
             {
-
-                console.log("Playing @time"+this.timeIdx);
                 $( "#playStats" ).html( 'running');
-                // $('#timeSelect').trigger('change');
-                this.handleTimeChange();
-                // this.handleMeshColorUpdate(cache[this.timeIdx]);
+                // Change time updates this.timeIdx and triggers the redraw
+                this.changeTime(this.timeIdx + 1);
 
                 this.playCount += 1;
                 this.bufferCount = 0;
@@ -209,10 +186,8 @@ Spatial.Controller = Backbone.View.extend( {
                     this.playCount = 0;
                 }
 
-                this.timeIdx += 1;
                 return;
             }
-            // Ben : This seems important but I'm not sure what it means
             // If we don't have the value loaded into the cache
             //   wait a few timesteps for it to load before we panic and make an server request
             else if(this.timeIdx <= this.maxLimit)
@@ -316,8 +291,6 @@ Spatial.Controller = Backbone.View.extend( {
 
     constructRenderer : function()
     {
-        var data = this.meshData;
-
         if(typeof(this.renderer) != 'undefined')
         {
             return;
@@ -364,21 +337,15 @@ Spatial.Controller = Backbone.View.extend( {
             vertexShader:   $('#vertexshader').text(),
             fragmentShader: $('#fragmentshader').text(),
             side : THREE.DoubleSide,
-            //depthTest: true,
             vertexColors: THREE.VertexColors,
             uniforms: uniforms,
-            wireframe: false,
-            //minFilter : THREE.LinearFilter
+            wireframe: false
+            //minFilter : THREE.NearestFilter
         } );
         
         this.mesh = new THREE.Mesh(this.geometry, material);
 
-        this.m2texLow = new MeshToTexture.Converter(this.mesh, this.data.voxelTuples, 0.0, 1.0, 256, 256);
-
-        /* 
-           GRID
-           var grid = new THREE.GridHelper(20, 0.1);          
-        */
+        this.m2texLow = new MeshToTexture.Converter(this.mesh, this.data.voxelTuples, 0.0, 1.0, 512, 512);
 
         // PLANE - X
         var planeX = new THREE.Mesh(
@@ -427,7 +394,7 @@ Spatial.Controller = Backbone.View.extend( {
         planeZ.visible = false;
         planeZEdges.visible = $("#planeZCheck").is(':checked');
 
-        scene.add(this.mesh);
+        //scene.add(this.mesh);
 
         scene.add(planeX);
         scene.add(planeXEdges);
@@ -476,38 +443,11 @@ Spatial.Controller = Backbone.View.extend( {
         this.camera.position.z = this.mesh.geometry.boundingSphere.radius* 2;
     },
 
-    /* 
-       Plane methods
-    */
-    hideMesh: function(){
-        // To update uniforms
-        console.log("hideMesh: function()");
-
-        var valX = parseFloat( $("#planeXSelect").val() ) ;
-        var valY = parseFloat( $("#planeYSelect").val() ) ;
-        var valZ = parseFloat( $("#planeZSelect").val() ) ;
-        
-        if(this.volumeRender)
-        {
-            this.g.mesh.material.uniforms.xval.value = valX;
-            this.g.mesh.material.uniforms.yval.value = valY;
-            this.g.mesh.material.uniforms.zval.value = valZ;
-            this.g.mesh.material.needsUpdate = true;
-        }
-        else
-        {
-            this.mesh.material.uniforms.xval.value = valX;
-            this.mesh.material.uniforms.yval.value = valY;
-            this.mesh.material.uniforms.zval.value = valZ;
-            this.mesh.material.needsUpdate = true;
-        }
-    },
-
     handleVolumeSliderChange: function(event)
     {
-        this.g.mesh.material.uniforms.luminosity.value = parseFloat($("#luminosityControls").val());
-        this.g.mesh.material.uniforms.opacity.value = parseFloat($("#opacityControls").val());
-        this.g.mesh.material.needsUpdate  = true;
+        this.volume.mesh.material.uniforms.luminosity.value = parseFloat($("#luminosityControls").val());
+        this.volume.mesh.material.uniforms.opacity.value = parseFloat($("#opacityControls").val());
+        this.volume.mesh.material.needsUpdate  = true;
     },
 
     handlePlaneSliderChange: function(which, event)
@@ -534,10 +474,18 @@ Spatial.Controller = Backbone.View.extend( {
         
         plane.uniforms.flag.value = checkbox.is(':checked') * 1.0; // Cast boolean to float
         this.mesh.material.needsUpdate = true;
+    },
 
-        //TODO: Fix for volume rendering
-        //plane.uniforms.flag.value = checkbox.is(':checked') * 1.0;
-        //this.g.mesh.material.needsUpdate = true;
+    handleFlipCheckboxClick : function(which, event)
+    {
+        var plane = this.planes[which];
+
+        var checkbox = plane.flipCheckbox; // Should also be available as $( event.target )
+
+        //plane.edges.visible = checkbox.is(':checked');
+        
+        plane.uniforms.flip.value = checkbox.is(':checked') * 1.0; // Cast boolean to float
+        this.mesh.material.needsUpdate = true;
     },
 
     deleteCache : function(start1, stop1)
@@ -584,7 +532,7 @@ Spatial.Controller = Backbone.View.extend( {
 
         $.ajax( { type : "GET",
                   url : "/spatial",
-                  data : { reqType : "onlyColorRange",
+                  data : { reqType : "getTimeSeriesData",
                            id : this.attributes.id,
                            data : JSON.stringify( {
                                showPopulation : this.showPopulation,
@@ -711,7 +659,7 @@ Spatial.Controller = Backbone.View.extend( {
     acquireNewData : function()
     {
         // If cache is available
-        if(this.cache[this.timeIdx] && this.meshData)
+        if(this.cache[this.timeIdx] && this.mesh)
         {
             this.handleMeshColorUpdate(this.cache[this.timeIdx]); 
         }
@@ -721,16 +669,12 @@ Spatial.Controller = Backbone.View.extend( {
                 $( "#meshPreviewMsg" ).show();
             
             // If mesh is available
-            if(this.meshData)
+            if(this.mesh)
             {
                 var start  = this.timeIdx ;
                 var end = (this.timeIdx + this.cacheRange);
                 this.updateCache(start, end, true);
                 $( "#meshPreviewMsg" ).hide();
-            }
-            // Neither cache or mesh available
-            else
-            {
             }
         }
     },
@@ -965,64 +909,79 @@ Spatial.Controller = Backbone.View.extend( {
 
     updateVolumeRenderData : function(raw) {
         $( '#volumeControls' ).show();
-        
-        var texture = new THREE.DataTexture(this.m2texLow.generateTexture(raw), this.m2texLow.texWidth, this.m2texLow.texHeight, THREE.RGBAFormat);
-        
-        this.displayVolume(texture);
+
+        var data = this.m2texLow.generateTexture(raw);
+
+        var texture = new THREE.DataTexture(data, this.m2texLow.texWidth, this.m2texLow.texHeight, THREE.RGBAFormat);
+
+        var c = document.getElementById("myCanvas");
+        c.width = this.m2texLow.texWidth;
+        c.height = this.m2texLow.texHeight;
+        var ctx = c.getContext("2d");
+        var imgData = ctx.createImageData(this.m2texLow.texWidth, this.m2texLow.texHeight);
+        for(var i = 0; i < imgData.data.length; i++)
+        {
+            imgData.data[i] = data[i];
+        }
+
+        ctx.putImageData(imgData, 0, 0)
+
+        if(this.volume)
+        {
+            texture.minFilter = THREE.NearestFilter
+            voltex.wrapS = voltex.wrapT = THREE.ClampToEdgeWrapping;
+            this.volume.uniforms.uTex.value = texture;
+            this.volume.uniforms.uTex.value.needsUpdate = true;
+        }
+        else
+        {
+            this.displayVolume(texture);
+        }
     },
 
     displayVolume: function(texture){
         console.log("Displaying Volume...");
         
-        g = {};
-        g.width = Math.floor(this.d_width); g.height = Math.floor(this.d_height);
-        g.scene = new THREE.Scene();
-
-        //g.colorTex = THREE.ImageUtils.loadTexture("/static/img/jet.png");
-        //g.colorTexDim =  new THREE.Vector3(347.0, 16.0, 0.0);
-
-        g.voltex = texture;//new THREE.Texture(imdata);
-        g.voltex.needsUpdate = true;
-        g.voltex.wrapS = g.voltex.wrapT = THREE.ClampToEdgeWrapping;
+        voltex = texture;//new THREE.Texture(imdata);
+        voltex.needsUpdate = true;
+        voltex.wrapS = voltex.wrapT = THREE.ClampToEdgeWrapping;
+        voltex.minFilter = THREE.NearestFilter
 
         var Nx = this.m2texLow.Nx;
         var Ny = this.m2texLow.Ny;
         var Nz = this.m2texLow.Nz;
 
-        g.volcol = new THREE.Vector3(1.0, 1.0, 1.0);
-        g.voltexDim = new THREE.Vector3(Nx, Ny, Nz);
+        volcol = new THREE.Vector3(1.0, 1.0, 1.0);
+        voltexDim = new THREE.Vector3(Nx, Ny, Nz);
 
         this.luminosity = parseFloat($("#luminosityControls").val());
         this.opacity = parseFloat($("#opacityControls").val());
 
         var radius = this.geometry.boundingSphere.radius;
 
-        g.uniforms = {
-            xval : { type: 'f', value: -radius }, 
-            yval : { type: 'f', value: -radius }, 
-            zval : { type: 'f', value: -radius },
-            xflag : { type: 'f', value: 0.0 },
-            yflag : { type: 'f', value: 0.0 }, 
-            zflag : { type: 'f', value: 0.0 },
-            xflip : { type: 'f', value: 1.0 },
-            yflip : { type: 'f', value: 1.0 }, 
-            zflip : { type: 'f', value: 1.0 },
-            uCamPos:    { type: "v3", value: this.camera.position },
-            uColor:     { type: "v3", value: g.volcol },
-            uTex:       { type: "t", value: g.voltex },
-            Nx:       { type: "f", value: Nx },
-            Ny:       { type: "f", value: Ny },
-            Nz:       { type: "f", value: Nz },
-            width:       { type: "f", value: this.m2texLow.texWidth },
-            height:       { type: "f", value: this.m2texLow.texHeight },
-            uTexDim:    { type: "v3", value: g.voltexDim },
-            uTMK:       { type: "f", value: 10.0 },
-            luminosity:  { type: "f", value: this.luminosity },
-            opacity: { type:"f", value: this.opacity }
+        uniforms = {
+            minx : { type: 'f', value: this.boundingBox.x.min },
+            maxx : { type: 'f', value: this.boundingBox.x.max },
+            miny : { type: 'f', value: this.boundingBox.y.min },
+            maxy : { type: 'f', value: this.boundingBox.y.max },
+            minz : { type: 'f', value: this.boundingBox.z.min },
+            maxz : { type: 'f', value: this.boundingBox.z.max },
+            uCamPos : { type: "v3", value: this.camera.position },
+            uColor : { type: "v3", value: volcol },
+            uTex : { type: "t", value: voltex },
+            Nx : { type: "f", value: Nx },
+            Ny : { type: "f", value: Ny },
+            Nz : { type: "f", value: Nz },
+            width : { type: "f", value: this.m2texLow.texWidth },
+            height : { type: "f", value: this.m2texLow.texHeight },
+            uTexDim : { type: "v3", value: voltexDim },
+            uTMK : { type: "f", value: 10.0 },
+            luminosity : { type: "f", value: this.luminosity },
+            opacity : { type:"f", value: this.opacity }
         };
 
         shader = new THREE.ShaderMaterial({
-            uniforms:       g.uniforms,
+            uniforms:       uniforms,
             vertexShader:   this.loadTextFile( '/static/shaders/vol-vs.glsl' ), 
             fragmentShader: this.loadTextFile( '/static/shaders/vol-fs.glsl' ),
             transparent: true,
@@ -1030,18 +989,46 @@ Spatial.Controller = Backbone.View.extend( {
 
         var maxDim = Math.max(Nx, Ny, Nz);
 
-        var geometry = new THREE.BoxGeometry( Nx / maxDim, Ny / maxDim, Nz / maxDim );
-        g.mesh = new THREE.Mesh( geometry , shader);
-        g.scene.add( g.mesh ); 
+        // Build a box geometry and align it to the regular mesh
+        var geometry = new THREE.BoxGeometry(1.0, 1.0, 1.0);
 
-        g.scene.add(planeX);
-        g.scene.add(planeXEdges);
-        g.scene.add(planeY);
-        g.scene.add(planeYEdges);
-        g.scene.add(planeZ);
-        g.scene.add(planeZEdges);
+        var minx = geometry.vertices[0].x;
+        var maxx = minx;
+        var miny = geometry.vertices[0].y;
+        var maxy = miny;
+        var minz = geometry.vertices[0].z;
+        var maxz = minz;
+            
+        for(var i = 0; i < geometry.vertices.length; i++)
+        {
+            var x = geometry.vertices[i].x;
+            var y = geometry.vertices[i].y; 
+            var z = geometry.vertices[i].z; 
+            
+            minx = ( minx > x ? x: minx );    
+            maxx = ( maxx < x ? x: maxx );
+            
+            miny = ( miny > y ? y: miny );    
+            maxy = ( maxy < y ? y: maxy );
+            
+            minz = ( minz > z ? z: minz );    
+            maxz = ( maxz < z ? z: maxz );
+        }
 
-        this.g = g;
+        for(var i = 0; i < geometry.vertices.length; i++)
+        {
+            geometry.vertices[i].x = (geometry.vertices[i].x - minx) * (this.boundingBox.x.max - this.boundingBox.x.min) + this.boundingBox.x.min;
+            geometry.vertices[i].y = (geometry.vertices[i].y - miny) * (this.boundingBox.y.max - this.boundingBox.y.min) + this.boundingBox.y.min;
+            geometry.vertices[i].z = (geometry.vertices[i].z - minz) * (this.boundingBox.z.max - this.boundingBox.z.min) + this.boundingBox.z.min;
+        }
+
+        mesh = new THREE.Mesh(geometry, shader);
+
+        this.scene.add(mesh);
+
+        this.volume = {};
+        this.volume.mesh = mesh;
+        this.volume.uniforms = uniforms;
     },
 
     render : function(data)
@@ -1116,7 +1103,7 @@ Spatial.Controller = Backbone.View.extend( {
                 $.ajax( {
                     type : "GET",
                     url : "/spatial",
-                    data : { reqType : "timeData", 
+                    data : { reqType : "getMeshData", 
                              id : this.attributes.id, 
                              data : JSON.stringify( {
                                  trajectory : this.trajectory,
@@ -1245,6 +1232,9 @@ Spatial.Controller = Backbone.View.extend( {
             plane.visibleCheckbox.click(_.bind(_.partial(this.handleVisibleCheckboxClick, which), this));
             plane.flipCheckbox.click(_.bind(_.partial(this.handleFlipCheckboxClick, which), this));
 
+            this.handleVisibleCheckboxClick(which);
+            this.handleFlipCheckboxClick(which);
+
             var min = this.boundingBox[which].min,
             max = this.boundingBox[which].max;
 
@@ -1255,6 +1245,8 @@ Spatial.Controller = Backbone.View.extend( {
             slider.val(min);
             slider.prop('step', (max - min) / 20);
             slider.on('change', _.throttle(_.bind(_.partial(this.handlePlaneSliderChange, which), this), 1000));
+
+            this.handlePlaneSliderChange(which);
         }            
 
         var slider = $("#luminosityControls");

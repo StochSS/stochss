@@ -327,8 +327,8 @@ MeshToTexture.Converter.prototype.generateTexture = function(data)
     
     var im = new Array(xlimit*ylimit*zlimit).fill(0);
 
-    var min = 0.0;
-    var max = undefined;
+    var min = _.min(data);
+    var max = _.max(data);
 
     for(var i = 0; i < this.list.length; i++)
     {
@@ -355,7 +355,7 @@ MeshToTexture.Converter.prototype.generateTexture = function(data)
         
         var inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
 
-        im[(x*ylimit*zlimit)+(y*zlimit)+z] = (inval - this.minv) / (this.maxv - this.minv);
+        im[(x*ylimit*zlimit)+(y*zlimit)+z] = (inval - min) / (max - min);
     }
 
     // We've converted to the structured mesh, now to convert to 2D texture

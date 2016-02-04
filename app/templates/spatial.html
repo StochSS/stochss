@@ -63,32 +63,31 @@
 
             if(xflag > 0.0)
             {
-                if(position.x <= xval)// && xflip >= 0.0)
+                if(position.x < xval && xflip < 0.5)
                     vColor = vec4(0.0, 0.0, 0.0, 0.0);
 
-                if(position.x > xval && xflip < 0.0)
+                if(position.x > xval && xflip > 0.5)
                     vColor = vec4(0.0, 0.0, 0.0, 0.0);
             }            
 
             if(yflag == 1.0)
             {
-                if (position.z <= yval && yflip >= 0.0)
+                if (position.y < yval && yflip < 0.5)
                     vColor = vec4(0.0, 0.0, 0.0, 0.0);
 
-                if (position.z > yval && yflip < 0.0)
+                if (position.y > yval && yflip > 0.5)
                     vColor = vec4(0.0, 0.0, 0.0, 0.0);
             }
             
             if(zflag == 1.0)
             {
-                if( position.y <= zval && zflip >= 0.0)
+                if( position.z < zval && zflip < 0.5)
                     vColor = vec4(0.0, 0.0, 0.0, 0.0);
 
-                if( position.y > zval && zflip < 0.0)
+                if( position.z > zval && zflip > 0.5)
                     vColor = vec4(0.0, 0.0, 0.0, 0.0);
             }
         }
-
     </script>
 
     <script type="x-shader/x-fragment" id="fragmentshader">
@@ -115,6 +114,7 @@
   	<li class="active"><%= name %></li>
     </ol>
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
+                <canvas id="myCanvas"></canvas>
     <br />
     <div class="well">
         <div class="row">
