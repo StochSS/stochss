@@ -1,11 +1,16 @@
 #!/bin/bash
 
-while getopts ":a:" opt; do
+while getopts ":a:,:t:" opt; do
   case $opt in
     a)
       echo "-a was triggered, IP Address of Docker VM: $OPTARG" >&2
       ip=$OPTARG
       ;;
+    t)
+      #echo "-t was triggered, Admin token: $OPTARG" >&2
+      token=$OPTARG
+      ;;
+
     \?)
       echo "Invalid option: -$OPTARG" >&2
       exit 1
@@ -16,6 +21,7 @@ while getopts ":a:" opt; do
       ;;
   esac
 done
+
 
 osname=$(uname)
 if [ "$osname" != 'Linux' ]; then
@@ -561,6 +567,6 @@ echo "Done!"
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0 $1 $ip
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $1 $token $ip
 fi
 
