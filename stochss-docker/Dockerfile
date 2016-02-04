@@ -119,6 +119,7 @@ RUN wget https://github.com/aviral26/stochss/archive/master.tar.gz && \
     python-setuptools \
     cython \
     libbz2-dev \
+    vim \
     libhdf5-mpi-dev && \
     chmod 777 run.ubuntu.sh
 

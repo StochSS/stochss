@@ -203,7 +203,7 @@ if serverUp:
     # Set up admin token
     admin_token = sys.argv[3]
     try:
-        with open('app/handlers/admin_uuid.txt', 'w') as file:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/handlers/admin_uuid.txt'), 'w') as file:
             file.write(str(admin_token))
     except Exception as e:
         print " File write error: cannot create admin token {0}".format(str(e))
