@@ -106,14 +106,14 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
   bool inside = false;
 
   for (int i=0; i<MAX_STEPS; ++i) {
-    bool outside = (pos.x > (1.0 + eps) ||
-       (pos.x) < -eps ||
-       (pos.y) > (1.0 + eps) ||
-       (pos.y) < -eps ||
-       (pos.z) > (1.0 + eps) ||
-       (pos.z) < -eps);
+    bool outside = pos.x > 1.0 ||
+       pos.x < 0.0 ||
+       pos.y > 1.0 ||
+       pos.y < 0.0 ||
+       pos.z > 1.0 ||
+       pos.z < 0.0;
 
-    if(outside && i >= 2)
+    if(outside && i >= 1)
     {
          break;
     }
@@ -147,7 +147,7 @@ void main() {
     rd.y = rd.y / (maxy - miny);
     rd.z = rd.z / (maxz - minz);
 
-    gStepSize = ROOTTHREE / float(MAX_STEPS);
+    gStepSize = 2.0 * ROOTTHREE / float(MAX_STEPS);
     //if(ro.x < 0.0)
     //    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
     //else

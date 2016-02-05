@@ -256,9 +256,9 @@ MeshToTexture.Converter.prototype.constructBaryMap = function()
         {
             for(var z=0; z<zlimit; z++)
             {
-                var a_x = ((x / (xlimit-1)) * (this.maxx - this.minx) + this.minx);
-                var a_y = ((y / (ylimit-1)) * (this.maxy - this.miny) + this.miny);
-                var a_z = ((z / (zlimit-1)) * (this.maxz - this.minz) + this.minz);
+                var a_x = ((x / (xlimit-1)) * (this.maxx - this.minx) + this.minx) * 1.1;
+                var a_y = ((y / (ylimit-1)) * (this.maxy - this.miny) + this.miny) * 1.1;
+                var a_z = ((z / (zlimit-1)) * (this.maxz - this.minz) + this.minz) * 1.1;
                 var key  = this.getVoxelBinFromCoordinates(a_x,a_y,a_z);
                 var keys = this.c2v.get(key);
                 var inval = 0;

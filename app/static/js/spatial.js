@@ -394,7 +394,9 @@ Spatial.Controller = Backbone.View.extend( {
         planeZ.visible = false;
         planeZEdges.visible = $("#planeZCheck").is(':checked');
 
-        //scene.add(this.mesh);
+        this.mesh.name = "mesh";
+
+        scene.add(this.mesh);
 
         scene.add(planeX);
         scene.add(planeXEdges);
@@ -914,7 +916,7 @@ Spatial.Controller = Backbone.View.extend( {
 
         var texture = new THREE.DataTexture(data, this.m2texLow.texWidth, this.m2texLow.texHeight, THREE.RGBAFormat);
 
-        var c = document.getElementById("myCanvas");
+        /*var c = document.getElementById("myCanvas");
         c.width = this.m2texLow.texWidth;
         c.height = this.m2texLow.texHeight;
         var ctx = c.getContext("2d");
@@ -924,7 +926,7 @@ Spatial.Controller = Backbone.View.extend( {
             imgData.data[i] = data[i];
         }
 
-        ctx.putImageData(imgData, 0, 0)
+        ctx.putImageData(imgData, 0, 0)*/
 
         if(this.volume)
         {
@@ -1023,6 +1025,8 @@ Spatial.Controller = Backbone.View.extend( {
         }
 
         mesh = new THREE.Mesh(geometry, shader);
+
+        mesh.name = "volume.mesh";
 
         this.scene.add(mesh);
 
@@ -1173,14 +1177,21 @@ Spatial.Controller = Backbone.View.extend( {
             console.log('unitSelect.click');
             selectedIndex =  $("#wireSelect")[0].options["selectedIndex"]
             selectedOption = $("#wireSelect")[0].options[selectedIndex].value
+
+            var mesh = this.scene.getObjectByName("mesh");
+            var volumeMesh = this.scene.getObjectByName("volume.mesh");
             if( selectedOption == 'solid')
             {
+                if(!mesh) this.scene.add(this.mesh);
+                if(volumeMesh) this.scene.remove(this.volume.mesh);
                 this.volumeRender = false;
                 this.mesh.material.wireframe = false;
                 this.mesh.material.needsUpdate = true;
             }
             else if( selectedOption == 'wireframe')
             {
+                if(!mesh) this.scene.add(this.mesh);
+                if(volumeMesh) this.scene.remove(this.volume.mesh)
                 this.volumeRender = false;
                 this.mesh.material.wireframe = true;
                 this.mesh.material.needsUpdate = true;
@@ -1188,6 +1199,9 @@ Spatial.Controller = Backbone.View.extend( {
             else if(selectedOption == 'volume')
             {
                 this.updateVolumeRenderData(this.cache[this.timeIdx].raw[this.selectedSpecies]);
+                volumeMesh = this.scene.getObjectByName("volume.mesh");
+                if(!volumeMesh) this.scene.add(this.volume.mesh);
+                if(mesh) this.scene.remove(this.mesh)
                 this.volumeRender = true;
             }
             this.cache = {}
