@@ -111,23 +111,29 @@ MeshToTexture.Converter.prototype.computeMeshLimits = function()
     var i = 1;
     for(i = this.rTexWidth; i > 0; i--)
     {
-        var Nx = i;
-        var Ny = Math.floor(Nx * yrange / xrange);
-        var Nz = Math.floor(Nx * zrange / xrange);
-        var horizontal = Math.floor(this.rTexWidth / Nx);
-        var vertical = Math.floor(this.rTexHeight / Ny);
-        if((horizontal * vertical) > Nz) break;
+        var Tx = i;
+        var Ty = Math.floor(Tx * yrange / xrange);
+        var Tz = Math.floor(Tx * zrange / xrange);
+        var horizontal = Math.floor(this.rTexWidth / Tx);
+        var vertical = Math.floor(this.rTexHeight / Ty);
+        if((horizontal * vertical) > Tz) break;
     }
 
-    this.Nx = Math.floor(i+1);
-    this.Ny = Math.floor(this.Nx * yrange / xrange);
-    this.Nz = Math.floor(this.Nx * zrange / xrange);
+    this.Tx = Math.floor(i+1);
+    this.Ty = Math.floor(this.Tx * yrange / xrange);
+    this.Tz = Math.floor(this.Tx * zrange / xrange);
 
-    var horizontal = Math.floor(this.rTexWidth / this.Nx);
-    var vertical = Math.floor(this.rTexHeight / this.Ny);
+    this.spacing = 2;
 
-    this.texWidth = horizontal * this.Nx;
-    this.texHeight = this.Ny * Math.ceil(this.Nz / horizontal);
+    this.Nx = this.Tx - this.spacing;
+    this.Ny = this.Ty - this.spacing;
+    this.Nz = this.Tz - this.spacing;
+
+    var horizontal = Math.floor(this.rTexWidth / this.Tx);
+    var vertical = Math.floor(this.rTexHeight / this.Ty);
+
+    this.texWidth = horizontal * this.Tx;
+    this.texHeight = this.Ty * Math.ceil(this.Tz / horizontal);
 };
 
 MeshToTexture.Converter.prototype.constructCoodinatesToVoxelBinHashmap = function() {
@@ -250,15 +256,15 @@ MeshToTexture.Converter.prototype.constructBaryMap = function()
 
     this.list = []
     this.baryMap = {}
-    for (var x=0; x<xlimit; x++)
+    for (var x = 0; x < xlimit; x++)
     {
-        for(var y=0; y<ylimit; y++)
+        for(var y = 0; y < ylimit; y++)
         {
-            for(var z=0; z<zlimit; z++)
+            for(var z = 0; z < zlimit; z++)
             {
-                var a_x = ((x / (xlimit-1)) * (this.maxx - this.minx) + this.minx) * 1.1;
-                var a_y = ((y / (ylimit-1)) * (this.maxy - this.miny) + this.miny) * 1.1;
-                var a_z = ((z / (zlimit-1)) * (this.maxz - this.minz) + this.minz) * 1.1;
+                var a_x = ((x / (xlimit - 1)) * (this.maxx - this.minx) + this.minx);
+                var a_y = ((y / (ylimit - 1)) * (this.maxy - this.miny) + this.miny);
+                var a_z = ((z / (zlimit - 1)) * (this.maxz - this.minz) + this.minz);
                 var key  = this.getVoxelBinFromCoordinates(a_x,a_y,a_z);
                 var keys = this.c2v.get(key);
                 var inval = 0;
@@ -327,8 +333,8 @@ MeshToTexture.Converter.prototype.generateTexture = function(data)
     
     var im = new Array(xlimit*ylimit*zlimit).fill(0);
 
-    var min = _.min(data);
-    var max = _.max(data);
+    //var min = _.min(data);
+    //var max = _.max(data);
 
     for(var i = 0; i < this.list.length; i++)
     {
@@ -355,7 +361,7 @@ MeshToTexture.Converter.prototype.generateTexture = function(data)
         
         var inval = l1 * c1 + l2 * c2 + l3 * c3 + l4 * c4
 
-        im[(x*ylimit*zlimit)+(y*zlimit)+z] = (inval - min) / (max - min);
+        im[(x * ylimit * zlimit) + (y * zlimit) + z] = (inval - this.minv) / (this.maxv - this.minv);
     }
 
     // We've converted to the structured mesh, now to convert to 2D texture
@@ -373,12 +379,12 @@ MeshToTexture.Converter.prototype.generateTexture = function(data)
         {
             for(var j = 0; j < this.Ny; j++)
             {
-                color1 = Math.floor(im[i*this.Ny * this.Nz+ j*this.Nz +z] * 255); 
-                color2 = Math.floor(im[i*this.Ny * this.Nz+ j*this.Nz +z] * 255);
+                color1 = Math.floor(im[i * this.Ny * this.Nz + j * this.Nz + z] * 255); 
+                color2 = Math.floor(im[i * this.Ny * this.Nz + j * this.Nz + z] * 255);
                 color3 = 0;
-                var idx = (i + j * width+ (z % tiles)* this.Nx);
+                var idx = (i + j * width+ (z % tiles) * this.Tx);
                 var rownum = Math.floor(z / tiles);
-                idx += rownum* this.Ny* width ;
+                idx += rownum * this.Ty * width ;
                 tgtData[4 * idx] = color1;
                 tgtData[4 * idx + 1] = color2;
                 tgtData[4 * idx + 2] = color3;

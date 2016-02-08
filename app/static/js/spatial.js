@@ -18,8 +18,10 @@ Spatial.Controller = Backbone.View.extend( {
         html_ele.text(data.msg);
         if(data.status)
             html_ele.prop('class', 'alert alert-success');
-        else
+        else if(data.status === false || data.status < 0)
             html_ele.prop('class', 'alert alert-error');
+        else
+            html_ele.prop('class', 'alert');
 
         if(data.msg.length > 0)
             html_ele.show();
@@ -447,7 +449,6 @@ Spatial.Controller = Backbone.View.extend( {
 
     handleVolumeSliderChange: function(event)
     {
-        this.volume.mesh.material.uniforms.luminosity.value = parseFloat($("#luminosityControls").val());
         this.volume.mesh.material.uniforms.opacity.value = parseFloat($("#opacityControls").val());
         this.volume.mesh.material.needsUpdate  = true;
     },
@@ -466,27 +467,23 @@ Spatial.Controller = Backbone.View.extend( {
         //plane.edges.geometry.verticesNeedUpdate = true;
     },
 
-    handleVisibleCheckboxClick : function(which, event)
+    handleVisibleCheckboxClick : function(which)
     {
         var plane = this.planes[which];
 
-        var checkbox = plane.visibleCheckbox; // Should also be available as $( event.target )
+        var checkbox = plane.visibleCheckbox;
 
         plane.edges.visible = checkbox.is(':checked');
-        
-        plane.uniforms.flag.value = checkbox.is(':checked') * 1.0; // Cast boolean to float
+        plane.uniforms.flag.value = checkbox.is(':checked') * 1.0;
         this.mesh.material.needsUpdate = true;
     },
 
-    handleFlipCheckboxClick : function(which, event)
+    handleFlipCheckboxClick : function(which)
     {
         var plane = this.planes[which];
 
-        var checkbox = plane.flipCheckbox; // Should also be available as $( event.target )
-
-        //plane.edges.visible = checkbox.is(':checked');
-        
-        plane.uniforms.flip.value = checkbox.is(':checked') * 1.0; // Cast boolean to float
+        var checkbox = plane.flipCheckbox;
+        plane.uniforms.flip.value = checkbox.is(':checked') * 1.0;
         this.mesh.material.needsUpdate = true;
     },
 
@@ -969,16 +966,15 @@ Spatial.Controller = Backbone.View.extend( {
             minz : { type: 'f', value: this.boundingBox.z.min },
             maxz : { type: 'f', value: this.boundingBox.z.max },
             uCamPos : { type: "v3", value: this.camera.position },
-            uColor : { type: "v3", value: volcol },
             uTex : { type: "t", value: voltex },
             Nx : { type: "f", value: Nx },
             Ny : { type: "f", value: Ny },
             Nz : { type: "f", value: Nz },
+            Tx : { type: "f", value: this.m2texLow.Tx },
+            Ty : { type: "f", value: this.m2texLow.Ty },
+            Tz : { type: "f", value: this.m2texLow.Tz },
             width : { type: "f", value: this.m2texLow.texWidth },
             height : { type: "f", value: this.m2texLow.texHeight },
-            uTexDim : { type: "v3", value: voltexDim },
-            uTMK : { type: "f", value: 10.0 },
-            luminosity : { type: "f", value: this.luminosity },
             opacity : { type:"f", value: this.opacity }
         };
 
@@ -1025,14 +1021,18 @@ Spatial.Controller = Backbone.View.extend( {
         }
 
         mesh = new THREE.Mesh(geometry, shader);
-
-        mesh.name = "volume.mesh";
+        var meshEdges = new THREE.EdgesHelper(mesh, 0x000000);
+        meshEdges.material.linewidth = 1;
+        meshEdges.visible = true;
 
         this.scene.add(mesh);
+        this.scene.add(meshEdges);
 
-        this.volume = {};
-        this.volume.mesh = mesh;
-        this.volume.uniforms = uniforms;
+        this.volume = {
+            mesh : mesh,
+            uniforms : uniforms,
+            edges : meshEdges
+        };
     },
 
     render : function(data)
@@ -1182,26 +1182,46 @@ Spatial.Controller = Backbone.View.extend( {
             var volumeMesh = this.scene.getObjectByName("volume.mesh");
             if( selectedOption == 'solid')
             {
-                if(!mesh) this.scene.add(this.mesh);
-                if(volumeMesh) this.scene.remove(this.volume.mesh);
+                $("#colormap").show();
+                $("#volumeControls").hide();
+                $("#domainControls").show();
+                this.handleVisibleCheckboxClick('x');
+                this.handleVisibleCheckboxClick('y');
+                this.handleVisibleCheckboxClick('z');
+                this.volume.mesh.visible = false;
+                this.volume.edges.visible = false;
+                this.mesh.visible = true;
                 this.volumeRender = false;
                 this.mesh.material.wireframe = false;
                 this.mesh.material.needsUpdate = true;
             }
             else if( selectedOption == 'wireframe')
             {
-                if(!mesh) this.scene.add(this.mesh);
-                if(volumeMesh) this.scene.remove(this.volume.mesh)
+                $("#colormap").show();
+                $("#volumeControls").hide();
+                $("#domainControls").show();
+                this.handleVisibleCheckboxClick('x');
+                this.handleVisibleCheckboxClick('y');
+                this.handleVisibleCheckboxClick('z');
+                this.volume.mesh.visible = false;
+                this.volume.edges.visible = false;
+                this.mesh.visible = true;
                 this.volumeRender = false;
                 this.mesh.material.wireframe = true;
                 this.mesh.material.needsUpdate = true;
             }
             else if(selectedOption == 'volume')
             {
+                $("#colormap").hide();
+                $("#volumeControls").show();
+                $("#domainControls").hide();
                 this.updateVolumeRenderData(this.cache[this.timeIdx].raw[this.selectedSpecies]);
-                volumeMesh = this.scene.getObjectByName("volume.mesh");
-                if(!volumeMesh) this.scene.add(this.volume.mesh);
-                if(mesh) this.scene.remove(this.mesh)
+                this.volume.mesh.visible = true;
+                this.volume.edges.visible = true;
+                this.mesh.visible = false;
+                this.planes.x.edges.visible = false;
+                this.planes.y.edges.visible = false;
+                this.planes.z.edges.visible = false;
                 this.volumeRender = true;
             }
             this.cache = {}
@@ -1217,7 +1237,7 @@ Spatial.Controller = Backbone.View.extend( {
             {
 
                 this.showPopulation  = true;
-                this.updateMsg( { status : false, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
+                this.updateMsg( { status : 0, msg : "Warning: the population plot is not normalized to volume. Interpretation of this plot can be misleading" }, 'meshMsg' );
             }
             else if( selectedOption == 'concentration')
             {
@@ -1262,9 +1282,6 @@ Spatial.Controller = Backbone.View.extend( {
 
             this.handlePlaneSliderChange(which);
         }            
-
-        var slider = $("#luminosityControls");
-        slider.on('change', _.throttle(_.bind(this.handleVolumeSliderChange, this), 1000));
 
         var slider = $("#opacityControls");
         slider.on('change', _.throttle(_.bind(this.handleVolumeSliderChange, this), 1000));

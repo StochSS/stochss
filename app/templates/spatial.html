@@ -114,7 +114,7 @@
   	<li class="active"><%= name %></li>
     </ol>
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
-    <canvas style="display: none;" id="myCanvas"></canvas>
+    <canvas style="display : none;" id="myCanvas"></canvas>
     <br />
     <div class="well">
         <div class="row">
@@ -178,7 +178,7 @@
             </tr>
         </table>
         <div class="row">
-            <div class="span10" style="border: 1px solid rgb(221, 221, 221);">
+            <div class="span10">
                 <div id="meshPreviewMsg">
                     <center><h1>Loading...</h1></center>
                 </div>
@@ -234,18 +234,6 @@
                 <div id="newMesh"></div>
                 <div id="meshPreview" width="100%" style="z-index=-2"></div>
 
-                <div id="volumeControls" class="controls well" style="clear:both; display: none; margin-bottom: 0px;">
-                    <span><b>Volume Rendering Controls</b> </span><br/>
-                    
-                    <div style="clear:both; display: none; margin-bottom: 0px;">
-                        <span> Luminosity </span>
-                        <input id="luminosityControls" type="range" min="0.0" max="100.0" step="10.0" value="10.0">
-                    </div>
-
-                    <span> Opacity </span>
-                    <input id="opacityControls" type="range" min="0.0" max="10.0" step="0.1" value="0.05">
-                </div>
-
                 <div id="domainControls" class="controls well" style="clear:both; display: none; margin-bottom: 0px;">
                     <span><b>Domain Clipping Controls</b> </span><br/>
                     <table>
@@ -278,9 +266,17 @@
 
 
             <div class="span1">
+              <div id="colormap">
                 <div id="maxVal">Maximum voxel population:</div>
                 <div><img src="/static/img/cmap.png"></div>
                 <div id="minVal">Minimum voxel population:</div>
+              </div>
+              <div id="volumeControls" style="display: none;">
+                <div>Opacity (real >= 0):</div>
+                <input id="opacityControls" type="number" step="0.1" value="0.5" style="width:100%">
+                <hr>
+                No legend available for volume rendering
+              </div>
             </div>
         </div>
 

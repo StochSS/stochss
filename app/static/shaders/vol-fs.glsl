@@ -33,16 +33,16 @@ uniform vec3 uOffset; // TESTDEBUG
 
 uniform vec3 uCamPos;
 
-uniform vec3 uColor;      // color of volume
 uniform sampler2D uTex;   // 3D(2D) volume texture
-uniform vec3 uTexDim;     // dimensions of texture
 
 uniform float Nx;
 uniform float Ny;
 uniform float Nz;
+uniform float Tx;
+uniform float Ty;
+uniform float Tz;
 uniform float width;
 uniform float height;
-uniform float luminosity;
 uniform float opacity;
 
 uniform float minx;
@@ -66,25 +66,24 @@ float sampleVolTex(vec3 pos, sampler2D uTex) {
   pos.y = pos.y;
   pos.z = pos.z;
 
-  float tilesX = floor(width / Nx);
+  float tilesX = floor(width / Tx);
 
   float tmp = pos.z * Nz; // This is the tile number we care about
 
   float tileNumber = floor(tmp);
 
-  float x1 = Nx * ( pos.x + mod(tileNumber, tilesX)) ;// this is the X coordinate of the tile in the texture
-  float y1 = Ny * ( pos.y + floor(tileNumber / tilesX)) ;// this is the Y coordinate of the tile in the texture
+  float x1 = (Nx * pos.x + Tx * mod(tileNumber, tilesX)) ;// this is the X coordinate of the tile in the texture
+  float y1 = (Ny * pos.y + Ty * floor(tileNumber / tilesX)) ;// this is the Y coordinate of the tile in the texture
 
   tileNumber = tileNumber + 1.0;
 
-  float x2 = Nx * (pos.x + mod(tileNumber, tilesX));// this is the X coordinate of the tile in the texture
-  float y2 = Ny * (pos.y + floor(tileNumber / tilesX));// this is the Y coordinate of the tile in the texture
+  float x2 = (Nx * pos.x + Tx * mod(tileNumber, tilesX));// this is the X coordinate of the tile in the texture
+  float y2 = (Ny * pos.y + Ty * floor(tileNumber / tilesX));// this is the Y coordinate of the tile in the texture
 
   x1 = (x1) / width;
   y1 = (height - y1) / height;
   x2 = (x2) / width;
   y2 = (height - y2) / height;  
-
 
   float z0 = texture2D(uTex, vec2(x1, y1)).r;
   float z1 = texture2D(uTex, vec2(x2, y2)).r;
@@ -101,7 +100,6 @@ vec4 raymarchLight(vec3 ro, vec3 rd) {
   float Aa = 0.0;         // accumulated alpha
   
   float Of = opacity;
-  float Lf = luminosity;
 
   bool inside = false;
 
