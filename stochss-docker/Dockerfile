@@ -1,7 +1,6 @@
-Author:
-Aviral Takkar <aviraltakkar@cs.ucsb.edu>
+#AUTHOR Aviral Takkar <aviraltakkar@cs.ucsb.edu>
+
 FROM phusion/baseimage:0.9.15
-#FROM ubuntu:14.04
 MAINTAINER Aviral Takkar
 
 ENV HOME /root

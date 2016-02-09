@@ -11,17 +11,16 @@ while getopts ":a:,:t:" opt; do
       token=$OPTARG
       ;;
 
-    # \?)
-    #   echo "Invalid option: -$OPTARG" >&2
-    #   exit 1
-    #   ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
     :)
       echo "Option -$OPTARG requires an argument." >&2
       exit 1
       ;;
   esac
 done
-
 
 
 osname=$(uname)
@@ -32,24 +31,24 @@ fi
 
 help_message="Usage: $0 [--run] [--install]"
 
-mode="install"
-# if [ $# -ge 2 ]; then
-#     echo "Error: $0 takes at most 1 argument."
-#     echo "$help_message"
-#     exit
-# elif [ $# -eq 1 ]; then
-#     if [ "$1" = "--run" ]; then
-#         mode="run"
-#     elif [ "$1" = "--install" ]; then
-#         mode="install"
-#     elif [ "$1" = "--debug" ]; then
-#         mode="debug"
-#     else
-#         echo "Error: Invalid argument '$1'!"
-#         echo "$help_message"
-#         exit
-#     fi
-# fi
+mode="run"
+#if [ $# -ge 2 ]; then
+ #   echo "Error: $0 takes at most 1 argument."
+  #  echo "$help_message"
+   # exit
+#if [ $# -eq 1 ]; then
+ if [ "$1" = "--run" ]; then
+     mode="run"
+ elif [ "$1" = "--install" ]; then
+     mode="install"
+ elif [ "$1" = "--debug" ]; then
+     mode="debug"
+ else
+     echo "Error: Invalid argument '$1'! (not really)"
+     echo "$help_message"
+ #    exit
+ fi
+#fi
 
 # Attempt to install StochKit 2.0.11
 #
@@ -75,7 +74,7 @@ export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
 export R_LIBS="$STOCHOPTIM/library"
 
 if [ "$(echo $STOCHSS_HOME | grep " ")" != "" ]; then
-    echo "Cannot install StochSS under any directory that contains spaces (which the filename listed above has). This is an known issue"
+    echo "Cannot install StochSS under any directory that contains spaces (which the filename listed above has). This is a known issue"
     exit -1
 fi
 
@@ -91,20 +90,20 @@ number_of_pkgs=`echo $PKGS | wc -w`
 count=$(dpkg-query -l $PKGS | grep '^[a-z]i' | wc -l)
 if [ $count != $number_of_pkgs ]; then
     echo "No $count of $number_of_pkgs packages installed"
-    read -p "Do you want me to try to use sudo to install required package(s) ($PKGS)? (y/n): " answer
+    #read -p "Do you want me to try to use sudo to install required package(s) ($PKGS)? (y/n): " answer
 
+    #if [ $? != 0 ]; then
+     #   exit -1
+    #fi
+
+    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+    CMD="sudo apt-get -y install $PKGS"
+    echo "Running '$CMD'"
+    eval $CMD
     if [ $? != 0 ]; then
         exit -1
     fi
-
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="sudo apt-get -y install $PKGS"
-        echo "Running '$CMD'"
-        eval $CMD
-        if [ $? != 0 ]; then
-            exit -1
-        fi
-    fi
+    #fi
 else
     echo "Yes"
 fi
@@ -157,66 +156,66 @@ function check_pip {
 
 function install_pip {
     echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
-    read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
+    #read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
 
-    if [ $? != 0 ]; then
-        exit -1
-    fi
+    #if [ $? != 0 ]; then
+     #   exit -1
+    #fi
 
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
-        echo $CMD
-        eval $CMD
-        CMD="sudo python get-pip.py"
-        echo $CMD
-        eval $CMD
-    else
-        exit -1
-    fi
+    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+    CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
+    echo $CMD
+    eval $CMD
+    CMD="sudo python get-pip.py"
+    echo $CMD
+    eval $CMD
+    #else
+     #   exit -1
+    #fi
 }
 function install_lib_h5py {
     if ! check_pip;then
         install_pip
     fi
     echo "We need install the following packages: h5py"
-    read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    #read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    #if [ $? != 0 ]; then
+     #   exit -1
+    #fi
+    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+    CMD='sudo CC="mpicc" pip install h5py'
+    echo $CMD
+    eval $CMD
     if [ $? != 0 ]; then
         exit -1
     fi
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD='sudo CC="mpicc" pip install h5py'
-        echo $CMD
-        eval $CMD
-        if [ $? != 0 ]; then
-            exit -1
-        fi
-        echo "$1 installed successfully"
-    else
-        echo "Exiting"
-        exit -1
-    fi
+    echo "$1 installed successfully"
+   # else
+    #    echo "Exiting"
+     #   exit -1
+    #fi
 }
 function install_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
     echo "We need install the following packages: $1"
-    read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    #read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    #if [ $? != 0 ]; then
+     #   exit -1
+    #fi
+    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+    CMD="sudo apt-get -y install $1"
+    echo $CMD
+    eval $CMD
     if [ $? != 0 ]; then
         exit -1
     fi
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="sudo apt-get -y install $1"
-        echo $CMD
-        eval $CMD
-        if [ $? != 0 ]; then
-            exit -1
-        fi
-        echo "$1 installed successfully"
-    else
-        echo "Exiting"
-        exit -1
-    fi
+    echo "$1 installed successfully"
+    #else
+     #   echo "Exiting"
+      #  exit -1
+    #fi
 }
 
 function install_lib_pip {
@@ -231,22 +230,22 @@ function install_lib_pip {
     else
         echo "We need to install package $1 with flags '$2'"
     fi
-    read -p "Do you want me to try to install required package with pip (y/n): " answer
+    #read -p "Do you want me to try to install required package with pip (y/n): " answer
+    #if [ $? != 0 ]; then
+     #   exit -1
+    #fi
+    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+    CMD="sudo pip install $2 $1"
+    echo $CMD
+    eval $CMD
     if [ $? != 0 ]; then
         exit -1
     fi
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="sudo pip install $2 $1"
-        echo $CMD
-        eval $CMD
-        if [ $? != 0 ]; then
-            exit -1
-        fi
-        echo "$1 installed successfully"
-    else
-        echo "Exiting"
-        exit -1
-    fi
+    echo "$1 installed successfully"
+    #else
+     #   echo "Exiting"
+      #  exit -1
+    #fi
 }
 
 function check_and_install_deps {
@@ -262,9 +261,9 @@ function check_and_install_deps {
     if ! check_lib "matplotlib";then
         install_lib "python-matplotlib"
     fi
-    if ! check_lib "libsbml";then
-        install_lib_pip "python-libsbml"
-    fi
+    #if ! check_lib "libsbml";then
+     #   install_lib_pip "python-libsbml"
+    #fi
     if ! check_lib "mysql";then
         install_lib_pip "mysql-connector-python" "--allow-external mysql-connector-python"
     fi
@@ -281,23 +280,23 @@ function check_dolfin {
 function install_dolfin {
     echo "We need to add the the following ppa: 'ppa:fenics-packages/fenics"
     echo "And install the following packages: python-software-properties fenics "
-    read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    #read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    #if [ $? != 0 ]; then
+     #   exit -1
+    #fi
+    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+    echo "Running 'sudo apt-get install ..."
+    sudo apt-get -y install python-software-properties
+    sudo add-apt-repository ppa:fenics-packages/fenics
+    sudo apt-get update
+    sudo apt-get -y install fenics
+    return 0 # True
     if [ $? != 0 ]; then
         exit -1
     fi
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        echo "Running 'sudo apt-get install ..."
-        sudo apt-get -y install python-software-properties
-        sudo add-apt-repository ppa:fenics-packages/fenics
-        sudo apt-get update
-        sudo apt-get -y install fenics
-        return 0 # True
-        if [ $? != 0 ]; then
-            exit -1
-        fi
-    else
-        exit -1
-    fi
+    #else
+     #   exit -1
+    #fi
 }
 
 function check_python_package_installation {
@@ -565,8 +564,8 @@ echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-#if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
-echo "Running StochSS..."
-export PATH=$PATH:$STOCHKIT_HOME
-exec python "$STOCHSS_HOME/launchapp.py" $0 $1 $token $ip
-#fi
+if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
+    echo "Running StochSS..."
+    export PATH=$PATH:$STOCHKIT_HOME
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $1 $token $ip
+fi
