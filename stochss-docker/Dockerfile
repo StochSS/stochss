@@ -1,11 +1,7 @@
-# Builds a Docker image from source using as many
-# upstream Ubuntu packages as possible.
-# An official build of this Dockerfile is maintained at:
-# https://registry.hub.docker.com/u/fenicsproject/stable-src/
-# Author:
-# Jack S. Hale <jack.hale@uni.lu>
-#FROM phusion/baseimage:0.9.15
-FROM ubuntu:14.04
+Author:
+Aviral Takkar <aviraltakkar@cs.ucsb.edu>
+FROM phusion/baseimage:0.9.15
+#FROM ubuntu:14.04
 MAINTAINER Aviral Takkar
 
 ENV HOME /root
@@ -126,9 +122,3 @@ RUN wget https://github.com/aviral26/stochss/archive/master.tar.gz && \
 
 EXPOSE 8000
 EXPOSE 8080
-
-
-
-
-
-
