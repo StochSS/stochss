@@ -1,6 +1,6 @@
 #!/bin/bash
-
-while getopts ":a:,:t:" opt; do
+mode="run"
+while getopts ":a:,:t:,:i:,:d:" opt; do
   case $opt in
     a)
       echo "-a was triggered, IP Address of Docker VM: $OPTARG" >&2
@@ -10,7 +10,14 @@ while getopts ":a:,:t:" opt; do
       #echo "-t was triggered, Admin token: $OPTARG" >&2
       token=$OPTARG
       ;;
-
+    i)
+      echo "Install mode"
+      mode="install"
+      ;;
+    d)
+      echo "Debug mode"
+      mode="debug"
+      ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
       exit 1
@@ -31,24 +38,24 @@ fi
 
 help_message="Usage: $0 [--run] [--install]"
 
-mode="run"
-#if [ $# -ge 2 ]; then
- #   echo "Error: $0 takes at most 1 argument."
-  #  echo "$help_message"
-   # exit
-#if [ $# -eq 1 ]; then
- if [ "$1" = "--run" ]; then
-     mode="run"
- elif [ "$1" = "--install" ]; then
-     mode="install"
- elif [ "$1" = "--debug" ]; then
-     mode="debug"
- else
-     echo "Error: Invalid argument '$1'! (not really)"
-     echo "$help_message"
- #    exit
- fi
-#fi
+
+# #if [ $# -ge 2 ]; then
+#  #   echo "Error: $0 takes at most 1 argument."
+#   #  echo "$help_message"
+#    # exit
+# #if [ $# -eq 1 ]; then
+#  if [ "$1" = "--run" ]; then
+#      mode="run"
+#  elif [ "$1" = "--install" ]; then
+#      mode="install"
+#  elif [ "$1" = "--debug" ]; then
+#      mode="debug"
+#  else
+#      echo "Error: Invalid argument '$1'! (not really)"
+#      echo "$help_message"
+#  #    exit
+#  fi
+# #fi
 
 # Attempt to install StochKit 2.0.11
 #
