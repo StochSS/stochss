@@ -1,34 +1,4 @@
 #!/bin/bash
-mode="run"
-while getopts ":a:t:i:d:" opt; do
-  case $opt in
-    a)
-      echo "-a was triggered, IP Address of Docker VM: $OPTARG" >&2
-      ip=$OPTARG
-      ;;
-    t)
-      #echo "-t was triggered, Admin token: $OPTARG" >&2
-      token=$OPTARG
-      ;;
-    i)
-      echo "Install mode"
-      mode="install"
-      ;;
-    d)
-      echo "Debug mode"
-      mode="debug"
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-  esac
-done
-
 
 osname=$(uname)
 if [ "$osname" != 'Linux' ]; then
@@ -38,24 +8,24 @@ fi
 
 help_message="Usage: $0 [--run] [--install]"
 
-
-# #if [ $# -ge 2 ]; then
-#  #   echo "Error: $0 takes at most 1 argument."
-#   #  echo "$help_message"
-#    # exit
-# #if [ $# -eq 1 ]; then
-#  if [ "$1" = "--run" ]; then
-#      mode="run"
-#  elif [ "$1" = "--install" ]; then
-#      mode="install"
-#  elif [ "$1" = "--debug" ]; then
-#      mode="debug"
-#  else
-#      echo "Error: Invalid argument '$1'! (not really)"
-#      echo "$help_message"
-#  #    exit
-#  fi
-# #fi
+mode="run"
+if [ $# -ge 2 ]; then
+    echo "Error: $0 takes at most 1 argument."
+    echo "$help_message"
+    exit
+elif [ $# -eq 1 ]; then
+    if [ "$1" = "--run" ]; then
+        mode="run"
+    elif [ "$1" = "--install" ]; then
+        mode="install"
+    elif [ "$1" = "--debug" ]; then
+        mode="debug"
+    else
+        echo "Error: Invalid argument '$1'!"
+        echo "$help_message"
+        exit
+    fi
+fi
 
 # Attempt to install StochKit 2.0.11
 #
@@ -270,7 +240,7 @@ function check_and_install_deps {
     fi
     #if ! check_lib "libsbml";then
      #   install_lib_pip "python-libsbml"
-    #fi
+    fi
     if ! check_lib "mysql";then
         install_lib_pip "mysql-connector-python" "--allow-external mysql-connector-python"
     fi
@@ -382,9 +352,9 @@ else
     rm -rf "$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
-    echo "Downloading $STOCHKIT_VERSION..."
-    #curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
-    curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
+	echo "Downloading $STOCHKIT_VERSION..."
+	#curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
+	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
     fi
 
     echo "Building StochKit"
@@ -407,11 +377,11 @@ else
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
-    echo "Success!"
+	echo "Success!"
     else
-    echo "Failed"
-    echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME" 
-    exit -1
+	echo "Failed"
+	echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME"	
+	exit -1
     fi
 fi
 
@@ -515,20 +485,20 @@ else
     cd "cvodes-2.7.0"
     ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make install 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     cd ../../
@@ -536,8 +506,8 @@ else
     export STOCHKIT_ODE="$(pwd -P)"
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     export STOCHKIT_ODE="$STOCHKIT_ODE_R"
@@ -547,11 +517,11 @@ else
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
-    echo "Success!"
+	echo "Success!"
     else
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
-    exit -1
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+	exit -1
     fi
 fi
 
@@ -574,5 +544,6 @@ echo "Done!"
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0 $1 $token $ip
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $1
 fi
+

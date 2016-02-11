@@ -13,10 +13,6 @@ import socket
 
 source_exec = sys.argv[1]
 host_ip = socket.gethostbyname(socket.gethostname())
-try:
-    vm_ip = sys.argv[4]
-except:
-    vm_ip = host_ip
 
 mac = False
 if 'mac' in sys.argv:
@@ -117,7 +113,7 @@ def startserver():
 
 startserver()
 
-print "Starting admin server at: http://{0}:8000".format(vm_ip)
+print "Starting admin server at: http://{0}:8000".format(host_ip)
 if mac:
     print "<br />"
 sys.stdout.flush()
@@ -200,17 +196,12 @@ for tryy in range(0, 20):
 ###print serverUp
 
 if serverUp:
-    # Set up admin token
-    admin_token = sys.argv[3]
-    try:
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/handlers/admin_uuid.txt'), 'w') as file:
-            file.write(str(admin_token))
-    except Exception as e:
-        print " File write error: cannot create admin token {0}".format(str(e))
-    # generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
-    # os.system(generate_admin_token_command)
+    # Create an admin token
+    admin_token = uuid.uuid4()
+    generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
+    os.system(generate_admin_token_command)
     stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, host_ip)
-    # Open web browserterminal
+    # Open web browser
 
     if mac:
         wbrowser = subprocess.Popen('open {0}'.format(stochss_url).split())
@@ -227,7 +218,7 @@ if serverUp:
     sys.stdout.flush()
 
     try:
-        print "Navigate to http://{1}:8080/login?secret_key={0} to access StochSS".format(admin_token, vm_ip)
+        print "Navigate to {0} to access StochSS".format(stochss_url)
         if mac:
             print "<br />"
 
