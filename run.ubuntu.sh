@@ -1,6 +1,6 @@
 #!/bin/bash
 mode="run"
-while getopts ":a:,:t:,:i:,:d:" opt; do
+while getopts ":a:t:i:d:" opt; do
   case $opt in
     a)
       echo "-a was triggered, IP Address of Docker VM: $OPTARG" >&2
