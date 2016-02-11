@@ -97,20 +97,12 @@ number_of_pkgs=`echo $PKGS | wc -w`
 count=$(dpkg-query -l $PKGS | grep '^[a-z]i' | wc -l)
 if [ $count != $number_of_pkgs ]; then
     echo "No $count of $number_of_pkgs packages installed"
-    #read -p "Do you want me to try to use sudo to install required package(s) ($PKGS)? (y/n): " answer
-
-    #if [ $? != 0 ]; then
-     #   exit -1
-    #fi
-
-    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
     CMD="sudo apt-get -y install $PKGS"
     echo "Running '$CMD'"
     eval $CMD
     if [ $? != 0 ]; then
         exit -1
     fi
-    #fi
 else
     echo "Yes"
 fi
@@ -163,33 +155,18 @@ function check_pip {
 
 function install_pip {
     echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
-    #read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
-
-    #if [ $? != 0 ]; then
-     #   exit -1
-    #fi
-
-    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
     CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
     echo $CMD
     eval $CMD
     CMD="sudo python get-pip.py"
     echo $CMD
     eval $CMD
-    #else
-     #   exit -1
-    #fi
 }
 function install_lib_h5py {
     if ! check_pip;then
         install_pip
     fi
     echo "We need install the following packages: h5py"
-    #read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
-    #if [ $? != 0 ]; then
-     #   exit -1
-    #fi
-    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
     CMD='sudo CC="mpicc" pip install h5py'
     echo $CMD
     eval $CMD
@@ -197,21 +174,13 @@ function install_lib_h5py {
         exit -1
     fi
     echo "$1 installed successfully"
-   # else
-    #    echo "Exiting"
-     #   exit -1
-    #fi
+
 }
 function install_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
     echo "We need install the following packages: $1"
-    #read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
-    #if [ $? != 0 ]; then
-     #   exit -1
-    #fi
-    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
     CMD="sudo apt-get -y install $1"
     echo $CMD
     eval $CMD
@@ -219,10 +188,6 @@ function install_lib {
         exit -1
     fi
     echo "$1 installed successfully"
-    #else
-     #   echo "Exiting"
-      #  exit -1
-    #fi
 }
 
 function install_lib_pip {
@@ -237,11 +202,6 @@ function install_lib_pip {
     else
         echo "We need to install package $1 with flags '$2'"
     fi
-    #read -p "Do you want me to try to install required package with pip (y/n): " answer
-    #if [ $? != 0 ]; then
-     #   exit -1
-    #fi
-    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
     CMD="sudo pip install $2 $1"
     echo $CMD
     eval $CMD
@@ -249,10 +209,6 @@ function install_lib_pip {
         exit -1
     fi
     echo "$1 installed successfully"
-    #else
-     #   echo "Exiting"
-      #  exit -1
-    #fi
 }
 
 function check_and_install_deps {
@@ -287,11 +243,6 @@ function check_dolfin {
 function install_dolfin {
     echo "We need to add the the following ppa: 'ppa:fenics-packages/fenics"
     echo "And install the following packages: python-software-properties fenics "
-    #read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
-    #if [ $? != 0 ]; then
-     #   exit -1
-    #fi
-    #if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
     echo "Running 'sudo apt-get install ..."
     sudo apt-get -y install python-software-properties
     sudo add-apt-repository ppa:fenics-packages/fenics
@@ -301,9 +252,6 @@ function install_dolfin {
     if [ $? != 0 ]; then
         exit -1
     fi
-    #else
-     #   exit -1
-    #fi
 }
 
 function check_python_package_installation {
@@ -382,9 +330,9 @@ else
     rm -rf "$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
-    echo "Downloading $STOCHKIT_VERSION..."
-    #curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
-    curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
+        echo "Downloading $STOCHKIT_VERSION..."
+        #curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
+        curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
     fi
 
     echo "Building StochKit"
@@ -407,11 +355,11 @@ else
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
-    echo "Success!"
+        echo "Success!"
     else
-    echo "Failed"
-    echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME" 
-    exit -1
+        echo "Failed"
+        echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME" 
+        exit -1
     fi
 fi
 
@@ -479,11 +427,11 @@ else
     check_if_StochOptim_Installed
     # Test that StochKit was installed successfully by running it on a sample model
     if [ "$is_stochoptim_installed" = "true" ]; then
-            echo "Success!"
+        echo "Success!"
     else
-            echo "Failed"
-            echo "$STOCHOPTIM failed to install. Consult logs above for errors"
-            exit -1
+        echo "Failed"
+        echo "$STOCHOPTIM failed to install. Consult logs above for errors"
+        exit -1
     fi
 fi
 
@@ -515,20 +463,20 @@ else
     cd "cvodes-2.7.0"
     ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        echo "Failed"
+        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        echo "Failed"
+        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make install 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        echo "Failed"
+        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     cd ../../
@@ -536,8 +484,8 @@ else
     export STOCHKIT_ODE="$(pwd -P)"
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        echo "Failed"
+        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     export STOCHKIT_ODE="$STOCHKIT_ODE_R"
@@ -547,11 +495,11 @@ else
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
-    echo "Success!"
+        echo "Success!"
     else
-    echo "Failed"
-    echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
-    exit -1
+        echo "Failed"
+        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        exit -1
     fi
 fi
 
