@@ -347,7 +347,73 @@ Spatial.Controller = Backbone.View.extend( {
         
         this.mesh = new THREE.Mesh(this.geometry, material);
 
-        this.m2texLow = new MeshToTexture.Converter(this.mesh, this.data.voxelTuples, 0.0, 1.0, 512, 512);
+        this.workerLow = new Worker("static/js/MeshToTextureConverter.js");
+
+        this.workerLow.onmessage = _.bind(function(e) {
+            // If somehow this returns second, use the other one k?
+            if(this.m2texLow)
+                return;
+
+            this.m2texLow = new MeshToTexture.Converter(null,
+                                                        null,
+                                                        null,
+                                                        null,
+                                                        null,
+                                                        null,
+                                                        JSON.parse(e.data));
+
+            if(this.minv)
+            {
+                this.m2texLow.minv = this.minv;
+                this.m2texLow.maxv = this.maxv;
+            }
+        }, this);
+
+        this.workerLow.postMessage( JSON.stringify({
+            mesh : this.mesh.geometry.vertices,
+            voxels : this.data.voxelTuples,
+            minv : 0.0,
+            maxv : 1.0,
+            requestedTexWidth : 128,
+            requestedTexHeight : 128
+        }) );
+
+        this.workerHigh = new Worker("static/js/MeshToTextureConverter.js");
+
+        this.workerHigh.onmessage = _.bind(function(e) {
+            this.m2texLow = new MeshToTexture.Converter(null,
+                                                         null,
+                                                         null,
+                                                         null,
+                                                         null,
+                                                         null,
+                                                         JSON.parse(e.data));
+
+            this.volume.uniforms.Nx.value = this.m2texLow.Nx;
+            this.volume.uniforms.Ny.value = this.m2texLow.Ny;
+            this.volume.uniforms.Nz.value = this.m2texLow.Nz;
+            this.volume.uniforms.Tx.value = this.m2texLow.Tx;
+            this.volume.uniforms.Ty.value = this.m2texLow.Ty;
+            this.volume.uniforms.Tz.value = this.m2texLow.Tz;
+            this.volume.uniforms.width.value = this.m2texLow.texWidth;
+            this.volume.uniforms.height.value = this.m2texLow.texHeight;
+            this.volume.mesh.material.needsUpdate  = true;
+            
+            if(this.minv)
+            {
+                this.m2texLow.minv = this.minv;
+                this.m2texLow.maxv = this.maxv;
+            }
+        }, this);
+
+        this.workerHigh.postMessage( JSON.stringify({
+            mesh : this.mesh.geometry.vertices,
+            voxels : this.data.voxelTuples,
+            minv : 0.0,
+            maxv : 1.0,
+            requestedTexWidth : 512,
+            requestedTexHeight : 512
+        }) );
 
         // PLANE - X
         var planeX = new THREE.Mesh(
@@ -567,8 +633,14 @@ Spatial.Controller = Backbone.View.extend( {
 
                           this.limits = data.limits;
 
-                          this.m2texLow.minv = this.limits[this.selectedSpecies].min;
-                          this.m2texLow.maxv = this.limits[this.selectedSpecies].max;
+                          this.minv = this.limits[this.selectedSpecies].min;
+                          this.maxv = this.limits[this.selectedSpecies].max;
+
+                          if(this.m2texLow)
+                          {
+                              this.m2texLow.minv = this.minv;
+                              this.m2texLow.maxv = this.maxv;
+                          }
 
                           if(this.showPopulation)
                           {
@@ -913,7 +985,7 @@ Spatial.Controller = Backbone.View.extend( {
 
         var texture = new THREE.DataTexture(data, this.m2texLow.texWidth, this.m2texLow.texHeight, THREE.RGBAFormat);
 
-        /*var c = document.getElementById("myCanvas");
+        var c = document.getElementById("myCanvas");
         c.width = this.m2texLow.texWidth;
         c.height = this.m2texLow.texHeight;
         var ctx = c.getContext("2d");
@@ -923,7 +995,7 @@ Spatial.Controller = Backbone.View.extend( {
             imgData.data[i] = data[i];
         }
 
-        ctx.putImageData(imgData, 0, 0)*/
+        ctx.putImageData(imgData, 0, 0);
 
         if(this.volume)
         {

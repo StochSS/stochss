@@ -1,13 +1,22 @@
 var MeshToTexture = MeshToTexture || {};
 
-MeshToTexture.Converter = function(mesh,
+MeshToTexture.Converter = function(vertices,
                                    voxels,
                                    minv,
                                    maxv,
                                    requestedTexWidth,
-                                   requestedTexHeight)
+                                   requestedTexHeight,
+                                   obj)
 {
-    this.mesh = mesh;
+    if(obj)
+    {
+        for(var k in obj)
+            this[k] = obj[k];
+
+        return;
+    }
+    
+    this.vertices = vertices;
     this.minv = (typeof(minv) != 'undefined') ? minv : 0.0;
     this.maxv = (typeof(maxv) != 'undefined') ? maxv : minv + 1.0;
 
@@ -71,7 +80,7 @@ MeshToTexture.Converter.prototype.getVoxelBinFromCoordinates = function(x, y, z)
 
 MeshToTexture.Converter.prototype.computeMeshLimits = function()
 {
-    var vertices = this.mesh.geometry.vertices;
+    var vertices = this.vertices;
 
     this.minx = vertices[0].x;
     this.maxx = vertices[0].x;
@@ -145,7 +154,7 @@ MeshToTexture.Converter.prototype.constructCoodinatesToVoxelBinHashmap = functio
         var voxelCoords = [];
         var xs = []; var ys =[]; var zs = [];
         for(var i=0; i<4; i++) {
-            vertices = this.mesh.geometry.vertices[tuples[i]];
+            vertices = this.vertices[tuples[i]];
             voxelCoords[i] = vertices;
             xs[i] = vertices['x'];
             ys[i] = vertices['y'];
@@ -153,12 +162,12 @@ MeshToTexture.Converter.prototype.constructCoodinatesToVoxelBinHashmap = functio
             
         }
 
-        var vminx = _.min(xs);
-        var vmaxx = _.max(xs);
-        var vminy = _.min(ys);
-        var vmaxy = _.max(ys);
-        var vminz = _.min(zs);
-        var vmaxz = _.max(zs);
+        var vminx = Math.min(...xs);
+        var vmaxx = Math.max(...xs);
+        var vminy = Math.min(...ys);
+        var vmaxy = Math.max(...ys);
+        var vminz = Math.min(...zs);
+        var vmaxz = Math.max(...zs);
         
         var dx = (this.maxx - this.minx) / this.vbN;
         var dy = (this.maxy - this.miny) / this.vbN;
@@ -195,7 +204,7 @@ MeshToTexture.Converter.prototype.constructInverseMap = function()
         var xs = []; var ys =[]; var zs = [];
         for(var i=0; i<4; i++)
         {
-            voxelCoords[i] = this.mesh.geometry.vertices[tuples[i]];
+            voxelCoords[i] = this.vertices[tuples[i]];
         }
 
         v1 = voxelCoords[0]
@@ -423,3 +432,11 @@ TupleDictionary.prototype = {
         return this.dict[ this.tupleToString(tuple) ];
     }
 };
+
+self.onmessage = function(e) {
+    var data = JSON.parse(e.data);
+
+    var m2tex = new MeshToTexture.Converter(data.mesh, data.voxels, data.minv, data.maxv, data.requestedTexWidth, data.requestedTexHeight);
+
+    self.postMessage( JSON.stringify(m2tex) );
+}
