@@ -632,10 +632,9 @@ ln -s "$STOCHKIT_HOME" StochKit >& /dev/null
 echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
-echo "Done!"
 
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0 $1 $token $ip
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $token $ip
 fi

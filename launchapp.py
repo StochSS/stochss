@@ -11,18 +11,21 @@ import webbrowser
 import uuid
 import socket
 
-source_exec = sys.argv[1]
 host_ip = socket.gethostbyname(socket.gethostname())
-try:
-    vm_ip = sys.argv[4]
-except IndexError:
-    vm_ip = host_ip
 
 try:
-    admin_token = sys.argv[3]
+    admin_token = sys.argv[2]
+    print("Received token {0}".format(admin_token))
 except IndexError:
     print("Admin token not found")
     exit(-1)
+
+
+try:
+    vm_ip = sys.argv[3]
+    print("Received vm_ip {0}".format(vm_ip))
+except IndexError:
+    vm_ip = host_ip
 
 mac = False
 if 'mac' in sys.argv:
@@ -207,14 +210,17 @@ for tryy in range(0, 20):
 
 if serverUp:
     # Set up admin token
-    
-    try:
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/handlers/admin_uuid.txt'), 'w') as file:
-            file.write(str(admin_token))
-    except Exception as e:
-        print " File write error: cannot create admin token {0}".format(str(e))
-    # generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
-    # os.system(generate_admin_token_command)
+    if admin_token == "not_set":
+        admin_token = uuid.uuid4()
+        generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
+        os.system(generate_admin_token_command)
+    else:
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/handlers/admin_uuid.txt'), 'w') as file:
+                file.write(str(admin_token))
+        except Exception as e:
+            print " File write error: cannot create admin token {0}".format(str(e))
+
     stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, host_ip)
     # Open web browserterminal
 
@@ -256,3 +262,4 @@ else:
         print "<br />"
     sys.stdout.flush()
     clean_up_and_exit(None, None)
+                                                                                                                                                                       197,1         Bot
