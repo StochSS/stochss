@@ -18,6 +18,12 @@ try:
 except IndexError:
     vm_ip = host_ip
 
+try:
+    admin_token = sys.argv[3]
+except IndexError:
+    print("Admin token not found")
+    exit(-1)
+
 mac = False
 if 'mac' in sys.argv:
     mac = True
@@ -201,7 +207,7 @@ for tryy in range(0, 20):
 
 if serverUp:
     # Set up admin token
-    admin_token = sys.argv[3]
+    
     try:
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/handlers/admin_uuid.txt'), 'w') as file:
             file.write(str(admin_token))

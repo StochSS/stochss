@@ -2,7 +2,8 @@
 
 mode="run"
 install_mode="false"
-
+token="not_set"
+ip=0
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -41,6 +42,8 @@ esac
 shift # past argument or value
 done
 
+echo "token is $token"
+echo "ip is $ip"
 
 # mode="run"
 # while getopts ":a:t:i:d:" opt; do
