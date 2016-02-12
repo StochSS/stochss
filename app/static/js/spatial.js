@@ -1,7 +1,3 @@
-$( document ).ready( function() {
-    waitForTemplates(run);
-});
-
 var Spatial = Spatial || {}
 
 Spatial.Controller = Backbone.View.extend( {
@@ -68,8 +64,7 @@ Spatial.Controller = Backbone.View.extend( {
         this.maxLimit = undefined;
 
         // We'll construct a MeshToTextureConverter once we get a mesh
-        // this.m2texLow -- Low res fast
-        // this.m2texHigh -- High res slow
+        // this.m2tex -- It'll start out being a low resolution one but we'll convert to a higher resolution one after a wait
     },
 
     // This is the render loop
@@ -112,16 +107,19 @@ Spatial.Controller = Backbone.View.extend( {
 
     play: function()
     {
-        if(this.timeIdx >= this.maxLimit && this.playFlag == false)
+        if(!this.playFlag)
         {
-            this.timeIdx = 0;
+            if(this.timeIdx >= this.maxLimit && this.playFlag == false)
+            {
+                this.timeIdx = 0;
+            }
+
+            this.playFlag = true;
+            this.bufferCount = 0;
+            this.playCount = 0;
+
+            this.playLoopInterval = setInterval(_.bind(this.playLoop, this), this.playMeshInterval);
         }
-
-        this.playFlag = true;
-        this.bufferCount = 0;
-        this.playCount = 0;
-
-        this.playLoopInterval = setInterval(_.bind(this.playLoop, this), this.playMeshInterval);
     },
 
     stop: function(){
@@ -163,13 +161,13 @@ Spatial.Controller = Backbone.View.extend( {
         }
     },
 
-    playLoop : function(dt){
-        if(this.playFlag){
+    playLoop : function(dt) {
+        if(this.playFlag) {
             // stopping animation when time limit is reached
             if(this.timeIdx > this.maxLimit)
             {
                 this.timeIdx = this.maxLimit;
-                this.stopMesh();
+                this.stop();
                 return;
             }
             // Loading value from cache
@@ -348,13 +346,23 @@ Spatial.Controller = Backbone.View.extend( {
         this.mesh = new THREE.Mesh(this.geometry, material);
 
         this.workerLow = new Worker("static/js/MeshToTextureConverter.js");
+        this.workerHigh = new Worker("static/js/MeshToTextureConverter.js");
 
         this.workerLow.onmessage = _.bind(function(e) {
-            // If somehow this returns second, use the other one k?
-            if(this.m2texLow)
-                return;
+            // Now that the low resolution is done, start the high resolution run!
+            this.workerHigh.postMessage( JSON.stringify({
+                mesh : this.mesh.geometry.vertices,
+                voxels : this.data.voxelTuples,
+                minv : 0.0,
+                maxv : 1.0,
+                requestedTexWidth : 512,
+                requestedTexHeight : 512
+            }) );
 
-            this.m2texLow = new MeshToTexture.Converter(null,
+            $( "#volume" ).prop('disabled', false);
+            $( "#volume" ).text('Volume');
+
+            this.m2tex = new MeshToTexture.Converter(null,
                                                         null,
                                                         null,
                                                         null,
@@ -362,10 +370,41 @@ Spatial.Controller = Backbone.View.extend( {
                                                         null,
                                                         JSON.parse(e.data));
 
-            if(this.minv)
+            if(typeof(this.minv) != 'undefined')
             {
-                this.m2texLow.minv = this.minv;
-                this.m2texLow.maxv = this.maxv;
+                this.m2tex.minv = this.minv;
+                this.m2tex.maxv = this.maxv;
+            }
+        }, this);
+
+        this.workerHigh.onmessage = _.bind(function(e) {
+            this.m2tex = new MeshToTexture.Converter(null,
+                                                         null,
+                                                         null,
+                                                         null,
+                                                         null,
+                                                         null,
+                                                         JSON.parse(e.data));
+            
+            if(typeof(this.minv) != 'undefined')
+            {
+                this.m2tex.minv = this.minv;
+                this.m2tex.maxv = this.maxv;
+            }
+
+            if(typeof(this.volume) != 'undefined')
+            {
+                this.volume.uniforms.Nx.value = this.m2tex.Nx;
+                this.volume.uniforms.Ny.value = this.m2tex.Ny;
+                this.volume.uniforms.Nz.value = this.m2tex.Nz;
+                this.volume.uniforms.Tx.value = this.m2tex.Tx;
+                this.volume.uniforms.Ty.value = this.m2tex.Ty;
+                this.volume.uniforms.Tz.value = this.m2tex.Tz;
+                this.volume.uniforms.width.value = this.m2tex.texWidth;
+                this.volume.uniforms.height.value = this.m2tex.texHeight;
+                this.volume.mesh.material.needsUpdate  = true;
+
+                this.handleMeshColorUpdate(this.cache[this.timeIdx]);
             }
         }, this);
 
@@ -376,43 +415,6 @@ Spatial.Controller = Backbone.View.extend( {
             maxv : 1.0,
             requestedTexWidth : 128,
             requestedTexHeight : 128
-        }) );
-
-        this.workerHigh = new Worker("static/js/MeshToTextureConverter.js");
-
-        this.workerHigh.onmessage = _.bind(function(e) {
-            this.m2texLow = new MeshToTexture.Converter(null,
-                                                         null,
-                                                         null,
-                                                         null,
-                                                         null,
-                                                         null,
-                                                         JSON.parse(e.data));
-
-            this.volume.uniforms.Nx.value = this.m2texLow.Nx;
-            this.volume.uniforms.Ny.value = this.m2texLow.Ny;
-            this.volume.uniforms.Nz.value = this.m2texLow.Nz;
-            this.volume.uniforms.Tx.value = this.m2texLow.Tx;
-            this.volume.uniforms.Ty.value = this.m2texLow.Ty;
-            this.volume.uniforms.Tz.value = this.m2texLow.Tz;
-            this.volume.uniforms.width.value = this.m2texLow.texWidth;
-            this.volume.uniforms.height.value = this.m2texLow.texHeight;
-            this.volume.mesh.material.needsUpdate  = true;
-            
-            if(this.minv)
-            {
-                this.m2texLow.minv = this.minv;
-                this.m2texLow.maxv = this.maxv;
-            }
-        }, this);
-
-        this.workerHigh.postMessage( JSON.stringify({
-            mesh : this.mesh.geometry.vertices,
-            voxels : this.data.voxelTuples,
-            minv : 0.0,
-            maxv : 1.0,
-            requestedTexWidth : 512,
-            requestedTexHeight : 512
         }) );
 
         // PLANE - X
@@ -636,10 +638,10 @@ Spatial.Controller = Backbone.View.extend( {
                           this.minv = this.limits[this.selectedSpecies].min;
                           this.maxv = this.limits[this.selectedSpecies].max;
 
-                          if(this.m2texLow)
+                          if(this.m2tex)
                           {
-                              this.m2texLow.minv = this.minv;
-                              this.m2texLow.maxv = this.maxv;
+                              this.m2tex.minv = this.minv;
+                              this.m2tex.maxv = this.maxv;
                           }
 
                           if(this.showPopulation)
@@ -981,21 +983,21 @@ Spatial.Controller = Backbone.View.extend( {
     updateVolumeRenderData : function(raw) {
         $( '#volumeControls' ).show();
 
-        var data = this.m2texLow.generateTexture(raw);
+        var data = this.m2tex.generateTexture(raw);
 
-        var texture = new THREE.DataTexture(data, this.m2texLow.texWidth, this.m2texLow.texHeight, THREE.RGBAFormat);
+        var texture = new THREE.DataTexture(data, this.m2tex.texWidth, this.m2tex.texHeight, THREE.RGBAFormat);
 
-        var c = document.getElementById("myCanvas");
-        c.width = this.m2texLow.texWidth;
-        c.height = this.m2texLow.texHeight;
+        /*var c = document.getElementById("myCanvas");
+        c.width = this.m2tex.texWidth;
+        c.height = this.m2tex.texHeight;
         var ctx = c.getContext("2d");
-        var imgData = ctx.createImageData(this.m2texLow.texWidth, this.m2texLow.texHeight);
+        var imgData = ctx.createImageData(this.m2tex.texWidth, this.m2tex.texHeight);
         for(var i = 0; i < imgData.data.length; i++)
         {
             imgData.data[i] = data[i];
         }
 
-        ctx.putImageData(imgData, 0, 0);
+        ctx.putImageData(imgData, 0, 0);*/
 
         if(this.volume)
         {
@@ -1018,9 +1020,9 @@ Spatial.Controller = Backbone.View.extend( {
         voltex.wrapS = voltex.wrapT = THREE.ClampToEdgeWrapping;
         voltex.minFilter = THREE.NearestFilter
 
-        var Nx = this.m2texLow.Nx;
-        var Ny = this.m2texLow.Ny;
-        var Nz = this.m2texLow.Nz;
+        var Nx = this.m2tex.Nx;
+        var Ny = this.m2tex.Ny;
+        var Nz = this.m2tex.Nz;
 
         volcol = new THREE.Vector3(1.0, 1.0, 1.0);
         voltexDim = new THREE.Vector3(Nx, Ny, Nz);
@@ -1042,11 +1044,11 @@ Spatial.Controller = Backbone.View.extend( {
             Nx : { type: "f", value: Nx },
             Ny : { type: "f", value: Ny },
             Nz : { type: "f", value: Nz },
-            Tx : { type: "f", value: this.m2texLow.Tx },
-            Ty : { type: "f", value: this.m2texLow.Ty },
-            Tz : { type: "f", value: this.m2texLow.Tz },
-            width : { type: "f", value: this.m2texLow.texWidth },
-            height : { type: "f", value: this.m2texLow.texHeight },
+            Tx : { type: "f", value: this.m2tex.Tx },
+            Ty : { type: "f", value: this.m2tex.Ty },
+            Tz : { type: "f", value: this.m2tex.Tz },
+            width : { type: "f", value: this.m2tex.texWidth },
+            height : { type: "f", value: this.m2tex.texHeight },
             opacity : { type:"f", value: this.opacity }
         };
 
@@ -1296,8 +1298,8 @@ Spatial.Controller = Backbone.View.extend( {
                 this.planes.z.edges.visible = false;
                 this.volumeRender = true;
             }
-            this.cache = {}
-            this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+            //this.cache = {}
+            //this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
         }, this));
 
         var drawUnits = $("#unitSelect");
@@ -1317,8 +1319,8 @@ Spatial.Controller = Backbone.View.extend( {
                 this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
             }
             
-            this.cache = {}
-            this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+            //this.cache = {}
+            //this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
         }, this));
 
         this.planes['x'].visibleCheckbox = $( '#planeXCheck' );
@@ -1365,8 +1367,7 @@ Spatial.Controller = Backbone.View.extend( {
     }
 });
 
-var run = function()
-{
+$( document ).ready( function() {
     var id = $.url().param("id");
     var cont = new Spatial.Controller( { id : id } );
-}
+});
