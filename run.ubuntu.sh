@@ -1,33 +1,76 @@
 #!/bin/bash
+
 mode="run"
-while getopts ":a:t:i:d:" opt; do
-  case $opt in
-    a)
-      echo "-a was triggered, IP Address of Docker VM: $OPTARG" >&2
-      ip=$OPTARG
-      ;;
-    t)
-      #echo "-t was triggered, Admin token: $OPTARG" >&2
-      token=$OPTARG
-      ;;
-    i)
-      echo "Install mode"
-      mode="install"
-      ;;
-    d)
-      echo "Debug mode"
-      mode="debug"
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-  esac
+install_mode="false"
+
+while [[ $# > 0 ]]
+do
+key="$1"
+case $key in
+    --install)
+    echo "install"
+    mode="install"
+    ;;
+    --debug)
+    echo "debug"
+    mode="debug"
+    ;;
+    --run)
+    echo "run"
+    mode="run"
+    ;;
+    --yy)
+    echo "yy"
+    install_mode="true"
+    ;;
+    -a)
+    ip="$2"
+    shift # past argument
+    echo $ip
+    ;;
+    -t)
+    token="$2"
+    shift # past argument
+    echo $token
+    ;;
+    *)
+    echo "Arguments not recognized recognized...exiting"      # unknown option
+    exit 1
+    ;;
+esac
+shift # past argument or value
 done
+
+
+# mode="run"
+# while getopts ":a:t:i:d:" opt; do
+#   case $opt in
+#     a)
+#       echo "-a was triggered, IP Address of Docker VM: $OPTARG" >&2
+#       ip=$OPTARG
+#       ;;
+#     t)
+#       #echo "-t was triggered, Admin token: $OPTARG" >&2
+#       token=$OPTARG
+#       ;;
+#     i)
+#       echo "Install mode"
+#       mode="install"
+#       ;;
+#     d)
+#       echo "Debug mode"
+#       mode="debug"
+#       ;;
+#     \?)
+#       echo "Invalid option: -$OPTARG" >&2
+#       exit 1
+#       ;;
+#     :)
+#       echo "Option -$OPTARG requires an argument." >&2
+#       exit 1
+#       ;;
+#   esac
+# done
 
 
 osname=$(uname)
@@ -39,11 +82,14 @@ fi
 help_message="Usage: $0 [--run] [--install]"
 
 
-# #if [ $# -ge 2 ]; then
-#  #   echo "Error: $0 takes at most 1 argument."
-#   #  echo "$help_message"
-#    # exit
-# #if [ $# -eq 1 ]; then
+
+
+
+#if [ $# -ge 2 ]; then
+ #   echo "Error: $0 takes at most 1 argument."
+  #  echo "$help_message"
+   # exit
+# if [ $# -eq 1 ]; then
 #  if [ "$1" = "--run" ]; then
 #      mode="run"
 #  elif [ "$1" = "--install" ]; then
@@ -55,7 +101,7 @@ help_message="Usage: $0 [--run] [--install]"
 #      echo "$help_message"
 #  #    exit
 #  fi
-# #fi
+#fi
 
 # Attempt to install StochKit 2.0.11
 #
@@ -99,9 +145,21 @@ if [ $count != $number_of_pkgs ]; then
     echo "No $count of $number_of_pkgs packages installed"
     CMD="sudo apt-get -y install $PKGS"
     echo "Running '$CMD'"
-    eval $CMD
-    if [ $? != 0 ]; then
-        exit -1
+    if ["$install_mode" = 'true']; then
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+    else
+        read -p "Do you want me to try to use sudo to install required package(s) ($PKGS)? (y/n): " answer
+        if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+            CMD="sudo apt-get -y install $PKGS"
+            echo "Running '$CMD'"
+            eval $CMD
+            if [ $? != 0 ]; then
+                exit -1
+            fi
+        fi
     fi
 else
     echo "Yes"
@@ -155,39 +213,71 @@ function check_pip {
 
 function install_pip {
     echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
-    CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
-    echo $CMD
-    eval $CMD
-    CMD="sudo python get-pip.py"
-    echo $CMD
-    eval $CMD
+    if ["$install_mode" = 'false']; then
+        read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
+
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+    fi
+    if ["$install_mode" = 'true'] || ["$answer" == 'y'] || ["$answer" == 'yes']; then
+        CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
+        echo $CMD
+        eval $CMD
+        CMD="sudo python get-pip.py"
+        echo $CMD
+        eval $CMD
+    else
+        exit -1
+    fi
 }
 function install_lib_h5py {
     if ! check_pip;then
         install_pip
     fi
     echo "We need install the following packages: h5py"
-    CMD='sudo CC="mpicc" pip install h5py'
-    echo $CMD
-    eval $CMD
-    if [ $? != 0 ]; then
+    if ["$install_mode" = 'false']; then
+        read -p "Do you want me to try to use sudo to install required packages (y/n): " answer
+
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+    fi
+    if ["$install_mode" = 'true'] || ["$answer" == 'y'] || ["$answer" == 'yes']; then
+        CMD='sudo CC="mpicc" pip install h5py'
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
         exit -1
     fi
-    echo "$1 installed successfully"
 
 }
 function install_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
-    echo "We need install the following packages: $1"
-    CMD="sudo apt-get -y install $1"
-    echo $CMD
-    eval $CMD
-    if [ $? != 0 ]; then
+    if ["$install_mode" = 'false']; then
+        read -p "Do you want me to try to use sudo to install required packages (y/n): " answer
+
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+    fi
+    if ["$install_mode" = "true"] || ["$answer" == 'y'] || ["$answer" == 'yes']; then
+        CMD="sudo apt-get -y install $1"
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
         exit -1
     fi
-    echo "$1 installed successfully"
 }
 
 function install_lib_pip {
@@ -202,13 +292,24 @@ function install_lib_pip {
     else
         echo "We need to install package $1 with flags '$2'"
     fi
-    CMD="sudo pip install $2 $1"
-    echo $CMD
-    eval $CMD
-    if [ $? != 0 ]; then
+    if ["$install_mode" = "false"]; then
+        read -p "Do you want me to try to use sudo to install required packages (y/n): " answer
+
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+    fi
+    if ["$install_mode" = "true"] || ["$answer" == 'y' || ["$answer" == 'yes']; then
+        CMD="sudo pip install $2 $1"
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
         exit -1
     fi
-    echo "$1 installed successfully"
 }
 
 function check_and_install_deps {
@@ -243,13 +344,24 @@ function check_dolfin {
 function install_dolfin {
     echo "We need to add the the following ppa: 'ppa:fenics-packages/fenics"
     echo "And install the following packages: python-software-properties fenics "
-    echo "Running 'sudo apt-get install ..."
-    sudo apt-get -y install python-software-properties
-    sudo add-apt-repository ppa:fenics-packages/fenics
-    sudo apt-get update
-    sudo apt-get -y install fenics
-    return 0 # True
-    if [ $? != 0 ]; then
+    if ["$install_mode" = "false"]; then
+        read -p "Do you want me to try to use sudo to install required packages (y/n): " answer
+
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+    fi
+    if ["$install_mode" = "true"] || ["$answer" == 'y'] || ["$answer" == 'yes']; then
+        echo "Running 'sudo apt-get install ..."
+        sudo apt-get -y install python-software-properties
+        sudo add-apt-repository ppa:fenics-packages/fenics
+        sudo apt-get update
+        sudo apt-get -y install fenics
+        return 0 # True
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+    else
         exit -1
     fi
 }
