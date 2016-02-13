@@ -11,10 +11,12 @@ import webbrowser
 import uuid
 import socket
 
+open_browser = sys.argv[2]
+print("open browser is {0}".format(open_browser))
 host_ip = socket.gethostbyname(socket.gethostname())
 
 try:
-    admin_token = sys.argv[2]
+    admin_token = sys.argv[3]
     print("Received token {0}".format(admin_token))
 except IndexError:
     print("Admin token not found")
@@ -22,7 +24,7 @@ except IndexError:
 
 
 try:
-    vm_ip = sys.argv[3]
+    vm_ip = sys.argv[4]
     print("Received vm_ip {0}".format(vm_ip))
 except IndexError:
     vm_ip = host_ip
@@ -42,44 +44,6 @@ try:
     os.mkdir('{0}/app/static/tmp'.format(path))
 except:
     pass
-
-if os.path.isfile('app/update'):
-    if mac:
-        print "<h2>Updating application now</h2><br />"
-    else:
-        sys.stdout.write('Updating application now...')
-    sys.stdout.flush()
-
-    h = subprocess.Popen('git stash'.split())
-    h.communicate()
-    if h.returncode != 0:
-        os.remove('app/update')
-        print "Error in updating, exiting"
-        if mac:
-            print "<br />"
-        sys.stdout.flush()
-        exit(-1)
-
-    h = subprocess.Popen('git pull'.split())
-    h.communicate()
-    if h.returncode != 0:
-        os.remove('app/update')
-        print "Error in updating, exiting"
-        if mac:
-            print "<br />"
-        sys.stdout.flush()
-        exit(-1)
-
-    # print "Success"
-    print "Done updating, relaunching {0}...".format(source_exec)
-    if mac:
-        print "<br />"
-    os.remove('app/update')
-
-    sys.stderr.flush()
-    sys.stdout.flush()
-
-    os.execl(source_exec, source_exec)
 
 if mac:
     print "<h2>Running StochSS Server</h2><br />"
@@ -224,10 +188,10 @@ if serverUp:
     stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, host_ip)
     # Open web browserterminal
 
-    if mac:
+    if mac and open_browser == "true":
         wbrowser = subprocess.Popen('open {0}'.format(stochss_url).split())
         wbrowser.communicate()
-    else:
+    elif open_browser == "true":
         webbrowser.open_new(stochss_url)
 
     if mac:
@@ -262,4 +226,3 @@ else:
         print "<br />"
     sys.stdout.flush()
     clean_up_and_exit(None, None)
-                                                                                                                                                                       197,1         Bot

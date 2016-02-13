@@ -3,7 +3,7 @@
 mode="run"
 install_mode="false"
 token="not_set"
-ip=0
+browser="true"
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -11,6 +11,10 @@ case $key in
     --install)
     echo "install"
     mode="install"
+    ;;
+    --no_browser)
+    echo "no browser"
+    browser="false"
     ;;
     --debug)
     echo "debug"
@@ -45,37 +49,6 @@ done
 echo "token is $token"
 echo "ip is $ip"
 
-# mode="run"
-# while getopts ":a:t:i:d:" opt; do
-#   case $opt in
-#     a)
-#       echo "-a was triggered, IP Address of Docker VM: $OPTARG" >&2
-#       ip=$OPTARG
-#       ;;
-#     t)
-#       #echo "-t was triggered, Admin token: $OPTARG" >&2
-#       token=$OPTARG
-#       ;;
-#     i)
-#       echo "Install mode"
-#       mode="install"
-#       ;;
-#     d)
-#       echo "Debug mode"
-#       mode="debug"
-#       ;;
-#     \?)
-#       echo "Invalid option: -$OPTARG" >&2
-#       exit 1
-#       ;;
-#     :)
-#       echo "Option -$OPTARG requires an argument." >&2
-#       exit 1
-#       ;;
-#   esac
-# done
-
-
 osname=$(uname)
 if [ "$osname" != 'Linux' ]; then
     echo "Error: $0 runs on Linux! This is $osname"
@@ -83,34 +56,6 @@ if [ "$osname" != 'Linux' ]; then
 fi
 
 help_message="Usage: $0 [--run] [--install]"
-
-
-
-
-
-#if [ $# -ge 2 ]; then
- #   echo "Error: $0 takes at most 1 argument."
-  #  echo "$help_message"
-   # exit
-# if [ $# -eq 1 ]; then
-#  if [ "$1" = "--run" ]; then
-#      mode="run"
-#  elif [ "$1" = "--install" ]; then
-#      mode="install"
-#  elif [ "$1" = "--debug" ]; then
-#      mode="debug"
-#  else
-#      echo "Error: Invalid argument '$1'! (not really)"
-#      echo "$help_message"
-#  #    exit
-#  fi
-#fi
-
-# Attempt to install StochKit 2.0.11
-#
-# Install it in the user's home folder by default
-#
-#
 
 
 MY_PATH="`dirname \"$0\"`"              # relative
@@ -328,9 +273,9 @@ function check_and_install_deps {
     if ! check_lib "matplotlib";then
         install_lib "python-matplotlib"
     fi
-    #if ! check_lib "libsbml";then
-     #   install_lib_pip "python-libsbml"
-    #fi
+    if ! check_lib "libsbml";then
+       install_lib_pip "python-libsbml"
+    fi
     if ! check_lib "mysql";then
         install_lib_pip "mysql-connector-python" "--allow-external mysql-connector-python"
     fi
@@ -636,5 +581,5 @@ echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0 $token $ip
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip
 fi

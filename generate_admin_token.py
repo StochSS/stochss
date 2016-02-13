@@ -1,6 +1,7 @@
 #! /usr/bin/python
 import sys
 import urllib, urllib2
+import os
 
 def print_usage_and_exit():
     '''
