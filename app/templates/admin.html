@@ -39,42 +39,10 @@
             </tbody>
         </table>
 
-        <h3>Pre-approved Users</h3>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Email</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in preapproved_users %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ user }}</td>
-                    <td>
-                        <button class="btn btn-danger table-action-button" data-action="revoke_preapproved">Revoke Access</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        
     </div>
 </div>
-<div class="span3">
-    <div class="well well-large">
-        <form id='approve-user-form' action="/admin" method="post">
-            <fieldset>
-                <legend>Pre-approve User</legend>
-                <label>Type an e-mail address in the box below to add a pre-approved user:</label>
-                <input style="display: none;" name="action" value="preapprove">
-                <input name="email" type="email" placeholder="example@example.com" required>
-                <button id="grant-access-button" class="btn btn-primary btn-large" type="submit">Pre-approve User</button>
-            </fieldset>
-        </form>
-    </div>
-</div>
+
 {% endblock %}
 
 {% block jscontent %}<script src="/static/js/admin_page.js"></script>{% endblock %}

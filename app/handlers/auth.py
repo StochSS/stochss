@@ -106,24 +106,34 @@ class UserRegistrationPage(BaseHandler):
 
             # Just an email address here, we should first make sure they havent been approved
             pending_users_list = PendingUsersList.shared_list()
-
-            # Now add to approval waitlist
-            if pending_users_list.is_user_approved(user_email):
-                success = True
+            if pending_users_list.approve_user(user_email, True):
                 approved = True
-            elif pending_users_list.user_exists(user_email):
                 success = True
-                approved = False
             else:
-                success = pending_users_list.add_user_to_approval_waitlist(user_email)
-                approved = False
+                success = False
+            # Now add to approval waitlist
+            #if pending_users_list.is_user_approved(user_email):
+            #    success = True
+            #    approved = True
+            #elif pending_users_list.user_exists(user_email):
+            #    success = True
+            #    approved = False
+            #else:
+            #    success = pending_users_list.add_user_to_approval_waitlist(user_email)
+            #     # Approve the user by default
+            #    if pending_users_list.approve_user(user_email, True):
+            #        approved = True
+            #    else:
+            #        approved = False
 
             if success:
                 # Then create the user
                 _attrs = {
                     'email_address': user_email,
                     'name': self.request.POST['name'],
-                    'password_raw': self.request.POST['password']
+                    'password_raw': self.request.POST['password'],
+                    'confirmed_user': False
+
                 }
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
                 
@@ -272,7 +282,7 @@ class LoginPage(BaseHandler):
                 return self.redirect('/')
             else:
                 # Not approved, add to approval waitlist
-                pending_users_list.add_user_to_approval_waitlist(email_address)
+             #   pending_users_list.add_user_to_approval_waitlist(email_address)
                 context = {
                     'error_alert': True,
                     'alert_message': 'You need to be approved by the admin before you can login.'
