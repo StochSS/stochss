@@ -86,14 +86,21 @@ class PendingUsersList(db.Model):
 def admin_required(handler):
     """
     Decorator for requiring admin access to page.
-    Assumes user already logged in, so redirects to profile page if not admin
+    Assumes user already logged in, so redirects to a page with information if not admin
     """
     def check_admin(self, *args, **kwargs):
-        if self.user.is_admin_user:
+        if self.user.is_admin_user():
             return handler(self, *args, **kwargs)
         else:
-            self.redirect('/profile')
+            self.redirect('/restricted')
     return check_admin
+
+class RestrictedPageHandler(BaseHandler):
+    """ Handles the case when user's try to access a restricted page. """
+
+    def get(self):
+        self.render_response('restricted.html')
+
 
 class AdminPage(BaseHandler):
     """

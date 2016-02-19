@@ -24,6 +24,7 @@ from backend.databases.dynamo_db import DynamoDB
 from db_models.vm_state_model import VMStateModel
 
 import fileserver
+from handlers import admin
 
 class FlexCredentialsPage(BaseHandler):
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
@@ -243,7 +244,7 @@ class FlexCredentialsPage(BaseHandler):
 class CredentialsPage(BaseHandler):
     def authentication_required(self):
         return True
-    
+    @admin.admin_required
     def get(self):
         logging.debug('GET')
 
@@ -322,6 +323,7 @@ class CredentialsPage(BaseHandler):
         ec2_context = self.__get_ec2_context(user_id)
         flex_context = self.__get_flex_context(user_id)
         context = dict(ec2_context, **flex_context)
+        #context = dict({self.user_data.}
         return context
     
     def __get_all_vms(self, params):

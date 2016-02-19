@@ -396,6 +396,7 @@ app = webapp2.WSGIApplication([
                                ('/logout', LogoutHandler),
                                ('/admin', AdminPage),
                                ('/account_settings', AccountSettingsPage),
+                               ('/restricted', handlers.admin.RestrictedPageHandler),
                                ],
                                 config=config,
                                 debug=True)
