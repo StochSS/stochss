@@ -71,6 +71,10 @@ try:
         fh.write("app_config['STOCHKIT_ODE']="+"'"+STOCHKIT_ODE+"'"+os.linesep)
     if STOCHOPTIM is not '':
         fh.write("app_config['STOCHOPTIM']="+"'"+STOCHOPTIM+"'"+os.linesep)
+
+    # Set this to true to disable the cloud computing features for all users except the admin user. 
+    # This is currently the recommended setting when deploying as multi-user SaaS (for security reasons, mainly) 
+    fh.write("app_config['DISABLE_CLOUD']=True")
     
     fh.close()
 except:

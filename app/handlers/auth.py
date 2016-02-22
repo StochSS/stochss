@@ -111,22 +111,10 @@ class UserRegistrationPage(BaseHandler):
                 success = True
             else:
                 success = False
-            # Now add to approval waitlist
-            #if pending_users_list.is_user_approved(user_email):
-            #    success = True
-            #    approved = True
-            #elif pending_users_list.user_exists(user_email):
-            #    success = True
-            #    approved = False
-            #else:
-            #    success = pending_users_list.add_user_to_approval_waitlist(user_email)
-            #     # Approve the user by default
-            #    if pending_users_list.approve_user(user_email, True):
-            #        approved = True
-            #    else:
-            #        approved = False
+   
 
             if success:
+
                 # Then create the user
                 _attrs = {
                     'email_address': user_email,

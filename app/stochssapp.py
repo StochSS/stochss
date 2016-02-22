@@ -181,6 +181,7 @@ class BaseHandler(webapp2.RequestHandler):
         else:
             ctx = {}
 
+        ctx.update(self.app.config)      
         ctx.update(context)
 
         if 'model_edited' not in ctx:
@@ -396,7 +397,7 @@ app = webapp2.WSGIApplication([
                                ('/logout', LogoutHandler),
                                ('/admin', AdminPage),
                                ('/account_settings', AccountSettingsPage),
-                               ('/restricted', handlers.admin.RestrictedPageHandler),
+                               ('/restricted', RestrictedPageHandler),
                                ],
                                 config=config,
                                 debug=True)

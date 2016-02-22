@@ -254,8 +254,9 @@ class SimulatePage(BaseHandler):
                                 "id" : model["id"],
                                 "units" : model["units"],
                                 "isSpatial" : model["isSpatial"] })
-        context = {'all_models': all_models}
 
+        context = {'all_models': all_models}
+        
         self.render_response('simulate.html',**context)
 
     def post(self):

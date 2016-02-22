@@ -221,8 +221,24 @@
         <br>
         <br>
 
-        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
-        <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>
+
+        <div class="btn-group">
+          <button type="submit" id="runLocal" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run</button>
+          <button type="submit" class="btn btn-primary btn-large dropdown-toggle" data-toggle="dropdown">
+            <span class="caret"></span>  <!-- caret -->
+            <span class="sr-only"><a style="opacity:0.0">d</a></span>
+          </button>
+            <div class="dropdown-menu"> <!-- class dropdown-menu -->
+              <a class="dropdown-item" id="runLocal">Run on server</a>
+              {% if (ENABLE_CLOUD or user.is_admin_user()) %}
+              <a class="dropdown-item" id="runCloud">Run on Cloud</a>
+              {% endif %}
+            </div>
+        </div>
+    
+     
+        <!-- <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
+        <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button> -->
         
         <!-- Prevent Submission on pressing enter -->
         <!--<script>
