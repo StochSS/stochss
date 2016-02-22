@@ -144,23 +144,6 @@
 	    </div>
         </div>
 
-        <!--<table id="selectTable2" class="sensitivity" border=1 width="50%">
-            <tr>
-                <th>Parameters</th>
-                <th>Initial Conditions</th>
-            </tr>
-            <tr>
-                <td valign="top">
-                    <table id="parameterContainer">
-                    </table>
-                </td>
-                <td valign="top">
-                    <table id="initialConditionContainer">
-                    </table>
-                </td>
-            </tr>
-        </table>-->
-
         <br />
         
         Simulation time
@@ -221,17 +204,21 @@
         <br>
         <br>
 
+        <!-- Button(s) to submit the job -->
+        <div class="btn-group dropdown dropdown-submit-input">
+            <!-- Default button, submit to local resource (client if on localhost, or the server where StochSS is deployed in cas of SaaS deployment) -->
+            <button type="submit" id="runLocal" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run</button>
 
-        <div class="btn-group">
-          <button type="submit" id="runLocal" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run</button>
-          <button type="submit" class="btn btn-primary btn-large dropdown-toggle" data-toggle="dropdown">
-            <span class="caret"></span>  <!-- caret -->
-            <span class="sr-only"><a style="opacity:0.0">d</a></span>
-          </button>
+            <!-- Options to submit to other resources/queues if they are available -->
+            <button type="submit" class="btn btn-primary btn-large dropdown-toggle" data-toggle="dropdown">
+                <span class="caret"></span>  <!-- caret -->
+                <span class="sr-only"><a style="opacity:0.0">d</a></span>
+            </button>
             <div class="dropdown-menu"> <!-- class dropdown-menu -->
-              <a class="dropdown-item" id="runLocal">Run on server</a>
+              <a class="dropdown-item" id="runLocal" role="button">Run on server</a>
+
               {% if (ENABLE_CLOUD or user.is_admin_user()) %}
-              <a class="dropdown-item" id="runCloud">Run on Cloud</a>
+              <a class="dropdown-item" id="runCloud" role="button">Run on Cloud</a>
               {% endif %}
             </div>
         </div>
@@ -266,11 +253,6 @@
             Simulation status: <%= status %>
             <br />
             Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
-            <!--Resource: <%= type %>
-                    <br />
-                    Simulation endtime: <%= final_time %>
-                    <br />
-                    Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>-->
         </p>
     </div>
 
