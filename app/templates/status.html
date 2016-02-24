@@ -13,9 +13,9 @@
                                               </script>
 <!--    -->
 
-<div class="span9">
-    <div class="row-fluid">
-	<div class"span9">
+<div class="col-sm-9 col-md-9">
+    <div class="row">
+	<div class"col-sm-9 col-md-9">
             <h1>Job Status</h1>
             <br>
             <div id="msg" style="display: none;"></div>
@@ -301,7 +301,7 @@
                 {% if not (allParameterJobs or allExportJobs or allSensJobs or all_jobs or allSpatialJobs) %}
                 No jobs in system<br /><br />
                 {% endif %}
-                <button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button>
+                <button type="submit" class="btn btn-primary btn-lg" name="refresh"><i class="icon-refresh"></i> Refresh</button>
             </form>
             
             {% if msg %}

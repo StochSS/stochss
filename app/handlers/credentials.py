@@ -244,6 +244,7 @@ class FlexCredentialsPage(BaseHandler):
 class CredentialsPage(BaseHandler):
     def authentication_required(self):
         return True
+        
     @admin.admin_required
     def get(self):
         logging.debug('GET')

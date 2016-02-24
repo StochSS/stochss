@@ -3,12 +3,12 @@
 {% block csscontent %}<link href="/static/css/admin_panel.css" rel="stylesheet">{% endblock %}
 
 {% block content %}
-<div class="active span7">
-    <h1>Admin Panel</h1>
-    <br>
-    <div class="users well well-large">
+<div class="active col-sm-9 col-md-9">
+    <h1>Manage users</h1>
+    <div class="users well well-lg">
         <h3>Users</h3>
-        <table class="table table-bordered active-usr-table">
+        
+            <table class="table table-bordered active-usr-table">
             <thead>
                 <tr>
                     <th>#</th>
@@ -18,7 +18,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for user in active_users %}
+            {% for user in active_users %}
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>{{ user.name }}</td>
@@ -35,10 +35,10 @@
                         {% endif %}
                     </td>
                 </tr>
-                {% endfor %}
+            {% endfor %}
+
             </tbody>
         </table>
-
         
     </div>
 </div>

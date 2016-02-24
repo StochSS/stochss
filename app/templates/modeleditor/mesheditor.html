@@ -12,79 +12,79 @@
 </style>
 {% endblock %}
 
-<div class="span9">
-    <div class="row-fluid">
-	<div class"span9">
-	    {% block modeleditorcontent %}
-	    <div class="menubar">
-		<ul class="nav nav-tabs">
-		    <li>
-			<a href="/modeleditor" TITLE = "Create or select your model">Models</a>
-		    </li>
-		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
+<div class="col-sm-9 col-md-9">
+    <div class="row">
+    <div class"span9"="">
+        {% block modeleditorcontent %}
+        <div class="menubar">
+        <ul class="nav nav-tabs">
+            <li>
+            <a href="/modeleditor" title="Create or select your model">Models</a>
+            </li>
+            <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
                     {% if model_edited %}
-		    <li>
-			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Species">Species</a>
-		    </li>
+            <li>
+            <a href="/modeleditor/specieseditor" title="Create a List of Species">Species</a>
+            </li>
                     <li>
-			<a href="/modeleditor/parametereditor" TITLE = "Create a List of Parameters">Parameters</a>
-		    </li>
-		    <li>
-			<a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
-		    </li>
+            <a href="/modeleditor/parametereditor" title="Create a List of Parameters">Parameters</a>
+            </li>
+            <li>
+            <a href="/modeleditor/reactioneditor" title="Create a List of Reactions">Reactions</a>
+            </li>
                     {% if isSpatial %}
-		    <li class="active">
-			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
-		    </li>
+            <li class="active">
+            <a href="/modeleditor/mesheditor" title="Add a mesh">Mesh</a>
+            </li>
                     {% endif %}
                     {% endif %}
-		    <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
-		    <li class="dropdown">
-			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
-			<ul class="dropdown-menu">
-			    <a href="/modeleditor/import/fromfile">From file..</a>
-			    <a href="/modeleditor/import/publiclibrary">From Public Library...</a>
-			    <!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
-			</ul>
-		    </li>
+            <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
+            <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" title="Import from File/ Load Existing Library">Import<b class="caret"></b></a>
+            <ul class="dropdown-menu">
+                <a href="/modeleditor/import/fromfile">From file..</a>
+                <a href="/modeleditor/import/publiclibrary">From Public Library...</a>
+                <!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
+            </ul>
+            </li>
                     
                     <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
                     {% if model_edited is defined %}
                     {% if model_edited.units == "population" %} 
-		    <li class="dropdown">
-			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
-			<ul class="dropdown-menu">
+            <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" title="Export File To Stochkit">Export<b class="caret"></b></a>
+            <ul class="dropdown-menu">
                           <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
-                          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
+                          <a href="#" id="exportToPublicLibrary" title="Export model to public Library">To Public Library...</a>
                           <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
-			</ul>
-		    </li>
+            </ul>
+            </li>
                     {% else %}
-		    <li class="dropdown">
-			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
-			<ul class="dropdown-menu">
-			    <a href="/modeleditor/export/tostochkit2">To XML</a>
-                            <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
-			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
-			</ul>
-		    </li>
+            <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" title="Export File To XML">Export<b class="caret"></b></a>
+            <ul class="dropdown-menu">
+                <a href="/modeleditor/export/tostochkit2">To XML</a>
+                            <a href="#" id="exportToPublicLibrary" title="Export model to public Library">To Public Library...</a>
+                <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+            </ul>
+            </li>
                     {% endif %}
                     {% endif %}
-		</ul>
+        </ul>
 
-	    </div>
-	    <!--/ul-->
+        </div>
+        <!--/ul-->
 
-	    <div class="span9">
-		<div id="meshEditorDiv" class="well well-large">
-		    <h3><a style="text-decoration: None"> Spatial Information </a></h3>
-		    <br/>
+        <div class="col-sm-9 col-md-9">
+        <div id="meshEditorDiv" class="well well-lg">
+            <h3><a style="text-decoration: None"> Spatial Information </a></h3>
+            <br>
 
                     <div>1. Set diffusion constants of species on the <a href="/modeleditor/mesheditor">species page</a></div>
-                    <br />
+                    <br>
 
                     <div>2. Select mesh on which species will diffuse and react</div>
-                    <br />
+                    <br>
                     <div id="meshMsg"></div>
 
                     <div class="accordion" id="accordion2">
@@ -112,29 +112,29 @@
                             <div id="collapseTwo" class="accordion-body collapse">
                                 <div class="accordion-inner">
                                     <div class="row">
-                                        <div class="span8">
-	                                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="meshTable">
-		                                <thead>
+                                        <div class="col-sm-8 col-md-8">
+                                        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="meshTable">
+                                        <thead>
                                                     <tr>
                                                         <th>Delete</th>
-		                                        <th>Select</th>
+                                                <th>Select</th>
                                                         <th style="width: 100%">Mesh Name</th>
                                                     </tr>
-		                                </thead>
-		                                <tbody id="meshTableBody">
-		                                </tbody>
-	                                    </table>
+                                        </thead>
+                                        <tbody id="meshTableBody">
+                                        </tbody>
+                                        </table>
                                         </div>
-                                        <div class="span3 meshSelectDescriptionDiv">
+                                        <div class="meshSelectDescriptionDiv col-sm-3 col-md-3">
                                             <h4>Description:</h4>
                                             <div class="description">
                                             </div>
                                         </div>
                                     </div>
                                     
-		                    <button id="selectButton" class="btn btn-primary">
-			                Done
-		                    </button>
+                            <button id="selectButton" class="btn btn-primary">
+                            Done
+                            </button>
                                     <br>
                                 </div>
                             </div>
@@ -148,27 +148,27 @@
                             <div id="collapseThree" class="accordion-body collapse uploadMeshDiv">
                                 <div class="accordion-inner">
                                     <form id="meshForm">
-                                        <div>For a guide on the .xml/.txt mesh format used here, look at <a href="http://iguana.cs.ucsb.edu/releases/tutorials/dolfin_notes.pdf">dolfin_notes.pdf</a> (which can also be found in the documentation on the StochSS website).</div><br />
+                                        <div>For a guide on the .xml/.txt mesh format used here, look at <a href="http://iguana.cs.ucsb.edu/releases/tutorials/dolfin_notes.pdf">dolfin_notes.pdf</a> (which can also be found in the documentation on the StochSS website).</div><br>
 
                                         <div class="row">
-                                            <div class="span5">
+                                            <div class="col-sm-5 col-md-5">
                                                 <div>Select mesh file:</div>
                                                 <div>
-                                                    <input id="meshDataUpload" type="file" name="files[]" multiple>
+                                                    <input id="meshDataUpload" type="file" name="files[]" multiple="" class="form-control">
                                                 </div>
                                                 <div id="meshDataUploadStatus">
                                                 </div>
                                                 <div>Select subdomain file:</div>
                                                 <div>
-                                                    <input id="subdomainDataUpload" type="file" name="files[]" multiple>
+                                                    <input id="subdomainDataUpload" type="file" name="files[]" multiple="" class="form-control">
                                                 </div>
                                                 <div id="subdomainDataUploadStatus">
                                                 </div>
                                             </div>
-                                            <div class="span6">
+                                            <div class="col-sm-6 col-md-6">
                                                 <div>
                                                     Model name:<br>
-                                                    <input type="text" class="name">
+                                                    <input type="text" class="name form-control">
                                                 </div>
                                                 <div>
                                                     Model description:<br>
@@ -176,7 +176,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <br />
+                                        <br>
                                         <button id="meshUploadButton" type="button" class="btn btn-primary btn-lg">
                                             <span class="icon-plus"></span> Upload PyURDME Mesh
                                         </button>
@@ -185,22 +185,22 @@
                                             <span class="icon-remove"></span> Reset
                                         </button>
                                     </form>
-                                    <br />
+                                    <br>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <br />
+                    <br>
                     
                     <div class="mesh" style="display : none;">
                     <div class="row">
-                        <div style="border: 1px solid rgb(221, 221, 221);" class="span9">
+                        <div style="border: 1px solid rgb(221, 221, 221);" class="col-sm-9 col-md-9">
                             <div style="background-color: rgb(255, 255, 255);" id="meshPreviewMsg"><center><h3>Loading...</h3></center></div>
                             <div id="meshPreview"></div>
                         </div>
-                        <div class="span2">
-                            <h5>Mouse Controls:</h5><br />
+                        <div class="col-sm-2 col-md-2">
+                            <h5>Mouse Controls:</h5><br>
                             <ol>
                                 <li>Rotation -- Left button</li>
                                 <li>Translation -- Right button</li>
@@ -224,17 +224,17 @@
                     <br>
 
                     <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="speciesSubdomainsTable">
-			<thead>
+            <thead>
                             <tr>
                                 <td style="width : 1pt;">Species</td>
                                 <td id="speciesSubdomainsTableTitle" colspan="1"><center>Subdomains</center></td>
                             </tr>
-			    <tr id="speciesSubdomainsTableHeader">
-			    </tr>
-			</thead>
-			<tbody id="speciesSubdomainsTableBody">
-			</tbody>
-		    </table>
+                <tr id="speciesSubdomainsTableHeader">
+                </tr>
+            </thead>
+            <tbody id="speciesSubdomainsTableBody">
+            </tbody>
+            </table>
 
                     4. Select which reactions should be enabled in each subdomain
                     <br>
@@ -242,34 +242,34 @@
                     <br>
 
                     <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="reactionsSubdomainsTable">
-		        <thead>
+                <thead>
                             <tr>
                                 <td style="width : 1pt;">Reaction</td>
                                 <td id="reactionsSubdomainsTableTitle" colspan="1"><center>Subdomains</center></td>
                             </tr>
-			    <tr id="reactionsSubdomainsTableHeader">
-			    </tr>
-		        </thead>
-		        <tbody id="reactionsSubdomainsTableBody">
-		        </tbody>
-		    </table>
+                <tr id="reactionsSubdomainsTableHeader">
+                </tr>
+                </thead>
+                <tbody id="reactionsSubdomainsTableBody">
+                </tbody>
+            </table>
 
                     <div>5. Select initial conditions for the model</div>
                     <br>
                     <div id="initialConditionMsg"></div>
 
                     <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
-		        <thead>
-			    <tr>
+                <thead>
+                <tr>
                                 <th style="width : 1pt;">Delete</th>
                                 <th>Initial Conditions Type</th>
                                 <th>Species</th>
                                 <th style="width : 100%">Custom</th>
-			    </tr>
-		        </thead>
-		        <tbody id="initialConditionsTableBody">
-		        </tbody>
-		    </table>
+                </tr>
+                </thead>
+                <tbody id="initialConditionsTableBody">
+                </tbody>
+            </table>
 
                     <button type="button" class="btn btn-primary btn-lg addInitialConditionsButton">
                         <span class="glyphicon glyphicon-plus"></span> Add Initial Condition
@@ -278,52 +278,52 @@
                 </div>
             </div>
     
-	    {% endblock %}
-	    
-	    
-	    <div class="span2">
-		{% if model_edited %}
+        {% endblock %}
+        
+        
+        <div class="col-sm-2 col-md-2">
+        {% if model_edited %}
 
-		<label><h2>{{model_edited.name}}</h2></label>
+        <label><h2>{{model_edited.name}}</h2></label>
 
-		<a href="/modeleditor">Edit another model</a>
+        <a href="/modeleditor">Edit another model</a>
                 <!--hr-->
 
-                <hr />
+                <hr>
                 <h3>Actions</h3>
                 <ul>
                   {% if model_edited is defined and model_edited.units == "concentration" %}
-		  <li>
-		    <a href="#" id="convertToPopulation">Convert to Population</a>
-		  </li>
+          <li>
+            <a href="#" id="convertToPopulation">Convert to Population</a>
+          </li>
                   {% endif %}
                   <li>
-		    <a href="#" id="duplicateModel" TITLE = "Duplicate model">Duplicate Model</a>
+            <a href="#" id="duplicateModel" title="Duplicate model">Duplicate Model</a>
                   </li>
                   <li>
-		    <a href="#" id="renameModel" TITLE = "Rename model">Rename Model</a>
+            <a href="#" id="renameModel" title="Rename model">Rename Model</a>
                   </li>
 
-                  <hr />
-                  <div id="sidemsg" />
+                  <hr>
+                  <div id="sidemsg"></div>
                 </ul>
 
-		{% else %}
-		<p>
-		    <h3>You are not editing a model</h3>
-                    <br /><br />
+        {% else %}
+        <p>
+            </p><h3>You are not editing a model</h3>
+                    <br><br>
                     <a href="/modeleditor">Choose a model to edit or create a new model</a>
-		</p>
-		{% endif %}
+        <p></p>
+        {% endif %}
                 {% block customizesidebar %}
                 {% endblock %}
-	    </div>
-	</div>
+        </div>
+    </div>
         
     </div>
     <!--/span9-->
 
-</Div>
+</div>
 <!--/row-->
 
 <!--/span9-->
@@ -332,15 +332,15 @@
 <script src="/static/js/jquery.dataTables.min.js"></script>
 
 <script src="/static/utils.js"></script>
-<script type="text/javascript" src = "/static/js/underscore.js"></script>
-<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src="/static/js/underscore.js"></script>
+<script type="text/javascript" src="/static/js/backbone.js"></script>
 
 <script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
 <script src="/static/js/jfu/js/jquery.fileupload.js"></script>
 
-<script type="text/javascript" src = "/static/js/debug.js"></script>
-<script type="text/javascript" src = "/static/js/three.js"></script>
-<script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
+<script type="text/javascript" src="/static/js/debug.js"></script>
+<script type="text/javascript" src="/static/js/three.js"></script>
+<script type="text/javascript" src="/static/js/OrbitControls.js"></script>
 
 <script src="/static/js/fileserver.js"></script>
 <script src="/static/js/modeleditor/mesheditor.js"></script>
@@ -454,7 +454,7 @@ $( '#exportToPublicLibrary' ).click( function() {
     "aoColumns": [
     // for sorting based on form fields
     { "sSortDataType": "dom-text"},
-    { "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false}								
+    { "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false}                                
     ]
     });
     });
@@ -495,7 +495,7 @@ $( '#exportToPublicLibrary' ).click( function() {
         button = $('#save_button');
         if (!status) {
           $( "#msg" ).prop('class', 'alert alert-error');
-        } else {					
+        } else {                    
           $( "#msg" ).prop('class', 'alert alert-success');
           follow_up();
         }
@@ -525,7 +525,7 @@ $( '#exportToPublicLibrary' ).click( function() {
     * Function to call the ajax request after the specified amount of time.
     * update will send the ajax request.
     */
-    $('.update_box').keyup(function(event) {		
+    $('.update_box').keyup(function(event) {        
     delay(function() {
     update()
     }, 400);
@@ -588,7 +588,7 @@ $( '#exportToPublicLibrary' ).click( function() {
     backdrop : 'static',
     show : true
     }
-    $('#deleteModal').modal(options)			
+    $('#deleteModal').modal(options)            
     }
     
     function confirmDelete(){
@@ -598,4 +598,4 @@ $( '#exportToPublicLibrary' ).click( function() {
 
 </script>
 {% endblock %}
-<
+&lt;
