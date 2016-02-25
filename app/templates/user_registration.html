@@ -8,12 +8,17 @@
 {% elif approved_user_message %}
   <p class="alert alert-success">You have already been approved by the admin to create an account.</p>
 {% endif %}
-  <div class="well col-lg-offset-3 col-sm-6 col-md-6">
+<div class=row>
+    <div class="top-content">
+                      <div class="inner-bg">
+
+
+  <div class="col-sm-4 col-sm-offset-4 text">
     <h4>
     {% if create_admin %}
       Please fill in the following information to create your admin account:
     {% else %}
-      Please fill in the following information:
+      <h1>Please fill in the following information:</h1>
     {% endif %}
     </h4>
     <form action="/register" method="post" class="form-horizontal">
@@ -45,13 +50,16 @@
         {% if create_admin %}
           <input type="hidden" name="secret_key" value="{{secret_key}}" class="form-control">
         {% else %}
-          <p class="new-user-warning">Note: You're good to go. Please log in using your new account.</p><p>
+          <p class="new-user-warning"></p><p>
         {% endif %}
         </p><div class="form-actions">
           <button id="submit-btn" type="submit" class="btn btn-primary">Submit</button>
         </div>
       </fieldset>
     </form>    
+  </div>
+  </div>
+  </div>
   </div>
 {% endblock %}
 {% block jscontent %}<script src="/static/js/user_registration.js"></script>{% endblock %}
