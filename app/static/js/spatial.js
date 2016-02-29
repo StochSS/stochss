@@ -779,7 +779,7 @@ Spatial.Controller = Backbone.View.extend( {
             }
 
             var slider = $( event.target );
-            $( '#timeSelectDisplay' ).text('Time: ' + slider.val().toPrecision(5))
+            $( '#timeSelectDisplay' ).text('Time: ' + Number(slider.val()).toPrecision(5))
             this.timeIdx = Math.round( slider.val() / slider.prop('step') );
 
             // After the slider reset is over we can animate again
@@ -1262,8 +1262,13 @@ Spatial.Controller = Backbone.View.extend( {
                 this.handleVisibleCheckboxClick('x');
                 this.handleVisibleCheckboxClick('y');
                 this.handleVisibleCheckboxClick('z');
-                this.volume.mesh.visible = false;
-                this.volume.edges.visible = false;
+
+                if(this.volume)
+                {
+                    this.volume.mesh.visible = false;
+                    this.volume.edges.visible = false;
+                }
+
                 this.mesh.visible = true;
                 this.volumeRender = false;
                 this.mesh.material.wireframe = false;
@@ -1277,8 +1282,13 @@ Spatial.Controller = Backbone.View.extend( {
                 this.handleVisibleCheckboxClick('x');
                 this.handleVisibleCheckboxClick('y');
                 this.handleVisibleCheckboxClick('z');
-                this.volume.mesh.visible = false;
-                this.volume.edges.visible = false;
+
+                if(this.volume)
+                {
+                    this.volume.mesh.visible = false;
+                    this.volume.edges.visible = false;
+                }
+
                 this.mesh.visible = true;
                 this.volumeRender = false;
                 this.mesh.material.wireframe = true;
