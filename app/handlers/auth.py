@@ -1,8 +1,8 @@
 import logging
-
+import socket
 from google.appengine.ext import ndb
 from google.appengine.ext import db
-
+import os
 from webapp2_extras.auth import InvalidAuthIdError, InvalidPasswordError
 from webapp2_extras import security
 
@@ -34,29 +34,18 @@ class SecretKey(db.Model):
     def isEqualToAdminKey(self):
         '''
         '''
-        admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
+        #admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
+        try:
+            basename = os.path.dirname(os.path.abspath(__file__))
+            with open(os.path.join(basename,"admin_uuid.txt"),'r') as file:
+                admin_key = file.read()
+        except:
+            admin_key = None
+
         if admin_key is None:
             return False
         else:
-            return self.isEqualTo(admin_key)
-
-class SecretKeyHandler(BaseHandler):
-    '''
-    Handles the endpoint for secret key creation.
-    '''
-    def authentication_required(self):
-        return False
-    
-    def post(self):
-        '''
-        A POST to /secret_key means a new secret key should be generated from the string in the request body.
-        '''
-        # Dont allow requests from outside connections
-        if self.request.headers['Host'].find('localhost') == -1:
-            return
-        SecretKey.clear_stored_key()
-        SecretKey(key_string=self.request.get('key_string')).put()
-        self.response.out.write('Successful secret key creation!')
+            return self.key_string == admin_key
 
 class UserRegistrationPage(BaseHandler):
     '''

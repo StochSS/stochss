@@ -390,7 +390,6 @@ app = webapp2.WSGIApplication([
                                ('/cost_analysis',CostAnalysisPage),
                                ('/localsettings',LocalSettingsPage),
                                ('/updates',UpdatesPage),
-                               ('/secret_key', SecretKeyHandler),
                                ('/register', UserRegistrationPage),
                                ('/login', LoginPage),
                                ('/logout', LogoutHandler),
