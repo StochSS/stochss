@@ -10,13 +10,6 @@
   overflow: hidden;
 } 
 
-#container{
-  display:none; 
-  border-style: solid; 
-  color: gray;
-  background-color: black;
-}
-
 /********************
   Box shadow and border radius styling
 */
