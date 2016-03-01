@@ -9,34 +9,27 @@ do
 key="$1"
 case $key in
     --install)
-    echo "install"
     mode="install"
     ;;
     --no_browser)
-    echo "no browser"
     browser="false"
     ;;
     --debug)
-    echo "debug"
     mode="debug"
     ;;
     --run)
-    echo "run"
     mode="run"
     ;;
     --yy)
-    echo "yy"
     install_mode="true"
     ;;
     -a)
     ip="$2"
     shift # past argument
-    echo $ip
     ;;
     -t)
     token="$2"
     shift # past argument
-    echo $token
     ;;
     *)
     echo "Arguments not recognized recognized...exiting"      # unknown option
