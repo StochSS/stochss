@@ -47,25 +47,6 @@ class SecretKey(db.Model):
         else:
             return self.key_string == admin_key
 
-# class SecretKeyHandler(BaseHandler):
-#     '''
-#     Handles the endpoint for secret key creation.
-#     '''
-#     def authentication_required(self):
-#         return False
-    
-#     def post(self):
-#         '''
-#         A POST to /secret_key means a new secret key should be generated from the string in the request body.
-#         '''
-#         # Dont allow requests from outside connections
-#         str_unique = socket.gethostbyname(socket.gethostname())
-#         if self.request.headers['Host'].find(str_unique) == -1:
-#             return
-#         SecretKey.clear_stored_key()
-#         SecretKey(key_string=self.request.get('key_string')).put()
-#         self.response.out.write('Successful secret key creation!')
-
 class UserRegistrationPage(BaseHandler):
     '''
     '''

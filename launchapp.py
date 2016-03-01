@@ -12,7 +12,6 @@ import uuid
 import socket
 
 open_browser = sys.argv[2]
-print("open browser is {0}".format(open_browser))
 host_ip = socket.gethostbyname(socket.gethostname())
 
 try:

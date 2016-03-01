@@ -89,7 +89,7 @@ def admin_required(handler):
     Assumes user already logged in, so redirects to profile page if not admin
     """
     def check_admin(self, *args, **kwargs):
-        if self.user.is_admin_user:
+        if self.user.is_admin_user():
             return handler(self, *args, **kwargs)
         else:
             self.redirect('/profile')
