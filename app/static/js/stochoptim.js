@@ -511,7 +511,7 @@ StochOptim.Controller = Backbone.View.extend(
                     if(!this.selectedTrajectories || !this.selectedInitialData || !this.selectedTrajectories.attributes || !this.selectedInitialData.attributes)
                     {
                         updateMsg( { status : false,
-                                     msg : "Trajectories and Initial Data files must be supplied" } );
+                                     msg : "Trajectory and Initial Data files must be supplied" } );
 
                         return;                        
                     }
@@ -565,7 +565,7 @@ StochOptim.Controller = Backbone.View.extend(
                     if(!this.selectedTrajectories || !this.selectedInitialData || !this.selectedTrajectories.attributes || !this.selectedInitialData.attributes)
                     {
                         updateMsg( { status : false,
-                                     msg : "Trajectories and Initial Data files must be supplied" } );
+                                     msg : "Trajectory and Initial Data files must be supplied" } );
 
                         return;                        
                     }
