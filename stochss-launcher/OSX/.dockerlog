@@ -1,3 +1,0 @@
-Cannot connect to the Docker daemon. Is the docker daemon running on this host?
-Error: failed to stop containers: [stochsscontainer1_7]
-(stochssdocker) Starting VM...
