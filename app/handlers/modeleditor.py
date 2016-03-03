@@ -444,9 +444,12 @@ def importExamplePublicModels(handler):
 
         names = [model['name'] for model in ModelManager.getModels(handler, public = True)]
 
+        print names, toImport
+
         for name in set(toImport.keys()) - set(names):
             path = toImport[name]
             modelDb = szip.extractStochKitModel(path, "", handler, rename = True)
+            print modelDb.name
             modelDb.user_id = ""
             modelDb.name = name
             modelDb.is_public = True

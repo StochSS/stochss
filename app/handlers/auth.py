@@ -81,7 +81,6 @@ class UserRegistrationPage(BaseHandler):
         A user can register only if they have been approved by the admin, i.e. they are in the approved_users
         list (see admin.py).
         '''
-        logging.info(self.request.POST)
 
         try:
             secret_key = self.request.POST['secret_key']
