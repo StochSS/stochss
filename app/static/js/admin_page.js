@@ -41,7 +41,7 @@ $('.users').on('click', 'button.table-action-button', function(e) {
                     clickedButton.removeClass('btn-danger');
                     clickedButton.addClass('btn-success');
                 } else if (action == "delete" || action == "revoke_preapproved") {
-                    tableRow.remove();
+                    location.reload();
                 } else if (action == "reset") {
                     alert('The user\'s password has been reset to:\n' + response["password"]);
                 }

@@ -39,6 +39,7 @@
             </tbody>
         </table>
 
+        {% if preapproved_users|length %}
         <h3>Pre-approved Users</h3>
         <table class="table table-bordered">
             <thead>
@@ -60,6 +61,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% endif %}
     </div>
 </div>
 <div class="span3">
