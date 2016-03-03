@@ -206,7 +206,7 @@ class Parameter():
         try:
             self.value = (float(eval(self.expression, namespace)))
         except:
-            self.value = None
+            self.value = self.expression
             
     def setExpression(self,expression):
         self.expression = expression
