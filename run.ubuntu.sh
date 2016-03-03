@@ -54,7 +54,7 @@ help_message="Usage: $0 [--run] [--install]"
 MY_PATH="`dirname \"$0\"`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH
-STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
+STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`"
 
 echo "Installing in $STOCHSS_HOME"
 
@@ -411,7 +411,7 @@ else
         echo "Success!"
     else
         echo "Failed"
-        echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME" 
+        echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME"
         exit -1
     fi
 fi
@@ -574,5 +574,5 @@ echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip --$mode
 fi

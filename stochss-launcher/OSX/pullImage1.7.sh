@@ -1,4 +1,3 @@
-#echo "exporting path $1"
 export PATH=$1:$PATH
 docker-machine env stochss1-7 >> .pullImageLog || (echo "cannot set environment" && exit -1)
 eval "$(docker-machine env stochss1-7)"

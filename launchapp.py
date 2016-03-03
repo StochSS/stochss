@@ -12,15 +12,17 @@ import uuid
 import socket
 
 open_browser = sys.argv[2]
-host_ip = socket.gethostbyname(socket.gethostname())
+try
+    host_ip = socket.gethostbyname(socket.gethostname())
+except socket.gaierror
+    print("Failed to get hostname...defaulting to localhost.")
+    host_ip="localhost"
 
 try:
     admin_token = sys.argv[3]
     print("Received token {0}".format(admin_token))
 except IndexError:
-    print("Admin token not found")
-    exit(-1)
-
+    print("Admin token not received. Will generate one.")
 
 try:
     vm_ip = sys.argv[4]
