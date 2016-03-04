@@ -23,10 +23,6 @@ case $key in
     --run)
     mode="run"
     ;;
-    -a)
-    ip="$2"
-    shift # past argument
-    ;;
     *)
     echo "Unknown option."      # unknown option
     exit 1
