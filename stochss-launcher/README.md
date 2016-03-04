@@ -11,4 +11,4 @@ Follow <a href="https://raw.githubusercontent.com/aviral26/stochss/develop/stoch
 
 <h2>Step 3:</h2>
 <h3>Build Docker Image</h3>
-Run the following command to build the image: `sudo docker build -t my_stochss_docker_image_name .`
+Run the following command to build the image: `sudo docker build -t my_stochss_docker_image_name`.
