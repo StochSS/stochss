@@ -1,7 +1,7 @@
 <h1>Using StochSS on Mac OSX</h1>
 
 <h2>Step1:</h2>
-<h3>Download the StochSS app for Mac OSX</h2>
+<h3>Download the StochSS app for Mac OSX</h3>
 <h2>Step 2:</h2>
 
 <h3>Install Docker Toolbox</h3> Follow the installation instructions on <a href="https://docs.docker.com/engine/installation/mac/#installation">this</a> page to install Docker Toolbox.
