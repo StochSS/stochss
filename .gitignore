@@ -13,3 +13,4 @@ app/stochss*.key
 *.DS_Store
 mydatastore
 app/backend/celeryconfig.py
+*.admin_key
