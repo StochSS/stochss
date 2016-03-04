@@ -65,6 +65,17 @@ class SpatialJobWrapper(db.Model):
             with open(f, 'w') as meshFile:
                 json.dump(json.loads(result.export_to_three_js(species[0], 0)), meshFile) 
 
+            f = os.path.join(self.preprocessedDir, "voxelTuples.json")
+
+            result.model.mesh.init(2,0)
+            voxelTopology = result.model.mesh.topology()(3, 0)
+            Ncells = result.model.mesh.num_cells()
+
+            voxelTuples = [list(voxelTopology(i).astype('int')) for i in range(Ncells)]
+
+            with open(f, 'w') as voxelTuplesFile:
+                json.dump(voxelTuples, voxelTuplesFile)
+
             hdf5File = h5py.File(target, 'w')
 
             for specie in species:
