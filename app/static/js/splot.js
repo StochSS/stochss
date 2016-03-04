@@ -173,7 +173,7 @@ Splot.Plot = Backbone.View.extend(
  
             chart.yAxis     //Chart y-axis settings
                 .axisLabel( this.attributes.ylabel )
-                .tickFormat(d3.format('.2e'));
+                //.tickFormat(d3.format(''));
  
             this.svg    //Select the <svg> element you want to render the chart in.   
                 .datum(prunedData)         //Populate the <svg> element with chart data...
