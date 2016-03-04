@@ -756,8 +756,8 @@ Spatial.Controller = Backbone.View.extend( {
     {
         this.timeIdx = time;
 
-        $( '#timeSelect' ).val(time);
-        $( '#timeSelectDisplay' ).text('Time: ' + time);   
+        $( '#timeSelect' ).val(time * $( '#timeSelect' ).prop('step'));
+        $( '#timeSelectDisplay' ).text('Time: ' + (time * $( '#timeSelect' ).prop('step')).toPrecision(5));
         
         this.acquireNewData();
     },
@@ -779,7 +779,7 @@ Spatial.Controller = Backbone.View.extend( {
             }
 
             var slider = $( event.target );
-            $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
+            $( '#timeSelectDisplay' ).text('Time: ' + Number(slider.val()).toPrecision(5))
             this.timeIdx = Math.round( slider.val() / slider.prop('step') );
 
             // After the slider reset is over we can animate again
@@ -1216,7 +1216,7 @@ Spatial.Controller = Backbone.View.extend( {
         slider.val(slider.prop('max'));
         slider.prop('step', this.jobInfo.indata.increment);
 
-        this.maxLimit = this.jobInfo.indata.time;
+        this.maxLimit = Math.round(this.jobInfo.indata.time / this.jobInfo.indata.increment);
 
         //Add event handler to slider
         slider.off('change');
@@ -1262,8 +1262,13 @@ Spatial.Controller = Backbone.View.extend( {
                 this.handleVisibleCheckboxClick('x');
                 this.handleVisibleCheckboxClick('y');
                 this.handleVisibleCheckboxClick('z');
-                this.volume.mesh.visible = false;
-                this.volume.edges.visible = false;
+
+                if(this.volume)
+                {
+                    this.volume.mesh.visible = false;
+                    this.volume.edges.visible = false;
+                }
+
                 this.mesh.visible = true;
                 this.volumeRender = false;
                 this.mesh.material.wireframe = false;
@@ -1277,8 +1282,13 @@ Spatial.Controller = Backbone.View.extend( {
                 this.handleVisibleCheckboxClick('x');
                 this.handleVisibleCheckboxClick('y');
                 this.handleVisibleCheckboxClick('z');
-                this.volume.mesh.visible = false;
-                this.volume.edges.visible = false;
+
+                if(this.volume)
+                {
+                    this.volume.mesh.visible = false;
+                    this.volume.edges.visible = false;
+                }
+
                 this.mesh.visible = true;
                 this.volumeRender = false;
                 this.mesh.material.wireframe = true;

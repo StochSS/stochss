@@ -8,7 +8,11 @@
     <div class="page-header">
         <h1> Welcome to StochSS <small>Stochastic Simulation Service</small></h1>
     </div>
+    
     <div class="jumbotron">
+   
+    {{ stochss_news|safe }}
+    
         <p>Welcome to StochSS! To get started, head over to the <a href="/modeleditor" style="font-size: 20px;">Model Editor</a> and create new deterministic or well-mixed stochastic models for simulation. Or, if time is short, feel free to try out a model in the <a href="/publicLibrary" style="font-size:20px;">Example Library</a>.
         
             Once you have defined your model, go to the <a style="font-size: 20px;" href="/simulate">Simulation Manager</a> to perform your experiments, and then to the <a style="font-size: 20px;" href="/status">Status Page</a> to view the output.
