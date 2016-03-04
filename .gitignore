@@ -11,3 +11,5 @@ app/stochss*.key
 *.dockerlog
 *.uninstalllog
 *.DS_Store
+mydatastore
+app/backend/celeryconfig.py

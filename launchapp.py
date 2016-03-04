@@ -12,27 +12,30 @@ import uuid
 import socket
 
 open_browser = sys.argv[2]
-try
-    host_ip = socket.gethostbyname(socket.gethostname())
-except socket.gaierror
+mac = False
+if 'mac' in sys.argv:
+    mac = True
+
+try:
+    if mac:
+        host_ip = "localhost"
+    else:
+        host_ip = socket.gethostbyname(socket.gethostname())
+except socket.gaierror:
     print("Failed to get hostname...defaulting to localhost.")
-    host_ip="localhost"
+    host_ip = "localhost"
 
 try:
     admin_token = sys.argv[3]
-    print("Received token {0}".format(admin_token))
 except IndexError:
     print("Admin token not received. Will generate one.")
 
 try:
     vm_ip = sys.argv[4]
-    print("Received vm_ip {0}".format(vm_ip))
+    if vm_ip == "0":
+        vm_ip = host_ip
 except IndexError:
     vm_ip = host_ip
-
-mac = False
-if 'mac' in sys.argv:
-    mac = True
 
 path = os.path.abspath(os.path.dirname(__file__))
 

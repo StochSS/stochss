@@ -4,6 +4,7 @@ mode="run"
 install_mode="false"
 token="not_set"
 browser="true"
+ip=0
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -32,15 +33,12 @@ case $key in
     shift # past argument
     ;;
     *)
-    echo "Arguments not recognized recognized...exiting"      # unknown option
+    echo "Unknown option."      # unknown option
     exit 1
     ;;
 esac
 shift # past argument or value
 done
-
-echo "token is $token"
-echo "ip is $ip"
 
 osname=$(uname)
 if [ "$osname" != 'Linux' ]; then
@@ -574,5 +572,5 @@ echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip --$mode
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode
 fi
