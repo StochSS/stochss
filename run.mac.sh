@@ -101,14 +101,14 @@ function check_dolfin {
 }
 
 function check_for_lib {
-    if [ -z "$mode" ];then
+    if [ -z "$1" ];then
         return 1 #False
     fi
-    if [ "$mode" = "mysql-connector-python" ]; then
+    if [ "$1" = "mysql-connector-python" ]; then
         RET=`python -c "import mysql.connector" 2>/dev/null`
         RC=$?
     else
-        RET=`python -c "import $mode" 2>/dev/null`
+        RET=`python -c "import $1" 2>/dev/null`
         RC=$?
     fi
     if [[ $RC != 0 ]];then
@@ -201,23 +201,23 @@ fi
 #################
 
 function retry_command {
-    if [ -z "$mode" ];then
+    if [ -z "$1" ];then
         return 1 #False
     fi
 
     for i in `seq 1 3`;
     do
-        echo "$mode"
-        eval "$mode"
+        echo "$1"
+        eval "$1"
         RET=$?
         if [[ $RET != 0 ]] ;then
-            echo "Failed to execute: \"$mode\""
+            echo "Failed to execute: \"$1\""
         else
             return 0 # True
         fi
     done
 
-    echo "Failed to execute: \"$mode\", Exiting"
+    echo "Failed to execute: \"$1\", Exiting"
     exit -1
 }
 

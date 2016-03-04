@@ -83,7 +83,7 @@ stderr = open('stderr.log', 'w')
 # print path
 def startserver():
     import sys
-    if '--debug' in sys.argv:
+    if 'debug' in sys.argv:
         h = subprocess.Popen((
                          "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)).split(), stdout=stdout, stderr=stderr)
     else:
