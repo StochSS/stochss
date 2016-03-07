@@ -12,25 +12,30 @@ import uuid
 import socket
 
 open_browser = sys.argv[2]
-host_ip = socket.gethostbyname(socket.gethostname())
-
-try:
-    admin_token = sys.argv[3]
-    print("Received token {0}".format(admin_token))
-except IndexError:
-    print("Admin token not found")
-    exit(-1)
-
-
-try:
-    vm_ip = sys.argv[4]
-    print("Received vm_ip {0}".format(vm_ip))
-except IndexError:
-    vm_ip = host_ip
-
 mac = False
 if 'mac' in sys.argv:
     mac = True
+
+try:
+    if mac:
+        host_ip = "localhost"
+    else:
+        host_ip = socket.gethostbyname(socket.gethostname())
+except socket.gaierror:
+    print("Failed to get hostname...defaulting to localhost.")
+    host_ip = "localhost"
+
+try:
+    admin_token = sys.argv[3]
+except IndexError:
+    print("Admin token not received. Will generate one.")
+
+try:
+    vm_ip = sys.argv[4]
+    if vm_ip == "0":
+        vm_ip = host_ip
+except IndexError:
+    vm_ip = host_ip
 
 path = os.path.abspath(os.path.dirname(__file__))
 
@@ -78,7 +83,7 @@ stderr = open('stderr.log', 'w')
 # print path
 def startserver():
     import sys
-    if '--debug' in sys.argv:
+    if 'debug' in sys.argv:
         h = subprocess.Popen((
                          "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)).split(), stdout=stdout, stderr=stderr)
     else:

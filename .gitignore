@@ -8,3 +8,9 @@ stdout.log
 app/stochss*.key
 ./release-tools/ami.json
 ./backend/tmp/*
+*.dockerlog
+*.uninstalllog
+*.DS_Store
+mydatastore
+app/backend/celeryconfig.py
+*.admin_key
