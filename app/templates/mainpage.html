@@ -5,20 +5,12 @@
 
 <script type="text/javascript">
 <!--
-    function toggle_visibility(id) {
-       var e = document.getElementById(id);
-       if(e.style.display == 'block')
-          e.style.display = 'none';
-       else
-          e.style.display = 'block';
-    }
     function show_reg_form() {
         document.getElementById('registration_link').style.display = 'none';
         var e = document.getElementById('registration_form');
         e.innerHTML = '<iframe src="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true&entry.1381119842=StochSS" width="700" height="800" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>';
         e.style.display = 'block';
     }
-
 //-->
 </script>
 
@@ -29,7 +21,6 @@
     </div>
     <div class="hero-unit">
         <div id="registration_form" style="display: none">
-        <!--<iframe src="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true&entry.1381119842=StochSS" width="700" height="800" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>-->
         </div>
         <div id="registration_link" style="display: block">
         <p><a href="#" onclick="show_reg_form();" style="font-size: 20px;"><B>Click here to Register StochSS</B></a> StochSS is publicly supported software.  Please take a moment to register StochSS so that we can continue to support computational science.</p>
