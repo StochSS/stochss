@@ -26,6 +26,11 @@ import simulation
 import spatial
 import stochoptim
 
+from sensitivity import SensitivityJobWrapper
+from simulation import StochKitJobWrapper
+from spatial import SpatialJobWrapper
+from stochoptim import StochOptimJobWrapper
+
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        
@@ -39,6 +44,7 @@ class StatusPage(BaseHandler):
     def post(self):
         
         params = self.request.POST
+        reqType = self.request.get('reqType')
         
         if 'delete' in params:
 
@@ -69,6 +75,50 @@ class StatusPage(BaseHandler):
             # Get the context and reload the page
             context = self.getContext()
             self.render_response('status.html', **context)
+
+        elif reqType == 'delJob':
+
+            ids = self.request.get_all('id[]')
+
+            for job_id in ids:
+                logging.exception(int(job_id))
+                try:
+                    try:    
+                        job = StochKitJobWrapper.get_by_id(int(job_id))
+                    except:
+                        logging.exception("wtf")
+                        raise
+                        
+                    try: 
+                        job = SensitivityJobWrapper.get_by_id(int(job_id))
+                    except:
+                        raise
+                    try: 
+                        job = SpatialJobWrapper.get_by_id(int(job_id))
+                    except:
+                        raise   
+                    try: 
+                        job = StochOptimJobWrapper.get_by_id(int(job_id))
+                    except:
+                        raise  
+
+                    if self.user.user_id() != job.user_id:
+                        self.response.headers['Content-Type'] = 'application/json'
+                        self.response.write(json.dumps(["Not the right user"]))
+                        return
+
+                    job.delete(self)
+                        
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write(json.dumps({ 'status' : True,
+                                                     'msg' : "Job deleted from the datastore."}))
+                except Exception as e:
+                    logging.exception(e)
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write(json.dumps({ 'status' : False,
+                                                     'msg' : "Error: {0}".format(e) }))
+
+            return
         else:
             context = self.getContext()
             result = {'status':False,'msg':"There was an error processing the request."}
