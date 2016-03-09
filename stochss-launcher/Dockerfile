@@ -66,10 +66,10 @@ RUN apt-get -y install python-software-properties && \
     apt-get update && \
     apt-get -y install fenics && \
     apt-get -y install cython python-h5py
-    
+
 
 # Cleanup to save space
-RUN apt-get clean && \ 
+RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set the HOME environment variable, otherwise import dolfin crashes
@@ -87,9 +87,10 @@ RUN echo "source /usr/local/share/dolfin/dolfin.conf" >> /etc/bash.bashrc
 #..................................................................................
 
 # Install packages for StochSS
- 
-RUN wget https://github.com/aviral26/stochss/archive/master.tar.gz && \
-    tar xfz master.tar.gz && \
+
+RUN wget https://github.com/StochSS/stochss/archive/develop.tar.gz && \
+    tar xfz develop.tar.gz && \
+    mv stochss-develop stochss-master && \
     cd stochss-master && \
     apt-get update && \
     apt-get install -yy curl && \
@@ -116,8 +117,8 @@ RUN wget https://github.com/aviral26/stochss/archive/master.tar.gz && \
     libbz2-dev \
     vim \
     libhdf5-mpi-dev && \
-    chmod 777 run.ubuntu.sh
-
+    chmod 777 run.ubuntu.sh && \
+    ./run.ubuntu.sh --install
 
 EXPOSE 8000
 EXPOSE 8080
