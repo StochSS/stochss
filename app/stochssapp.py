@@ -318,10 +318,11 @@ class MainPage(BaseHandler):
     	return stochss_news
     
     def get(self):
-    	stochss_news = urllib2.urlopen("http://www.stochss.org/wordpress/?cat=7&feed=rss2").read().decode('utf-8')
-    	
-    	stochss_news = "<h3>Latest News:</h3><p>"+self.get_titles(stochss_news,2)+"</p><hr>"
-    	
+        try:
+    	    stochss_feed = urllib2.urlopen("http://www.stochss.org/wordpress/?cat=7&feed=rss2").read().decode('utf-8')
+    	    stochss_news = "<h3>Latest News:</h3><p>"+self.get_titles(stochss_feed,2)+"</p><hr>"
+        except urllib2.URLError:
+            stochss_news = ''
     	template_values = {'stochss_news':stochss_news}
         self.render_response("mainpage.html",**template_values)
     
