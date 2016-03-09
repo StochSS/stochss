@@ -1,8 +1,8 @@
 import logging
-
+import socket
 from google.appengine.ext import ndb
 from google.appengine.ext import db
-
+import os
 from webapp2_extras.auth import InvalidAuthIdError, InvalidPasswordError
 from webapp2_extras import security
 
@@ -34,29 +34,18 @@ class SecretKey(db.Model):
     def isEqualToAdminKey(self):
         '''
         '''
-        admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
+        #admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
+        try:
+            basename = os.path.dirname(os.path.abspath(__file__))
+            with open(os.path.join(basename,"admin_uuid.txt"),'r') as file:
+                admin_key = file.read()
+        except:
+            admin_key = None
+
         if admin_key is None:
             return False
         else:
-            return self.isEqualTo(admin_key)
-
-class SecretKeyHandler(BaseHandler):
-    '''
-    Handles the endpoint for secret key creation.
-    '''
-    def authentication_required(self):
-        return False
-    
-    def post(self):
-        '''
-        A POST to /secret_key means a new secret key should be generated from the string in the request body.
-        '''
-        # Dont allow requests from outside connections
-        if self.request.headers['Host'].find('localhost') == -1:
-            return
-        SecretKey.clear_stored_key()
-        SecretKey(key_string=self.request.get('key_string')).put()
-        self.response.out.write('Successful secret key creation!')
+            return self.key_string == admin_key
 
 class UserRegistrationPage(BaseHandler):
     '''
@@ -106,24 +95,22 @@ class UserRegistrationPage(BaseHandler):
 
             # Just an email address here, we should first make sure they havent been approved
             pending_users_list = PendingUsersList.shared_list()
-
-            # Now add to approval waitlist
-            if pending_users_list.is_user_approved(user_email):
-                success = True
+            if pending_users_list.approve_user(user_email, True):
                 approved = True
-            elif pending_users_list.user_exists(user_email):
                 success = True
-                approved = False
             else:
-                success = pending_users_list.add_user_to_approval_waitlist(user_email)
-                approved = False
+                success = False
+   
 
             if success:
+
                 # Then create the user
                 _attrs = {
                     'email_address': user_email,
                     'name': self.request.POST['name'],
-                    'password_raw': self.request.POST['password']
+                    'password_raw': self.request.POST['password'],
+                    'confirmed_user': False
+
                 }
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
                 
@@ -272,7 +259,7 @@ class LoginPage(BaseHandler):
                 return self.redirect('/')
             else:
                 # Not approved, add to approval waitlist
-                pending_users_list.add_user_to_approval_waitlist(email_address)
+             #   pending_users_list.add_user_to_approval_waitlist(email_address)
                 context = {
                     'error_alert': True,
                     'alert_message': 'You need to be approved by the admin before you can login.'

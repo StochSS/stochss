@@ -1,127 +1,139 @@
-<!-- <!DOCTYPE html> -->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>StochSS: {% block title %}Stochastic Simlation Service{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+<!doctype html>
+<html lang="en"><head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <!-- Le styles -->
-    <link href="/static/css/bootstrap.css" rel="stylesheet">
-    <link href="/static/css/nv.d3.css" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.css">
-    <style type="text/css">
-      body {
-        padding-top: 60px;
-        padding-bottom: 40px;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-      }
-
-      .sidebar-nav {
-        padding: 9px 0;
-        font-size: 14px;
-      }
-
-      .nav {
-        font-size: 16px;
-      }
-    </style>
-    <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
-    
-    {% block csscontent %}{% endblock %}
-
-    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <!-- Le fav and touch icons -->
-    <link rel="shortcut icon" href="/static/ico/favicon.ico">
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../static/ico/apple-touch-icon-144-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../static/ico/apple-touch-icon-114-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../static/ico/apple-touch-icon-72-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" href="/static/ico/apple-touch-icon-57-precomposed.png">
-</head>
-
-  <body>
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container-fluid">
-	  <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-
-	  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-	  </a>
- 
-          <a class="brand" href="/">StochSS</a>
-
-	  <div class="nav-collapse">
-            <ul class="nav">
-              <li class="active"><a href="/">Home</a></li>
-              <li><a href="http://www.stochss.org" target="_blank">About</a></li>
-              <li><a href="http://www.stochss.org/?page_id=476" target="_blank">Documentation</a></li>
-              <li><a href="mailto:stochss-users@googlegroups.com">Contact</a></li>
-            </ul>
-            <div class="pull-right">
-	      <ul class="nav">
-		<li><a href="/account_settings">Settings</a></li>
-		<li><a href="/logout">Sign Out</a></li>
-	      </ul>
-            </div>
-	  </div>
-        </div><!-- container fluid -->
-      </div><!-- navbar inner -->
-    </div><!-- navbar fixed -->
-
-    <div class="container-fluid">
-      <div class="row-fluid">
-        <div class="span2">
-          <div class="well sidebar-nav">
-            <ul class="nav nav-list">
-              <li class="nav-header"><i class="icon-beaker"></i>Modelling</li>
-              <li><a href="/modeleditor" TITLE = "Create/Import models">Model Editor</a></li>
-              <li class="nav-header"><i class="icon-play"></i> Simulation</li>
-              <li><a href="/simulate" TITLE = "Configure and submit simulations">Simulation Manager</a></li>
-              <li><a href="/stochoptim" TITLE = "Launch a parameter estimation job">Parameter Estimation</a></li>
-              <li><a href="/status" TITLE = "Monitor the progress of a simulation">Job Status</a></li>
-              <li class="nav-header"><i class="icon-cog"></i> Settings</li>
-              {% if user.is_admin_user() %}
-                  <li><a href="/admin">Admin Panel</a></li>
-              {% endif %}
-              <li><a href="/credentials" TITLE = "Set AWS credentials and manage
-			  computational resources in the cloud">Cloud Computing</a></li>
-              <li><a href="/import" TITLE = "Manage backup archives">Backup</a></li>
-            </ul>
-          </div><!--/.well -->
-        </div><!--/span2-->
-        {% block content %}
-        {% endblock %}
-      </div><!--/row-->
-
-      </hr>
-
+        <title>StochSS: {% block title %}Stochastic Simlation Service{% endblock %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <!-- Le styles -->
+        <link href="/static/css/bootstrap.css" rel="stylesheet">
+        <link href="/static/css/nv.d3.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.css">
+        <style type="text/css">
+            body {
+                padding-top: 60px;
+                padding-bottom: 40px;
+                padding-left: 0px;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }
             
-      <footer>
-        <p></p>
-      </footer>
+        }
+        </style>
+        <!--.sidebar-nav {
+                padding: 9px 0;
+                font-size: 14px;
+            }
+            .nav {
+                font-size: 16px;
+        }
+         -->
+        <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
+        </head>
 
-    </div><!--/.fluid-container-->
+        <body>
+        {% block csscontent %}{% endblock %}
+        <!-- Le HTML5 shim, for IE6-8 support
+        of HTML5 elements -->
+        <!--[if lt IE 9]>
+            <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        <!-- Le fav and touch icons -->
+        <link rel="shortcut icon" href="/static/ico/favicon.ico">
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../static/ico/apple-touch-icon-144-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../static/ico/apple-touch-icon-114-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../static/ico/apple-touch-icon-72-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" href="/static/ico/apple-touch-icon-57-precomposed.png">
+    
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="container">
+                <div class="navbar-header"><a class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <!-- -->
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
-    <script src="/static/js/jquery-ui-1.10.3/js/jquery-1.9.1.js"></script>
-    <script src="/static/js/custom.js"></script>
-    <script src="/static/js/bootstrap.js"></script>    
+            <span class="glyphicon glyphicon-bar"></span>
+            <span class="glyphicon glyphicon-bar"></span>
+            <span class="glyphicon glyphicon-bar"></span>
 
+            </a><a class="navbar-brand" href="/">StochSS</a></div>
+                    <!-- .btn-navbar is used as the toggle for collapsed navbar content --> 
+ 
+                    <div class="navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <li class="active"><a href="/">Home</a>
+                            </li>
+                            <li><a href="http://www.stochss.org" target="_blank">About</a>
+                            </li>
+                            <li><a href="http://www.stochss.org/?page_id=476" target="_blank">Documentation</a>
+                            </li>
+                            <li><a href="mailto:stochss-users@googlegroups.com">Contact</a>
+                            </li>
+                        </ul>
+                        <div class="pull-right">
+                            <ul class="nav navbar-nav">
+                                <li><a href="/account_settings">Settings</a>
+                                </li>
+                                <li><a href="/logout">Sign Out</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- container fluid -->
+            </div>
+            <!-- navbar inner -->
+        </nav>
+
+        <!-- navbar fixed -->
+        <div class="container">
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="well sidebar-nav">
+                        <ul class="nav">
+                            <li class="nav-header"><i class="glyphicon glyphicon-beaker"></i> Modelling</li>
+                            <li><a href="/modeleditor" title="Create/Import models">Model Editor</a>
+                            </li>
+                            <li class="nav-header"><i class="glyphicon glyphicon-play"></i> Simulation</li>
+                            <li><a href="/simulate" title="Configure and submit simulations">Simulation Manager</a>
+                            </li>
+                            <li><a href="/stochoptim" title="Launch a parameter estimation job">Parameter Estimation</a>
+                            </li>
+                            <li><a href="/status" title="Monitor the progress of a simulation">Job Status</a>
+                            </li>
+                            <li><a href="/import" title="Manage backup archives">Backup</a></li>
+                            {% if ( ENABLE_CLOUD or user.is_admin_user()) %}        
+                            <li class="nav-header"><i class="glyphicon glyphicon-cloud"></i> Cloud computing</li>
+                            <li><a href="/credentials" title="Manage computational resources in the cloud">Manage resources</a></li>
+                            {% endif %}
+                            {% if user.is_admin_user() %}
+                            <li class="nav-header"><i class="glyphicon glyphicon-cog"></i> Admin</li>
+                            <li><a href="/admin">Identity</a></li>
+                            {% endif %}
+                        </ul>
+                        </div>
+                    </div>
+                    <!--/.well -->
+
+                     <!-- This is where the main content in the "middle" of the page gets inserted. -->
+                     {% block content %}
+                     {% endblock %}
+                </div>
+                <!--/col-md-2-->
+
+                </div>
+                
+            <!--/row-->
+            <footer>
+                <p></p>
+            </footer>
+        </div>
+          <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="/static/js/bootstrap.min.js" type="text/javascript"></script>  
+      
     {% block jscontent %}{% endblock %}
 
-  </body>
+</body>
 </html>

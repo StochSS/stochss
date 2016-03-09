@@ -8,12 +8,13 @@
 {% endblock %}
 
 <div class="modelEditor">
-    <div class="span8">
+
+    <div class="col-sm-8 col-md-8">
         <div>
             <h1>Model Editor</h1>
             <br>
             <div class="well">
-                <div data-hook='selector'>
+                <div data-hook="selector">
                     <div class="selectAccordion">
                         <div class="accordion-group">
                             <div class="accordion-heading">
@@ -29,12 +30,12 @@
                         </div>
                     </div>
                 </div>
-                <div data-hook='editor'></div>
+                <div data-hook="editor"></div>
             </div>
         </div>
     </div>
 
-    <div class="span2 modelRightBar">
+    <div class="modelRightBar col-sm-2 col-md-2">
         <div class="well sidebar-nav">
             <ul class="nav nav-list">
                 <li class="nav-header">Import / Export</li>
@@ -42,10 +43,10 @@
                 <li><a href="/importFromXML">Import from .XML</a></li>
                 <li><a href="/importFromSBML">Import from .SBML</a></li>
                 <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
-                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
                 <li class="nav-header">Public Library</li>
                 <li><a href="/publicLibrary">Import from Public Library</a></li>
-                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
+                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
             </ul>
         </div>
     </div>
@@ -199,14 +200,14 @@
                                 </div>
                             </div>
                             <div class="span3 meshSelectDescriptionDiv">
-				<div class="descriptionContainer">
+                <div class="descriptionContainer">
                                     <h4>Description:</h4>
                                     <pre class="description">
                                     </pre>
-				</div>
+                </div>
                             </div>
                         </div>
-			<br>
+            <br>
                         <button data-hook="doneSelectButton" class="btn btn-primary">Done</button>
                     </div>
                 </div>
@@ -311,5 +312,5 @@
     </div>
 </script>
 
-<script type="text/javascript" src = "/static/modelEditor/app.bundle.js"></script>
+<script type="text/javascript" src="/static/modelEditor/app.bundle.js"></script>
 {% endblock %}

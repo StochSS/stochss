@@ -9,14 +9,14 @@
 {% if error_alert is defined %}
 <p class="alert alert-danger">{{error_alert}}</p>
 {% endif %}
-<div class="span4">
-  <h2 id='form-heading'>Account Settings</h2>
+<div class="col-sm-4 col-md-4">
+  <h2 id="form-heading">Account Settings</h2>
   <form action="/account_settings" method="post" class="form-horizontal">
     <fieldset>
-      <div class="control-group">
+      <div class="form-group">
         <label class="control-label">Your Name</label>
         <div class="controls">
-          <input id="name" type="text" name="name" value="{{name}}">
+          <input id="name" type="text" name="name" value="{{name}}" class="form-control">
         </div>
       </div>
       <!-- <div class="control-group">
@@ -25,22 +25,22 @@
           <input id="email" type="email" name="email" value="{{email_address}}">
         </div>
       </div> -->
-      <div class="control-group">
+      <div class="form-group">
         <label class="control-label">New Password</label>
         <div class="controls">
-          <input id="password" type="password" name="password">
+          <input id="password" type="password" name="password" class="form-control">
         </div>
       </div>
-      <div class="control-group">
+      <div class="form-group">
         <label class="control-label">New Password Confirmation</label>
         <div class="controls">
-          <input id="password_conf" type="password" name="password_confirmation">
+          <input id="password_conf" type="password" name="password_confirmation" class="form-control">
         </div>
       </div>
-      <div class="control-group current-pass hidden">
+      <div class="current-pass hidden form-group">
         <label class="control-label">Current Password</label>
         <div class="controls">
-          <input type="password" name="current_password">
+          <input type="password" name="current_password" class="form-control">
         </div>
       </div>
       <div class="form-actions">
