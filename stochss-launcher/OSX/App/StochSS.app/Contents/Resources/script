@@ -21,7 +21,7 @@ then
 	(docker-machine env stochss1-7 >> $DIR/.dockerlog)
 	eval "$(docker-machine env stochss1-7)" || { echo "Could not connect to VM successfully. Exiting..."; exit 1; }
 	DOCKERPATH=$(dirname $(which docker-machine))
-	
+
 	(more $DIR/.admin_key >> $DIR/.dockerlog 2>&1) || (echo `uuidgen` > $DIR/.admin_key && echo "Generated key.")
 	echo "Docker daemon is now running. The IP address of stochss1-7 VM is $(docker-machine ip stochss1-7)"
 	token=`more $DIR/.admin_key`
@@ -36,7 +36,7 @@ then
 	done
 	echo "StochSS server is running at the following URL. The browser window should open automatically."
 	echo "http://$(docker-machine ip stochss1-7):8080/login?secret_key=`echo $token`"
-	
+
 	open "http://$(docker-machine ip stochss1-7):8080/login?secret_key=`echo $token`"
 
 else
@@ -45,6 +45,6 @@ else
 fi
 
 while :
-do 
+do
 	sleep 10000
 done
