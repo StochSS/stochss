@@ -3,13 +3,47 @@
 {% block content %}
 
 
+<<<<<<< HEAD
 <div class="col-sm-9 col-md-9">
+=======
+<script type="text/javascript">
+<!--
+    function show_reg_form() {
+        document.getElementById('registration_link').style.display = 'none';
+        var e = document.getElementById('registration_form');
+        e.innerHTML = '<iframe src="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true" width="700" height="800" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>';
+        e.style.display = 'block';
+    }
+//-->
+</script>
+
+<div class="span9">
+>>>>>>> develop
     
     <div class="page-header">
         <h1> Welcome to StochSS <small>Stochastic Simulation Service</small></h1>
     </div>
+<<<<<<< HEAD
     
     <div class="jumbotron">
+=======
+    <div class="hero-unit">
+    <div class="jumbotron">
+        <div id="registration_form" style="display: none">
+        </div>
+        <div id="registration_link" style="display: block">
+        <p><a href="#" onclick="show_reg_form();" style="font-size: 20px;"><B>Click here to Register StochSS</B></a> 
+        StochSS is open-source software.  To obtain continued funding for sustained
+        development, we must show that StochSS is making an impact in the scientific
+        community.  For this, we need to know who is using the software, and a bit
+        about what they are using it for.  Please consider registering StochSS to show your
+        support.
+        </p>
+        </div>
+
+    </div>
+    <hr>
+>>>>>>> develop
    
     {{ stochss_news|safe }}
     

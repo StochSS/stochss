@@ -164,7 +164,7 @@ Spatial.Controller = Backbone.View.extend( {
     playLoop : function(dt) {
         if(this.playFlag) {
             // stopping animation when time limit is reached
-            if(this.timeIdx > this.maxLimit)
+            if(this.timeIdx >= this.maxLimit)
             {
                 this.timeIdx = this.maxLimit;
                 this.stop();
