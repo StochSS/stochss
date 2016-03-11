@@ -1,7 +1,16 @@
-<h1>Using StochSS on Linux</h1>
+# Using StochSS on Linux
 
-<h2>Step 1:</h2>
-<h3>Download the installation script</h3> TODO
+StochSS requires [Docker](https://www.docker.com/) to run. The script in this folder (launchContainerLinux1.7.sh) uses Docker to download and run StochSS inside a Docker container (this is basically a lightweight virtual machine). Docker + this script is all you need to run Stochss on your Linux computer.
 
-<h2>Step 2:</h2> 
-<h3>Run the installation script for Linux</h3> <ol><li>Open up a terminal window.</li><li>Run this command: `sudo ./launchContainerLinux1.7`.</li></ol>
+**Note**: The Ubuntu 12.04 default kernel is too old to support Docker. 12.04 users can instead just run StochSS [without the container]{linktoolddownloads}
+
+## Running StochSS
+
+1. Install Docker using directions here: https://docs.docker.com/engine/installation/linux/
+2. Open up a terminal window
+3. Download the Ubuntu run script script : `curl -o launchContainerLinux1.7sh urltoscript`
+4. Run : `sudo ./launchContainerLinux1.7.sh`
+
+## Note on security
+
+When you run StochSS, it is encapsulated inside a Docker container. Even though you use sudo the launch the container, StochSS does not have root permissions on your computer. The security of this container is similar to a VM. If something goes wrong with the StochSS container, it is (hopefully) isolated from everything else.
