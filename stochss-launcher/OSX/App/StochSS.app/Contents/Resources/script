@@ -4,7 +4,7 @@ trap clean_up INT SIGHUP SIGINT SIGTERM
 function clean_up(){
 	echo
 	echo "Please wait while the StochSS 1.7 VM is stopped correctly..."
-	IR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	IR="$( cd ~/.stochss; pwd )"
 	docker stop stochsscontainer1_7 >> $IR/.dockerlog 2>&1
 	docker-machine stop stochss1-7 || exit 1
 	echo "Done"
@@ -13,8 +13,9 @@ function clean_up(){
 
 if [[ $(uname -s) == 'Darwin' ]]
 then
+	if [ ! -d ~/.stochss ]; then mkdir ~/.stochss; fi
 	docker-machine version || { echo "Docker-machine not detected. Please read the installation instructions at xyz"; exit 1; }
-	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	DIR="$( cd ~/.stochss; pwd )"
 	# Start up the VM if it's not already running and set environment variables to use docker
 	(docker-machine ls stochss1-7 | grep "stochss1-7" | grep -oh "Running") || (docker-machine start stochss1-7 >> $DIR/.dockerlog 2>&1 || docker-machine create --driver virtualbox stochss1-7 || { echo "Could not create VM. Exiting..."; exit 1; })
 	(docker-machine regenerate-certs --force stochss1-7)

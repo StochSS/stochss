@@ -4,7 +4,7 @@ trap clean_up INT SIGHUP SIGINT SIGTERM
 function clean_up(){
 	echo
 	echo "Please wait while the StochSS 1.7 VM is stopped correctly..."
-	IR="$( cd "$( cd ~/.stochss; pwd )" )" && pwd )"
+	IR="$( cd ~/.stochss; pwd )"
 	docker stop stochsscontainer1_7 >> $IR/.dockerlog 2>&1
 	docker-machine stop stochss1-7 || exit 1
 	echo "Done"
