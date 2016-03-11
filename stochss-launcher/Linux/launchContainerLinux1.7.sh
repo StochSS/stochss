@@ -4,7 +4,7 @@ trap clean_up INT SIGHUP SIGINT SIGTERM
 function clean_up(){
 	echo
 	echo "Please wait while StochSS 1.7 is stopped correctly..."
-	IR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	IR="$( cd ~/.stochss; pwd )"
 	docker stop stochsscontainer1_7 >> $IR/.dockerlog 2>&1
 	echo "Done"
 	exit 0
@@ -12,10 +12,11 @@ function clean_up(){
 
 if [[ $(uname -s) == 'Linux' ]]
 then
-	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	(cat .admin_key >> .dockerlog 2>&1) || (touch .admin_key && echo `uuidgen` > .admin_key && echo "Generated key.")
-	token=`cat .admin_key`
-	docker start stochsscontainer1_7 >> $DIR/.dockerlog 2>&1 || { docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" >> $DIR.dockerlog && echo "Starting StochSS 1.7 for the first time takes a while." && echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"; } ||	{ echo "Failed to start server."; clean_up; exit; }
+	if [ ! -d ~/.stochss ]; then mkdir ~/.stochss; fi
+	DIR="$( cd ~/.stochss; pwd )"
+	(cat $DIR/.admin_key >> $DIR/.dockerlog 2>&1) || (touch $DIR/.admin_key && echo `uuidgen` > $DIR/.admin_key && echo "Generated key.")
+	token=`cat $DIR/.admin_key`
+	docker start stochsscontainer1_7 >> $DIR/.dockerlog 2>&1 || { docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" >> $DIR/.dockerlog && echo "Starting StochSS 1.7 for the first time." && echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"; } ||	{ echo "Failed to start server."; clean_up; exit; }
 
 
 	echo "Starting server. This process may take up to 5 minutes..."
