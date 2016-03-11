@@ -12,7 +12,7 @@ function clean_up(){
 
 if [[ $(uname -s) == 'Linux' ]]
 then
-	#DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	(cat .admin_key >> .dockerlog 2>&1) || (touch .admin_key && echo `uuidgen` > .admin_key && echo "Generated key.")
 	token=`cat .admin_key`
 	docker start stochsscontainer1_7 >> $DIR/.dockerlog 2>&1 || { docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" >> $DIR.dockerlog && echo "Starting StochSS 1.7 for the first time takes a while." && echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"; } ||	{ echo "Failed to start server."; clean_up; exit; }
