@@ -1,13 +1,10 @@
-<h1>Using StochSS on Mac OSX</h1>
+###Using StochSS on Mac OSX
+StochSS requires Docker Machine to run. Once Docker Machine is installed on your machine, simply double click the app icon to run StochSS.
 
+###Running StochSS
+Install Docker Toolbox using directions here: https://docs.docker.com/engine/installation/mac/#installation
+Download the Mac OSX app : urltoapp
+Double click the icon to laucnh server
 
-<h2>Step 1:</h2>
-<h3>Install Docker Toolbox</h3> Follow the installation instructions on <a href="https://docs.docker.com/engine/installation/mac/#installation">this</a> page to install Docker Toolbox.
-
-
-<h2>Step 1:</h2>
-<h3>Download the StochSS app for Mac OSX</h3>
-TODO
-
-<h2>Step 3:</h2>
-<h3>Run the StochSS App for Mac OSX</h3> Double click the StochSS app icon to launch StochSS.
+###Note on security
+When you run StochSS, it is encapsulated inside a virtual machine. If something goes wrong with the StochSS virtual machine, it is isolated from everything else on your system.
