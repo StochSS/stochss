@@ -1176,19 +1176,24 @@ Spatial.Controller = Backbone.View.extend( {
                     return;
             }
             
-            if(data['jobStatus'] == 'Finished' && data['complete'] == 'yes' )
+            if(data['jobStatus'] == 'Finished' && data['complete'] == 'yes')
             {
-                $.ajax( {
-                    type : "GET",
-                    url : "/spatial",
-                    data : { reqType : "getMeshData", 
-                             id : this.attributes.id, 
-                             data : JSON.stringify( {
-                                 trajectory : this.trajectory,
-                                 timeIdx : this.timeIdx })
-                           },
-                    success : _.bind(this.handleGetMesh, this)
-                } );
+                if(data['outData'])
+                {
+                    $( '#plotRegion' ).show();
+
+                    $.ajax( {
+                        type : "GET",
+                        url : "/spatial",
+                        data : { reqType : "getMeshData", 
+                                 id : this.attributes.id, 
+                                 data : JSON.stringify( {
+                                     trajectory : this.trajectory,
+                                     timeIdx : this.timeIdx })
+                               },
+                        success : _.bind(this.handleGetMesh, this)
+                    } );
+                }
             }
             else
             {
