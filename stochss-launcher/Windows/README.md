@@ -22,7 +22,7 @@ StochSS requires Docker Toolbox for Windows to run.
    Run `docker run -i -t -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 "/bin/bash"`.
    This will download the StochSS docker image, create the StochSS docker container and give terminal access to it.</li>
 
-   <li>Otherwise, if you already have a StochSS docker container (i.e. when you use StochSS subsequently), run `docker start             stochsscontainer1_7` to start the existing container.</li>
+   <li>Otherwise, if you already have a StochSS docker container (i.e. when you use StochSS subsequently), run `docker start             stochsscontainer1_7` to start the existing container. Next, run `docker exec -t stochsscontainer1_7 /bin/bash`</li>
    </ol>
 
 4. Run the following commands to start the server: `cd stochss-master; ./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_     -t _the_token_you_created_above_`.
