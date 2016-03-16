@@ -23,7 +23,7 @@ StochSS requires Docker Toolbox for Windows to run.
 4. Run the following commands to start the server: `cd stochss-master; ./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_     -t _the_token_you_created_above_`.
    Navigate to the URL displayed to access StochSS.
 
-5. Follow the instructions on the terminal to kill the server process. After that, run the following commands to stop the container:     `docker stop stochsscontainer1_7`. Next, run `docker-machine stop stochss1-7` to stop the StochSS VM. The terminal window can now     be safely closed.
+5. Follow the instructions on the terminal to kill the server process. After that, run the following commands to stop the container:     Type `exit` to exit the VM. `docker stop stochsscontainer1_7`. Next, run `docker-machine stop stochss1-7` to stop the StochSS VM.     The terminal window can now be safely closed.
 
 ###Note on security
 When you run StochSS, it is encapsulated inside a virtual machine. If something goes wrong with the StochSS virtual machine, it is isolated from everything else on your system.
