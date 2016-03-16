@@ -1,5 +1,10 @@
 ###Using StochSS on Windows
-<i>Please note: StochSS does not run Microsoft Edge browser. The recommended browser is <a href="https://www.google.com/chrome/browser/desktop/">Google Chrome</a>.</i>
+<i>Please note: 
+<ol>
+<li> StochSS does not run Microsoft Edge browser. The recommended browser is <a href="https://www.google.com/chrome/browser/desktop/">Google Chrome</a>.</li>
+<li> You may have to enable virtualization in the BIOS (Use this Microsoft Virtualization detector to check if virtualization is enabled in your system: https://www.microsoft.com/en-us/download/details.aspx?id=592. If it's not, please enable it from the BIOS first).</li>
+<li> You need Win7 64 bit at least.</li>
+</i>
 
 StochSS requires Docker Toolbox for Windows to run. 
 
