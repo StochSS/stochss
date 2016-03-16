@@ -8,7 +8,7 @@ StochSS requires Docker Toolbox for Windows to run.
 2. Open the Docker QuickStart Terminal. Run the following commands:
    <ul><li>`docker-machine start stochss1-7 || docker-machine create --driver virtualbox stochss1-7`</li><li>`eval                       "$(docker-machine env stochss1-7)"`</li></ul>
    This will start/create a Virtual Machine called `stochss1-7`, and give you terminal access to it. StochSS will run in this machine.
-   <b>Please note the IP address of the of the machine `stochss1-7`. Also, please create an access key for yourself. This could be any    random string of alphabetical letters only, such as <i>yabadabadoo</i>.</b>
+   <b>Please note the IP address of the of the machine `stochss1-7`. Run command `docker-machine ip stochss1-7` to determine this IP     address.  Also, please create an access key for yourself. This could be any    random string of alphabetical letters only, such as    <i>yabadabadoo</i>.</b>
 3. Run the following commands to start StochSS:
    <ol>
    <li>If this is the first time you're starting StochSS,
