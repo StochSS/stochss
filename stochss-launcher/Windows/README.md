@@ -1,38 +1,60 @@
 ###Using StochSS on Windows
-<i>Please note</i>: 
-<ol>
-<li> StochSS does not run Microsoft Edge browser. The recommended browser is <a href="https://www.google.com/chrome/browser/desktop/">Google Chrome</a>.</li>
-<li> You may have to enable virtualization in the BIOS (Use this Microsoft Virtualization detector to check if virtualization is enabled in your system: https://www.microsoft.com/en-us/download/details.aspx?id=592. If it's not, please enable it from the BIOS first).</li>
-<li> You need Win7 64 bit at least.</li>
-</ol>
+_Please note_: 
++ StochSS does not run Microsoft Edge browser. The recommended browser is <a href="https://www.google.com/chrome/browser/desktop/">Google Chrome</a>.
++ You may have to enable virtualization in the BIOS (Use this Microsoft Virtualization detector to check if virtualization is enabled in your system: https://www.microsoft.com/en-us/download/details.aspx?id=592. If it's not, please enable it from the BIOS first).
++ You need Win7 64 bit at least.
 
 StochSS requires Docker Toolbox for Windows to run. 
+
+ProTip! 
++ To paste text from your clipboard to Docker Quickstart terminal, _right click_ onto the terminal screen. 
++ To copy text from the Docker Quickstart terminal onto your clipboard, highlight the desired text and press _enter/return_.
++ Launching and using StochSS on Windows is error-prone. Some useful commands that may help you in figuring out what's going   on when things don't work as expected are: 
+     - `docker-machine ls`  will list the virtual machines running and their status.
+     - `docker ps`  will list the containers that are _running_.
+     - `docker ps -aq` will list _all_ containers in the virtual machine, running or stopped.
 
 ###Running StochSS
 1. Install Docker Toolbox using directions here: https://docs.docker.com/engine/installation/windows/
 
 2. Open the Docker QuickStart Terminal. Run the following commands:
-    `docker-machine start stochss1-7 || docker-machine create --driver virtualbox stochss1-7`</li><li>`eval                       "$(docker-machine env stochss1-7)"`
-    This will start/create a Virtual Machine called `stochss1-7`, and give you terminal access to it. StochSS will run in this machine.
-    __Please note the IP address of the of the machine `stochss1-7`. Run command `docker-machine ip stochss1-7` to determine this IP     address.  Also, please create an access key for yourself. This could be any random string of alphabetical letters only, such as       _yabadabadoo_.__
+    + `docker-machine start stochss1-7 || docker-machine create --driver virtualbox stochss1-7`
+    + `eval "$(docker-machine env stochss1-7)"`
+    
+    This will start/create a Virtual Machine called `stochss1-7`, and give you terminal access to it. StochSS will run in        this machine. To verify that the machine is running, run the following command:
+    + `docker-machine ls`
+    
+    You should see that the status of machine `stochss1-7` is _running_.
+
+    Please note the IP address of the of the machine `stochss1-7`. Run the following command to determine the IP address:
+    + `docker-machine ip stochss1-7`   
+    
+    __Also, please create an access key for yourself. This could be any random string of alphabetical letters only, such as        _yabadabadoo_.__
 
 3. Run the following commands to start StochSS container:
-    1. If this is the first time you're starting StochSS,
+    + If this is the first time you're starting StochSS,
 
-        Run `docker run -i -t -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 "/bin/bash"`.
+         + `docker run -i -t -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 "/bin/bash"`
+        
         This will download the StochSS docker image, create the StochSS docker container and give terminal access to it.
 
-    2. Otherwise, if you already have a StochSS docker container (i.e. when you use StochSS subsequently), 
-       run `docker start stochsscontainer1_7` to start the existing container. Next, 
-       run `docker exec -t stochsscontainer1_7 /bin/bash`
+    + Otherwise, if you already have a StochSS docker container (i.e. when you use StochSS subsequently), run 
+    
+         + `docker start stochsscontainer1_7` 
+         + `docker exec -t stochsscontainer1_7 /bin/bash`
 
 4. Run the following commands to start the server: 
-    `cd stochss-master; ./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_  -t _the_token_you_created_above_`.
-   Navigate to the URL displayed to access StochSS.
+    + `cd stochss-master`
+    + `./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_  -t _the_token_you_created_above_`.
+   
+    Navigate to the URL displayed to access StochSS.
 
-5. Follow the instructions on the terminal to kill the server process. After that, run the following commands to stop the container:       Type `exit` to exit the VM. Next, 
-    `docker stop stochsscontainer1_7`. Next, 
-     run `docker-machine stop stochss1-7` to stop the StochSS VM. The terminal window can now be safely closed.
+5. Follow the instructions on the terminal to kill the server process. After that, run the following commands to stop the container:
+     + `exit` 
+     + `docker stop stochsscontainer1_7`
+     + `docker-machine stop stochss1-7` 
+     
+    These commands will stop the container and virtual machine. The terminal window can now be safely closed.
 
 ###Note on security
 When you run StochSS, it is encapsulated inside a virtual machine. If something goes wrong with the StochSS virtual machine, it is isolated from everything else on your system.
