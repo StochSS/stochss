@@ -56,5 +56,11 @@ ProTip!
      
     These commands will stop the container and virtual machine. The terminal window can now be safely closed.
 
+###Uninstalling StochSS
+
+1. Open the Docker Quickstart terminal.
+2. Run the following command:
+      - `docker-machine rm stochss1-7`
+
 ###Note on security
 When you run StochSS, it is encapsulated inside a virtual machine. If something goes wrong with the StochSS virtual machine, it is isolated from everything else on your system.
