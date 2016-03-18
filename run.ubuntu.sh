@@ -140,6 +140,8 @@ function check_lib {
     echo "$1 not found"
     return 1 #False
 }
+
+
 function check_pip {
     if which pip > /dev/null;then
         echo "pip is installed on your system, using it<br />"
@@ -267,8 +269,8 @@ function check_and_install_deps {
     if ! check_lib "libsbml";then
        install_lib_pip "python-libsbml"
     fi
-    if ! check_lib "mysql";then
-        install_lib_pip "mysql-connector-python" "--allow-external mysql-connector-python"
+    if ! check_lib "mysql.connector";then
+        install_lib "python-mysql.connector"
     fi
 }
 
