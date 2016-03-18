@@ -13,34 +13,25 @@
         <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.css">
         <style type="text/css">
             body {
-                padding-top: 60px;
+                padding-top: 70px; 
                 padding-bottom: 40px;
                 padding-left: 0px;
                 background-repeat: no-repeat;
                 background-attachment: fixed;
             }
+            .sidebar-nav {
+                padding: 9px 0;
+                font-size: 16px;
+            }
             
         }
-        </style>
-        <!--.sidebar-nav {
-                padding: 9px 0;
-                font-size: 14px;
-            }
-            .nav {
-                font-size: 16px;
-        }
-         -->
+        </style> 
+        
         <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
         </head>
 
         <body>
         {% block csscontent %}{% endblock %}
-        <!-- Le HTML5 shim, for IE6-8 support
-        of HTML5 elements -->
-        <!--[if lt IE 9]>
-            <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-        <![endif]-->
-        <!-- Le fav and touch icons -->
         <link rel="shortcut icon" href="/static/ico/favicon.ico">
         <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../static/ico/apple-touch-icon-144-precomposed.png">
         <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../static/ico/apple-touch-icon-114-precomposed.png">
@@ -87,11 +78,11 @@
 
         <!-- navbar fixed -->
         <div class="container">
-            <div class="row">
-                <div class="col-md-2">
-                    <div class="well sidebar-nav">
-                        <ul class="nav">
-                            <li class="nav-header"><i class="glyphicon glyphicon-beaker"></i> Modelling</li>
+                <div class="col-md-2 col-lg-2">
+                    <div class="sidebar-nav">
+
+                        <ul class="nav nav-pills">
+                            <li class="nav-header"><i class="glyphicon glyphicon-pencil"></i> Modelling</li>
                             <li><a href="/modeleditor" title="Create/Import models">Model Editor</a>
                             </li>
                             <li class="nav-header"><i class="glyphicon glyphicon-play"></i> Simulation</li>
@@ -112,22 +103,15 @@
                             {% endif %}
                         </ul>
                         </div>
-                    </div>
                     <!--/.well -->
-
-                     <!-- This is where the main content in the "middle" of the page gets inserted. -->
-                     {% block content %}
-                     {% endblock %}
                 </div>
                 <!--/col-md-2-->
+                <!-- This is where the main content in the "middle" of the page gets inserted. -->
+                {% block content %}
+                {% endblock %}
 
-                </div>
-                
-            <!--/row-->
-            <footer>
-                <p></p>
-            </footer>
         </div>
+     
           <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
