@@ -238,7 +238,7 @@ function install_lib_pip {
             exit -1
         fi
     fi
-    if [ "$install_mode" = "true" ] || [ "$answer" == 'y' || [ "$answer" == 'yes' ]; then
+    if [ "$install_mode" = "true" ] || [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         CMD="sudo pip install $2 $1"
         echo $CMD
         eval $CMD
