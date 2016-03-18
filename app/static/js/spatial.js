@@ -720,7 +720,8 @@ Spatial.Controller = Backbone.View.extend( {
             this.constructRenderer();
             this.constructControls();
 
-            this.updateCache(0, this.cacheRange);
+            //This triggers the initial download of the time series data
+            this.changeTime(this.timeIdx);
         }
         catch(err)
         {
@@ -1226,7 +1227,6 @@ Spatial.Controller = Backbone.View.extend( {
         //Add event handler to slider
         slider.off('change');
         slider.on('change', _.throttle(_.bind(this.handleTimeChange, this), 1000));
-        this.changeTime(this.timeIdx);
 
         // Set up species selector
         var speciesSelect = $("#speciesSelect");
@@ -1334,8 +1334,8 @@ Spatial.Controller = Backbone.View.extend( {
                 this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
             }
             
-            //this.cache = {}
-            //this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+            this.cache = {}
+            this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
         }, this));
 
         this.planes['x'].visibleCheckbox = $( '#planeXCheck' );
