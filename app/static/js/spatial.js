@@ -419,8 +419,8 @@ Spatial.Controller = Backbone.View.extend( {
 
         // PLANE - X
         var planeX = new THREE.Mesh(
-            new THREE.PlaneGeometry(this.boundingBox.y.max - this.boundingBox.y.min,
-                                    this.boundingBox.z.max - this.boundingBox.z.min),
+            new THREE.PlaneGeometry(this.boundingBox.z.max - this.boundingBox.z.min,
+                                    this.boundingBox.y.max - this.boundingBox.y.min),
             new THREE.MeshBasicMaterial({
                 color: 0xff0000,
                 side: THREE.DoubleSide
@@ -436,7 +436,7 @@ Spatial.Controller = Backbone.View.extend( {
         // PLANE - Y
         var planeY= new THREE.Mesh(
             new THREE.PlaneGeometry(this.boundingBox.x.max - this.boundingBox.x.min,
-                                    this.boundingBox.y.max - this.boundingBox.y.min),
+                                    this.boundingBox.z.max - this.boundingBox.z.min),
             new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 side: THREE.DoubleSide
@@ -452,7 +452,7 @@ Spatial.Controller = Backbone.View.extend( {
         // PLANE - Z
         planeZ = new THREE.Mesh(
             new THREE.PlaneGeometry(this.boundingBox.x.max - this.boundingBox.x.min,
-                                    this.boundingBox.z.max - this.boundingBox.z.min),
+                                    this.boundingBox.y.max - this.boundingBox.y.min),
             new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 side: THREE.DoubleSide
@@ -1028,7 +1028,6 @@ Spatial.Controller = Backbone.View.extend( {
         volcol = new THREE.Vector3(1.0, 1.0, 1.0);
         voltexDim = new THREE.Vector3(Nx, Ny, Nz);
 
-        this.luminosity = parseFloat($("#luminosityControls").val());
         this.opacity = parseFloat($("#opacityControls").val());
 
         var radius = this.geometry.boundingSphere.radius;
