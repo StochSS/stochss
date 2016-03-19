@@ -419,8 +419,8 @@ Spatial.Controller = Backbone.View.extend( {
 
         // PLANE - X
         var planeX = new THREE.Mesh(
-            new THREE.PlaneGeometry(this.boundingBox.y.max - this.boundingBox.y.min,
-                                    this.boundingBox.z.max - this.boundingBox.z.min),
+            new THREE.PlaneGeometry(this.boundingBox.z.max - this.boundingBox.z.min,
+                                    this.boundingBox.y.max - this.boundingBox.y.min),
             new THREE.MeshBasicMaterial({
                 color: 0xff0000,
                 side: THREE.DoubleSide
@@ -436,7 +436,7 @@ Spatial.Controller = Backbone.View.extend( {
         // PLANE - Y
         var planeY= new THREE.Mesh(
             new THREE.PlaneGeometry(this.boundingBox.x.max - this.boundingBox.x.min,
-                                    this.boundingBox.y.max - this.boundingBox.y.min),
+                                    this.boundingBox.z.max - this.boundingBox.z.min),
             new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 side: THREE.DoubleSide
@@ -452,7 +452,7 @@ Spatial.Controller = Backbone.View.extend( {
         // PLANE - Z
         planeZ = new THREE.Mesh(
             new THREE.PlaneGeometry(this.boundingBox.x.max - this.boundingBox.x.min,
-                                    this.boundingBox.z.max - this.boundingBox.z.min),
+                                    this.boundingBox.y.max - this.boundingBox.y.min),
             new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 side: THREE.DoubleSide
@@ -720,7 +720,8 @@ Spatial.Controller = Backbone.View.extend( {
             this.constructRenderer();
             this.constructControls();
 
-            this.updateCache(0, this.cacheRange);
+            //This triggers the initial download of the time series data
+            this.changeTime(this.timeIdx);
         }
         catch(err)
         {
@@ -1027,7 +1028,6 @@ Spatial.Controller = Backbone.View.extend( {
         volcol = new THREE.Vector3(1.0, 1.0, 1.0);
         voltexDim = new THREE.Vector3(Nx, Ny, Nz);
 
-        this.luminosity = parseFloat($("#luminosityControls").val());
         this.opacity = parseFloat($("#opacityControls").val());
 
         var radius = this.geometry.boundingSphere.radius;
@@ -1176,19 +1176,24 @@ Spatial.Controller = Backbone.View.extend( {
                     return;
             }
             
-            if(data['jobStatus'] == 'Finished' && data['complete'] == 'yes' )
+            if(data['jobStatus'] == 'Finished' && data['complete'] == 'yes')
             {
-                $.ajax( {
-                    type : "GET",
-                    url : "/spatial",
-                    data : { reqType : "getMeshData", 
-                             id : this.attributes.id, 
-                             data : JSON.stringify( {
-                                 trajectory : this.trajectory,
-                                 timeIdx : this.timeIdx })
-                           },
-                    success : _.bind(this.handleGetMesh, this)
-                } );
+                if(data['outData'])
+                {
+                    $( '#plotRegion' ).show();
+
+                    $.ajax( {
+                        type : "GET",
+                        url : "/spatial",
+                        data : { reqType : "getMeshData", 
+                                 id : this.attributes.id, 
+                                 data : JSON.stringify( {
+                                     trajectory : this.trajectory,
+                                     timeIdx : this.timeIdx })
+                               },
+                        success : _.bind(this.handleGetMesh, this)
+                    } );
+                }
             }
             else
             {
@@ -1221,7 +1226,6 @@ Spatial.Controller = Backbone.View.extend( {
         //Add event handler to slider
         slider.off('change');
         slider.on('change', _.throttle(_.bind(this.handleTimeChange, this), 1000));
-        this.changeTime(this.timeIdx);
 
         // Set up species selector
         var speciesSelect = $("#speciesSelect");
@@ -1329,8 +1333,8 @@ Spatial.Controller = Backbone.View.extend( {
                 this.updateMsg( { status : true, msg : "" }, 'meshMsg' );
             }
             
-            //this.cache = {}
-            //this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+            this.cache = {}
+            this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
         }, this));
 
         this.planes['x'].visibleCheckbox = $( '#planeXCheck' );
