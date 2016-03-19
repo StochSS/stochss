@@ -84,7 +84,7 @@ if [ $count != $number_of_pkgs ]; then
     echo "No $count of $number_of_pkgs packages installed"
     CMD="sudo apt-get -y install $PKGS"
     echo "Running '$CMD'"
-    if ["$install_mode" = 'true']; then
+    if [ "$install_mode" = 'true' ]; then
         eval $CMD
         if [ $? != 0 ]; then
             exit -1
@@ -140,6 +140,8 @@ function check_lib {
     echo "$1 not found"
     return 1 #False
 }
+
+
 function check_pip {
     if which pip > /dev/null;then
         echo "pip is installed on your system, using it<br />"
@@ -152,14 +154,14 @@ function check_pip {
 
 function install_pip {
     echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
-    if ["$install_mode" = 'false']; then
+    if [ "$install_mode" = 'false' ]; then
         read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
 
         if [ $? != 0 ]; then
             exit -1
         fi
     fi
-    if ["$install_mode" = 'true'] || ["$answer" == 'y'] || ["$answer" == 'yes']; then
+    if [ "$install_mode" = 'true' ] || [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
         echo $CMD
         eval $CMD
@@ -175,14 +177,14 @@ function install_lib_h5py {
         install_pip
     fi
     echo "We need install the following packages: h5py"
-    if ["$install_mode" = 'false']; then
+    if [ "$install_mode" = 'false' ]; then
         read -p "Do you want me to try to use sudo to install required packages (y/n): " answer
 
         if [ $? != 0 ]; then
             exit -1
         fi
     fi
-    if ["$install_mode" = 'true'] || ["$answer" == 'y'] || ["$answer" == 'yes']; then
+    if [ "$install_mode" = 'true' ] || [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         CMD='sudo CC="mpicc" pip install h5py'
         echo $CMD
         eval $CMD
@@ -199,14 +201,14 @@ function install_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
-    if ["$install_mode" = 'false']; then
+    if [ "$install_mode" = 'false' ]; then
         read -p "Do you want me to try to use sudo to install required packages (y/n): " answer
 
         if [ $? != 0 ]; then
             exit -1
         fi
     fi
-    if ["$install_mode" = "true"] || ["$answer" == 'y'] || ["$answer" == 'yes']; then
+    if [ "$install_mode" = "true" ] || [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         CMD="sudo apt-get -y install $1"
         echo $CMD
         eval $CMD
@@ -231,14 +233,14 @@ function install_lib_pip {
     else
         echo "We need to install package $1 with flags '$2'"
     fi
-    if ["$install_mode" = "false"]; then
+    if [ "$install_mode" = "false" ]; then
         read -p "Do you want me to try to use sudo to install required packages (y/n): " answer
 
         if [ $? != 0 ]; then
             exit -1
         fi
     fi
-    if ["$install_mode" = "true"] || ["$answer" == 'y' || ["$answer" == 'yes']; then
+    if [ "$install_mode" = "true" ] || [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         CMD="sudo pip install $2 $1"
         echo $CMD
         eval $CMD
@@ -267,8 +269,8 @@ function check_and_install_deps {
     if ! check_lib "libsbml";then
        install_lib_pip "python-libsbml"
     fi
-    if ! check_lib "mysql";then
-        install_lib_pip "mysql-connector-python" "--allow-external mysql-connector-python"
+    if ! check_lib "mysql.connector";then
+        install_lib "python-mysql.connector"
     fi
 }
 
@@ -283,14 +285,14 @@ function check_dolfin {
 function install_dolfin {
     echo "We need to add the the following ppa: 'ppa:fenics-packages/fenics"
     echo "And install the following packages: python-software-properties fenics "
-    if ["$install_mode" = "false"]; then
+    if [ "$install_mode" = "false" ]; then
         read -p "Do you want me to try to use sudo to install required packages (y/n): " answer
 
         if [ $? != 0 ]; then
             exit -1
         fi
     fi
-    if ["$install_mode" = "true"] || ["$answer" == 'y'] || ["$answer" == 'yes']; then
+    if [ "$install_mode" = "true" ] || [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         echo "Running 'sudo apt-get install ..."
         sudo apt-get -y install python-software-properties
         sudo add-apt-repository ppa:fenics-packages/fenics
