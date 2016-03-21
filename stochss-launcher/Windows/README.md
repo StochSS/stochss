@@ -29,7 +29,6 @@ ProTip!
     Please note the IP address of the of the machine `stochss1-7`. Run the following command to determine the IP address:
     + `docker-machine ip stochss1-7`   
     
-    __Also, please create an access key for yourself. This could be any random string of alphabetical letters only, such as        _yabadabadoo_.__
 
 3. Run the following commands to start StochSS container:
     + If this is the first time you're starting StochSS,
@@ -45,7 +44,7 @@ ProTip!
 
 4. Run the following commands to start the server: 
     + `cd stochss-master`
-    + `./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_  -t _the_token_you_created_above_`.
+    + `./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_  -t secretkey`.
    
     Navigate to the URL displayed to access StochSS.
 
