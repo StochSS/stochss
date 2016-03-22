@@ -8,10 +8,29 @@
 
 <div class="modelEditor">
 
-    <div class="col-sm-8 col-md-8">
+
+    <div class="col-sm-9 col-md-9">
         <div>
             <h1>Model Editor</h1>
             <br>
+
+            <ul class="nav nav-pills">
+                <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                Import/Export <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                <li><a href="/import?tab=1">Import from .zip</a></li>
+                <li><a href="/importFromXML">Import from .XML</a></li>
+                <li><a href="/importFromSBML">Import from .SBML</a></li>
+                <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
+                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li><a href="/publicLibrary">Import from Public Library</a></li>
+                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
+
+            </ul>
+                </li>
+                </ul>
             <div class="well">
                 <div data-hook="selector">
                     <div class="selectAccordion">
@@ -34,7 +53,9 @@
         </div>
     </div>
 
-    <div class="container">
+
+
+    <!--<div class="container">
     <div class="modelRightBar col-sm-2 col-md-2">
         <div class="well sidebar-nav">
             <ul class="nav nav-list">
@@ -42,7 +63,6 @@
                 <li><a href="/import?tab=1">Import from .zip</a></li>
                 <li><a href="/importFromXML">Import from .XML</a></li>
                 <li><a href="/importFromSBML">Import from .SBML</a></li>
-                <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
                 <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
                 <li class="nav-header">Public Library</li>
                 <li><a href="/publicLibrary">Import from Public Library</a></li>
@@ -50,7 +70,7 @@
             </ul>
         </div>
     </div>
-    </div>
+    </div>-->
 </div>
 
 {% endblock %}

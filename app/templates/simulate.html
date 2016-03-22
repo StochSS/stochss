@@ -3,6 +3,7 @@
 
 {% block content %}
 
+<div class="container">
 <div class="col-sm-9 col-md-9">
         <div style="display : none;" id="modelSelect">
             <h1>Simulation Manager</h1>
@@ -104,16 +105,19 @@
             {% set help_modal_message = "A PyURDME Ensemble is a collection of trajectories, or realizations, of a given spatial model. Since the model is stochastic, each trajectory represents an independent sample of the model for the given parameters." %}
             {% include "help_modal.html" %}
             {{help_modal|safe}}
+
         </h2>
         <% } %>
-
-        Model Name: <h2><%= name %></h2>
-        Units: <h3><%= units %></h3>
-        Type: <h3><% if(isSpatial) { %>Spatial<% } else { %>Well-mixed<% } %></h3>
+        
+            <strong>Model Name: </strong> <%= name %> <br />
+            <strong>Type: </strong> <% if(isSpatial) { %>Spatial<% } else { %>Well-mixed<% } %> <br />
+            <strong>Units: </strong> <%= units %>
+        
         <hr />
 
-        <label>Name:</label>
-        <input type="text" class="span3" id="jobName" value="<%= name %>_job_<%= datestr %>" />
+        <h4>Name:</h4>
+        <input type="text" size="50" id="jobName" value="<%= name %>_job_<%= datestr %>" />
+        <br />
         <span class="help-block">This name will be used to reference the ensemble.</span>
 
         <br />
@@ -149,7 +153,7 @@
 
         <br />
         
-        Simulation time
+        <h4>Simulation time</h4>
         <br />
         <input type="text" class="input-small" disabled="disabled" value="0">
         &nbsp; to &nbsp;
@@ -157,22 +161,19 @@
         &nbsp; store state every &nbsp;
         <input type="text" class="input-small" id="increment" value="1.0"> &nbsp; time units.
         
+        <h4>Number of realizations</h4>
         <span class="stochastic spatial">
-            <br />
-            <label>Realizations</label>
-            <input type="text" class="span3" id="realizations" value="1">
+            <input type="text" id="realizations" value="1">
             <span class="help-block">Number of realizations in this ensemble.</span>
         </span>
-        <br />
         
         <!-- Optional parameters to the SSA and Tau-leaping solvers. -->
         <h3 class="advanced-settings">
-            <a data-toggle="collapse" data-target="#advanced-settings">
+            <a data-toggle="collapse" data-target="#advanced-settings" href="#advances-settigns">
                 Advanced settings&raquo;
             </a>
         </h3>
-        
-        <div id="advanced-settings" class="collapse advanced-settings">
+        <div id="advanced-settings" class="panel-collapse collapse in advanced-settings">
             <div class="stochastic spatial">
                 <B>Algorithm:</B><br />
                 <% if(!isSpatial) { %>
@@ -185,18 +186,19 @@
 
             <br>
 
-            <label class="tau-leaping ssa spatial">Seed
-                <input type="text" class="span3" id="seed" value="-1">
+            <label class="tau-leaping ssa spatial">
+            Seed
+                <input type="text" id="seed" value="-1">
                 <span class="help-block">Seed the random number generator (set to -1 for a random seed).</span>
             </label>
             
             <label class="tau-leaping">Threshold
-                <input type="text" class="span3" id="threshold" value="10">
+                <input type="text" id="threshold" value="10">
                 <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
             </label>
             
             <label class="tau-leaping">Epsilon
-                <input type="text" class="span3" id="epsilon" value="0.01">
+                <input type="text" id="epsilon" value="0.01">
                 <span class="help-block tau-leaping">Set the tolerance. Valid values: must be greater than 0.0 and less than 1.0.</span>
             </label>
         </div> <!-- Advanced settings -->
@@ -219,7 +221,6 @@
             </button>
             <div class="dropdown-menu"> <!-- class dropdown-menu -->
               <a class="dropdown-item" id="runLocal" role="button">Run on server</a>
-
               {% if (ENABLE_CLOUD or user.is_admin_user()) %}
               <a class="dropdown-item" id="runCloud" role="button">Run on Cloud</a>
               {% endif %}
@@ -239,6 +240,8 @@
             });
             </script>-->
     </div>
+</div>
+
 </script>
 
 <script type="text/template" id="jobInfoTemplate">
