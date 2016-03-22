@@ -116,9 +116,10 @@
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <canvas style="display : none;" id="myCanvas"></canvas>
     <br />
+    <div class="container">
     <div class="well">
         <div class="row">
-            <div class="span8">
+            <div class="col-sm-8 col-md-8 col-lg-8">
                 <h3>Metadata</h3>
                 <p class="thispage">
                     Resource: <%= resource %>
@@ -128,7 +129,7 @@
                     Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
                 </p>
             </div>
-            <div class="span3">
+            <div class="col-sm-3 col-md-3 col-lg-3">
                 <h5>Mouse Controls:</h5><br />
                 <ol>
                     <li>Rotation -- Left button</li>
@@ -143,7 +144,7 @@
     <div id="meshMsg" style="clear:both; display: none;"></div>
 
     <div id="plotRegion" style="display: none;">
-        <table class="controls">
+        <table class="table controls">
             <tr>
                 <td valign=top>
                     Select <span id="timeSelectDisplay"></span><br />
@@ -178,7 +179,7 @@
             </tr>
         </table>
         <div class="row">
-            <div class="span10">
+            <div class="col-sm-10 col-md-10 col-lg-10">
                 <div id="meshPreviewMsg">
                     <center><h1>Loading...</h1></center>
                 </div>
@@ -338,6 +339,6 @@
     </div>
     <% } %>
     
-    
+<div>    
 </script>
 {% endblock %}
