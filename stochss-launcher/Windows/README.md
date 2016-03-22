@@ -2,7 +2,7 @@
 _Please note_: 
 + StochSS does not run Microsoft Edge browser. The recommended browser is <a href="https://www.google.com/chrome/browser/desktop/">Google Chrome</a>.
 + You may have to enable virtualization in the BIOS (Use this Microsoft Virtualization detector to check if virtualization is enabled in your system: https://www.microsoft.com/en-us/download/details.aspx?id=592. If it's not, please enable it from the BIOS first).
-+ You need Win7 64 bit at least.
++ You need Windows 7 64 bit at least.
 
 StochSS requires Docker Toolbox for Windows to run. 
 
@@ -29,7 +29,6 @@ ProTip!
     Please note the IP address of the of the machine `stochss1-7`. Run the following command to determine the IP address:
     + `docker-machine ip stochss1-7`   
     
-    __Also, please create an access key for yourself. This could be any random string of alphabetical letters only, such as        _yabadabadoo_.__
 
 3. Run the following commands to start StochSS container:
     + If this is the first time you're starting StochSS,
@@ -45,7 +44,7 @@ ProTip!
 
 4. Run the following commands to start the server: 
     + `cd stochss-master`
-    + `./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_  -t _the_token_you_created_above_`.
+    + `./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_  -t secretkey`
    
     Navigate to the URL displayed to access StochSS.
 
@@ -64,3 +63,18 @@ ProTip!
 
 ###Note on security
 When you run StochSS, it is encapsulated inside a virtual machine. If something goes wrong with the StochSS virtual machine, it is isolated from everything else on your system.
+
+###When things go wrong
+   + Leaving StochSS is running while the computer goes to sleep can cause the network configuration of the virtual machine       to change unexpectedly when the computer is woken up again. This means that StochSS could become temporarily                 inaccessible. Performing the following steps may solve this:
+     - Open a Docker Quickstart terminal window
+     - Run the following commands:
+       * `docker-machine start stochss1-7`
+       * `docker-machine ssh stochss1-7`
+       * `docker stop stochsscontainer1_7`
+       * `docker start stochsscontainer1_7`
+       * `exit`
+      
+    - Follow the instructions in this guide to start StochSS.
+   
+     Our suspicion is that when we ssh into the virtual machine, it's network configuration is reset/corrected.
+

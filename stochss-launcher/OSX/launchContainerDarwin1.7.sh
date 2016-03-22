@@ -34,7 +34,7 @@ then
 	(docker-machine ls stochss1-7 | grep "stochss1-7" | grep -oh "Running") || (docker-machine start stochss1-7 >> $DIR/.dockerlog 2>&1 || docker-machine create --driver virtualbox stochss1-7 || { echo "Could not create VM. Exiting..."; exit 1; })
 	(docker-machine regenerate-certs --force stochss1-7)
 	(docker-machine env stochss1-7 >> $DIR/.dockerlog)
-	eval "$(docker-machine env stochss1-7)" || { echo "Could not connect to VM successfully. Exiting..."; exit 1; }
+  eval "$(docker-machine env stochss1-7 || { echo "Could not connect to VM successfully. Exiting..."; exit 1; })"
 	DOCKERPATH=$(dirname $(which docker-machine))
 
 	(more $DIR/.admin_key >> $DIR/.dockerlog 2>&1) || (echo `uuidgen` > $DIR/.admin_key && echo "Generated key.")
