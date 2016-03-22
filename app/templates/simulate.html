@@ -210,27 +210,24 @@
         <br>
 
         <!-- Button(s) to submit the job -->
-        <div class="btn-group dropdown dropdown-submit-input">
+        <div class="btn-group dropdown dropdown-submit-input"> 
             <!-- Default button, submit to local resource (client if on localhost, or the server where StochSS is deployed in cas of SaaS deployment) -->
-            <button type="submit" id="runLocal" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run</button>
+            <button type="submit" id="runLocal" class="btn btn-primary btn-lg"><i class="icon-cloud"></i> Run</button>
 
             <!-- Options to submit to other resources/queues if they are available -->
-            <button type="submit" class="btn btn-primary btn-large dropdown-toggle" data-toggle="dropdown">
+            <button type="submit" class="btn btn-primary btn-lg dropdown-toggle" data-toggle="dropdown">
                 <span class="caret"></span>  <!-- caret -->
                 <span class="sr-only"><a style="opacity:0.0">d</a></span>
             </button>
-            <div class="dropdown-menu"> <!-- class dropdown-menu -->
-              <a class="dropdown-item" id="runLocal" role="button">Run on server</a>
+
+            <ul class="dropdown-menu dropdown-submit-input"> 
+              <!-- <li><a id="runLocal" role="button" type="submit" class="form-control">Run on server</a></li> -->
               {% if (ENABLE_CLOUD or user.is_admin_user()) %}
-              <a class="dropdown-item" id="runCloud" role="button">Run on Cloud</a>
+              <li><a id="runCloud" role="button" type="submit">Run on Cloud</a></li>
               {% endif %}
-            </div>
-        </div>
-    
-     
-        <!-- <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
-        <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button> -->
-        
+            </ul>
+        </div> 
+            
         <!-- Prevent Submission on pressing enter -->
         <!--<script>
             document.getElementById('submit_stochkit_ensemble').addEventListener('keypress', function(event) {
