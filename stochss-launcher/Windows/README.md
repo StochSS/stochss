@@ -44,7 +44,7 @@ ProTip!
 
 4. Run the following commands to start the server: 
     + `cd stochss-master`
-    + `./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_  -t secretkey`.
+    + `./run.ubuntu.sh -a _the_ip_address_you_noted_in_Step_2_above_  -t secretkey`
    
     Navigate to the URL displayed to access StochSS.
 
