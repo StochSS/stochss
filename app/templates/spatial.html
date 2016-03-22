@@ -109,41 +109,45 @@
     </script>
 
 <script type="text/template" id="jobInfoTemplate">
-    <ol class="breadcrumb">
-    <li><a href="/status">Job Status</a></li>
-    <li class="active"><%= name %></li>
-    </ol>
-    <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
-    <canvas style="display : none;" id="myCanvas"></canvas>
-    <br />
-    <div class="container">
-    <div class="well">
-        <div class="row">
-            <div class="col-sm-8 col-md-8 col-lg-8">
-                <h3>Metadata</h3>
-                <p class="thispage">
-                    Resource: <%= resource %>
-                    <br />
-                    Simulation status: <%= jobStatus %>
-                    <br />
-                    Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
-                </p>
-            </div>
-            <div class="col-sm-3 col-md-3 col-lg-3">
-                <h5>Mouse Controls:</h5><br />
-                <ol>
-                    <li>Rotation -- Left button</li>
-                    <li>Translation -- Right button</li>
-                    <li>Zoom -- Mouse wheel, or left + right button</li>
-                </ol>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-10 col-md-10">
+            <!--<ol class="breadcrumb">
+                <li><a href="/status">Job Status</a></li>
+                <li class="active"><%= name %></li>
+            </ol>-->
+            <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
+            <canvas style="display : none;" id="myCanvas"></canvas>
+        </div>
+    </div> 
+
+    <div class="row">
+        <div class="col-sm-10 col-md-10 col-lg-10">
+            <!--<h3>Metadata</h3> -->
+            <p class="thispage">
+                <!-- Resource: <%= resource %> 
+                <br />
+                Simulation status: <%= jobStatus %>
+                <br />-->
+                <h4>Model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a> </h4>
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-10 col-md-10 col-lg-10">
+            <div class="text-center">
+            <h5>Mouse controls:</h5>
+            <i>Rotate:</i> Left button &nbsp <i>Translate:</i> Right button &nbsp <i>Zoom:</i> Mouse wheel, or left + right button
             </div>
         </div>
-
     </div>
-
-    <div id="meshMsg" style="clear:both; display: none;"></div>
-
-    <div id="plotRegion" style="display: none;">
+ 
+     <div class="row">  
+        <div class="col-sm-10 col-md-10 col-lg-10">  
+            <div id="meshMsg" style="clear:both; display: none;"></div>
+            <div id="plotRegion" style="display: none;">
+        
         <table class="table controls">
             <tr>
                 <td valign=top>
@@ -178,8 +182,12 @@
                 </td>
             </tr>
         </table>
-        <div class="row">
-            <div class="col-sm-10 col-md-10 col-lg-10">
+        </div>
+        </div>
+    </div>
+    
+     <div class="row">
+            <div class="col-sm-9 col-md-9 col-lg-9">
                 <div id="meshPreviewMsg">
                     <center><h1>Loading...</h1></center>
                 </div>
@@ -189,37 +197,37 @@
                         <div class="button-container  button-container-left">
                             
                             Animation <span id="playStats">stopped</span>:
-                            <button class="button" id="play_btn"><i class="icon-play"></i></button> 
-                            <button class="button" id="stop_btn"><i class="icon-stop"></i></button>
+                            <button class="button" id="play_btn"><i class="glyphicon glyphicon-play"></i></button> 
+                            <button class="button" id="stop_btn"><i class="glyphicon glyphicon-stop"></i></button>
                         </div>
                         
                         <div class="button-container">
                             Animating <span id="playSpeed">1</span> fps:
-                            <button class="button" id="speedup_btn"><i class="icon-arrow-up"></i></button>
-                            <button class="button" id="slowdown_btn"><i class="icon-arrow-down"></i></button>
+                            <button class="button" id="speedup_btn"><i class="glyphicon glyphicon-arrow-up"></i></button>
+                            <button class="button" id="slowdown_btn"><i class="glyphicon glyphicon-arrow-down"></i></button>
                             
                         </div>
                         &nbsp;
                         <div class="button-container" >
-                            <button class="button" id="zoomPlus_btn"><i class="icon-plus"></i></button> 
+                            <button class="button" id="zoomPlus_btn"><i class="glyphicon glyphicon-plus"></i></button> 
                             Zoom
-                            <button class="button" id="zoomMinus_btn"><i class="icon-minus"></i></button> 
+                            <button class="button" id="zoomMinus_btn"><i class="iglyphicon glyphicon-minus"></i></button> 
                         </div>
                         &nbsp; 
                         <div class="button-container">
-                            <button class="button" id="panLeft_btn"><i class="icon-arrow-left"></i></button> 
-                            <button class="button" id="panUp_btn"><i class="icon-arrow-up"></i></button> 
+                            <button class="button" id="panLeft_btn"><i class="glyphicon glyphicon-arrow-left"></i></button> 
+                            <button class="button" id="panUp_btn"><i class="glyphicon glyphicon-arrow-up"></i></button> 
                             Pan
-                            <button class="button" id="panDown_btn"><i class="icon-arrow-down"></i></button>
-                            <button class="button" id="panRight_btn"><i class="icon-arrow-right"></i></button>
+                            <button class="button" id="panDown_btn"><i class="glyphicon glyphicon-arrow-down"></i></button>
+                            <button class="button" id="panRight_btn"><i class="glyphicon glyphicon-arrow-right"></i></button>
                         </div>
                         &nbsp; 
                         <div class="button-container">
-                            <button class="button" id="rotateLeft_btn"><i class="icon-arrow-left"></i></button>
-                            <button class="button" id="rotateUp_btn"><i class=" icon-arrow-up"></i></button> 
+                            <button class="button" id="rotateLeft_btn"><i class="glyphicon glyphicon-arrow-left"></i></button>
+                            <button class="button" id="rotateUp_btn"><i class="glyphicon glyphicon-arrow-up"></i></button> 
                             Rotate
-                            <button class="button" id="rotateDown_btn"><i class="icon-arrow-down"></i></button> 
-                            <button class="button" id="rotateRight_btn"><i class="icon-arrow-right"></i></button> 
+                            <button class="button" id="rotateDown_btn"><i class="glyphicon glyphicon-arrow-down"></i></button> 
+                            <button class="button" id="rotateRight_btn"><i class="glyphicon glyphicon-arrow-right"></i></button> 
                         </div>
                         
                         &nbsp; 
@@ -237,7 +245,7 @@
 
                 <div id="domainControls" class="controls well" style="clear:both; display: none; margin-bottom: 0px;">
                     <span><b>Domain Clipping Controls</b> </span><br/>
-                    <table>
+                    <table class="table">
                         
                         <tr>
                             <td><span>Clip:</span></td>
@@ -266,7 +274,7 @@
             </div>
 
 
-            <div class="span1">
+            <div class="col-sm-1 col-md-1 col-lg-1">
               <div id="colormap">
                 <div id="maxVal">Maximum voxel population:</div>
                 <div><img src="/static/img/cmap.png"></div>
@@ -279,28 +287,27 @@
                 No legend available for volume rendering
               </div>
             </div>
-        </div>
+        
 
         <br>
     </div>
 
-    <div id="error" style="clear:both; display: none;">
-      Stdout:<br />
-      <pre><%= stdout %></pre>
-      
-      Stderr:<br />
-      <pre><%= stderr %></pre>
-      <br>
-    </div>
+    <div class="row">
+        <div class="col-sm-9 col-md-9 col-lg-9">
+            <div id="error" style="clear:both; display: none;">
+                Stdout:<br />
+                <pre><%= stdout %></pre>
+                Stderr:<br />
+                <pre><%= stderr %></pre>
+                <br>
+            </div>
     
-    <div id="msg" style="clear:both; display: none;"></div>
-
-    <div id="accessOutput" class="well" style="clear:both; display: none;">
-        
-        <h3>Output</h3>
+        <div id="msg" style="clear:both; display: none;"></div>
         <br />
-        
-        
+
+        <div id="accessOutput" class="well" style="clear:both; display: none;">
+        <br />
+        <h3>Output</h3>
 
         <% if (resource =="local" || output_stored == "True"){ %>
             <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
@@ -320,7 +327,7 @@
             <% } %>     
         <% } %>
 
-    </div>
+        </div>
 
     <% if (jobStatus != "Failed" && (resource == "ec2-cloud")){ %>
     <div class="well">
@@ -338,7 +345,9 @@
     <% } %>
     </div>
     <% } %>
+    </div>
+</div>
     
-<div>    
+</div>  <!-- Container -->  
 </script>
 {% endblock %}
