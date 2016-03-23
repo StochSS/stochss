@@ -1,15 +1,15 @@
-stochss
+StochSS
 =======
 
 StochSS - Stochastic Simulation Service.  
 
-StochSS is currently supported on Linux and Apple OSX platforms.
+StochSS is currently supported on Linux and Apple OSX platforms, we have added preliminary support for Windows.
 
-## Obtaining the code:
+## Obtaining StochSS:
 
-The easiest and recommended way to obtain StochSS is to download the latest package (Linux, OSX) from www.stochss.org.
+The easiest and recommended way to obtain StochSS is to download the latest package from www.stochss.org.
 
-### Installing from source
+### Installing from source (Advanced users only)
 
 The StochSS source is downloaded by cloning the GitHub repository. **Since the repository relies on several submodules, a recursive cloning has to be performed.** Open a terminal and from a directory to where you want to download the code,
 (your home folder is a good place) type the following command:
