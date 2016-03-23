@@ -42,9 +42,9 @@ then
 	token=`more $DIR/.admin_key`
 	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
 	if ! docker start stochsscontainer1_7 >> $DIR/.dockerlog 2>&1 ; then
-	 	if ! docker images | grep "aviralcse/stochss-initial" | grep -oh "1.7" ; then
+	 	if ! docker images | grep "stochss/stochss-launcher" | grep -oh "1.7" ; then
 			 echo "A terminal window should open up to download StochSS. Waiting for image..." && osascript $APPLE_SCRIPT_PATH/StochSS.scpt $DOCKERPATH
-			 if ! docker images | grep "aviralcse/stochss-initial" | grep -oh "1.7" ; then
+			 if ! docker images | grep "stochss/stochss-launcher" | grep -oh "1.7" ; then
 					if [ "$try_again" == 'true' ]; then
 		 				if ! create_container_and_try_again ; then
 								echo "Failed to get image."
@@ -58,12 +58,12 @@ then
 					fi;
 			 fi;
 			 first_time=true
-			 if ! docker images | grep "aviralcse/stochss-initial" | grep -oh "1.7" ; then
+			 if ! docker images | grep "stochss/stochss-launcher" | grep -oh "1.7" ; then
 				 echo "Failed to get image."
 				 clean_up
 				 exit 1
 			 fi;
-			 if docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochss1-7) -t $token --yy" >> $DIR/.dockerlog; then
+			 if docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 stochss/stochss-launcher:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochss1-7) -t $token --yy" >> $DIR/.dockerlog; then
 			    echo "Starting StochSS 1.7 for the first time."
 			 else
 				 echo "Failed to start server."; clean_up; exit 1;
