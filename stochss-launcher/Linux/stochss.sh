@@ -16,7 +16,7 @@ then
 	DIR="$( cd ~/.stochss; pwd )"
 	(cat $DIR/.admin_key >> $DIR/.dockerlog 2>&1) || (touch $DIR/.admin_key && echo `uuidgen` > $DIR/.admin_key && echo "Generated key.")
 	token=`cat $DIR/.admin_key`
-	sudo docker start stochsscontainer1_7 >> $DIR/.dockerlog 2>&1 || { sudo docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 stochss/stochss-launcher:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" >> $DIR/.sudo dockerlog && echo "Starting StochSS 1.7 for the first time." && echo "To view Logs, run \"sudo docker logs -f stochsscontainer\" from another terminal"; } ||	{ echo "Failed to start server."; clean_up; exit; }
+	sudo docker start stochsscontainer1_7 >> $DIR/.dockerlog 2>&1 || { sudo docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 stochss/stochss-launcher:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" >> $DIR/.dockerlog && echo "Starting StochSS 1.7 for the first time." && echo "To view Logs, run \"sudo docker logs -f stochsscontainer1_7\" from another terminal"; } ||	{ echo "Failed to start server."; clean_up; exit; }
 
 
 	echo "Starting server. This process may take up to 5 minutes..."
