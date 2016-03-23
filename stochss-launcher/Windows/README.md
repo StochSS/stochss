@@ -33,7 +33,7 @@ ProTip!
 3. Run the following commands to start StochSS container:
     + If this is the first time you're starting StochSS,
 
-         + `docker run -i -t -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 "/bin/bash"`
+         + `docker run -i -t -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 stochss/stochss-launcher:1.7 "/bin/bash"`
         
         This will download the StochSS docker image, create the StochSS docker container and give terminal access to it.
 
