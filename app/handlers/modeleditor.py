@@ -364,10 +364,6 @@ class PublicModelBackboneInterface(BaseHandler):
     
         self.response.content_type = 'application/json'
 
-        #modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochss.examplemodels.dimerdecay(), True)
-
-        #print modelDb.key().id(), modelDb.user_id, modelDb.is_public
-        
         if len(req) == 1 or req[-1] == 'list':
             models = ModelManager.getModels(self, public = True)
 

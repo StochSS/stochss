@@ -6,6 +6,30 @@ if [ "$osname" != 'Darwin' ]; then
     exit
 fi
 
+mode=""
+token="not_set"
+browser="true"
+ip=0
+while [[ $# > 0 ]]
+do
+key="$1"
+case $key in
+    --no_browser)
+    browser="false"
+    ;;
+    --debug)
+    mode="debug"
+    ;;
+    --run)
+    mode="run"
+    ;;
+    *)
+    echo "Unknown option."      # unknown option
+    exit 1
+    ;;
+esac
+shift # past argument or value
+done
 
 # Attempt to install StochKit 2.0.10, StochOptim, and PyURDME
 #
@@ -16,12 +40,12 @@ fi
 MY_PATH="`pwd`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH
-STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
+STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`"
 
 STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
-ODE_VERSION="ode-1.0.2"
+ODE_VERSION="ode-1.0.3"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
@@ -279,7 +303,7 @@ else
     echo " stderr in $STOCHSS_HOME/stderr.log <br />"
     echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete. Please be patient</h3></font>"
 
-    
+
     retry_command "tar -xzf \"$STOCHOPTIM.tgz\""
     mkdir "$STOCHOPTIM/library"
     RET=$?
@@ -400,4 +424,4 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec python "$STOCHSS_HOME/launchapp.py" mac $0 $1
+exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode mac
