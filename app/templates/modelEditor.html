@@ -6,9 +6,11 @@
 <link href="/static/css/controls.css" rel="stylesheet">
 {% endblock %}
 
+
+<div class="container">
 <div class="modelEditor">
 
-
+<div class="row">
     <div class="col-sm-9 col-md-9">
         <div>
             <h1>Model Editor</h1>
@@ -52,25 +54,9 @@
             </div>
         </div>
     </div>
+</div>
 
-
-
-    <!--<div class="container">
-    <div class="modelRightBar col-sm-2 col-md-2">
-        <div class="well sidebar-nav">
-            <ul class="nav nav-list">
-                <li class="nav-header">Import / Export</li>
-                <li><a href="/import?tab=1">Import from .zip</a></li>
-                <li><a href="/importFromXML">Import from .XML</a></li>
-                <li><a href="/importFromSBML">Import from .SBML</a></li>
-                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
-                <li class="nav-header">Public Library</li>
-                <li><a href="/publicLibrary">Import from Public Library</a></li>
-                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
-            </ul>
-        </div>
-    </div>
-    </div>-->
+</div>
 </div>
 
 {% endblock %}
