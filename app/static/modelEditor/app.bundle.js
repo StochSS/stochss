@@ -14,19 +14,43 @@ console.log("Requesting models " + performance.now())
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
     comparator: util.alphaNumByName,
-    model: Model
+    model: Model,
+
+    ajaxConfig: function () {
+        return {
+            xhrFields: {
+                timeout : 120000
+            }
+        };
+    }
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
     url: "/publicModels",
     comparator: util.alphaNumByName,
-    model: Model
+    model: Model,
+
+    ajaxConfig: function () {
+        return {
+            xhrFields: {
+                timeout : 120000
+            }
+        };
+    }
 });
 
 MeshCollection = AmpersandCollection.extend( {
     url: "/meshes",
     comparator: util.alphaNumByName,
-    model: Mesh
+    model: Mesh,
+
+    ajaxConfig: function () {
+        return {
+            xhrFields: {
+                timeout : 120000
+            }
+        };
+    }
 });
 
 var publicModelCollection = new PublicModelCollection();
@@ -10998,7 +11022,7 @@ function createXHR(options, callback) {
 
     // Cannot set timeout with sync request
     if (!sync) {
-        xhr.timeout = "timeout" in options ? options.timeout : 120000
+        xhr.timeout = "timeout" in options ? options.timeout : 5000
     }
 
     if (xhr.setRequestHeader) {
