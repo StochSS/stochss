@@ -2,24 +2,39 @@
 {% block title%}Manage Models{% endblock %}
 {% block content %}
 {% block csscontent %}
-<link href="/static/css/jquery-ui-1.9.1.custom.min.css" rel="stylesheet">
 <link href="/static/modelEditor/app.css" rel="stylesheet">
 <link href="/static/css/controls.css" rel="stylesheet">
 {% endblock %}
 
+
+<div class="container">
 <div class="modelEditor">
-    <div class="span8">
-        <div class="modelLoader">
-        </div>
-        <div class="publicModelLoader">
-        </div>
-        <div class="meshLoader">
-        </div>
+
+<div class="row">
+    <div class="col-sm-9 col-md-9">
         <div>
             <h1>Model Editor</h1>
             <br>
+
+            <ul class="nav nav-pills">
+                <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                Import/Export <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                <li><a href="/import?tab=1">Import from .zip</a></li>
+                <li><a href="/importFromXML">Import from .XML</a></li>
+                <li><a href="/importFromSBML">Import from .SBML</a></li>
+                <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
+                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li><a href="/publicLibrary">Import from Public Library</a></li>
+                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
+
+            </ul>
+                </li>
+                </ul>
             <div class="well">
-                <div data-hook='selector'>
+                <div data-hook="selector">
                     <div class="selectAccordion">
                         <div class="accordion-group">
                             <div class="accordion-heading">
@@ -35,26 +50,13 @@
                         </div>
                     </div>
                 </div>
-                <div data-hook='editor'></div>
+                <div data-hook="editor"></div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="span2 modelRightBar">
-        <div class="well sidebar-nav">
-            <ul class="nav nav-list">
-                <li class="nav-header">Import / Export</li>
-                <li><a href="/import?tab=1">Import from .zip</a></li>
-                <li><a href="/importFromXML">Import from .XML</a></li>
-                <li><a href="/importFromSBML">Import from .SBML</a></li>
-                <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
-                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
-                <li class="nav-header">Public Library</li>
-                <li><a href="/publicLibrary">Import from Public Library</a></li>
-                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
-            </ul>
-        </div>
-    </div>
+</div>
 </div>
 
 {% endblock %}
@@ -205,14 +207,14 @@
                                 </div>
                             </div>
                             <div class="span3 meshSelectDescriptionDiv">
-				<div class="descriptionContainer">
+                <div class="descriptionContainer">
                                     <h4>Description:</h4>
                                     <pre class="description">
                                     </pre>
-				</div>
+                </div>
                             </div>
                         </div>
-			<br>
+            <br>
                         <button data-hook="doneSelectButton" class="btn btn-primary">Done</button>
                     </div>
                 </div>
@@ -317,5 +319,5 @@
     </div>
 </script>
 
-<script type="text/javascript" src = "/static/modelEditor/app.bundle.js"></script>
+<script type="text/javascript" src="/static/modelEditor/app.bundle.js"></script>
 {% endblock %}
