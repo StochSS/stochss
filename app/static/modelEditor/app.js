@@ -34,14 +34,6 @@ ModelCollection = AmpersandCollection.extend( {
     ajaxConfig : ajaxConfig
 });
 
-PublicModelCollection = AmpersandCollection.extend( {
-    url: "/publicModels",
-    comparator: util.alphaNumByName,
-    model: Model,
-
-    ajaxConfig : ajaxConfig
-});
-
 MeshCollection = AmpersandCollection.extend( {
     url: "/meshes",
     comparator: util.alphaNumByName,
@@ -50,24 +42,16 @@ MeshCollection = AmpersandCollection.extend( {
     ajaxConfig : ajaxConfig
 });
 
-var publicModelCollection = new PublicModelCollection();
 var modelCollection = new ModelCollection();
 var meshCollection = new MeshCollection();
 
 var modelCollectionLoader = new CollectionLoader({}, { collection : modelCollection });
-var publicModelCollectionLoader = new CollectionLoader({}, { collection : publicModelCollection });
 var meshCollectionLoader = new CollectionLoader({}, { collection : meshCollection });
 
 var modelCollectionLoaderView = new CollectionLoaderView({
     name : 'Model Collection',
     model : modelCollectionLoader,
     el : $( '.modelLoader' )[0]
-});
-
-var publicModelCollectionLoaderView = new CollectionLoaderView({
-    name : 'Public Model Collection',
-    model : publicModelCollectionLoader,
-    el : $( '.publicModelLoader' )[0]
 });
 
 var meshCollectionLoaderView = new CollectionLoaderView({
@@ -123,7 +107,6 @@ var runOnLoad = function()
     }
 
     modelCollectionLoaderView.remove();
-    publicModelCollectionLoaderView.remove();
     meshCollectionLoaderView.remove();
     
     var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );
@@ -133,11 +116,10 @@ var runOnLoad = function()
 
 domReady(function () {
     modelCollectionLoaderView.render();
-    publicModelCollectionLoaderView.render();
     meshCollectionLoaderView.render();
 
     var waitToLaunch = new WaitToLaunch( {}, {
-        collections : [meshCollectionLoader, modelCollectionLoader, publicModelCollectionLoader],
+        collections : [meshCollectionLoader, modelCollectionLoader],
         callback : runOnLoad
     } );
 });
