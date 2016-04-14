@@ -16,18 +16,23 @@ var CollectionLoaderView = require('./forms/collection-loader');
 
 console.log("Requesting models " + performance.now())
 
+var ajaxConfig = function () {
+    return {
+        xhrFields: {
+            timeout : 10000,
+            onprogress : _.bind(function(e) {
+                this.trigger('progress', { totalDownloaded : e.total, totalSize : e.totalSize });
+            }, this)
+        }
+    };
+};
+
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
     comparator: util.alphaNumByName,
     model: Model,
 
-    ajaxConfig: function () {
-        return {
-            xhrFields: {
-                timeout : 10000
-            }
-        };
-    }
+    ajaxConfig : ajaxConfig
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
@@ -35,13 +40,7 @@ PublicModelCollection = AmpersandCollection.extend( {
     comparator: util.alphaNumByName,
     model: Model,
 
-    ajaxConfig: function () {
-        return {
-            xhrFields: {
-                timeout : 10000
-            }
-        };
-    }
+    ajaxConfig : ajaxConfig
 });
 
 MeshCollection = AmpersandCollection.extend( {
@@ -49,13 +48,7 @@ MeshCollection = AmpersandCollection.extend( {
     comparator: util.alphaNumByName,
     model: Mesh,
 
-    ajaxConfig: function () {
-        return {
-            xhrFields: {
-                timeout : 10000
-            }
-        };
-    }
+    ajaxConfig : ajaxConfig
 });
 
 var publicModelCollection = new PublicModelCollection();
@@ -129,6 +122,10 @@ var runOnLoad = function()
         modelCollection.models[i].setupMesh(meshCollection);
         modelCollection.models[i].saveState = 'saved';
     }
+
+    modelCollectionLoaderView.remove();
+    publicModelCollectionLoaderView.remove();
+    meshCollectionLoaderView.remove();
     
     var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );
     
@@ -600,8 +597,11 @@ var View = require('ampersand-view');
 
 module.exports = View.extend({
     template : "<div> \
-  <span data-hook='name'></span> \
-  <span data-hook='status'></span> \
+  <h4> \
+    <span data-hook='status'></span>: \
+    <span data-hook='name'></span> \
+    <span data-hook='progress'></span>% \
+  </h4> \
 </div>",
     props : {
         name : 'string',
@@ -631,6 +631,10 @@ module.exports = View.extend({
         'status' : {
             type : 'text',
             hook : 'status'
+        },
+        'model.progress' : {
+            type : 'text',
+            hook : 'progress'
         }
     },
     initialize: function()
@@ -4783,6 +4787,10 @@ module.exports /*CollectionLoader*/ = State.extend({
         failed : {
             type : 'Boolean',
             default : false
+        },
+        progress : {
+            type : 'number',
+            default : 0.0
         }
     },
     derived: {
@@ -4816,6 +4824,10 @@ module.exports /*CollectionLoader*/ = State.extend({
             this.failed = true;
         }
     },
+    updateProgress: function(e)
+    {
+        this.progress = 100.0 * e.totalDownloaded / e.totalSize;
+    },
     initialize : function(attrs, options)
     {
         if(typeof(options.maxAttempts) != 'undefined')
@@ -4833,6 +4845,8 @@ module.exports /*CollectionLoader*/ = State.extend({
         State.prototype.initialize.apply(this, arguments);
 
         this.collection = options.collection;
+
+        this.listenTo(this.collection, 'progress', _.bind(this.updateProgress, this));
 
         this.downloadModels();
     }

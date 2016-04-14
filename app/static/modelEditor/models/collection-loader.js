@@ -14,6 +14,10 @@ module.exports /*CollectionLoader*/ = State.extend({
         failed : {
             type : 'Boolean',
             default : false
+        },
+        progress : {
+            type : 'number',
+            default : 0.0
         }
     },
     derived: {
@@ -47,6 +51,10 @@ module.exports /*CollectionLoader*/ = State.extend({
             this.failed = true;
         }
     },
+    updateProgress: function(e)
+    {
+        this.progress = 100.0 * e.totalDownloaded / e.totalSize;
+    },
     initialize : function(attrs, options)
     {
         if(typeof(options.maxAttempts) != 'undefined')
@@ -64,6 +72,8 @@ module.exports /*CollectionLoader*/ = State.extend({
         State.prototype.initialize.apply(this, arguments);
 
         this.collection = options.collection;
+
+        this.listenTo(this.collection, 'progress', _.bind(this.updateProgress, this));
 
         this.downloadModels();
     }

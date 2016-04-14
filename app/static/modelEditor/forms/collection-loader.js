@@ -4,8 +4,11 @@ var View = require('ampersand-view');
 
 module.exports = View.extend({
     template : "<div> \
-  <span data-hook='name'></span> \
-  <span data-hook='status'></span> \
+  <h4> \
+    <span data-hook='status'></span>: \
+    <span data-hook='name'></span> \
+    <span data-hook='progress'></span>% \
+  </h4> \
 </div>",
     props : {
         name : 'string',
@@ -35,6 +38,10 @@ module.exports = View.extend({
         'status' : {
             type : 'text',
             hook : 'status'
+        },
+        'model.progress' : {
+            type : 'text',
+            hook : 'progress'
         }
     },
     initialize: function()

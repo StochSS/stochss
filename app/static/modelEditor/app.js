@@ -15,18 +15,23 @@ var CollectionLoaderView = require('./forms/collection-loader');
 
 console.log("Requesting models " + performance.now())
 
+var ajaxConfig = function () {
+    return {
+        xhrFields: {
+            timeout : 10000,
+            onprogress : _.bind(function(e) {
+                this.trigger('progress', { totalDownloaded : e.total, totalSize : e.totalSize });
+            }, this)
+        }
+    };
+};
+
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
     comparator: util.alphaNumByName,
     model: Model,
 
-    ajaxConfig: function () {
-        return {
-            xhrFields: {
-                timeout : 10000
-            }
-        };
-    }
+    ajaxConfig : ajaxConfig
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
@@ -34,13 +39,7 @@ PublicModelCollection = AmpersandCollection.extend( {
     comparator: util.alphaNumByName,
     model: Model,
 
-    ajaxConfig: function () {
-        return {
-            xhrFields: {
-                timeout : 10000
-            }
-        };
-    }
+    ajaxConfig : ajaxConfig
 });
 
 MeshCollection = AmpersandCollection.extend( {
@@ -48,13 +47,7 @@ MeshCollection = AmpersandCollection.extend( {
     comparator: util.alphaNumByName,
     model: Mesh,
 
-    ajaxConfig: function () {
-        return {
-            xhrFields: {
-                timeout : 10000
-            }
-        };
-    }
+    ajaxConfig : ajaxConfig
 });
 
 var publicModelCollection = new PublicModelCollection();
@@ -128,6 +121,10 @@ var runOnLoad = function()
         modelCollection.models[i].setupMesh(meshCollection);
         modelCollection.models[i].saveState = 'saved';
     }
+
+    modelCollectionLoaderView.remove();
+    publicModelCollectionLoaderView.remove();
+    meshCollectionLoaderView.remove();
     
     var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );
     
