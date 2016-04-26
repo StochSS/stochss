@@ -27,6 +27,8 @@ import traceback
 from backend.backendservice import backendservices
 from backend.common.config import AgentTypes, JobConfig
 
+import mesheditor
+
 import molns
 
 from db_models.parameter_sweep_job import ParameterSweepJobWrapper
@@ -202,7 +204,7 @@ class ParameterSweepPage(BaseHandler):
                 "logB" : data['logB'],
                 "variableCount" : data['variableCount'],
                 "isSpatial" : modelDb.isSpatial
-            };
+            }
 
             if modelDb.isSpatial:
                 try:
