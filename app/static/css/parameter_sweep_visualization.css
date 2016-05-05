@@ -28,3 +28,7 @@ text.axis-workweek {
 text.axis-worktime {
     fill: #000;
 }
+
+#stdout_show {
+    white-space: pre;
+}

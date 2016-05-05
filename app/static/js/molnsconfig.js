@@ -387,14 +387,15 @@ $( function() {
             var dateString = '';
 
             var date = new Date();
-            var dateString = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+            
+            var dateString = date.toLocaleTimeString("en-us", { hour : "2-digit", minute: "2-digit", second : "2-digit" });
 
             if(typeof data != "undefined")
                 this.handleMessage(data);
 
             var messages = $( '.messages' );
 
-            messages.append( '<div style="display: none;" class="line"><span class="time">' + dateString + '</span>: <pre style="all : initial; white-space: pre-wrap; font-family: monospace; display : inline;" class="content"></pre></div>' );
+            messages.append( $( '<div style="display: none;" class="line"><span class="time">' + dateString + '</span>: <pre style="all : initial; white-space: pre-wrap; font-family: monospace; display : inline;" class="content"></pre></div>' ) );
 
             if(messages.length)
                 messages.scrollTop(messages[0].scrollHeight - messages.height());
@@ -410,7 +411,9 @@ $( function() {
 
             var date = new Date();
 
-            time.text(date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds());
+            var dateString = date.toLocaleTimeString("en-us", { hour : "2-digit", minute: "2-digit", second : "2-digit" });
+
+            time.text(dateString);
 
             if(data.status)
             {

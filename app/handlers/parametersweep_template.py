@@ -4,7 +4,7 @@ import molnsutil
 import numpy
 import itertools
 
-### NOTE the string '___JSON_STRING___' will be replaced by data from the model
+### NOTE the string '_t__JSON_STRING___' (without the extra 't' at the start) will be replaced by data from the model
 
 class StochSSModel(gillespy.Model):
     json_data = json.loads("""___JSON_STRING___""")

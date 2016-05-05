@@ -225,8 +225,13 @@ class ParameterSweepPage(BaseHandler):
                 templateData['subdomains'] = meshWrapperDb.subdomains
 
             program = os.path.join(dataDir, 'program.py')
+
             with open(program, 'w') as f:
-                jsonString = json.dumps(templateData)
+                jsonString = json.dumps(templateData, indent = 4, sort_keys = True)
+
+                # We've got to double escape the strings here cause of how we're substituting the JSON data in a source file
+                jsonString = jsonString.replace('\\', '\\\\')
+
                 f.write(template.replace('___JSON_STRING___', jsonString))
             
             molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
