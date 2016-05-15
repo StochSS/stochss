@@ -22,13 +22,13 @@
             <div id="msg" style="display: none;"></div>
             <form class ="well form" action="/status" method="get">
                 <!-- Bulk acions -->
-                <div class="btn-group">
+                <!--<div class="btn-group">
                      <button type="button" class="btn btn-default btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Bulk action <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
                         <li><a href="javascript:void(0)" onclick="deleteJob('/status?reqType=delJob&');">Delete</a></li>
                     </ul>
-                </div>
+                </div>-->
 
                 {% if all_jobs %}
 
@@ -54,10 +54,10 @@
                         {% for job in all_jobs %}
                         <tr>
                             <td>
-                           <!-- <a href="javascript:void(0)" onclick="deleteJob('/simulate?reqType=delJob&id={{job.id}}');">Delete</a>-->
-                            <div class="checkbox">
+                            <a href="javascript:void(0)" onclick="deleteJob('/simulate?reqType=delJob&id={{job.id}}');">Delete</a>
+                            <!--<div class="checkbox">
                                 <label><input type="checkbox" class="check" name="check_job" value="{{job.id}}"></label>
-                            </div>
+                            </div>-->
                             </td>
                             <td>
                                 <span>{{job.number}}</span>
@@ -111,8 +111,9 @@
                         {% for job in allSpatialJobs %}
                         <tr>
                             <td>
-                              <div class="checkbox">
-                                <label><input type="checkbox" class="check" name="check_job" value="{{job.id}}"></label>
+                              <!--<div class="checkbox">
+                                <label><input type="checkbox" class="check" name="check_job" value="{{job.id}}"></label>-->
+                                <a href="javascript:void(0)" onclick="deleteJob('/spatial?reqType=delJob&id={{job.id}}');">Delete</a>
                             </div>
                             </td>
                             <td>
@@ -168,9 +169,10 @@
                         {% for job in allSensJobs %}
                         <tr>
                             <td>
-                              <div class="checkbox">
+                              <!--<div class="checkbox">
                                 <label><input type="checkbox" class="check" name="check_job" value="{{job.id}}"></label>
-                                </div>
+                                </div>-->
+                              <a href="javascript:void(0)" onclick="deleteJob('/sensitivity?reqType=delJob&id={{job.id}}');">Delete</a>
                             <td>
                                 <span>{{job.number}}</span>
                             </td>
@@ -286,9 +288,10 @@
                         {% for job in allExportJobs %}
                         <tr>
                             <td>
-                                <div class="checkbox">
+                                <!--<div class="checkbox">
                                  <label><input type="checkbox" class="check" name="check_job" value="{{job.id}}"></label>
-                                </div>
+                                </div>-->
+                                <a href="javascript:void(0)" onclick="deleteJob('/export?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
                             <td>
                                 <span>{{job.number}}</span>
