@@ -312,33 +312,22 @@ class SimulatePage(BaseHandler):
             return
         elif reqType == 'delJob':
 
-            ids = self.request.get_all('id[]')
-            logging.exception(ids)
 
-            for job_id in ids:
-                try:
-                    try:    
-                        job = StochKitJobWrapper.get_by_id(int(job_id))
-                    except:
-                        pass
-                        
-                    try: 
-                        job = SensitivityJobWrapper.get_by_id(int(job_id))
-                    except:
-                        pass    
+            try:
+                job = StochKitJobWrapper.get_by_id(int(job_id))
 
-                    if job.user_id == self.user.user_id():
-                        job.delete(self)
+                if job.user_id == self.user.user_id():
+                    job.delete(self)
                         
-                    self.response.headers['Content-Type'] = 'application/json'
-                    self.response.write(json.dumps({ 'status' : True,
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : True,
                                                      'msg' : "Job deleted from the datastore."}))
-                except Exception as e:
-                    logging.exception(e)
-                    self.response.headers['Content-Type'] = 'application/json'
-                    self.response.write(json.dumps({ 'status' : False,
+                        
+            except Exception as e:
+                logging.exception(e)
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : False,
                                                      'msg' : "Error: {0}".format(e) }))
-
             return
         elif reqType == 'jobInfo':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
