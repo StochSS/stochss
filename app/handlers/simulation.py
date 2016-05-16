@@ -314,7 +314,7 @@ class SimulatePage(BaseHandler):
 
 
             try:
-                job = StochKitJobWrapper.get_by_id(int(job_id))
+                job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
                 if job.user_id == self.user.user_id():
                     job.delete(self)
