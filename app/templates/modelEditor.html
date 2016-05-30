@@ -198,7 +198,7 @@
                 <div id="collapseTwo2" class="accordion-body collapse">
                     <div class="accordion-inner">
                         <div class="row">
-                            <div class="span11">
+                            <div class="col-md-11">
                                 Select a model mesh and visualize the subdomains. The subdomain information will be used to define where species can diffuse and where reactions occur.
                             </div>
 
@@ -281,7 +281,8 @@
 <script class="mesh3dTemplate" type="text/template">
     <div>
         <h3>Mesh Preview</h3>
-        <div data-hook="container">
+        <div style="display:none" ID="mesh_preview_hide_show">
+        <div data-hook="container" style="display:none">
             <center>
                 <div class="button-container button-container-left" >
                     <button class="button" data-hook="zoomPlus_btn"><i class="glyphicon glyphicon-plus"></i></button> 
@@ -315,6 +316,10 @@
         </div>
         <h3>Highlight Subdomains</h3>
         <div data-hook="subdomains">
+        </div>
+        </div>
+        <div style="display:inline" ID="mesh_preview_click_to_show">
+            <A href="return false">Click here to preview mesh<A>
         </div>
     </div>
 </script>
