@@ -1480,7 +1480,7 @@ var View = require('ampersand-view');
 module.exports = View.extend({
     template: '<tr> \
   <td> \
-    <button type="button" class="btn2 btn-default" data-hook="delete"> \
+    <button type="button" class="btn2" data-hook="delete"> \
       x \
     </button> \
   </td> \
@@ -76554,13 +76554,13 @@ module.exports = View.extend({
   </td> \
   <td> \
     <div class="btn2-group"> \
-      <button type="button" class="btn2 btn-default" data-hook="delete"> \
+      <button type="button" class="btn2" data-hook="delete"> \
         Delete \
       </button> \
-      <button type="button" class="btn2 btn-default" data-hook="duplicate"> \
+      <button type="button" class="btn2" data-hook="duplicate"> \
         Duplicate \
       </button> \
-      <button type="button" class="btn2 btn-default" data-hook="convert"> \
+      <button type="button" class="btn2" data-hook="convert"> \
          \
       </button> \
       <!--<a class="btn2 dropdown-toggle" data-toggle="dropdown" data-hook="test" href="#"> \
