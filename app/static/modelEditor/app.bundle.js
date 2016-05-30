@@ -360,9 +360,9 @@ var ReactionCollectionView = View.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn22' data-hook='previous'>&lt;&lt;</button> \
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button> \
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn22' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn2' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 
@@ -541,9 +541,9 @@ var SpecieCollectionView = View.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn22' data-hook='previous'>&lt;&lt;</button> \
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button> \
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn2'2 data-hook='next'>&gt;&gt;</button> \
+    <button class='btn2' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 
@@ -722,9 +722,9 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
     </tbody> \
   </table>\
   <div data-hook='nav'> \
-    <button class='btn22' data-hook='previous'>&lt;&lt;</button> \
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button> \
     [ <span data-hook='position'></span> / <span data-hook='total'></span> of <span data-hook='total'></span> ] \
-    <button class='btn22' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn2' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 
@@ -772,7 +772,7 @@ var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr data-hook='row'> \
 <td valign='top'> \
-<button class='btn22' data-hook='delete'>x</button> \
+<button class='btn2' data-hook='delete'>x</button> \
 </td> \
 <td data-hook='typeSelect' valign='top'></td> \
 <td data-hook='specie' valign='top'></td> \
@@ -1323,9 +1323,9 @@ var MeshCollectionSelectView = AmpersandView.extend({
     <tbody data-hook='items'></tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn22' data-hook='previous'>&lt;&lt;</button>\
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn22' data-hook='next'>&gt;&gt;</button>\
+    <button class='btn2' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 
@@ -3837,7 +3837,7 @@ module.exports = View.extend({
     <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
     <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
-    <td><center><button class='btn22' data-hook='remove'>x</button></center></td>\
+    <td><center><button class='btn2' data-hook='remove'>x</button></center></td>\
   </tr>",
     props : {
         valid : 'boolean',
