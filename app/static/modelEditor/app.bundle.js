@@ -716,7 +716,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table data-hook='table'>\
     <thead>\
-      <th></th><th>Type</th><th>Species</th><th>Details</th>\
+      <th width=27></th><th width=205>Type</th><th width=110>Species</th><th width=180>Details</th>\
     </thead>\
     <tbody data-hook='items'> \
     </tbody> \
@@ -787,7 +787,7 @@ module.exports = View.extend({
 <tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
 </tbody> \
 <tbody data-hook='subdomainTbody'> \
-<tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
+<tr><td width=75 height=25 valign=top>Subdomain</td><td valign=top><div data-hook='subdomain'></div></td></tr> \
 </tbody> \
 </table> \
 </td> \
