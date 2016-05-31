@@ -53,10 +53,9 @@ class UserRegistrationPage(BaseHandler):
     '''
     '''
     
-    def send_verification_email(self, msg):
+    def send_verification_email(self, msg, user_email):
        
         me = "stochssadm@gmail.com"
-        you = "andreas.hellander@gmail.com"
         # you == the recipient's email address
         msg['Subject'] = "StochSS registration verification"
         msg['From'] = me
@@ -133,7 +132,7 @@ class UserRegistrationPage(BaseHandler):
                 
                 msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/register/user_email={0}&signup_token={1}".format(user_email, token)))
 
-                msg = self.send_verification_email(msg)
+                msg = self.send_verification_email(msg,user_email)
                 
                 if success:
                     context = {
