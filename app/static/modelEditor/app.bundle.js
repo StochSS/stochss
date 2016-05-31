@@ -1303,11 +1303,11 @@ var MeshCollectionSelectView = AmpersandView.extend({
             $( this.el ).find( "[data-hook='meshLibraryAccordion'] a" )[0].click();
 
         this.model.mesh = this.selected;
-	this.model.meshId = this.selected.id;
+        this.model.meshId = this.selected.id;
 
 	if( this.selected.description )
 	{
-	    $( this.el ).find( '.descriptionContainer' ).show();
+            $( this.el ).find( '.descriptionContainer' ).show();
             $( this.el ).find( '.description' ).text( this.selected.description );
 	}
 	else
@@ -1379,9 +1379,13 @@ module.exports = View.extend({
         <h5>Mesh Name:</h5> \
         <div data-hook="name"> \
         </div> \
+        <div id="meshdescription_hideshow2" > \
+        <A href="javascript:document.getElementById(\'meshdescription_hideshow\').style.display=\'block\';document.getElementById(\'meshdescription_hideshow2\').style.display=\'none\';void(0)"><i>Show Description</i></A> \
+        </div> \
     </div> \
     <div> \
         <br /> \
+        <div style="display:none;" id="meshdescription_hideshow" > \
         <table cellpadding="5" width="100%"> \
         <tr> \
         <td data-hook="descriptionContainer" width="33%" valign="top"> \
@@ -1417,6 +1421,7 @@ module.exports = View.extend({
         </td> \
         </tr> \
         </table> \
+        </div> \
     </div> \
 </div>',
     bindings: {

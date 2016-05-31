@@ -192,7 +192,7 @@
             <div class="accordion-group" data-hook="meshLibraryAccordion">
                 <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion22" href="#collapseTwo2">
-                        Select a Mesh
+                        Select a Different Mesh
                     </a>
                 </div>
                 <div id="collapseTwo2" class="accordion-body collapse">
@@ -223,7 +223,7 @@
             <div class="accordion-group">
                 <div class="accordion-heading">
                     <a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion22" href="#collapseThree2">
-                        Upload a Mesh
+                        Upload a New Mesh
                     </a>
                 </div>
                 <div id="collapseThree2" class="accordion-body collapse uploadMeshDiv">
@@ -280,9 +280,9 @@
 
 <script class="mesh3dTemplate" type="text/template">
     <div>
+        <div style="display:none" ID="mesh_preview_hide_show" style="display:none">
         <h3>Mesh Preview</h3>
-        <div style="display:none" ID="mesh_preview_hide_show">
-        <div data-hook="container" style="display:none">
+        <div data-hook="container">
             <center>
                 <div class="button-container button-container-left" >
                     <button class="button" data-hook="zoomPlus_btn"><i class="glyphicon glyphicon-plus"></i></button> 
@@ -318,8 +318,8 @@
         <div data-hook="subdomains">
         </div>
         </div>
-        <div style="display:inline" ID="mesh_preview_click_to_show">
-            <A href="return false">Click here to preview mesh<A>
+        <div id="mesh_preview_hide_show2">
+        <A href="javascript:document.getElementById('mesh_preview_hide_show').style.display='block';document.getElementById('mesh_preview_hide_show2').style.display='none';void(0)">Click here to preview mesh
         </div>
     </div>
 </script>
