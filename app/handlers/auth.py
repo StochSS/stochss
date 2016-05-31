@@ -5,7 +5,7 @@ from google.appengine.ext import db
 import os
 from webapp2_extras.auth import InvalidAuthIdError, InvalidPasswordError
 from webapp2_extras import security
-import webapp2_extras.appengine.auth.models.UserToken
+import webapp2_extras.appengine.auth.models
 from stochssapp import BaseHandler
 from stochssapp import User
 
