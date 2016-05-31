@@ -127,10 +127,11 @@ class UserRegistrationPage(BaseHandler):
                 
                 # Create a signup token for the user
                 token=webapp2_extras.appengine.auth.models.UserToken.create(user,'signup')
+                token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user, 'signup',token)
                 if not token:
                     success = False
                 
-                msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/register/user_email={0}&signup_token={1}".format(user_email, token)))
+                msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/register/user_email={0}&signup_token={1}".format(user_email, token_key)))
 
                 msg = self.send_verification_email(msg,user_email)
                 
