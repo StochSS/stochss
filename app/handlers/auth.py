@@ -5,9 +5,12 @@ from google.appengine.ext import db
 import os
 from webapp2_extras.auth import InvalidAuthIdError, InvalidPasswordError
 from webapp2_extras import security
-
+import webapp2_extras.appengine.auth.models.UserToken
 from stochssapp import BaseHandler
 from stochssapp import User
+
+import smtplib
+from email.mime.text import MIMEText
 
 #from simpleauth import SimpleAuthHandler
 
@@ -34,7 +37,6 @@ class SecretKey(db.Model):
     def isEqualToAdminKey(self):
         '''
         '''
-        #admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
         try:
             basename = os.path.dirname(os.path.abspath(__file__))
             with open(os.path.join(basename,"admin_uuid.txt"),'r') as file:
@@ -50,6 +52,21 @@ class SecretKey(db.Model):
 class UserRegistrationPage(BaseHandler):
     '''
     '''
+    
+    def send_verification_email(self, msg):
+       
+        me = "stochssadm@gmail.com"
+        you = "andreas.hellander@gmail.com"
+        # you == the recipient's email address
+        msg['Subject'] = "StochSS registration verification"
+        msg['From'] = me
+        msg['To'] = user_email
+        #s = smtplib.SMTP('smtp.gmail.com:587')
+        #s.starttls()
+        #s.sendmail(me, [you], msg.as_string())
+        #s.quit()
+        return msg
+    
     def authentication_required(self):
         return False
     
@@ -92,42 +109,41 @@ class UserRegistrationPage(BaseHandler):
             logging.info('Registering a normal user...')
             user_email = self.request.POST['email']
 
-            # Just an email address here, we should first make sure they havent been approved
+            # Just an email address here, we should first make sure they have not been approved
             pending_users_list = PendingUsersList.shared_list()
-            if pending_users_list.approve_user(user_email, True):
-                approved = True
-                success = True
-            else:
-                success = False
-   
-
-            if success:
-
+            
+            # If the user does not exist, we create it.
+            if not bool(User.get_by_auth_id(user_email)):
+            
+                # if pending_users_list.is_user_approved(user_email):
                 # Then create the user
                 _attrs = {
                     'email_address': user_email,
                     'name': self.request.POST['name'],
                     'password_raw': self.request.POST['password'],
-                    'confirmed_user': False
+                    'verified': False
 
                 }
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
                 
-                if success:
-                    if approved:
-                        context = {
-                            'success_alert': True,
-                            'alert_message': 'Account creation successful! Your account is approved and you can log in immediately.'
-                        }
-                    else:
-                        context = {
-                            'success_alert': True,
-                            'alert_message': 'Account creation successful! Once an admin has approved your account, you can login.'
-                        }
+                # Create a signup token for the user
+                token=webapp2_extras.appengine.auth.models.UserToken.create(user,'signup')
+                if not token:
+                    success = False
+                
+                msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/register/user_email={0}&signup_token={1}".format(user_email, token)))
 
+                msg = self.send_verification_email(msg)
+                
+                if success:
+                    context = {
+                            'success_alert': True,
+                            'alert_message': 'Account creation successful! You will recieve a verification email, please follow the instructions to activate your account. {0}'.format(msg)
+                    }
+                    
                     return self.render_response('login.html', **context)
                 else:
-                    logging.info("Acount registration failed for: {0}".format(user))
+                    logging.info("Account registration failed for: {0}".format(user))
                     context = {
                         'email_address': self.request.POST['email'],
                         'name': self.request.POST['name'],
@@ -140,6 +156,7 @@ class UserRegistrationPage(BaseHandler):
                     'alert_message': 'You have already requested an account.'
                 }
                 return self.render_response('login.html', **context)
+            
         else:
             # Attempt to create an admin user
             logging.info('Registering an admin user...')
@@ -186,6 +203,9 @@ class UserRegistrationPage(BaseHandler):
                 }
                 return self.render_response('login.html', **context)
 
+class VerificationHandler(BaseHandler):
+    """ Handles email verification requests. """
+
 class LoginPage(BaseHandler):
     """
     """
@@ -212,20 +232,7 @@ class LoginPage(BaseHandler):
                 pass
         
         self.render_response('login.html')
-        # # This is one way to allow local access with no login, but it doesnt cover every case
-        # # Also, it means there is a separate account for local access that can only see its own models
-        # if self.request.headers['Host'].find('localhost') != -1:
-        # auth_id = 'default:local'
-        # _attrs = {
-        #     'name': 'Local Access',
-        #     'email_address': 'do-not-use@stochss.local'
-        # }
-        # user = self.auth.store.user_model.get_by_auth_id(auth_id)
-        # if user is None:
-        #     ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
-        # 
-        # self.auth.set_session(self.auth.store.user_to_dict(user))
-        # self.redirect('/')
+
     
     def post(self):
         '''
