@@ -125,7 +125,7 @@ class UserRegistrationPage(BaseHandler):
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
                 
                 # Has the user been preapproved? If so, we just verify it.
-                if pending_users_list.is_user_approved(user_email)
+                if pending_users_list.is_user_approved(user_email):
                     user.verified = True
                     user.put()
                     pending_users_list.remove_user_from_approved_list()
@@ -217,12 +217,20 @@ class VerificationHandler(BaseHandler):
         if sucess:
             # Verify the token
             token = self.auth.store.user_model.validate_token(user_email, 'signup', token)
+            if token:
+                user.verfified = True
+                user.put()
+                context = {
+                    'success_alert': true,
+                    'alert_message': 'Account verficiation sucessful. You can now log in.'
+                }
         else:
             context = {
-                'success_alert': True,
-                    'alert_message': 'Account creation successful! You may now log in with your new account.'
+                'success_alert': False,
+                'alert_message': 'Account verficiation failed. Contact the administrator for assistance.'
                 }
-                self.redirect("/login")
+        
+        return self.render_response('login.html', **context)
 
 
     def post(self):
