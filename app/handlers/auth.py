@@ -8,6 +8,7 @@ from webapp2_extras import security
 import webapp2_extras.appengine.auth.models
 from stochssapp import BaseHandler
 from stochssapp import User
+import datetime
 
 import smtplib
 from email.mime.text import MIMEText
@@ -131,11 +132,12 @@ class UserRegistrationPage(BaseHandler):
                     pending_users_list.remove_user_from_approved_list()
                 else:
                     # Create a signup token for the user and send a verification email
-                    token=webapp2_extras.appengine.auth.models.UserToken.create(user,'signup')
-                    if not token:
-                        success = False
-                    token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user,'signup',token)
-                    msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/verify?user_email={0}&signup_token={1}".format(user_email, token_key)))
+                    token = str(uuid.uuid4())
+                    user.signup_token = token
+                    user.signup_token_time_created=datetime.datetime()
+                    user.put()
+                    # token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user,'signup',token)
+                    msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/verify?user_email={0}&signup_token={1}".format(user_email, token)))
                     self.send_verification_email(msg,user_email)
                 
                 
@@ -212,13 +214,16 @@ class VerificationHandler(BaseHandler):
     def get(self):
         """ Corresponds to /verify """
         user_email = self.request.POST['user_email']
-        token = self.request.POST['signup_token']
+        token = str(self.request.POST['signup_token'])
         sucess, user = self.auth.store.user_model.get_by_auth_id(user_email)
         if sucess:
             # Verify the token
-            token = self.auth.store.user_model.validate_token(user_email, 'signup', token)
-            if token:
+            user_token = user.token
+            
+            #token = self.auth.store.user_model.validate_token(user_email, 'signup', token)
+            if user_token == token:
                 user.verfified = True
+                user.token=None
                 user.put()
                 context = {
                     'success_alert': true,
