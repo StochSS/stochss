@@ -64,7 +64,6 @@ class UserRegistrationPage(BaseHandler):
         #s.starttls()
         #s.sendmail(me, [you], msg.as_string())
         #s.quit()
-        return msg
     
     def authentication_required(self):
         return False
@@ -125,15 +124,20 @@ class UserRegistrationPage(BaseHandler):
                 }
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
                 
-                # Create a signup token for the user
-                token=webapp2_extras.appengine.auth.models.UserToken.create(user,'signup')
-                token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user, 'signup',token)
-                if not token:
-                    success = False
+                # Has the user been preapproved? If so, we just verify it.
+                if pending_users_list.is_user_approved(user_email)
+                    user.verified = True
+                    user.put()
+                    pending_users_list.remove_user_from_approved_list()
+                else:
+                    # Create a signup token for the user and send a verification email
+                    token=webapp2_extras.appengine.auth.models.UserToken.create(user,'signup')
+                    if not token:
+                        success = False
+                    token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user,'signup',token)
+                    msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/verify?user_email={0}&signup_token={1}".format(user_email, token_key)))
+                    self.send_verification_email(msg,user_email)
                 
-                msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/register/user_email={0}&signup_token={1}".format(user_email, token_key)))
-
-                msg = self.send_verification_email(msg,user_email)
                 
                 if success:
                     context = {
@@ -205,6 +209,37 @@ class UserRegistrationPage(BaseHandler):
 
 class VerificationHandler(BaseHandler):
     """ Handles email verification requests. """
+    def get(self):
+        """ Corresponds to /verify """
+        user_email = self.request.POST['user_email']
+        token = self.request.POST['signup_token']
+        sucess, user = self.auth.store.user_model.get_by_auth_id(user_email)
+        if sucess:
+            # Verify the token
+            token = self.auth.store.user_model.validate_token(user_email, 'signup', token)
+        else:
+            context = {
+                'success_alert': True,
+                    'alert_message': 'Account creation successful! You may now log in with your new account.'
+                }
+                self.redirect("/login")
+
+
+    def post(self):
+        user_email = self.request.POST['user_email']
+        token_key = self.request.POST['signup_token']
+        sucess, user = self.auth.store.user_model.get_by_auth_id(user_email)
+        if sucess:
+            # Verify the token
+            token = self.auth.store.user_model.validate_token(user_email, 'signup', token_key)
+        else:
+            context = {
+                'success_alert': True,
+                    'alert_message': 'Account creation successful! You may now log in with your new account.'
+                    }
+
+            return self.render_response('user_registration.html', **context)
+
 
 class LoginPage(BaseHandler):
     """
@@ -260,7 +295,7 @@ class LoginPage(BaseHandler):
             else:
                 isAdmin = False
 
-            if pending_users_list.is_user_approved(email_address) or isAdmin:
+            if user.verified:
                 self.auth.set_session(user)
                 return self.redirect('/')
             else:
@@ -268,7 +303,7 @@ class LoginPage(BaseHandler):
              #   pending_users_list.add_user_to_approval_waitlist(email_address)
                 context = {
                     'error_alert': True,
-                    'alert_message': 'You need to be approved by the admin before you can login.'
+                    'alert_message': 'You need to verify your account or be approved by the admin before you can login.'
                     }
                 return self.render_response('login.html', **context)
         except (InvalidAuthIdError, InvalidPasswordError) as e:
@@ -321,25 +356,13 @@ class AccountSettingsPage(BaseHandler):
         '''
         should_update_user = False
         new_name = self.request.POST['name']
-        # new_email = self.request.POST['email']
         if self.user.name != new_name:
             self.user.name = new_name
             should_update_user = True
-        # if self.user.email_address != new_email:
-        #     if self.user.change_auth_id(new_email):
-        #         self.user.email_address = new_email
-        #         should_update_user = True
-        #     else:
-        #         context = {
-        #             'name': self.user.name,
-        #             'email_address': self.user.email_address,
-        #             'error_alert': 'A user with that email address already exists.'
-        #         }
-        #         return self.render_response('account_settings.html', **context)
-        context = {
-            'name': self.user.name,
-            'email_address': self.user.email_address
-        }
+            context = {
+                'name': self.user.name,
+                'email_address': self.user.email_address
+            }
         try:
             new_password = self.request.POST["password"]
             current_password = self.request.POST["current_password"]

@@ -408,6 +408,7 @@ app = webapp2.WSGIApplication([
                                ('/updates',UpdatesPage),
                                ('/register', UserRegistrationPage),
                                ('/login', LoginPage),
+                               ('/verify', VerificationHandler),
                                ('/logout', LogoutHandler),
                                ('/admin', AdminPage),
                                ('/account_settings', AccountSettingsPage),
