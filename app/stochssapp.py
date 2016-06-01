@@ -291,6 +291,7 @@ from handlers.admin import *
 import handlers.fileserver
 import handlers.spatial
 from backend import pricing
+from handlers.emailsetup import *
 
 
 class MainPage(BaseHandler):
@@ -427,6 +428,7 @@ app = webapp2.WSGIApplication([
                                ('/admin', AdminPage),
                                ('/account_settings', AccountSettingsPage),
                                ('/restricted', RestrictedPageHandler),
+                               ('/emailsetup', EmailSetupPage),
                                ],
                                 config=config,
                                 debug=True)
