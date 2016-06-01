@@ -181,7 +181,7 @@ class UserRegistrationPage(BaseHandler):
                         'email_address': self.request.POST['email'],
                         'name': self.request.POST['name'],
                         'password_raw': self.request.POST['password'],
-                        'is_admin': 'YES'
+                        'is_admin': 'YES',
                         'verified': True
                     }
                     success, user = self.auth.store.user_model.create_user(_attrs['email_address'], **_attrs)
