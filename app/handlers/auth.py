@@ -9,6 +9,7 @@ import webapp2_extras.appengine.auth.models
 from stochssapp import BaseHandler
 from stochssapp import User
 import datetime
+import uuid
 
 import smtplib
 from email.mime.text import MIMEText
@@ -134,7 +135,7 @@ class UserRegistrationPage(BaseHandler):
                     # Create a signup token for the user and send a verification email
                     token = str(uuid.uuid4())
                     user.signup_token = token
-                    user.signup_token_time_created=datetime.datetime()
+                    user.signup_token_time_created=None
                     user.put()
                     # token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user,'signup',token)
                     msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/verify?user_email={0}&signup_token={1}".format(user_email, token)))
@@ -214,26 +215,32 @@ class VerificationHandler(BaseHandler):
     """ Handles email verification requests. """
     def get(self):
         """ Corresponds to /verify """
-        user_email = self.request.POST['user_email']
-        token = str(self.request.POST['signup_token'])
-        sucess, user = self.auth.store.user_model.get_by_auth_id(user_email)
-        if sucess:
+        user_email = self.request.GET['user_email']
+        token = str(self.request.GET['signup_token'])
+        user = self.auth.store.user_model.get_by_auth_id(user_email)
+	
+        if user:
             # Verify the token
-            user_token = user.token
+            user_token = user.signup_token
             
             #token = self.auth.store.user_model.validate_token(user_email, 'signup', token)
             if user_token == token:
-                user.verfified = True
-                user.token=None
+                user.verified = True
+                user.signup_token = None
                 user.put()
                 context = {
-                    'success_alert': true,
+                    'success_alert': True,
                     'alert_message': 'Account verficiation sucessful. You can now log in.'
+                }
+            else:
+		context = {
+                    'success_alert': False,
+                    'alert_message': 'Account verficiation failed. Please contact the administrator for assistance.'
                 }
         else:
             context = {
                 'success_alert': False,
-                'alert_message': 'Account verficiation failed. Contact the administrator for assistance.'
+                'alert_message': 'Account verficiation failed. No such user.'
                 }
         
         return self.render_response('login.html', **context)
@@ -296,8 +303,8 @@ class LoginPage(BaseHandler):
         # Login attempt, need to grab password too
         password = self.request.POST['password']
         try:
-            user = self.auth.get_user_by_password(email_address, password, remember=True)
-            # Success, put user in the session and redirect to home page
+            user = self.auth.get_user_by_password(email_address, password, remember=True)           
+# Success, put user in the session and redirect to home page
 
             # Has this user been approved? Or is the user the admin? Login either way
             pending_users_list = PendingUsersList.shared_list()
@@ -309,7 +316,7 @@ class LoginPage(BaseHandler):
             else:
                 isAdmin = False
 
-            if user.verified:
+            if userdb.verified:
                 self.auth.set_session(user)
                 return self.redirect('/')
             else:
@@ -317,7 +324,7 @@ class LoginPage(BaseHandler):
              #   pending_users_list.add_user_to_approval_waitlist(email_address)
                 context = {
                     'error_alert': True,
-                    'alert_message': 'You need to verify your account or be approved by the admin before you can login.'
+                    'alert_message': 'You need to verify your account or be approved by the admin before you can login.{0}'.format(userdb.__dict__)
                     }
                 return self.render_response('login.html', **context)
         except (InvalidAuthIdError, InvalidPasswordError) as e:
