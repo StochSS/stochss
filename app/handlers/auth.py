@@ -286,7 +286,7 @@ class PasswordResetHandler(BaseHandler):
         user_email = self.request.GET['user_email']
         token = self.request.GET['token']
         user = self.auth.store.user_model.get_by_auth_id(user_email)
-        
+  
         if user:
             # Verify the token
             user_token = user.signup_token
@@ -328,7 +328,7 @@ class PasswordResetHandler(BaseHandler):
             password_confirmation = None
         
         if new_password not in [None, ''] and new_password == password_confirmation:
-            # Check that correct current password was entered
+          
             self.user.set_password(new_password)
             should_update_user = True
         else:
