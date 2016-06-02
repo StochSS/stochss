@@ -139,15 +139,14 @@ class UserRegistrationPage(BaseHandler):
                     user.signup_token_time_created=None
                     user.put()
                     # token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user,'signup',token)
-                    msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/verify?user_email={0}&signup_token={1}".format(user_email, token)))
-                    EmailConfig.send_email(user_email, subject, msg)
-		    self.send_verification_email(msg,user_email)
+                    msg = "Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/verify?user_email={0}&signup_token={1}".format(user_email, token))
+                    EmailConfig.send_email(user_email, "StochSS Registration Verification", msg)
                 
                 
                 if success:
                     context = {
                             'success_alert': True,
-                            'alert_message': 'Account creation successful! You will recieve a verification email, please follow the instructions to activate your account. {0}'.format(msg)
+                            'alert_message': 'Account creation successful! You will recieve a verification email, please follow the instructions to activate your account.'
                     }
                     
                     return self.render_response('login.html', **context)
@@ -215,6 +214,9 @@ class UserRegistrationPage(BaseHandler):
 
 class VerificationHandler(BaseHandler):
     """ Handles email verification requests. """
+    def authentication_required(self):
+        return False
+    
     def get(self):
         """ Corresponds to /verify """
         user_email = self.request.GET['user_email']
@@ -225,7 +227,6 @@ class VerificationHandler(BaseHandler):
             # Verify the token
             user_token = user.signup_token
             
-            #token = self.auth.store.user_model.validate_token(user_email, 'signup', token)
             if user_token == token:
                 user.verified = True
                 user.signup_token = None
@@ -235,33 +236,33 @@ class VerificationHandler(BaseHandler):
                     'alert_message': 'Account verficiation successful. You can now log in.'
                 }
             else:
-		context = {
-                    'success_alert': False,
+                context = {
+                    'error_alert': True,
                     'alert_message': 'Account verficiation failed. Please contact the administrator for assistance.'
                 }
         else:
             context = {
-                'success_alert': False,
+                'error_alert': True,
                 'alert_message': 'Account verficiation failed. No such user.'
                 }
         
         return self.render_response('login.html', **context)
 
 
-    def post(self):
-        user_email = self.request.POST['user_email']
-        token_key = self.request.POST['signup_token']
-        sucess, user = self.auth.store.user_model.get_by_auth_id(user_email)
-        if sucess:
-            # Verify the token
-            token = self.auth.store.user_model.validate_token(user_email, 'signup', token_key)
-        else:
-            context = {
-                'success_alert': True,
-                    'alert_message': 'Account creation successful! You may now log in with your new account.'
-                    }
-
-            return self.render_response('user_registration.html', **context)
+#    def post(self):
+#        user_email = self.request.POST['user_email']
+#        token_key = self.request.POST['signup_token']
+#        sucess, user = self.auth.store.user_model.get_by_auth_id(user_email)
+#        if sucess:
+#            # Verify the token
+#            token = self.auth.store.user_model.validate_token(user_email, 'signup', token_key)
+#        else:
+#            context = {
+#                'success_alert': True,
+#                    'alert_message': 'Account creation successful! You may now log in with your new account.'
+#                    }
+#
+#            return self.render_response('user_registration.html', **context)
 
 
 class LoginPage(BaseHandler):
@@ -326,7 +327,7 @@ class LoginPage(BaseHandler):
              #   pending_users_list.add_user_to_approval_waitlist(email_address)
                 context = {
                     'error_alert': True,
-                    'alert_message': 'You need to verify your account or be approved by the admin before you can login.{0}'.format(userdb.__dict__)
+                    'alert_message': 'You need to verify your account or be approved by the admin before you can login.'
                     }
                 return self.render_response('login.html', **context)
         except (InvalidAuthIdError, InvalidPasswordError) as e:
