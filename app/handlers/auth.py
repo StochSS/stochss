@@ -216,7 +216,7 @@ class VerificationHandler(BaseHandler):
     def get(self):
         """ Corresponds to /verify """
         user_email = self.request.GET['user_email']
-        token = str(self.request.GET['signup_token'])
+        token = self.request.GET['signup_token']
         user = self.auth.store.user_model.get_by_auth_id(user_email)
 	
         if user:
@@ -230,7 +230,7 @@ class VerificationHandler(BaseHandler):
                 user.put()
                 context = {
                     'success_alert': True,
-                    'alert_message': 'Account verficiation sucessful. You can now log in.'
+                    'alert_message': 'Account verficiation successful. You can now log in.'
                 }
             else:
 		context = {
