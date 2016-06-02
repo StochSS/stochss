@@ -18,23 +18,26 @@ class EmailSetupPage(BaseHandler):
     def post(self):
         params = self.request.POST
         context = {}
-        if 'save' in params:
-            EmailConfig.get_config(
-                params['smtp_host'],
-                params['smtp_port'],
-                params['smtp_username'],
-                params['smtp_email']
-            )
-            context['msg'] = 'Config Saved'
-        elif 'test' in params:
-            context = EmailConfig.get_config()
-            EmailConfig.send_email(
-                params['to_email'],
-                'Test email from StochSS',
-                'Test email from StochSS'
-            )
-            context['msg'] = 'Test Email Sent'
-            
+        try:
+            if 'save' in params:
+                EmailConfig.save_config(
+                    params['smtp_host'],
+                    params['smtp_port'],
+                    params['smtp_username'],
+                    params['smtp_password'],
+                    params['from_email']
+                )
+                context['msg'] = 'Config Saved'
+            elif 'test' in params:
+                context = EmailConfig.get_config()
+                EmailConfig.send_email(
+                    params['to_email'],
+                    'Test email from StochSS',
+                    'Test email from StochSS'
+                )
+                context['msg'] = 'Test Email Sent'
+        except Exception as e:
+            context['msg'] = "Error: {0}".format(e)
         context.update( EmailConfig.get_config() )
         self.render_response('emailsetup.html', **context)
 

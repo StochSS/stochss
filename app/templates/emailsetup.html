@@ -3,7 +3,7 @@
 {% block csscontent %}<link href="/static/css/admin_panel.css" rel="stylesheet">{% endblock %}
 
 {% block content %}
-{{ msg }}
+<CENTER><FONT COLOR="red">{{ msg }}</FONT></CENTER>
 <div class="active col-sm-9 col-md-9">
     <h1>Configure Email</h1>
     <div class="well well-lg">
@@ -24,6 +24,10 @@
         <TR>
             <TD> Password: </TD>
             <TD> <INPUT TYPE=password name="smtp_password" value="{{ smtp_password }}"> </TD>
+        </TR>
+        <TR>
+            <TD> From Email: </TD>
+            <TD> <INPUT TYPE=text name="from_email" value="{{ from_email }}"> </TD>
         </TR>
         <TR>
             <TD> &nbsp; </TD>
