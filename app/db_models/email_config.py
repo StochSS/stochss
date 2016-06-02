@@ -57,11 +57,14 @@ class EmailConfig(db.Model):
         if config is None:
             return False
         import smtplib
-        smtp = smtplib.SMTP_SSL(config.smtp_host, int(config.smtp_port))
+        smtp = smtplib.SMTP(config.smtp_host, int(config.smtp_port))
         from email.mime.text import MIMEText
         msg = MIMEText(message)
         msg['To'] = to_email_address
         msg['Subject'] = subject
         msg['From'] = config.from_email
+        smtp.starttls()
+        smtp.login(config.smtp_username, config.smtp_password)
         smtp.sendmail(config.from_email, to_email_address, msg.as_string())
+        smtp.quit()
         return True
