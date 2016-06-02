@@ -21,6 +21,7 @@ class PendingUsersList(db.Model):
     """
     users_waiting_approval = db.StringListProperty()
     approved_users = db.StringListProperty()
+    user_verification_method = db.StringProperty()  # 'admin' (default), 'email', 'none'
     
     @classmethod
     def shared_list(cls):
@@ -42,12 +43,38 @@ class PendingUsersList(db.Model):
 
     def user_exists(self, user_email):
         return bool(User.get_by_auth_id(user_email))
+
+
+    def add_user_to_approval_waitlist(self, user_email):		
+        """		
+        Add the given email address to the list of users waiting approval		
+         as long as the given user_email is not a current user's email.		
+        Returns False if email address already in list, else True.		
+        """		
+        if (self.users_waiting_approval and (user_email in self.users_waiting_approval)):		
+            return False		
+		
+        self.users_waiting_approval.append(user_email)		
+        self.put()		
+        return True		
+    		
+    def remove_user_from_approval_waitlist(self, user_email):
+        '''		
+        Removes the given email address from the approval waitlist.		
+        This function is currently only called when the email exists in the waitlist so 		
+         theres no checking to do.		
+        '''		
+        self.users_waiting_approval.remove(user_email)		
+        self.put()
     
     def approve_user(self, user_email, awaiting_approval):
         """
         Add given email address to list of approved users and 
          remove it from waiting approval list if needed.
+        Returns False if email address already in list, else True
         """
+        if self.approved_users and (user_email in self.approved_users):
+            return False
         if not self.is_user_approved(user_email):
             self.approved_users.append(user_email)
             self.remove_user_from_approval_waitlist(user_email)

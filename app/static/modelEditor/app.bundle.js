@@ -297,9 +297,9 @@ var ParameterCollectionFormView = View.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button> \
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn2' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 
@@ -351,7 +351,7 @@ var ReactionCollectionView = View.extend({
     render: function()
     {
         var collectionTemplate = "<div> \
-  <h3>Reactions</h3> \
+  <h3>MINE Reactions</h3> \
   <table class='table table-bordered' data-hook='table'> \
     <thead> \
       <th width='120px'>Name</th><th width='300px'>Rate</th><th>Summary</th><th>Result</th> \
@@ -360,9 +360,9 @@ var ReactionCollectionView = View.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button> \
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn2' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 
@@ -541,9 +541,9 @@ var SpecieCollectionView = View.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button> \
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn2' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 
@@ -673,7 +673,7 @@ var AddNewInitialConditionForm = AmpersandFormView.extend({
     {
         AmpersandFormView.prototype.render.apply(this, arguments);
 
-        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Initial Condition</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn2 btn-large btn-primary" type="submit">Add Initial Condition</button>').appendTo( $( this.el ) );
     }
 });
 
@@ -716,15 +716,15 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table data-hook='table'>\
     <thead>\
-      <th></th><th>Type</th><th>Species</th><th>Details</th>\
+      <th width=27></th><th width=205>Type</th><th width=110>Species</th><th width=180>Details</th>\
     </thead>\
     <tbody data-hook='items'> \
     </tbody> \
   </table>\
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button> \
     [ <span data-hook='position'></span> / <span data-hook='total'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn2' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 
@@ -772,7 +772,7 @@ var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr data-hook='row'> \
 <td valign='top'> \
-<button class='btn' data-hook='delete'>x</button> \
+<button class='btn2' data-hook='delete'>x</button> \
 </td> \
 <td data-hook='typeSelect' valign='top'></td> \
 <td data-hook='specie' valign='top'></td> \
@@ -787,7 +787,7 @@ module.exports = View.extend({
 <tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
 </tbody> \
 <tbody data-hook='subdomainTbody'> \
-<tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
+<tr><td width=75 height=25 valign=top>Subdomain</td><td valign=top><div data-hook='subdomain'></div></td></tr> \
 </tbody> \
 </table> \
 </td> \
@@ -1303,11 +1303,11 @@ var MeshCollectionSelectView = AmpersandView.extend({
             $( this.el ).find( "[data-hook='meshLibraryAccordion'] a" )[0].click();
 
         this.model.mesh = this.selected;
-	this.model.meshId = this.selected.id;
+        this.model.meshId = this.selected.id;
 
 	if( this.selected.description )
 	{
-	    $( this.el ).find( '.descriptionContainer' ).show();
+            $( this.el ).find( '.descriptionContainer' ).show();
             $( this.el ).find( '.description' ).text( this.selected.description );
 	}
 	else
@@ -1323,9 +1323,9 @@ var MeshCollectionSelectView = AmpersandView.extend({
     <tbody data-hook='items'></tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button>\
+    <button class='btn2' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 
@@ -1379,9 +1379,13 @@ module.exports = View.extend({
         <h5>Mesh Name:</h5> \
         <div data-hook="name"> \
         </div> \
+        <div id="meshdescription_hideshow2" > \
+        <A href="javascript:document.getElementById(\'meshdescription_hideshow\').style.display=\'block\';document.getElementById(\'meshdescription_hideshow2\').style.display=\'none\';void(0)"><i>Show Description</i></A> \
+        </div> \
     </div> \
     <div> \
         <br /> \
+        <div style="display:none;" id="meshdescription_hideshow" > \
         <table cellpadding="5" width="100%"> \
         <tr> \
         <td data-hook="descriptionContainer" width="33%" valign="top"> \
@@ -1417,6 +1421,7 @@ module.exports = View.extend({
         </td> \
         </tr> \
         </table> \
+        </div> \
     </div> \
 </div>',
     bindings: {
@@ -1480,7 +1485,7 @@ var View = require('ampersand-view');
 module.exports = View.extend({
     template: '<tr> \
   <td> \
-    <button type="button" class="btn btn-default" data-hook="delete"> \
+    <button type="button" class="btn2" data-hook="delete"> \
       x \
     </button> \
   </td> \
@@ -1653,18 +1658,18 @@ module.exports = View.extend({
     },
     addGui : function() {
         $( this.queryByHook("container") ).show();
-        $( this.queryByHook("zoomPlus_btn") ).click( _.bind(function() { this.controls.dollyOut();}, this) );
-        $( this.queryByHook('zoomMinus_btn') ).click( _.bind(function() { this.controls.dollyIn();}, this) );
-        $( this.queryByHook('panLeft_btn') ).click( _.bind(function() { this.controls.panLeft(-0.1);}, this) );
-        $( this.queryByHook('panRight_btn') ).click( _.bind(function() { this.controls.panLeft(0.1);}, this) );
-        $( this.queryByHook('panUp_btn') ).click( _.bind(function() { this.controls.panUp(-0.1);}, this) );
-        $( this.queryByHook('panDown_btn') ).click( _.bind(function() { this.controls.panUp(0.1);}, this) );
+        $( this.queryByHook("zoomPlus_btn2") ).click( _.bind(function() { this.controls.dollyOut();}, this) );
+        $( this.queryByHook('zoomMinus_btn2') ).click( _.bind(function() { this.controls.dollyIn();}, this) );
+        $( this.queryByHook('panLeft_btn2') ).click( _.bind(function() { this.controls.panLeft(-0.1);}, this) );
+        $( this.queryByHook('panRight_btn2') ).click( _.bind(function() { this.controls.panLeft(0.1);}, this) );
+        $( this.queryByHook('panUp_btn2') ).click( _.bind(function() { this.controls.panUp(-0.1);}, this) );
+        $( this.queryByHook('panDown_btn2') ).click( _.bind(function() { this.controls.panUp(0.1);}, this) );
         
-        $( this.queryByHook('rotateUp_btn') ).click( _.bind(function() { this.controls.rotateUp(0.5);}, this) );
-        $( this.queryByHook('rotateDown_btn') ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
-        $( this.queryByHook('rotateRight_btn') ).click( _.bind(function() { this.controls.rotateLeft(2.0);}, this) );
-        $( this.queryByHook('rotateLeft_btn') ).click( _.bind(function() { this.controls.rotateLeft(2.0);}, this) );
-        $( this.queryByHook('reset_btn') ).click( _.bind(function() { this.controls.reset(); this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2;; }, this) ); 
+        $( this.queryByHook('rotateUp_btn2') ).click( _.bind(function() { this.controls.rotateUp(0.5);}, this) );
+        $( this.queryByHook('rotateDown_btn2') ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
+        $( this.queryByHook('rotateRight_btn2') ).click( _.bind(function() { this.controls.rotateLeft(2.0);}, this) );
+        $( this.queryByHook('rotateLeft_btn2') ).click( _.bind(function() { this.controls.rotateLeft(2.0);}, this) );
+        $( this.queryByHook('reset_btn2') ).click( _.bind(function() { this.controls.reset(); this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2;; }, this) ); 
     },
 
     createText : function(letter, x, y, z){
@@ -2508,7 +2513,7 @@ var AddNewParameterForm = AmpersandFormView.extend({
     {
         AmpersandFormView.prototype.render.apply(this, arguments);
 
-        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Parameter</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn2 btn-large btn-primary" type="submit">Add Parameter</button>').appendTo( $( this.el ) );
     }
 });
 
@@ -2558,9 +2563,9 @@ var ParameterCollectionFormView = AmpersandView.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button>\
+    <button class='btn2' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 
@@ -2597,7 +2602,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr data-hook='row'><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>",
+    template: "<tr data-hook='row'><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn2' data-hook='delete'>x</button></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     props : {
@@ -3210,8 +3215,8 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.buttonTemplate = '<div class="btn-group dropup"> \
-  <button class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown"> \
+        this.buttonTemplate = '<div class="btn2-group dropup"> \
+  <button class="btn2 btn-large btn-primary dropdown-toggle" data-toggle="dropdown"> \
     Add Reaction \
     <span class="caret"></span> \
   </button> \
@@ -3352,15 +3357,15 @@ var ReactionCollectionFormView = AmpersandView.extend({
         collectionTemplate = "<div>\
   <table data-hook='table'>\
     <thead>\
-      <th width='25px'>Edit</th><th width='120px'>Name</th><th>Summary</th><th width='40px'>Delete</th>\
+      <th width='20px'></th><th width='120px' align='center'><CENTER>Name</CENTER></th><th align='center' style='text-align=center'><CENTER>Summary</CENTER></th><th width='40px'></th>\
     </thead>\
     <tbody data-hook='items'>\
     </tbody>\
   </table>\
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button>\
+    <button class='btn2' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 
@@ -3837,7 +3842,7 @@ module.exports = View.extend({
     <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
     <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
-    <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
+    <td><center><button class='btn2' data-hook='remove'>x</button></center></td>\
   </tr>",
     props : {
         valid : 'boolean',
@@ -4035,7 +4040,7 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Species</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn2 btn-large btn-primary" type="submit">Add Species</button>').appendTo( $( this.el ) );
     }
 });
 
@@ -4104,9 +4109,9 @@ var SpecieCollectionFormView = AmpersandView.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button>\
+    <button class='btn2' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 
@@ -4263,11 +4268,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn2' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn2' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
@@ -29900,11 +29905,6 @@ function addGetHookIf( conditionFn, hookFn ) {
 			},
 			reliableMarginRight: function() {
 
-				// Support: Android 2.3
-				// Check if div with explicit width and no margin-right incorrectly
-				// gets computed margin-right based on width of container. (#3333)
-				// WebKit Bug 13343 - getComputedStyle returns wrong value for margin-right
-				// This support function is only executed once so no memoizing is needed.
 				var ret,
 					marginDiv = div.appendChild( document.createElement( "div" ) );
 
@@ -76425,7 +76425,7 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.buttonTemplate = '<div class="btn-group"> \
+        this.buttonTemplate = '<div class="btn2-group"> \
   <a class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
     Add Model \
     <span class="caret"></span> \
@@ -76503,9 +76503,9 @@ var ModelCollectionSelectView = AmpersandView.extend({
     <tbody data-hook='items'></tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    <button class='btn2' data-hook='previous'>&lt;&lt;</button> \
     [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn2' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 
@@ -76551,24 +76551,24 @@ var Model = require('../models/model');
 module.exports = View.extend({
     template: '<tr data-hook="row"> \
   <td> \
-    <button data-hook="edit" class="btn-small btn">Select</button> \
+    <button data-hook="edit" class="btn2">Select</button> \
   </td> \
   <td data-hook="name"> \
   </td> \
   <td data-hook="type"> \
   </td> \
   <td> \
-    <div class="btn-group"> \
-      <button type="button" class="btn btn-default" data-hook="delete"> \
+    <div class="btn2-group"> \
+      <button type="button" class="btn2" data-hook="delete"> \
         Delete \
       </button> \
-      <button type="button" class="btn btn-default" data-hook="duplicate"> \
+      <button type="button" class="btn2" data-hook="duplicate"> \
         Duplicate \
       </button> \
-      <button type="button" class="btn btn-default" data-hook="convert"> \
+      <button type="button" class="btn2" data-hook="convert"> \
          \
       </button> \
-      <!--<a class="btn dropdown-toggle" data-toggle="dropdown" data-hook="test" href="#"> \
+      <!--<a class="btn2 dropdown-toggle" data-toggle="dropdown" data-hook="test" href="#"> \
         Model Actions \
         <span class="caret"></span> \
       </a> \
@@ -76660,12 +76660,12 @@ module.exports = View.extend({
     },
     deSelect : function()
     {
-        $( this.queryByHook( "edit" ) ).removeClass('btn-success');
+        $( this.queryByHook( "edit" ) ).removeClass('btn2-success');
         $( this.queryByHook( "name" ) ).find('input').prop('disabled', true);
     },
     select : function()
     {
-        $( this.queryByHook( "edit" ) ).addClass('btn-success');
+        $( this.queryByHook( "edit" ) ).addClass('btn2-success');
         $( this.queryByHook( "name" ) ).find('input').prop('disabled', false);
     },
     updateVisibility : function() {

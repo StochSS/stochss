@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block csscontent %}<link href="/static/css/admin_panel.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+<CENTER><FONT COLOR="red">{{ msg }}</FONT></CENTER>
+<div class="active col-sm-9 col-md-9">
+    <h1>Configure Email</h1>
+    <div class="well well-lg">
+        <form method=POST>
+        <TABLE class="table" border=0>
+        <TR>
+            <TD> SMTP Server Name: </TD>
+            <TD> <INPUT TYPE=text name="smtp_host" value="{{ smtp_host }}"> </TD>
+        </TR>
+        <TR>
+            <TD> SMTP Server Port: </TD>
+            <TD> <INPUT TYPE=text size=3 name="smtp_port" value="{{ smtp_port }}"> </TD>
+        </TR>
+        <TR>
+            <TD> Username: </TD>
+            <TD> <INPUT TYPE=text name="smtp_username" value="{{ smtp_username }}"> </TD>
+        </TR>
+        <TR>
+            <TD> Password: </TD>
+            <TD> <INPUT TYPE=password name="smtp_password" value="{{ smtp_password }}"> </TD>
+        </TR>
+        <TR>
+            <TD> From Email: </TD>
+            <TD> <INPUT TYPE=text name="from_email" value="{{ from_email }}"> </TD>
+        </TR>
+        <TR>
+            <TD> &nbsp; </TD>
+            <TD> <INPUT TYPE=submit name="save" value="Save"> </TD>
+        </TR>
+        </TABLE>
+        </form>
+    </div>
+</div>
+
+<div class="active col-sm-9 col-md-9">
+    <h1>Send Test Email</h1>
+    <div class="well well-lg">
+        <form method=POST>
+        <TABLE class="table" border=0>
+        <TR>
+            <TD> Email Address: </TD>
+            <TD> <INPUT TYPE=text name="to_email" value=""> </TD>
+        </TR>
+        <TR>
+            <TD> &nbsp; </TD>
+            <TD> <INPUT TYPE=submit name="test" value="Send Test Email"> </TD>
+        </TR>
+        </TABLE>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}<script src="/static/js/admin_page.js"></script>{% endblock %}
