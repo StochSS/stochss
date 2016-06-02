@@ -90,7 +90,7 @@ class EmailConfig(db.Model):
         config = db.GqlQuery("SELECT * FROM EmailConfig").get()
         if config is None:
             return False
-        msg = "Please click the following link in order to reset your password: {0}".format(str(config.url_prefix)+"/passwordresetrequest?user_email={0}&token={1}".format(user_email, token))
+        msg = "Please click the following link in order to reset your password: {0}".format(str(config.url_prefix)+"/passwordreset?user_email={0}&token={1}".format(user_email, token))
         status = self.send_email(user_email,"StochSS: Reset password", msg)
         if status:
             return True
