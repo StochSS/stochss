@@ -294,7 +294,8 @@ class PasswordResetHandler(BaseHandler):
             if user_token == token:
                 user.signup_token = None
                 user.put()
-                self.render_response('passwordreset.html')
+		context = {'user_email':user_email}
+                self.render_response('passwordreset.html',**context)
                 
             else:
                 context = {
@@ -314,21 +315,20 @@ class PasswordResetHandler(BaseHandler):
     def post(self):
         '''
             Corresponds to an attempt to change the password.
-            Possible fields to change:
-            - name
-            - email_address
-            - password
-            '''
+            
+        '''
+        context = {}
         should_update_user = False
         try:
             new_password = self.request.POST["password"]
             password_confirmation =  self.request.POST["password_confirmation"]
+	    user_email = self.request.POST['user_email']
         except KeyError:
             new_password = None
             password_confirmation = None
         
         if new_password not in [None, ''] and new_password == password_confirmation:
-          
+            user = self.auth.store.user_model.get_by_auth_id(user_email)
             self.user.set_password(new_password)
             should_update_user = True
         else:
