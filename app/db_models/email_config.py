@@ -13,6 +13,7 @@ class EmailConfig(db.Model):
     smtp_username = db.StringProperty()
     smtp_password = db.StringProperty()
     from_email = db.StringProperty()
+    url_prefix = db.StringProperty()
 
     @classmethod
     def get_config(self):
@@ -22,6 +23,7 @@ class EmailConfig(db.Model):
         ret['smtp_username'] = ''
         ret['smtp_password'] = ''
         ret['from_email'] = ''
+	ret['url_prefix']=''
         config = db.GqlQuery("SELECT * FROM EmailConfig").get()
         if config is not None:
             ret['smtp_host'] = config.smtp_host
@@ -29,10 +31,11 @@ class EmailConfig(db.Model):
             ret['smtp_username'] = config.smtp_username
             ret['smtp_password'] = config.smtp_password
             ret['from_email'] = config.from_email
+	    ret['url_prefix']=config.url_prefix
         return ret
 
     @classmethod
-    def save_config(self, smtp_host, smtp_port, smtp_username, smtp_password, from_email):
+    def save_config(self, smtp_host, smtp_port, smtp_username, smtp_password, from_email,url_prefix):
         config = db.GqlQuery("SELECT * FROM EmailConfig").get()
         if config is None:
             config = EmailConfig()
@@ -41,6 +44,7 @@ class EmailConfig(db.Model):
         config.smtp_username = smtp_username
         config.smtp_password = smtp_password
         config.from_email    = from_email
+	config.url_prefix    = url_prefix
         config.put()
 
     @classmethod
@@ -68,3 +72,15 @@ class EmailConfig(db.Model):
         smtp.sendmail(config.from_email, to_email_address, msg.as_string())
         smtp.quit()
         return True
+
+    @classmethod
+    def send_verification_email(self,user_email, token):
+        config = db.GqlQuery("SELECT * FROM EmailConfig").get()
+        if config is None:
+            return False
+	msg = "Please click the following link in order to verify your account: {0}".format(str(config.url_prefix)+"/verify?user_email={0}&signup_token={1}".format(user_email, token))
+	status = self.send_email(user_email,"StochSS registration verification", msg)
+        if status:
+	   return True
+	else:
+	   return False

@@ -138,9 +138,7 @@ class UserRegistrationPage(BaseHandler):
                     user.signup_token = token
                     user.signup_token_time_created=None
                     user.put()
-                    # token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user,'signup',token)
-                    msg = "Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/verify?user_email={0}&signup_token={1}".format(user_email, token))
-                    EmailConfig.send_email(user_email, "StochSS Registration Verification", msg)
+                    EmailConfig.send_verification_email(user_email, token)
                 
                 
                 if success:

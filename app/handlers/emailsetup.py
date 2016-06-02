@@ -25,7 +25,8 @@ class EmailSetupPage(BaseHandler):
                     params['smtp_port'],
                     params['smtp_username'],
                     params['smtp_password'],
-                    params['from_email']
+                    params['from_email'],
+		    params['url_prefix']
                 )
                 context['msg'] = 'Config Saved'
             elif 'test' in params:
