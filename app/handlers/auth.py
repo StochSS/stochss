@@ -258,7 +258,7 @@ class PasswordResetRequestHandler(BaseHandler):
     def post(self):
         
         """ Corresponds to /passwordresetrequest """
-        user_email = self.request.POST['user_email']
+        user_email = self.request.POST['email']
         user = self.auth.store.user_model.get_by_auth_id(user_email)
         
         if user:
@@ -279,12 +279,12 @@ class PasswordResetRequestHandler(BaseHandler):
 class PasswordResetHandler(BaseHandler):
     """ Reset user password """
     def authentication_required(self):
-        return True
+        return False
     
     def get(self):
         """ Corresponds to /passwordreset """
         user_email = self.request.GET['user_email']
-        user_token = self.request.GET['token']
+        token = self.request.GET['token']
         user = self.auth.store.user_model.get_by_auth_id(user_email)
         
         if user:
@@ -292,24 +292,24 @@ class PasswordResetHandler(BaseHandler):
             user_token = user.signup_token
             
             if user_token == token:
-                user.verified = True
                 user.signup_token = None
                 user.put()
-                self.render_response('passwordreset.html', **context)
-                }
+                self.render_response('passwordreset.html')
+                
             else:
                 context = {
                     'error_alert': True,
                     'alert_message': 'Password reset token not validated. Please contact the administrator for assistance.'
-                    self.render_response('passwordreset.html', **context)
-
-                    }
-            else:
-                context = {
-                    'error_alert': True,
-                    'alert_message': 'Password reset failed. No such user.'
-                    self.render_response('passwordreset.html', **context)
-                }
+		}                    
+		self.render_response('passwordreset.html', **context)
+   
+        else:
+            context = {
+                'error_alert': True,
+                'alert_message': 'Password reset failed. No such user.'
+             	}
+	    self.render_response('passwordreset.html', **context)
+               
 
     def post(self):
         '''
