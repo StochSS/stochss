@@ -246,21 +246,104 @@ class VerificationHandler(BaseHandler):
         
         return self.render_response('login.html', **context)
 
+class PasswordResetRequestHandler(BaseHandler):
+    """ Handles password reset requests. """
+    def authentication_required(self):
+        return False
+    
+    def get(self):
+        context = {}
+        self.render_response('passwordresetrequest.html', **context)
+    
+    def post(self):
+        
+        """ Corresponds to /passwordresetrequest """
+        user_email = self.request.POST['user_email']
+        user = self.auth.store.user_model.get_by_auth_id(user_email)
+        
+        if user:
+            # Create a token
+            token = str(uuid.uuid4())
+            user.signup_token = token
+            user.signup_token_time_created=None
+            user.put()
+            status=EmailConfig.send_password_reset_email(user_email, token)
+            if status:
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'Password reset link has been sent, please follow the instructions to reset your password'
+            }
+    
+        return self.render_response('passwordresetrequest.html', **context)
 
-#    def post(self):
-#        user_email = self.request.POST['user_email']
-#        token_key = self.request.POST['signup_token']
-#        sucess, user = self.auth.store.user_model.get_by_auth_id(user_email)
-#        if sucess:
-#            # Verify the token
-#            token = self.auth.store.user_model.validate_token(user_email, 'signup', token_key)
-#        else:
-#            context = {
-#                'success_alert': True,
-#                    'alert_message': 'Account creation successful! You may now log in with your new account.'
-#                    }
-#
-#            return self.render_response('user_registration.html', **context)
+class PasswordResetHandler(BaseHandler):
+    """ Reset user password """
+    def authentication_required(self):
+        return True
+    
+    def get(self):
+        """ Corresponds to /passwordreset """
+        user_email = self.request.GET['user_email']
+        user_token = self.request.GET['token']
+        user = self.auth.store.user_model.get_by_auth_id(user_email)
+        
+        if user:
+            # Verify the token
+            user_token = user.signup_token
+            
+            if user_token == token:
+                user.verified = True
+                user.signup_token = None
+                user.put()
+                self.render_response('passwordreset.html', **context)
+                }
+            else:
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'Password reset token not validated. Please contact the administrator for assistance.'
+                    self.render_response('passwordreset.html', **context)
+
+                    }
+            else:
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'Password reset failed. No such user.'
+                    self.render_response('passwordreset.html', **context)
+                }
+
+    def post(self):
+        '''
+            Corresponds to an attempt to change the password.
+            Possible fields to change:
+            - name
+            - email_address
+            - password
+            '''
+        should_update_user = False
+        try:
+            new_password = self.request.POST["password"]
+            password_confirmation =  self.request.POST["password_confirmation"]
+        except KeyError:
+            new_password = None
+            password_confirmation = None
+        
+        if new_password not in [None, ''] and new_password == password_confirmation:
+            # Check that correct current password was entered
+            self.user.set_password(new_password)
+            should_update_user = True
+        else:
+            # Incorrect
+            context['error_alert'] = 'Password and confirmation must match'
+            return self.render_response('passwordreset.html', **context)
+        
+        # Was anything updated?
+        if should_update_user:
+            self.user.put()
+            context['success_alert'] = 'Successfully updated password!'
+        else:
+            context['error_alert'] = "Failed to reset password"
+        return self.render_response('login.html', **context)
+
 
 
 class LoginPage(BaseHandler):

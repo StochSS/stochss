@@ -84,3 +84,15 @@ class EmailConfig(db.Model):
 	   return True
 	else:
 	   return False
+
+    @classmethod
+    def send_password_reset_email(self,user_email, token):
+        config = db.GqlQuery("SELECT * FROM EmailConfig").get()
+        if config is None:
+            return False
+        msg = "Please click the following link in order to reset your password: {0}".format(str(config.url_prefix)+"/passwordresetrequest?user_email={0}&token={1}".format(user_email, token))
+        status = self.send_email(user_email,"StochSS: Reset password", msg)
+        if status:
+            return True
+        else:
+            return False
