@@ -16,6 +16,7 @@ from email.mime.text import MIMEText
 
 #from simpleauth import SimpleAuthHandler
 
+from db_models.email_config import EmailConfig
 from admin import PendingUsersList
 
 class SecretKey(db.Model):
@@ -139,7 +140,8 @@ class UserRegistrationPage(BaseHandler):
                     user.put()
                     # token_key = webapp2_extras.appengine.auth.models.UserToken.get_key(user,'signup',token)
                     msg = MIMEText("Please click the following link in order to verify your account: {0}".format("https://try.stochss.org/verify?user_email={0}&signup_token={1}".format(user_email, token)))
-                    self.send_verification_email(msg,user_email)
+                    EmailConfig.send_email(user_email, subject, msg)
+		    self.send_verification_email(msg,user_email)
                 
                 
                 if success:
