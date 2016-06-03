@@ -343,8 +343,9 @@ class PasswordResetHandler(BaseHandler):
         # Was anything updated?
         if should_update_user:
             user.put()
-            context['success_alert'] = 'Successfully updated password!'
-	    self.render_response('passwordreset.html',**context)
+            context['success_alert'] = True 
+	    context['alert_message']='Successfully updated password!'
+	    self.render_response('login.html',**context)
         else:
             context['error_alert'] = "Failed to reset password"
             self.render_response("passwordreset.html",**context)
