@@ -42,25 +42,6 @@ jinja_environment = jinja2.Environment(autoescape=True,
 
 from db_models.object_property import ObjectProperty
 
-#?class DictionaryProperty(db.Property):
-#?    """  A db property to store objects. """
-#?
-#?    def get_value_for_datastore(self, dict_prty):
-#?        result = super(DictionaryProperty, self).get_value_for_datastore(dict_prty)
-#?        result = pickle.dumps(dict_prty)
-#?        return db.Blob(result)
-#?
-#?    def make_value_from_datastore(self, value):
-#?        if value is None:
-#?            return None
-#?        return pickle.loads(value)
-#?
-#?    def empty(self, value):
-#?        return value is None
-
-
-
-
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -205,6 +186,7 @@ class User(WebApp2User):
     The WebApp2User class is an expando model (see https://developers.google.com/appengine/docs/python/datastore/expandoclass),
     so the User class inherits that functionality.
     """
+    
 
     @classmethod
     def admin_exists(cls):
@@ -237,6 +219,9 @@ class User(WebApp2User):
             return True
         else:
             return False
+
+    def is_verified(self):
+        return self.verified
 
     def set_password(self, raw_password):
         '''
@@ -387,10 +372,6 @@ app = webapp2.WSGIApplication([
                                ('/meshes.*', handlers.mesheditor.MeshBackboneInterface),
                                ('/models/list.*', handlers.modeleditor.ModelBackboneInterface),
                                ('/stochkit/list.*', JobBackboneInterface),
-                               #('/modeleditor/converttopopulation', ConvertToPopulationPage),
-                               #('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
-                               #('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
-                               #('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
                                ('/modeleditor.*', handlers.modeleditor.ModelEditorPage),
                                ('/publicLibrary.*', handlers.modeleditor.PublicModelPage),
                                ('/simulate',SimulatePage),
@@ -424,6 +405,9 @@ app = webapp2.WSGIApplication([
                                ('/updates',UpdatesPage),
                                ('/register', UserRegistrationPage),
                                ('/login', LoginPage),
+                               ('/verify', VerificationHandler),
+                               ('/passwordresetrequest', PasswordResetRequestHandler),
+                               ('/passwordreset', PasswordResetHandler),
                                ('/logout', LogoutHandler),
                                ('/admin', AdminPage),
                                ('/account_settings', AccountSettingsPage),
