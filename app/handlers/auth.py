@@ -270,7 +270,7 @@ class PasswordResetRequestHandler(BaseHandler):
             status=EmailConfig.send_password_reset_email(user_email, token)
             if status:
                 context = {
-                    'error_alert': True,
+                    'success_alert': True,
                     'alert_message': 'Password reset link has been sent, please follow the instructions to reset your password'
             }
     
@@ -325,24 +325,29 @@ class PasswordResetHandler(BaseHandler):
 	    user_email = self.request.POST['user_email']
         except KeyError:
             new_password = None
-            password_confirmation = None
+            password_confirmation = None	
         
         if new_password not in [None, ''] and new_password == password_confirmation:
             user = self.auth.store.user_model.get_by_auth_id(user_email)
-            self.user.set_password(new_password)
+            user.set_password(new_password)
             should_update_user = True
+	    
         else:
             # Incorrect
-            context['error_alert'] = 'Password and confirmation must match'
+            context['error_alert'] = 'Password and confirmation must match: {0}'.format(self.request.POST)
+            context["user_email"] = user_email
+	    context["password"]=password
+	    context["password_confirmation"] = password_confirmation
             return self.render_response('passwordreset.html', **context)
         
         # Was anything updated?
         if should_update_user:
-            self.user.put()
+            user.put()
             context['success_alert'] = 'Successfully updated password!'
+	    self.render_response('passwordreset.html',**context)
         else:
             context['error_alert'] = "Failed to reset password"
-        return self.render_response('login.html', **context)
+            self.render_response("passwordreset.html",**context)
 
 
 
