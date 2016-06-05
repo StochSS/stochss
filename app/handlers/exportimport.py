@@ -1226,7 +1226,7 @@ class ImportPage(BaseHandler):
                             continue
                         elif overwriteType == 'overwriteOld':
                             #print 'deleting', dbName, 'hehe'
-                            otherJob.delete()
+                            otherJob.delete(self)
                         #elif overwriteType == 'renameOld':
                         #    i = 1
                         #    tryName = name + '_' + str(i)
@@ -1305,7 +1305,7 @@ class ImportPage(BaseHandler):
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
@@ -1337,7 +1337,7 @@ class ImportPage(BaseHandler):
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
@@ -1370,7 +1370,7 @@ class ImportPage(BaseHandler):
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
