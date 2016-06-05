@@ -40,7 +40,7 @@ ProTip!
     + Otherwise, if you already have a StochSS docker container (i.e. when you use StochSS subsequently), run 
     
          + `docker start stochsscontainer1_7` 
-         + `docker exec -t stochsscontainer1_7 /bin/bash`
+         + `docker exec -ti stochsscontainer1_7 /bin/bash`
 
 4. Run the following commands to start the server: 
     + `cd stochss-master`
