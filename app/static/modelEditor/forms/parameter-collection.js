@@ -83,7 +83,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
         AmpersandView.prototype.render.apply(this, arguments);
 
         collectionTemplate = "<div> \
-  <table width='100%' data-hook='table'> \
+  <table data-hook='table' class='table'> \
     <thead> \
       <th width='120px'>Name</th><th width='120px'>Value</th><th></th> \
     </thead> \

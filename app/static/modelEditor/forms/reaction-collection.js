@@ -271,9 +271,9 @@ var ReactionCollectionFormView = AmpersandView.extend({
         var collectionTemplate = '';
 
         collectionTemplate = "<div>\
-  <table data-hook='table'>\
+  <table class='table' data-hook='table'>\
     <thead>\
-      <th width='25px'>Edit</th><th width='120px'>Name</th><th>Summary</th><th width='40px'>Delete</th>\
+      <th width='45px'>Edit</th><th width='120px'>Name</th><th>Summary</th><th width='75px'>Delete</th>\
     </thead>\
     <tbody data-hook='items'>\
     </tbody>\

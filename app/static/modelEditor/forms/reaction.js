@@ -17,7 +17,7 @@ module.exports = View.extend({
     <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
     <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
-    <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
+    <td><center><button class='btn btn-sm' data-hook='remove'>x</button></center></td>\
   </tr>",
     props : {
         valid : 'boolean',

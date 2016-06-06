@@ -214,7 +214,8 @@ var PaginatedCollectionView = AmpersandView.extend({
         'overLimit' : {
             type : 'toggle',
             hook : 'nav'
-        },        'leftPosition' : 
+        },
+        'leftPosition' : 
         {
             type : 'text',
             hook : 'leftPosition'
@@ -246,7 +247,7 @@ var PaginatedCollectionView = AmpersandView.extend({
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.subCollectionViews = this.renderCollection(this.subCollection, this.viewModel, this.el.querySelector('[data-hook=table]'));
+        this.subCollectionViews = this.renderCollection(this.subCollection, this.viewModel, this.el.querySelector('[data-hook=items]'));
 
         if(this.value)
             this.select(this.value, true, true);

@@ -11,6 +11,23 @@
     autocomplete : false;
 }
 
+/* Overriding the Bootstrap 3 CSS to avoid the bottom-margin + bold stuff */
+label {
+    display: inline-block;
+    max-width: 100%;
+    margin-bottom: 0px;
+    font-weight: normal;
+}
+
+/* Overriding Bootstrap 3 CSS to avoid width == 100% tables */
+.table {
+    width : auto;
+}
+
+.table th {
+    text-align : center;
+}
+
 input {
     margin-bottom : 0px;
 }
