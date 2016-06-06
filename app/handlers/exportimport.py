@@ -1217,26 +1217,15 @@ class ImportPage(BaseHandler):
                     rename = False
                     
                     dbName = getEither(headers['models'][name], "name", "jobName")
-                    jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
+                    models = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
-                    if len(jobs) > 0:
-                        otherJob = jobs[0]
+                    if len(models) > 0:
+                        otherModel = models[0]
 
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            #print 'deleting', dbName, 'hehe'
-                            otherJob.delete()
-                        #elif overwriteType == 'renameOld':
-                        #    i = 1
-                        #    tryName = name + '_' + str(i)
-
-                        #    while len(list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name", self.user.user_id(), tryName).run())) > 0:
-                        #        i += 1
-                        #        tryName = name + '_' + str(i)
-
-                        #    otherJob.name = tryName
-                        #    otherJob.put()
+                            otherModel.delete()
                         elif overwriteType == 'renameNew':
                             rename = True
                             
