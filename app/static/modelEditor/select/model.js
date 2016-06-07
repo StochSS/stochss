@@ -9,7 +9,7 @@ var Model = require('../models/model');
 module.exports = View.extend({
     template: '<tr data-hook="row"> \
   <td> \
-    <button data-hook="edit" class="btn-small btn">Select</button> \
+    <button data-hook="edit" class="btn-sm btn">Select</button> \
   </td> \
   <td data-hook="name"> \
   </td> \
@@ -17,23 +17,15 @@ module.exports = View.extend({
   </td> \
   <td> \
     <div class="btn-group"> \
-      <button type="button" class="btn btn-default" data-hook="delete"> \
+      <button type="button" class="btn btn-default btn-sm" data-hook="delete"> \
         Delete \
       </button> \
-      <button type="button" class="btn btn-default" data-hook="duplicate"> \
+      <button type="button" class="btn btn-default btn-sm" data-hook="duplicate"> \
         Duplicate \
       </button> \
-      <button type="button" class="btn btn-default" data-hook="convert"> \
+      <button type="button" class="btn btn-default btn-sm" data-hook="convert"> \
          \
       </button> \
-      <!--<a class="btn dropdown-toggle" data-toggle="dropdown" data-hook="test" href="#"> \
-        Model Actions \
-        <span class="caret"></span> \
-      </a> \
-      <ul class="dropdown-menu" data-hook="test"> \
-        <a data-hook="convertToPopulation" href="#">Convert to Population</a> \
-        <a data-hook="convertToSpatial" href="#">Convert to Spatial</a> \
-      </ul>--> \
     </div> \
   </td> \
 </tr>',

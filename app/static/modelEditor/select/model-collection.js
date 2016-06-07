@@ -58,7 +58,7 @@ var AddNewModelForm = AmpersandFormView.extend({
         $( this.el ).find('input').prop('autocomplete', 'off');
 
         this.buttonTemplate = '<div class="btn-group"> \
-  <a class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
+  <a class="btn btn-lg btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
     Add Model \
     <span class="caret"></span> \
   </a> \

@@ -6,7 +6,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr data-hook='row'><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>",
+    template: "<tr data-hook='row'><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn btn-sm' data-hook='delete'>x</button></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     props : {
