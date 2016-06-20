@@ -68,7 +68,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
         this.baseModel = this.collection.parent;
 
         var collectionTemplate = "<div> \
-  <table data-hook='table'>\
+  <table data-hook='table' class='table'>\
     <thead>\
       <th></th><th>Type</th><th>Species</th><th>Details</th>\
     </thead>\
