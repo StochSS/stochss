@@ -16,7 +16,7 @@ module.exports = View.extend({
 <td data-hook='typeSelect' valign='top'></td> \
 <td data-hook='specie' valign='top'></td> \
 <td data-hook='details' valign='top'> \
-<table> \
+<table class='table'> \
 <tr> \
 <td>Count:</td><td><div data-hook='count'></div></td> \
 </tr> \

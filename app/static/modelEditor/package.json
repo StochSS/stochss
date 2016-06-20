@@ -47,5 +47,10 @@
     "trailing": true,
     "undef": true,
     "white": true
-  }
+  },
+  "description": "ERROR: No README data found!",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "BSD-2-Clause"
 }
