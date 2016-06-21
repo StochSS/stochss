@@ -306,7 +306,7 @@ var reactants;
     </tr>\
   </table>\
   <br>\
-  <div class='alert alert-error' data-hook='reactionMessage'></div> \
+  <div class='alert alert-danger' data-hook='reactionMessage'></div> \
 </div>\
 </div>";
         }
@@ -325,7 +325,7 @@ var reactants;
     </tr>\
   </table>\
   <br> \
-  <div class='alert alert-error' data-hook='reactionMessage'></div> \
+  <div class='alert alert-danger' data-hook='reactionMessage'></div> \
 </div>\
 </div>";
         }
