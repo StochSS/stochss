@@ -406,7 +406,7 @@ class LoginPage(BaseHandler):
             else:
                 isAdmin = False
 
-            if True:#userdb.verified:
+            if userdb.verified:
                 self.auth.set_session(user)
                 return self.redirect('/')
             else:
