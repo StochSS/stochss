@@ -4,7 +4,7 @@
 
 {% block content %}
   {% if error_alert %}
-    <p class="alert alert-error alert-warning">{{alert_message}}</p>
+    <p class="alert alert-danger">{{alert_message}}</p>
   {% elif success_alert %}
     <p class="alert alert-success">{{alert_message}}</p>
   {% endif %}

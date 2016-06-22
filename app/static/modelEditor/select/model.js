@@ -148,7 +148,8 @@ module.exports = View.extend({
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
         //this.model.collection.remove(this.model);
-        saveMessageDom.removeClass( "alert-success alert-error" );
+        saveMessageDom.removeClass( "alert-success alert-danger" );
+        saveMessageDom.addClass( "alert-info" );
         saveMessageDom.text( "Deleting model..." );
 
         this.model.destroy({
@@ -209,7 +210,7 @@ module.exports = View.extend({
     {
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
-        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-info alert-danger" );
         saveMessageDom.addClass( "alert-success" );
         saveMessageDom.text( "Model deleted" );
     },
@@ -217,8 +218,8 @@ module.exports = View.extend({
     {
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
-        saveMessageDom.removeClass( "alert-success" );
-        saveMessageDom.addClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-info alert-success" );
+        saveMessageDom.addClass( "alert-danger" );
         saveMessageDom.text( "Model not saved to local library!" );
     },
     initialize: function()

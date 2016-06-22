@@ -44,14 +44,14 @@ module.exports = View.extend({
         {
             if(state)
             {
-                saveMessageDom.removeClass( "alert-error" );
+                saveMessageDom.removeClass( "alert-info alert-danger" );
                 saveMessageDom.addClass( "alert-success" );
                 saveMessageDom.text( msg );                
             }
             else
             {
-                saveMessageDom.removeClass( "alert-success" );
-                saveMessageDom.addClass( "alert-error" );
+                saveMessageDom.removeClass( "alert-info alert-success" );
+                saveMessageDom.addClass( "alert-danger" );
                 saveMessageDom.text( msg );
             }
         }
@@ -59,25 +59,26 @@ module.exports = View.extend({
         {
             if(this.selected.saveState == 'saved')
             {
-                saveMessageDom.removeClass( "alert-error" );
+                saveMessageDom.removeClass( "alert-info alert-danger" );
                 saveMessageDom.addClass( "alert-success" );
                 saveMessageDom.text( "Saved" );
             }
             else if(this.selected.saveState == 'saving')
             {
-                saveMessageDom.removeClass( "alert-success alert-error" );
+                saveMessageDom.removeClass( "alert-success alert-danger" );
+                saveMessageDom.addClass( "alert-info" );
                 saveMessageDom.text( "Saving..." );
             }
             else if(this.selected.saveState == 'failed')
             {
-                saveMessageDom.removeClass( "alert-success" );
-                saveMessageDom.addClass( "alert-error" );
+                saveMessageDom.removeClass( "alert-info alert-success" );
+                saveMessageDom.addClass( "alert-danger" );
                 saveMessageDom.text( "Model Save Failed!" );
             }
             else if(this.selected.saveState == 'invalid')
             {
-                saveMessageDom.removeClass( "alert-success" );
-                saveMessageDom.addClass( "alert-error" );
+                saveMessageDom.removeClass( "alert-info alert-success" );
+                saveMessageDom.addClass( "alert-danger" );
                 saveMessageDom.text( this.message );
             }
         }
@@ -233,7 +234,8 @@ module.exports = View.extend({
     {
         var saveMessageDom = $( this.queryByHook('saveMessage') );
 
-        saveMessageDom.removeClass( "alert-success alert-error" );
+        saveMessageDom.removeClass( "alert-success alert-danger" );
+        saveMessageDom.addClass( "alert-info" );
         saveMessageDom.text( "Duplicating model..." );
 
         var models = $.ajax( { type : 'GET',
@@ -269,7 +271,7 @@ module.exports = View.extend({
     modelSaved: function() {
         var saveMessageDom = $( this.queryByHook('saveMessage') );
 
-        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-info alert-danger" );
         saveMessageDom.addClass( "alert-success" );
         saveMessageDom.text( "Saved model to public library" );
 
@@ -279,8 +281,8 @@ module.exports = View.extend({
     {
         var saveMessageDom = $( this.queryByHook('saveMessage') );
 
-        saveMessageDom.removeClass( "alert-success" );
-        saveMessageDom.addClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-info alert-success" );
+        saveMessageDom.addClass( "alert-danger" );
         saveMessageDom.text( "Error! Model not saved to public library!" );
     },
     modelDeleted: function()
@@ -324,8 +326,8 @@ module.exports = View.extend({
         {
             var saveMessageDom = $( this.queryByHook('saveMessage') );
 
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
+            saveMessageDom.removeClass( "alert-info alert-success" );
+            saveMessageDom.addClass( "alert-danger" );
             saveMessageDom.text( data.msg );        
         }
     },

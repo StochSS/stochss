@@ -209,7 +209,7 @@ var updateMsg = function (data, msg) {
     if (data.status)
         $(msg).prop('class', 'alert alert-success');
     else
-        $(msg).prop('class', 'alert alert-error');
+        $(msg).prop('class', 'alert alert-danger');
     $(msg).show();
 };
 

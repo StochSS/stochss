@@ -309,7 +309,7 @@ var Model = AmpersandModel.extend({
         }
 
         obj.spatial = {};
-        obj.spatial.mesh_wrapper_id = this.meshId;
+        obj.spatial.mesh_wrapper_id = this.mesh.id;
         //obj.spatial.subdomains = this.mesh.uniqueSubdomainList;
         obj.spatial.species_diffusion_coefficients = {};
         obj.spatial.species_subdomain_assignments = {};
