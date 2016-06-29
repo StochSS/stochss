@@ -30,8 +30,10 @@
             <TD> <INPUT TYPE=text name="from_email" value="{{ from_email }}"> </TD>
         </TR>
         <TR>
-            <TD> URL Prefix: </TD>
-            <TD> <INPUT TYPE=text name="url_prefix" value="{{ url_prefix }}"> </TD>
+            <TD> URL of this App: </TD>
+            <TD> <INPUT TYPE=text id="url_prefix"  name="url_prefix" value="{{ url_prefix }}">
+            <INPUT TYPE=BUTTON OnClick="document.getElementById('url_prefix').value=location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: ''); " VALUE="Fill">
+           </TD>
         </TR>
         <TR>
         <TR>
