@@ -15,9 +15,9 @@ Spatial.Controller = Backbone.View.extend( {
         if(data.status)
             html_ele.prop('class', 'alert alert-success');
         else if(data.status === false || data.status < 0)
-            html_ele.prop('class', 'alert alert-error');
+            html_ele.prop('class', 'alert alert-danger');
         else
-            html_ele.prop('class', 'alert');
+            html_ele.prop('class', 'alert alert-info');
 
         if(data.msg.length > 0)
             html_ele.show();

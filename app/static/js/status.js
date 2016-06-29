@@ -5,10 +5,10 @@ var updateMsg = function(data)
     $( "#msg" ).prop('class', 'alert alert-success');
     else{
     	if(data.msg.indexOf('?') === -1)
-    		$( "#msg" ).prop('class', 'alert alert-error');
+    		$( "#msg" ).prop('class', 'alert alert-danger');
     	else{
     		$( "#msg" ).text(data.msg.substring(0, data.msg.indexOf('*')));
-    		$( "#msg" ).prop('class', 'alert alert-error');
+    		$( "#msg" ).prop('class', 'alert alert-danger');
     		
     		var msg = document.getElementById('msg');
     		var a = document.createElement('a');

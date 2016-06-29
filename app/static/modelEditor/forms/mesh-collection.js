@@ -60,7 +60,7 @@ var AddNewMeshForm = AmpersandView.extend({
         if(data.status)
             el.prop('class', 'alert alert-success');
         else
-            el.prop('class', 'alert alert-error');
+            el.prop('class', 'alert alert-danger');
         
         el.show();
     },
