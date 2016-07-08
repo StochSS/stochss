@@ -254,8 +254,9 @@ class SimulatePage(BaseHandler):
                                 "id" : model["id"],
                                 "units" : model["units"],
                                 "isSpatial" : model["isSpatial"] })
-        context = {'all_models': all_models}
 
+        context = {'all_models': all_models}
+        
         self.render_response('simulate.html',**context)
 
     def post(self):
@@ -310,21 +311,23 @@ class SimulatePage(BaseHandler):
                                              'url' : relpath }))
             return
         elif reqType == 'delJob':
+
+
             try:
                 job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
                 if job.user_id == self.user.user_id():
                     job.delete(self)
-                    
+                        
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ 'status' : True,
-                                                 'msg' : "Job deleted from the datastore."}))
+                                                     'msg' : "Job deleted from the datastore."}))
+                        
             except Exception as e:
                 logging.exception(e)
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ 'status' : False,
-                                                 'msg' : "Error: {0}".format(e) }))
-
+                                                     'msg' : "Error: {0}".format(e) }))
             return
         elif reqType == 'jobInfo':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))

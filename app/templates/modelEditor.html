@@ -2,18 +2,48 @@
 {% block title%}Manage Models{% endblock %}
 {% block content %}
 {% block csscontent %}
-<link href="/static/css/jquery-ui-1.9.1.custom.min.css" rel="stylesheet">
 <link href="/static/modelEditor/app.css" rel="stylesheet">
 <link href="/static/css/controls.css" rel="stylesheet">
 {% endblock %}
 
+
+<div class="container">
 <div class="modelEditor">
-    <div class="span8">
+
+<div class="row">
+    <div class="col-sm-9 col-md-9">
         <div>
             <h1>Model Editor</h1>
             <br>
+
+            <ul class="nav nav-pills">
+                <li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                Import/Export <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                <li><a href="/import?tab=1">Import from .zip</a></li>
+                <li><a href="/importFromXML">Import from .XML</a></li>
+                <li><a href="/importFromSBML">Import from .SBML</a></li>
+                <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
+                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li><a href="/publicLibrary">Import from Public Library</a></li>
+                <li class="reqModel" data-anddom-display="" data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
+
+            </ul>
+                </li>
+<li role="presentation" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                External resources <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                <li><a href="http://bionumbers.hms.harvard.edu/" target="_NEW">B10NUMB3R5 Database</a></li>
+                <li><a href="https://www.ebi.ac.uk/biomodels-main/" target="_NEW">Biomodels Database</a></li>
+            </ul>
+                </li>
+                </ul>
             <div class="well">
-                <div data-hook='selector'>
+                <div data-hook="selector">
                     <div class="selectAccordion">
                         <div class="accordion-group">
                             <div class="accordion-heading">
@@ -29,26 +59,13 @@
                         </div>
                     </div>
                 </div>
-                <div data-hook='editor'></div>
+                <div data-hook="editor"></div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="span2 modelRightBar">
-        <div class="well sidebar-nav">
-            <ul class="nav nav-list">
-                <li class="nav-header">Import / Export</li>
-                <li><a href="/import?tab=1">Import from .zip</a></li>
-                <li><a href="/importFromXML">Import from .XML</a></li>
-                <li><a href="/importFromSBML">Import from .SBML</a></li>
-                <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
-                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
-                <li class="nav-header">Public Library</li>
-                <li><a href="/publicLibrary">Import from Public Library</a></li>
-                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
-            </ul>
-        </div>
-    </div>
+</div>
 </div>
 
 {% endblock %}
@@ -184,13 +201,13 @@
             <div class="accordion-group" data-hook="meshLibraryAccordion">
                 <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion22" href="#collapseTwo2">
-                        Select a Mesh
+                        Select a Different Mesh
                     </a>
                 </div>
                 <div id="collapseTwo2" class="accordion-body collapse">
                     <div class="accordion-inner">
                         <div class="row">
-                            <div class="span11">
+                            <div class="col-md-11">
                                 Select a model mesh and visualize the subdomains. The subdomain information will be used to define where species can diffuse and where reactions occur.
                             </div>
 
@@ -199,14 +216,14 @@
                                 </div>
                             </div>
                             <div class="span3 meshSelectDescriptionDiv">
-				<div class="descriptionContainer">
+                <div class="descriptionContainer">
                                     <h4>Description:</h4>
                                     <pre class="description">
                                     </pre>
-				</div>
+                </div>
                             </div>
                         </div>
-			<br>
+            <br>
                         <button data-hook="doneSelectButton" class="btn btn-primary">Done</button>
                     </div>
                 </div>
@@ -215,7 +232,7 @@
             <div class="accordion-group">
                 <div class="accordion-heading">
                     <a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion22" href="#collapseThree2">
-                        Upload a Mesh
+                        Upload a New Mesh
                     </a>
                 </div>
                 <div id="collapseThree2" class="accordion-body collapse uploadMeshDiv">
@@ -272,29 +289,30 @@
 
 <script class="mesh3dTemplate" type="text/template">
     <div>
+        <div style="display:none" ID="mesh_preview_hide_show" style="display:none">
         <h3>Mesh Preview</h3>
         <div data-hook="container">
             <center>
                 <div class="button-container button-container-left" >
-                    <button class="button" data-hook="zoomPlus_btn"><i class="icon-plus"></i></button> 
+                    <button class="button" data-hook="zoomPlus_btn"><i class="glyphicon glyphicon-plus"></i></button> 
                     Zoom
-                    <button class="button" data-hook="zoomMinus_btn"><i class="icon-minus"></i></button> 
+                    <button class="button" data-hook="zoomMinus_btn"><i class="glyphicon glyphicon-minus"></i></button> 
                 </div>
                 &nbsp; 
                 <div class="button-container">
-                    <button class="button" data-hook="panLeft_btn"><i class="icon-arrow-left"></i></button> 
-                    <button class="button" data-hook="panUp_btn"><i class="icon-arrow-up"></i></button> 
+                    <button class="button" data-hook="panLeft_btn"><i class="glyphicon glyphicon-arrow-left"></i></button> 
+                    <button class="button" data-hook="panUp_btn"><i class="glyphicon glyphicon-arrow-up"></i></button> 
                     Pan
-                    <button class="button" data-hook="panDown_btn"><i class="icon-arrow-down"></i></button>
-                    <button class="button" data-hook="panRight_btn"><i class="icon-arrow-right"></i></button>
+                    <button class="button" data-hook="panDown_btn"><i class="glyphicon glyphicon-arrow-down"></i></button>
+                    <button class="button" data-hook="panRight_btn"><i class="glyphicon glyphicon-arrow-right"></i></button>
                 </div>
                 &nbsp; 
                 <div class="button-container">
-                    <button class="button" data-hook="rotateLeft_btn"><i class="icon-arrow-left"></i></button>
-                    <button class="button" data-hook="rotateUp_btn"><i class=" icon-arrow-up"></i></button> 
+                    <button class="button" data-hook="rotateLeft_btn"><i class="glyphicon glyphicon-arrow-left"></i></button>
+                    <button class="button" data-hook="rotateUp_btn"><i class="glyphicon glyphicon-arrow-up"></i></button> 
                     Rotate
-                    <button class="button" data-hook="rotateDown_btn"><i class="icon-arrow-down"></i></button> 
-                    <button class="button" data-hook="rotateRight_btn"><i class="icon-arrow-right"></i></button> 
+                    <button class="button" data-hook="rotateDown_btn"><i class="glyphicon glyphicon-arrow-down"></i></button> 
+                    <button class="button" data-hook="rotateRight_btn"><i class="glyphicon glyphicon-arrow-right"></i></button> 
                 </div>
                 &nbsp; 
                 <div class="button-container button-container-right">
@@ -308,8 +326,12 @@
         <h3>Highlight Subdomains</h3>
         <div data-hook="subdomains">
         </div>
+        </div>
+        <div id="mesh_preview_hide_show2">
+        <A href="javascript:document.getElementById('mesh_preview_hide_show').style.display='block';document.getElementById('mesh_preview_hide_show2').style.display='none';void(0)">Click here to preview mesh
+        </div>
     </div>
 </script>
 
-<script type="text/javascript" src = "/static/modelEditor/app.bundle.js"></script>
+<script type="text/javascript" src="/static/modelEditor/app.bundle.js"></script>
 {% endblock %}

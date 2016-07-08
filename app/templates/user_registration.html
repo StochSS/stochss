@@ -4,54 +4,71 @@
 
 {% block content %}
 {% if user_registration_failed %}
-  <p class="alert alert-error">Registration failed, please try again.</p>
+  <p class="alert alert-danger">Registration failed, please try again.</p>
 {% elif approved_user_message %}
   <p class="alert alert-success">You have already been approved by the admin to create an account.</p>
 {% endif %}
-  <div class="span6 offset3 well">
+<div class=row>
+    <div class="top-content">
+                      <div class="inner-bg">
+
+
+  <div class="col-sm-4 col-sm-offset-4 text">
     <h4>
     {% if create_admin %}
       Please fill in the following information to create your admin account:
     {% else %}
-      Please fill in the following information:
+      <h1>Please fill in the following information:</h1>
     {% endif %}
     </h4>
     <form action="/register" method="post" class="form-horizontal">
       <fieldset>
-        <div class="control-group">
+        <div class="form-group">
           <label class="control-label">Name</label>
           <div class="controls">
-            <input id="name" type="text" name="name" value="{{name}}" required>
+            <input id="name" type="text" name="name" value="{{name}}" required="" class="form-control">
           </div>
         </div>
-        <div class="control-group">
+        <div class="form-group">
           <label class="control-label">Email Address</label>
           <div class="controls">
-            <input id="email" type="email" name="email" value="{{email_address}}" required>
+            <input id="email" type="email" name="email" value="{{email_address}}" required="" class="form-control">
           </div>
         </div>
-        <div class="control-group">
+        <div class="form-group">
           <label class="control-label">Password</label>
           <div class="controls">
-            <input id="password" type="password" name="password" required>
+            <input id="password" type="password" name="password" required="" class="form-control">
           </div>
         </div>
-        <div class="control-group">
+        <div class="form-group">
           <label class="control-label">Password Confirmation</label>
           <div class="controls">
-            <input id="password_conf" type="password" name="password_confirmation" required>
+            <input id="password_conf" type="password" name="password_confirmation" required="" class="form-control">
           </div>
         </div>
+        <!-- <div class="form-group">
+          <div class="controls first-pet">
+            <input id="first-pet-name" type="text" name="First pet" required="" class="form-control">
+          </div>
+        </div>
+
+        </div>-->
+
+
         {% if create_admin %}
-          <input type="hidden" name="secret_key" value="{{secret_key}}">
+          <input type="hidden" name="secret_key" value="{{secret_key}}" class="form-control">
         {% else %}
-          <p class="new-user-warning">Note: You will not be able to log in until your account is approved by the admin.<p>
+          <p class="new-user-warning"></p><p>
         {% endif %}
-        <div class="form-actions">
+        </p><div class="form-actions">
           <button id="submit-btn" type="submit" class="btn btn-primary">Submit</button>
         </div>
       </fieldset>
     </form>    
+  </div>
+  </div>
+  </div>
   </div>
 {% endblock %}
 {% block jscontent %}<script src="/static/js/user_registration.js"></script>{% endblock %}

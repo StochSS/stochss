@@ -14,13 +14,14 @@
 //-->
 </script>
 
-<div class="span9">
-    
+<div class="col-sm-9 col-md-9">
+
     <div class="page-header">
         <h1> Welcome to StochSS <small>Stochastic Simulation Service</small></h1>
     </div>
-    <div class="hero-unit">
+    
     <div class="jumbotron">
+    <div class="hero-unit">
         <div id="registration_form" style="display: none">
         </div>
         <div id="registration_link" style="display: block">
@@ -40,27 +41,26 @@
     
         <p>Welcome to StochSS! To get started, head over to the <a href="/modeleditor" style="font-size: 20px;">Model Editor</a> and create new deterministic or well-mixed stochastic models for simulation. Or, if time is short, feel free to try out a model in the <a href="/publicLibrary" style="font-size:20px;">Example Library</a>.
         
-            Once you have defined your model, go to the <a style="font-size: 20px;" href="/simulate" >Simulation Manager</a> to perform your experiments, and then to the <a style="font-size: 20px;" href="/status" >Status Page</a> to view the output.
+            Once you have defined your model, go to the <a style="font-size: 20px;" href="/simulate">Simulation Manager</a> to perform your experiments, and then to the <a style="font-size: 20px;" href="/status">Status Page</a> to view the output.
         </p>
         
-       </br>
+       <br>
         
         <h3>Do you want to run simulations in the Cloud?</h3>
         
         <p>
             StochSS will let you launch computational nodes in the Amazon EC2 compute cloud and use them to run your simulations, all with the click of a button! To use this feature, you need to sign up for an account with <a href="http://aws.amazon.com/" target="_blank">Amazon Web Services</a> and then <a href="/credentials">configure StochSS with your AWS credentials</a>.
         </p>
-        </br>
+        <br>
         <p>
-            For more information, consult the <a href="http://www.stochss.org/?page_id=476" target=_blank>StochSS Documentation</a>. Also, make sure to join the <a href="https://groups.google.com/forum/?fromgroups#!forum/stochss-users" target="_blank">StochSS Users Google group</a> to receive information about updates and to ask questions.
+            For more information, consult the <a href="http://www.stochss.org/?page_id=476" target="_blank">StochSS Documentation</a>. Also, make sure to join the <a href="https://groups.google.com/forum/?fromgroups#!forum/stochss-users" target="_blank">StochSS Users Google group</a> to receive information about updates and to ask questions.
         </p>
         
     </div>
     
     
-    
-</div><!--/span-->
 {% endblock %}
+
 {% block jscontent %}
 <script type="text/javascript" src="/static/js/jquery-1.8.3.js"></script>
 <script type="text/javascript" src="/static/js/mainPage.js"></script>

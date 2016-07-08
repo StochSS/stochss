@@ -26,6 +26,11 @@ import simulation
 import spatial
 import stochoptim
 
+from sensitivity import SensitivityJobWrapper
+from simulation import StochKitJobWrapper
+from spatial import SpatialJobWrapper
+from stochoptim import StochOptimJobWrapper
+
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        
@@ -41,12 +46,12 @@ class StatusPage(BaseHandler):
         params = self.request.POST
         
         if 'delete' in params:
-
+            
             # The jobs to delete are specified in the checkboxes
             jobs_to_delete = params.getall('select_job')
-        
+            
             service = backendservices(self.user_data)
-
+            
             # Select the jobs to delete from the datastore
             result = {}
             for job_name in jobs_to_delete:
@@ -54,17 +59,17 @@ class StatusPage(BaseHandler):
                     job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
                 except Exception,e:
                     result = {'status':False,'msg':"Could not retrieve the jobs"+job_name+ " from the datastore."}
-        
+                
                 job.delete()
-    
-            # Render the status page 
+            
+            # Render the status page
             # AH: This is a hack to prevent the page from reloading before the datastore transactions
             # have taken place. I think it is only necessary for the SQLLite backend stub.
             # TODO: We need a better way to check if the entities are gone from the datastore...
             time.sleep(0.5)
             context = self.getContext()
             self.render_response('status.html', **dict(result,**context))
-                
+        
         elif 'refresh' in params:
             # Get the context and reload the page
             context = self.getContext()
@@ -73,8 +78,8 @@ class StatusPage(BaseHandler):
             context = self.getContext()
             result = {'status':False,'msg':"There was an error processing the request."}
             self.render_response('status.html', **dict(result,**context))
-
     
+
 
     def getContext(self):
         """ 

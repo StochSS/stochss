@@ -245,7 +245,7 @@ module.exports = View.extend({
 
         // Just say the model is saved -- this is a white lie, and every model form will set this. It's an issue
         var saveMessageDom = $( this.queryByHook('saveMessage') );
-        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-danger" );
         saveMessageDom.addClass( "alert-success" );
         saveMessageDom.text( "Saved" );
 
