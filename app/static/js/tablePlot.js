@@ -33,7 +33,7 @@ TablePlot.TablePlot = Backbone.View.extend(
 
             if(this.interpolated)
             {
-                $("<div id='interpolateWarning' class='alert alert-block alert-info'>Note: The lines on this graph have been downsampled and interpolated to improve rendering performance.</div>").appendTo( this.$el );
+                $("<div id='interpolateWarning' class='alert alert-info'>Note: The lines on this graph have been downsampled and interpolated to improve rendering performance.</div>").appendTo( this.$el );
             }
             
             $("<span>Display as: <span /><input type='radio' name='viewType' value='graphic'>Graphic, </input><input type='radio' name='viewType' value='text'>Text</input>").appendTo( this.$el );

@@ -124,11 +124,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn btn-sm' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn btn-sm' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);

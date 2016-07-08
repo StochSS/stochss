@@ -110,7 +110,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
             intro = "Define species and their initial conditions. For concentration models this is a positive floating point value and for population models this is an integer.";
         }
 
-        var collectionTemplate = "<div>" + intro + "<table width='100%' data-hook='table'> \
+        var collectionTemplate = "<div>" + intro + "<table data-hook='table' class='table'> \
     <thead> \
 <th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Active in subdomains</th>" : "") + "<th></th> \
     </thead> \

@@ -9,7 +9,7 @@ var Model = require('../models/model');
 module.exports = View.extend({
     template: '<tr data-hook="row"> \
   <td> \
-    <button data-hook="edit" class="btn-small btn">Select</button> \
+    <button data-hook="edit" class="btn-sm btn">Select</button> \
   </td> \
   <td data-hook="name"> \
   </td> \
@@ -17,23 +17,15 @@ module.exports = View.extend({
   </td> \
   <td> \
     <div class="btn-group"> \
-      <button type="button" class="btn btn-default" data-hook="delete"> \
+      <button type="button" class="btn btn-default btn-sm" data-hook="delete"> \
         Delete \
       </button> \
-      <button type="button" class="btn btn-default" data-hook="duplicate"> \
+      <button type="button" class="btn btn-default btn-sm" data-hook="duplicate"> \
         Duplicate \
       </button> \
-      <button type="button" class="btn btn-default" data-hook="convert"> \
+      <button type="button" class="btn btn-default btn-sm" data-hook="convert"> \
          \
       </button> \
-      <!--<a class="btn dropdown-toggle" data-toggle="dropdown" data-hook="test" href="#"> \
-        Model Actions \
-        <span class="caret"></span> \
-      </a> \
-      <ul class="dropdown-menu" data-hook="test"> \
-        <a data-hook="convertToPopulation" href="#">Convert to Population</a> \
-        <a data-hook="convertToSpatial" href="#">Convert to Spatial</a> \
-      </ul>--> \
     </div> \
   </td> \
 </tr>',
@@ -156,7 +148,8 @@ module.exports = View.extend({
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
         //this.model.collection.remove(this.model);
-        saveMessageDom.removeClass( "alert-success alert-error" );
+        saveMessageDom.removeClass( "alert-success alert-danger" );
+        saveMessageDom.addClass( "alert-info" );
         saveMessageDom.text( "Deleting model..." );
 
         this.model.destroy({
@@ -217,7 +210,7 @@ module.exports = View.extend({
     {
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
-        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-info alert-danger" );
         saveMessageDom.addClass( "alert-success" );
         saveMessageDom.text( "Model deleted" );
     },
@@ -225,8 +218,8 @@ module.exports = View.extend({
     {
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
-        saveMessageDom.removeClass( "alert-success" );
-        saveMessageDom.addClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-info alert-success" );
+        saveMessageDom.addClass( "alert-danger" );
         saveMessageDom.text( "Model not saved to local library!" );
     },
     initialize: function()

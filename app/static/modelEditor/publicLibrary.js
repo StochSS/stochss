@@ -115,7 +115,8 @@ var PrimaryView = View.extend({
     {
         var saveMessageDom = $( this.queryByHook('saveMessage') );
 
-        saveMessageDom.removeClass( "alert-success alert-error" );
+        saveMessageDom.removeClass( "alert-success alert-danger" );
+        saveMessageDom.addClass( "alert-info" );
         saveMessageDom.text( "Duplicating model..." );
 
         var models = $.ajax( { type : 'GET',
@@ -151,7 +152,7 @@ var PrimaryView = View.extend({
     modelSaved: function(model) {
         var saveMessageDom = $( this.queryByHook('saveMessage') );
 
-        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-info alert-danger" );
         saveMessageDom.addClass( "alert-success" );
         saveMessageDom.text( "Saved model to local library" );
         
@@ -161,8 +162,8 @@ var PrimaryView = View.extend({
     {
         var saveMessageDom = $( this.queryByHook('saveMessage') );
 
-        saveMessageDom.removeClass( "alert-success" );
-        saveMessageDom.addClass( "alert-error" );
+        saveMessageDom.removeClass( "alert-info alert-success" );
+        saveMessageDom.addClass( "alert-danger" );
         saveMessageDom.text( "Model not saved to local library!" );
     },
     modelDeleted: function()

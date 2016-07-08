@@ -3,12 +3,12 @@
 {% block csscontent %}<link href="/static/css/admin_panel.css" rel="stylesheet">{% endblock %}
 
 {% block content %}
-<div class="active span7">
-    <h1>Admin Panel</h1>
-    <br>
-    <div class="users well well-large">
+<div class="active col-sm-9 col-md-9">
+    <h1>Manage users</h1>
+    <div class="users well well-lg">
         <h3>Users</h3>
-        <table class="table table-bordered active-usr-table">
+        
+            <table class="table table-bordered active-usr-table">
             <thead>
                 <tr>
                     <th>#</th>
@@ -18,7 +18,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for user in active_users %}
+            {% for user in active_users %}
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>{{ user.name }}</td>
@@ -35,48 +35,17 @@
                         {% endif %}
                     </td>
                 </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            {% endfor %}
 
-        {% if preapproved_users|length %}
-        <h3>Pre-approved Users</h3>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Email</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in preapproved_users %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ user }}</td>
-                    <td>
-                        <button class="btn btn-danger table-action-button" data-action="revoke_preapproved">Revoke Access</button>
-                    </td>
-                </tr>
-                {% endfor %}
             </tbody>
         </table>
-        {% endif %}
+        
+    </div>
+    <div class="users well well-lg">
+        <h3>User Verification Method</h3>
     </div>
 </div>
-<div class="span3">
-    <div class="well well-large">
-        <form id='approve-user-form' action="/admin" method="post">
-            <fieldset>
-                <legend>Pre-approve User</legend>
-                <label>Type an e-mail address in the box below to add a pre-approved user:</label>
-                <input style="display: none;" name="action" value="preapprove">
-                <input name="email" type="email" placeholder="example@example.com" required>
-                <button id="grant-access-button" class="btn btn-primary btn-large" type="submit">Pre-approve User</button>
-            </fieldset>
-        </form>
-    </div>
-</div>
+
 {% endblock %}
 
 {% block jscontent %}<script src="/static/js/admin_page.js"></script>{% endblock %}

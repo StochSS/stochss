@@ -14,7 +14,7 @@ var updateMsg = function(data)
     if(data.status)
         $( "#msg" ).prop('class', 'alert alert-success');
     else
-        $( "#msg" ).prop('class', 'alert alert-error');
+        $( "#msg" ).prop('class', 'alert alert-danger');
     $( "#msg" ).show();
 };
 
@@ -164,7 +164,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
             if(status == 'Failed')
             {
                 this.stage = 5;
-                textClass = 'alert-error';
+                textClass = 'alert-danger';
             }
 
             $( '.stage' + this.stage ).css('text-decoration', 'underline').addClass(textClass);

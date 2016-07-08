@@ -552,7 +552,7 @@ else
     else
         echo "Failed"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
-        exit -1
+# exit -1
     fi
 fi
 

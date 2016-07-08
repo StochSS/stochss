@@ -15,7 +15,7 @@
             <button type="submit">Submit</button>
 	    {% if status == False %}
 	    <br><br>
-	    <div id="msg" class="alert alert-error">{{ msg }}</div>
+	    <div id="msg" class="alert alert-danger">{{ msg }}</div>
 	    {% endif %}
             {% if errors | length > 0 %}
             <br>
