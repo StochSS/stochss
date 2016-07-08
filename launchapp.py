@@ -16,14 +16,14 @@ mac = False
 if 'mac' in sys.argv:
     mac = True
 
-try:
-    if mac:
-        host_ip = "localhost"
-    else:
-        host_ip = socket.gethostbyname(socket.gethostname())
-except socket.gaierror:
-    print("Failed to get hostname...defaulting to localhost.")
-    host_ip = "localhost"
+#try:
+#    if mac:
+#        host_ip = "localhost"
+#    else:
+#        host_ip = socket.gethostbyname(socket.gethostname())
+#except socket.gaierror:
+#    print("Failed to get hostname...defaulting to localhost.")
+host_ip = "localhost"
 
 try:
     admin_token = sys.argv[3]
