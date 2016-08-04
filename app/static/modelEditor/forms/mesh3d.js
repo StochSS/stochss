@@ -237,8 +237,11 @@ module.exports = View.extend({
             return;  
         }
         
+        var firstRun = false;
         if(!this.renderer)
         {
+            firstRun = true;
+
             var scene = new THREE.Scene();
             var width = $( this.el ).width();
             this.d_width = width;
@@ -284,7 +287,9 @@ module.exports = View.extend({
         scene.add(mesh);
 
         this.mesh = mesh;
-        this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2;
+
+        if(firstRun)
+            this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2;
         
         delete loader;
         delete material;            

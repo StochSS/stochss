@@ -29,9 +29,11 @@ module.exports = Model.extend({
 
         this.id = attr.id;
 
-        for(var i = 0; i < attr.uniqueSubdomains.length; i++)
+        var uniqueSubdomains = attr.uniqueSubdomains.sort();
+
+        for(var i = 0; i < uniqueSubdomains.length; i++)
         {
-            this.uniqueSubdomains.add({ name : attr.uniqueSubdomains[i] });
+            this.uniqueSubdomains.add({ name : uniqueSubdomains[i] });
         }
 
         delete attr.uniqueSubdomains;

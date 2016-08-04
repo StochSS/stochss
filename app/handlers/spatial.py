@@ -104,8 +104,7 @@ class SpatialPage(BaseHandler):
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             return
-
-        elif reqType == 'timeData':
+        elif reqType == 'getMeshData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
@@ -125,13 +124,16 @@ class SpatialPage(BaseHandler):
                 with open(os.path.join(indir, 'mesh.json') ,'r') as meshfile:
                     mesh = json.load(meshfile)
 
+                with open(os.path.join(indir, 'voxelTuples.json') ,'r') as voxelTuplesFile:
+                    voxelTuples = json.load(voxelTuplesFile)
+
                 f = os.path.join(indir, 'result{0}'.format(trajectory))
                 
                 with h5py.File(f, 'r') as dataFile:
                     species = dataFile.keys()
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps({ "mesh" : mesh, "species" : species }))
+                self.response.write(json.dumps({ "mesh" : mesh, "voxelTuples" : voxelTuples, "species" : species }))
             
             except Exception as e:
                 traceback.print_exc()
@@ -142,8 +144,7 @@ class SpatialPage(BaseHandler):
 
                 self.response.write(json.dumps(result))
             return
-        
-        elif reqType == 'onlyColorRange':
+        elif reqType == 'getTimeSeriesData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
                 data = json.loads(self.request.get('data'))
@@ -151,13 +152,13 @@ class SpatialPage(BaseHandler):
                 trajectory = data["trajectory"]
                 sTime= data["timeStart"]
                 eTime = data["timeEnd"]
+
                 #TODO: what is the right value here?
                 if eTime is None:
                     eTime = 0
                 dataType = "population" if "showPopulation" in data and data["showPopulation"] else "concentration"
 
                 resultJS = {}
-                data = {}
 
                 if job.preprocessed is None or trajectory not in job.preprocessed or not os.path.exists(job.preprocessedDir):
                     job.preprocess(trajectory)
@@ -170,9 +171,12 @@ class SpatialPage(BaseHandler):
 
                 with h5py.File(f, 'r') as dataFile:
                     dataTmp = {}
+                    colorTmp = {}
 
                     for specie in dataFile.keys():
                         data2 = dataFile[specie][dataType][sTime:eTime + 1]
+
+                        dataTmp[specie] = data2
                         
                         limits[specie] = { 'min' : dataFile[specie][dataType].attrs['min'],
                                            'max' : dataFile[specie][dataType].attrs['max'] }
@@ -181,24 +185,28 @@ class SpatialPage(BaseHandler):
                         rgbas = cm.to_rgba(data2, bytes = True).astype('uint32')
 
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
-
+                        
                         #rgbaInts = numpy.zeros((rgbas.shape[0], rgbas.shape[1]))
 
                         #for i in range(rgbas.shape[0]):
                         #    for j in range(rgbas.shape[1]):
                         #        rgbaInts[i, j] = int('0x%02x%02x%02x' % tuple(rgbas[i, j][0:3]), 0)
 
-                        dataTmp[specie] = []
+                        colorTmp[specie] = []
                         for i in range(rgbas.shape[0]):
-                            dataTmp[specie].append(list(rgbas[i].astype('int')))
+                            colorTmp[specie].append(list(rgbas[i].astype('int')))
 
-                    for i in range(len(dataTmp.values()[0])):
+                    colors = {}
+                    data = {}
+                    for i in range(abs(eTime - sTime + 1)):
+                        colors[sTime + i] = {}
                         data[sTime + i] = {}
                         for specie in dataFile.keys():
-                            data[sTime + i][specie] = dataTmp[specie][i]
+                            colors[sTime + i][specie] = colorTmp[specie][i] 
+                            data[sTime + i][specie] = list(dataTmp[specie][i])
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( { "colors" : data, "limits" : limits } ))
+                self.response.write(json.dumps( { "colors" : colors, "raw" : data, "limits" : limits } ))
 
             except Exception as e:
                 traceback.print_exc()

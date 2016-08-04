@@ -97,7 +97,7 @@ class StatusPage(BaseHandler):
                           reverse=True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                all_jobs.append(self.__process_getJobStatus(service,job, number))
+                all_jobs.append(self.__process_getJobStatus(service, job, number))
         context['all_jobs']=all_jobs
 
         # Sensitivity
@@ -112,7 +112,7 @@ class StatusPage(BaseHandler):
                           reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allSensJobs.append(self.__process_getJobStatus(service,job, number))
+                allSensJobs.append(self.__process_getJobStatus(service, job, number))
         context['allSensJobs']=allSensJobs
 
 
@@ -139,7 +139,7 @@ class StatusPage(BaseHandler):
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allParameterJobs.append(self.__process_getJobStatus(service,job, number))
+                allParameterJobs.append(self.__process_getJobStatus(service, job, number))
         context['allParameterJobs'] = allParameterJobs
 
         #Spatial Jobs
@@ -153,7 +153,7 @@ class StatusPage(BaseHandler):
                           reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allSpatialJobs.append(self.__process_getJobStatus(service,job, number))
+                allSpatialJobs.append(self.__process_getJobStatus(service, job, number))
         context['allSpatialJobs'] = allSpatialJobs
 
         #Parameter Sweep Jobs
@@ -218,15 +218,20 @@ def getJobStatus(service, job, molnsConfig = None):
         except Exception as e:
             logging.exception(e)
             job.status = "Failed"
-            
 
         if job.outData is not None and return_code is not None:
             # job finished
             logging.debug('status.getJobStatus() file_to_check={0} return_code={1}'.format(file_to_check, return_code))
-            if return_code == 0:
-                job.status = "Finished"
+            if job.kind() == 'StochKitJobWrapper':
+                if os.path.exists("{0}/result/log.txt".format(job.outData)):
+                    job.status = "Failed"
+                else:
+                    job.status = "Finished"
             else:
-                job.status = "Failed"
+                if return_code == 0:
+                    job.status = "Finished"
+                else:
+                    job.status = "Failed"
         elif job.resource.lower() == "local":
             # running Locally
             # check if the job is still running

@@ -7,6 +7,7 @@ import socket
 import webapp2
 import logging
 
+
 try:
     import json
 except ImportError:
@@ -254,6 +255,7 @@ import handlers.modeleditor
 import handlers.stochoptim
 import handlers.parametersweep
 import handlers.mesheditor
+import handlers.volume
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -269,13 +271,40 @@ import handlers.spatial
 import handlers.molnsconfig
 from backend import pricing
 
+
 class MainPage(BaseHandler):
     """ The Main page. Renders a welcome message and shortcuts to main menu items. """
     def authentication_required(self):
         return True
-        
+    
+    def get_titles(self,news,num_news):
+    	stochss_news = ""
+    	for j in range(0,num_news+1):
+    		i = news.find('<title>')
+    		news = news[i+7:-1]
+    		i = news.find('</title>')
+    		title = news[0:i]
+    		news = news[i+8:-1]
+    		i = news.find('<link>')
+    		news = news[i+6:-1]
+    		i = news.find('</link>')
+    		link = news[0:i]
+    		news = news[i+7:-1]
+    		if(j>0):
+				stochss_news = stochss_news+'<a href="'+link+'">'+title+'</a><br>'
+				
+    		news = news[i+8:-1]
+    		
+    	return stochss_news
+    
     def get(self):
-        self.render_response("mainpage.html")
+        try:
+    	    stochss_feed = urllib2.urlopen("http://www.stochss.org/wordpress/?cat=7&feed=rss2").read().decode('utf-8')
+    	    stochss_news = "<h3>Latest News:</h3><p>"+self.get_titles(stochss_feed,2)+"</p><hr>"
+        except urllib2.URLError:
+            stochss_news = ''
+    	template_values = {'stochss_news':stochss_news}
+        self.render_response("mainpage.html",**template_values)
     
     def post(self):
         self.get()
@@ -339,6 +368,7 @@ app = webapp2.WSGIApplication([
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/spatial',handlers.spatial.SpatialPage),
+                               ('/volume',handlers.volume.VolumePage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
                                ('/parametersweep', handlers.parametersweep.ParameterSweepPage),
                                webapp2.Route('/parametersweep/<jobID>', handler = handlers.parametersweep.ParameterSweepVisualizationPage),
@@ -368,7 +398,6 @@ app = webapp2.WSGIApplication([
                                ('/cost_analysis',CostAnalysisPage),
                                ('/localsettings',LocalSettingsPage),
                                ('/updates',UpdatesPage),
-                               ('/secret_key', SecretKeyHandler),
                                ('/register', UserRegistrationPage),
                                ('/login', LoginPage),
                                ('/logout', LogoutHandler),
