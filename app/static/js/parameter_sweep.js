@@ -276,9 +276,11 @@ ParameterSweep.Controller = Backbone.View.extend(
             }
             
             $( "#minValueA" ).val( 0.9 * valA );
+            $( "#currentValueA" ).val( valA );
             $( "#maxValueA" ).val( 1.1 * valA );
 
             $( "#minValueB" ).val( 0.9 * valB );
+            $( "#currentValueB" ).val( valB );
             $( "#maxValueB" ).val( 1.1 * valB );
         },
 
