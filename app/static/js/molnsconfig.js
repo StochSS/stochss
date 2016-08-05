@@ -146,7 +146,7 @@ $( function() {
 
                 $( 'input, button, select' ).prop('disabled', true);
 
-                this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+                this.updateStateMessage({ status : 'true', msg : 'Processing command, check Terminal for details' });
             }
             else if(molnsRunning)
             {
@@ -277,7 +277,7 @@ $( function() {
         },
                             
         startCluster : function() {
-            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Terminal for details' });
             this.createMessage({ status : 2, msg : 'Sending molns cluster start request' });
             $( '.startCluster' ).prop('disabled', true);
 
@@ -309,7 +309,7 @@ $( function() {
         },
 
         rebuildCluster : function() {
-            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Terminal for details' });
             this.createMessage({ status : 2, msg : 'Sending molns cluster rebuild request' });
             $( '.rebuildCluster' ).prop('disabled', true);
 
@@ -333,7 +333,7 @@ $( function() {
                   );
         },
         stopCluster : function() {
-            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Terminal for details' });
             this.createMessage({ status : 2, msg : 'Sending molns cluster stop request' });
             $( '.stopCluster' ).prop('disabled', true);
             $( '.terminateCluster' ).prop('disabled', true);
@@ -358,7 +358,7 @@ $( function() {
                   );
         },
         terminateCluster : function() {
-            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Debug Terminal for details' });
+            this.updateStateMessage({ status : 'true', msg : 'Processing command, check Terminal for details' });
             this.createMessage({ status : 2, msg : 'Sending molns cluster terminate request' });
             $( '.stopCluster' ).prop('disabled', true);
             $( '.terminateCluster' ).prop('disabled', true);

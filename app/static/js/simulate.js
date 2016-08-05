@@ -479,6 +479,7 @@ var run = function()
                            {
                                url = "/simulate";
                            }
+                           jobName = data.jobName
 
                            $.post( url = url,
                                    data = { reqType : "newJob",
@@ -487,7 +488,7 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status';
+                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));
@@ -519,6 +520,7 @@ var run = function()
                            {
                                url = "/simulate";
                            }
+                           jobName = data.jobName
 
                            $.post( url = url,
                                    data = { reqType : "newJob",
@@ -527,7 +529,7 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status';
+                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));
@@ -559,6 +561,7 @@ var run = function()
                            {
                                url = "/simulate";
                            }
+                           jobName = data.jobName
 
                            $.post( url = url,
                                    data = { reqType : "newJob",
@@ -567,7 +570,7 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status';
+                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));
