@@ -76,6 +76,8 @@ h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout
                      stderr=subprocess.PIPE)
 h.communicate()
 
+proc = {}
+
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
 
@@ -84,30 +86,45 @@ stderr = open('stderr.log', 'w')
 def startserver():
     import sys
     if 'debug' in sys.argv:
-        h = subprocess.Popen((
+        return subprocess.Popen((
                          "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)).split(), stdout=stdout, stderr=stderr)
     else:
-        h = subprocess.Popen((
+        return subprocess.Popen((
                          "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(
                              path, host_ip)).split(), stdout=stdout, stderr=stderr)
 
-
-startserver()
-
-print "Starting admin server at: http://{0}:8000".format(vm_ip)
-if mac:
-    print "<br />"
-sys.stdout.flush()
-
+def startjupyternotebook():
+     return subprocess.Popen((
+        "jupyter notebook --NotebookApp.open_browser=False --ip={1} --port=9999 --config={0}/jupyter_profile/jupyter.config".format(path, host_ip)).split(),         
+        stdout=stdout, stderr=stderr, preexec_fn=os.setsid)
 
 def clean_up_and_exit(signal, stack):
-    print "Killing webserver proces..."
+    print "Killing webserver process..."
     if mac:
-        print "<br /></body></html>"
+        print "<br />"
     sys.stdout.flush()
 
     try:
-        h.terminate()
+        proc['server'].terminate()
+    except:
+        pass
+
+    print "Killing jupyter notebook process [pid={0}]...".format(proc['jupyternotebook'].pid)
+    if mac:
+        print "<br /></body></html>"
+    sys.stdout.flush()
+    try:
+        pgrp = os.getpgid(proc['jupyternotebook'].pid)
+        os.killpg(pgrp, signal.SIGINT)
+        time.sleep(0.1)
+        os.killpg(pgrp, signal.SIGTERM)
+        time.sleep(0.1)
+        os.killpg(pgrp, signal.SIGKILL)
+#        proc['jupyternotebook'].terminate()
+#        time.sleep(0.1)
+#        proc['jupyternotebook'].kill()
+#        time.sleep(0.1)
+#        proc['jupyternotebook'].kill()
     except:
         pass
 
@@ -115,6 +132,22 @@ def clean_up_and_exit(signal, stack):
         exit(0)
     else:
         exit(-1)
+
+
+#print "Starting admin server at: http://{0}:8000".format(vm_ip)
+print "Starting server at: http://{0}:8080".format(vm_ip)
+if mac:
+    print "<br />"
+sys.stdout.flush()
+proc['server'] = startserver()
+
+print "Starting jupyter notebook server at: http://{0}:9999".format(vm_ip)
+if mac:
+    print "<br />"
+sys.stdout.flush()
+proc['jupyternotebook'] = startjupyternotebook()
+
+
 
 
 signal.signal(signal.SIGHUP, clean_up_and_exit)
