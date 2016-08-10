@@ -7,10 +7,23 @@
     function toggle(source) {
     checkboxes = document.getElementsByName('select_job');
     for(var i=0, n=checkboxes.length;i<n;i++) {
-                                              checkboxes[i].checked = source.checked;
-                                              }
-                                              }
-                                              </script>
+        checkboxes[i].checked = source.checked;
+    }
+}
+function swap_job_type_filter(sel) {
+    var value = sel.value;  
+    //alert(value)
+    if(value == 'type'){
+        document.getElementById("filter_value_div").style.display = 'none';
+        document.getElementById("job_type_div").style.display = 'inline';
+        document.getElementById("filter_value_box").value = "";
+    }else{
+        document.getElementById("filter_value_div").style.display = 'inline';
+        document.getElementById("job_type_div").style.display = 'none';
+        document.getElementById("job_type_select").value = "";
+    }
+}
+</script>
 <!--    -->
 
 <div class="span9">
@@ -27,14 +40,21 @@
                     <td valign=bottom>
                         <!--input type=submit class="btn btn-primary btn-large" value="Filter"-->
                         <input type=submit class="btn btn-primary" value="Filter:">
-                        <select name="filter_type">
+                        <select name="filter_type" onchange="swap_job_type_filter(this)">
                         <option value="name" {{seleted_filter_type_name}}>Job Name</option>
                         <option value="model" {{seleted_filter_type_model}}>Model</option>
                         <option value="type" {{seleted_filter_type_type}}>Job Type</option>
                         <option value="resource" {{seleted_filter_type_resource}}>Resource</option>
                         <option value="status" {{seleted_filter_type_status}}>Status</option>
                         </select>
-                        <input type=text name="filter_value" value="{{seleted_filter_value}}">
+                        <div id="filter_value_div" style="display:{{filter_value_div}}">
+                        <input type=text id="filter_value_box" name="filter_value" value="{{seleted_filter_value}}">
+                        </div>
+                        <div id="job_type_div" style="display:{{job_type_div}}">
+                        <select id="job_type_select" name="job_type"><option value=""> -- </option>
+                        {{job_type_option_list|safe}}
+                        </select>
+                        </div>
                     </td>
                 </tr>
             </table>

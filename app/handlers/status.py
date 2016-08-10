@@ -84,14 +84,19 @@ class StatusPage(BaseHandler):
             with info to display on the page. 
         """
         ## 
-        show_jobs={}
-        show_jobs['stochkit'] = True
-        show_jobs['sensitivity'] = True
-        show_jobs['export'] = True
-        show_jobs['parameter_estimation'] = True
-        show_jobs['spatial'] = True
-        show_jobs['parameter_sweep'] = True
         context = {}
+        ##
+        all_job_types = OrderedDict([('stochkit','Non-spatial Simulation'),('spatial','Spatial Simulation'),('sensitivity','Sensitivity'),('parameter_estimation','Parameter Estimation'),('parameter_sweep','Parameter Sweep'),('export','Data Export')])
+        show_jobs={}
+        context['job_type_option_list'] = ""
+        for k,v in all_job_types.iteritems(): 
+            show_jobs[k]=True
+            if 'job_type' in self.request.GET and self.request.GET['job_type'] == k:
+                context['job_type_option_list'] += "<option value=\"{0}\" SELECTED>{1}</option>".format(k,v)
+            else:
+                context['job_type_option_list'] += "<option value=\"{0}\">{1}</option>".format(k,v)
+        context['filter_value_div']='inline'
+        context['job_type_div']='none'
         service = backendservices(self.user_data)
         ## setup filters
         filter_types = ['type','name','model','resource','status']
@@ -107,12 +112,15 @@ class StatusPage(BaseHandler):
         SQL_where_data = [self.user.user_id()]
         ## process filters
         for k,v in self.request.GET.iteritems():
-            if k == 'job_type':
+            #if k == 'job_type' and v != "":
+            #    for k,v in show_jobs.iteritems(): show_jobs[k]=False
+            #    if v in show_jobs: show_jobs[v] = True
+            if k == "filter_type" and v == "type":# and 'job_type' in self.request.GET:
                 for k,v in show_jobs.iteritems(): show_jobs[k]=False
-                if v in show_jobs: show_jobs[v] = True
-            elif k == "filter_type" and v == "type":
-                for k,v in show_jobs.iteritems(): show_jobs[k]=False
-                if filter_value in show_jobs: show_jobs[filter_value] = True
+                job_filter = self.request.GET['job_type']
+                if job_filter in show_jobs: show_jobs[job_filter] = True
+                context['filter_value_div']='none'
+                context['job_type_div']='inline'
             elif k == "filter_type" and v == "name":
                 SQL_where_clause = "WHERE user_id = :1 AND name = :2"
                 SQL_where_data = [self.user.user_id(), filter_value]
