@@ -159,7 +159,7 @@ class JobManager():
         
         jobWrap.modelName = job['modelName']
         # This is probably not a good idea...
-        jobWrap.indata = json.dumps(dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'epsilon', 'threshold', 'seed'] if k in job]))
+        jobWrap.indata = json.dumps(dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'epsilon', 'rTol', 'aTol', 'mxSteps', 'threshold', 'seed'] if k in job]))
 
         if 'startTime' in job:
             jobWrap.startTime = job['startTime']
@@ -460,6 +460,8 @@ class SimulatePage(BaseHandler):
                                                  "stdout" : stdout,
                                                  "stderr" : stderr}))
             else:
+                traceback.print_exc()
+                
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "asdfasfdfdsa" }))
         else:
@@ -490,6 +492,8 @@ class SimulatePage(BaseHandler):
                                                   "msg" : "Job launched",
                                                   "id" : job.key().id() } ))
             except Exception as e:
+                traceback.print_exc()
+
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps( { "status" : False,
                                                   "msg" : str(e) } ))
@@ -621,6 +625,9 @@ class SimulatePage(BaseHandler):
                                   "exec_type" : params['execType'],
                                   "units" : model.units.lower(),
                                   "epsilon" : params['epsilon'],
+                                  "rTol" : params['rTol'],
+                                  "aTol" : params['aTol'],
+                                  "mxSteps" : params['mxSteps'],
                                   "threshold" : params['threshold'] })
 
         job.output_stored = 'True'
@@ -698,6 +705,7 @@ class SimulatePage(BaseHandler):
         fmodelHandle.close()
 
         cmd += ' -m {0} --out-dir {1}/result'.format(modelFileName, dataDir)
+        cmd += ' -r {0} -a {1} --mxsteps {2}'.format(params['rTol'], params['aTol'], params['mxSteps'])
 
         logging.info("cmd =\n{}".format(cmd))
         logging.debug('simulation.runLocal(): cmd={0}'.format(cmd))
@@ -735,6 +743,9 @@ class SimulatePage(BaseHandler):
                                    "exec_type" : params['execType'],
                                    "units" : model.units.lower(),
                                    "epsilon" : params['epsilon'],
+                                   "rTol" : params['rTol'],
+                                   "aTol" : params['aTol'],
+                                   "mxSteps" : params['mxSteps'],
                                    "threshold" : params['threshold'] } )
 
         job.outData = dataDir

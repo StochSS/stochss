@@ -95,6 +95,39 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
+    var rTol = $( "#rTol" ).val();
+
+    rTol = parseFloat(rTol);
+
+    if(isNaN(rTol) || rTol <= 0.0)
+    {
+        updateMsg( { status : false,
+                     msg : "Relative tolerance must be a valid floating point number greater than 0.0" } );
+        return false;
+    }
+
+    var aTol = $( "#aTol" ).val();
+
+    aTol = parseFloat(aTol);
+
+    if(isNaN(aTol) || aTol <= 0.0)
+    {
+        updateMsg( { status : false,
+                     msg : "Absolute tolerance must be a valid floating point number greater than 0.0" } );
+        return false;
+    }
+
+    var mxSteps = $( "#mxSteps" ).val();
+
+    if(!/^[0-9]+$/.test(mxSteps) || parseInt(mxSteps) <= 0)
+    {
+        updateMsg( { status : false,
+                     msg : "Max steps must be a valid integer greater than 0" } );
+        return false;
+    }
+
+    mxSteps = parseInt(mxSteps);
+
     var epsilon = $( "#epsilon" ).val();
 
     if(!(epsilon <= 1.0 && epsilon >= 0.0))
@@ -136,7 +169,10 @@ var checkAndGet = function(selectTable)
              seed : seed,
              threshold : threshold,
              epsilon : epsilon,
-             selections : selections};
+             selections : selections,
+             aTol : aTol,
+             rTol : rTol,
+             mxSteps : mxSteps };
 }
 
 var updateMsg = function(data)
@@ -401,7 +437,7 @@ var run = function()
                        var handle_type = function() {
                            if( $( "#deterministic" ).eq(0).prop('checked') )
                            {
-                               $( ".advanced-settings" ).hide();
+                               $( ".advanced-settings" ).show();
                                $( ".stochastic" ).hide();
                                $( ".tau-leaping" ).hide();
                                $( ".ssa" ).hide();
