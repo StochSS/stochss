@@ -326,6 +326,31 @@ class SimulatePage(BaseHandler):
                                                  'msg' : "Error: {0}".format(e) }))
 
             return
+        elif reqType == 'redirectJupyterNotebook':
+            try:
+                job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
+                #Check if notebook already exists, if not create one
+                notebook_filename = "{0}.ipynb".format(job.name)
+                local_path = os.path.relpath(os.path.abspath(job.outData), os.path.abspath(__file__+'/../../../'))
+                notebook_file_path =  os.path.abspath(job.outData) + "/" + notebook_filename
+                notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/Simulation.ipynb"
+                if not os.path.isfile(notebook_file_path):
+                    logging.info("Creating {0} from {1}".format(notebook_file_path,notebook_template_path))
+                    shutil.copyfile(notebook_template_path, notebook_file_path)
+
+
+                #TODO remove 'localhost' here, replace with ip used for request
+                host = 'localhost'
+                port = 9999
+                proto = 'http'
+                #
+                # return the url of the notebook
+                notebook_url = '{0}://{1}:{2}/notebooks/{3}/{4}'.format(proto,host,port,local_path,notebook_filename)
+                self.redirect(notebook_url)
+            except Exception as e:
+                logging.error("Error in openJupyterNotebook: {0}".format(e))
+                self.response.write('Error: {0}'.format(e))
+            return   
         elif reqType == 'jobInfo':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
             indata = json.loads(job.indata)

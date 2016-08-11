@@ -109,22 +109,17 @@ def clean_up_and_exit(signal, stack):
     except:
         pass
 
-    print "Killing jupyter notebook process [pid={0}]...".format(proc['jupyternotebook'].pid)
-    if mac:
-        print "<br /></body></html>"
-    sys.stdout.flush()
     try:
+        print "Killing jupyter notebook process [pid={0}]...".format(proc['jupyternotebook'].pid)
+        if mac:
+            print "<br /></body></html>"
+        sys.stdout.flush()
         pgrp = os.getpgid(proc['jupyternotebook'].pid)
         os.killpg(pgrp, signal.SIGINT)
         time.sleep(0.1)
         os.killpg(pgrp, signal.SIGTERM)
         time.sleep(0.1)
         os.killpg(pgrp, signal.SIGKILL)
-#        proc['jupyternotebook'].terminate()
-#        time.sleep(0.1)
-#        proc['jupyternotebook'].kill()
-#        time.sleep(0.1)
-#        proc['jupyternotebook'].kill()
     except:
         pass
 
@@ -138,17 +133,21 @@ def clean_up_and_exit(signal, stack):
 print "Starting server at: http://{0}:8080".format(vm_ip)
 if mac:
     print "<br />"
+try:
+    proc['server'] = startserver()
+except Exception as e:
+    print "Error starting server: {0}".format(e)
+    sys.exit(1)
 sys.stdout.flush()
-proc['server'] = startserver()
 
 print "Starting jupyter notebook server at: http://{0}:9999".format(vm_ip)
 if mac:
     print "<br />"
+try:
+    proc['jupyternotebook'] = startjupyternotebook()
+except Exception as e:
+    print "Error startring jupyter notebook: {0}".format(e)
 sys.stdout.flush()
-proc['jupyternotebook'] = startjupyternotebook()
-
-
-
 
 signal.signal(signal.SIGHUP, clean_up_and_exit)
 signal.signal(signal.SIGINT, clean_up_and_exit)
