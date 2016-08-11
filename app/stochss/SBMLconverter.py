@@ -4,6 +4,54 @@ import os
 import stochkit
 import numpy
 
+def convertToSBML(filename, model):
+    try:
+        document = libsbml.SBMLDocument(3, 1)
+    except ValueError:
+        raise SystemExit('Could not create SBMLDocumention object')
+
+    model = document.createModel()
+
+    species = model.getAllSpecies()
+
+    for name in species:
+        specie = species[name]
+        s = model.createSpecies()
+        s.setId(specie.name)
+        s.setInitialAmount(specie.initial_value)
+
+    parameters = model.getAllParameters()
+    for name in parameters:
+        parameter = parameters[name]
+        p = model.createParameter()
+        p.setId(parameter.name)
+        p.setValue(parameter.value)
+
+    reactions = model.getAllReactions()
+    for name in reactions:
+        reaction = reactions[name]
+        r = model.createReaction()
+        r.setId(reaction.name)
+
+        for reactionName, stoichiometry in reactions.reactants:
+            r2 = r.createReactant()
+            r2.setSpecies(reactionName)
+            r2.setStoichiometry(stoichiometry)
+
+        for productName, stoichiometry in reaction.products:
+            p = r.createProduct()
+            p.setSpecies(productName)
+            p.setStoichiometry(stoichiometry)
+
+        k = r.createKineticLaw()
+        if reaction.massaction:
+            # THIS IS NOT CORRECT
+            k.setMath(parameters[reaction.marate].value)
+        else:
+            k.setMath(reaction.propensity_function)
+
+    libsbml.writeSBMLToFile(document, filename)
+
 def convert(filename, modelName = None):
     document = libsbml.readSBML(filename)
 
