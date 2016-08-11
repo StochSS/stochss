@@ -333,7 +333,12 @@ class SimulatePage(BaseHandler):
                 notebook_filename = "{0}.ipynb".format(job.name)
                 local_path = os.path.relpath(os.path.abspath(job.outData), os.path.abspath(__file__+'/../../../'))
                 notebook_file_path =  os.path.abspath(job.outData) + "/" + notebook_filename
-                notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/Simulation.ipynb"
+                # TODO Deterministic or Stochastic template
+                indata = json.loads(job.indata)
+                if indata['exec_type'] ==  'deterministic':
+                    notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/Deterministic.ipynb"
+                else:
+                    notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/Stochastic.ipynb"
                 if not os.path.isfile(notebook_file_path):
                     logging.info("Creating {0} from {1}".format(notebook_file_path,notebook_template_path))
                     shutil.copyfile(notebook_template_path, notebook_file_path)

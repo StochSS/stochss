@@ -424,4 +424,8 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
+export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
+
+echo "PYTHONPATH :: $PYTHONPATH"
+
 exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode mac

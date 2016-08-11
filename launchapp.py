@@ -98,7 +98,7 @@ def startjupyternotebook():
         "jupyter notebook --NotebookApp.open_browser=False --ip={1} --port=9999 --config={0}/jupyter_profile/jupyter.config".format(path, host_ip)).split(),         
         stdout=stdout, stderr=stderr, preexec_fn=os.setsid)
 
-def clean_up_and_exit(signal, stack):
+def clean_up_and_exit(in_signal, stack):
     print "Killing webserver process..."
     if mac:
         print "<br />"
@@ -118,10 +118,9 @@ def clean_up_and_exit(signal, stack):
         os.killpg(pgrp, signal.SIGINT)
         time.sleep(0.1)
         os.killpg(pgrp, signal.SIGTERM)
-        time.sleep(0.1)
-        os.killpg(pgrp, signal.SIGKILL)
-    except:
-        pass
+    except Exception as e:
+        print "Failed to kill notebook: {0}".format(e)
+       
 
     if signal == None:
         exit(0)
