@@ -571,6 +571,8 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 
+export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
+
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
