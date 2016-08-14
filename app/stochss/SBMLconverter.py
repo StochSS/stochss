@@ -6,53 +6,96 @@ import numpy
 
 def convertToSBML(filename, model):
     try:
-        document = libsbml.SBMLDocument(3, 1)
+        document = libsbml.SBMLDocument(2, 1)
     except ValueError:
         raise SystemExit('Could not create SBMLDocumention object')
 
-    model = document.createModel()
+    sbmlModel = document.createModel()    
 
-    species = model.getAllSpecies()
+    sbmlModel.setName(str(model.name))
 
-    for name in species:
-        specie = species[name]
-        s = model.createSpecies()
-        s.setId(specie.name)
-        s.setInitialAmount(specie.initial_value)
+    c = sbmlModel.createCompartment()
+    c.setId('c')
+    c.setConstant(True)
+    c.setSize(1)
+    c.setSpatialDimensions(3)
 
-    parameters = model.getAllParameters()
-    for name in parameters:
-        parameter = parameters[name]
-        p = model.createParameter()
-        p.setId(parameter.name)
-        p.setValue(parameter.value)
+    species = model.species
 
-    reactions = model.getAllReactions()
-    for name in reactions:
-        reaction = reactions[name]
-        r = model.createReaction()
-        r.setId(reaction.name)
+    for specie in species:
+        s = sbmlModel.createSpecies()
+        s.setCompartment('c')
+        s.setId(specie['name'])
+        s.setInitialAmount(specie['initialCondition'])
 
-        for reactionName, stoichiometry in reactions.reactants:
+    dParameters = {}
+
+    parameters = model.parameters
+    for parameter in parameters:
+        p = sbmlModel.createParameter()
+        dParameters[parameter['name']] = parameter['value']
+        p.setId(parameter['name'])
+        p.setValue(parameter['value'])
+
+    reactions = model.reactions
+    for reaction in reactions:
+        r = sbmlModel.createReaction()
+        r.setId(reaction['name'])
+
+        reactants = {}
+        for reactant in reaction['reactants']:
+            if reactant['specie'] not in reactants:
+                reactants[reactant['specie']] = 0
+
+            reactants[reactant['specie']] += reactant['stoichiometry']
+
+        for reactantName, stoichiometry in reactants.items():
             r2 = r.createReactant()
-            r2.setSpecies(reactionName)
+            r2.setSpecies(reactantName)
             r2.setStoichiometry(stoichiometry)
 
-        for productName, stoichiometry in reaction.products:
+        products = {}
+        for product in reaction['products']:
+            if product['specie'] not in products:
+                products[product['specie']] = 0
+
+            products[product['specie']] += product['stoichiometry']
+
+        for productName, stoichiometry in products.items():
             p = r.createProduct()
             p.setSpecies(productName)
             p.setStoichiometry(stoichiometry)
 
         k = r.createKineticLaw()
-        if reaction.massaction:
-            # THIS IS NOT CORRECT
-            k.setMath(parameters[reaction.marate].value)
+        if reaction['type'] != 'custom':
+            if len(reactants) == 1:
+                reactantName, stoichiometry = reactants.items()[0]
+                if stoichiometry == 1:
+                    equation = "{0} * {1}".format(reaction['rate'], reactantName)
+                elif stoichiometry == 2:
+                    equation = "{0} * {1} * {1}".format(reaction['rate'], reactantName)
+                else:
+                    raise Exception("Failed to export SBML. Reaction '{0}' is marked as mass action but reactant '{1}' has stoichiometry '{2}' (impossible)".format(reaction['name'], reactantName, stoichiometry))
+            elif len(reactants) == 2:
+                reactantName0, stoichiometry0 = reactants.items()[0]
+                reactantName1, stoichiometry1 = reactants.items()[1]
+
+                if stoichiometry0 == 1 and stoichiometry1 == 1:
+                    equation = "{0} * {1} * {2}".format(reaction['rate'], reactantName0, reactantName1)
+                else:
+                    raise Exception("Failed to export SBML. Reaction '{0}' is marked as mass action but total stoichiometry of reactants exceeds 2 (impossible)".format(reaction['name']))
+            else:
+                raise Exception("Failed to export SBML. Reaction '{0}' is marked as mass action but has {1} reactants (impossible)".format(reaction['name'], len(reactants)))
         else:
-            k.setMath(reaction.propensity_function)
+            equation = reaction['equation']
 
-    libsbml.writeSBMLToFile(document, filename)
+        k.setMath(libsbml.parseL3Formula(equation))
+    writer = libsbml.SBMLWriter()
 
-def convert(filename, modelName = None):
+    with open(filename, 'w') as f:
+        f.write(writer.writeSBMLToString(document))
+
+def convertToStochSS(filename, modelName = None):
     document = libsbml.readSBML(filename)
 
     errors = []

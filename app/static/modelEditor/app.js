@@ -235,6 +235,7 @@ var PrimaryView = View.extend({
 
         $( "[data-hook='exportToPublic']" ).click(_.bind(this.exportModel, this));
         $( "[data-hook='exportToZip']" ).click(_.bind(this.exportModelAsZip, this));
+        $( "[data-hook='exportToSBML']" ).click(_.bind(this.exportModelAsSBML, this));
 
         $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
             this.modelEditor.duplicateModel();
@@ -396,6 +397,15 @@ var PrimaryView = View.extend({
         $.ajax( { type : 'GET',
                   url : '/modeleditor',
                   data : { reqType : 'exportToZip', id : this.modelSelector.selected.id },
+                  dataType : 'json',
+                  success : _.bind(this.forwardToFile, this)
+                } )
+    },
+    exportModelAsSBML: function()
+    {
+        $.ajax( { type : 'GET',
+                  url : '/modeleditor',
+                  data : { reqType : 'exportToSBML', id : this.modelSelector.selected.id },
                   dataType : 'json',
                   success : _.bind(this.forwardToFile, this)
                 } )
