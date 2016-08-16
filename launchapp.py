@@ -17,25 +17,16 @@ if 'mac' in sys.argv:
     mac = True
 
 try:
-    if mac:
-        host_ip = "localhost"
-    else:
-        host_ip = socket.gethostbyname(socket.gethostname())
-except socket.gaierror:
-    print("Failed to get hostname...defaulting to localhost.")
-    host_ip = "localhost"
-
-try:
     admin_token = sys.argv[3]
 except IndexError:
     print("Admin token not received. Will generate one.")
 
 try:
-    vm_ip = sys.argv[4]
-    if vm_ip == "0":
-        vm_ip = host_ip
+    host_ip = sys.argv[4]
+    if host_ip == "0":
+        host_ip = "localhost"
 except IndexError:
-    vm_ip = host_ip
+    host_ip = "localhost"
 
 path = os.path.abspath(os.path.dirname(__file__))
 
@@ -128,8 +119,8 @@ def clean_up_and_exit(in_signal, stack):
         exit(-1)
 
 
-#print "Starting admin server at: http://{0}:8000".format(vm_ip)
-print "Starting server at: http://{0}:8080".format(vm_ip)
+#print "Starting admin server at: http://{0}:8000".format(host_ip)
+print "Starting server at: http://{0}:8080".format(host_ip)
 if mac:
     print "<br />"
 try:
@@ -139,7 +130,7 @@ except Exception as e:
     sys.exit(1)
 sys.stdout.flush()
 
-print "Starting jupyter notebook server at: http://{0}:9999".format(vm_ip)
+print "Starting jupyter notebook server at: http://{0}:9999".format(host_ip)
 if mac:
     print "<br />"
 try:
@@ -238,7 +229,7 @@ if serverUp:
     sys.stdout.flush()
 
     try:
-        print "Navigate to http://{1}:8080/login?secret_key={0} to access StochSS".format(admin_token, vm_ip)
+        print "Navigate to http://{1}:8080/login?secret_key={0} to access StochSS".format(admin_token, host_ip)
         if mac:
             print "<br />"
 

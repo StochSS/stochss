@@ -9,7 +9,7 @@ fi
 mode=""
 token="not_set"
 browser="true"
-ip=0
+ip="localhost"
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -428,4 +428,5 @@ export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
 
 echo "PYTHONPATH :: $PYTHONPATH"
 
-exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode mac
+#echo "python \"$STOCHSS_HOME/launchapp.py\" $0 $browser $token $ip $mode"
+exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode

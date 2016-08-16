@@ -4,7 +4,7 @@ mode="run"
 install_mode="false"
 token="not_set"
 browser="true"
-ip=0
+ip="localhost"
 while [[ $# > 0 ]]
 do
 key="$1"
