@@ -9,7 +9,7 @@ fi
 mode=""
 token="not_set"
 browser="true"
-ip=0
+ip="localhost"
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -441,6 +441,9 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
+export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
 
-#exec python "$STOCHSS_HOME/launchapp.py" mac $0 $1
-exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode mac
+echo "PYTHONPATH :: $PYTHONPATH"
+
+#echo "python \"$STOCHSS_HOME/launchapp.py\" $0 $browser $token $ip $mode"
+exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode

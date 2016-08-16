@@ -282,6 +282,7 @@
         <h3>Output</h3>
         <br />
         <% if (resource =="Local" || output_stored == "True"){ %>
+            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Juypter Notebook</button></form>
         	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     	<% } %>
     	
