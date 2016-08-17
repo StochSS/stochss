@@ -307,6 +307,26 @@ function install_dolfin {
     fi
 }
 
+function check_molns_sub {
+    RET=`python -c "import molns" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_molns {
+    MOLNS_DIR="$STOCHSS_HOME/app/lib/molns/"
+    if [ -e $MOLNS_DIR ];then
+        echo "Molns local install found $MOLNS_DIR.<br />"
+        export PYTHONPATH=$MOLNS_DIR:$PYTHONPATH
+        if check_molns_sub;then
+            return 0 #True
+        fi
+    fi
+    return 1 #False
+}
+
 function check_python_package_installation {
     check_and_install_deps
     echo "Checking for FEniCS/Dolfin"
@@ -329,6 +349,14 @@ function check_python_package_installation {
         echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
         return 1 #False
     fi
+
+    if check_molns; then
+        echo "MOLNs detected successfully.<br />"
+    else
+        echo "Failed to detect MOLNs.<br />"
+        return 1 #False
+    fi
+
     return 0 #True
 }
 
