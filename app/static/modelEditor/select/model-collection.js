@@ -59,7 +59,7 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         this.buttonTemplate = '<div class="btn-group"> \
   <a class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
-    Add Model \
+    New Model \
     <span class="caret"></span> \
   </a> \
   <ul class="dropdown-menu"> \
