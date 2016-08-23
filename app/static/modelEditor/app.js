@@ -367,8 +367,6 @@ var PrimaryView = View.extend({
         saveMessageDom.removeClass( "alert-error" );
         saveMessageDom.addClass( "alert-success" );
         saveMessageDom.text( "Saved model to public library" );
-
-        window.location = '/publicLibrary';
     },
     modelNotSaved: function()
     {
