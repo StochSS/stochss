@@ -7,10 +7,23 @@
     function toggle(source) {
     checkboxes = document.getElementsByName('select_job');
     for(var i=0, n=checkboxes.length;i<n;i++) {
-                                              checkboxes[i].checked = source.checked;
-                                              }
-                                              }
-                                              </script>
+        checkboxes[i].checked = source.checked;
+    }
+}
+function swap_job_type_filter(sel) {
+    var value = sel.value;  
+    //alert(value)
+    if(value == 'type'){
+        document.getElementById("filter_value_div").style.display = 'none';
+        document.getElementById("job_type_div").style.display = 'inline';
+        document.getElementById("filter_value_box").value = "";
+    }else{
+        document.getElementById("filter_value_div").style.display = 'inline';
+        document.getElementById("job_type_div").style.display = 'none';
+        document.getElementById("job_type_select").value = "";
+    }
+}
+</script>
 <!--    -->
 
 <div class="span9">
@@ -20,6 +33,32 @@
             <br>
             <div id="msg" style="display: none;"></div>
             <form class ="well form" action="/status" method="get">
+            <div id="filters" style="display: inline">
+            <!--table border=1 cellpadding="0" cellspacing="0" class="table table-striped table-bordered"-->
+            <table border=0 cellpadding="0" cellspacing="0" class="table table-bordered">
+                <tr>
+                    <td valign=bottom>
+                        <!--input type=submit class="btn btn-primary btn-large" value="Filter"-->
+                        <input type=submit class="btn btn-primary" value="Filter:">
+                        <select name="filter_type" onchange="swap_job_type_filter(this)">
+                        <option value="name" {{seleted_filter_type_name}}>Job Name</option>
+                        <option value="model" {{seleted_filter_type_model}}>Model</option>
+                        <option value="type" {{seleted_filter_type_type}}>Job Type</option>
+                        <option value="resource" {{seleted_filter_type_resource}}>Resource</option>
+                        <option value="status" {{seleted_filter_type_status}}>Status</option>
+                        </select>
+                        <div id="filter_value_div" style="display:{{filter_value_div}}">
+                        <input type=text id="filter_value_box" name="filter_value" value="{{seleted_filter_value}}">
+                        </div>
+                        <div id="job_type_div" style="display:{{job_type_div}}">
+                        <select id="job_type_select" name="job_type"><option value=""> -- </option>
+                        {{job_type_option_list|safe}}
+                        </select>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            </div>
                 {% if all_jobs %}
                 Non-spatial Deterministic/Stochastic Simulations:
                 <br />
@@ -244,6 +283,65 @@
                             
                         </tr>
                         
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                {% if allParameterSweepJobs %}
+                Parameter Sweeps:
+                <br />
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="40pt">Job #</th>
+                            <th>Job name</th>
+                            <th width="50pt">Resource</th>
+                            <th width="100pt">Status</th>
+                            <th width="220pt">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in allParameterSweepJobs %}
+                        <tr>
+                            <td>
+                            <a href="javascript:void(0)" onclick="deleteJob('/parametersweep?reqType=delJob&id={{job.id}}');">Delete</a>
+                            </td>
+                            <td>
+                                <span>{{job.number}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.resource}}</span>
+                            </td>
+                            <td>
+                                {% if job.status == "Running" or job.status == "Finished" %}
+                                <span style="color: green" class="create_msg">{{job.status}}</span>
+                                {% elif job.status == "Pending" %}
+                                <span style="color: orange" class="create_msg">{{job.status}}</span>
+                                {% else %}
+                                <span style="color: red" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == "Running" %}
+
+                                <a href="/parametersweep/{{job.id}}">View Progress</a>
+
+                                {% elif job.status == "Finished" %}
+                                
+                                <a href="/parametersweep/{{job.id}}">View</a>
+                               
+                                {% elif job.status == "Failed"%}
+                                
+                                <a href="/parametersweep/{{job.id}}">Get Debugging Info</a>
+                            
+                                {% endif %}
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>

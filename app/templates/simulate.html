@@ -71,6 +71,7 @@
 <link rel="stylesheet" href="/static/css/nv.d3.css">
 
 <link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
+<link href="/static/css/nv.d3.css" rel="stylesheet" type="text/css">
 <script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
 
 <script type="text/javascript" src = "/static/js/purl.js"></script>
@@ -223,6 +224,7 @@
 
         <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
         <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>
+        <button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Molns Cloud</button>
         
         <!-- Prevent Submission on pressing enter -->
         <!--<script>
@@ -280,6 +282,7 @@
         <h3>Output</h3>
         <br />
         <% if (resource =="Local" || output_stored == "True"){ %>
+            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Juypter Notebook</button></form>
         	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     	<% } %>
     	

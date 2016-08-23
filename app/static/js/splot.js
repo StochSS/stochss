@@ -7,6 +7,9 @@ Splot.Plot = Backbone.View.extend(
         {
             this.attributes = attributes;
 
+            if(typeof(this.attributes.xlabel) == "undefined")
+                this.attributes.xlabel = "Time";
+
             this.$el = this.attributes.selector;
 
             $("<hr />" + this.attributes.title + ":<br />").appendTo( this.$el );
@@ -22,7 +25,7 @@ Splot.Plot = Backbone.View.extend(
 
             var initialCheckbox = undefined;
 
-            this.attributes.data = _.sortByNat(this.attributes.data, function(e) { return e.label }); 
+            this.attributes.data = _.sortBy(this.attributes.data, function(e) { return e.label }); 
 
             for(var k = 0; k < this.attributes.data.length; k++)
             {
@@ -73,7 +76,7 @@ Splot.Plot = Backbone.View.extend(
                 initialCheckbox.trigger("click");
             }
 
-            this.render();
+            //this.render();
         },
         
         //DON'T USE THIS. IT IS JUST REFERENCE CODE
@@ -161,14 +164,14 @@ Splot.Plot = Backbone.View.extend(
             
             var chart = nv.models.lineChart()
                 .margin({left: 100})  //Adjust chart margins to give the x-axis some breathing room.
-                .useInteractiveGuideline(true)  //We want nice looking tooltips and a guideline!
-                .transitionDuration(0)  //how fast do you want the lines to transition?
+                //.useInteractiveGuideline(true)  //We want nice looking tooltips and a guideline!
+                //.transitionDuration(0)  //how fast do you want the lines to transition?
                 .showLegend(true)       //Show the legend, allowing users to turn on/off line series.
                 .showYAxis(true)        //Show the y-axis
                 .showXAxis(true)//Show the x-axis
  
             chart.xAxis     //Chart x-axis settings
-                .axisLabel('Time')
+                .axisLabel( this.attributes.xlabel )
                 .tickFormat(d3.format(',r'));
  
             chart.yAxis     //Chart y-axis settings
@@ -178,51 +181,13 @@ Splot.Plot = Backbone.View.extend(
             this.svg    //Select the <svg> element you want to render the chart in.   
                 .datum(prunedData)         //Populate the <svg> element with chart data...
                 .call(chart);
-
-            /*csss = $.get('/static/css/nv.d3.css', success = _.partial(function(t, data)
-                         {
-                             var byteString = t.svg.node().parentNode.innerHTML;
-                             
-                             csstext = data;
-                             svgthing = $.parseXML(byteString);
-                             whereweappend = $( svgthing ).find('defs').eq(0);
-                             cssobj = $( '<style type="text/css"><![CDATA['+csstext+']]></style>');
-                             cssobj.appendTo( whereweappend );
-                             byteString = (new XMLSerializer()).serializeToString(svgthing);
-                             
-                             imgsrc = 'data:image/svg+xml;base64,'+ btoa(byteString)
-                             
-                             var img = '<img src="'+imgsrc+'">'; 
-                             t.renderDiv.html(img);
-                         }, this));*/
         }
     }
 );
 
-Splot.plot = function( title, selector, data, ylabel )
+Splot.plot = function( title, selector, data, ylabel, xlabel )
 {
-    var plot = new Splot.Plot( { title : title, selector : selector, data : data, ylabel : ylabel } );
+    var plot = new Splot.Plot( { title : title, selector : selector, data : data, ylabel : ylabel, xlabel : xlabel } );
 
     return plot;
 }
-            //imageDiv.prop('src', $( '#pizza' ).jqplotToImageStr({}))
-            
-            /*this.plot = $.jqplot( 'pizza', prunedData, {
-                series : [{showMarker:false}],
-                axes : {
-                    xaxis : {
-                        label:'Time',
-                        labelRenderer: $.jqplot.CanvasAxisLabelRenderer
-                    },
-                    yaxis : {
-                        label:'Concentration',
-                        labelRenderer: $.jqplot.CanvasAxisLabelRenderer
-                    }
-                },
-                legend : {
-                    labels : labels
-                }
-            } );
-            var imageDiv = $( '<img />' );
-            imageDiv.prop('src', $( '#pizza' ).jqplotToImageStr({}))*/
-            //var imageDiv = $( Canvas2Image.saveAsPNG( this.plot.getCanvas(), true ) );

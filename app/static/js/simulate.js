@@ -479,6 +479,7 @@ var run = function()
                            {
                                url = "/simulate";
                            }
+                           jobName = data.jobName
 
                            $.post( url = url,
                                    data = { reqType : "newJob",
@@ -487,7 +488,48 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status';
+                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
+                                   },
+                                   dataType = "json" );
+                       }, selectTable));
+
+                       $( "#runMolns" ).click( _.partial( function(selectTable) {
+                           updateMsg( { status: true,
+                                        msg: "Running job in MOLNs cloud..." } );
+                           var data = checkAndGet(selectTable);
+
+                           if(!data)
+                               return;
+
+                           data.id = id;
+                           data.resource = "molns";
+
+                           var url = "";
+
+                           data.selections = selectTable.state.selections;
+
+                           if(data.execType == "sensitivity")
+                           {
+                               url = "/sensitivity";
+                           }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
+                           }
+                           else
+                           {
+                               url = "/simulate";
+                           }
+                           jobName = data.jobName
+
+                           $.post( url = url,
+                                   data = { reqType : "newJob",
+                                            data : JSON.stringify(data) }, //Watch closely...
+                                   success = function(data)
+                                   {
+                                       updateMsg(data);
+                                       if(data.status)
+                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));
@@ -519,6 +561,7 @@ var run = function()
                            {
                                url = "/simulate";
                            }
+                           jobName = data.jobName
 
                            $.post( url = url,
                                    data = { reqType : "newJob",
@@ -527,7 +570,7 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status';
+                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));

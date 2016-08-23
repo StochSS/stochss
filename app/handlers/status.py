@@ -26,6 +26,8 @@ import simulation
 import spatial
 import stochoptim
 
+import molns
+
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        
@@ -81,88 +83,170 @@ class StatusPage(BaseHandler):
             Get the status of all the jobs that exist in the system and assemble a dict
             with info to display on the page. 
         """
+        ## 
         context = {}
+        ##
+        all_job_types = OrderedDict([('stochkit','Non-spatial Simulation'),('spatial','Spatial Simulation'),('sensitivity','Sensitivity'),('parameter_estimation','Parameter Estimation'),('parameter_sweep','Parameter Sweep'),('export','Data Export')])
+        show_jobs={}
+        context['job_type_option_list'] = ""
+        for k,v in all_job_types.iteritems(): 
+            show_jobs[k]=True
+            if 'job_type' in self.request.GET and self.request.GET['job_type'] == k:
+                context['job_type_option_list'] += "<option value=\"{0}\" SELECTED>{1}</option>".format(k,v)
+            else:
+                context['job_type_option_list'] += "<option value=\"{0}\">{1}</option>".format(k,v)
+        context['filter_value_div']='inline'
+        context['job_type_div']='none'
         service = backendservices(self.user_data)
+        ## setup filters
+        filter_types = ['type','name','model','resource','status']
+        if 'filter_value' in self.request.GET:
+            filter_value = self.request.GET['filter_value']
+            context['seleted_filter_value'] = filter_value
+        if 'filter_type' in self.request.GET:
+            for f in filter_types:
+                context['seleted_filter_type_'+f] = ''
+            filter_type = self.request.GET['filter_type']
+            context['seleted_filter_type_'+filter_type] = 'SELECTED'
+        SQL_where_clause = "WHERE user_id = :1"
+        SQL_where_data = [self.user.user_id()]
+        ## process filters
+        for k,v in self.request.GET.iteritems():
+            #if k == 'job_type' and v != "":
+            #    for k,v in show_jobs.iteritems(): show_jobs[k]=False
+            #    if v in show_jobs: show_jobs[v] = True
+            if k == "filter_type" and v == "type":# and 'job_type' in self.request.GET:
+                for k,v in show_jobs.iteritems(): show_jobs[k]=False
+                job_filter = self.request.GET['job_type']
+                if job_filter in show_jobs: show_jobs[job_filter] = True
+                context['filter_value_div']='none'
+                context['job_type_div']='inline'
+            elif k == "filter_type" and v == "name":
+                SQL_where_clause = "WHERE user_id = :1 AND name = :2"
+                SQL_where_data = [self.user.user_id(), filter_value]
+            elif k == "filter_type" and v == "model":
+                SQL_where_clause = "WHERE user_id = :1 AND modelName = :2"
+                SQL_where_data = [self.user.user_id(), filter_value]
+            elif k == "filter_type" and v == "resource":
+                SQL_where_clause = "WHERE user_id = :1 AND resource = :2"
+                SQL_where_data = [self.user.user_id(), filter_value]
+            elif k == "filter_type" and v == "status":
+                SQL_where_clause = "WHERE user_id = :1 AND resource = :2"
+                SQL_where_data = [self.user.user_id(), filter_value]
+
+
         # StochKit jobs
-        all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         all_jobs = []
-        if all_stochkit_jobs != None:
-            jobs = list(all_stochkit_jobs.run())
-            jobs = sorted(jobs,
-                          key=lambda x:
-                                (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
-                                     if hasattr(x, 'startTime') and x.startTime != None else datetime.datetime.now()),
-                          reverse=True)
-            for number, job in enumerate(jobs):
-                number = len(jobs) - number
-                all_jobs.append(self.__process_getJobStatus(service, job, number))
+        if show_jobs['stochkit']:
+            #all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
+            all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
+            if all_stochkit_jobs != None:
+                jobs = list(all_stochkit_jobs.run())
+                jobs = sorted(jobs,
+                              key=lambda x:
+                                    (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
+                                         if hasattr(x, 'startTime') and x.startTime != None else datetime.datetime.now()),
+                              reverse=True)
+                for number, job in enumerate(jobs):
+                    number = len(jobs) - number
+                    all_jobs.append(self.__process_getJobStatus(service, job, number))
         context['all_jobs']=all_jobs
 
         # Sensitivity
         allSensJobs = []
-        allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1", self.user.user_id())
-        if allSensQuery != None:
-            jobs = list(allSensQuery.run())
-            jobs = sorted(jobs,
-                          key=lambda x:
-                                (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
-                                 if hasattr(x, 'startTime') and x.startTime != None else ''),
-                          reverse = True)
-            for number, job in enumerate(jobs):
-                number = len(jobs) - number
-                allSensJobs.append(self.__process_getJobStatus(service, job, number))
+        if show_jobs['sensitivity']:
+            #allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1", self.user.user_id())
+            allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
+            if allSensQuery != None:
+                jobs = list(allSensQuery.run())
+                jobs = sorted(jobs,
+                              key=lambda x:
+                                    (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
+                                     if hasattr(x, 'startTime') and x.startTime != None else ''),
+                              reverse = True)
+                for number, job in enumerate(jobs):
+                    number = len(jobs) - number
+                    allSensJobs.append(self.__process_getJobStatus(service, job, number))
         context['allSensJobs']=allSensJobs
 
 
         # Export
         allExportJobs = []
-        exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper WHERE user_id = :1", self.user.user_id())
-        if exportJobsQuery != None:
-            jobs = list(exportJobsQuery.run())
-            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
-            for number, job in enumerate(jobs):
-                number = len(jobs) - number
-                allExportJobs.append({ "startTime" : job.startTime,
-                                       "status" : job.status,
-                                       "number" : number,
-                                       "outData" : os.path.basename(job.outData if job.outData else ""),
-                                       "id" : job.key().id()})
+        if show_jobs['export']:
+            #exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper WHERE user_id = :1", self.user.user_id())
+            exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
+            if exportJobsQuery != None:
+                jobs = list(exportJobsQuery.run())
+                jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+                for number, job in enumerate(jobs):
+                    number = len(jobs) - number
+                    allExportJobs.append({ "startTime" : job.startTime,
+                                           "status" : job.status,
+                                           "number" : number,
+                                           "outData" : os.path.basename(job.outData if job.outData else ""),
+                                           "id" : job.key().id()})
         context['allExportJobs'] = allExportJobs
 
         # Parameter Estimation
         allParameterJobs = []
-        allParameterJobsQuery = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE user_id = :1", self.user.user_id())
-        if allParameterJobsQuery != None:
-            jobs = list(allParameterJobsQuery.run())
-            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
-            for number, job in enumerate(jobs):
-                number = len(jobs) - number
-                allParameterJobs.append(self.__process_getJobStatus(service, job, number))
+        if show_jobs['parameter_estimation']:
+            #allParameterJobsQuery = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE user_id = :1", self.user.user_id())
+            allParameterJobsQuery = db.GqlQuery("SELECT * FROM StochOptimJobWrapper {0}".format(SQL_where_clause), *SQL_where_data) 
+            if allParameterJobsQuery != None:
+                jobs = list(allParameterJobsQuery.run())
+                jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+                for number, job in enumerate(jobs):
+                    number = len(jobs) - number
+                    allParameterJobs.append(self.__process_getJobStatus(service, job, number))
         context['allParameterJobs'] = allParameterJobs
 
         #Spatial Jobs
         allSpatialJobs = []
-        allSpatialJobsQuery = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1", self.user.user_id())
-        if allSpatialJobsQuery != None:
-            jobs = list(allSpatialJobsQuery.run())
-            jobs = sorted(jobs,
-                          key=lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
-                                              if hasattr(x, 'startTime') and x.startTime != None else ''),
-                          reverse = True)
-            for number, job in enumerate(jobs):
-                number = len(jobs) - number
-                allSpatialJobs.append(self.__process_getJobStatus(service, job, number))
+        if show_jobs['spatial']:
+            #allSpatialJobsQuery = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1", self.user.user_id())
+            allSpatialJobsQuery = db.GqlQuery("SELECT * FROM SpatialJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
+            if allSpatialJobsQuery != None:
+                jobs = list(allSpatialJobsQuery.run())
+                jobs = sorted(jobs,
+                              key=lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
+                                                  if hasattr(x, 'startTime') and x.startTime != None else ''),
+                              reverse = True)
+                for number, job in enumerate(jobs):
+                    number = len(jobs) - number
+                    allSpatialJobs.append(self.__process_getJobStatus(service, job, number))
         context['allSpatialJobs'] = allSpatialJobs
+
+        #Parameter Sweep Jobs
+        allParameterSweepJobs = []
+        if show_jobs['parameter_sweep']:
+            #allParameterSweepJobsQuery = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1", self.user.user_id())
+            allParameterSweepJobsQuery = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
+            if allParameterSweepJobsQuery != None:
+                jobs = list(allParameterSweepJobsQuery.run())
+                jobs = sorted(jobs,
+                              key=lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
+                                                  if hasattr(x, 'startTime') and x.startTime != None else ''),
+                              reverse = True)
+                for number, job in enumerate(jobs):
+                    number = len(jobs) - number
+                    allParameterSweepJobs.append(self.__process_getJobStatus(service,job, number))
+        context['allParameterSweepJobs'] = allParameterSweepJobs
     
         return context
 
     def __process_getJobStatus(self,service,job,number):
         try:
-            status = getJobStatus(service, job)
+            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+
+            if molnsConfigDb:
+                config = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+
+            status = getJobStatus(service, job, config)
         except Exception as e:
+            traceback.print_exc()
             status = {  "status" : 'Error: {0}'.format(e),
                         "name" : job.name,
-                        "uuid" : job.cloudDatabaseID,
+                        "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
                         "output_stored": None,
                         "resource": 'Error',
                         "id" : job.key().id()}
@@ -170,10 +254,10 @@ class StatusPage(BaseHandler):
         return status
 
 
-def getJobStatus(service, job):
+def getJobStatus(service, job, molnsConfig = None):
         logging.debug('status.getJobStatus() job = {0}'.format(job))
         logging.debug('status.getJobStatus() job.status={0} job.resource={1} job.outData={2}'.format(job.status, job.resource, job.outData))
-        indata = json.loads(job.indata)
+        #indata = json.loads(job.indata)
         file_to_check = "{0}/return_code".format(job.outData)
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
         logging.debug('status.getJobStatus() job.outData={0}'.format(job.outData))
@@ -218,7 +302,19 @@ def getJobStatus(service, job):
                 job.status = "Running"
             else:
                 job.status = "Failed"
+        elif job.resource.lower() == "molns":
+            if molnsConfig:
+                job_status = molns.MOLNSExec.job_status([job.molnsPID], molnsConfig)
+                  
+                status = 'Running' if job_status['running'] else 'Finished'
+                  
+                if status == 'Finished':
+                    with open(file_to_check, 'w') as f:
+                        f.write('0')
 
+                job.status = status
+            else:
+                job.status = 'Unknown'
 
         elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             # running in cloud
@@ -265,12 +361,10 @@ def getJobStatus(service, job):
 
         job.put()
         
-         
-
-        return {    "status" : job.status,
-                    "name" : job.name,
-                    "uuid" : job.cloudDatabaseID,
-                    "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
-                    "resource": job.resource,
-                    "id" : job.key().id()}
+        return { "status" : job.status,
+                 "name" : job.name,
+                 "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
+                 "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
+                 "resource": job.resource,
+                 "id" : job.key().id() }
 

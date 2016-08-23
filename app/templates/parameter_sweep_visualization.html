@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title%}Manage Simulations{% endblock %}
+{% block csscontent %}{% endblock %}
+{% block content %}
+
+<div class="span9">
+    <div class="row-fluid">
+        <div id="stochoptim">
+            Loading output...
+        </div>
+
+        <div style="display: none; border-style: solid; border-width: 1px; padding: 2px;">
+        <div  id="initialData">
+            {{ initialData }}
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<script type="text/javascript" src = "/static/js/d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/splot.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
+<link rel="stylesheet" href="/static/css/nv.d3.css">
+
+<script type="text/javascript" src = "/static/js/parameter_sweep_visualization.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/css/parameter_sweep_visualization.css">
+
+<script id="visualizationTemplate" type="text/template">
+    <ol class="breadcrumb">
+  	<li><a href="/status">Job Status</a></li>
+  	<li class="active"><%= name %></a></li>
+    </ol>
+    <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
+    <br />
+    <div class="well">
+        <div class="metadata row">
+            <div class="span8">
+                <h3>Metadata</h3>
+                <p class="thispage">
+                    Resource: <%= resource %>
+                    <br />
+                    Simulation status: <%= status %>
+                    <br />
+                    Model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+                </p>
+            </div>
+            <div class="span3">
+              <!-- Put help info here-->
+            </div>
+        </div>
+
+    </div>
+
+    <pre>Status :<%= status%></pre><BR>
+    <div style="border-style: solid; border-width: 1px; padding: 5px;" id="initialData">
+        <div id="stdout_show" style="display: inline;">Stdout: <%= stdout %></div>
+    </div><BR><BR>
+    <% if(output_stored) { %>
+
+    <div id="outputSelectDiv" style="display: none;">
+      Select data to visualize:
+      <select id="outputSelect"></select>
+    </div>
+    <div id="graphs" style="display: none;">
+      <div id="legend"></div><div id="chart"></div>
+    </div>
+
+    <% } %>
+
+    <div id="msg" style="clear:both; display: none;"></div>
+
+    <% if(status == "Finished"){ %>
+    <div id="accessOutput" class="well" style="clear:both; display: none;">        
+        <h3>Output</h3>
+        <br />
+
+        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+    </div>
+    <% } %>
+</script>
+{% endblock %}

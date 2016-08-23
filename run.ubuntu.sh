@@ -4,7 +4,7 @@ mode="run"
 install_mode="false"
 token="not_set"
 browser="true"
-ip=0
+ip="localhost"
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -272,6 +272,21 @@ function check_and_install_deps {
     if ! check_lib "mysql.connector";then
         install_lib "python-mysql.connector"
     fi
+    if ! check_lib "paramiko";then
+        install_lib "python-paramiko"
+    fi
+    if ! check_lib "sqlalchemy";then
+        install_lib "python-sqlalchemy"
+    fi
+    if ! check_lib "novaclient";then
+        install_lib "python-novaclient"
+    fi
+    if ! check_lib "boto";then
+        install_lib "python-boto"
+    fi
+    if ! check_lib "celery";then
+        install_lib "python-celery"
+    fi
 }
 
 function check_dolfin {
@@ -307,6 +322,26 @@ function install_dolfin {
     fi
 }
 
+function check_molns_sub {
+    RET=`python -c "import molns" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_molns {
+    MOLNS_DIR="$STOCHSS_HOME/app/lib/molns/"
+    if [ -e $MOLNS_DIR ];then
+        echo "Molns local install found $MOLNS_DIR.<br />"
+        export PYTHONPATH=$MOLNS_DIR:$PYTHONPATH
+        if check_molns_sub;then
+            return 0 #True
+        fi
+    fi
+    return 1 #False
+}
+
 function check_python_package_installation {
     check_and_install_deps
     echo "Checking for FEniCS/Dolfin"
@@ -329,6 +364,14 @@ function check_python_package_installation {
         echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
         return 1 #False
     fi
+
+    if check_molns; then
+        echo "MOLNs detected successfully.<br />"
+    else
+        echo "Failed to detect MOLNs.<br />"
+        return 1 #False
+    fi
+
     return 0 #True
 }
 
@@ -570,6 +613,8 @@ ln -s "$STOCHKIT_HOME" StochKit >& /dev/null
 echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
+
+export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
 
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
