@@ -4245,7 +4245,7 @@ module.exports = View.extend({
                     placeholder: 'Initial Condition',
                     model : this.model,
                     parent : this,
-                    tests: [].concat(Tests.nonzero(), Tests.units(this.model.collection.parent))
+                    tests: [].concat(Tests.isNumber(), Tests.nonzero(), Tests.units(this.model.collection.parent))
                 }), this.el.querySelector("[data-hook='initialCondition']"));
         }
 
@@ -4652,6 +4652,7 @@ module.exports = {
         }
     }
 };
+
 },{"underscore":226}],31:[function(require,module,exports){
 var _ = require('underscore');
 
