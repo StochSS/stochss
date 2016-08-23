@@ -272,6 +272,21 @@ function check_and_install_deps {
     if ! check_lib "mysql.connector";then
         install_lib "python-mysql.connector"
     fi
+    if ! check_lib "paramiko";then
+        install_lib "python-paramiko"
+    fi
+    if ! check_lib "sqlalchemy";then
+        install_lib "python-sqlalchemy"
+    fi
+    if ! check_lib "novaclient";then
+        install_lib "python-novaclient"
+    fi
+    if ! check_lib "boto";then
+        install_lib "python-boto"
+    fi
+    if ! check_lib "celery";then
+        install_lib "python-celery"
+    fi
 }
 
 function check_dolfin {
