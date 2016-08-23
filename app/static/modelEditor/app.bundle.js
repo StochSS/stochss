@@ -545,7 +545,7 @@ module.exports = View.extend({
         var species = this.model.species.models;
         for(var i = 0; i < species.length; i++)
         {
-            species[i].initialCondition = Math.floor(this.volume * species[i].initialCondition);
+            species[i].initialCondition = Math.round(this.volume * species[i].initialCondition);
         }
 
         var reactions = this.model.reactions.models;
@@ -923,7 +923,7 @@ module.exports = View.extend({
     },
     volumeChange: function()
     {
-        $( this.queryByHook('initialCondition') ).text( Math.floor(this.model.initialCondition * this.baseView.volume) );
+        $( this.queryByHook('initialCondition') ).text(Math.round(this.model.initialCondition * this.baseView.volume));
     },
     render: function()
     {
