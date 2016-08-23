@@ -316,12 +316,16 @@ function check_molns_sub {
     return 1 #False
 }
 function check_molns {
-    MOLNS_DIR="$STOCHSS_HOME/app/lib/molns/"
-    if [ -e $MOLNS_DIR ];then
-        echo "Molns local install found $MOLNS_DIR.<br />"
-        export PYTHONPATH=$MOLNS_DIR:$PYTHONPATH
-        if check_molns_sub;then
-            return 0 #True
+    if check_molns_sub; then
+        return 0 #True
+    else
+        MOLNS_DIR="$STOCHSS_HOME/app/lib/molns/"
+        if [ -e $MOLNS_DIR ];then
+            echo "Molns local install found $MOLNS_DIR.<br />"
+            export PYTHONPATH=$MOLNS_DIR:$PYTHONPATH
+            if check_molns_sub;then
+                return 0 #True
+            fi
         fi
     fi
     return 1 #False
