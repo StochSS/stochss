@@ -49,7 +49,7 @@ function check_and_install_dependencies {
     if ! check_pip;then
         install_pip
     fi
-    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python" "paramiko" "sqlalchemy" "novaclient" "boto")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep" >> run_mac_install.log
