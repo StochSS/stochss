@@ -340,7 +340,8 @@ class ParameterSweepPage(BaseHandler):
                 "stepsB" : data['stepsB'],
                 "logB" : data['logB'],
                 "variableCount" : data['variableCount'],
-                "isSpatial" : modelDb.isSpatial
+                "isSpatial" : modelDb.isSpatial,
+                "isLocal" : False
             }
 
             if modelDb.isSpatial:
@@ -427,10 +428,10 @@ class ParameterSweepVisualizationPage(BaseHandler):
                     initialData['data'] = pickle.load(f)
             except IOError as e:
                 initialData['data'] = {}
-        logging.error('*'*80)
+        #logging.error('*'*80)
         #logging.error("{0}".format(**{'initialData' : json.dumps(initialData)}))
-        logging.error("{0}".format(initialData))
-        logging.error('*'*80)
+        #logging.error("{0}".format(initialData))
+        #logging.error('*'*80)
         self.render_response('parameter_sweep_visualization.html', **{'initialData' : json.dumps(initialData)})
 
     def post(self, queryType, jobID):
