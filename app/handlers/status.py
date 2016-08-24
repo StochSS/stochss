@@ -121,16 +121,16 @@ class StatusPage(BaseHandler):
                 if job_filter in show_jobs: show_jobs[job_filter] = True
                 context['filter_value_div']='none'
                 context['job_type_div']='inline'
-            elif k == "filter_type" and v == "name":
+            elif k == "filter_type" and v == "name" and filter_value != '':
                 SQL_where_clause = "WHERE user_id = :1 AND name = :2"
                 SQL_where_data = [self.user.user_id(), filter_value]
-            elif k == "filter_type" and v == "model":
+            elif k == "filter_type" and v == "model" and filter_value != '':
                 SQL_where_clause = "WHERE user_id = :1 AND modelName = :2"
                 SQL_where_data = [self.user.user_id(), filter_value]
-            elif k == "filter_type" and v == "resource":
+            elif k == "filter_type" and v == "resource" and filter_value != '':
                 SQL_where_clause = "WHERE user_id = :1 AND resource = :2"
                 SQL_where_data = [self.user.user_id(), filter_value]
-            elif k == "filter_type" and v == "status":
+            elif k == "filter_type" and v == "status" and filter_value != '':
                 SQL_where_clause = "WHERE user_id = :1 AND resource = :2"
                 SQL_where_data = [self.user.user_id(), filter_value]
 
@@ -138,7 +138,6 @@ class StatusPage(BaseHandler):
         # StochKit jobs
         all_jobs = []
         if show_jobs['stochkit']:
-            #all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
             all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
             if all_stochkit_jobs != None:
                 jobs = list(all_stochkit_jobs.run())
@@ -155,7 +154,6 @@ class StatusPage(BaseHandler):
         # Sensitivity
         allSensJobs = []
         if show_jobs['sensitivity']:
-            #allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1", self.user.user_id())
             allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
             if allSensQuery != None:
                 jobs = list(allSensQuery.run())
@@ -190,7 +188,6 @@ class StatusPage(BaseHandler):
         # Parameter Estimation
         allParameterJobs = []
         if show_jobs['parameter_estimation']:
-            #allParameterJobsQuery = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE user_id = :1", self.user.user_id())
             allParameterJobsQuery = db.GqlQuery("SELECT * FROM StochOptimJobWrapper {0}".format(SQL_where_clause), *SQL_where_data) 
             if allParameterJobsQuery != None:
                 jobs = list(allParameterJobsQuery.run())
@@ -203,7 +200,6 @@ class StatusPage(BaseHandler):
         #Spatial Jobs
         allSpatialJobs = []
         if show_jobs['spatial']:
-            #allSpatialJobsQuery = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1", self.user.user_id())
             allSpatialJobsQuery = db.GqlQuery("SELECT * FROM SpatialJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
             if allSpatialJobsQuery != None:
                 jobs = list(allSpatialJobsQuery.run())
@@ -219,7 +215,6 @@ class StatusPage(BaseHandler):
         #Parameter Sweep Jobs
         allParameterSweepJobs = []
         if show_jobs['parameter_sweep']:
-            #allParameterSweepJobsQuery = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1", self.user.user_id())
             allParameterSweepJobsQuery = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
             if allParameterSweepJobsQuery != None:
                 jobs = list(allParameterSweepJobsQuery.run())
@@ -267,6 +262,7 @@ def getJobStatus(service, job, molnsConfig = None):
                     "uuid" : job.cloudDatabaseID,
                     "output_stored": None,
                     "resource": None,
+                    "start_time" : datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S'),
                     "id" : job.key().id()}
 
         return_code = None
@@ -366,5 +362,6 @@ def getJobStatus(service, job, molnsConfig = None):
                  "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
                  "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
                  "resource": job.resource,
+                 "start_time" : datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S').strftime('%b-%d-%y %H:%M'),
                  "id" : job.key().id() }
 

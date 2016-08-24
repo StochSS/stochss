@@ -66,7 +66,7 @@ function swap_job_type_filter(sel) {
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
@@ -80,7 +80,7 @@ function swap_job_type_filter(sel) {
                             <a href="javascript:void(0)" onclick="deleteJob('/simulate?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
@@ -121,7 +121,7 @@ function swap_job_type_filter(sel) {
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
@@ -135,7 +135,7 @@ function swap_job_type_filter(sel) {
                             <a href="javascript:void(0)" onclick="deleteJob('/spatial?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
@@ -175,7 +175,7 @@ function swap_job_type_filter(sel) {
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                         
@@ -189,7 +189,7 @@ function swap_job_type_filter(sel) {
                         <tr>
                             <td><a href="javascript:void(0)" onclick="deleteJob('/sensitivity?reqType=delJob&id={{job.id}}');">Delete</a></td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
@@ -231,7 +231,7 @@ function swap_job_type_filter(sel) {
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name </th>
                             <th width="50pt">Resource </th>
                             <th width="100pt">Status</th>
@@ -249,7 +249,7 @@ function swap_job_type_filter(sel) {
                                 {% endif %}
                             </td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
@@ -295,7 +295,7 @@ function swap_job_type_filter(sel) {
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
@@ -309,7 +309,7 @@ function swap_job_type_filter(sel) {
                             <a href="javascript:void(0)" onclick="deleteJob('/parametersweep?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
