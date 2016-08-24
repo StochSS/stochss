@@ -261,7 +261,17 @@ $( function() {
                     state["EC2"]["worker"][i]["value"] = $('input[name=workerNode]:checked').val();
 
                 if(this.state["EC2"]["worker"][i]["key"] == "num_vms")
-                    state["EC2"]["worker"][i]["value"] = $('input[name=workerCount]').val();
+                {
+                    var numWorkers = $('input[name=workerCount]').val();
+
+                    if(numWorkers < 0)
+                    {
+                        this.createMessage({ status : 0, msg : "Number of workers cannot be a negative number" });
+                        throw "Number of workers cannot be negative";
+                    }
+
+                    state["EC2"]["worker"][i]["value"] = numWorkers;
+                }
             }
 
             for(var i = 0; i < state["EC2"]["provider"].length; i++)
