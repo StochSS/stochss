@@ -32,3 +32,7 @@ text.axis-worktime {
 #stdout_show {
     white-space: pre;
 }
+
+#stderr_show {
+    white-space: pre;
+}

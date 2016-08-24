@@ -391,6 +391,45 @@ ParameterSweep.Controller = Backbone.View.extend(
                 this.selectParameter();
                 this.selectVariableCount();
 
+
+                $( "#runLocal" ).click( _.bind(function() {
+                    updateMsg( { status: true,
+                                 msg: "Running job locally..." } );
+
+                    var data = checkAndGet();
+                    
+                    if(!data)
+                        return;
+
+                    data.modelID = this.model.attributes.id;
+                    data.resource = "local";
+                    data.variableCount = this.variableCount;
+
+                    var speciesSelect = {};
+                    for(var name in this.speciesSelectCheckboxes)
+                    {
+                        speciesSelect[name] = this.speciesSelectCheckboxes[name].find('input').prop('checked');
+                    }
+
+                    data.speciesSelect = speciesSelect;
+
+                    var url = "/parametersweep";
+                    jobName = data.jobName
+                    
+                    $.post( url = url,
+                            data = { reqType : "newJobLocal",
+                                     data : JSON.stringify(data) }, //Watch closely...
+                            success = function(data)
+                            {
+                                updateMsg(data);
+                                if(data.status)
+                                {
+                                    window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
+                                }
+                            },
+                            dataType = "json" );
+                }, this));
+
                 $( "#runMolns" ).click( _.bind(function() {
                     updateMsg( { status: true,
                                  msg: "Running job in the Molns cloud..." } );
@@ -413,6 +452,7 @@ ParameterSweep.Controller = Backbone.View.extend(
                     data.speciesSelect = speciesSelect;
 
                     var url = "/parametersweep";
+                    jobName = data.jobName
                     
                     $.post( url = url,
                             data = { reqType : "newJob",
@@ -422,7 +462,7 @@ ParameterSweep.Controller = Backbone.View.extend(
                                 updateMsg(data);
                                 if(data.status)
                                 {
-                                    window.location = '/status';
+                                    window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
                                 }
                             },
                             dataType = "json" );

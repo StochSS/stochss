@@ -1,8 +1,10 @@
+#import molnsutil
 import gillespy
-import json
-import molnsutil
-import numpy
 import itertools
+import json
+import numpy
+import os
+import pickle
 
 ### NOTE the string '_t__JSON_STRING___' (without the extra 't' at the start) will be replaced by data from the model
 
@@ -92,8 +94,6 @@ print "Name: ", name
 import sys
 sys.stdout.flush()
 
-sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
-#sweep = molnsutil.ParameterSweep(model_class=StochSSModel, parameters=parameters)
 
 statsSpecies = sorted([specie for specie, doStats in StochSSModel.json_data['speciesSelect'].items() if doStats])
 
@@ -114,7 +114,7 @@ def reduceAnalysis(metricsList):
     for key1, key2 in itertools.product(keys1, statsSpecies):
         toReduce = [metrics[key1][key2] for metrics in metricsList]
 
-        reduced[(key1, key2)] = { 'max' : numpy.max(toReduce),
+        reduced["{0}::{1}".format(key1, key2)] = { 'max' : numpy.max(toReduce),
                                   'avg' : numpy.min(toReduce),
                                   'avg' : numpy.mean(toReduce),
                                   'var' : numpy.var(toReduce) }
@@ -123,13 +123,44 @@ def reduceAnalysis(metricsList):
 
 sys.stdout.write("Starting Parameter sweep\n")
 sys.stdout.flush()
-#, reducer = reduceAnalysis
-ret = sweep.run(mapper = mapAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], chunk_size = 1, store_realizations = False, progress_bar = False)
-
-import pickle
 dat = []
-for r in ret:
-    dat.append({ 'parameters' : r.parameters, 'result' : r.result })
+#############################################
+if True:  # Turn on debugging, run 'local' 
+    if len(parameters) > 1:
+        raise Exception("can not use multi parameters")
+    sys.stdout.write("Using local serial execution mode\n")
+    sys.stdout.flush()
+    for pname,pvals in parameters.iteritems():
+        for pval in pvals:
+            pset = {pname:pval}
+            sys.stdout.write("\tSimulating {0}\n".format(pset))
+            sys.stdout.flush()
+            model = StochSSModel(**pset) 
+            results = model.run(number_of_trajectories = StochSSModel.json_data['trajectories'])
+            if not isinstance(results, list):
+                results = [results]
+            mapped_list = []
+            for r in results:
+                mapped_list.append(mapAnalysis(r))
+            dat.append({ 'parameters' : pset, 'result' : reduceAnalysis(mapped_list) })
+else:
+    #sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
+    #ret = sweep.run(mapper = mapAnalysis, reducer = reduceAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], chunk_size = 1, store_realizations = False, progress_bar = False)
+    #for r in ret:
+    #    dat.append({ 'parameters' : r.parameters, 'result' : r.result })
+    pass
+#############################################
 
-with open('results', 'w') as f:
+sys.stdout.write("Finished Parameter sweep\n")
+sys.stdout.flush()
+
+result_file = os.path.join(os.path.dirname(__file__),'results')
+
+sys.stdout.write("Writing result to file '{0}'\n".format(result_file))
+sys.stdout.flush()
+
+with open(result_file, 'w') as f:
     pickle.dump(dat, f)
+
+sys.stdout.write("Done")
+sys.stdout.flush()

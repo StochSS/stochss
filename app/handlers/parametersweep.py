@@ -79,6 +79,36 @@ class ParameterSweepPage(BaseHandler):
                           'msg':'Error: {0}'.format(e)}
                 self.response.write(json.dumps(result))
                 return
+        elif reqType == 'newJobLocal':
+            logging.error("*"*80)
+            logging.error("parametersweep.newJobLocal")
+            logging.error("*"*80)
+            data = json.loads(self.request.get('data'))
+
+            job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
+                              self.user.user_id(),
+                              data["jobName"].strip()).get()
+
+            if job != None:
+                logging.error("parametersweep.newJobLocal: error: Job name must be unique")
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Job name must be unique"}))
+                return
+
+            try:
+                result = self.runLocal(data = data)
+
+                return self.response.write(json.dumps({
+                    "status": True,
+                    "msg": "Job launched",
+                    "id": result.key().id()
+                }))
+            except Exception as e:
+                logging.exception(e)
+                result = {'status':False,
+                          'msg':'Error: {0}'.format(e)}
+                self.response.write(json.dumps(result))
+                return
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
 
@@ -157,6 +187,113 @@ class ParameterSweepPage(BaseHandler):
 
         self.response.write(json.dumps({ 'status' : True,
                                          'msg' : 'Success'}))
+
+    def runLocal(self, data):
+        logging.error("*"*80)
+        logging.error("parametersweep.runLocal()")
+        logging.error("*"*80)
+        modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
+        path = os.path.abspath(os.path.dirname(__file__))
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+        job = ParameterSweepJobWrapper()
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = data["jobName"]
+        job.inData = json.dumps(data)
+        job.modelName = modelDb.name
+        job.outData = dataDir
+        job.status = "Pending"
+        job.output_stored = False
+        # # execute local task
+        try:
+            with open(os.path.join(path, 'parametersweep_template.py'), 'r') as f:
+                template = f.read()
+            templateData = {
+                "name" : modelDb.name,
+                "modelType" : modelDb.type,
+                "species" : modelDb.species,
+                "parameters" : modelDb.parameters,
+                "reactions" : modelDb.reactions,
+                "speciesSelect" : data['speciesSelect'],
+                "maxTime" : data['maxTime'],
+                "increment" : data['increment'],
+                "trajectories" : data['trajectories'],
+                "seed" : data['seed'],
+                "parameterA" : data['parameterA'],
+                "minValueA" : data['minValueA'],
+                "maxValueA" : data['maxValueA'],
+                "stepsA" : data['stepsA'],
+                "logA" : data['logA'],
+                "parameterB" : data['parameterB'],
+                "minValueB" : data['minValueB'],
+                "maxValueB" : data['maxValueB'],
+                "stepsB" : data['stepsB'],
+                "logB" : data['logB'],
+                "variableCount" : data['variableCount'],
+                "isSpatial" : modelDb.isSpatial,
+                "isLocal" : True
+            }
+            if modelDb.isSpatial:
+                try:
+                    meshWrapperDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                except Exception as e:
+                    logging.exception(e)
+                    logging.error("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                    raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                try:
+                    meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
+                    templateData["mesh"] = meshFileObj["data"]
+                except IOError as e: 
+                    logging.exception(e)
+                    logging.error("Mesh file inaccessible. Try another mesh")
+                    raise Exception("Mesh file inaccessible. Try another mesh")
+
+                templateData['reaction_subdomain_assigments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assigments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
+                templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
+                templateData['subdomains'] = meshWrapperDb.subdomains
+
+            program = os.path.join(dataDir, 'program.py')
+
+            with open(program, 'w') as f:
+                jsonString = json.dumps(templateData, indent = 4, sort_keys = True)
+
+                # We've got to double escape the strings here cause of how we're substituting the JSON data in a source file
+                jsonString = jsonString.replace('\\', '\\\\')
+
+                f.write(template.replace('___JSON_STRING___', jsonString))
+            
+#?            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+#?            if not molnsConfigDb:
+#?                raise Exception("Molns not initialized")
+#?
+#?            config = molns.MOLNSConfig(config_dir=molnsConfigDb.folder)
+#?            result = molns.MOLNSExec.start_job(['EC2_controller', "python {0}".format(program)], config)
+            cmd = "python {0}".format(program)
+            logging.info('parametersweep.runLocal(): cmd={0}'.format(cmd))
+            logging.info('*'*80)
+            logging.info('*'*80)
+            exstring = '{0}/backend/wrapper.py {1}/stdout {1}/stderr {1}/return_code {2}'.format(basedir, dataDir, cmd)
+            logging.info('parametersweep.runLocal(): exstring={0}'.format(exstring))
+            logging.info('*'*80)
+            logging.info('*'*80)
+            handle = subprocess.Popen(exstring.split(), preexec_fn=os.setsid)
+            job.pid = handle.pid
+            logging.info("parametersweep.runLocal() job started pid={0}".format(job.pid))
+            logging.info('*'*80)
+            logging.info('*'*80)
+
+            job.resource = "local"
+            job.put()
+        except Exception as e:
+            logging.exception(e)
+            job.status='Failed'
+            job.delete(self)
+            raise
+
+        return job
 
     def runMolns(self, data):
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
@@ -268,6 +405,8 @@ class ParameterSweepVisualizationPage(BaseHandler):
         try:
             with open(os.path.join(jobDb.outData, 'stdout'), 'r') as f:
                 initialData['stdout'] = f.read()
+            with open(os.path.join(jobDb.outData, 'stderr'), 'r') as f:
+                initialData['stderr'] = f.read()
         except IOError as e:
             molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
             initialData['data'] = {}
@@ -282,13 +421,16 @@ class ParameterSweepVisualizationPage(BaseHandler):
                 initialData['stdout'] = str(e)
 
                 
-        if jobDb.output_stored:
+        if jobDb.resource == 'local' or  jobDb.output_stored:
             try:
                 with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
                     initialData['data'] = pickle.load(f)
             except IOError as e:
                 initialData['data'] = {}
-
+        logging.error('*'*80)
+        #logging.error("{0}".format(**{'initialData' : json.dumps(initialData)}))
+        logging.error("{0}".format(initialData))
+        logging.error('*'*80)
         self.render_response('parameter_sweep_visualization.html', **{'initialData' : json.dumps(initialData)})
 
     def post(self, queryType, jobID):
