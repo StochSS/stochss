@@ -309,6 +309,9 @@ function check_and_install_deps {
     if ! check_lib "celery";then
         install_lib "python-celery"
     fi
+    if ! check_lib "jupyter";then
+        install_lib_pip "jupyter"
+    fi
 }
 
 function check_dolfin {
