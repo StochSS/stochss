@@ -80,4 +80,4 @@ function loadOrdered(files, callback) {
 
 loadOrdered(['/static/custom/three.js', '/static/custom/OrbitControls.js', '/static/custom/render.js']);
 
-CUSTOMLOADED = true;
+var CUSTOMLOADED = true;
