@@ -7,7 +7,10 @@ var renderPyURDMEMesh= function(pyurdme_mesh_json, div_id, solution, alpha, iswi
     var renderer = new THREE.WebGLRenderer({alpha:true});
     renderer.setSize(width, height);
     
-    dom.appendChild(renderer.domElement);
+    var element = $( dom.appendChild(renderer.domElement) );
+
+    element.css('width', width);
+    element.css('height', height);
     
     var loader = new THREE.JSONLoader();
     function load_geometry(model){

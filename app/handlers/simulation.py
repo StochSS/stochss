@@ -165,9 +165,9 @@ class JobManager():
             jobWrap.startTime = job['startTime']
 
         if 'resource' in job:
-            jobWrap.resource = job['resource']
+            jobWrap.resource = job['resource'].lower()
         else:
-            jobWrap.resource = 'Local'
+            jobWrap.resource = 'local'
 
         jobWrap.outData = job['output_location']
 
@@ -744,7 +744,7 @@ class SimulatePage(BaseHandler):
 
         # Create a wrapper to store the Job description in the datastore
         job = StochKitJobWrapper()
-        job.resource = 'Local'
+        job.resource = 'local'
         
         # stochkit_job.uuid = res['uuid']
             
