@@ -59,7 +59,7 @@ echo "Installing in $STOCHSS_HOME"
 STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
-ODE_VERSION="ode-1.0.4"
+ODE_VERSION="ode-1.0.3"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
@@ -577,6 +577,7 @@ else
 
     echo "Cleaning up anything already there..."
     rm -rf "$STOCHSS_HOME/ode" >& /dev/null
+    rm -rf $STOCHKIT_ODE >& /dev/null
 
     stdout="$STOCHSS_HOME/stdout.log"
     stderr="$STOCHSS_HOME/stderr.log"
@@ -593,19 +594,19 @@ else
     cd "cvodes-2.7.0"
     ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes configure)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes make)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make install 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes make install)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
@@ -614,7 +615,7 @@ else
     export STOCHKIT_ODE="$(pwd -P)"
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (ode make)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
@@ -627,8 +628,10 @@ else
     if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
         echo "Success!"
     else
-        echo "Failed"
-        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        echo "Failed (ode test)"
+        echo "StochKit ODE failed to install. See below for errors:"
+        echo "export STOCHKIT_ODE=\"$STOCHKIT_ODE\"; $STOCHKIT_ODE/ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 1 -i 1 --out-dir $rundir"
+        eval "export STOCHKIT_ODE=\"$STOCHKIT_ODE\"; $STOCHKIT_ODE/ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 1 -i 1 --out-dir $rundir"
         exit -1
     fi
 fi
