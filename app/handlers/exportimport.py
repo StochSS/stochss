@@ -202,7 +202,7 @@ class SuperZip:
                     outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.outData)
                     jsonJob["output_location"] = outputLocation
             # For local jobs, we need to include the output location in the zip archive
-            elif job.resource == 'Local':
+            elif job.resource.lower() == 'local':
                 outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.outData)
                 jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
                 jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
@@ -297,7 +297,7 @@ class SuperZip:
                     "modelName" : job.modelName,
                     "indata" : json.loads(job.indata),
                     "outData" : job.outData,
-                    "resource" : "Local",
+                    "resource" : "local",
                     "uuid" : job.uuid,
                     "status" : job.status }
         
@@ -570,7 +570,7 @@ class SuperZip:
 
         jobj["modelName"] = jobj["modelName"] if "modelName" in jobj else None
 
-        jobj["resource"] = 'Local'
+        jobj["resource"] = 'local'
         jobj["output_location"] = outPath
         jobj["stdout"] = "{0}/stdout".format(outPath)
         jobj["stderr"] = "{0}/stderr".format(outPath)
@@ -753,7 +753,7 @@ class ExportPage(BaseHandler):
 
             for job in jobs:
                 if job.status == "Finished":
-                    if job.resource == 'Local':
+                    if job.resource.lower() == 'local':
                         numberOfFiles += 1
                         totalSize += get_size(job.job.outData)
 
