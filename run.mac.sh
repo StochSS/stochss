@@ -45,7 +45,7 @@ STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`"
 STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
-ODE_VERSION="ode-1.0.3"
+ODE_VERSION="ode-1.0.4"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
@@ -403,9 +403,10 @@ else
 
     stdout="$STOCHSS_HOME/stdout.log"
     stderr="$STOCHSS_HOME/stderr.log"
+    echo "" > "$stdout"
+    echo "" > "$stderr"
     echo "Building StochKit ODE"
-    echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
-    echo " stderr in $STOCHSS_HOME/stderr.log "
+    echo "Logging stdout/stderr to $STOCHSS_HOME/stderr.log "
     echo "This process should take about a minute to complete. Please be patient"
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
@@ -414,19 +415,19 @@ else
     cd "$tmpdir/$ODE_VERSION/cvodes"
     retry_command "tar -xzf \"cvodes-2.7.0.tar.gz\""
     cd "cvodes-2.7.0"
-    ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
+    ./configure --prefix="$PWD/cvodes" >>"$stderr" 2>&1
     if [ $? != 0 ]; then
 	echo "Failed (cvodes configure)"
 	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
-    make 1>"$stdout" 2>"$stderr"
+    make >>"$stderr" 2>&1
     if [ $? != 0 ]; then
         echo "Failed (cvodes make)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
-    make install 1>"$stdout" 2>"$stderr"
+    make install >>"$stderr" 2>&1
     if [ $? != 0 ]; then
         echo "Failed (cvodes make install)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
@@ -435,7 +436,7 @@ else
     cd ../../
     STOCHKIT_ODE_R=$STOCHKIT_ODE
     export STOCHKIT_ODE="$(pwd -P)"
-    make 1>"$stdout" 2>"$stderr"
+    make >>"$stderr" 2>&1
     if [ $? != 0 ]; then
         echo "Failed (ode make)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
