@@ -1,0 +1,106 @@
+###########################################################################
+###########################################################################
+ifeq ($(URDME_ROOT),)
+    $(error URDME_ROOT is not set)
+endif
+ifeq ($(SOLVER_ROOT),)
+    $(error SOLVER_ROOT is not set)
+endif
+LIB = $(URDME_ROOT)/lib
+BIN = $(URDME_ROOT)/bin
+SRC = $(SOLVER_ROOT)/src
+USRC = $(URDME_ROOT)/src
+###########################################################################
+#ARCHS=$(shell $(URDME_ROOT)/bin/urdme_init -s)
+ifneq ($(ARCHS),)
+SET_ARCH=-arch $(ARCHS)
+endif
+###########################################################################
+INCLUDE = -I$(URDME_ROOT)/include -I$(SOLVER_ROOT)/include
+CC     = gcc
+LINKER = gcc
+#OPTION_SET = -DOUTPUT_ALL -DESTIMATE_ERROR_MEAN -DERROR_L2
+#OPTION_SET = -DRECORD_TIMESTEPS
+
+#CFLAGS = -c $(SET_ARCHS) -gdwarf-2  -Wlong-long -Wformat -Wpointer-arith $(INCLUDE) -DURDME_LIBMAT $(OPTION_SET)
+CFLAGS = -w -c -O3 -Wlong-long -Wformat -Wpointer-arith $(INCLUDE) -DURDME_LIBMAT $(OPTION_SET)
+LFLAGS = -lm -lgsl -lgslcblas -lhdf5 -lhdf5_hl
+###########################################################################
+ifeq ($(URDME_MODEL),)
+     $(error URDME_MODEL not set)
+endif
+###########################################################################
+# destination directory
+OUT=.urdme/
+###########################################################################
+###########################################################################
+###########################################################################
+###########################################################################
+
+all:  dfsp
+dfsp: $(OUT)$(URDME_MODEL).adaptive_dfsp
+
+###########################################################################
+#OBJS= $(URDME_MODEL).o dfsp_diffusion.o dfsp_reactions.o dfsp.o dfspcore.o report.o dfsp_statespace.o gsl_expm.o matmodel.o read_matfile.o estimate_splitting_error.o nsmcore.o binheap.o
+OBJS= $(URDME_MODEL).o dfsp_diffusion.o dfsp_reactions.o dfsp.o dfspcore.o report.o dfsp_statespace.o urdmemodel.o read_matfile.o outputwriter.o  estimate_splitting_error.o select_timestep.o nsmcore.o binheap.o
+DEPS= $(addprefix $(OUT),$(OBJS))
+###########################################################################
+
+$(OUT)$(URDME_MODEL).adaptive_dfsp: $(OUT) $(DEPS)
+	$(LINKER) -o $(OUT)$(URDME_MODEL).adaptive_dfsp $(DEPS) $(LFLAGS)
+
+$(OUT):
+	-mkdir -p $(OUT)
+
+$(OUT)$(URDME_MODEL).o: $(OUT)$(URDME_MODEL).c
+	$(CC) $(CFLAGS) $(OUT)$(URDME_MODEL).c -o $(OUT)$(URDME_MODEL).o 
+
+$(OUT)dfsp.o: $(SRC)/adaptive_dfsp/dfsp.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/dfsp.c -o $(OUT)dfsp.o
+
+$(OUT)dfsp_diffusion.o: $(SRC)/adaptive_dfsp/dfsp_diffusion.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/dfsp_diffusion.c -o $(OUT)dfsp_diffusion.o
+
+$(OUT)dfsp_reactions.o: $(SRC)/adaptive_dfsp/dfsp_reactions.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/dfsp_reactions.c -o $(OUT)dfsp_reactions.o
+
+$(OUT)dfspcore.o: $(SRC)/adaptive_dfsp/dfspcore.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/dfspcore.c -o $(OUT)dfspcore.o
+
+$(OUT)dfsp_statespace.o: $(SRC)/adaptive_dfsp/dfsp_statespace.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/dfsp_statespace.c -o $(OUT)dfsp_statespace.o
+
+#$(OUT)gsl_expm.o: $(SRC)/adaptive_dfsp/gsl_expm.c 
+#	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/gsl_expm.c -o $(OUT)gsl_expm.o
+#
+$(OUT)estimate_splitting_error.o: $(SRC)/adaptive_dfsp/estimate_splitting_error.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/estimate_splitting_error.c -o $(OUT)estimate_splitting_error.o
+
+$(OUT)select_timestep.o: $(SRC)/adaptive_dfsp/select_timestep.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/select_timestep.c -o $(OUT)select_timestep.o
+
+$(OUT)nsmcore.o: $(SRC)/adaptive_dfsp/nsmcore.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/nsmcore.c -o $(OUT)nsmcore.o
+
+$(OUT)binheap.o: $(SRC)/adaptive_dfsp/binheap.c 
+	$(CC) $(CFLAGS) $(SRC)/adaptive_dfsp/binheap.c -o $(OUT)binheap.o
+
+#$(OUT)matmodel.o: $(USRC)/matmodel.c
+#	$(CC) $(CFLAGS) $(USRC)/matmodel.c -o $(OUT)matmodel.o
+#
+$(OUT)urdmemodel.o: $(USRC)/urdmemodel.c
+	$(CC) $(CFLAGS) $(USRC)/urdmemodel.c -o $(OUT)urdmemodel.o
+
+$(OUT)outputwriter.o: $(USRC)/outputwriter.c
+	$(CC) $(CFLAGS) $(USRC)/outputwriter.c -o $(OUT)outputwriter.o
+
+$(OUT)read_matfile.o: $(USRC)/read_matfile.c
+	$(CC) $(CFLAGS) $(USRC)/read_matfile.c -o $(OUT)read_matfile.o
+
+$(OUT)report.o: $(USRC)/report.c
+	$(CC) $(CFLAGS) $(USRC)/report.c -o $(OUT)report.o
+
+clean:
+	rm -f $(DEPS)
+	rm -f $(OUT)$(URDME_MODEL).adaptive_dfsp
+

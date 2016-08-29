@@ -9,7 +9,7 @@ fi
 mode=""
 token="not_set"
 browser="true"
-ip=0
+ip="localhost"
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -116,7 +116,29 @@ function check_for_lib {
     fi
     return 0 #True
 }
-
+function check_gillespy_sub {
+    RET=`python -c "import gillespy" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_gillespy {
+    if check_gillespy_sub; then
+        return 0 #True
+    else
+        GILLESPY_DIR="$STOCHSS_HOME/app/lib/gillespy/"
+        if [ -e $GILLESPY_DIR ];then
+            echo "GillesPy install found $GILLESPY_DIR."
+            export PYTHONPATH=$GILLESPY_DIR:$PYTHONPATH
+            if check_gillespy_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
 function check_pyurdme_sub {
     RET=`python -c "import pyurdme" 2>/dev/null`
     RC=$?
@@ -186,6 +208,13 @@ function check_python_installation {
         echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
         return 1 #False
     fi
+    if check_gillespy; then
+        echo "GillesPy detected successfully."
+    else
+        echo "Failed to detect GillesPy."
+        return 1 #False
+    fi
+
     return 0 #True
 }
 
@@ -424,4 +453,9 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode mac
+export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
+
+echo "PYTHONPATH :: $PYTHONPATH"
+
+#echo "python \"$STOCHSS_HOME/launchapp.py\" $0 $browser $token $ip $mode"
+exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode

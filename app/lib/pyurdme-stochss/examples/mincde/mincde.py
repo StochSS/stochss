@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
-import matplotlib.pyplot as plt
 import numpy
 import os.path
 import pyurdme
 import dolfin
 import numpy
+
+try:
+    import matplotlib.pyplot as plt
+except:
+    pass
 
 class Membrane(dolfin.SubDomain):
     def inside(self,x,on_boundary):
@@ -94,7 +98,7 @@ class mincde(pyurdme.URDMEModel):
         self.set_initial_condition_scatter({MinD_c_adp:4500})
         self.set_initial_condition_scatter({MinD_e:1575})
 
-        self.timespan(range(1))
+        self.timespan(range(500))
 
 
 if __name__=="__main__":
@@ -103,28 +107,16 @@ if __name__=="__main__":
     model = mincde(model_name="mincde")
     result = model.run(report_level=1)
 
-    # Write mesh and subdomain files for the StochSS UI
-    sd = model.get_subdomain_vector()
-    with open("coli_subdomains.txt",'w') as fd:
-        for ndx,val in enumerate(sd):
-            fd.write("{0},{1}\n".format(ndx,val))
-
-    h = model.mesh.get_mesh_size()
-    print numpy.mean(h)
-    exit(0)
-
-    print "Writing species 'MinD_m' to folder 'MinDout'"
-    result.export_to_vtk(species='MinD_m',folder_name="MinDout")
-
-    mindm = result.get_species("MinD_m")
-
-    y_vals = model.mesh.coordinates()[:, 1]
-    idx = (y_vals < 1e-6)
-    mindmsum = numpy.sum(mindm[:,idx],axis=1)
-    plt.plot(model.tspan, mindmsum)
-    plt.title('MinD_m oscillations')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Copy number of membrane bound MinD in half of the cell')
-    
-    plt.show()    
+    try:
+        mindm = result.get_species("MinD_m")
+        y_vals = model.mesh.coordinates()[:, 1]
+        idx = (y_vals < 1e-6)
+        mindmsum = numpy.sum(mindm[:,idx],axis=1)
+        plt.plot(model.tspan, mindmsum)
+        plt.title('MinD_m oscillations')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Copy number of membrane bound MinD in half of the cell') 
+        plt.show()
+    except:
+        pass    
 
