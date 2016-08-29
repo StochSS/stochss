@@ -24,10 +24,23 @@ module.exports = View.extend({
     renderFrame : function() {
         if(typeof(this.renderer) == "undefined")
             return
-        this.renderer.render(this.scene, this.camera);
-        this.updateWorldCamera();
-        this.renderer2.render(this.scene2, this.camera2);
+
+        if(typeof(this.then) == "undefined")
+            this.then = 0;
+
         requestAnimationFrame(_.bind(this.renderFrame, this));
+
+        var now = Date.now();
+        var elapsed = now - this.then;
+
+        if (elapsed > 1000.0 / 30.0) {
+            this.renderer.render(this.scene, this.camera);
+            this.updateWorldCamera();
+            this.renderer2.render(this.scene2, this.camera2);
+
+            this.then = now;
+        }
+
         this.controls.update();
     },
     update : function(obj) {
@@ -48,13 +61,13 @@ module.exports = View.extend({
 
     generateSolidMesh : function(desiredSubdomain)
     {
-    var sdmesh = this.model.mesh.subdomains;
-    var vtx = this.model.mesh.threeJsMesh.vertices;
-    var faces = this.model.mesh.threeJsMesh.faces;
-    
-    var sub_faces = [];
-    var sub_faces_idx = 0;
-    for(var f=0; f<faces.length/7; f++)
+        var sdmesh = this.model.mesh.subdomains;
+        var vtx = this.model.mesh.threeJsMesh.vertices;
+        var faces = this.model.mesh.threeJsMesh.faces;
+        
+        var sub_faces = [];
+        var sub_faces_idx = 0;
+        for(var f=0; f<faces.length/7; f++)
         {
             if(sdmesh[faces[f*7 + 1]] == desiredSubdomain && sdmesh[faces[f*7 + 2]] == desiredSubdomain && sdmesh[faces[f*7 + 3]] == desiredSubdomain)
             {
@@ -64,16 +77,13 @@ module.exports = View.extend({
             }
         }
 
-    this.model.mesh.threeJsMesh.faces = sub_faces;
-
-
+        this.model.mesh.threeJsMesh.faces = sub_faces;
     },
 
     highLightSubdomains : function(subdomains)
     {
         var subdomainLabels = this.model.mesh.subdomains;
 
-        
         var colors = new Array(subdomainLabels.length);
         
         for(var i = 0; i < subdomainLabels.length; i++)
@@ -93,7 +103,6 @@ module.exports = View.extend({
     },
     
     redrawColors : function(colors) {
-        
         for(var i = 0; i < this.mesh.geometry.faces.length; i++)
         {
             var faceIndices = ['a', 'b', 'c'];         

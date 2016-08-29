@@ -1,6 +1,6 @@
 ###Using StochSS on Windows
 _Please note_: 
-+ StochSS does not run Microsoft Edge browser. The recommended browser is <a href="https://www.google.com/chrome/browser/desktop/">Google Chrome</a>.
++ StochSS does not run on Microsoft Edge browser. The recommended browser is <a href="https://www.google.com/chrome/browser/desktop/">Google Chrome</a>.
 + You may have to enable virtualization in the BIOS (Use this Microsoft Virtualization detector to check if virtualization is enabled in your system: https://www.microsoft.com/en-us/download/details.aspx?id=592. If it's not, please enable it from the BIOS first).
 + You need Windows 7 64 bit at least.
 
@@ -40,7 +40,7 @@ ProTip!
     + Otherwise, if you already have a StochSS docker container (i.e. when you use StochSS subsequently), run 
     
          + `docker start stochsscontainer1_7` 
-         + `docker exec -t stochsscontainer1_7 /bin/bash`
+         + `docker exec -ti stochsscontainer1_7 /bin/bash`
 
 4. Run the following commands to start the server: 
     + `cd stochss-master`

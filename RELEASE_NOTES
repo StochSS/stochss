@@ -4,7 +4,7 @@ StochSS - Stochastic Simulation Service: Release Notes
 =============================
 - Volume rendering visualization for spatial jobs.
 - StochSS-launcher uses docker containers to run StochSS. Includeds support for newest OSX and Windows operating systems.
-- Added RSS feed and StochSS registration to font page
+- Added RSS feed and StochSS registration to front page
 
 1.6.1
 =============================

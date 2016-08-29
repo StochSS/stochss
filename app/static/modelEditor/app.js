@@ -31,7 +31,27 @@ ModelCollection = AmpersandCollection.extend( {
     comparator: util.alphaNumByName,
     model: Model,
 
-    ajaxConfig : ajaxConfig
+    ajaxConfig: function () {
+        return {
+            xhrFields: {
+                timeout : 120000
+            }
+        };
+    }
+});
+
+PublicModelCollection = AmpersandCollection.extend( {
+    url: "/publicModels",
+    comparator: util.alphaNumByName,
+    model: Model,
+
+    ajaxConfig: function () {
+        return {
+            xhrFields: {
+                timeout : 120000
+            }
+        };
+    }
 });
 
 MeshCollection = AmpersandCollection.extend( {
@@ -39,7 +59,13 @@ MeshCollection = AmpersandCollection.extend( {
     comparator: util.alphaNumByName,
     model: Mesh,
 
-    ajaxConfig : ajaxConfig
+    ajaxConfig: function () {
+        return {
+            xhrFields: {
+                timeout : 120000
+            }
+        };
+    }
 });
 
 var modelCollection = new ModelCollection();
@@ -89,7 +115,147 @@ var WaitToLaunch = State.extend({
             this.listenTo(this.collections[i], 'change:loaded', _.bind(this.checkAndLaunch, this));
         }
 
-        this.checkAndLaunch();
+            // Need to remember this so we can clean up event handlers
+            this.selected = this.modelSelector.selected;
+        }
+
+        this.updateModelNameText();
+    },
+    exportModel : function()
+    {
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+        saveMessageDom.removeClass( "alert-success alert-error" );
+        saveMessageDom.text( "Duplicating model..." );
+
+        var models = $.ajax( { type : 'GET',
+                               url : '/publicModels/names',
+                               async : false,
+                               dataType : 'JSON' } ).responseJSON;
+
+        var names = models.map( function(model) { return model.name; } );
+
+        model = new Model(this.modelSelector.selected.toJSON());
+
+        var tmpName = model.name;
+        while(_.contains(names, tmpName))
+        {
+            tmpName = model.name + '_' + Math.random().toString(36).substr(2, 3);
+        }
+
+        model.name = tmpName;
+        model.is_public = true;
+        model.id = undefined;
+
+        model.setupMesh(this.meshCollection);
+
+        publicModelCollection.add(model);
+
+        saveMessageDom.text( "Saving model..." );
+
+        model.save(undefined, {
+            success : _.bind(this.modelSaved, this),
+            error : _.bind(this.modelNotSaved, this)
+        });
+    },
+    modelSaved: function() {
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.addClass( "alert-success" );
+        saveMessageDom.text( "Saved model to public library" );
+    },
+    modelNotSaved: function()
+    {
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+        saveMessageDom.removeClass( "alert-success" );
+        saveMessageDom.addClass( "alert-error" );
+        saveMessageDom.text( "Error! Model not saved to public library!" );
+    },
+    modelDeleted: function()
+    {
+        if(this.modelEditor)
+        {
+            this.modelEditor.remove()
+            this.stopListening(this.modelSelector.selected);
+            this.selected = undefined;
+
+            delete this.modelEditor;
+        }
+
+        this.updateModelNameText();
+    },
+    exportModelAsZip: function()
+    {
+        $.ajax( { type : 'GET',
+                  url : '/modeleditor',
+                  data : { reqType : 'exportToZip', id : this.modelSelector.selected.id },
+                  dataType : 'json',
+                  success : _.bind(this.forwardToFile, this)
+                } )
+    },
+    exportModelAsXML: function()
+    {
+        $.ajax( { type : 'GET',
+                  url : '/modeleditor',
+                  data : { reqType : 'exportToXML', id : this.modelSelector.selected.id },
+                  dataType : 'json',
+                  success : _.bind(this.forwardToFile, this)
+                } )
+    },
+    forwardToFile: function(data)
+    {
+        if(data.url)
+        {
+            window.location = data.url;
+        }
+        else
+        {
+            var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+            saveMessageDom.removeClass( "alert-success" );
+            saveMessageDom.addClass( "alert-error" );
+            saveMessageDom.text( data.msg );        
+        }
+    },
+    render: function()
+    {
+        //View.prototype.render.apply(this, arguments);
+
+        $( this.queryByHook('modelSelect') ).empty();
+
+        var url = new URL(document.URL, true);
+
+        var model;
+        if(url.query.select)
+        {
+            model = this.collection.get(parseInt(url.query.select), "id");
+        }
+        else if(url.query.model_edited)
+        {
+            for(var i = 0; i < this.collection.models.length; i++)
+            {
+                if(this.collection.at(i).name == url.query.model_edited)
+                {
+                    model = this.collection.at(i);
+                }
+            }
+        }
+
+        this.modelSelector = this.renderSubview(
+            new ModelSelectView( {
+                collection : this.collection,
+                meshCollection : this.meshCollection,
+                parent : this,
+                selected : model
+            } ), this.queryByHook('modelSelect')
+        );
+
+        this.selectModel();
+        this.modelSelector.on('change:selected', _.bind(this.selectModel, this));
+
+        return this;
     }
 });
 
