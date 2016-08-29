@@ -427,7 +427,7 @@ class SuperZip:
         job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
         job.inData = json.dumps(jsonJob["inData"])
         job.outData = outPath
-        job.resource = "molns"
+        job.resource = jsonJob["resource"]
         job.status = jsonJob["status"]
         job.output_stored = jsonJob["output_stored"]
 
@@ -1089,7 +1089,9 @@ class ImportPage(BaseHandler):
         parameter_sweep_jobs_query.filter("status =", "Finished")
         parameter_sweep_jobs = []
         for cloud_job in parameter_sweep_jobs_query.run():
-            if cloud_job.output_stored:
+            if cloud_job.resource is None or cloud_job.resource not in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                continue
+            if cloud_job.outputURL is None or cloud_job.outData is not None:
                 continue
 
             #output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL

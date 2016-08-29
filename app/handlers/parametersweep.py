@@ -426,6 +426,8 @@ class ParameterSweepVisualizationPage(BaseHandler):
             try:
                 with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
                     initialData['data'] = pickle.load(f)
+
+                initialData['status'] = 'Finished'
             except IOError as e:
                 initialData['data'] = {}
         #logging.error('*'*80)
