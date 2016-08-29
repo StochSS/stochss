@@ -67,17 +67,19 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
             if(this.data.data)
             {
-                if(this.data.inData.variableCount == 2)
-                {
-                    var template = _.template('<option><%= type %></option>');
-                    
-                    for(var type in this.data.data)
+                var template = _.template('<option><%= type %></option>');
+
+                if(this.data.inData.variableCount == 2) {
+                    var types = _.difference(_.keys(this.data.data[0].result), ['min', 'max']);
+
+                    for(var i in types)
                     {
-                        $( template( { type : type } ) ).appendTo( this.$el.find( "#outputSelect" ) );
-                    }
-                    
+                        $( template( { type : types[i] } ) ).appendTo( this.$el.find( "#outputSelect" ) );
+                    }                
                     
                     this.$el.find( "#outputSelect" ).change(_.bind(this.updateGraphs, this));
+
+                    this.$el.find( "#outputSelectDiv" ).show();
                 }
 
                 $( window ).resize(_.bind(this.updateGraphs, this));
@@ -181,17 +183,24 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .attr('width', width + 'px')
                 .attr('height', height + 'px');
 
-            for(var key in this.data.data)
+            var data = this.data.data;
+
+            var parameterKey = _.keys(data[0].parameters)[0];
+            var types = _.difference(_.keys(this.data.data[0].result), ['min', 'max']);
+
+            for(var type in types)
             {
-                var line = this.data.data[key];
+                var key = types[type];
 
                 var series = []
-                for(var i = 0; i < line.length; i++)
+                for(var i = 0; i < data.length; i++)
                 {
-                    var xval = this.data.inData.minValueA + i * (this.data.inData.maxValueA - this.data.inData.minValueA) / (line.length - 1);
-                    
-                    series.push( { x : xval, y : line[i] + Math.random() } );
+                    var xval = data[i].parameters[parameterKey];
+
+                    series.push( { x : xval, y : data[i].result[key].avg } );
                 }
+
+                series = _.sortBy(series, function(v) { return v.x; })
 
                 plotData.push( { key : key,
                                  values : series } );
@@ -223,28 +232,70 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
         updateHeatmap : function()
         {
-            var key = this.$el.find( "#outputSelect" ).val().trim();
+            var resultKey = this.$el.find( "#outputSelect" ).val().trim();
 
-            var matrix = this.data.data[key];
+            var data = this.data.data;
 
-            var margin = { top: 50, right: 50, bottom: 100, left: 75 },
-            width = $(".metadata").width() - margin.left - margin.right - 75,
-            height = width * 3 / 4,//300 - margin.top - margin.bottom,
-            gridSizeY = Math.floor(height / matrix.length),
-            gridSizeX = Math.floor(width / matrix[0].length);
+            var sortedParameters = {}
+            var parameterKeys = []
+
+            for(var key in data[0].parameters)
+            {
+                sortedParameters[key] = [];
+                parameterKeys.push(key);
+            }
+
+            for(var key in sortedParameters) {
+                for(var i in data)
+                {
+                    sortedParameters[key].push(data[i].parameters[key]);
+                }
+
+                sortedParameters[key] = _.uniq(sortedParameters[key]);
+            }
+
+            var yCount = sortedParameters[parameterKeys[1]].length;
+            var xCount = sortedParameters[parameterKeys[0]].length;
+
+            for(var key in sortedParameters) {
+                sortedParameters[key] = _.sortBy(sortedParameters[key], function(x) { return x; });
+
+                var tmp = {};
+
+                for(var i in sortedParameters[key])
+                {
+                    tmp[sortedParameters[key][i]] = i;
+                }
+
+                sortedParameters[key] = tmp;
+            }
+
+            var margin = { top: 50, right: 50, bottom: 100, left: 75 };
+            var width = $(".metadata").width() - margin.left - margin.right - 75;
+            var height = width * 3 / 4;
+            var gridSizeY = Math.floor(height / yCount);
+            var gridSizeX = Math.floor(width / xCount);
 
             var numberBoxes = 20;
 
             this.listData = [];
             var colors = [];
             
-            for(var i = 0; i < matrix.length; i++)
+            for(var d in data)
+            {
+                var i = sortedParameters[parameterKeys[0]][data[d].parameters[parameterKeys[0]]];
+                var j = sortedParameters[parameterKeys[1]][data[d].parameters[parameterKeys[1]]];
+
+                this.listData.push([i, j, data[d].result[resultKey].avg]);
+            }
+
+            /*for(var i = 0; i < matrix.length; i++)
             {
                 for(var j = 0; j < matrix[0].length; j++)
                 {
                     this.listData.push([i, j, matrix[i][j]]);
                 }
-            }
+            }*/
 
             d3.select("#chart svg").remove();
             
@@ -263,7 +314,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             //Draw title
             svg.append("text")
                 .attr("class", "title")
-                .text(key)
+                .text(resultKey)
                 .style("text-anchor", "middle")
                 .style("dominant-baseline", "central")
                 .attr("x", width / 2)
@@ -293,9 +344,9 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             var yAxisValues = [];
             var useExponential = false;
 
-            for(var i = 0; i < matrix.length; i++)
+            for(var i = 0; i < yCount; i++)
             {
-                var val = this.data.inData.minValueB + i * (this.data.inData.maxValueB - this.data.inData.minValueB) / (matrix.length - 1);
+                var val = this.data.inData.minValueB + i * (this.data.inData.maxValueB - this.data.inData.minValueB) / (yCount - 1);
 
                 yAxisValues.push(val);
 
@@ -325,9 +376,9 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             var xAxisValues = [];
             var useExponential = false;
 
-            for(var i = 0; i < matrix[0].length; i++)
+            for(var i = 0; i < xCount; i++)
             {
-                var val = this.data.inData.minValueA + i * (this.data.inData.maxValueA - this.data.inData.minValueA) / (matrix[0].length - 1);
+                var val = this.data.inData.minValueA + i * (this.data.inData.maxValueA - this.data.inData.minValueA) / (xCount - 1);
 
                 xAxisValues.push(val);
 
@@ -353,15 +404,15 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .attr("y", height)
                 .attr("dy", "1.0em");
 
-            d3.select("#legend")
+            /*d3.select("#legend")
                 .style("width", "50px")
                 .style("height", height + 'px')
                 .style("float", "left")
-                .style("margin-top", margin.top + 'px');
+                .style("margin-top", margin.top + 'px');*/
 
             var colorScale = d3.scale
                 .linear()
-                .domain([0, d3.max(this.listData, function (d) { return d[2]; })])
+                .domain([d3.min(this.listData, function (d) { return d[2]; }), d3.max(this.listData, function (d) { return d[2]; })])
                 .range(["blue", "red"]);
             
             //Draw legend
@@ -388,23 +439,23 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
             var minLabel = legend.append('text')
                 .attr('class', 'colorlegend-labels')
-                .attr('x', width + boxWidth / 2)
+                .attr('x', width + boxWidth)
                 .attr('y', height)
                 .attr('dy', '1em')
                 .style('text-anchor', 'middle')
                 .style('pointer-events', 'none')
-                .text(colorScale.domain()[0]);
+                .text(formatter( colorScale.domain()[0] ));
 
             var maxLabel = legend.append('text')
                 .attr('class', 'colorlegend-labels')
-                .attr('x', width + boxWidth / 2)
+                .attr('x', width + boxWidth)
                 .attr('dy', '-0.25em')
                 .style('text-anchor', 'middle')
                 .style('pointer-events', 'none')
-                .text(colorScale.domain()[1]);
+                .text(formatter( colorScale.domain()[1] ));
             
             legendBoxes.append('rect')
-                .attr('x', width)
+                .attr('x', width + boxWidth / 2)
                 .attr('y', function(d, i) {
                     return i * (boxHeight);
                 })
@@ -437,7 +488,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .style("fill", function(d) { return colorScale(d[2]); });
 
             heatMapJoin.append("text")
-                .text(function(d) { return "Value = " + d[2]; })
+                .text(function(d) { return formatter(d[2]); })
                 .style("text-anchor", "middle")
                 .style("font-size", 16)
                 .attr("fill", "#FFFFFF")

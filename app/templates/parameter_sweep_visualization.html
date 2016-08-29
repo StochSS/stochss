@@ -58,20 +58,20 @@
     </div>
 
     <pre>Status :<%= status%></pre><BR>
-    <div style="border-style: solid; border-width: 1px; padding: 5px;" id="initialData">
-        <div id="stdout_show" style="display: inline;"><B>Stdout:</B> <%= stdout %></div>
-        <div id="stderr_show" style="display: inline;"><B>Stderr:</B> <%= stderr %></div>
-    </div><BR><BR>
-    <% if(output_stored) { %>
+    <% if(status == "Finished") { %>
 
-    <div id="outputSelectDiv" style="display: none;">
+    <div id="outputSelectDiv" style="display : none;">
       Select data to visualize:
       <select id="outputSelect"></select>
     </div>
     <div id="graphs" style="display: none;">
       <div id="legend"></div><div id="chart"></div>
     </div>
-
+    <% } else { %>
+    <div style="border-style: solid; border-width: 1px; padding: 5px;" id="initialData">
+        <div id="stdout_show" style="display: inline;"><B>Stdout:</B> <%= stdout %></div>
+        <div id="stderr_show" style="display: inline;"><B>Stderr:</B> <%= stderr %></div>
+    </div>
     <% } %>
 
     <div id="msg" style="clear:both; display: none;"></div>
