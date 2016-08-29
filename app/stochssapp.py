@@ -255,7 +255,6 @@ import handlers.modeleditor
 import handlers.stochoptim
 import handlers.parametersweep
 import handlers.mesheditor
-import handlers.volume
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -368,7 +367,6 @@ app = webapp2.WSGIApplication([
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/spatial',handlers.spatial.SpatialPage),
-                               ('/volume',handlers.volume.VolumePage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
                                ('/parametersweep', handlers.parametersweep.ParameterSweepPage),
                                webapp2.Route('/parametersweep/<jobID>', handler = handlers.parametersweep.ParameterSweepVisualizationPage),

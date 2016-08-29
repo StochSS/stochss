@@ -78,67 +78,6 @@ Splot.Plot = Backbone.View.extend(
 
             //this.render();
         },
-        
-        //DON'T USE THIS. IT IS JUST REFERENCE CODE
-        getImage : function()
-        {
-            var imageDiv = $( '<img />' );
-            var imgsrc = 'data:image/svg+xml;base64,'+ btoa(this.svg.node().parentNode.innerHTML);
-
-
-            csss = $.get('/static/css/nv.d3.css', success = _.partial(function(t, data)
-                         {
-                             var byteString = t.svg.node().parentNode.innerHTML;
-                             var byteString = t.svg.node().parentNode.innerHTML;
-
-                             csstext = data;
-                             svgthing = $.parseXML(byteString);
-                             whereweappend = $( svgthing ).find('defs').eq(0);
-                             cssobj = $( '<style type="text/css"><![CDATA['+csstext+']]></style>');
-                             t = cssobj.appendTo( whereweappend );
-                             byteString = (new XMLSerializer()).serializeToString(svgthing);
-                             
-                             imgsrc = 'data:image/svg+xml;base64,'+ btoa(byteString)
-
-            var img = '<img src="'+imgsrc+'">'; 
-            d3.select("#working").html(img);
-
-            var canvas = document.querySelector("canvas");
-
-            var image = new Image;
-                             image.src = $('#working').find('img').attr('src');//imgsrc
-            image.onload = function() {
-                context = canvas.getContext("2d");
-                context.drawImage(image, 0, 0);
-
-                /*var a = document.createElement("a");
-                a.download = "sample.png";
-                a.href = canvas.toDataURL("image/png");
-                a.click();*/
-
-                var byteString = atob(document.querySelector("canvas").toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, ""));
-                var ab = new ArrayBuffer(byteString.length);
-                var ia = new Uint8Array(ab);
-                for (var i = 0; i < byteString.length; i++) {
-                    ia[i] = byteString.charCodeAt(i);
-                }
-                var dataView = new DataView(ab);
-                var blob = new Blob([dataView], {type: "image/png"});
-                var DOMURL = self.URL || self.webkitURL || self;
-                var newurl = DOMURL.createObjectURL(blob)
-                
-                console.log(newurl)
-                             console.log(newurl)
-            }
-                             
-                         }, this));
-
-
-            //this.flotDiv.empty();
-            //$( "<img />" ).appendTo( this.flotDiv ).prop('src', imagesrc);
-            //this.flotDiv.append( imageDiv );
-        },
-
         render : function()
         {
             this.hiddenDiv.empty();
