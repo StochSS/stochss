@@ -13,7 +13,7 @@ module.exports = View.extend({
     },
     volumeChange: function()
     {
-        $( this.queryByHook('initialCondition') ).text( Math.floor(this.model.initialCondition * this.baseView.volume) );
+        $( this.queryByHook('initialCondition') ).text(Math.round(this.model.initialCondition * this.baseView.volume));
     },
     render: function()
     {

@@ -131,7 +131,8 @@ class SpatialJobWrapper(db.Model):
         if self.status == "Running":
             service = backendservices(handler.user_data)
             if self.resource == "local":
-                service.stopTaskLocal([int(self.pid)])
+                if self.pid is not None:
+                    service.stopTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 result = service.stopTasks(self)
                 if result and result[self.cloudDatabaseID]:
