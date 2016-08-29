@@ -116,9 +116,11 @@ class StatusPage(BaseHandler):
             #    for k,v in show_jobs.iteritems(): show_jobs[k]=False
             #    if v in show_jobs: show_jobs[v] = True
             if k == "filter_type" and v == "type":# and 'job_type' in self.request.GET:
-                for k,v in show_jobs.iteritems(): show_jobs[k]=False
                 job_filter = self.request.GET['job_type']
-                if job_filter in show_jobs: show_jobs[job_filter] = True
+                if job_filter != '':
+                    if job_filter in show_jobs:
+                        for k,v in show_jobs.iteritems(): show_jobs[k]=False
+                        show_jobs[job_filter] = True
                 context['filter_value_div']='none'
                 context['job_type_div']='inline'
             elif k == "filter_type" and v == "name" and filter_value != '':
@@ -171,7 +173,6 @@ class StatusPage(BaseHandler):
         # Export
         allExportJobs = []
         if show_jobs['export']:
-            #exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper WHERE user_id = :1", self.user.user_id())
             exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
             if exportJobsQuery != None:
                 jobs = list(exportJobsQuery.run())

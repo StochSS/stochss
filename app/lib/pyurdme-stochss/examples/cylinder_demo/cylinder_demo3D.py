@@ -52,8 +52,8 @@ class cylinderDemo3D(pyurdme.URDMEModel):
     
         k_react = pyurdme.Parameter(name="k_react", expression=1.0)
         
-        k_creat1 = pyurdme.Parameter(name="k_creat1", expression=100/right)
-        k_creat2 = pyurdme.Parameter(name="k_creat2", expression=100/left)
+        k_creat1 = pyurdme.Parameter(name="k_creat1", expression=100/left)
+        k_creat2 = pyurdme.Parameter(name="k_creat2", expression=100/right)
         
         self.add_parameter([k_react, k_creat1,k_creat2])
 

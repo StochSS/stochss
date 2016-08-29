@@ -18,6 +18,7 @@
 — New initial condition method, initial_condition_place_voxel - places molecules in a specific voxel
 — Now possible to choose between adding molecules or resetting the initial condition with initial_condition_place near and initial_condition_place_voxel.   
 — Compatibility with FEniCS 1.5 (and examples use mshr module)
-
+- Compatibility with FEniCS 1.6
+- Addition of ADFSP solver
 
 

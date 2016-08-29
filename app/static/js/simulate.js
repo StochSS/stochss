@@ -220,7 +220,7 @@ var run = function()
 
                       if(data.status == "Finished")
                       {
-                          if(data.job.output_location != null && (data.job.resource == 'local' || data.job.output_stored == "True"))
+                          if(data.job.output_location != null && (data.job.resource.toLowerCase() == 'local' || data.job.output_stored == "True"))
                           {
                               var plotData = []
 
@@ -524,7 +524,7 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
+                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));
@@ -565,7 +565,7 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
+                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));
@@ -606,7 +606,7 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status?autoforward=1status?filterfilter_type=name&filter_value='+jobName;
+                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));

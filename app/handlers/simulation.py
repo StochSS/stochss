@@ -169,7 +169,7 @@ class JobManager():
             jobWrap.startTime = job['startTime']
 
         if 'resource' in job:
-            jobWrap.resource = job['resource']
+            jobWrap.resource = job['resource'].lower()
         else:
             jobWrap.resource = 'local'
 
