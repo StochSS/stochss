@@ -173,7 +173,6 @@ class StatusPage(BaseHandler):
         # Export
         allExportJobs = []
         if show_jobs['export']:
-            #exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper WHERE user_id = :1", self.user.user_id())
             exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper {0}".format(SQL_where_clause), *SQL_where_data)
             if exportJobsQuery != None:
                 jobs = list(exportJobsQuery.run())

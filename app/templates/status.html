@@ -3,8 +3,8 @@
 {% block content %}
 
 <!-- Script to check/unckeck all checkboxes -->
-<script language="">
-    function toggle(source) {
+<script type="text/javascript">
+function toggle(source) {
     checkboxes = document.getElementsByName('select_job');
     for(var i=0, n=checkboxes.length;i<n;i++) {
         checkboxes[i].checked = source.checked;
@@ -22,6 +22,26 @@ function swap_job_type_filter(sel) {
         document.getElementById("job_type_div").style.display = 'none';
         document.getElementById("job_type_select").value = "";
     }
+}
+function pageHasArg(arg){
+    var url = window.location.href;
+    if(url.indexOf('?'+arg) != -1)
+        return true
+    else if(url.indexOf('&'+arg) != -1)
+        return true
+    return false
+}
+function AutoForwardReloadPage(job_name, job_status, forward_url){
+    if(pageHasArg('autoforward=1') && pageHasArg('filter_type=name') && pageHasArg('filter_value='+job_name)){
+        if(job_status == "Running"){
+            setTimeout(function(){ location.reload(); }, 3000);
+        }else{
+            window.location.href = forward_url;
+        }
+        //setTimeout(function(){ alert("Hello"); }, 3000);
+    }
+
+        
 }
 </script>
 <!--    -->
@@ -107,6 +127,7 @@ function swap_job_type_filter(sel) {
                                 	<a href="/simulate?id={{job.id}}">Get Debugging Info</a>
                                 
                                 {% endif %}
+                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/simulate?id={{job.id}}");</script>
                             </td>
                         </tr>
                         
@@ -162,6 +183,7 @@ function swap_job_type_filter(sel) {
                                 <a href="/spatial?id={{job.id}}">Get Debugging Info</a>
                             
                                 {% endif %}
+                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/spatial?id={{job.id}}");</script>
                             </td>
                         </tr>
                         {% endfor %}
@@ -216,6 +238,7 @@ function swap_job_type_filter(sel) {
                                 <a href="/sensitivity?id={{job.id}}">Get Debugging Info</a>
                                 
                                 {% endif %}
+                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/sensitivity?id={{job.id}}");</script>
                             </td>
                         </tr>
                         
@@ -279,6 +302,7 @@ function swap_job_type_filter(sel) {
                                 {% endif %}
                                 {% endif %}
                                 {% endif %}-->
+                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/stochoptim/{{job.id}}");</script>
                             </td>
                             
                         </tr>
@@ -340,6 +364,7 @@ function swap_job_type_filter(sel) {
                                 <a href="/parametersweep/{{job.id}}">Get Debugging Info</a>
                             
                                 {% endif %}
+                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/parametersweep/{{job.id}}");</script>
                             </td>
                         </tr>
                         {% endfor %}
