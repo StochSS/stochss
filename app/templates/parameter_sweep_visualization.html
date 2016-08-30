@@ -48,14 +48,56 @@
                     Simulation status: <%= status %>
                     <br />
                     Model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+                    <br />
+                    Max time: <%= inData.maxTime %>
+                    <br />
+                    Number of trajectories: <%= inData.trajectories %>
+                    <br />
                 </p>
             </div>
             <div class="span3">
               <!-- Put help info here-->
             </div>
         </div>
-
+        <div>
+            <table class="table">
+                <tr>
+                    <th>
+                        Sweep Variable
+                    </th>
+                    <th>
+                        Minimum value (inclusive)
+                    </th>
+                    <th>
+                        Maximum value (inclusive)
+                    </th>
+                    <th>
+                        Steps
+                    </th>
+                    <th>
+                        Log scale
+                    </th>
+                </tr>
+                <tr>
+                    <td><%= inData.parameterA %></td>
+                    <td><%= inData.minValueA %></td>
+                    <td><%= inData.maxValueA %></td>
+                    <td><%= inData.stepsA %></td>
+                    <td><%= inData.logA %></td>
+                </tr>
+                <% if (inData.variableCount > 1) { %>
+                <tr>
+                    <td><%= inData.parameterB %></td>
+                    <td><%= inData.minValueB %></td>
+                    <td><%= inData.maxValueB %></td>
+                    <td><%= inData.stepsB %></td>
+                    <td><%= inData.logB %></td>
+                </tr>
+                <% } %>
+            </table>
+        </div>
     </div>
+
 
     <pre>Status :<%= status%></pre><BR>
     <% if(status == "Finished") { %>

@@ -163,30 +163,6 @@
         </table>
 
         <div>
-            <h4>Select data to generate:</h4>
-
-            <p>All combinations of selected mappers and reducers will be run on the selected species. A parameter sweep produces, for a given parameter set, N time series trajectories for each point in parameter space. For visualization and analysis, each set of N time series trajectories must be turned into a single number (which can be visualized on a heatmap). The mapper turns each time series to a single number, and then the N numbers that result from that are reduced to a single number which is plotted in the heatmap.</p>
-
-            <div class="row">
-                <div class="span5">
-                    <h4>Mappers</h4>
-                    <input type="checkbox" name="mapper" id="mapMax" checked>Maximum<br>
-                    <input type="checkbox" name="mapper" id="mapMin" checked>Minimum<br>
-                    <input type="checkbox" name="mapper" id="mapAvg" checked>Average<br>
-                    <input type="checkbox" name="mapper" id="mapVar" checked>Variance<br>
-                </div>
-
-                <div class="span5">
-                    <h4>Reducers</h4>
-                    <input type="checkbox" name="reducer" id="mapMax" checked>Maximum<br>
-                    <input type="checkbox" name="reducer" id="mapMin" checked>Minimum<br>
-                    <input type="checkbox" name="reducer" id="mapAvg" checked>Average<br>
-                    <input type="checkbox" name="reducer" id="mapVar" checked>Variance<br>
-                </div>
-            </div>
-            
-            <br>
-            
             <h4>Species</h4>
             <div id="species">
             </div>
