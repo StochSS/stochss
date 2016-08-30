@@ -107,17 +107,22 @@ def mapAnalysis(result):
     return metrics
 
 def reduceAnalysis(metricsList):
-    reduced = { 'max' : {}, 'min' : {} }
+    reduced = {}
 
     keys1 = ['max', 'min', 'avg', 'var']
     for key1, key2 in itertools.product(keys1, statsSpecies):
         toReduce = [metrics[key1][key2] for metrics in metricsList]
 
-        reduced["{0}::{1}".format(key1, key2)] = { 'max' : numpy.max(toReduce),
-                                  'avg' : numpy.min(toReduce),
-                                  'avg' : numpy.mean(toReduce),
-                                  'var' : numpy.var(toReduce) }
+        if key1 not in reduced:
+            reduced[key1] = {}
 
+        reduced[key1][key2] = {
+            'max' : numpy.max(toReduce),
+            'min' : numpy.min(toReduce),
+            'avg' : numpy.mean(toReduce),
+            'var' : numpy.var(toReduce)
+        }
+        
     return reduced
 
 sys.stdout.write("Starting Parameter sweep\n")

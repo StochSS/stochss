@@ -56,6 +56,20 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             this.data = JSON.parse($( '#initialData' ).text());
         },
 
+        selectAllSpecies : function()
+        {
+            $( this.el ).find( "#speciesCheckboxes input" ).prop('checked', true);
+
+            this.updateGraphs();
+        },
+
+        clearAllSpecies : function()
+        {
+            $( this.el ).find( "#speciesCheckboxes input" ).prop('checked', false);
+
+            this.updateGraphs();
+        },
+
         render : function()
         {
             this.el = $("#stochoptim")[0];
@@ -69,17 +83,48 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             {
                 var template = _.template('<option><%= type %></option>');
 
+                var mappers = _.sortBy(_.keys(this.data.data[0].result), function(x) { return x; });
+                var species = _.sortBy(_.keys(this.data.data[0].result[mappers[0]]), function(x) { return x; });
+                var reducers = _.sortBy(_.keys(this.data.data[0].result[mappers[0]][species[0]]), function(x) { return x; });
+
+                for(var i in reducers)
+                {
+                    $( template( { type : reducers[i] } ) ).appendTo( this.$el.find( "#reducerSelect" ) );
+                }                
+
+                for(var i in mappers)
+                {
+                    $( template( { type : mappers[i] } ) ).appendTo( this.$el.find( "#mapperSelect" ) );
+                }
+                
+                this.$el.find( "#mapperSelect" ).change(_.bind(this.updateGraphs, this));
+                this.$el.find( "#reducerSelect" ).change(_.bind(this.updateGraphs, this));
+
                 if(this.data.inData.variableCount == 2) {
-                    var types = _.difference(_.keys(this.data.data[0].result), ['min', 'max']);
-
-                    for(var i in types)
+                    for(var i in species)
                     {
-                        $( template( { type : types[i] } ) ).appendTo( this.$el.find( "#outputSelect" ) );
-                    }                
+                        $( template( { type : species[i] } ) ).appendTo( this.$el.find( "#speciesSelect" ) );
+                    }
                     
-                    this.$el.find( "#outputSelect" ).change(_.bind(this.updateGraphs, this));
+                    this.$el.find( "#speciesSelect" ).change(_.bind(this.updateGraphs, this));
 
-                    this.$el.find( "#outputSelectDiv" ).show();
+                    this.$el.find( "#speciesSelectDiv" ).show();
+                } else {
+                    var checkboxTemplate = _.template('<span><input type="checkbox" name="species" value="<%= name %>" checked><%= name %><% if(!last) { %>, <% } else { %><% } %></span>');
+
+                    this.speciesSelectCheckboxes = {};
+
+                    for(var p in species)
+                    {
+                        var checkbox = $( checkboxTemplate({ name : species[p], last : p == species.length - 1 }) ).appendTo( "#speciesCheckboxes" );
+                        
+                        checkbox.change(_.bind(this.updateGraphs, this));
+                    }
+
+                    this.$el.find( ".selectAll" ).click(_.bind(this.selectAllSpecies, this));
+                    this.$el.find( ".clearAll" ).click(_.bind(this.clearAllSpecies, this));
+                    
+                    this.$el.find( "#speciesCheckboxDiv" ).show();
                 }
 
                 $( window ).resize(_.bind(this.updateGraphs, this));
@@ -157,7 +202,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                     });
         },
         
-        updateGraphs : function()
+        updateGraphs : _.debounce(function()
         {
             if(this.data.inData.variableCount == 1)
             {
@@ -167,17 +212,29 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             {
                 this.updateHeatmap();
             }
-        },
+        }, 200),
 
         updateLineGraph : function()
         {
+            var mapperKey = this.$el.find( "#mapperSelect" ).val().trim();
+            var reducerKey = this.$el.find( "#reducerSelect" ).val().trim();
+
+            var species = []
+            var checkboxes = this.$el.find( "#speciesCheckboxes input" );
+
+            for(var i = 0; i < checkboxes.length; i++)
+            {
+                if(checkboxes.eq(i).prop('checked'))
+                    species.push(checkboxes.eq(i).val());
+            }
+
             var plotData = [];
 
             this.$el.find( '#chart' ).empty();
             this.$el.find( "#graphs" ).show();
 
             var width = $(".metadata").width();
-            var height = width * 3 / 4;
+            var height = width * 1 / 2;
 
             d3.select('#chart').append('svg')
                 .attr('width', width + 'px')
@@ -186,23 +243,22 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             var data = this.data.data;
 
             var parameterKey = _.keys(data[0].parameters)[0];
-            var types = _.difference(_.keys(this.data.data[0].result), ['min', 'max']);
 
-            for(var type in types)
+            for(var i in species)
             {
-                var key = types[type];
+                var specie = species[i];
 
                 var series = []
-                for(var i = 0; i < data.length; i++)
+                for(var j = 0; j < data.length; j++)
                 {
-                    var xval = data[i].parameters[parameterKey];
+                    var xval = data[j].parameters[parameterKey];
 
-                    series.push( { x : xval, y : data[i].result[key].avg } );
+                    series.push( { x : xval, y : data[j].result[mapperKey][specie][reducerKey] } );
                 }
 
                 series = _.sortBy(series, function(v) { return v.x; })
 
-                plotData.push( { key : key,
+                plotData.push( { key : specie,
                                  values : series } );
             }
             
@@ -232,7 +288,9 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
         updateHeatmap : function()
         {
-            var resultKey = this.$el.find( "#outputSelect" ).val().trim();
+            var mapperKey = this.$el.find( "#mapperSelect" ).val().trim();
+            var speciesKey = this.$el.find( "#speciesSelect" ).val().trim();
+            var reducerKey = this.$el.find( "#reducerSelect" ).val().trim();
 
             var data = this.data.data;
 
@@ -286,7 +344,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 var i = sortedParameters[parameterKeys[0]][data[d].parameters[parameterKeys[0]]];
                 var j = sortedParameters[parameterKeys[1]][data[d].parameters[parameterKeys[1]]];
 
-                this.listData.push([i, j, data[d].result[resultKey].avg]);
+                this.listData.push([i, j, data[d].result[mapperKey][speciesKey][reducerKey]]);
             }
 
             /*for(var i = 0; i < matrix.length; i++)
@@ -314,7 +372,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             //Draw title
             svg.append("text")
                 .attr("class", "title")
-                .text(resultKey)
+                .text("Mapper: " + mapperKey + ", Reducer: " + reducerKey + ", Species: " + speciesKey)
                 .style("text-anchor", "middle")
                 .style("dominant-baseline", "central")
                 .attr("x", width / 2)

@@ -60,10 +60,34 @@
     <pre>Status :<%= status%></pre><BR>
     <% if(status == "Finished") { %>
 
-    <div id="outputSelectDiv" style="display : none;">
-      Select data to visualize:
-      <select id="outputSelect"></select>
+    <div>
+        <div>
+            Select mapper to visualize:
+            <select id="mapperSelect"></select>
+        </div>
+
+        <div>
+            Select reducer to visualize:
+            <select id="reducerSelect"></select>
+        </div>
+      
+        <div id="speciesSelectDiv" style="display : none;">
+            Select species to visualize:
+            <select id="speciesSelect"></select>
+        </div>
+      
+        <div id="speciesCheckboxDiv" style="display : none;">
+            Select species to visualize:
+            <div id="speciesCheckboxes">
+            </div>
+
+            <div class="btn-group">
+		<button class="btn btn-small selectAll">Select All</button>
+		<button class="btn btn-small clearAll">Clear All</button>
+	    </div>
+        </div>
     </div>
+
     <div id="graphs" style="display: none;">
       <div id="legend"></div><div id="chart"></div>
     </div>
