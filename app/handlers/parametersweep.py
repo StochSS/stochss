@@ -252,8 +252,8 @@ class ParameterSweepPage(BaseHandler):
                     logging.error("Mesh file inaccessible. Try another mesh")
                     raise Exception("Mesh file inaccessible. Try another mesh")
 
-                templateData['reaction_subdomain_assigments'] = modelDb.spatial["reactions_subdomain_assignments"]
-                templateData['species_subdomain_assigments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['reaction_subdomain_assignments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assignments'] = modelDb.spatial["species_subdomain_assignments"]
                 templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
                 templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
                 templateData['subdomains'] = meshWrapperDb.subdomains
@@ -277,15 +277,12 @@ class ParameterSweepPage(BaseHandler):
             cmd = "python {0}".format(program)
             logging.info('parametersweep.runLocal(): cmd={0}'.format(cmd))
             logging.info('*'*80)
-            logging.info('*'*80)
             exstring = '{0}/backend/wrapper.py {1}/stdout {1}/stderr {1}/return_code {2}'.format(basedir, dataDir, cmd)
             logging.info('parametersweep.runLocal(): exstring={0}'.format(exstring))
-            logging.info('*'*80)
             logging.info('*'*80)
             handle = subprocess.Popen(exstring.split(), preexec_fn=os.setsid)
             job.pid = handle.pid
             logging.info("parametersweep.runLocal() job started pid={0}".format(job.pid))
-            logging.info('*'*80)
             logging.info('*'*80)
 
             job.resource = "local"
@@ -359,8 +356,8 @@ class ParameterSweepPage(BaseHandler):
                 except IOError as e: 
                     raise Exception("Mesh file inaccessible. Try another mesh")
 
-                templateData['reaction_subdomain_assigments'] = modelDb.spatial["reactions_subdomain_assignments"]
-                templateData['species_subdomain_assigments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['reaction_subdomain_assignments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assignments'] = modelDb.spatial["species_subdomain_assignments"]
                 templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
                 templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
                 templateData['subdomains'] = meshWrapperDb.subdomains
@@ -403,6 +400,7 @@ class ParameterSweepVisualizationPage(BaseHandler):
         initialData = {}
         
         jobDb = ParameterSweepJobWrapper.get_by_id(jobID)
+        logging.info("ParameterSweepVisualizationPage.get() jobID={0} path={1}".format(jobID, jobDb.outData))
 
         initialData = jobDb.getJSON()
 
