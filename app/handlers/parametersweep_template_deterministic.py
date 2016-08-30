@@ -97,7 +97,7 @@ sys.stdout.flush()
 statsSpecies = sorted([specie for specie, doStats in StochSSModel.json_data['speciesSelect'].items() if doStats])
 
 def mapAnalysis(result):
-    metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {} }
+    metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
     for i, specie in enumerate(statsSpecies):
         metrics['max'][specie] = numpy.max(result[:, i])
         metrics['min'][specie] = numpy.min(result[:, i])
