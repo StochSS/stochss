@@ -1,4 +1,5 @@
 import pyurdme
+import tempfile
 import itertools
 import json
 import numpy
@@ -7,7 +8,7 @@ import pickle
 
 ### NOTE the string '_t__JSON_STRING___' (without the extra 't' at the start) will be replaced by data from the model
 
-class StochSSModel(pyurdme.Model):
+class StochSSModel(pyurdme.URDMEModel):
     json_data = json.loads("""___JSON_STRING___""")
     def __init__(self, **kwargs):
         modelType = self.json_data["modelType"]
@@ -20,9 +21,18 @@ class StochSSModel(pyurdme.Model):
         increment = self.json_data["increment"]
         if increment is None:
             increment = 1
+        reaction_subdomain_assignments = self.json_data["reaction_subdomain_assignments"]  #e.g. {'R1':[1,2,3]}
+        species_subdomain_assignments = self.json_data["species_subdomain_assignments"]  #e.g. {'S1':[1,2,3]}
+        species_diffusion_coefficients = self.json_data["species_diffusion_coefficients"] #e.g. {'S1':0.5}
+        initial_conditions = self.json_data["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
 
 
-        pyurdme.Model.__init__(self, name = self.json_data["name"])
+        pyurdme.URDMEModel.__init__(self, name = self.json_data["name"])
+        mesh_file = tempfile.NamedTemporaryFile(suffix='.xml')
+        mesh_file.write(self.json_data["mesh"])
+        mesh_file.seek(0)
+        self.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(mesh_file.name))
+        self.set_subdomain_vector(numpy.array(self.json_data["subdomains"]))
 
         parameterByName = dict()
 
@@ -37,9 +47,11 @@ class StochSSModel(pyurdme.Model):
         speciesByName = dict()
 
         for specie in species:
-            speciesByName[specie['name']] = pyurdme.Species(name = specie['name'], initial_value = specie['initialCondition'])
-
+            speciesByName[specie['name']] = pyurdme.Species(name = specie['name'], diffusion_constant=float(species_diffusion_coefficients[specie['name']]))
             self.add_species(speciesByName[specie['name']])
+        for s, sd_list in species_subdomain_assignments.iteritems():
+            spec = self.listOfSpecies[s]
+            self.restrict(spec, sd_list)
 
         for reaction in reactions:
             inReactants = dict()
@@ -64,6 +76,19 @@ class StochSSModel(pyurdme.Model):
                 self.add_reaction(pyurdme.Reaction(name = reaction['name'], reactants = reactants, products = products, propensity_function = reaction['equation']))
             else:
                 self.add_reaction(pyurdme.Reaction(name = reaction['name'], reactants = reactants, products = products, rate = parameterByName[reaction['rate']]))
+        for r in reaction_subdomain_assignments:
+            self.listOfReactions[r].restrict_to = reaction_subdomain_assignments[r]
+
+        for ic in initial_conditions:
+            spec = self.listOfSpecies[ic['species']]
+            if ic['type'] == "place":
+                self.set_initial_condition_place_near({spec:int(ic['count'])}, point=[float(ic['x']),float(ic['y']),float(ic['z'])])
+            elif ic['type'] == "scatter":
+                self.set_initial_condition_scatter({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
+            elif ic['type'] == "distribute":
+                self.set_initial_condition_distribute_uniformly({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
+            else:
+                raise Exception("Unknown initial condition type {0}".format(ic['type']))
 
         self.timespan(numpy.concatenate((numpy.arange(maxTime / increment) * increment, [maxTime])))
 
@@ -99,11 +124,13 @@ statsSpecies = sorted([specie for specie, doStats in StochSSModel.json_data['spe
 def mapAnalysis(result):
     metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
     for i, specie in enumerate(statsSpecies):
-        metrics['max'][specie] = numpy.max(result[:, i])
-        metrics['min'][specie] = numpy.min(result[:, i])
-        metrics['avg'][specie] = numpy.mean(result[:, i])
-        metrics['var'][specie] = numpy.var(result[:, i])
-        metrics['finalTime'][specie] = result[-1, i]
+        val = result.get_species(specie)
+        non_spatial_val = numpy.sum(val,axis=1)
+        metrics['max'][specie] = numpy.max(non_spatial_val)
+        metrics['min'][specie] = numpy.min(non_spatial_val)
+        metrics['avg'][specie] = numpy.mean(non_spatial_val)
+        metrics['var'][specie] = numpy.var(non_spatial_val)
+        metrics['finalTime'][specie] = non_spatial_val[-1]
 
     return metrics
 
