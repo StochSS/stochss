@@ -341,8 +341,8 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             
             for(var d in data)
             {
-                var i = sortedParameters[parameterKeys[0]][data[d].parameters[parameterKeys[0]]];
-                var j = sortedParameters[parameterKeys[1]][data[d].parameters[parameterKeys[1]]];
+                var i = sortedParameters[parameterKeys[1]][data[d].parameters[parameterKeys[1]]];
+                var j = sortedParameters[parameterKeys[0]][data[d].parameters[parameterKeys[0]]];
 
                 this.listData.push([i, j, data[d].result[mapperKey][speciesKey][reducerKey]]);
             }
