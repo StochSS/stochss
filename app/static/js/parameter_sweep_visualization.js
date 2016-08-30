@@ -275,7 +275,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .tickFormat(d3.format('.02f'));
             
             chart.yAxis     //Chart y-axis settings
-                .axisLabel('')
+                .axisLabel('Value of reducer')
                 .tickFormat(d3.format('.02f'));
             
             d3.select('#chart svg')    //Select the <svg> element you want to render the chart in.   

@@ -103,13 +103,14 @@ def mapAnalysis(result):
         metrics['min'][specie] = numpy.min(result[:, i])
         metrics['avg'][specie] = numpy.mean(result[:, i])
         metrics['var'][specie] = numpy.var(result[:, i])
+        metrics['finalTime'][specie] = result[-1, i]
 
     return metrics
 
 def reduceAnalysis(metricsList):
     reduced = {}
 
-    keys1 = ['max', 'min', 'avg', 'var']
+    keys1 = ['max', 'min', 'avg', 'var', 'finalTime']
     for key1, key2 in itertools.product(keys1, statsSpecies):
         toReduce = [metrics[key1][key2] for metrics in metricsList]
 

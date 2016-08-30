@@ -97,27 +97,33 @@ sys.stdout.flush()
 statsSpecies = sorted([specie for specie, doStats in StochSSModel.json_data['speciesSelect'].items() if doStats])
 
 def mapAnalysis(result):
-    metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {} }
+    metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
     for i, specie in enumerate(statsSpecies):
         metrics['max'][specie] = numpy.max(result[:, i])
         metrics['min'][specie] = numpy.min(result[:, i])
         metrics['avg'][specie] = numpy.mean(result[:, i])
         metrics['var'][specie] = numpy.var(result[:, i])
+        metrics['finalTime'][specie] = result[-1, i]
 
     return metrics
 
 def reduceAnalysis(metricsList):
-    reduced = { 'max' : {}, 'min' : {} }
+    reduced = {}
 
-    keys1 = ['max', 'min', 'avg', 'var']
+    keys1 = ['max', 'min', 'avg', 'var', 'finalTime']
     for key1, key2 in itertools.product(keys1, statsSpecies):
         toReduce = [metrics[key1][key2] for metrics in metricsList]
 
-        reduced["{0}::{1}".format(key1, key2)] = { 'max' : numpy.max(toReduce),
-                                  'avg' : numpy.min(toReduce),
-                                  'avg' : numpy.mean(toReduce),
-                                  'var' : numpy.var(toReduce) }
+        if key1 not in reduced:
+            reduced[key1] = {}
 
+        reduced[key1][key2] = {
+            'max' : numpy.max(toReduce),
+            'min' : numpy.min(toReduce),
+            'avg' : numpy.mean(toReduce),
+            'var' : numpy.var(toReduce)
+        }
+        
     return reduced
 
 sys.stdout.write("Starting Parameter sweep\n")
