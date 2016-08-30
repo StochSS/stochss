@@ -81,7 +81,7 @@ else:
     
 if StochSSModel.json_data['variableCount'] != 1:
     if StochSSModel.json_data['logB']:
-        parameters[StochSSModel.json_data['parameterB']] = numpy.logspace(numpy.log10(StochSSModel.json_data['minValueB']), numpy.logspace(StochSSModel.json_data['maxValueB']), StochSSModel.json_data['stepsB'])
+        parameters[StochSSModel.json_data['parameterB']] = numpy.logspace(numpy.log10(StochSSModel.json_data['minValueB']), numpy.log10(StochSSModel.json_data['maxValueB']), StochSSModel.json_data['stepsB'])
     else:
         parameters[StochSSModel.json_data['parameterB']] = numpy.linspace(StochSSModel.json_data['minValueB'], StochSSModel.json_data['maxValueB'], StochSSModel.json_data['stepsB'])
 
@@ -124,6 +124,10 @@ sys.stdout.write("Starting Parameter sweep\n")
 sys.stdout.flush()
 dat = []
 #############################################
+os.environ["PATH"] += os.pathsep + "{0}/ode/".format(os.path.join(os.path.dirname(__file__), "../../../"))
+sys.stdout.write("PATH={0}".format(os.environ["PATH"]))
+sys.stdout.flush()
+#############################################
 if StochSSModel.json_data['isLocal']:  # Turn on debugging, run 'local' 
     sys.stdout.write("Using local serial execution mode\n")
     sys.stdout.flush()
@@ -144,7 +148,7 @@ if StochSSModel.json_data['isLocal']:  # Turn on debugging, run 'local'
         sys.stdout.write("\tSimulating {0}\n".format(pset))
         sys.stdout.flush()
         model = StochSSModel(**pset) 
-        results = model.run(number_of_trajectories = StochSSModel.json_data['trajectories'])
+        results = model.run(solver=gillespy.StochKitODESolver)
         if not isinstance(results, list):
             results = [results]
         mapped_list = []

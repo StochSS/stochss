@@ -131,7 +131,10 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
+    var modelType = $('input[name=modelType]:checked').val()
+
     return { jobName : jobName,
+             modelType : modelType, 
              parameterA : $( "#parameterA" ).val(),
              minValueA : minValueA,
              maxValueA : maxValueA,
@@ -361,6 +364,21 @@ ParameterSweep.Controller = Backbone.View.extend(
                 var parameters = this.model.attributes.parameters;
 
                 this.values = {}
+
+
+                if(this.model.attributes.units.toLowerCase() == 'concentration'){
+                    $( "#deterministicModelType" ).prop("checked", true);
+                    $( "#stochasticModelType" ).prop("disabled", true);
+                    $( "#spatialModelType" ).prop("disabled", true);
+                }else if (this.model.attributes.isSpatial){
+                    $( "#deterministicModelType" ).prop("disabled", true);
+                    $( "#stochasticModelType" ).prop("disabled", true);
+                    $( "#spatialModelType" ).prop("checked", true);
+                }else{
+                    //$( "#deterministicModelType" ).prop("disabled", true);
+                    $( "#stochasticModelType" ).prop("checked", true);
+                    $( "#spatialModelType" ).prop("disabled", true);
+                }
 
                 var optionTemplate = _.template('<option value="<%= name %>"><%= name %></option>');
 

@@ -105,9 +105,15 @@
         <br />
         
         <div>
+          <label>Model type:</label>
+          <input type="radio" id="deterministicModelType" name="modelType" value="deterministic" checked> Deterministic<br>
+          <input type="radio" id="stochasticModelType" name="modelType" value="stochastic"> Stochastic<br>
+          <input type="radio" id="spatialModelType" name="modelType" value="spatial"> Spatial Stochastic
+        </div>
+        <div>
           <label>Sweep type:</label>
-          <input type="radio" name="variableCount" value="one" checked>One parameter<br>
-          <input type="radio" name="variableCount" value="two">Two parameter
+          <input type="radio" name="variableCount" value="one" checked> One parameter<br>
+          <input type="radio" name="variableCount" value="two"> Two parameter
         </div>
 
         <br>

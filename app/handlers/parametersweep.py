@@ -190,7 +190,7 @@ class ParameterSweepPage(BaseHandler):
 
     def runLocal(self, data):
         logging.error("*"*80)
-        logging.error("parametersweep.runLocal()")
+        logging.error("parametersweep.runLocal() modelType={0}".format(data['modelType']))
         logging.error("*"*80)
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
         path = os.path.abspath(os.path.dirname(__file__))
@@ -207,7 +207,10 @@ class ParameterSweepPage(BaseHandler):
         job.output_stored = False
         # # execute local task
         try:
-            with open(os.path.join(path, 'parametersweep_template.py'), 'r') as f:
+            template_filename = 'parametersweep_template_{0}.py'.format(data['modelType'])
+            logging.error("parametersweep.runLocal() template_filename={0}".format(template_filename))
+            logging.error("*"*80)
+            with open(os.path.join(path,template_filename ), 'r') as f:
                 template = f.read()
             templateData = {
                 "name" : modelDb.name,
