@@ -25,7 +25,7 @@
 <script type="text/javascript" src="/static/js/nv.d3.js"></script>
 <script type="text/javascript" src="/static/js/sensitivity.js"></script>
 <script type="text/javascript" src="/static/model/stochkit.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
+<script type="text/javascript" src="/static/js/three.js"></script>
 <script type="text/javascript" src="/static/js/TrackballControls.js"></script>
 <script type="text/javascript" src="/static/js/OrbitControls.js"></script>
 <script type="text/javascript" src="/static/js/MeshToTextureConverter.js"></script>
@@ -302,6 +302,7 @@
         
 
         <% if (resource =="local" || output_stored == "True"){ %>
+            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Juypter Notebook</button></form>
         	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
 
                 <% if (jobStatus != "Failed" ){ %>

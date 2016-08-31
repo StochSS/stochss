@@ -184,7 +184,7 @@ var run = function()
 
                       if(data.status == "Finished")
                       {
-                          if(data.job.output_location != null && (data.job.resource == 'Local' || data.job.output_stored == "True"))
+                          if(data.job.output_location != null && (data.job.resource.toLowerCase() == 'local' || data.job.output_stored == "True"))
                           {
                               var plotData = []
 

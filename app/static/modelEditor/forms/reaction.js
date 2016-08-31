@@ -130,7 +130,7 @@ module.exports = View.extend({
     },
     initialize: function()
     {
-        View.prototype.render.apply(this, arguments);
+        View.prototype.initialize.apply(this, arguments);
 
         this.updateValid();
     },

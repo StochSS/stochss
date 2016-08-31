@@ -468,6 +468,18 @@ class EC2CredentialsPage(BaseHandler):
         params = {}
         params['credentials'] = credentials
         params["infrastructure"] = AgentTypes.EC2
+
+        currentCredentials = self.user_data.getCredentials()
+
+        if len(credentials['EC2_ACCESS_KEY']) > 0 and len(credentials['EC2_SECRET_KEY']) > 0:
+            uniqAccessLetters = list(set(credentials['EC2_ACCESS_KEY']))
+            uniqSecretLetters = list(set(credentials['EC2_SECRET_KEY']))
+
+            if uniqAccessLetters[0] == '*' and len(uniqAccessLetters) == 1:
+                params['credentials']['EC2_ACCESS_KEY'] = currentCredentials['EC2_ACCESS_KEY']
+
+            if uniqSecretLetters[0] == '*' and len(uniqSecretLetters) == 1:
+                params['credentials']['EC2_SECRET_KEY'] = currentCredentials['EC2_SECRET_KEY']
         
         # Check if the supplied credentials are valid of not
         if service.validateCredentials(params):
