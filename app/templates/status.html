@@ -95,7 +95,7 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                     </thead>
                     <tbody>
                         {% for job in all_jobs %}
-                        <tr>
+                        <tr id="ROW_{{job.name}}">
                             <td>
                             <a href="javascript:void(0)" onclick="deleteJob('/simulate?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
@@ -151,7 +151,7 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                     </thead>
                     <tbody>
                         {% for job in allSpatialJobs %}
-                        <tr>
+                        <tr id="ROW_{{job.name}}">
                             <td>
                             <a href="javascript:void(0)" onclick="deleteJob('/spatial?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
@@ -208,7 +208,7 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                     </thead>
                     <tbody>
                         {% for job in allSensJobs %}
-                        <tr>
+                        <tr id="ROW_{{job.name}}">
                             <td><a href="javascript:void(0)" onclick="deleteJob('/sensitivity?reqType=delJob&id={{job.id}}');">Delete</a></td>
                             <td>
                                 <span><font size=-2>{{job.start_time}}</font></span>
@@ -263,12 +263,12 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                     </thead>
                     <tbody>
                         {% for job in allParameterJobs %}
-                        <tr>
+                        <tr id="ROW_{{job.name}}">
                             <td>
                                 {% if job.status|lower == "pending" or job.status|lower == "running" %}
-                                <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=stopJob&id={{job.id}}', deleting = false);">Stop</a>
+                                <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/stochoptim?reqType=stopJob&id={{job.id}}', deleting = false);">Stop</a>
                                 {% else %}
-                                <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a>
+                                <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a>
                                 {% endif %}
                             </td>
                             <td>
@@ -328,9 +328,9 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                     </thead>
                     <tbody>
                         {% for job in allParameterSweepJobs %}
-                        <tr>
+                        <tr id="ROW_{{job.name}}">
                             <td>
-                            <a href="javascript:void(0)" onclick="deleteJob('/parametersweep?reqType=delJob&id={{job.id}}');">Delete</a>
+                            <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/parametersweep?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
                             <td>
                                 <span><font size=-2>{{job.start_time}}</font></span>
@@ -387,8 +387,8 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                     </thead>
                     <tbody>
                         {% for job in allExportJobs %}
-                        <tr>
-                            <td><a href="javascript:void(0)" onclick="deleteJob('/export?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                        <tr id="ROW_{{job.name}}">
+                            <td><a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/export?reqType=delJob&id={{job.id}}');">Delete</a></td>
                             <td>
                                 <span>{{job.number}}</span>
                             </td>
@@ -441,32 +441,47 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
 </div>
 
 <script>
-function deleteJob(path, deleting)
+function deleteRow(rowid)  
+{   
+    var row = document.getElementById(rowid);
+    var table = row.parentNode;
+    while ( table && table.tagName != 'TABLE' )
+        table = table.parentNode;
+    if ( !table )
+        return;
+    table.deleteRow(row.rowIndex);
+}
+function deleteJob(jobName, path, deleting)
 {
-    if(typeof(deleting) == 'undefined' || deleting)
-    {
-        msg = "Deleting the job...";
-    }
-    else
-    {
-        msg = "Stopping the job...";
+    if(typeof(deleting) == 'undefined' || deleting){
+        act_msg = "Deleting";
+    }else{
+        act_msg = "Stopping";
     }
 
     updateMsg( { status: true,
-              msg: msg } );
-$.ajax({ url : path,
-    type : 'POST',
-    success : function(data)
-    {
-        location.reload();
-    },
-    error : function(data)
-    {
-        location.reload();
-    }});
+                 msg: act_msg+" job "+jobName+"..."
+              } );
 
-return false;
+    $.ajax({ url : path,
+        type : 'POST',
+        success : function(data)
+        {
+            updateMsg( { status: true,
+                         msg: 'Finished '+act_msg+" job "+jobName+"..."
+                      } );
+            deleteRow('ROW_'+jobName);
+        },
+        error : function(data)
+        {
+            updateMsg( { status: False,
+                         msg: 'Error while '+act_msg+" job "+jobName+"..."
+                      } );
+        }});
+
+    return false;
 }
+
 
 var updateMsg = function(data)
 {
@@ -490,20 +505,20 @@ function rerun(path, type)
     updateMsg( { status: true,
               msg: msg } );
               
-              $.ajax({ url : path,
-                     type : 'POST',
-                     success : function(data)
-                     {
-                     updateMsg(data);
-                     if(data.status)
-                     window.location = '/status';
-                     },
-                     error : function(data)
-                     {
-                     location.reload();
-                     }});
-                     
-                     return false;
+    $.ajax({ url : path,
+           type : 'POST',
+           success : function(data)
+           {
+           updateMsg(data);
+             if(data.status)
+                window.location = '/status';
+           },
+           error : function(data)
+           {
+             location.reload();
+           }});
+           
+    return false;
 }
 
 </script>
