@@ -253,6 +253,10 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 {
                     var xval = data[j].parameters[parameterKey];
 
+                    if(this.data.inData.logA == true) {
+                        xval = Math.log10(xval);
+                    }
+
                     series.push( { x : xval, y : data[j].result[mapperKey][specie][reducerKey] } );
                 }
 
@@ -269,14 +273,24 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .showYAxis(true)        //Show the y-axis
                 .showXAxis(true)        //Show the x-axis
             ;
+
+            var d3Format = d3.format('.02f');
+            
+            if(this.data.inData.logA) {
+                formatter = function(x) {
+                    return d3Format(Math.pow(10.0, x));
+                }
+            } else {
+                formatter = d3Format;
+            }
             
             chart.xAxis     //Chart x-axis settings
                 .axisLabel(this.data.inData["parameterA"])
-                .tickFormat(d3.format('.02f'));
+                .tickFormat(formatter);
             
             chart.yAxis     //Chart y-axis settings
                 .axisLabel('Value of reducer')
-                .tickFormat(d3.format('.02f'));
+                .tickFormat(d3Format);
             
             d3.select('#chart svg')    //Select the <svg> element you want to render the chart in.   
                 .datum(plotData)         //Populate the <svg> element with chart data...
