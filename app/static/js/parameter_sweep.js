@@ -295,8 +295,6 @@ ParameterSweep.Controller = Backbone.View.extend(
                 $( '#rowB' ).hide();
             else
                 $( '#rowB' ).show();
-
-            this.selectParameter();
         },
 
         selectAllSpecies : function()
@@ -389,8 +387,16 @@ ParameterSweep.Controller = Backbone.View.extend(
                     $( optionTemplate({ name : parameters[p].name }) ).appendTo( "#parameterA, #parameterB" );               
                 }
 
-                $( "#parameterA option" ).eq(0).prop('selected', true);
-                $( "#parameterB option" ).eq(1).prop('selected', true);
+                $( "#parameterA" ).val(parameters[0].name);
+
+                if(parameters.length > 1)
+                {
+                    $( "#parameterB" ).val(parameters[1].name);
+                }
+                else
+                {
+                    $( "#parameterB" ).val(parameters[0].name);
+                }
 
                 var species = this.model.attributes.species;
 
@@ -402,9 +408,6 @@ ParameterSweep.Controller = Backbone.View.extend(
                 {
                     this.speciesSelectCheckboxes[species[p].name] = $( checkboxTemplate({ name : species[p].name, last : p == species.length - 1 }) ).appendTo( "#species" );               
                 }
-
-                $( "#parameterA option" ).eq(0).prop('selected', true);
-                $( "#parameterB option" ).eq(1).prop('selected', true);
 
                 this.selectParameter();
                 this.selectVariableCount();
