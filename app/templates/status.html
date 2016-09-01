@@ -1,16 +1,18 @@
 {% extends "base.html" %}
 {% block title%}Job Status{% endblock %}
-{% block content %}
+
+{% block jscontent %}
 
 <!-- Script to check/unckeck all checkboxes -->
 <script type="text/javascript">
-function toggle(source) {
+toggle = function(source) {
     checkboxes = document.getElementsByName('select_job');
     for(var i=0, n=checkboxes.length;i<n;i++) {
         checkboxes[i].checked = source.checked;
     }
 }
-function swap_job_type_filter(sel) {
+
+swap_job_type_filter = function(sel) {
     var value = sel.value;  
     //alert(value)
     if(value == 'type'){
@@ -23,7 +25,8 @@ function swap_job_type_filter(sel) {
         document.getElementById("job_type_select").value = "";
     }
 }
-function pageHasArg(arg){
+
+pageHasArg = function(arg){
     var url = window.location.href;
     if(url.indexOf('?'+arg) != -1)
         return true
@@ -31,20 +34,60 @@ function pageHasArg(arg){
         return true
     return false
 }
-function AutoForwardReloadPage(job_name, job_status, forward_url){
+
+AutoForwardReloadPage = function(job_name, job_status, forward_url){
     if(pageHasArg('autoforward=1') && pageHasArg('filter_type=name') && pageHasArg('filter_value='+job_name)){
         if(job_status == "Running"){
-            setTimeout(function(){ location.reload(); }, 3000);
+            reloadTimeout = setTimeout(function(){ location.reload(); }, 3000);
         }else{
             window.location.href = forward_url;
         }
         //setTimeout(function(){ alert("Hello"); }, 3000);
-    }
-
-        
+    }        
 }
+
+$( document ).ready( function() {
+    $( 'a' ).click( function() {
+        clearTimeout(reloadTimeout);
+    });
+    /*
+    {% if all_jobs %}
+        {% for job in all_jobs %}
+            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/simulate?id={{job.id}}");
+        {% endfor %}
+    {% endif %}
+
+    {% if allSpatialJobs %}
+        {% for job in allSpatialJobs %}
+            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/spatial?id={{job.id}}");
+        {% endfor %}
+    {% endif %}
+
+    {% if allSensJobs %}
+        {% for job in allSensJobs %}
+            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/sensitivity?id={{job.id}}");
+        {% endfor %}
+    {% endif %}
+
+    {% if allParameterJobs %}
+        {% for job in allParameterJobs %}
+            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/stochoptim/{{job.id}}");
+        {% endfor %}
+    {% endif %}
+
+    {% if allParameterSweepJobs %}
+        {% for job in allParameterSweepJobs %}
+            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/parametersweep/{{job.id}}");
+        {% endfor %}
+    {% endif %}
+    */
+});
+
 </script>
 <!--    -->
+{% endblock %}
+
+{% block content %}
 
 <div class="span9">
     <div class="row-fluid">
@@ -187,7 +230,6 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                                 <a href="/spatial?id={{job.id}}">Get Debugging Info</a>
                             
                                 {% endif %}
-                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/spatial?id={{job.id}}");</script>
                             </td>
                         </tr>
                         {% endfor %}
@@ -242,7 +284,6 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                                 <a href="/sensitivity?id={{job.id}}">Get Debugging Info</a>
                                 
                                 {% endif %}
-                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/sensitivity?id={{job.id}}");</script>
                             </td>
                         </tr>
                         
@@ -306,7 +347,6 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                                 {% endif %}
                                 {% endif %}
                                 {% endif %}-->
-                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/stochoptim/{{job.id}}");</script>
                             </td>
                             
                         </tr>
@@ -368,7 +408,6 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                                 <a href="/parametersweep/{{job.id}}">Get Debugging Info</a>
                             
                                 {% endif %}
-                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/parametersweep/{{job.id}}");</script>
                             </td>
                         </tr>
                         {% endfor %}

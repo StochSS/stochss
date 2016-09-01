@@ -79,7 +79,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             
             $( this.el ).html( visualizationTemplate(this.data) );
 
-            if(this.data.data)
+            if(this.data.status == 'Finished')
             {
                 var template = _.template('<option><%= type %></option>');
 
