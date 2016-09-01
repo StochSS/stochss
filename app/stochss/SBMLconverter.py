@@ -4,6 +4,12 @@ import os
 import stochkit
 import numpy
 
+def removeUnicode(s):
+    if isinstance(s, unicode):
+        return str(s)
+    else:
+        return s
+
 def convertToSBML(filename, model):
     try:
         document = libsbml.SBMLDocument(2, 1)
@@ -25,8 +31,8 @@ def convertToSBML(filename, model):
     for specie in species:
         s = sbmlModel.createSpecies()
         s.setCompartment('c')
-        s.setId(specie['name'])
-        s.setInitialAmount(specie['initialCondition'])
+        s.setId(removeUnicode(specie['name']))
+        s.setInitialAmount(removeUnicode(specie['initialCondition']))
 
     dParameters = {}
 
@@ -34,13 +40,20 @@ def convertToSBML(filename, model):
     for parameter in parameters:
         p = sbmlModel.createParameter()
         dParameters[parameter['name']] = parameter['value']
-        p.setId(parameter['name'])
-        p.setValue(parameter['value'])
+        p.setId(removeUnicode(parameter['name']))
+        value = removeUnicode(parameter['value'])
+
+        try:
+            value = float(value)
+        except Exception as e:
+            raise Exception("Python threw an error when casting parameter {0} to float (decimal float required for this functionality)".format(parameter['name']))
+
+        p.setValue(value)
 
     reactions = model.reactions
     for reaction in reactions:
         r = sbmlModel.createReaction()
-        r.setId(reaction['name'])
+        r.setId(removeUnicode(reaction['name']))
 
         reactants = {}
         for reactant in reaction['reactants']:
@@ -51,8 +64,8 @@ def convertToSBML(filename, model):
 
         for reactantName, stoichiometry in reactants.items():
             r2 = r.createReactant()
-            r2.setSpecies(reactantName)
-            r2.setStoichiometry(stoichiometry)
+            r2.setSpecies(removeUnicode(reactantName))
+            r2.setStoichiometry(removeUnicode(stoichiometry))
 
         products = {}
         for product in reaction['products']:
@@ -63,12 +76,14 @@ def convertToSBML(filename, model):
 
         for productName, stoichiometry in products.items():
             p = r.createProduct()
-            p.setSpecies(productName)
-            p.setStoichiometry(stoichiometry)
+            p.setSpecies(removeUnicode(productName))
+            p.setStoichiometry(removeUnicode(stoichiometry))
 
         k = r.createKineticLaw()
         if reaction['type'] != 'custom':
-            if len(reactants) == 1:
+            if len(reactants) == 0:
+                equation = "{0}".format(reaction['rate'])
+            elif len(reactants) == 1:
                 reactantName, stoichiometry = reactants.items()[0]
                 if stoichiometry == 1:
                     equation = "{0} * {1}".format(reaction['rate'], reactantName)
@@ -89,7 +104,12 @@ def convertToSBML(filename, model):
         else:
             equation = reaction['equation']
 
-        k.setMath(libsbml.parseL3Formula(equation))
+        try:
+            k.setMath(libsbml.parseL3Formula(removeUnicode(equation)))
+        except Exception as e:
+            traceback.print_exc()
+            raise Exception('libsbml threw an error when parsing rate equation "{0}" for reaction "{1}"'.format(equation, reaction['name']))
+
     writer = libsbml.SBMLWriter()
 
     with open(filename, 'w') as f:
