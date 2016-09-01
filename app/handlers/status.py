@@ -137,6 +137,7 @@ class StatusPage(BaseHandler):
                 SQL_where_data = [self.user.user_id(), filter_value]
 
 
+        all_jobs_together = []
         # StochKit jobs
         all_jobs = []
         if show_jobs['stochkit']:
@@ -152,6 +153,7 @@ class StatusPage(BaseHandler):
                     number = len(jobs) - number
                     all_jobs.append(self.__process_getJobStatus(service, job, number))
         context['all_jobs']=all_jobs
+        all_jobs_together.extend(all_jobs)
 
         # Sensitivity
         allSensJobs = []
@@ -168,6 +170,7 @@ class StatusPage(BaseHandler):
                     number = len(jobs) - number
                     allSensJobs.append(self.__process_getJobStatus(service, job, number))
         context['allSensJobs']=allSensJobs
+        all_jobs_together.extend(allSensJobs)
 
 
         # Export
@@ -185,6 +188,7 @@ class StatusPage(BaseHandler):
                                            "outData" : os.path.basename(job.outData if job.outData else ""),
                                            "id" : job.key().id()})
         context['allExportJobs'] = allExportJobs
+        all_jobs_together.extend(allExportJobs)
 
         # Parameter Estimation
         allParameterJobs = []
@@ -197,6 +201,7 @@ class StatusPage(BaseHandler):
                     number = len(jobs) - number
                     allParameterJobs.append(self.__process_getJobStatus(service, job, number))
         context['allParameterJobs'] = allParameterJobs
+        all_jobs_together.extend(allParameterJobs)
 
         #Spatial Jobs
         allSpatialJobs = []
@@ -212,6 +217,7 @@ class StatusPage(BaseHandler):
                     number = len(jobs) - number
                     allSpatialJobs.append(self.__process_getJobStatus(service, job, number))
         context['allSpatialJobs'] = allSpatialJobs
+        all_jobs_together.extend(allSpatialJobs)
 
         #Parameter Sweep Jobs
         allParameterSweepJobs = []
@@ -227,6 +233,14 @@ class StatusPage(BaseHandler):
                     number = len(jobs) - number
                     allParameterSweepJobs.append(self.__process_getJobStatus(service,job, number))
         context['allParameterSweepJobs'] = allParameterSweepJobs
+        all_jobs_together.extend(allParameterSweepJobs)
+        # Sort the jobs
+        #sorted(all_jobs_together, key=lambda k: k['start_time'], reverse=True)
+        #all_jobs_together.sort(key=lambda k: k['start_time_sort'])
+        all_jobs_together.sort(key=lambda x: (datetime.datetime.strptime(x['startTime'], '%Y-%m-%d-%H-%M-%S')
+                                         if 'startTime' in x and x['startTime'] != None else datetime.datetime.now()),
+                              reverse=True)
+        context['all_jobs_together'] = all_jobs_together
     
         return context
 
@@ -251,19 +265,52 @@ class StatusPage(BaseHandler):
 
 
 def getJobStatus(service, job, molnsConfig = None):
+        logging.info('status.getJobStatus(id={0}) kind={1}'.format(job.key().id(), job.kind()))
         logging.debug('status.getJobStatus() job = {0}'.format(job))
         logging.debug('status.getJobStatus() job.status={0} job.resource={1} job.outData={2}'.format(job.status, job.resource, job.outData))
-        #indata = json.loads(job.indata)
         file_to_check = "{0}/return_code".format(job.outData)
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
         logging.debug('status.getJobStatus() job.outData={0}'.format(job.outData))
+        jobType = '(unknown kind={0})'.format(job.kind())
+        if job.kind() == 'StochKitJobWrapper':
+            jobActionUrl = '/simulate?id={0}'.format(job.key().id())
+            jobResultUrl = '/simulate?id={0}'.format(job.key().id())
+            indata = json.loads(job.indata)
+            if indata['exec_type'] ==  'deterministic':
+                jobType = 'Deterministic Simulation'
+            else:
+                jobType = 'Stochastic Simulation'
+        elif job.kind() == 'SpatialJobWrapper':
+            jobActionUrl = '/spatial?id={0}'.format(job.key().id())
+            jobResultUrl = '/spatial?id={0}'.format(job.key().id())
+            jobType = 'Spatial Simulation'
+        elif job.kind() == 'SensitivityJobWrapper':
+            jobActionUrl = '/sensitivity?id={0}'.format(job.key().id())
+            jobResultUrl = '/sensitivity?id={0}'.format(job.key().id())
+            jobType = 'Sensitivity Analysis'
+        elif job.kind() == 'StochOptimJobWrapper':
+            jobActionUrl = '/stochoptim?id={0}'.format(job.key().id())
+            jobType = 'Parameter Estimation'
+        elif job.kind() == 'ParameterSweepJobWrapper':
+            jobActionUrl = '/parametersweep?id={0}'.format(job.key().id())
+            jobResultUrl = '/parametersweep/{0}'.format(job.key().id())
+            jobType = 'Parameter Sweep'
+        elif job.kind() == 'ExportJobWrapper':
+            jobActionUrl = '/export?id={0}'.format(job.key().id())
+            jobResultUrl = "/static/tmp/{0}".format(job.outData)
+            jobType = 'Export'
+            
         if job.resource is None:
             return { "status" : 'Error',
                     "name" : job.name,
+                    "type" : jobType,
+                    "actionURL" : jobActionUrl,
+                    "resultURL" : jobResultUrl,
                     "uuid" : job.cloudDatabaseID,
                     "output_stored": None,
                     "resource": None,
                     "start_time" : datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S'),
+                    "startTime" : job.startTime,
                     "id" : job.key().id()}
 
         return_code = None
@@ -360,9 +407,13 @@ def getJobStatus(service, job, molnsConfig = None):
         
         return { "status" : job.status,
                  "name" : job.name,
+                 "type" : jobType,
+                 "actionURL" : jobActionUrl,
+                 "resultURL" : jobResultUrl,
                  "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
                  "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
                  "resource": job.resource,
                  "start_time" : datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S').strftime('%b-%d-%y %H:%M'),
+                 "startTime" : job.startTime,
                  "id" : job.key().id() }
 
