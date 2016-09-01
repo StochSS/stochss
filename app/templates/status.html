@@ -79,8 +79,7 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                 </tr>
             </table>
             </div>
-                {% if all_jobs %}
-                Non-spatial Deterministic/Stochastic Simulations:
+                {% if all_jobs_together %}
                 <br />
                 <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
                     <thead>
@@ -90,14 +89,15 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
-                            <th width="220pt">Result</th>
+                            <th width="80pt">Result</th>
+                            <th width="100pt">Type</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for job in all_jobs %}
+                        {% for job in all_jobs_together %}
                         <tr id="ROW_{{job.name}}">
                             <td>
-                            <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/simulate?reqType=delJob&id={{job.id}}');">Delete</a>
+                            <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '{{job.actionURL}}&reqType=delJob');">Delete</a>
                             </td>
                             <td>
                                 <span><font size=-2>{{job.start_time}}</font></span>
@@ -120,14 +120,17 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                             <td>
                                 {% if job.status == "Finished" %}
                                 
-                                	<a href="/simulate?id={{job.id}}">View</a>
+                                	<a href="{{job.resultURL}}">View</a>
                                 
                                 {% elif job.status == "Failed"%}
                           
-                                	<a href="/simulate?id={{job.id}}">Get Debugging Info</a>
+                                	<a href="{{job.resultURL}}">Get Debugging Info</a>
                                 
                                 {% endif %}
-                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/simulate?id={{job.id}}");</script>
+                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "{{job.resultURL}}");</script>
+                            </td>
+                            <td>
+                                {{job.type}}
                             </td>
                         </tr>
                         
@@ -135,6 +138,7 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                     </tbody>
                 </table>
                 {% endif %}
+                {#
                 {% if allSpatialJobs %}
                 Spatial Simulations:
                 <br />
@@ -422,6 +426,10 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                 {% endif %}
 
                 {% if not (allParameterJobs or allExportJobs or allSensJobs or all_jobs or allSpatialJobs or allParameterSweepJobs) %}
+                No jobs in system<br /><br />
+                {% endif %}
+                #}
+                {% if not (all_jobs_together) %}
                 No jobs in system<br /><br />
                 {% endif %}
                 <button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button>
