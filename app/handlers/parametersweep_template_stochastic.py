@@ -1,4 +1,7 @@
 import gillespy
+import sys
+import uuid
+import sys
 import itertools
 import json
 import numpy
@@ -72,29 +75,6 @@ class StochSSModel(gillespy.Model):
 #output = model.run()
 #print output
 
-parameters = dict()
-
-if StochSSModel.json_data['logA']:
-    parameters[StochSSModel.json_data['parameterA']] = numpy.logspace(numpy.log10(StochSSModel.json_data['minValueA']), numpy.log10(StochSSModel.json_data['maxValueA']), StochSSModel.json_data['stepsA'])
-else:    
-    parameters[StochSSModel.json_data['parameterA']] = numpy.linspace(StochSSModel.json_data['minValueA'], StochSSModel.json_data['maxValueA'], StochSSModel.json_data['stepsA'])
-    
-if StochSSModel.json_data['variableCount'] != 1:
-    if StochSSModel.json_data['logB']:
-        parameters[StochSSModel.json_data['parameterB']] = numpy.logspace(numpy.log10(StochSSModel.json_data['minValueB']), numpy.log10(StochSSModel.json_data['maxValueB']), StochSSModel.json_data['stepsB'])
-    else:
-        parameters[StochSSModel.json_data['parameterB']] = numpy.linspace(StochSSModel.json_data['minValueB'], StochSSModel.json_data['maxValueB'], StochSSModel.json_data['stepsB'])
-
-print "Parameters: ",parameters
-
-import uuid
-name = "StochSS_exec" + str(uuid.uuid4())
-print "Name: ", name
-import sys
-sys.stdout.flush()
-
-
-statsSpecies = sorted([specie for specie, doStats in StochSSModel.json_data['speciesSelect'].items() if doStats])
 
 def mapAnalysis(result):
     metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
@@ -126,14 +106,23 @@ def reduceAnalysis(metricsList):
         
     return reduced
 
-sys.stdout.write("Starting Parameter sweep\n")
-sys.stdout.flush()
-dat = []
-#############################################
-if StochSSModel.json_data['isLocal']:  # Turn on debugging, run 'local' 
-    sys.stdout.write("Using local serial execution mode\n")
-    sys.stdout.flush()
+def getParameters():
+    parameters = dict()
+    if StochSSModel.json_data['logA']:
+        parameters[StochSSModel.json_data['parameterA']] = numpy.logspace(numpy.log10(StochSSModel.json_data['minValueA']), numpy.log10(StochSSModel.json_data['maxValueA']), StochSSModel.json_data['stepsA'])
+    else:    
+        parameters[StochSSModel.json_data['parameterA']] = numpy.linspace(StochSSModel.json_data['minValueA'], StochSSModel.json_data['maxValueA'], StochSSModel.json_data['stepsA'])
+        
+    if StochSSModel.json_data['variableCount'] != 1:
+        if StochSSModel.json_data['logB']:
+            parameters[StochSSModel.json_data['parameterB']] = numpy.logspace(numpy.log10(StochSSModel.json_data['minValueB']), numpy.log10(StochSSModel.json_data['maxValueB']), StochSSModel.json_data['stepsB'])
+        else:
+            parameters[StochSSModel.json_data['parameterB']] = numpy.linspace(StochSSModel.json_data['minValueB'], StochSSModel.json_data['maxValueB'], StochSSModel.json_data['stepsB'])
+    return parameters;       
+
+def run_local_parameter_sweep(parameters, mapper_fn=mapAnalysis, reducer_fn=reduceAnalysis): 
     pset_list = []
+    dat = []
     if len(parameters) > 1:
         pnames = parameters.keys()
         for pvals1 in parameters[pnames[0]]:
@@ -155,28 +144,50 @@ if StochSSModel.json_data['isLocal']:  # Turn on debugging, run 'local'
             results = [results]
         mapped_list = []
         for r in results:
-            mapped_list.append(mapAnalysis(r))
-        dat.append({ 'parameters' : pset, 'result' : reduceAnalysis(mapped_list) })
-else:
-    sys.stdout.write("Using parallel execution mode (molnsutil.ParameterSweep)\n")
+            mapped_list.append(mapper_fn(r))
+        dat.append({ 'parameters' : pset, 'result' : reducer_fn(mapped_list) })
+    return dat
+
+
+
+if __name__ == '__main__':
+    parameters = getParameters()
+    print "Parameters: ",parameters
+
+    name = "StochSS_exec" + str(uuid.uuid4())
+    print "Name: ", name
     sys.stdout.flush()
-    import molnsutil
-    sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
-    ret = sweep.run(mapper = mapAnalysis, reducer = reduceAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], chunk_size = 1, store_realizations = False, progress_bar = False)
-    for r in ret:
-        dat.append({ 'parameters' : r.parameters, 'result' : r.result })
-#############################################
 
-sys.stdout.write("Finished Parameter sweep\n")
-sys.stdout.flush()
 
-result_file = os.path.join(os.path.dirname(__file__),'results')
+    statsSpecies = sorted([specie for specie, doStats in StochSSModel.json_data['speciesSelect'].items() if doStats])
+    sys.stdout.write("Starting Parameter sweep\n")
+    sys.stdout.flush()
+    dat = []
+    #############################################
+    if StochSSModel.json_data['isLocal']:  # Turn on debugging, run 'local' 
+        sys.stdout.write("Using local serial execution mode\n")
+        sys.stdout.flush()
+        dat = run_local_parameter_sweep(parameters, mapper_fn=mapAnalysis, reducer_fn=reduceAnalysis)
+    else:
+        sys.stdout.write("Using parallel execution mode (molnsutil.ParameterSweep)\n")
+        sys.stdout.flush()
+        import molnsutil
+        sweep = molnsutil.ParameterSweep(name=name, model_class=StochSSModel, parameters=parameters)
+        ret = sweep.run(mapper = mapAnalysis, reducer = reduceAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], chunk_size = 1, store_realizations = False, progress_bar = False)
+        for r in ret:
+            dat.append({ 'parameters' : r.parameters, 'result' : r.result })
+    #############################################
 
-sys.stdout.write("Writing result to file '{0}'\n".format(result_file))
-sys.stdout.flush()
+    sys.stdout.write("Finished Parameter sweep\n")
+    sys.stdout.flush()
 
-with open(result_file, 'w') as f:
-    pickle.dump(dat, f)
+    result_file = os.path.join(os.path.dirname(__file__),'results')
 
-sys.stdout.write("Done\n\n")
-sys.stdout.flush()
+    sys.stdout.write("Writing result to file '{0}'\n".format(result_file))
+    sys.stdout.flush()
+
+    with open(result_file, 'w') as f:
+        pickle.dump(dat, f)
+
+    sys.stdout.write("Done\n\n")
+    sys.stdout.flush()

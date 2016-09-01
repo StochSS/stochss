@@ -97,7 +97,7 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                         {% for job in all_jobs %}
                         <tr id="ROW_{{job.name}}">
                             <td>
-                            <a href="javascript:void(0)" onclick="deleteJob('/simulate?reqType=delJob&id={{job.id}}');">Delete</a>
+                            <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/simulate?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
                             <td>
                                 <span><font size=-2>{{job.start_time}}</font></span>
@@ -153,7 +153,7 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                         {% for job in allSpatialJobs %}
                         <tr id="ROW_{{job.name}}">
                             <td>
-                            <a href="javascript:void(0)" onclick="deleteJob('/spatial?reqType=delJob&id={{job.id}}');">Delete</a>
+                            <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/spatial?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
                             <td>
                                 <span><font size=-2>{{job.start_time}}</font></span>
@@ -209,7 +209,7 @@ function AutoForwardReloadPage(job_name, job_status, forward_url){
                     <tbody>
                         {% for job in allSensJobs %}
                         <tr id="ROW_{{job.name}}">
-                            <td><a href="javascript:void(0)" onclick="deleteJob('/sensitivity?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                            <td><a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/sensitivity?reqType=delJob&id={{job.id}}');">Delete</a></td>
                             <td>
                                 <span><font size=-2>{{job.start_time}}</font></span>
                             </td>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title%}Manage Simulations{% endblock %}
+{% block title%}View Parameter Sweep{% endblock %}
 
 {% block content %}
 <div class="span9">
@@ -295,7 +295,7 @@
         <h3>Output</h3>
         <br />
         <% if (resource == "local" || output_stored == "True"){ %>
-            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Juypter Notebook</button></form>
+            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Jupyter Notebook</button></form>
         	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     	<% } %>
     	

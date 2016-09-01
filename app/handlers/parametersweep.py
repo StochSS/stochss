@@ -258,7 +258,7 @@ class ParameterSweepPage(BaseHandler):
                 templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
                 templateData['subdomains'] = meshWrapperDb.subdomains
 
-            program = os.path.join(dataDir, 'program.py')
+            program = os.path.join(dataDir, 'stochss_parametersweep_program.py')
 
             with open(program, 'w') as f:
                 jsonString = json.dumps(templateData, indent = 4, sort_keys = True)
@@ -437,45 +437,44 @@ class ParameterSweepVisualizationPage(BaseHandler):
         #logging.error('*'*80)
         self.render_response('parameter_sweep_visualization.html', **{'initialData' : json.dumps(initialData)})
 
-    def post(self, queryType, jobID):
-        job = StochOptimJobWrapper.get_by_id(int(jobID))
+    def post(self, jobID=None):
+        job = ParameterSweepJobWrapper.get_by_id(int(jobID))
+        logging.info("ParameterSweepVisualizationPage.post() jobID={0} path={1}".format(jobID, job.outData))
 
-        data = json.loads(self.request.get('data'));
+        reqType = self.request.get('reqType')
+        if reqType == 'redirectJupyterNotebook':
+            try:
+                #Check if notebook already exists, if not create one
+                notebook_filename = "{0}.ipynb".format(job.name)
+                local_path = os.path.relpath(os.path.abspath(job.outData), os.path.abspath(__file__+'/../../../'))
+                notebook_file_path =  os.path.abspath(job.outData) + "/" + notebook_filename
+                if not os.path.isfile(notebook_file_path):
+                    modelType = self.request.get('modelType')
+                    if modelType ==  'deterministic':
+                        notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/ParameterSweep_deterministic.ipynb"
+                    elif modelType ==  'stochastic':
+                        notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/ParameterSweep_stochastic.ipynb"
+                    elif modelType ==  'spatial':
+                        notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/ParameterSweep_spatial.ipynb"
+                    else:
+                        raise Exception("Error, '{0}' is not a valid modelType".format(modelType))
+                    logging.info("Creating {0} from {1}".format(notebook_file_path,notebook_template_path))
+                    shutil.copyfile(notebook_template_path, notebook_file_path)
 
-        parameters = data["parameters"]
-        modelName = job.modelName
-        proposedName = data["proposedName"]
-        
-        model = ModelManager.getModelByName(self, modelName);
 
-        del model["id"]
-
-        if ModelManager.getModelByName(self, proposedName):
-            self.response.write(json.dumps({"status" : False,
-                                            "msg" : "Model name must be unique"}))
-            return
-
-        if not model:
-            self.response.write(json.dumps({"status" : False,
-                                            "msg" : "Model '{0}' does not exist anymore. Possibly deleted".format(modelName) }))
-            return
-
-        model["name"] = proposedName
-
-        parameterByName = {}
-        for parameter in model["parameters"]:
-            parameterByName[parameter["name"]] = parameter
-
-        for parameter in parameters:
-            parameterByName[parameter]["value"] = str(parameters[parameter])
-
-        if ModelManager.updateModel(self, model):
-            self.response.write(json.dumps({"status" : True,
-                                            "msg" : "Model created",
-                                            "url" : "/modeleditor?model_edited={0}".format(proposedName) }))
+                #TODO remove 'localhost' here, replace with ip used for request
+                host = 'localhost'
+                port = 9999
+                proto = 'http'
+                #
+                # return the url of the notebook
+                notebook_url = '{0}://{1}:{2}/notebooks/{3}/{4}'.format(proto,host,port,local_path,notebook_filename)
+                self.redirect(notebook_url)
+            except Exception as e:
+                logging.error("Error in openJupyterNotebook: {0}".format(e))
+                self.response.write('Error: {0}'.format(e))
             return
         else:
-            self.response.write(json.dumps({"status" : False,
-                                            "msg" : "Model failed to be created, check logs"}))
-            return
-    
+            self.get(int(jobID))
+
+     
