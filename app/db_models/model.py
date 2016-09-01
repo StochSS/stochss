@@ -25,12 +25,17 @@ class StochKitModelWrapper(db.Model):
     units = db.StringProperty()
     spatial = ObjectProperty()
     zipFileName = db.StringProperty()
+    sbmlFileName = db.StringProperty()
     is_public = db.BooleanProperty()
 
     def delete(self):
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
+
+        if self.sbmlFileName:
+            if os.path.exists(self.sbmlFileName):
+                os.remove(self.sbmlFileName)
 
         super(StochKitModelWrapper, self).delete()
 

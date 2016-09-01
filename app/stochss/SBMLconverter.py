@@ -4,7 +4,118 @@ import os
 import stochkit
 import numpy
 
-def convert(filename, modelName = None):
+def removeUnicode(s):
+    if isinstance(s, unicode):
+        return str(s)
+    else:
+        return s
+
+def convertToSBML(filename, model):
+    try:
+        document = libsbml.SBMLDocument(2, 1)
+    except ValueError:
+        raise SystemExit('Could not create SBMLDocumention object')
+
+    sbmlModel = document.createModel()    
+
+    sbmlModel.setName(str(model.name))
+
+    c = sbmlModel.createCompartment()
+    c.setId('c')
+    c.setConstant(True)
+    c.setSize(1)
+    c.setSpatialDimensions(3)
+
+    species = model.species
+
+    for specie in species:
+        s = sbmlModel.createSpecies()
+        s.setCompartment('c')
+        s.setId(removeUnicode(specie['name']))
+        s.setInitialAmount(removeUnicode(specie['initialCondition']))
+
+    dParameters = {}
+
+    parameters = model.parameters
+    for parameter in parameters:
+        p = sbmlModel.createParameter()
+        dParameters[parameter['name']] = parameter['value']
+        p.setId(removeUnicode(parameter['name']))
+        value = removeUnicode(parameter['value'])
+
+        try:
+            value = float(value)
+        except Exception as e:
+            raise Exception("Python threw an error when casting parameter {0} to float (decimal float required for this functionality)".format(parameter['name']))
+
+        p.setValue(value)
+
+    reactions = model.reactions
+    for reaction in reactions:
+        r = sbmlModel.createReaction()
+        r.setId(removeUnicode(reaction['name']))
+
+        reactants = {}
+        for reactant in reaction['reactants']:
+            if reactant['specie'] not in reactants:
+                reactants[reactant['specie']] = 0
+
+            reactants[reactant['specie']] += reactant['stoichiometry']
+
+        for reactantName, stoichiometry in reactants.items():
+            r2 = r.createReactant()
+            r2.setSpecies(removeUnicode(reactantName))
+            r2.setStoichiometry(removeUnicode(stoichiometry))
+
+        products = {}
+        for product in reaction['products']:
+            if product['specie'] not in products:
+                products[product['specie']] = 0
+
+            products[product['specie']] += product['stoichiometry']
+
+        for productName, stoichiometry in products.items():
+            p = r.createProduct()
+            p.setSpecies(removeUnicode(productName))
+            p.setStoichiometry(removeUnicode(stoichiometry))
+
+        k = r.createKineticLaw()
+        if reaction['type'] != 'custom':
+            if len(reactants) == 0:
+                equation = "{0}".format(reaction['rate'])
+            elif len(reactants) == 1:
+                reactantName, stoichiometry = reactants.items()[0]
+                if stoichiometry == 1:
+                    equation = "{0} * {1}".format(reaction['rate'], reactantName)
+                elif stoichiometry == 2:
+                    equation = "{0} * {1} * {1}".format(reaction['rate'], reactantName)
+                else:
+                    raise Exception("Failed to export SBML. Reaction '{0}' is marked as mass action but reactant '{1}' has stoichiometry '{2}' (impossible)".format(reaction['name'], reactantName, stoichiometry))
+            elif len(reactants) == 2:
+                reactantName0, stoichiometry0 = reactants.items()[0]
+                reactantName1, stoichiometry1 = reactants.items()[1]
+
+                if stoichiometry0 == 1 and stoichiometry1 == 1:
+                    equation = "{0} * {1} * {2}".format(reaction['rate'], reactantName0, reactantName1)
+                else:
+                    raise Exception("Failed to export SBML. Reaction '{0}' is marked as mass action but total stoichiometry of reactants exceeds 2 (impossible)".format(reaction['name']))
+            else:
+                raise Exception("Failed to export SBML. Reaction '{0}' is marked as mass action but has {1} reactants (impossible)".format(reaction['name'], len(reactants)))
+        else:
+            equation = reaction['equation']
+
+        try:
+            k.setMath(libsbml.parseL3Formula(removeUnicode(equation)))
+        except Exception as e:
+            traceback.print_exc()
+            raise Exception('libsbml threw an error when parsing rate equation "{0}" for reaction "{1}"'.format(equation, reaction['name']))
+
+    writer = libsbml.SBMLWriter()
+
+    with open(filename, 'w') as f:
+        f.write(writer.writeSBMLToString(document))
+
+def convertToStochSS(filename, modelName = None):
     document = libsbml.readSBML(filename)
 
     errors = []
