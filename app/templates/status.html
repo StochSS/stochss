@@ -50,37 +50,12 @@ $( document ).ready( function() {
     $( 'a' ).click( function() {
         clearTimeout(reloadTimeout);
     });
-    /*
-    {% if all_jobs %}
-        {% for job in all_jobs %}
-            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/simulate?id={{job.id}}");
-        {% endfor %}
-    {% endif %}
 
-    {% if allSpatialJobs %}
-        {% for job in allSpatialJobs %}
-            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/spatial?id={{job.id}}");
+    {% if all_jobs_together %}
+        {% for job in all_jobs_together %}
+            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "{{job.resultURL}}");
         {% endfor %}
     {% endif %}
-
-    {% if allSensJobs %}
-        {% for job in allSensJobs %}
-            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/sensitivity?id={{job.id}}");
-        {% endfor %}
-    {% endif %}
-
-    {% if allParameterJobs %}
-        {% for job in allParameterJobs %}
-            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/stochoptim/{{job.id}}");
-        {% endfor %}
-    {% endif %}
-
-    {% if allParameterSweepJobs %}
-        {% for job in allParameterSweepJobs %}
-            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "/parametersweep/{{job.id}}");
-        {% endfor %}
-    {% endif %}
-    */
 });
 
 </script>
@@ -173,7 +148,6 @@ $( document ).ready( function() {
                                 	<a href="{{job.resultURL}}">Get Debugging Info</a>
                                 
                                 {% endif %}
-                                <script>AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "{{job.resultURL}}");</script>
                             </td>
                             <td>
                                 {{job.type}}

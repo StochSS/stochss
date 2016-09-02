@@ -41,6 +41,9 @@ class FlexCredentialsPage(BaseHandler):
         user_id = self.user.user_id()
         if user_id is None:
             raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
         
         context = self.getContext(user_id)
 
@@ -78,6 +81,9 @@ class FlexCredentialsPage(BaseHandler):
         user_id = self.user.user_id()
         if user_id is None:
             raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
 
         data_received = json.loads(self.request.body)
         logging.debug("json data = \n{0}".format(pprint.pformat(data_received)))
@@ -250,6 +256,9 @@ class CredentialsPage(BaseHandler):
         user_id = self.user.user_id()
         if user_id is None:
             raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
         
         context = self.getContext(user_id)
 
@@ -349,12 +358,18 @@ class EC2CredentialsPage(BaseHandler):
         user_id = self.user.user_id()
         if user_id is None:
             raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
         
         context = self.getContext(user_id)
 
         self.render_response('ec2_credentials.html', **context)
 
     def post(self):
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
+        
         logging.debug('POST')
         logging.debug("request.body = {0}".format(self.request.body))
         logging.debug("CONTENT_TYPE = {0}".format(self.request.environ['CONTENT_TYPE']))

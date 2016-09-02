@@ -63,7 +63,6 @@ def rebuildMolns(providerName, configFilename):
     config = molns.MOLNSConfig(db_file = configFilename)
     molns.MOLNSProvider.provider_rebuild([providerName], config)
 
-
 def addWorkers(workerName, number, configFilename):
     config = molns.MOLNSConfig(db_file = configFilename)
 
