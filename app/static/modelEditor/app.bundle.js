@@ -2865,6 +2865,7 @@ module.exports = View.extend({
 
         $( "[data-hook='exportToPublic']" ).click(_.bind(this.exportModel, this));
         $( "[data-hook='exportToZip']" ).click(_.bind(this.exportModelAsZip, this));
+        $( "[data-hook='exportToSBML']" ).click(_.bind(this.exportModelAsSBML, this));
 
         $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
             this.modelEditor.duplicateModel();
@@ -2924,6 +2925,15 @@ module.exports = View.extend({
                 meshCollection : this.meshCollection,
                 parent : this
             } );
+
+            if(this.modelSelector.selected.isSpatial)
+            {
+                $( '.reqNonSpatialModel' ).hide();
+            }
+            else
+            {
+                $( '.reqNonSpatialModel' ).show();
+            }
             
             this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
             this.listenTo(this.modelSelector.selected, 'requestSave', _.bind(this.saveModel, this));
@@ -3035,6 +3045,15 @@ module.exports = View.extend({
         $.ajax( { type : 'GET',
                   url : '/modeleditor',
                   data : { reqType : 'exportToXML', id : this.modelSelector.selected.id },
+                  dataType : 'json',
+                  success : _.bind(this.forwardToFile, this)
+                } )
+    },
+    exportModelAsSBML: function()
+    {
+        $.ajax( { type : 'GET',
+                  url : '/modeleditor',
+                  data : { reqType : 'exportToSBML', id : this.modelSelector.selected.id },
                   dataType : 'json',
                   success : _.bind(this.forwardToFile, this)
                 } )

@@ -92,8 +92,11 @@ $( document ).ready( function() {
 <div class="span9">
     <div class="row-fluid">
 	<div class"span9">
-            <h1>Job Status</h1>
-            <br>
+            <table><tr><td>
+                <h1>Job Status</h1>
+            </td><td width=25>&nbsp;</td><td valign="bottom"><BR>
+                <form action="/status" method="get"><button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button></form>
+            </td></tr></table>
             <div id="msg" style="display: none;"></div>
             <form class ="well form" action="/status" method="get">
             <div id="filters" style="display: inline">

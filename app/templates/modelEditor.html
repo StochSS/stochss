@@ -50,10 +50,28 @@
                 <li><a href="/importFromSBML">Import from .SBML</a></li>
                 <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
                 <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li class="reqNonSpatialModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><span><a data-hook="exportToSBML" href="#">Export to SBML</a> <a href="#sbmlModal" data-toggle="modal"><i class="icon-info-sign"></i></a></span></li>
                 <li class="nav-header">Public Library</li>
                 <li><a href="/publicLibrary">Import from Public Library</a></li>
                 <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
             </ul>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div id="sbmlModal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel">Warnings on Export to SBML</h3>
+        </div>
+        <div class="modal-body">
+            <ul>
+                <li>StochSS assumes a model volume of 1 for all concentration and population models when exporting to SBML.</li>
+                <li>Units are important in SBML models. However, StochSS puts no constraints on how units are used internally. It is possible this can lead to errors when exporting to SBML, especially with custom propensities and non-concentration models.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
         </div>
     </div>
 </div>
