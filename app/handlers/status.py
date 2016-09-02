@@ -290,6 +290,7 @@ def getJobStatus(service, job, molnsConfig = None):
             jobType = 'Sensitivity Analysis'
         elif job.kind() == 'StochOptimJobWrapper':
             jobActionUrl = '/stochoptim?id={0}'.format(job.key().id())
+            jobResultUrl = ''
             jobType = 'Parameter Estimation'
         elif job.kind() == 'ParameterSweepJobWrapper':
             jobActionUrl = '/parametersweep?id={0}'.format(job.key().id())
