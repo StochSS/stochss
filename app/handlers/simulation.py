@@ -865,7 +865,9 @@ class SimulatePage(BaseHandler):
         fmodelHandle.close()
 
         cmd += ' -m {0} --out-dir {1}/result'.format(modelFileName, dataDir)
-        cmd += ' -r {0} -a {1} --mxsteps {2}'.format(params['rTol'], params['aTol'], params['mxSteps'])
+
+        if params['execType'] == 'deterministic':
+            cmd += ' -r {0} -a {1} --mxsteps {2}'.format(params['rTol'], params['aTol'], params['mxSteps'])
 
         logging.info("cmd =\n{}".format(cmd))
         logging.debug('simulation.runLocal(): cmd={0}'.format(cmd))
