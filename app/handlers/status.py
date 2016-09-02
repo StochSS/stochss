@@ -251,6 +251,8 @@ class StatusPage(BaseHandler):
             if molnsConfigDb:
                 config = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
 
+            config = None
+
             status = getJobStatus(service, job, config)
         except Exception as e:
             traceback.print_exc()

@@ -37,7 +37,7 @@ pageHasArg = function(arg){
 
 AutoForwardReloadPage = function(job_name, job_status, forward_url){
     if(pageHasArg('autoforward=1') && pageHasArg('filter_type=name') && pageHasArg('filter_value='+job_name)){
-        if(job_status == "Running"){
+        if(job_status.toLowerCase() != "finished"){
             reloadTimeout = setTimeout(function(){ location.reload(); }, 3000);
         }else{
             window.location.href = forward_url;

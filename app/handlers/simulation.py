@@ -494,10 +494,13 @@ class SimulatePage(BaseHandler):
                                                  "stdout" : stdout,
                                                  "stderr" : stderr}))
             else:
+                raise Exception('This page should never be accessed if job is not Finished or Running (current state of job {0} : {1})'.format(job.id, job.status))
                 traceback.print_exc()
+
+                print job.status
                 
                 self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps({ "status" : "asdfasfdfdsa" }))
+                self.response.write(json.dumps({ "status" : "tttttttttasdfasfdfdsa" }))
         else:
             # Params is a dict that constains all response elements of the form
             params = json.loads(self.request.get('data'))
