@@ -117,7 +117,7 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
-    var mxSteps = $( "#mxSteps" ).val();
+    /*var mxSteps = $( "#mxSteps" ).val();
 
     if(!/^[0-9]+$/.test(mxSteps) || parseInt(mxSteps) <= 0)
     {
@@ -126,7 +126,7 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
-    mxSteps = parseInt(mxSteps);
+    mxSteps = parseInt(mxSteps);*/
 
     var epsilon = $( "#epsilon" ).val();
 
@@ -172,7 +172,7 @@ var checkAndGet = function(selectTable)
              selections : selections,
              aTol : aTol,
              rTol : rTol,
-             mxSteps : mxSteps };
+             mxSteps : 10000 }; // mxSteps is not actually working yet.
 }
 
 var updateMsg = function(data)
