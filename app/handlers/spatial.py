@@ -55,7 +55,7 @@ class SpatialPage(BaseHandler):
         return True
     
     def get(self):
-        logging.debug('GET self.request.body = {}'.format(self.request.body))
+        logging.info('GET self.request.body = {}'.format(self.request.body))
         reqType = self.request.get('reqType')
 
         if reqType == 'getJobInfo':

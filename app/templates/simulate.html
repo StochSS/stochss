@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title%}Manage Simulations{% endblock %}
+{% block title%}View Parameter Sweep{% endblock %}
 
 {% block content %}
 <div class="span9">
@@ -68,7 +68,7 @@
 <script type="text/javascript" src = "/static/utils.js"></script>
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
-<link rel="stylesheet" href="/static/css/nv.d3.css">
+<link href="/static/css/nv.d3.min.css" rel="stylesheet" type="text/css">
 
 <link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
@@ -76,8 +76,8 @@
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>
-<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
-<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
+<script type="text/javascript" src = "/static/js/d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.min.js"></script>
 <script type="text/javascript" src = "/static/js/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <script type="text/javascript" src = "/static/js/simulate.js"></script>
@@ -237,6 +237,7 @@
 
         <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
         <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>
+        <!--<button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Molns Cloud</button>-->
         
         <!-- Prevent Submission on pressing enter -->
         <!--<script>
@@ -293,8 +294,11 @@
     <div class="well">
         <h3>Output</h3>
         <br />
+        <% if(output_location != null) { %>
+            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Jupyter Notebook</button></form>
+        <% } %>
+
         <% if (resource == "local" || output_stored == "True"){ %>
-            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Juypter Notebook</button></form>
         	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     	<% } %>
     	

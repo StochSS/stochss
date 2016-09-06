@@ -1,19 +1,68 @@
 {% extends "base.html" %}
-{% block title%}
-Job Status
-{% endblock %}
-{% block content %}
+{% block title%}Job Status{% endblock %}
+
+{% block jscontent %}
 
 <!-- Script to check/unckeck all checkboxes -->
-<script language="">
-    function toggle(source) {
+<script type="text/javascript">
+toggle = function(source) {
     checkboxes = document.getElementsByName('select_job');
     for(var i=0, n=checkboxes.length;i<n;i++) {
-                                              checkboxes[i].checked = source.checked;
-                                              }
-                                              }
-                                              </script>
+        checkboxes[i].checked = source.checked;
+    }
+}
+
+swap_job_type_filter = function(sel) {
+    var value = sel.value;  
+    //alert(value)
+    if(value == 'type'){
+        document.getElementById("filter_value_div").style.display = 'none';
+        document.getElementById("job_type_div").style.display = 'inline';
+        document.getElementById("filter_value_box").value = "";
+    }else{
+        document.getElementById("filter_value_div").style.display = 'inline';
+        document.getElementById("job_type_div").style.display = 'none';
+        document.getElementById("job_type_select").value = "";
+    }
+}
+
+pageHasArg = function(arg){
+    var url = window.location.href;
+    if(url.indexOf('?'+arg) != -1)
+        return true
+    else if(url.indexOf('&'+arg) != -1)
+        return true
+    return false
+}
+
+AutoForwardReloadPage = function(job_name, job_status, forward_url){
+    if(pageHasArg('autoforward=1') && pageHasArg('filter_type=name') && pageHasArg('filter_value='+job_name)){
+        if(job_status.toLowerCase() != "finished"){
+            reloadTimeout = setTimeout(function(){ location.reload(); }, 3000);
+        }else{
+            window.location.href = forward_url;
+        }
+        //setTimeout(function(){ alert("Hello"); }, 3000);
+    }        
+}
+
+$( document ).ready( function() {
+    $( 'a' ).click( function() {
+        clearTimeout(reloadTimeout);
+    });
+
+    {% if all_jobs_together %}
+        {% for job in all_jobs_together %}
+            AutoForwardReloadPage("{{job.name}}", "{{job.status}}", "{{job.resultURL}}");
+        {% endfor %}
+    {% endif %}
+});
+
+</script>
 <!--    -->
+{% endblock %}
+
+{% block content %}
 
 <div class="span9">
     <div class="row-fluid">
@@ -25,28 +74,54 @@ Job Status
             </td></tr></table>
             <div id="msg" style="display: none;"></div>
             <form class ="well form" action="/status" method="get">
-                {% if all_jobs %}
-                Non-spatial Deterministic/Stochastic Simulations:
+            <div id="filters" style="display: inline">
+            <!--table border=1 cellpadding="0" cellspacing="0" class="table table-striped table-bordered"-->
+            <table border=0 cellpadding="0" cellspacing="0" class="table table-bordered">
+                <tr>
+                    <td valign=bottom>
+                        <!--input type=submit class="btn btn-primary btn-large" value="Filter"-->
+                        <input type=submit class="btn btn-primary" value="Filter:">
+                        <select name="filter_type" onchange="swap_job_type_filter(this)">
+                        <option value="name" {{seleted_filter_type_name}}>Job Name</option>
+                        <option value="model" {{seleted_filter_type_model}}>Model</option>
+                        <option value="type" {{seleted_filter_type_type}}>Job Type</option>
+                        <option value="resource" {{seleted_filter_type_resource}}>Resource</option>
+                        <option value="status" {{seleted_filter_type_status}}>Status</option>
+                        </select>
+                        <div id="filter_value_div" style="display:{{filter_value_div}}">
+                        <input type=text id="filter_value_box" name="filter_value" value="{{seleted_filter_value}}">
+                        </div>
+                        <div id="job_type_div" style="display:{{job_type_div}}">
+                        <select id="job_type_select" name="job_type"><option value=""> -- </option>
+                        {{job_type_option_list|safe}}
+                        </select>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            </div>
+                {% if all_jobs_together %}
                 <br />
                 <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
-                            <th width="220pt">Result</th>
+                            <th width="80pt">Result</th>
+                            <th width="100pt">Type</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for job in all_jobs %}
-                        <tr>
+                        {% for job in all_jobs_together %}
+                        <tr id="ROW_{{job.name}}">
                             <td>
-                            <a href="javascript:void(0)" onclick="deleteJob('/simulate?reqType=delJob&id={{job.id}}');">Delete</a>
+                            <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '{{job.actionURL}}&reqType=delJob');">Delete</a>
                             </td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
@@ -66,13 +141,16 @@ Job Status
                             <td>
                                 {% if job.status == "Finished" %}
                                 
-                                	<a href="/simulate?id={{job.id}}">View</a>
+                                	<a href="{{job.resultURL}}">View</a>
                                 
                                 {% elif job.status == "Failed"%}
                           
-                                	<a href="/simulate?id={{job.id}}">Get Debugging Info</a>
+                                	<a href="{{job.resultURL}}">Get Debugging Info</a>
                                 
                                 {% endif %}
+                            </td>
+                            <td>
+                                {{job.type}}
                             </td>
                         </tr>
                         
@@ -80,6 +158,7 @@ Job Status
                     </tbody>
                 </table>
                 {% endif %}
+                {#
                 {% if allSpatialJobs %}
                 Spatial Simulations:
                 <br />
@@ -87,7 +166,7 @@ Job Status
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
@@ -96,12 +175,12 @@ Job Status
                     </thead>
                     <tbody>
                         {% for job in allSpatialJobs %}
-                        <tr>
+                        <tr id="ROW_{{job.name}}">
                             <td>
-                            <a href="javascript:void(0)" onclick="deleteJob('/spatial?reqType=delJob&id={{job.id}}');">Delete</a>
+                            <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/spatial?reqType=delJob&id={{job.id}}');">Delete</a>
                             </td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
@@ -141,7 +220,7 @@ Job Status
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                         
@@ -152,10 +231,10 @@ Job Status
                     </thead>
                     <tbody>
                         {% for job in allSensJobs %}
-                        <tr>
-                            <td><a href="javascript:void(0)" onclick="deleteJob('/sensitivity?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                        <tr id="ROW_{{job.name}}">
+                            <td><a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/sensitivity?reqType=delJob&id={{job.id}}');">Delete</a></td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
@@ -197,7 +276,7 @@ Job Status
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
+                            <th width="80pt">Date</th>
                             <th>Job name </th>
                             <th width="50pt">Resource </th>
                             <th width="100pt">Status</th>
@@ -206,16 +285,16 @@ Job Status
                     </thead>
                     <tbody>
                         {% for job in allParameterJobs %}
-                        <tr>
+                        <tr id="ROW_{{job.name}}">
                             <td>
                                 {% if job.status|lower == "pending" or job.status|lower == "running" %}
-                                <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=stopJob&id={{job.id}}', deleting = false);">Stop</a>
+                                <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/stochoptim?reqType=stopJob&id={{job.id}}', deleting = false);">Stop</a>
                                 {% else %}
-                                <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a>
+                                <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a>
                                 {% endif %}
                             </td>
                             <td>
-                                <span>{{job.number}}</span>
+                                <span><font size=-2>{{job.start_time}}</font></span>
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
@@ -254,6 +333,65 @@ Job Status
                 </table>
                 {% endif %}
 
+                {% if allParameterSweepJobs %}
+                Parameter Sweeps:
+                <br />
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="80pt">Date</th>
+                            <th>Job name</th>
+                            <th width="50pt">Resource</th>
+                            <th width="100pt">Status</th>
+                            <th width="220pt">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in allParameterSweepJobs %}
+                        <tr id="ROW_{{job.name}}">
+                            <td>
+                            <a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/parametersweep?reqType=delJob&id={{job.id}}');">Delete</a>
+                            </td>
+                            <td>
+                                <span><font size=-2>{{job.start_time}}</font></span>
+                            </td>
+                            <td>
+                                <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.resource}}</span>
+                            </td>
+                            <td>
+                                {% if job.status == "Running" or job.status == "Finished" %}
+                                <span style="color: green" class="create_msg">{{job.status}}</span>
+                                {% elif job.status == "Pending" %}
+                                <span style="color: orange" class="create_msg">{{job.status}}</span>
+                                {% else %}
+                                <span style="color: red" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == "Running" %}
+
+                                <a href="/parametersweep/{{job.id}}">View Progress</a>
+
+                                {% elif job.status == "Finished" %}
+                                
+                                <a href="/parametersweep/{{job.id}}">View</a>
+                               
+                                {% elif job.status == "Failed"%}
+                                
+                                <a href="/parametersweep/{{job.id}}">Get Debugging Info</a>
+                            
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
                 {% if allExportJobs %}
                 Export Jobs (YYYY-MM-DD, hh-mm-ss GMT):
                 <br />
@@ -269,8 +407,8 @@ Job Status
                     </thead>
                     <tbody>
                         {% for job in allExportJobs %}
-                        <tr>
-                            <td><a href="javascript:void(0)" onclick="deleteJob('/export?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                        <tr id="ROW_{{job.name}}">
+                            <td><a href="javascript:void(0)" onclick="deleteJob('{{job.name}}', '/export?reqType=delJob&id={{job.id}}');">Delete</a></td>
                             <td>
                                 <span>{{job.number}}</span>
                             </td>
@@ -303,7 +441,11 @@ Job Status
                 </table>
                 {% endif %}
 
-                {% if not (allParameterJobs or allExportJobs or allSensJobs or all_jobs or allSpatialJobs) %}
+                {% if not (allParameterJobs or allExportJobs or allSensJobs or all_jobs or allSpatialJobs or allParameterSweepJobs) %}
+                No jobs in system<br /><br />
+                {% endif %}
+                #}
+                {% if not (all_jobs_together) %}
                 No jobs in system<br /><br />
                 {% endif %}
                 <button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button>
@@ -323,32 +465,52 @@ Job Status
 </div>
 
 <script>
-function deleteJob(path, deleting)
+function deleteRow(rowid)  
+{   
+    var row = document.getElementById(rowid);
+    var table = row.parentNode;
+    while ( table && table.tagName != 'TABLE' )
+        table = table.parentNode;
+    if ( !table )
+        return;
+    table.deleteRow(row.rowIndex);
+}
+function deleteJob(jobName, path, deleting)
 {
-    if(typeof(deleting) == 'undefined' || deleting)
-    {
-        msg = "Deleting the job...";
-    }
-    else
-    {
-        msg = "Stopping the job...";
+    var val = confirm("Are you sure you want to delete '" + jobName + "'?");
+
+    if(!val)
+        return false;
+
+    if(typeof(deleting) == 'undefined' || deleting){
+        act_msg = "Deleting";
+    }else{
+        act_msg = "Stopping";
     }
 
     updateMsg( { status: true,
-              msg: msg } );
-$.ajax({ url : path,
-    type : 'POST',
-    success : function(data)
-    {
-        location.reload();
-    },
-    error : function(data)
-    {
-        location.reload();
-    }});
+                 msg: act_msg+" job "+jobName+"..."
+              } );
 
-return false;
+    $.ajax({ url : path,
+        type : 'POST',
+        success : function(data)
+        {
+            updateMsg( { status: true,
+                         msg: 'Finished '+act_msg+" job "+jobName+"..."
+                      } );
+            deleteRow('ROW_'+jobName);
+        },
+        error : function(data)
+        {
+            updateMsg( { status: False,
+                         msg: 'Error while '+act_msg+" job "+jobName+"..."
+                      } );
+        }});
+
+    return false;
 }
+
 
 var updateMsg = function(data)
 {
@@ -372,20 +534,20 @@ function rerun(path, type)
     updateMsg( { status: true,
               msg: msg } );
               
-              $.ajax({ url : path,
-                     type : 'POST',
-                     success : function(data)
-                     {
-                     updateMsg(data);
-                     if(data.status)
-                     window.location = '/status';
-                     },
-                     error : function(data)
-                     {
-                     location.reload();
-                     }});
-                     
-                     return false;
+    $.ajax({ url : path,
+           type : 'POST',
+           success : function(data)
+           {
+           updateMsg(data);
+             if(data.status)
+                window.location = '/status';
+           },
+           error : function(data)
+           {
+             location.reload();
+           }});
+           
+    return false;
 }
 
 </script>

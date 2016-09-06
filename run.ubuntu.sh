@@ -294,6 +294,24 @@ function check_and_install_deps {
     if ! check_lib "mysql.connector";then
         install_lib "python-mysql.connector"
     fi
+    if ! check_lib "paramiko";then
+        install_lib "python-paramiko"
+    fi
+    if ! check_lib "sqlalchemy";then
+        install_lib "python-sqlalchemy"
+    fi
+    if ! check_lib "novaclient";then
+        install_lib "python-novaclient"
+    fi
+    if ! check_lib "boto";then
+        install_lib "python-boto"
+    fi
+    if ! check_lib "celery";then
+        install_lib "python-celery"
+    fi
+    if ! check_lib "jupyter";then
+        install_lib_pip "jupyter"
+    fi
 }
 
 function check_dolfin {
@@ -329,6 +347,30 @@ function install_dolfin {
     fi
 }
 
+function check_molns_sub {
+    RET=`python -c "import molns" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_molns {
+    if check_molns_sub; then
+        return 0 #True
+    else
+        MOLNS_DIR="$STOCHSS_HOME/app/lib/molns/"
+        if [ -e $MOLNS_DIR ];then
+            echo "Molns local install found $MOLNS_DIR.<br />"
+            export PYTHONPATH=$MOLNS_DIR:$PYTHONPATH
+            if check_molns_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
+
 function check_python_package_installation {
     check_and_install_deps
     echo "Checking for FEniCS/Dolfin"
@@ -349,6 +391,12 @@ function check_python_package_installation {
         echo "PyURDME detected successfully"
     else
         echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
+        return 1 #False
+    fi
+    if check_molns; then
+        echo "MOLNs detected successfully.<br />"
+    else
+        echo "Failed to detect MOLNs.<br />"
         return 1 #False
     fi
     if check_gillespy; then
@@ -529,6 +577,7 @@ else
 
     echo "Cleaning up anything already there..."
     rm -rf "$STOCHSS_HOME/ode" >& /dev/null
+    rm -rf $STOCHKIT_ODE >& /dev/null
 
     stdout="$STOCHSS_HOME/stdout.log"
     stderr="$STOCHSS_HOME/stderr.log"
@@ -545,19 +594,19 @@ else
     cd "cvodes-2.7.0"
     ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes configure)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes make)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make install 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes make install)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
@@ -566,7 +615,7 @@ else
     export STOCHKIT_ODE="$(pwd -P)"
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (ode make)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
@@ -579,8 +628,10 @@ else
     if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
         echo "Success!"
     else
-        echo "Failed"
-        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        echo "Failed (ode test)"
+        echo "StochKit ODE failed to install. See below for errors:"
+        echo "export STOCHKIT_ODE=\"$STOCHKIT_ODE\"; $STOCHKIT_ODE/ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 1 -i 1 --out-dir $rundir"
+        eval "export STOCHKIT_ODE=\"$STOCHKIT_ODE\"; $STOCHKIT_ODE/ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 1 -i 1 --out-dir $rundir"
         exit -1
     fi
 fi

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title%}Manage Simulations{% endblock %}
+{% block csscontent %}{% endblock %}
+{% block content %}
+
+<div class="span9">
+    <div class="row-fluid">
+        <div id="stochoptim">
+            Loading model content...
+        </div>
+
+        <div style="display: none;" id="initialData">
+            {{ initialData }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<script type="text/javascript" src = "/static/js/jquery.csv-0.71.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
+
+<script type="text/javascript" src = "/static/js/purl.js"></script>
+<script type="text/javascript" src = "/static/js/parameter_sweep.js"></script>
+
+<script id="modelSelectTemplate" type="text/template">
+    <div id="modelSelect">
+        <h1>Parameter Sweep</h1>
+        <br>
+        <div class="well">
+            <% if(typeof models != 'undefined' && models.length > 0) { %>
+            <h3> Select model to analyze </h3>
+            <br />
+            <table class="table table-striped table-bordered mainTable">
+                <thead>
+                    <tr>
+                        <th width="25px"></th>
+                        <th width="200px">Name</th>
+                        <th>Units</th>
+                        <th>Spatial</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for(var model in models) { %>
+                    <tr>
+                        <td>
+                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" />
+                        </td>
+                        <td>
+                            <%= models[model].attributes.name %>
+                        </td>
+                        <td>
+                            <%= models[model].attributes.units %>
+                        </td>
+                        <td>
+                            <% if(models[model].attributes.isSpatial) { %>
+                            True
+                            <% } else { %>
+                            False
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+
+            <br />
+            <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
+            <% } else { %>
+            <h2>There are no models in the system.</h2><br />
+            <a style="font-size:18px;" href="/modeleditor"> Create a new model </a>
+            <% } %>
+        </div>
+    </div>
+</script>
+
+<!--<script id="csvSelectTemplate" type="text/template">
+    
+    </script>-->
+
+<script id="simulationConfTemplate" type="text/template">
+    <div class="well well-large">
+        <h2>
+            <a data-toggle="modal" href="#help_modal1" style="text-decoration: none">Run Parameter Sweep <i class="icon-question-sign"></i> </a>
+            
+            {% set help_modal_id = "help_modal1" %}
+            {% set help_modal_title = "Parameter sweep" %}
+            {% set help_modal_message = "The parameter sweep tool simulates a large number of models with different parameters and plots various functions of the results against the input parameters. This is the simplest way to uncover connections between parameter values and model behavior." %}
+            {% include "help_modal.html" %}
+            {{help_modal|safe}}
+            
+        </h2>
+
+        Model Name: <h2><%= model.attributes.name %></h2>
+        Units: <h3><%= model.attributes.units %></h3>
+        <hr />
+        <label>Job name:</label>
+        <input type="text" class="span3" id="jobName" value="<%= model.attributes.name %>_job_<%= datestr %>" />
+        <br />
+        
+        <div>
+          <label>Model type:</label>
+          <input type="radio" id="deterministicModelType" name="modelType" value="deterministic" checked> Deterministic<br>
+          <input type="radio" id="stochasticModelType" name="modelType" value="stochastic"> Stochastic<br>
+          <input type="radio" id="spatialModelType" name="modelType" value="spatial"> Spatial Stochastic
+        </div>
+        <div>
+          <label>Sweep type:</label>
+          <input type="radio" name="variableCount" value="one" checked> One parameter<br>
+          <input type="radio" name="variableCount" value="two"> Two parameter
+        </div>
+
+        <br>
+
+        <!--List parameters that can be parameter-swept-->
+        <label>Configure variable(s) (minima and maxima are inclusive in sweep):</label>
+            
+        <div id="speciesMsg"></div>
+
+        <table class="table">
+            <tr>
+                <th>
+                  Sweep Variable
+                </th>
+                <th>
+                    Current value
+                </th>
+                <th>
+                    Minimum value (inclusive)
+                </th>
+                <th>
+                    Maximum value (inclusive)
+                </th>
+                <th>
+                    Steps
+                </th>
+                <th>
+                    Log scale
+                </th>
+            </tr>
+            <tr>
+                <td><select class="input-small" id="parameterA"></select></td>
+                <td><input class="input-small" type="number" id="currentValueA" readonly></td>
+                <td><input class="input-small" type="number" id="minValueA"></td>
+                <td><input class="input-small" type="number" id="maxValueA"></td>
+                <td><input class="input-small" type="number" id="stepsA" value="10"></td>
+                <td><input id="logA" type="checkbox" /></td>
+            </tr>
+            <tr id="rowB">
+                <td><select class="input-small" id="parameterB"></select></td>
+                <td><input class="input-small" type="number" id="currentValueB" readonly></td>
+                <td><input class="input-small" type="number" id="minValueB"></td>
+                <td><input class="input-small" type="number" id="maxValueB"></td>
+                <td><input class="input-small" type="number" id="stepsB" value="10"></td>
+                <td><input id="logB" type="checkbox" /></td>
+            </tr>
+        </table>
+
+        <div>
+            <h4>Species</h4>
+            <div id="species">
+            </div>
+	    <div class="btn-group">
+		<button class="btn btn-small selectAll">Select All</button>
+		<button class="btn btn-small clearAll">Clear All</button>
+	    </div>
+        </div>
+
+        <br>
+
+        Simulation time
+        <br />
+        <input type="text" class="input-small" disabled="disabled" value="0">
+        &nbsp; to &nbsp;
+        <input type="text" class="input-small" id="maxTime" value="100">
+        &nbsp; store state every &nbsp;
+        <input type="text" class="input-small" id="increment" value="1.0"> &nbsp; time units.
+
+        <div>
+            Number of trajectories:<br />
+            <input class="input-small" type="number" id="trajectories" value="1">
+        </div>
+
+        <h3 class="advanced-settings">
+            <a data-toggle="collapse" data-target="#advanced-settings">
+                Advanced settings&raquo;
+            </a>
+        </h3>
+        
+        <div id="advanced-settings" class="collapse advanced-settings">
+            <label>
+              Seed
+              <input class="input-small" id="seed" type="number" step="1" value="-1" />
+              <span class='help-block'>Seed the random number generator (use -1 for random seed).</span>
+            </label>
+        </div>
+        <br>
+            
+        <div id="msg"></div>
+
+        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Local </button>
+        <!--<button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run via Cloud </button>-->
+    </div>
+</script>
+{% endblock %}

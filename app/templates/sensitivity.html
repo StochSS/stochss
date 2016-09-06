@@ -60,13 +60,13 @@
 <script type="text/javascript" src = "/static/utils.js"></script>
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
-<link rel="stylesheet" href="/static/css/nv.d3.css">
+<link rel="stylesheet" href="/static/css/nv.d3.min.css">
 
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>
-<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
-<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
+<script type="text/javascript" src = "/static/js/d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.min.js"></script>
 <script type="text/javascript" src = "/static/js/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/js/sensitivityMain.js"></script>
 <script type="text/javascript" src="static/js/status.js"></script>
@@ -102,8 +102,11 @@
     <div class="well">
         <h3>Output</h3>
         <br />    
+        <% if(outData != null) { %>
+            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Jupyter Notebook</button></form>
+        <% } %>
+
         <% if (resource == "local" || output_stored == "True"){ %>
-            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Juypter Notebook</button></form>
      		<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Output Data</button>
     	<% } %>
     	

@@ -117,7 +117,7 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
-    var mxSteps = $( "#mxSteps" ).val();
+    /*var mxSteps = $( "#mxSteps" ).val();
 
     if(!/^[0-9]+$/.test(mxSteps) || parseInt(mxSteps) <= 0)
     {
@@ -126,7 +126,7 @@ var checkAndGet = function(selectTable)
         return false;
     }
 
-    mxSteps = parseInt(mxSteps);
+    mxSteps = parseInt(mxSteps);*/
 
     var epsilon = $( "#epsilon" ).val();
 
@@ -172,7 +172,7 @@ var checkAndGet = function(selectTable)
              selections : selections,
              aTol : aTol,
              rTol : rTol,
-             mxSteps : mxSteps };
+             mxSteps : 10000 }; // mxSteps is not actually working yet.
 }
 
 var updateMsg = function(data)
@@ -515,6 +515,7 @@ var run = function()
                            {
                                url = "/simulate";
                            }
+                           jobName = data.jobName
 
                            $.post( url = url,
                                    data = { reqType : "newJob",
@@ -523,7 +524,48 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status';
+                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
+                                   },
+                                   dataType = "json" );
+                       }, selectTable));
+
+                       $( "#runMolns" ).click( _.partial( function(selectTable) {
+                           updateMsg( { status: true,
+                                        msg: "Running job in MOLNs cloud..." } );
+                           var data = checkAndGet(selectTable);
+
+                           if(!data)
+                               return;
+
+                           data.id = id;
+                           data.resource = "molns";
+
+                           var url = "";
+
+                           data.selections = selectTable.state.selections;
+
+                           if(data.execType == "sensitivity")
+                           {
+                               url = "/sensitivity";
+                           }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
+                           }
+                           else
+                           {
+                               url = "/simulate";
+                           }
+                           jobName = data.jobName
+
+                           $.post( url = url,
+                                   data = { reqType : "newJob",
+                                            data : JSON.stringify(data) }, //Watch closely...
+                                   success = function(data)
+                                   {
+                                       updateMsg(data);
+                                       if(data.status)
+                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));
@@ -555,6 +597,7 @@ var run = function()
                            {
                                url = "/simulate";
                            }
+                           jobName = data.jobName
 
                            $.post( url = url,
                                    data = { reqType : "newJob",
@@ -563,7 +606,7 @@ var run = function()
                                    {
                                        updateMsg(data);
                                        if(data.status)
-                                           window.location = '/status';
+                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
                        }, selectTable));
