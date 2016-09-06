@@ -4,6 +4,8 @@ except ImportError:
   from django.utils import simplejson as json
 
 from collections import OrderedDict
+import dateutil.tz
+import pytz
 import logging
 import traceback
 import __future__
@@ -31,6 +33,11 @@ import molns
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        
+
+    def __init__(self, request, response):
+        BaseHandler.__init__(self, request, response)
+        self.molnsConfig = None       
+
     def authentication_required(self):
         return True
     
@@ -235,23 +242,27 @@ class StatusPage(BaseHandler):
         context['allParameterSweepJobs'] = allParameterSweepJobs
         all_jobs_together.extend(allParameterSweepJobs)
         # Sort the jobs
-        #sorted(all_jobs_together, key=lambda k: k['start_time'], reverse=True)
-        #all_jobs_together.sort(key=lambda k: k['start_time_sort'])
         all_jobs_together.sort(key=lambda x: (datetime.datetime.strptime(x['startTime'], '%Y-%m-%d-%H-%M-%S')
                                          if 'startTime' in x and x['startTime'] != None else datetime.datetime.now()),
                               reverse=True)
         context['all_jobs_together'] = all_jobs_together
+        
+        if 'time_zone_name' in self.request.cookies:
+            #logging.info("time_zone_name = {0}".format(self.request.cookies.get('time_zone_name')))
+            context['time_zone_name'] = "({0})".format(self.request.cookies.get('time_zone_name'))
+        else:
+            context['time_zone_name'] = '(UTC)'
     
         return context
 
-    def __process_getJobStatus(self,service,job,number):
+    def __process_getJobStatus(self,service,job, number):
         try:
-            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+            if self.molnsConfig is None:
+                molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+                if molnsConfigDb:
+                    self.molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
 
-            if molnsConfigDb:
-                config = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
-
-            status = getJobStatus(service, job, config)
+            status = self.getJobStatus(service, job, self.molnsConfig)
         except Exception as e:
             traceback.print_exc()
             status = {  "status" : 'Error: {0}'.format(e),
@@ -260,161 +271,164 @@ class StatusPage(BaseHandler):
                         "output_stored": None,
                         "resource": 'Error',
                         "id" : job.key().id()}
-        status['number'] = number
+        status["number"] = number
         return status
 
 
-def getJobStatus(service, job, molnsConfig = None):
-        logging.info('status.getJobStatus(id={0}) kind={1}'.format(job.key().id(), job.kind()))
-        logging.debug('status.getJobStatus() job = {0}'.format(job))
-        logging.debug('status.getJobStatus() job.status={0} job.resource={1} job.outData={2}'.format(job.status, job.resource, job.outData))
-        file_to_check = "{0}/return_code".format(job.outData)
-        logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
-        logging.debug('status.getJobStatus() job.outData={0}'.format(job.outData))
-        jobType = '(unknown kind={0})'.format(job.kind())
-        if job.kind() == 'StochKitJobWrapper':
-            jobActionUrl = '/simulate?id={0}'.format(job.key().id())
-            jobResultUrl = '/simulate?id={0}'.format(job.key().id())
-            indata = json.loads(job.indata)
-            if indata['exec_type'] ==  'deterministic':
-                jobType = 'Deterministic Simulation'
-            else:
-                jobType = 'Stochastic Simulation'
-        elif job.kind() == 'SpatialJobWrapper':
-            jobActionUrl = '/spatial?id={0}'.format(job.key().id())
-            jobResultUrl = '/spatial?id={0}'.format(job.key().id())
-            jobType = 'Spatial Simulation'
-        elif job.kind() == 'SensitivityJobWrapper':
-            jobActionUrl = '/sensitivity?id={0}'.format(job.key().id())
-            jobResultUrl = '/sensitivity?id={0}'.format(job.key().id())
-            jobType = 'Sensitivity Analysis'
-        elif job.kind() == 'StochOptimJobWrapper':
-            jobActionUrl = '/stochoptim?id={0}'.format(job.key().id())
-            jobResultUrl = ''
-            jobType = 'Parameter Estimation'
-        elif job.kind() == 'ParameterSweepJobWrapper':
-            jobActionUrl = '/parametersweep?id={0}'.format(job.key().id())
-            jobResultUrl = '/parametersweep/{0}'.format(job.key().id())
-            jobType = 'Parameter Sweep'
-        elif job.kind() == 'ExportJobWrapper':
-            jobActionUrl = '/export?id={0}'.format(job.key().id())
-            jobResultUrl = "/static/tmp/{0}".format(job.outData)
-            jobType = 'Export'
-            
-        if job.resource is None:
-            return { "status" : 'Error',
-                    "name" : job.name,
-                    "type" : jobType,
-                    "actionURL" : jobActionUrl,
-                    "resultURL" : jobResultUrl,
-                    "uuid" : job.cloudDatabaseID,
-                    "output_stored": None,
-                    "resource": None,
-                    "start_time" : datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S'),
-                    "startTime" : job.startTime,
-                    "id" : job.key().id()}
-
-        return_code = None
-        try:
-            if os.path.exists(file_to_check):
-                with open(file_to_check, 'r') as fd:
-                    line = fd.readline().strip()
-                
-                    if len(line) > 0:
-                        return_code = int(line)
-        except Exception as e:
-            logging.exception(e)
-            job.status = "Failed"
-
-        if job.outData is not None and return_code is not None:
-            # job finished
-            logging.debug('status.getJobStatus() file_to_check={0} return_code={1}'.format(file_to_check, return_code))
+    def getJobStatus(self, service, job, molnsConfig = None):
+            file_to_check = "{0}/return_code".format(job.outData)
+            jobType = '(unknown kind={0})'.format(job.kind())
             if job.kind() == 'StochKitJobWrapper':
-                if os.path.exists("{0}/result/log.txt".format(job.outData)):
-                    job.status = "Failed"
+                jobActionUrl = '/simulate?id={0}'.format(job.key().id())
+                jobResultUrl = '/simulate?id={0}'.format(job.key().id())
+                indata = json.loads(job.indata)
+                if indata['exec_type'] ==  'deterministic':
+                    jobType = 'Deterministic Simulation'
                 else:
-                    job.status = "Finished"
-            else:
-                if return_code == 0:
-                    job.status = "Finished"
-                else:
-                    job.status = "Failed"
-        elif job.resource.lower() == "local":
-            # running Locally
-            # check if the job is still running
-            res = service.checkTaskStatusLocal([job.pid])
-            if res[job.pid] and job.pid:
-                job.status = "Running"
-            else:
+                    jobType = 'Stochastic Simulation'
+            elif job.kind() == 'SpatialJobWrapper':
+                jobActionUrl = '/spatial?id={0}'.format(job.key().id())
+                jobResultUrl = '/spatial?id={0}'.format(job.key().id())
+                jobType = 'Spatial Simulation'
+            elif job.kind() == 'SensitivityJobWrapper':
+                jobActionUrl = '/sensitivity?id={0}'.format(job.key().id())
+                jobResultUrl = '/sensitivity?id={0}'.format(job.key().id())
+                jobType = 'Sensitivity Analysis'
+            elif job.kind() == 'StochOptimJobWrapper':
+                jobActionUrl = '/stochoptim?id={0}'.format(job.key().id())
+                jobResultUrl = ''
+                jobType = 'Parameter Estimation'
+            elif job.kind() == 'ParameterSweepJobWrapper':
+                jobActionUrl = '/parametersweep?id={0}'.format(job.key().id())
+                jobResultUrl = '/parametersweep/{0}'.format(job.key().id())
+                jobType = 'Parameter Sweep'
+            elif job.kind() == 'ExportJobWrapper':
+                jobActionUrl = '/export?id={0}'.format(job.key().id())
+                jobResultUrl = "/static/tmp/{0}".format(job.outData)
+                jobType = 'Export'
+                
+            if job.resource is None:
+                return { "status" : 'Error',
+                        "name" : job.name,
+                        "type" : jobType,
+                        "actionURL" : jobActionUrl,
+                        "resultURL" : jobResultUrl,
+                        "uuid" : job.cloudDatabaseID,
+                        "output_stored": None,
+                        "resource": None,
+                        "start_time" : 'none',#datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S').replace(tzinfo=dateutil.tz.tzutc()).astimezone(dateutil.tz.tzlocal()),
+                        "startTime" : job.startTime,
+                        "id" : job.key().id()}
+
+            return_code = None
+            try:
+                if os.path.exists(file_to_check):
+                    with open(file_to_check, 'r') as fd:
+                        line = fd.readline().strip()
+                    
+                        if len(line) > 0:
+                            return_code = int(line)
+            except Exception as e:
+                logging.exception(e)
                 job.status = "Failed"
-        elif job.resource.lower() == "molns":
-            if molnsConfig:
-                job_status = molns.MOLNSExec.job_status([job.molnsPID], molnsConfig)
-                  
-                status = 'Running' if job_status['running'] else 'Finished'
-                  
-                if status == 'Finished':
-                    with open(file_to_check, 'w') as f:
-                        f.write('0')
 
-                job.status = status
-            else:
-                job.status = 'Unknown'
+            if job.outData is not None and return_code is not None:
+                # job finished
+                logging.debug('status.getJobStatus() file_to_check={0} return_code={1}'.format(file_to_check, return_code))
+                if job.kind() == 'StochKitJobWrapper':
+                    if os.path.exists("{0}/result/log.txt".format(job.outData)):
+                        job.status = "Failed"
+                    else:
+                        job.status = "Finished"
+                else:
+                    if return_code == 0:
+                        job.status = "Finished"
+                    else:
+                        job.status = "Failed"
+            elif job.resource.lower() == "local":
+                # running Locally
+                # check if the job is still running
+                res = service.checkTaskStatusLocal([job.pid])
+                if res[job.pid] and job.pid:
+                    job.status = "Running"
+                else:
+                    job.status = "Failed"
+            elif job.resource.lower() == "molns":
+                if molnsConfig:
+                    job_status = molns.MOLNSExec.job_status([job.molnsPID], molnsConfig)
+                      
+                    status = 'Running' if job_status['running'] else 'Finished'
+                      
+                    if status == 'Finished':
+                        with open(file_to_check, 'w') as f:
+                            f.write('0')
 
-        elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            # running in cloud
-            task_status = service.describeTasks(job)
-            logging.info('status.getJobStatus()  task_status =\n{}'.format(pprint.pformat(task_status)))
+                    job.status = status
+                else:
+                    job.status = 'Unknown'
 
-            if task_status is None:
-                job.status = "Inaccessible"
-                logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
-                job_status = None
-            elif task_status is not None and job.cloudDatabaseID not in task_status:
-                job.status = "Unknown"
-                logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
-            else:
-                job_status = task_status[job.cloudDatabaseID]
-                if job_status is None or 'status' not in job_status:
+            elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                # running in cloud
+                task_status = service.describeTasks(job)
+                logging.info('status.getJobStatus()  task_status =\n{}'.format(pprint.pformat(task_status)))
+
+                if task_status is None:
+                    job.status = "Inaccessible"
+                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
+                    job_status = None
+                elif task_status is not None and job.cloudDatabaseID not in task_status:
                     job.status = "Unknown"
                     logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
-                elif job_status['status'] == 'finished':
-                    job.outputURL = job_status['output']
-                    job.uuid = job_status['uuid']
-                    job.status = 'Finished'
-                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
-
-                elif job_status['status'] == 'failed':
-                    job.status = 'Failed'
-                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
-                    job.exception_message = job_status['message']
-                    # Might not have a uuid or output if an exception was raised early on or if there is just no output available
-                    try:
-                        job.uuid = job_status['uuid']
-                        job.outputURL = job_status['output']
-                    except KeyError:
-                        pass
-
-                elif job_status['status'] == 'pending':
-                    job.status = 'Pending'
-                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
                 else:
-                    # The state gives more fine-grained results, like if the job is being re-run, but
-                    #  we don't bother the users with this info, we just tell them that it is still running.
-                    job.status = 'Running'
-                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
+                    job_status = task_status[job.cloudDatabaseID]
+                    if job_status is None or 'status' not in job_status:
+                        job.status = "Unknown"
+                        logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
+                    elif job_status['status'] == 'finished':
+                        job.outputURL = job_status['output']
+                        job.uuid = job_status['uuid']
+                        job.status = 'Finished'
+                        logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
 
-        job.put()
-        
-        return { "status" : job.status,
-                 "name" : job.name,
-                 "type" : jobType,
-                 "actionURL" : jobActionUrl,
-                 "resultURL" : jobResultUrl,
-                 "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
-                 "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
-                 "resource": job.resource,
-                 "start_time" : datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S').strftime('%b-%d-%y %H:%M'),
-                 "startTime" : job.startTime,
-                 "id" : job.key().id() }
+                    elif job_status['status'] == 'failed':
+                        job.status = 'Failed'
+                        logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
+                        job.exception_message = job_status['message']
+                        # Might not have a uuid or output if an exception was raised early on or if there is just no output available
+                        try:
+                            job.uuid = job_status['uuid']
+                            job.outputURL = job_status['output']
+                        except KeyError:
+                            pass
+
+                    elif job_status['status'] == 'pending':
+                        job.status = 'Pending'
+                        logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
+                    else:
+                        # The state gives more fine-grained results, like if the job is being re-run, but
+                        #  we don't bother the users with this info, we just tell them that it is still running.
+                        job.status = 'Running'
+                        logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
+
+            job.put()
+            
+            dateobj = datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S')
+            if 'time_zone_utc_offset' in self.request.cookies:
+                dateobj2 = dateobj - datetime.timedelta(hours=int(self.request.cookies.get('time_zone_utc_offset')))
+                datestr = dateobj2.strftime('%b-%d-%y %H:%M'),
+                #logging.info("time_zone_utc_offset = {0}".format(self.request.cookies.get('time_zone_utc_offset')))
+            else:
+                datestr = dateobj.strftime('%b-%d-%y %H:%M'),
+
+            return { "status" : job.status,
+                     "name" : job.name,
+                     "type" : jobType,
+                     "actionURL" : jobActionUrl,
+                     "resultURL" : jobResultUrl,
+                     "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
+                     "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
+                     "resource": job.resource,
+                     "start_time" : str(datestr[0]),
+                     "startTime" : job.startTime,
+                     "id" : job.key().id() }
 

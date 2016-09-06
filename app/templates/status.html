@@ -5,6 +5,24 @@
 
 <!-- Script to check/unckeck all checkboxes -->
 <script type="text/javascript">
+/**
+ * Set the local time offset to display time values in the users local time
+ */
+function setTimeOffset() {
+    // Create all the dates necessary
+    var now = later = new Date();
+    // Set time for how long the cookie should be saved - 1 year
+    later.setTime(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+    var tz = now.toLocaleString('en-US', {timeZoneName :'short'}).split(" ").reverse()[0];
+    document.cookie ='time_zone_name='+tz+'; expires='+ later +'; path=/';
+    var off = now.getTimezoneOffset() / 60;
+    document.cookie ='time_zone_utc_offset='+off+'; expires='+ later +'; path=/';
+}
+
+// Trigger the time offset cookie creation
+setTimeOffset();
+
+
 toggle = function(source) {
     checkboxes = document.getElementsByName('select_job');
     for(var i=0, n=checkboxes.length;i<n;i++) {
@@ -106,7 +124,7 @@ $( document ).ready( function() {
                     <thead>
                         <tr>
                             <th width="40pt"></th>
-                            <th width="80pt">Date</th>
+                            <th width="80pt">Date {{time_zone_name}}</th>
                             <th>Job name</th>
                             <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
