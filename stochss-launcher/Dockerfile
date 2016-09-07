@@ -82,7 +82,7 @@ RUN apt-get clean && \
 #RUN echo "y" > /etc/container_environment/LIBGL_ALWAYS_INDIRECT
 
 # Put environment variables into
-RUN echo "source /usr/local/share/dolfin/dolfin.conf" >> /etc/bash.bashrc
+#RUN echo "source /usr/local/share/dolfin/dolfin.conf" >> /etc/bash.bashrc # not needed, causes errors
 
 #..................................................................................
 
