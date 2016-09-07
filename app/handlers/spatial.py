@@ -335,8 +335,10 @@ class SpatialPage(BaseHandler):
                     shutil.copyfile(notebook_template_path, notebook_file_path)
 
 
-                #TODO remove 'localhost' here, replace with ip used for request
-                host = 'localhost'
+                if self.request.get('hostname') is not None:
+                    host = self.request.get('hostname')
+                else:
+                    host = 'localhost'
                 port = 9999
                 proto = 'http'
                 #

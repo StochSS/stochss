@@ -347,14 +347,17 @@ class SimulatePage(BaseHandler):
                     logging.info("Creating {0} from {1}".format(notebook_file_path,notebook_template_path))
                     shutil.copyfile(notebook_template_path, notebook_file_path)
 
-
-                #TODO remove 'localhost' here, replace with ip used for request
-                host = 'localhost'
+                if self.request.get('hostname') is not None:
+                    logging.info('hostname={0}'.format(self.request.get('hostname')))
+                    host = self.request.get('hostname')
+                else:
+                    host = 'localhost'
                 port = 9999
                 proto = 'http'
                 #
                 # return the url of the notebook
                 notebook_url = '{0}://{1}:{2}/notebooks/{3}/{4}'.format(proto,host,port,local_path,notebook_filename)
+                logging.info('redirect: {0}'.format(notebook_url))
                 self.redirect(notebook_url)
             except Exception as e:
                 logging.error("Error in openJupyterNotebook: {0}".format(e))

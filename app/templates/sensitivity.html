@@ -71,6 +71,7 @@
 <script type="text/javascript" src = "/static/js/sensitivityMain.js"></script>
 <script type="text/javascript" src="static/js/status.js"></script>
 
+
 <script id="jobInfoTemplate" type="text/template">
 	<ol class="breadcrumb">
   		<li><a href="/status">Job Status</a></li>
@@ -103,7 +104,7 @@
         <h3>Output</h3>
         <br />    
         <% if(outData != null) { %>
-            <form method=post action="" target="_blank"><input type=hidden name="reqType" value="redirectJupyterNotebook"><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Jupyter Notebook</button></form>
+            <form method=post action="" target="_blank"  onsubmit="document.getElementById('notebook_hostname').value = window.location.hostname;"><input type=hidden name="reqType" value="redirectJupyterNotebook"><input type="hidden" id="notebook_hostname" name="hostname" value=""><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Jupyter Notebook</button></form>
         <% } %>
 
         <% if (resource == "local" || output_stored == "True"){ %>

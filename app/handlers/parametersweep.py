@@ -461,9 +461,12 @@ class ParameterSweepVisualizationPage(BaseHandler):
                     logging.info("Creating {0} from {1}".format(notebook_file_path,notebook_template_path))
                     shutil.copyfile(notebook_template_path, notebook_file_path)
 
-
-                #TODO remove 'localhost' here, replace with ip used for request
-                host = 'localhost'
+                if self.request.get('hostname') is not None:
+                    logging.info('hostname = {0}'.format(self.request.get('hostname')))
+                    host = self.request.get('hostname')
+                else:
+                    logging.info('hostname = localhost (default)')
+                    host = 'localhost'
                 port = 9999
                 proto = 'http'
                 #
