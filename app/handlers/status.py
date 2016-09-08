@@ -296,7 +296,7 @@ class StatusPage(BaseHandler):
                 jobType = 'Sensitivity Analysis'
             elif job.kind() == 'StochOptimJobWrapper':
                 jobActionUrl = '/stochoptim?id={0}'.format(job.key().id())
-                jobResultUrl = ''
+                jobResultUrl = '/stochoptim/{0}'.format(job.key().id())
                 jobType = 'Parameter Estimation'
             elif job.kind() == 'ParameterSweepJobWrapper':
                 jobActionUrl = '/parametersweep?id={0}'.format(job.key().id())
