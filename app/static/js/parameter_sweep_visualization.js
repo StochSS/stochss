@@ -342,7 +342,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 sortedParameters[key] = tmp;
             }
 
-            var margin = { top: 50, right: 50, bottom: 100, left: 75 };
+            var margin = { top: 50, right: 100, bottom: 100, left: 75 };
             var width = $(".metadata").width() - margin.left - margin.right - 75;
             var height = width * 3 / 4;
             var gridSizeY = Math.floor(height / yCount);
