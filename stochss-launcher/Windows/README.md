@@ -18,29 +18,29 @@ ProTip!
 1. Install Docker Toolbox using directions here: https://docs.docker.com/engine/installation/windows/
 
 2. Open the Docker QuickStart Terminal. Run the following commands:
-    + `docker-machine start stochss1-7 || docker-machine create --driver virtualbox stochss1-7`
-    + `eval "$(docker-machine env stochss1-7)"`
+    + `docker-machine start stochss1-8 || docker-machine create --driver virtualbox stochss1-8`
+    + `eval "$(docker-machine env stochss1-8)"`
     
-    This will start/create a Virtual Machine called `stochss1-7`, and give you terminal access to it. StochSS will run in        this machine. To verify that the machine is running, run the following command:
+    This will start/create a Virtual Machine called `stochss1-8`, and give you terminal access to it. StochSS will run in this machine. To verify that the machine is running, run the following command:
     + `docker-machine ls`
     
-    You should see that the status of machine `stochss1-7` is _running_.
+    You should see that the status of machine `stochss1-8` is _running_.
 
-    Please note the IP address of the of the machine `stochss1-7`. Run the following command to determine the IP address:
-    + `docker-machine ip stochss1-7`   
+    Please note the IP address of the of the machine `stochss1-8`. Run the following command to determine the IP address:
+    + `docker-machine ip stochss1-8`   
     
 
 3. Run the following commands to start StochSS container:
     + If this is the first time you're starting StochSS,
 
-         + `docker run -i -t -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 stochss/stochss-launcher:1.7 "/bin/bash"`
+         + `docker run -i -t -p 8080:8080 -p 8000:8000 --name=itochsscontainer1_8 briandrawert/stochss-launcher:1.8 "/bin/bash"`
         
         This will download the StochSS docker image, create the StochSS docker container and give terminal access to it.
 
     + Otherwise, if you already have a StochSS docker container (i.e. when you use StochSS subsequently), run 
     
-         + `docker start stochsscontainer1_7` 
-         + `docker exec -ti stochsscontainer1_7 /bin/bash`
+         + `docker start stochsscontainer1_8` 
+         + `docker exec -ti stochsscontainer1_8 /bin/bash`
 
 4. Run the following commands to start the server: 
     + `cd stochss-master`
@@ -50,8 +50,8 @@ ProTip!
 
 5. Follow the instructions on the terminal to kill the server process. After that, run the following commands to stop the container:
      + `exit` 
-     + `docker stop stochsscontainer1_7`
-     + `docker-machine stop stochss1-7` 
+     + `docker stop stochsscontainer1_8`
+     + `docker-machine stop stochss1-8` 
      
     These commands will stop the container and virtual machine. The terminal window can now be safely closed.
 
@@ -59,7 +59,7 @@ ProTip!
 
 1. Open the Docker Quickstart terminal.
 2. Run the following command:
-      - `docker-machine rm stochss1-7`
+      - `docker-machine rm stochss1-8`
 
 ###Note on security
 When you run StochSS, it is encapsulated inside a virtual machine. If something goes wrong with the StochSS virtual machine, it is isolated from everything else on your system.
@@ -68,10 +68,10 @@ When you run StochSS, it is encapsulated inside a virtual machine. If something 
    + Leaving StochSS is running while the computer goes to sleep can cause the network configuration of the virtual machine       to change unexpectedly when the computer is woken up again. This means that StochSS could become temporarily                 inaccessible. Performing the following steps may solve this:
      - Open a Docker Quickstart terminal window
      - Run the following commands:
-       * `docker-machine start stochss1-7`
-       * `docker-machine ssh stochss1-7`
-       * `docker stop stochsscontainer1_7`
-       * `docker start stochsscontainer1_7`
+       * `docker-machine start stochss1-8`
+       * `docker-machine ssh stochss1-8`
+       * `docker stop stochsscontainer1_8`
+       * `docker start stochsscontainer1_8`
        * `exit`
       
     - Follow the instructions in this guide to start StochSS.
