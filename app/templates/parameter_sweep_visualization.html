@@ -101,15 +101,18 @@
     <% if(status == "Finished") { %>
 
     <div>
-        <div>
-            Select mapper to visualize:
+        <table border=0 cellpadding=0 cellspacing=0>
+        <TR><TD>
+            Select analysis to perform on each trajectory:
+        </TD><TD>
             <select id="mapperSelect"></select>
-        </div>
-
-        <div>
-            Select reducer to visualize:
+        </TD></TR>
+        <TR><TD>
+            Then select analysis to perform over ensemble of trajectories:
+        </TD><TD>
             <select id="reducerSelect"></select>
-        </div>
+        </TD</TR>
+        </TABLE>
       
         <div id="speciesSelectDiv" style="display : none;">
             Select species to visualize:
