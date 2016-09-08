@@ -106,9 +106,15 @@
         
         <div>
           <label>Model type:</label>
-          <input type="radio" id="deterministicModelType" name="modelType" value="deterministic" checked> Deterministic<br>
-          <input type="radio" id="stochasticModelType" name="modelType" value="stochastic"> Stochastic<br>
-          <input type="radio" id="spatialModelType" name="modelType" value="spatial"> Spatial Stochastic
+          <div id="deterministicModelTypeDiv">
+            <input type="radio" id="deterministicModelType" name="modelType" value="deterministic" checked> Deterministic
+          </div>
+          <div id="stochasticModelTypeDiv">
+            <input type="radio" id="stochasticModelType" name="modelType" value="stochastic"> Stochastic
+          </div>
+          <div id="spatialModelTypeDiv">
+            <input type="radio" id="spatialModelType" name="modelType" value="spatial"> Spatial Stochastic
+          </div>
         </div>
         <div>
           <label>Sweep type:</label>
@@ -182,7 +188,7 @@
         &nbsp; store state every &nbsp;
         <input type="text" class="input-small" id="increment" value="1.0"> &nbsp; time units.
 
-        <div>
+        <div id="numberTrajectories">
             Number of trajectories per parameter point:<br />
             <input class="input-small" type="number" id="trajectories" value="1">
         </div>

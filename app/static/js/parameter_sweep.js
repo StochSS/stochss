@@ -307,6 +307,18 @@ ParameterSweep.Controller = Backbone.View.extend(
             $( this.el ).find( "#species input" ).prop('checked', false);
         },
 
+        showHideTrajectoriesBox : function()
+        {
+            if($( '#deterministicModelType' ).prop('checked'))
+            {
+                $( "#numberTrajectories" ).hide();
+            }
+            else
+            {
+                $( "#numberTrajectories" ).show();
+            }
+        },
+
         render : function()
         {
             //If we're at the model select stage, just render the available models if that info has been fetched
@@ -363,12 +375,17 @@ ParameterSweep.Controller = Backbone.View.extend(
 
                 this.values = {}
 
-
                 if(this.model.attributes.units.toLowerCase() == 'concentration'){
                     $( "#deterministicModelType" ).prop("checked", true);
                     $( "#stochasticModelType" ).prop("disabled", true);
                     $( "#spatialModelType" ).prop("disabled", true);
+
+                    $( "#stochasticModelTypeDiv" ).hide();
+                    $( "#spatialModelTypeDiv" ).hide();
                 }else if (this.model.attributes.isSpatial){
+                    $( "#deterministicModelTypeDiv" ).hide();
+                    $( "#stochasticModelTypeDiv" ).hide();
+
                     $( "#deterministicModelType" ).prop("disabled", true);
                     $( "#stochasticModelType" ).prop("disabled", true);
                     $( "#spatialModelType" ).prop("checked", true);
@@ -376,7 +393,13 @@ ParameterSweep.Controller = Backbone.View.extend(
                     //$( "#deterministicModelType" ).prop("disabled", true);
                     $( "#stochasticModelType" ).prop("checked", true);
                     $( "#spatialModelType" ).prop("disabled", true);
+
+                    $( "#spatialModelTypeDiv" ).hide();
                 }
+
+                $( "input[name=modelType]" ).click( _.bind(this.showHideTrajectoriesBox, this) );
+
+                this.showHideTrajectoriesBox();
 
                 var optionTemplate = _.template('<option value="<%= name %>"><%= name %></option>');
 
