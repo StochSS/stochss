@@ -88,10 +88,10 @@ $( document ).ready( function() {
             <table><tr><td>
                 <h1>Job Status</h1>
             </td><td width=25>&nbsp;</td><td valign="bottom"><BR>
-                <form action="/status" method="get"><button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button></form>
+                <form action="/status" method="get" onSubmit="window.location.reload();return false"><button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button></form>
             </td></tr></table>
             <div id="msg" style="display: none;"></div>
-            <form class ="well form" action="/status" method="get">
+            <form class ="well form" action="/status" method="get" onSubmit="window.location.reload();return false">
             <div id="filters" style="display: inline">
             <!--table border=1 cellpadding="0" cellspacing="0" class="table table-striped table-bordered"-->
             <table border=0 cellpadding="0" cellspacing="0" class="table table-bordered">
