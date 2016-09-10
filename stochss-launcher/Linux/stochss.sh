@@ -32,7 +32,7 @@ then
 	done
 	echo "StochSS server is running at the following URL. The browser window should open automatically."
 	echo "http://$(sudo docker inspect --format {{.NetworkSettings.IPAddress}} $STOCHSS_CONTAINER_NAME):8080/login?secret_key=$token"
-        xdg-open "http://$(sudo docker inspect --format {{.NetworkSettings.IPAddress}} stochsscontainer1_7):8080/login?secret_key=$token"
+        xdg-open "http://$(sudo docker inspect --format {{.NetworkSettings.IPAddress}} $STOCHSS_CONTAINER_NAME):8080/login?secret_key=$token"
 
 else
 	echo "This operating system is not recognized."
