@@ -584,7 +584,7 @@ class SimulatePage(BaseHandler):
 
             args += '--seed {0} '.format(params['seed'])
         else:
-            executable = "/usr/local/ode-1.0.2/stochkit_ode.py"
+            executable = "/usr/local/ode/stochkit_ode.py"
 
         # Columns need to be labeled for visulatization page to work.  
         args += ' --label'
