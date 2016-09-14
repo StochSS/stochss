@@ -344,7 +344,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
             var margin = { top: 50, right: 100, bottom: 100, left: 75 };
             var width = $(".metadata").width() - margin.left - margin.right - 75;
-            var height = width * 3 / 4;
+            var height = width;
             var gridSizeY = Math.floor(height / yCount);
             var gridSizeX = Math.floor(width / xCount);
 
@@ -422,7 +422,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
                 yAxisValues.push(val);
 
-                if(Math.abs(val) < 0.01 && Math.abs(val) > 1e-15)
+                if((Math.abs(val) < 0.1 && Math.abs(val) > 1e-15) || Math.abs(val) >= 10.0)
                     useExponential = true;
             }
 
@@ -454,7 +454,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
                 xAxisValues.push(val);
 
-                if(Math.abs(val) < 0.01 && Math.abs(val) > 1e-15)
+                if((Math.abs(val) < 0.1 && Math.abs(val) > 1e-15) || Math.abs(val) >= 10.0)
                     useExponential = true;
             }
 
