@@ -7,7 +7,7 @@ StochSS is currently supported on Linux and Apple OSX platforms, and with prelim
 
 ## Obtaining StochSS:
 
-The easiest and recommended way to obtain StochSS is to download the latest app bundle or package from www.stochss.org. These reqire Docker. 
+The easiest and recommended way to obtain StochSS is to download the latest app bundle or package from www.stochss.org.  These require Docker (from http://www.docker.com/). 
 
 ### Installing and running from source (Advanced users only)
 
