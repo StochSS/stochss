@@ -274,7 +274,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .showXAxis(true)        //Show the x-axis
             ;
 
-            var d3Format = d3.format('.02f');
+            var d3Format = d3.format('.2e');
             
             if(this.data.inData.logA) {
                 formatter = function(x) {
@@ -540,8 +540,8 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .data(this.listData);
 
             heatMapJoin.enter().append("svg")
-                .attr("x", function(d) { return (d[1]) * gridSizeX; })
-                .attr("y", function(d) { return (d[0]) * gridSizeY; })
+                .attr("x", function(d) { return (d[0]) * gridSizeX; })
+                .attr("y", function(d) { return (d[1]) * gridSizeY; })
                 .on('mouseover', function(d) {
                     d3.select(this).select("text").attr('visibility', 'visible');
                 })
