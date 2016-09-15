@@ -79,11 +79,11 @@ class StochSSModel(gillespy.Model):
 def mapAnalysis(result):
     metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
     for i, specie in enumerate(statsSpecies):
-        metrics['max'][specie] = numpy.max(result[:, i])
-        metrics['min'][specie] = numpy.min(result[:, i])
-        metrics['avg'][specie] = numpy.mean(result[:, i])
-        metrics['var'][specie] = numpy.var(result[:, i])
-        metrics['finalTime'][specie] = result[-1, i]
+        metrics['max'][specie] = numpy.max(result[:, i + 1])
+        metrics['min'][specie] = numpy.min(result[:, i + 1])
+        metrics['avg'][specie] = numpy.mean(result[:, i + 1])
+        metrics['var'][specie] = numpy.var(result[:, i + 1])
+        metrics['finalTime'][specie] = result[-1, i + 1]
 
     return metrics
 

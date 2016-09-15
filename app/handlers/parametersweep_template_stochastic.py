@@ -80,11 +80,11 @@ class StochSSModel(gillespy.Model):
 def mapAnalysis(result):
     metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
     for i, specie in enumerate(statsSpecies):
-        metrics['max'][specie] = numpy.max(result[:, i])
-        metrics['min'][specie] = numpy.min(result[:, i])
-        metrics['avg'][specie] = numpy.mean(result[:, i])
-        metrics['var'][specie] = numpy.var(result[:, i])
-        metrics['finalTime'][specie] = result[-1, i]
+        metrics['max'][specie] = numpy.max(result[:, i + 1])
+        metrics['min'][specie] = numpy.min(result[:, i + 1])
+        metrics['avg'][specie] = numpy.mean(result[:, i + 1])
+        metrics['var'][specie] = numpy.var(result[:, i + 1])
+        metrics['finalTime'][specie] = result[-1, i + 1]
 
     return metrics
 
@@ -141,6 +141,7 @@ def run_local_parameter_sweep(parameters, mapper_fn=mapAnalysis, reducer_fn=redu
     else:
         random.seed()
         seed = random.randint(0, 2147483647)
+
     for pndx,pset in enumerate(pset_list):
         sys.stdout.write("\tSimulating {0}\n".format(pset))
         sys.stdout.flush()
