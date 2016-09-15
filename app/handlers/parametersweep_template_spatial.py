@@ -160,12 +160,16 @@ def run_local_parameter_sweep(parameters, mapper_fn=mapAnalysis, reducer_fn=redu
             for pval in pvals:
                 pset = {pname:pval}
                 pset_list.append(pset)
-
-    for pset in pset_list:
+    if 'seed' in StochSSModel.json_data and int(StochSSModel.json_data['seed']) != -1:
+        seed = int(StochSSModel.json_data['seed'])
+    else:
+        random.seed()
+        seed = random.randint(0, 2147483647)
+    for pndx,pset in enumerate(pset_list):
         sys.stdout.write("\tSimulating {0}\n".format(pset))
         sys.stdout.flush()
         model = StochSSModel(**pset)
-        results = model.run(number_of_trajectories = StochSSModel.json_data['trajectories'])
+        results = model.run(number_of_trajectories = StochSSModel.json_data['trajectories'], seed=seed+pndx)
         if not isinstance(results, list):
             results = [results]
         mapped_list = []
