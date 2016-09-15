@@ -223,7 +223,6 @@ class SpatialPage(BaseHandler):
     def post(self):
         reqType = self.request.get('reqType')
         self.response.content_type = 'application/json'
-        logging.error('spaital post reqType={0}'.format(reqType))
 
         if reqType == 'newJob':
             data = json.loads(self.request.get('data'))
@@ -467,9 +466,9 @@ class SpatialPage(BaseHandler):
     def construct_pyurdme_model(self, data):
         '''
         '''
-        json_model_refs = ModelManager.getModel(self, data["id"]) # data["id"] is the model id of the selected model I think
+        json_model_refs = ModelManager.getModel(self, int(data["id"])) # data["id"] is the model id of the selected model I think
 
-        stochkit_model_obj = StochKitModelWrapper.get_by_id(data["id"]).createStochKitModel()
+        stochkit_model_obj = StochKitModelWrapper.get_by_id(int(data["id"])).createStochKitModel()
         #print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
         try:
             meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])

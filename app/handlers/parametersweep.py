@@ -315,7 +315,10 @@ class ParameterSweepPage(BaseHandler):
 
         # # execute cloud task
         try:
-            with open(os.path.join(path, 'parametersweep_template.py'), 'r') as f:
+            template_filename = 'parametersweep_template_{0}.py'.format(data['modelType'])
+            logging.error("parametersweep.runMolns() template_filename={0}".format(template_filename))
+            logging.error("*"*80)
+            with open(os.path.join(path,template_filename ), 'r') as f:
                 template = f.read()
 
             templateData = {

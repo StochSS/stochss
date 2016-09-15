@@ -141,6 +141,7 @@ module.exports = View.extend({
         $( "[data-hook='exportToPublic']" ).click(_.bind(this.exportModel, this));
         $( "[data-hook='exportToZip']" ).click(_.bind(this.exportModelAsZip, this));
         $( "[data-hook='exportToSBML']" ).click(_.bind(this.exportModelAsSBML, this));
+        $( "[data-hook='runSimulation']" ).click(_.bind(this.runSimulation, this));
 
         $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
             this.modelEditor.duplicateModel();
@@ -204,10 +205,12 @@ module.exports = View.extend({
             if(this.modelSelector.selected.isSpatial)
             {
                 $( '.reqNonSpatialModel' ).hide();
+                $( '.reqSpatialModel' ).show();
             }
             else
             {
                 $( '.reqNonSpatialModel' ).show();
+                $( '.reqSpatialModel' ).hide();
             }
             
             this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
@@ -332,6 +335,10 @@ module.exports = View.extend({
                   dataType : 'json',
                   success : _.bind(this.forwardToFile, this)
                 } )
+    },
+    runSimulation: function()
+    {
+              window.location =  '/simulate?model_id='+this.modelSelector.selected.id
     },
     forwardToFile: function(data)
     {
