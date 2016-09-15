@@ -40,7 +40,8 @@ class MtimeFileWatcher(object):
 
   def start(self):
     """Start watching a directory for changes."""
-    self._watcher_thread.start()
+    #self._watcher_thread.start()
+    pass
 
   def quit(self):
     """Stop watching a directory for changes."""
