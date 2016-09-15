@@ -157,8 +157,11 @@ $( document ).ready( function() {
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                
+                                   {% if job.type | lower == "export" %}
+                                	<a href="{{job.resultURL}}">Download</a>
+                                   {% else %}
                                 	<a href="{{job.resultURL}}">View</a>
+                                   {% endif %}
                                 
                                 {% elif job.status == "Failed"%}
                           

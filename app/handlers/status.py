@@ -187,13 +187,10 @@ class StatusPage(BaseHandler):
             if exportJobsQuery != None:
                 jobs = list(exportJobsQuery.run())
                 jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+
                 for number, job in enumerate(jobs):
                     number = len(jobs) - number
-                    allExportJobs.append({ "startTime" : job.startTime,
-                                           "status" : job.status,
-                                           "number" : number,
-                                           "outData" : os.path.basename(job.outData if job.outData else ""),
-                                           "id" : job.key().id()})
+                    allExportJobs.append(self.__process_getJobStatus(service, job, number))
         context['allExportJobs'] = allExportJobs
         all_jobs_together.extend(allExportJobs)
 
@@ -278,6 +275,11 @@ class StatusPage(BaseHandler):
     def getJobStatus(self, service, job, molnsConfig = None):
             file_to_check = "{0}/return_code".format(job.outData)
             jobType = '(unknown kind={0})'.format(job.kind())
+            if job.kind() == 'ExportJobWrapper':
+                jobName = os.path.basename(job.outData)
+            else:
+                jobName = job.name
+
             if job.kind() == 'StochKitJobWrapper':
                 jobActionUrl = '/simulate?id={0}'.format(job.key().id())
                 jobResultUrl = '/simulate?id={0}'.format(job.key().id())
@@ -304,12 +306,33 @@ class StatusPage(BaseHandler):
                 jobType = 'Parameter Sweep'
             elif job.kind() == 'ExportJobWrapper':
                 jobActionUrl = '/export?id={0}'.format(job.key().id())
-                jobResultUrl = "/static/tmp/{0}".format(job.outData)
+                jobResultUrl = "/static/tmp/{0}".format(os.path.basename(job.outData))
                 jobType = 'Export'
+            
+            dateobj = datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S')
+            if 'time_zone_utc_offset' in self.request.cookies:
+                dateobj2 = dateobj - datetime.timedelta(hours=int(self.request.cookies.get('time_zone_utc_offset')))
+                datestr = dateobj2.strftime('%b-%d-%y %H:%M')
+                #logging.info("time_zone_utc_offset = {0}".format(self.request.cookies.get('time_zone_utc_offset')))
+            else:
+                datestr = dateobj.strftime('%b-%d-%y %H:%M')
+
+            if job.kind() == 'ExportJobWrapper':
+                return { "status" : job.status,
+                     "name" : jobName,
+                     "type" : jobType,
+                     "actionURL" : jobActionUrl,
+                     "resultURL" : jobResultUrl,
+                     "uuid" : None,
+                     "output_stored": None,
+                     "resource": "local",
+                     "start_time" : str(datestr),
+                     "startTime" : job.startTime,
+                     "id" : job.key().id() }
                 
             if job.resource is None:
                 return { "status" : 'Error',
-                        "name" : job.name,
+                        "name" : jobName,
                         "type" : jobType,
                         "actionURL" : jobActionUrl,
                         "resultURL" : jobResultUrl,
@@ -411,14 +434,6 @@ class StatusPage(BaseHandler):
                         logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
 
             job.put()
-            
-            dateobj = datetime.datetime.strptime(job.startTime, '%Y-%m-%d-%H-%M-%S')
-            if 'time_zone_utc_offset' in self.request.cookies:
-                dateobj2 = dateobj - datetime.timedelta(hours=int(self.request.cookies.get('time_zone_utc_offset')))
-                datestr = dateobj2.strftime('%b-%d-%y %H:%M'),
-                #logging.info("time_zone_utc_offset = {0}".format(self.request.cookies.get('time_zone_utc_offset')))
-            else:
-                datestr = dateobj.strftime('%b-%d-%y %H:%M'),
 
             return { "status" : job.status,
                      "name" : job.name,
@@ -428,7 +443,7 @@ class StatusPage(BaseHandler):
                      "uuid" : job.cloudDatabaseID if hasattr(job, 'cloudDatabaseID') else None,
                      "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
                      "resource": job.resource,
-                     "start_time" : str(datestr[0]),
+                     "start_time" : str(datestr),
                      "startTime" : job.startTime,
                      "id" : job.key().id() }
 
