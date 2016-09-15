@@ -79,11 +79,11 @@ class StochSSModel(gillespy.Model):
 def mapAnalysis(result):
     metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
     for i, specie in enumerate(statsSpecies):
-        metrics['max'][specie] = numpy.max(result[:, i])
-        metrics['min'][specie] = numpy.min(result[:, i])
-        metrics['avg'][specie] = numpy.mean(result[:, i])
-        metrics['var'][specie] = numpy.var(result[:, i])
-        metrics['finalTime'][specie] = result[-1, i]
+        metrics['max'][specie] = numpy.max(result[specie])
+        metrics['min'][specie] = numpy.min(result[specie])
+        metrics['avg'][specie] = numpy.mean(result[specie])
+        metrics['var'][specie] = numpy.var(result[specie])
+        metrics['finalTime'][specie] = result[specie][-1]
 
     return metrics
 
@@ -139,7 +139,7 @@ def run_local_parameter_sweep(parameters, mapper_fn=mapAnalysis, reducer_fn=redu
         sys.stdout.write("\tSimulating {0}\n".format(pset))
         sys.stdout.flush()
         model = StochSSModel(**pset)
-        results = model.run(solver=gillespy.StochKitODESolver)
+        results = model.run(solver=gillespy.StochKitODESolver, show_labels=True)
         if not isinstance(results, list):
             results = [results]
         mapped_list = []

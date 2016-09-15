@@ -188,8 +188,8 @@ ParameterSweep.Controller = Backbone.View.extend(
 
         events : {
             "click #next" : "buttonClicked",
-            "change #parameterA" : "selectParameter",
-            "change #parameterB" : "selectParameter",
+            "change #parameterA" : "selectParameterA",
+            "change #parameterB" : "selectParameterB",
             "change input[name=variableCount]" : "selectVariableCount",
             "click .selectAll" : "selectAllSpecies",
             "click .clearAll" : "clearAllSpecies"
@@ -236,19 +236,14 @@ ParameterSweep.Controller = Backbone.View.extend(
             }
         },
 
-        selectParameter : function()
+        selectParameterA : function()
         {
             var paramA = $( "#parameterA" ).val();
             var paramB = $( "#parameterB" ).val();
 
-            $( "#parameterA option" ).prop("disabled", false);
             $( "#parameterB option" ).prop("disabled", false);
 
-            if(this.variableCount == 2)
-            {
-                $( "#parameterB option[value=\"" + paramA + "\"]" ).prop("disabled", true);
-                $( "#parameterA option[value=\"" + paramB + "\"]" ).prop("disabled", true);
-            }
+            $( "#parameterB option[value=\"" + paramA + "\"]" ).prop("disabled", true);
 
             var valA = this.values[paramA];
             var valB = this.values[paramB];
@@ -281,7 +276,45 @@ ParameterSweep.Controller = Backbone.View.extend(
             $( "#minValueA" ).val( 0.9 * valA );
             $( "#currentValueA" ).val( valA );
             $( "#maxValueA" ).val( 1.1 * valA );
+        },
 
+        selectParameterB: function()
+        {
+            var paramA = $( "#parameterA" ).val();
+            var paramB = $( "#parameterB" ).val();
+
+            $( "#parameterA option" ).prop("disabled", false);
+
+            $( "#parameterA option[value=\"" + paramB + "\"]" ).prop("disabled", true);
+
+            var valA = this.values[paramA];
+            var valB = this.values[paramB];
+
+            $( '#speciesMsg' ).hide();
+
+            if(!isNumber(valA) && !isNumber(valA) && this.variableCount == 2)
+            {
+                updateMsg( { status: false,
+                             msg: "'" + paramA + "' and '" + paramB + "' are not set to numbers, setting default minima and maxima to zero" }, '#speciesMsg' );
+
+                valA = 0.0;
+                valB = 0.0;
+            }
+            else if(!isNumber(valA))
+            {
+                updateMsg( { status: false,
+                             msg: "'" + paramA + "' is not a number, setting default minimum and maximum to zero" }, '#speciesMsg' );
+
+                valA = 0.0;
+            }
+            else if(!isNumber(valB) && this.variableCount == 2)
+            {
+                updateMsg( { status: false,
+                             msg: "'" + paramB + "' is not a number, setting default minimum and maximum to zero" }, '#speciesMsg' );
+
+                valB = 0.0;
+            }
+            
             $( "#minValueB" ).val( 0.9 * valB );
             $( "#currentValueB" ).val( valB );
             $( "#maxValueB" ).val( 1.1 * valB );
@@ -432,7 +465,17 @@ ParameterSweep.Controller = Backbone.View.extend(
                     this.speciesSelectCheckboxes[species[p].name] = $( checkboxTemplate({ name : species[p].name, last : p == species.length - 1 }) ).appendTo( "#species" );               
                 }
 
-                this.selectParameter();
+                if(parameters.length > 1)
+                    this.selectParameterB();
+
+                this.selectParameterA();
+
+                if(parameters.length > 1)
+                    this.selectParameterB(); // The select must be repeated to get the effect that the same parameter cannot be selected twice
+
+                if(parameters.length > 1)
+                    $( "#twoParameterButton" ).show()
+
                 this.selectVariableCount();
 
 

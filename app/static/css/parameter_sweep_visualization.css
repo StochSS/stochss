@@ -8,12 +8,12 @@ text.title, text.label {
 }
 
 text.ticks {
-    font-size: 14pt;
+    font-size: 12pt;
     text-anchor : middle;
 }
 
 text.colorlegend-labels {
-    font-size: 16pt;
+    font-size: 12pt;
     font-color: "black";
 }
 

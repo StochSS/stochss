@@ -1,4 +1,5 @@
 import gillespy
+import random
 import sys
 import uuid
 import sys
@@ -79,11 +80,11 @@ class StochSSModel(gillespy.Model):
 def mapAnalysis(result):
     metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
     for i, specie in enumerate(statsSpecies):
-        metrics['max'][specie] = numpy.max(result[:, i])
-        metrics['min'][specie] = numpy.min(result[:, i])
-        metrics['avg'][specie] = numpy.mean(result[:, i])
-        metrics['var'][specie] = numpy.var(result[:, i])
-        metrics['finalTime'][specie] = result[-1, i]
+        metrics['max'][specie] = numpy.max(result[specie])
+        metrics['min'][specie] = numpy.min(result[specie])
+        metrics['avg'][specie] = numpy.mean(result[specie])
+        metrics['var'][specie] = numpy.var(result[specie])
+        metrics['finalTime'][specie] = result[specie][-1]
 
     return metrics
 
@@ -135,11 +136,15 @@ def run_local_parameter_sweep(parameters, mapper_fn=mapAnalysis, reducer_fn=redu
                 pset = {pname:pval}
                 pset_list.append(pset)
 
-    for pset in pset_list:
-        sys.stdout.write("\tSimulating {0}\n".format(pset))
-        sys.stdout.flush()
+    if 'seed' in StochSSModel.json_data and int(StochSSModel.json_data['seed']) != -1:
+        seed = int(StochSSModel.json_data['seed'])
+    else:
+        random.seed()
+        seed = random.randint(0, 2147483647)
+
+    for pndx,pset in enumerate(pset_list):
         model = StochSSModel(**pset) 
-        results = model.run(number_of_trajectories = StochSSModel.json_data['trajectories'])
+        results = model.run(number_of_trajectories = StochSSModel.json_data['trajectories'], seed=seed+pndx, show_labels=True)
         if not isinstance(results, list):
             results = [results]
         mapped_list = []

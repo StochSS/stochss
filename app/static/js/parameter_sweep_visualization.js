@@ -274,7 +274,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .showXAxis(true)        //Show the x-axis
             ;
 
-            var d3Format = d3.format('.02f');
+            var d3Format = d3.format('.2e');
             
             if(this.data.inData.logA) {
                 formatter = function(x) {
@@ -309,12 +309,11 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             var data = this.data.data;
 
             var sortedParameters = {}
-            var parameterKeys = []
+            var parameterKeys = [this.data.inData["parameterA"], this.data.inData["parameterB"]]
 
             for(var key in data[0].parameters)
             {
                 sortedParameters[key] = [];
-                parameterKeys.push(key);
             }
 
             for(var key in sortedParameters) {
@@ -344,7 +343,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
             var margin = { top: 50, right: 100, bottom: 100, left: 75 };
             var width = $(".metadata").width() - margin.left - margin.right - 75;
-            var height = width * 3 / 4;
+            var height = width;
             var gridSizeY = Math.floor(height / yCount);
             var gridSizeX = Math.floor(width / xCount);
 
@@ -355,8 +354,8 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
             
             for(var d in data)
             {
-                var i = sortedParameters[parameterKeys[1]][data[d].parameters[parameterKeys[1]]];
-                var j = sortedParameters[parameterKeys[0]][data[d].parameters[parameterKeys[0]]];
+                var i = sortedParameters[parameterKeys[0]][data[d].parameters[parameterKeys[0]]];
+                var j = sortedParameters[parameterKeys[1]][data[d].parameters[parameterKeys[1]]];
 
                 this.listData.push([i, j, data[d].result[mapperKey][speciesKey][reducerKey]]);
             }
@@ -422,7 +421,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
                 yAxisValues.push(val);
 
-                if(Math.abs(val) < 0.01 && Math.abs(val) > 1e-15)
+                if((Math.abs(val) < 0.1 && Math.abs(val) > 1e-15) || Math.abs(val) >= 10.0)
                     useExponential = true;
             }
 
@@ -454,7 +453,7 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
 
                 xAxisValues.push(val);
 
-                if(Math.abs(val) < 0.01 && Math.abs(val) > 1e-15)
+                if((Math.abs(val) < 0.1 && Math.abs(val) > 1e-15) || Math.abs(val) >= 10.0)
                     useExponential = true;
             }
 
@@ -540,8 +539,8 @@ ParameterSweepVisualization.Controller = Backbone.View.extend(
                 .data(this.listData);
 
             heatMapJoin.enter().append("svg")
-                .attr("x", function(d) { return (d[1]) * gridSizeX; })
-                .attr("y", function(d) { return (d[0]) * gridSizeY; })
+                .attr("x", function(d) { return (d[0]) * gridSizeX; })
+                .attr("y", function(d) { return (d[1]) * gridSizeY; })
                 .on('mouseover', function(d) {
                     d3.select(this).select("text").attr('visibility', 'visible');
                 })

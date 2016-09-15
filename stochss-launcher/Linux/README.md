@@ -13,8 +13,8 @@ StochSS requires [Docker](https://www.docker.com/) to run. The script in this fo
 
 1. Open up a terminal window
 2. Run : 
-     - `sudo docker stop stochsscontainer1_7`
-     - `sudo docker rm stochsscontainer1_7`
+     - `sudo docker stop stochsscontainer1_8`
+     - `sudo docker rm stochsscontainer1_8`
 
 ## Note on security
 

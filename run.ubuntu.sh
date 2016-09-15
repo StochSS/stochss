@@ -166,10 +166,10 @@ function check_lib {
 
 function check_pip {
     if which pip > /dev/null;then
-        echo "pip is installed on your system, using it<br />"
+        echo "pip is installed on your system, using it"
         return 0 #True
     else
-        echo "pip is not installed on your system<br />"
+        echo "pip is not installed on your system"
         return 1 #False
     fi
 }
@@ -361,7 +361,7 @@ function check_molns {
     else
         MOLNS_DIR="$STOCHSS_HOME/app/lib/molns/"
         if [ -e $MOLNS_DIR ];then
-            echo "Molns local install found $MOLNS_DIR.<br />"
+            echo "Molns local install found $MOLNS_DIR."
             export PYTHONPATH=$MOLNS_DIR:$PYTHONPATH
             if check_molns_sub;then
                 return 0 #True
@@ -394,9 +394,9 @@ function check_python_package_installation {
         return 1 #False
     fi
     if check_molns; then
-        echo "MOLNs detected successfully.<br />"
+        echo "MOLNs detected successfully."
     else
-        echo "Failed to detect MOLNs.<br />"
+        echo "Failed to detect MOLNs."
         return 1 #False
     fi
     if check_gillespy; then
