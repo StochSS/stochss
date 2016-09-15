@@ -18,9 +18,9 @@ This uses the launcher tools from this repository. For the master branch, they a
     $ git clone --recursive https://github.com/StochSS/stochss.git
 
 2. Use 'stochss_launcher' to start the application
-    * [OSX](stochss_launcher/OSX/README.md)
-    * [Linux](stochss_launcher/Linux/README.md)
-    * [Windows](stochss_launcher/Windows/README.md)
+    * [OSX](stochss-launcher/OSX/README.md)
+    * [Linux](stochss-launcher/Linux/README.md)
+    * [Windows](stochss-launcher/Windows/README.md)
 
 ### Installing and running from source (Advanced users only)
 
