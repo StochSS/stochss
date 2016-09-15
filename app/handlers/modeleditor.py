@@ -49,7 +49,7 @@ def createStochKitModelWrapperFromStochKitModel(handler, model, public = False):
         'species_diffusion_coefficients': {},
         'species_subdomain_assignments': {}
     }
-    
+
     for specieName, specie in model.listOfSpecies.items():
         name = fixName(specie.name)
         species.append({ 'name' : name, 'initialCondition' : specie.initial_value })
@@ -134,6 +134,7 @@ def createStochKitModelWrapperFromStochKitModel(handler, model, public = False):
     modelDb.units = model.units
     modelDb.spatial = spatial
     modelDb.zipFileName = None
+    modelDb.sbmlFileName = None
     modelDb.is_public = public
     
     modelDb.put()
@@ -528,9 +529,10 @@ class ImportFromSBMLPage(BaseHandler):
             tmp.close()
 
             #stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
-            model, errors = stochss.SBMLconverter.convert(filename)
-            modelDb = createStochKitModelWrapperFromStochKitModel(self, model)
+            model, errors = stochss.SBMLconverter.convertToStochSS(filename)
 
+            modelDb = createStochKitModelWrapperFromStochKitModel(self, model)
+            
             modelDb.units = model.units
             modelDb.put()
 
@@ -602,6 +604,42 @@ class ModelEditorPage(BaseHandler):
                 model.put()
                 
                 relpath = '/' + os.path.relpath(model.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+                
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : True,
+                                                 'msg' : 'Model prepared',
+                                                 'url' : relpath }))
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
+
+            return
+        elif self.request.get('reqType') == 'exportToSBML':
+            modelId = int(self.request.get('id'));
+
+            model = StochKitModelWrapper.get_by_id(modelId)
+            
+            try:
+                if model.sbmlFileName:
+                    if os.path.exists(model.sbmlFileName):
+                        os.remove(model.sbmlFileName)
+
+                fd, fname = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = model.name + "_", suffix = '.sbml')
+
+                os.close(fd)
+
+                stochss.SBMLconverter.convertToSBML(fname, model)
+
+                model.sbmlFileName = fname
+
+                # Save the updated status
+                model.put()
+                
+                relpath = '/' + os.path.relpath(fname, os.path.abspath(os.path.dirname(__file__) + '/../'))
                 
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ 'status' : True,

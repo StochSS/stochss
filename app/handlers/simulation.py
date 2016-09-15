@@ -15,6 +15,8 @@ import logging
 import boto
 from boto.dynamodb import condition
 from google.appengine.api import users
+import molns
+
 
 from stochss.model import *
 from stochss.stochkit import *
@@ -39,6 +41,8 @@ try:
     import json
 except ImportError:
     from django.utils import simplejson as json
+
+from db_models.molnsconfig import MolnsConfigWrapper
 
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
@@ -159,15 +163,15 @@ class JobManager():
         
         jobWrap.modelName = job['modelName']
         # This is probably not a good idea...
-        jobWrap.indata = json.dumps(dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'epsilon', 'threshold', 'seed'] if k in job]))
+        jobWrap.indata = json.dumps(dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'epsilon', 'rTol', 'aTol', 'mxSteps', 'threshold', 'seed'] if k in job]))
 
         if 'startTime' in job:
             jobWrap.startTime = job['startTime']
 
         if 'resource' in job:
-            jobWrap.resource = job['resource']
+            jobWrap.resource = job['resource'].lower()
         else:
-            jobWrap.resource = 'Local'
+            jobWrap.resource = 'local'
 
         jobWrap.outData = job['output_location']
 
@@ -326,6 +330,39 @@ class SimulatePage(BaseHandler):
                                                  'msg' : "Error: {0}".format(e) }))
 
             return
+        elif reqType == 'redirectJupyterNotebook':
+            try:
+                job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
+                #Check if notebook already exists, if not create one
+                notebook_filename = "{0}.ipynb".format(job.name)
+                local_path = os.path.relpath(os.path.abspath(job.outData), os.path.abspath(__file__+'/../../../'))
+                notebook_file_path =  os.path.abspath(job.outData) + "/" + notebook_filename
+                # TODO Deterministic or Stochastic template
+                indata = json.loads(job.indata)
+                if indata['exec_type'] ==  'deterministic':
+                    notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/Deterministic.ipynb"
+                else:
+                    notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/Stochastic.ipynb"
+                if not os.path.isfile(notebook_file_path):
+                    logging.info("Creating {0} from {1}".format(notebook_file_path,notebook_template_path))
+                    shutil.copyfile(notebook_template_path, notebook_file_path)
+
+                if self.request.get('hostname') is not None:
+                    logging.info('hostname={0}'.format(self.request.get('hostname')))
+                    host = self.request.get('hostname')
+                else:
+                    host = 'localhost'
+                port = 9999
+                proto = 'http'
+                #
+                # return the url of the notebook
+                notebook_url = '{0}://{1}:{2}/notebooks/{3}/{4}'.format(proto,host,port,local_path,notebook_filename)
+                logging.info('redirect: {0}'.format(notebook_url))
+                self.redirect(notebook_url)
+            except Exception as e:
+                logging.error("Error in openJupyterNotebook: {0}".format(e))
+                self.response.write('Error: {0}'.format(e))
+            return   
         elif reqType == 'jobInfo':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
             indata = json.loads(job.indata)
@@ -460,8 +497,13 @@ class SimulatePage(BaseHandler):
                                                  "stdout" : stdout,
                                                  "stderr" : stderr}))
             else:
+                raise Exception('This page should never be accessed if job is not Finished or Running (current state of job {0} : {1})'.format(job.id, job.status))
+                traceback.print_exc()
+
+                print job.status
+                
                 self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps({ "status" : "asdfasfdfdsa" }))
+                self.response.write(json.dumps({ "status" : "tttttttttasdfasfdfdsa" }))
         else:
             # Params is a dict that constains all response elements of the form
             params = json.loads(self.request.get('data'))
@@ -483,6 +525,8 @@ class SimulatePage(BaseHandler):
                     job = self.runStochKitLocal(params)
                 elif params['resource'] == 'cloud':
                     job = self.runCloud(params)
+                elif params['resource'] == 'molns':
+                    job = self.runMolns(params)
                 else:
                     raise Exception("Unknown resource {0}".format(params["resource"]))
                 self.response.headers['Content-Type'] = 'application/json'
@@ -490,10 +534,136 @@ class SimulatePage(BaseHandler):
                                                   "msg" : "Job launched",
                                                   "id" : job.key().id() } ))
             except Exception as e:
+                traceback.print_exc()
+
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps( { "status" : False,
                                                   "msg" : str(e) } ))
     
+    def runMolns(self, params):
+        """ Submit a remote molns StochKit job """
+        modelDb = StochKitModelWrapper.get_by_id(params["id"])
+        sys.stderr.write("*"*80 + "\n")
+        sys.stderr.write("*"*80 + "\n")
+        sys.stderr.write("runMolns\n")
+        logging.info('runMolns')
+        sys.stderr.write("*"*80 + "\n")
+        sys.stderr.write("*"*80 + "\n")
+
+        if not modelDb:
+            return {'status':False,
+                    'msg':'Failed to retrive the model to simulate.'}
+
+        model = modelDb.createStochKitModel()
+
+        # Execute as concentration or population?
+        execType = params['execType'].lower()
+        
+        if execType not in ["deterministic", "stochastic", "sensitivity"]:
+            raise Exception('exec_type must be deterministic, sensitivity, or stochastic. Found "{0}"'.format(execType))
+            
+        if model.units.lower() == 'concentration' and execType.lower() == 'stochastic':
+            raise Exception('Concentration models cannot be executed stochastically')
+
+        # Assemble the argument list
+        args = ''
+        args += ' -t {0} '.format(params['time'])
+        num_output_points = int(float(params['time'])/float(params['increment']))
+        args += ' -i {0} '.format(num_output_points)
+        path = os.path.abspath(os.path.dirname(__file__))
+        # Algorithm, SSA or Tau-leaping?
+        if params['execType'] != 'deterministic':
+            executable = "/usr/local/StochKit/{0}".format(params['algorithm'])
+
+            args += ' --realizations {0} '.format(params['realizations'])
+            args += ' --keep-trajectories '
+
+            if int(params['seed']) < 0:
+                random.seed()
+                params['seed'] = random.randint(0, 2147483647)
+
+            args += '--seed {0} '.format(params['seed'])
+        else:
+            executable = "/usr/local/ode-1.0.2/stochkit_ode.py"
+
+        # Columns need to be labeled for visulatization page to work.  
+        args += ' --label'
+        
+        cmd = executable + ' ' + args
+        
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+        
+        # Wow, what a hack
+        if params['execType'] == 'deterministic' and model.units.lower() == 'population':
+            document = model.serialize()
+
+            model = StochMLDocument.fromString(document).toModel(model.name)
+
+            for reactionN in model.getAllReactions():
+                reaction = model.getAllReactions()[reactionN]
+                if reaction.massaction:
+                    if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+                        reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
+        modelFileName = '{0}/{1}.xml'.format(dataDir, model.name)
+        with open(modelFileName, 'w') as fmodelHandle:
+            fmodelHandle.write(model.serialize())
+
+        cmd += ' -m {0} --out-dir ./result'.format(os.path.basename(modelFileName))
+
+        sys.stderr.write('*'*80+"\n")
+        logging.error("cmd =\n{}".format(cmd))
+        sys.stderr.write('simulation.runMolns(): cmd={0}\n'.format(cmd))
+        
+        with tempfile.NamedTemporaryFile() as exec_file:
+            exec_file.write(cmd+"\n")
+            exec_file.write("tar -czf result.tar.gz result")
+            exec_file.flush()
+            
+            controllerName = 'EC2_controller'  #TODO: look this up
+
+            exec_str = "bash {0} {1}".format(exec_file.name, modelFileName)
+            sys.stderr.write("result = molns.MOLNSExec.start_job(['{0}', '{1}])".format(controllerName, exec_str))
+            sys.stderr.write('*'*80+"\n")
+            
+            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+            if not molnsConfigDb:
+                raise Exception("Molns not initialized")
+
+            config = molns.MOLNSConfig(config_dir=molnsConfigDb.folder)
+            result = molns.MOLNSExec.start_job([controllerName, exec_str], config)
+            sys.stderr.write('result = {0}'.format(result))
+
+        sys.stderr.write('*'*80+"\n")
+
+
+        # Create a wrapper to store the Job description in the datastore
+        # Create a StochKitJob instance
+        job = StochKitJobWrapper()
+        job.resource = 'Molns'
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = params['jobName']
+        job.modelName = model.name
+        #job.pid = None
+        job.pid = result['id']
+        job.indata = json.dumps( { "type" : 'StochKit2 Ensemble',
+                                   "final_time" : params['time'],
+                                   "realizations" : params['realizations'],
+                                   "increment" : params['increment'],
+                                   "seed" : params['seed'],
+                                   "exec_type" : params['execType'],
+                                   "units" : model.units.lower(),
+                                   "epsilon" : params['epsilon'],
+                                   "threshold" : params['threshold'] } )
+        job.outData = dataDir
+        job.status = 'Running'
+        job.put()
+            
+        return job
+
+
     def runCloud(self, params):
         model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
 
@@ -621,6 +791,9 @@ class SimulatePage(BaseHandler):
                                   "exec_type" : params['execType'],
                                   "units" : model.units.lower(),
                                   "epsilon" : params['epsilon'],
+                                  "rTol" : params['rTol'],
+                                  "aTol" : params['aTol'],
+                                  "mxSteps" : params['mxSteps'],
                                   "threshold" : params['threshold'] })
 
         job.output_stored = 'True'
@@ -699,6 +872,9 @@ class SimulatePage(BaseHandler):
 
         cmd += ' -m {0} --out-dir {1}/result'.format(modelFileName, dataDir)
 
+        if params['execType'] == 'deterministic':
+            cmd += ' -r {0} -a {1} --mxsteps {2}'.format(params['rTol'], params['aTol'], params['mxSteps'])
+
         logging.info("cmd =\n{}".format(cmd))
         logging.debug('simulation.runLocal(): cmd={0}'.format(cmd))
         logging.debug('*'*80)
@@ -714,7 +890,7 @@ class SimulatePage(BaseHandler):
 
         # Create a wrapper to store the Job description in the datastore
         job = StochKitJobWrapper()
-        job.resource = 'Local'
+        job.resource = 'local'
         
         # stochkit_job.uuid = res['uuid']
             
@@ -735,6 +911,9 @@ class SimulatePage(BaseHandler):
                                    "exec_type" : params['execType'],
                                    "units" : model.units.lower(),
                                    "epsilon" : params['epsilon'],
+                                   "rTol" : params['rTol'],
+                                   "aTol" : params['aTol'],
+                                   "mxSteps" : params['mxSteps'],
                                    "threshold" : params['threshold'] } )
 
         job.outData = dataDir
