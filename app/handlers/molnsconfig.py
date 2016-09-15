@@ -344,8 +344,6 @@ class MolnsConfig(stochssapp.BaseHandler if __name__ != "__main__" else object):
         process = subprocess.Popen(shlex.split('python {0}'.format(thisFile)), stdout = stdoutFile, stderr = stderrFile, stdin = subprocess.PIPE)
         process.stdin.write(pickle.dumps((funcName, return_code, args)))
         process.stdin.close()
-        #process = multiprocessing.Process(target = wrapStdoutStderr, args = )
-        #process.start()
 
         molnsConfigProcessWrapper.pid = process.pid
         molnsConfigProcessWrapper.put()
