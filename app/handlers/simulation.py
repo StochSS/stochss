@@ -15,8 +15,8 @@ import logging
 import boto
 from boto.dynamodb import condition
 from google.appengine.api import users
-import molns
 
+import molns
 
 from stochss.model import *
 from stochss.stochkit import *

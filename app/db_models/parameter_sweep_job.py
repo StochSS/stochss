@@ -19,6 +19,7 @@ class ParameterSweepJobWrapper(db.Model):
     output_stored = db.BooleanProperty()
     
     resource = db.StringProperty()
+    qsubHandle = db.TextProperty()
     molnsPID = db.IntegerProperty()
 
     def getJSON(self):
@@ -33,7 +34,6 @@ class ParameterSweepJobWrapper(db.Model):
                  'status' : self.status,
                  'zipFileName' : self.zipFileName,
                  'output_stored' : self.output_stored,
-            
                  'resource' : self.resource,
                  'molnsPID' : self.molnsPID }
 

@@ -32,6 +32,7 @@ import mesheditor
 import molns
 
 from db_models.parameter_sweep_job import ParameterSweepJobWrapper
+import parametersweep_qsub
 
 import status
 logging.getLogger().setLevel(logging.DEBUG)
@@ -97,6 +98,36 @@ class ParameterSweepPage(BaseHandler):
 
             try:
                 result = self.runLocal(data = data)
+
+                return self.response.write(json.dumps({
+                    "status": True,
+                    "msg": "Job launched",
+                    "id": result.key().id()
+                }))
+            except Exception as e:
+                logging.exception(e)
+                result = {'status':False,
+                          'msg':'Error: {0}'.format(e)}
+                self.response.write(json.dumps(result))
+                return
+        elif reqType == 'newJobQsub':
+            logging.error("*"*80)
+            logging.error("parametersweep.newJobQsub")
+            logging.error("*"*80)
+            data = json.loads(self.request.get('data'))
+
+            job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
+                              self.user.user_id(),
+                              data["jobName"].strip()).get()
+
+            if job != None:
+                logging.error("parametersweep.newJobQsub: error: Job name must be unique")
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Job name must be unique"}))
+                return
+
+            try:
+                result = self.runQsub(data = data)
 
                 return self.response.write(json.dumps({
                     "status": True,
@@ -247,7 +278,7 @@ class ParameterSweepPage(BaseHandler):
                 try:
                     meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
                     templateData["mesh"] = meshFileObj["data"]
-                except IOError as e: 
+                except IOError as e:
                     logging.exception(e)
                     logging.error("Mesh file inaccessible. Try another mesh")
                     raise Exception("Mesh file inaccessible. Try another mesh")
@@ -286,6 +317,85 @@ class ParameterSweepPage(BaseHandler):
             logging.info('*'*80)
 
             job.resource = "local"
+            job.put()
+        except Exception as e:
+            logging.exception(e)
+            job.status='Failed'
+            job.delete(self)
+            raise
+
+        return job
+
+    def runQsub(self, data):
+        logging.error("*"*80)
+        logging.error("parametersweep.runQsub() modelType={0}".format(data['modelType']))
+        logging.error("*"*80)
+
+        modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
+        path = os.path.abspath(os.path.dirname(__file__))
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+        job = ParameterSweepJobWrapper()
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = data["jobName"]
+        job.inData = json.dumps(data)
+        job.modelName = modelDb.name
+        job.outData = dataDir
+        job.status = "Pending"
+        job.output_stored = False
+
+        try:
+            templateData = {
+                "name" : modelDb.name,
+                "modelType" : modelDb.type,
+                "species" : modelDb.species,
+                "parameters" : modelDb.parameters,
+                "reactions" : modelDb.reactions,
+                "speciesSelect" : data['speciesSelect'],
+                "maxTime" : data['maxTime'],
+                "increment" : data['increment'],
+                "trajectories" : data['trajectories'],
+                "seed" : data['seed'],
+                "parameterA" : data['parameterA'],
+                "minValueA" : data['minValueA'],
+                "maxValueA" : data['maxValueA'],
+                "stepsA" : data['stepsA'],
+                "logA" : data['logA'],
+                "parameterB" : data['parameterB'],
+                "minValueB" : data['minValueB'],
+                "maxValueB" : data['maxValueB'],
+                "stepsB" : data['stepsB'],
+                "logB" : data['logB'],
+                "variableCount" : data['variableCount'],
+                "isSpatial" : modelDb.isSpatial,
+                "isLocal" : True
+            }
+
+            if modelDb.isSpatial:
+                try:
+                    meshWrapperDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                except Exception as e:
+                    logging.exception(e)
+                    logging.error("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                    raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                try:
+                    meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
+                    templateData["mesh"] = meshFileObj["data"]
+                except IOError as e:
+                    logging.exception(e)
+                    logging.error("Mesh file inaccessible. Try another mesh")
+                    raise Exception("Mesh file inaccessible. Try another mesh")
+
+                templateData['reaction_subdomain_assignments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assignments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
+                templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
+                templateData['subdomains'] = meshWrapperDb.subdomains
+
+            job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData))
+
+            job.resource = "qsub"
             job.put()
         except Exception as e:
             logging.exception(e)
@@ -404,26 +514,29 @@ class ParameterSweepVisualizationPage(BaseHandler):
 
         initialData = jobDb.getJSON()
 
-        try:
-            with open(os.path.join(jobDb.outData, 'stdout'), 'r') as f:
-                initialData['stdout'] = f.read()
-            with open(os.path.join(jobDb.outData, 'stderr'), 'r') as f:
-                initialData['stderr'] = f.read()
-        except IOError as e:
-            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
-            initialData['data'] = {}
-            if not molnsConfigDb:
-                initialData['stdout'] = 'ERROR: could not lookup molnsConfigDb'
-            molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
-            #TODO: Check if the molns service is active
+        if jobDb.resource == 'qsub':
+            initialData['stdout'] = ""
+            initialData['stderr'] = ""
+        else:
             try:
-                log = molns.MOLNSExec.job_logs([jobDb.molnsPID], molnsConfig)
-                initialData['stdout'] = log['msg']
-            except (IOError, molns.MOLNSException) as e:
-                initialData['stdout'] = str(e)
-
+                with open(os.path.join(jobDb.outData, 'stdout'), 'r') as f:
+                    initialData['stdout'] = f.read()
+                with open(os.path.join(jobDb.outData, 'stderr'), 'r') as f:
+                    initialData['stderr'] = f.read()
+            except IOError as e:
+                molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+                initialData['data'] = {}
+                if not molnsConfigDb:
+                    initialData['stdout'] = 'ERROR: could not lookup molnsConfigDb'
+                molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+                #TODO: Check if the molns service is active
+                try:
+                    log = molns.MOLNSExec.job_logs([jobDb.molnsPID], molnsConfig)
+                    initialData['stdout'] = log['msg']
+                except (IOError, molns.MOLNSException) as e:
+                    initialData['stdout'] = str(e)
                 
-        if jobDb.resource == 'local' or  jobDb.output_stored:
+        if jobDb.resource == 'local' or jobDb.resource == 'qsub' or jobDb.output_stored:
             try:
                 with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
                     initialData['data'] = pickle.load(f)

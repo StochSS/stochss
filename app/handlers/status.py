@@ -13,6 +13,7 @@ import time
 import shutil
 import os
 import subprocess
+import pickle
 import tempfile
 import datetime
 import pprint
@@ -27,6 +28,10 @@ import sensitivity
 import simulation
 import spatial
 import stochoptim
+import cluster_execution
+import cluster_execution.remote_execution
+import cluster_execution.cluster_parameter_sweep
+import cluster_execution.cluster_execution_exceptions
 
 import molns
 
@@ -389,7 +394,38 @@ class StatusPage(BaseHandler):
                     job.status = status
                 else:
                     job.status = 'Unknown'
+            elif job.resource.lower() == "qsub":
+                rh = cluster_execution.remote_execution.RemoteHost("bic05.bic.ucsb.edu", "bales", "/home/bbales2/.ssh/id_rsa", port = 22)
 
+                cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = None, parameters = None, remote_host = rh)
+
+                if job.status != "Finished" and job.status != "Failed":
+                    try:
+                        val = cps.get_sweep_result(pickle.loads(job.qsubHandle))
+
+                        print val
+
+                        results = []
+                        for nm in val:
+                            results.append({ "parameters" : nm.parameters, "result" : nm.result })
+
+                        with open(os.path.join(job.outData, 'results'), 'w') as f:
+                            pickle.dump(results, f)
+
+                        with open(file_to_check, 'w') as f:
+                            f.write('0')
+
+                        status = "Finished"
+                    except cluster_execution.cluster_execution_exceptions.RemoteJobNotFinished as e:
+                        status = "Running"
+                    except cluster_execution.cluster_execution_exceptions.RemoteJobFailed as e:
+                        status = "Failed"
+
+                        with open(file_to_check, 'w') as f:
+                            f.write('1')
+
+                job.status = status
+                #status = qsub.check_status(job.qsubjob)
             elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 # running in cloud
                 task_status = service.describeTasks(job)
