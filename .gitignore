@@ -30,3 +30,5 @@ conf/config
 release-tools/create_stochss_ami_stderr.log
 release-tools/create_stochss_ami_stdout.log
 release-tools/flex-cloud/make_flex_vm_stderr.log
+._StochKit2.0.11
+._ode-1.0.4

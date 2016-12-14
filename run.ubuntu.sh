@@ -656,5 +656,6 @@ export PYTHONPATH="$(pwd -P)/app:"$PYTHONPATH
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
+    env
     exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode
 fi

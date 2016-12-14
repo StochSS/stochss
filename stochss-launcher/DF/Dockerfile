@@ -1,4 +1,7 @@
+#AUTHOR Aviral Takkar <aviraltakkar@cs.ucsb.edu>
+
 FROM phusion/baseimage:0.9.15
+MAINTAINER Aviral Takkar
 
 ENV HOME /root
 
@@ -49,6 +52,10 @@ RUN apt-get install -yy \
     libeigen3-dev \
     libcgal-dev \
     unzip
+
+# TODO: Parmetis, SLEPC, PETSc4py, PASTIX?
+# Trilinos has been deprecated, for now.
+# Sphinx is not necessary for this build.
 
 # Install sympy using pip instead of Ubuntu packages, much smaller footprint.
 RUN pip install sympy
@@ -113,7 +120,7 @@ RUN wget https://github.com/StochSS/stochss/archive/develop.tar.gz && \
     vim \
     docker \
     libhdf5-mpi-dev && \
-    pip install docker-py && \
+    pip install -yy docker-py && \
     chmod 777 run.ubuntu.sh && \
     ./run.ubuntu.sh --install
 #md5=3df394d89300db95163f17c843ef49df
