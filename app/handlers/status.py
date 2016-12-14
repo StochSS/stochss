@@ -395,7 +395,8 @@ class StatusPage(BaseHandler):
                 else:
                     job.status = 'Unknown'
             elif job.resource.lower() == "qsub":
-                rh = cluster_execution.remote_execution.RemoteHost("bic05.bic.ucsb.edu", "bales", "/home/bbales2/.ssh/id_rsa", port = 22)
+                #rh = cluster_execution.remote_execution.RemoteHost("bic05.bic.ucsb.edu", "bales", "/home/bbales2/.ssh/id_rsa", port = 22)
+                rh = cluster_execution.remote_execution.RemoteHost("anole.cs.ucsb.edu", "aviral", "/home/bbales2/.ssh/id_rsa", port = 22)
 
                 cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = None, parameters = None, remote_host = rh)
 
