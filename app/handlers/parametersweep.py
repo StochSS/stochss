@@ -116,6 +116,18 @@ class ParameterSweepPage(BaseHandler):
             logging.error("*"*80)
             data = json.loads(self.request.get('data'))
 
+            cluster_node_info = self.user_data.get_cluster_node_info()[0]
+            files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
+            cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
+
+            cluster_info = dict()
+            cluster_info['ip_address'] = cluster_node_info['ip']
+            cluster_info['username'] = cluster_node_info['username']
+            cluster_info['ssh_key'] = cluster_ssh_key_info[cluster_node_info['key_file_id']]['keyname']
+
+            logging.info("PARAMETER_SWEEP_CLUSTER_INFO = {0}".format(cluster_info))
+            #cluster_info = json.loads(self.request.get('cluster_info'))
+
             job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
                               self.user.user_id(),
                               data["jobName"].strip()).get()
@@ -127,7 +139,7 @@ class ParameterSweepPage(BaseHandler):
                 return
 
             try:
-                result = self.runQsub(data = data)
+                result = self.runQsub(data=data, cluster_info=cluster_info)
 
                 return self.response.write(json.dumps({
                     "status": True,
@@ -326,7 +338,7 @@ class ParameterSweepPage(BaseHandler):
 
         return job
 
-    def runQsub(self, data):
+    def runQsub(self, data, cluster_info):
         logging.error("*"*80)
         logging.error("parametersweep.runQsub() modelType={0}".format(data['modelType']))
         logging.error("*"*80)
@@ -394,11 +406,11 @@ class ParameterSweepPage(BaseHandler):
                 templateData['subdomains'] = meshWrapperDb.subdomains
 
             if data['modelType'] == "stochastic":
-                job.qsubHandle = pickle.dumps(parametersweep_qsub.stochastic(templateData))
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.stochastic(templateData, cluster_info))
             elif data['modelType'] == "deterministic":
-                job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData))
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData, cluster_info))
             elif data['modelType'] == "spatial":
-                job.qsubHandle = pickle.dumps(parametersweep_qsub.spatial(templateData))
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.spatial(templateData, cluster_info))
             else:
                 raise Exception("Trying to runQsub on unsupported modelType {0}".format(data['modelType']))
 
@@ -599,5 +611,3 @@ class ParameterSweepVisualizationPage(BaseHandler):
             return
         else:
             self.get(int(jobID))
-
-     

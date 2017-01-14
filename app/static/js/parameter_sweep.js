@@ -556,6 +556,7 @@ ParameterSweep.Controller = Backbone.View.extend(
                 }, this));
 
                 $( "#runQsub" ).click( _.bind(function() {
+
                     updateMsg( { status: true,
                                  msg: "Running job in Qsub cluster..." } );
 

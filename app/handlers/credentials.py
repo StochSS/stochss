@@ -25,6 +25,92 @@ from db_models.vm_state_model import VMStateModel
 
 import fileserver
 
+
+class ClusterCredentialsPage(BaseHandler):
+
+    def authentication_required(self):
+        return True
+
+    def post(self):
+        logging.debug('POST /clusterCredentials')
+        logging.debug("request.body = {0}".format(self.request.body))
+        logging.debug("CONTENT_TYPE = {0}".format(self.request.environ['CONTENT_TYPE']))
+
+        user_id = self.user.user_id()
+        if user_id is None:
+            raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
+
+        data_received = json.loads(self.request.body)
+        logging.debug("json data = \n{0}".format(pprint.pformat(data_received)))
+        print("json data received = \n{0}".format(pprint.pformat(data_received)))
+
+        self.user_data.set_cluster_node_info(data_received['cluster_info'])
+        self.user_data.put()
+
+        return True
+
+    def get(self):
+        logging.debug('GET /clusterCredentials')
+
+        user_id = self.user.user_id()
+        if user_id is None:
+            raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
+
+        context = self.__get_context(user_id)
+
+        logging.info("context: " + str(context))
+
+        self.render_response('cluster_credentials.html', **context)
+
+    def __get_context(self, user_id):
+        return self.__get_cluster_context(user_id)
+
+    def __get_cluster_context(self, user_id):
+        context = {}
+        result = {}
+
+        cluster_node_info = self.user_data.get_cluster_node_info()
+        logging.debug("cluster_node_info =\n{0}".format(pprint.pformat(cluster_node_info)))
+
+        result['is_cluster_info_set'] = True
+
+        # Fill with dummy if empty
+        if cluster_node_info is None or len(cluster_node_info) == 0:
+            logging.debug('Adding dummy cluster node for UI rendering...')
+            cluster_node_info = [{'ip': '', 'keyname': '', 'username': ''}]
+            result['is_cluster_info_set'] = False
+
+        # We must ensure queue head is first element in this list for GUI to work properly
+        # flex_cloud_machine_info = sorted(flex_cloud_machine_info, key=lambda x: x['queue_head'], reverse=True)
+
+        context['cluster_node_info'] = cluster_node_info
+
+        # logging.debug('user_data.valid_flex_cloud_info = {0}'.format(self.user_data.valid_flex_cloud_info))
+        # context['valid_flex_cloud_info'] = self.user_data.valid_flex_cloud_info
+
+        # Check if the flex cloud credentials are valid.
+        # context['flex_cloud_status'] = self.user_data.flex_cloud_status
+        # context['flex_cloud_info_msg'] = self.user_data.flex_cloud_info_msg
+
+        # Get cluster SSH Key Info
+        cluster_ssh_key_info = self.__get_cluster_ssh_key_info()
+        context['cluster_ssh_key_info'] = cluster_ssh_key_info
+
+        context = dict(result, **context)
+        return context
+
+    def __get_cluster_ssh_key_info(self):
+        files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
+        cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
+        return cluster_ssh_key_info
+
+
 class FlexCredentialsPage(BaseHandler):
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
 

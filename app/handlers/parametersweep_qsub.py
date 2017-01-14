@@ -22,7 +22,7 @@ def getParameters(data):
             parameters[data['parameterB']] = numpy.linspace(data['minValueB'], data['maxValueB'], data['stepsB'])
     return parameters
 
-def deterministic(data):
+def deterministic(data, cluster_info):
     statsSpecies = sorted([specie for specie, doStats in data['speciesSelect'].items() if doStats])
 
     def mapAnalysis(result):
@@ -123,16 +123,14 @@ def deterministic(data):
 
             self.timespan(numpy.concatenate((numpy.arange(maxTime / increment) * increment, [maxTime])))
 
-    #rh = cluster_execution.remote_execution.RemoteHost("bic05.bic.ucsb.edu", "bales", "/home/bbales2/.ssh/id_rsa", port = 22
-    rh = cluster_execution.remote_execution.RemoteHost("anole.cs.ucsb.edu", "aviral", "/home/bbales2/.ssh/id_rsa", port = 22)
-
+    rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port=22)
     cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data), remote_host = rh)
 
     x = cps.run_async(mapper = mapAnalysis, reducer = reduceAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], store_realizations = True)
 
     return x
 
-def stochastic(data):
+def stochastic(data, cluster_info):
     statsSpecies = sorted([specie for specie, doStats in data['speciesSelect'].items() if doStats])
 
     def mapAnalysis(result):
@@ -230,16 +228,14 @@ def stochastic(data):
 
             self.timespan(numpy.concatenate((numpy.arange(maxTime / increment) * increment, [maxTime])))
 
-    #rh = cluster_execution.remote_execution.RemoteHost("bic05.bic.ucsb.edu", "bales", "/home/bbales2/.ssh/id_rsa", port = 22)
-    rh = cluster_execution.remote_execution.RemoteHost("anole.cs.ucsb.edu", "aviral", "/home/bbales2/.ssh/id_rsa", port = 22)
-
+    rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port=22)
     cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data), remote_host = rh)
 
     x = cps.run_async(mapper = mapAnalysis, reducer = reduceAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], store_realizations = True)
 
     return x
 
-def spatial(data):
+def spatial(data, cluster_info):
     statsSpecies = sorted([specie for specie, doStats in data['speciesSelect'].items() if doStats])
 
     def mapAnalysis(result):
@@ -359,8 +355,7 @@ def spatial(data):
 
             self.timespan(numpy.concatenate((numpy.arange(maxTime / increment) * increment, [maxTime])))
 
-    #rh = cluster_execution.remote_execution.RemoteHost("bic05.bic.ucsb.edu", "bales", "/home/bbales2/.ssh/id_rsa", port = 22)
-    rh = cluster_execution.remote_execution.RemoteHost("anole.cs.ucsb.edu", "aviral", "/home/bbales2/.ssh/id_rsa", port = 22)
+    rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port = 22)
 
     cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data), remote_host = rh)
 

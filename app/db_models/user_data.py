@@ -30,6 +30,9 @@ class UserData(db.Model):
     # Is the amazon db table initalizes
     is_amazon_db_table = db.BooleanProperty()
 
+    # Cluster Info
+    cluster_node_info = db.TextProperty(default="[]")
+
     # Private Cloud Machine Info
     flex_cloud_machine_info = db.TextProperty(default="[]")
     valid_flex_cloud_info = db.BooleanProperty(default=False)
@@ -60,6 +63,15 @@ class UserData(db.Model):
 
     def isTable(self):
         return self.is_amazon_db_table
+
+    def set_cluster_node_info(self, node_info):
+        logging.debug("set_cluster_node_info() node_info = {0}".format(node_info))
+        self.cluster_node_info = json.dumps(node_info, encoding="ascii")
+
+    def get_cluster_node_info(self):
+        info = json.loads(self.cluster_node_info, encoding="ascii")
+        logging.debug("get_cluster_node_info() info = {0}".format(self.cluster_node_info))
+        return info
 
     def set_flex_cloud_machine_info(self, machine_info):
         logging.debug("set_flex_cloud_machine_info() machine_info = {0}".format(machine_info))
