@@ -123,7 +123,7 @@ class ParameterSweepPage(BaseHandler):
             cluster_info = dict()
             cluster_info['ip_address'] = cluster_node_info['ip']
             cluster_info['username'] = cluster_node_info['username']
-            cluster_info['ssh_key'] = cluster_ssh_key_info[cluster_node_info['key_file_id']]['keyname']
+            cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(cluster_ssh_key_info[cluster_node_info['key_file_id']]['id']).storePath
 
             logging.info("PARAMETER_SWEEP_CLUSTER_INFO = {0}".format(cluster_info))
             #cluster_info = json.loads(self.request.get('cluster_info'))
