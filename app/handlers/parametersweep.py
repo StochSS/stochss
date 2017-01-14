@@ -393,7 +393,14 @@ class ParameterSweepPage(BaseHandler):
                 templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
                 templateData['subdomains'] = meshWrapperDb.subdomains
 
-            job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData))
+            if data['modelType'] == "stochastic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.stochastic(templateData))
+            elif data['modelType'] == "deterministic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData))
+            elif data['modelType'] == "spatial":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.spatial(templateData))
+            else:
+                raise Exception("Trying to runQsub on unsupported modelType {0}".format(data['modelType']))
 
             job.resource = "qsub"
             job.put()
