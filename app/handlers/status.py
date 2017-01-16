@@ -17,6 +17,7 @@ import pickle
 import tempfile
 import datetime
 import pprint
+import fileserver
 
 from google.appengine.ext import db
 
@@ -395,8 +396,17 @@ class StatusPage(BaseHandler):
                 else:
                     job.status = 'Unknown'
             elif job.resource.lower() == "qsub":
-                #rh = cluster_execution.remote_execution.RemoteHost("bic05.bic.ucsb.edu", "bales", "/home/bbales2/.ssh/id_rsa", port = 22)
-                rh = cluster_execution.remote_execution.RemoteHost("anole.cs.ucsb.edu", "aviral", "/home/bbales2/.ssh/id_rsa", port = 22)
+                cluster_node_info = self.user_data.get_cluster_node_info()[0]
+                files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
+                cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
+
+                cluster_info = dict()
+                cluster_info['ip_address'] = cluster_node_info['ip']
+                cluster_info['username'] = cluster_node_info['username']
+                cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(
+                    cluster_ssh_key_info[cluster_node_info['key_file_id']]['id']).storePath
+
+                rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port=22)
 
                 cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = None, parameters = None, remote_host = rh)
 
