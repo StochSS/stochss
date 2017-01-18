@@ -213,13 +213,25 @@
         <!--<button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Local </button>-->
         <!--&lt;!&ndash;<button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run via Cloud </button>&ndash;&gt;-->
         <!--<button id="runQsub" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run via Qsub </button>-->
-          <label for="resource_picker"><span class="label label-info">Run on</span></label>
-          <select id="resource_picker" class="selectpicker">
+          <label for="resource_picker"><h4>Choose compute resource and press Start</h4></label>
+          <select name="resource_picker" id="resource_picker" class="selectpicker">
             {% for resource in resources %}
-                {% if resource.id == selected %}
-                    <option selected="selected" value="{{resource.key_file_id}}">Run on {{resource.username}}@{{resource.ip}}</option>
+                {% if resource.key_file_id == selected %}
+                    <option selected="selected" value="{{ resource.json }}">
+                        {% if resource.key_file_id == 0 %}
+                            {{resource.ip}}
+                        {% else %}
+                            {{resource.username}}@{{resource.ip}}
+                        {% endif %}
+                    </option>
                 {% else %}
-                    <option value="{{resource.key_file_id}}">{{resource.username}}@{{resource.ip}}</option>
+                    <option value="{{ resource.json }}">
+                        {% if resource.key_file_id == 0 %}
+                            {{resource.ip}}
+                        {% else %}
+                            {{resource.username}}@{{resource.ip}}
+                        {% endif %}
+                    </option>
                 {% endif %}
             {% endfor %}
           </select>

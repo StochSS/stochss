@@ -56,12 +56,15 @@ class ParameterSweepPage(BaseHandler):
         result = {}
 
         context['resources'] = []
-        context['resources'].append(dict(key_file_id=0, username="", ip="Local"))
-        context['resources'].extend(self.user_data.get_cluster_node_info())
+        # Important for UI, do not change key_file_id.
+        context['resources'].append(dict(key_file_id=0, username="", ip="StochSS Server"))
+        for resource in self.user_data.get_cluster_node_info():
+            resource['json'] = json.dumps(resource)
+            context['resources'].append(resource)
         context['selected'] = 0
         context['initialData'] = json.dumps(ModelManager.getModels(self))
         context = dict(result, **context)
-        logging.debug("Parametersweep.py\n" + str(context))
+        # logging.debug("Parametersweep.py\n" + str(context))
         return context
 
     def post(self):
@@ -130,14 +133,15 @@ class ParameterSweepPage(BaseHandler):
             logging.error("*"*80)
             data = json.loads(self.request.get('data'))
 
-            cluster_node_info = self.user_data.get_cluster_node_info()[0]
-            files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
-            cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
+            # cluster_node_info = self.user_data.get_cluster_node_info()[0]
+            # files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
+            # cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
 
             cluster_info = dict()
-            cluster_info['ip_address'] = cluster_node_info['ip']
-            cluster_info['username'] = cluster_node_info['username']
-            cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(cluster_ssh_key_info[cluster_node_info['key_file_id']]['id']).storePath
+            received_cluster_info = json.loads(self.request.get('cluster_info'))
+            cluster_info['ip_address'] = received_cluster_info['ip']
+            cluster_info['username'] = received_cluster_info['username']
+            cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
 
             logging.info("PARAMETER_SWEEP_CLUSTER_INFO = {0}".format(cluster_info))
             #cluster_info = json.loads(self.request.get('cluster_info'))
