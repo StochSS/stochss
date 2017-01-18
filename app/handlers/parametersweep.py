@@ -48,7 +48,21 @@ class ParameterSweepPage(BaseHandler):
         return True
     
     def get(self):
-        self.render_response('parameter_sweep.html', **{ 'initialData' : json.dumps(ModelManager.getModels(self)) })
+        context = self.__get_context()
+        self.render_response('parameter_sweep.html', **context)
+
+    def __get_context(self):
+        context = {}
+        result = {}
+
+        context['resources'] = []
+        context['resources'].append(dict(key_file_id=0, username="", ip="Local"))
+        context['resources'].extend(self.user_data.get_cluster_node_info())
+        context['selected'] = 0
+        context['initialData'] = json.dumps(ModelManager.getModels(self))
+        context = dict(result, **context)
+        logging.debug("Parametersweep.py\n" + str(context))
+        return context
 
     def post(self):
         reqType = self.request.get('reqType')
