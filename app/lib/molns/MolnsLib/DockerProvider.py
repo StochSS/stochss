@@ -208,7 +208,7 @@ class DockerProvider(DockerBase):
 def get_default_working_directory(config=None):
     if config is None:
         raise Exception("Config should not be None.")
-    return os.path.join(config.config_dir, "docker_controller_working_dirs", config.name)
+    return os.path.realpath(os.path.join(config.config_dir, "docker_controller_working_dirs", config.name))
 
 
 class DockerController(DockerBase):

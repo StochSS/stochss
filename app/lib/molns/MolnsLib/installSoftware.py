@@ -107,7 +107,9 @@ class InstallSW:
             # Gmsh for Finite Element meshes
             "sudo apt-get install -y gmsh",
         ],
-        
+
+        ["sudo apt-get install docker", "sudo pip install docker-py", "sudo pip install sqlalchemy",
+         "sudo pip install boto", "sudo pip install python-novaclient", "sudo pip install paramiko"],
         # pyurdme
         [   "sudo rm -rf /usr/local/pyurdme && sudo mkdir -p /usr/local/pyurdme && sudo chown ubuntu /usr/local/pyurdme",
             "cd /usr/local/ && git clone https://github.com/MOLNs/pyurdme.git",

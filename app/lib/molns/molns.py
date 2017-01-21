@@ -1819,5 +1819,5 @@ def parse_args():
 if __name__ == "__main__":
     logger = logging.getLogger()
     #logger.setLevel(logging.INFO)  #for Debugging
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
     parse_args()

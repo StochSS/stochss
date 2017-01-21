@@ -58,7 +58,7 @@ class Docker:
                                         "controller environment, and unfortunately the provided name for working "
                                         "directory of the controller cannot be one of these. Please configure this "
                                         "controller again with a different volume name and retry. "
-                                        "Here is a list of forbidden names: \n{0}"
+                                        "Here is the list of forbidden names: \n{0}"
                                         .format(Constants.ForbiddenVolumeNames))
 
             logging.warning(Docker.LOG_TAG + "Unable to verify provided directory to use to as volume. Volume will NOT "
@@ -189,7 +189,7 @@ class Docker:
 
         for image in self.client.images():
             some_id = image["Id"]
-            some_tags = image["RepoTags"]
+            some_tags = image["RepoTags"] or [None]
             if docker_image.image_id in \
                     some_id[:(Constants.DOCKER_PY_IMAGE_ID_PREFIX_LENGTH + Constants.DOKCER_IMAGE_ID_LENGTH)]:
                 return True

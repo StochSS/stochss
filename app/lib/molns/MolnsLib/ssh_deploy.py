@@ -493,7 +493,7 @@ class SSHDeploy:
             return
 
         if not os.access(local_ssh_key_file_path, os.R_OK):
-            print "Skipping transfer of SSH key file."
+            print "No read access to SSH key file. Skipping transfer."
             return
 
         # Transfer secret key file.
@@ -507,8 +507,9 @@ class SSHDeploy:
         remote_ssh_key_file.close()
         sftp.close()
 
-        # Give user ubuntu permission to access file.
+        # Only user ubuntu has permission to access file.
         self.ssh.exec_command("sudo chown ubuntu:ubuntu {0}".format(remote_file_abs_path))
+        self.ssh.exec_command("sudo chmod 400 {0}".format(remote_file_abs_path))
 
     def deploy_ipython_controller(self, instance, controller_obj, notebook_password=None, reserved_cpus=2,
                                   resume=False):
