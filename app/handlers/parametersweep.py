@@ -57,11 +57,12 @@ class ParameterSweepPage(BaseHandler):
 
         context['resources'] = []
         # Important for UI, do not change key_file_id.
-        context['resources'].append(dict(key_file_id=0, username="", ip="StochSS Server"))
+        context['resources'].append(dict(key_file_id=0, username="", ip="Default (local resources)"))
         for resource in self.user_data.get_cluster_node_info():
             resource['json'] = json.dumps(resource)
             context['resources'].append(resource)
-        context['selected'] = 0
+        context['selected'] = self.user_data.get_selected()
+        logging.info("context['selected'] = {0}".format(context['selected']))
         context['initialData'] = json.dumps(ModelManager.getModels(self))
         context = dict(result, **context)
         # logging.debug("Parametersweep.py\n" + str(context))
@@ -103,6 +104,8 @@ class ParameterSweepPage(BaseHandler):
             logging.error("*"*80)
             data = json.loads(self.request.get('data'))
 
+            self.user_data.set_selected(0)
+
             job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
                               self.user.user_id(),
                               data["jobName"].strip()).get()
@@ -142,6 +145,8 @@ class ParameterSweepPage(BaseHandler):
             cluster_info['ip_address'] = received_cluster_info['ip']
             cluster_info['username'] = received_cluster_info['username']
             cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
+
+            self.user_data.set_selected(received_cluster_info['key_file_id'])
 
             logging.info("PARAMETER_SWEEP_CLUSTER_INFO = {0}".format(cluster_info))
             #cluster_info = json.loads(self.request.get('cluster_info'))

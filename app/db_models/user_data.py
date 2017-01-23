@@ -32,6 +32,7 @@ class UserData(db.Model):
 
     # Cluster Info
     cluster_node_info = db.TextProperty(default="[]")
+    selected = db.TextProperty(default="0")
 
     # Private Cloud Machine Info
     flex_cloud_machine_info = db.TextProperty(default="[]")
@@ -46,7 +47,6 @@ class UserData(db.Model):
     reservation_id = db.StringProperty()
 
     env_variables = db.TextProperty()
-
 
     def setCredentials(self, credentials):
         self.ec2_access_key = credentials['EC2_ACCESS_KEY']
@@ -67,11 +67,26 @@ class UserData(db.Model):
     def set_cluster_node_info(self, node_info):
         logging.debug("set_cluster_node_info() node_info = {0}".format(node_info))
         self.cluster_node_info = json.dumps(node_info, encoding="ascii")
+        self.put()
 
     def get_cluster_node_info(self):
         info = json.loads(self.cluster_node_info, encoding="ascii")
         logging.debug("get_cluster_node_info() info = {0}".format(self.cluster_node_info))
         return info
+
+    def get_selected(self):
+        try:
+            val = int(json.loads(self.selected, encoding="ascii"))
+            logging.debug("get_selected() ascii = {0}".format(val))
+            return val
+        except:
+            logging.error("Could not parse selected resource value {0} to int.".format(self.selected))
+            return 0
+
+    def set_selected(self, val):
+        self.selected = json.dumps(val, encoding="ascii")
+        self.put()
+        logging.debug("set_selected() ascii = {0}".format(self.selected))
 
     def set_flex_cloud_machine_info(self, machine_info):
         logging.debug("set_flex_cloud_machine_info() machine_info = {0}".format(machine_info))
