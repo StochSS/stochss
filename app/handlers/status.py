@@ -255,7 +255,7 @@ class StatusPage(BaseHandler):
             context['time_zone_name'] = "({0})".format(self.request.cookies.get('time_zone_name'))
         else:
             context['time_zone_name'] = '(UTC)'
-    
+        logging.info("STATUS: CONTEXT \n {0}".format(context))
         return context
 
     def __process_getJobStatus(self,service,job, number):
@@ -395,7 +395,7 @@ class StatusPage(BaseHandler):
                     job.status = status
                 else:
                     job.status = 'Unknown'
-            elif job.resource.lower() == "qsub":
+            elif job.resource.lower() == "qsub":  # TODO
                 cluster_node_info = self.user_data.get_cluster_node_info()[0]
                 files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
                 cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
@@ -413,7 +413,7 @@ class StatusPage(BaseHandler):
                 if job.status != "Finished" and job.status != "Failed":
                     try:
                         val = cps.get_sweep_result(pickle.loads(job.qsubHandle))
-
+                        # TODO delete this
                         print val
 
                         results = []

@@ -16,22 +16,22 @@ function get_cluster_info_input() {
 
         try {
             cluster_node['ip'] = row.find('input[name="ip"]').val().trim();
-            if (cluster_node['ip'] == '') {
-                updateMsg({ status: false, msg: 'Please provide valid IP Address!' }, '#clusterInfoMsg');
-                return null
-            }
+            // if (cluster_node['ip'] == '') {
+            //     updateMsg({ status: false, msg: 'Please provide valid IP Address!' }, '#clusterInfoMsg');
+            //     return null
+            // }
 
             cluster_node['username'] = row.find('input[name="username"]').val().trim();
-            if (cluster_node['username'] == '') {
-                updateMsg({ status: false, msg: 'Please provide valid username!' }, '#clusterInfoMsg');
-                return null
-            }
+            // if (cluster_node['username'] == '') {
+            //     updateMsg({ status: false, msg: 'Please provide valid username!' }, '#clusterInfoMsg');
+            //     return null
+            // }
 
             cluster_node['key_file_id'] = parseInt(row.find('select').val());
-            if (!cluster_node['key_file_id']) {
-                updateMsg({ status: false, msg: 'Please select a key file' }, '#clusterInfoMsg');
-                return null;
-            }
+            // if (!cluster_node['key_file_id']) {
+            //     updateMsg({ status: false, msg: 'Please select a key file' }, '#clusterInfoMsg');
+            //     return null;
+            // }
         }
         catch (err){
         }
@@ -44,8 +44,8 @@ function get_cluster_info_input() {
 function save_cluster_info() {
     var cluster_info = get_cluster_info_input();
     if (cluster_info == null) {
-        updateMsg( { status : false, msg : "Save unsuccessful" }, '#clusterInfoMsg');
-        return
+        updateMsg( { status : false, msg : "Changes unsuccessful." }, '#clusterInfoMsg');
+        return;
     }
 
     var jsonDataToBeSent = {};
@@ -53,7 +53,6 @@ function save_cluster_info() {
 
     jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
     updateMsg( { status : true, msg : "Saving information..." }, '#clusterInfoMsg');
-
     $.ajax({
         type: "POST",
         url: "/clusterCredentials",
@@ -83,16 +82,16 @@ $(document).ready(function () {
         return false;
     });
 
-    $("#delete_cluster_node").click(function () {
-        if ($('#cluster_info_table tr').length == 1) {
-            $('#cluster_info_table tr:last').find('input').val("");
-        }
-        else {
-            var rowCount = $('#cluster_info_table tr').length;
-            $('#cluster_info_table tr').eq(rowCount - 2).remove();
-        }
-        return false;
-    });
+    // $("#delete_cluster_node").click(function () {
+    //     if ($('#cluster_info_table tr').length == 1) {
+    //         $('#cluster_info_table tr:last').find('input').val("");
+    //     }
+    //     else {
+    //         var rowCount = $('#cluster_info_table tr').length;
+    //         $('#cluster_info_table tr').eq(rowCount - 2).remove();
+    //     }
+    //     return false;
+    // });
 });
 
 var Cluster = Cluster || {}
@@ -187,6 +186,7 @@ Cluster.Controller = Backbone.View.extend({
             .parent().addClass($.support.fileInput ? undefined : 'disabled');
 
         this.renderFiles();
+
     },
 
     deleteKeyFile: function (clusterKeyFileId, event) {
