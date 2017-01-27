@@ -7,37 +7,19 @@ if (typeof(String.prototype.trim) === "undefined") {
 function get_cluster_info_input() {
     var cluster_node_info = [];
     var cluster_node = {};
-
-    var tbody = $('#cluster_info_table');
-    var rows = tbody.find('tr');
-    for (i = 0; i < rows.length; i++) {
-        var row = $(rows[i]);
-        cluster_node = {};
-
-        try {
-            cluster_node['ip'] = row.find('input[name="ip"]').val().trim();
-            // if (cluster_node['ip'] == '') {
-            //     updateMsg({ status: false, msg: 'Please provide valid IP Address!' }, '#clusterInfoMsg');
-            //     return null
-            // }
-
-            cluster_node['username'] = row.find('input[name="username"]').val().trim();
-            // if (cluster_node['username'] == '') {
-            //     updateMsg({ status: false, msg: 'Please provide valid username!' }, '#clusterInfoMsg');
-            //     return null
-            // }
-
-            cluster_node['key_file_id'] = parseInt(row.find('select').val());
-            // if (!cluster_node['key_file_id']) {
-            //     updateMsg({ status: false, msg: 'Please select a key file' }, '#clusterInfoMsg');
-            //     return null;
-            // }
-        }
-        catch (err){
-        }
+    var row = $('#cluster_info_table').find('#form_row');
+    var no_ip = false;
+    var no_username = false;
+    try {
+        cluster_node['ip'] = row.find('input[name="ip"]').val().trim();
+        cluster_node['username'] = row.find('input[name="username"]').val().trim();
+        cluster_node['key_file_id'] = parseInt(row.find('select').val());
+    }
+    catch (err){
+    }
+    if (!(no_ip || no_username)){
         cluster_node_info.push(cluster_node);
     }
-
     return cluster_node_info
 }
 
@@ -47,7 +29,6 @@ function save_cluster_info() {
         updateMsg( { status : false, msg : "Changes unsuccessful." }, '#clusterInfoMsg');
         return;
     }
-
     var jsonDataToBeSent = {};
     jsonDataToBeSent['cluster_info'] = cluster_info;
 
@@ -69,30 +50,31 @@ function save_cluster_info() {
     });
 }
 
-$(document).ready(function () {
-    $("#append_cluster_node").click(function () {
+function delete_cluster_info(row_index) {
+    var row = document.getElementById(row_index);
+    var cluster_info = {};
 
-        var prior_row = $('#cluster_info_table tr:last');
+    cluster_info['ip'] = row.cells[0].innerHTML.trim();
+    cluster_info['username'] = row.cells[1].innerHTML.trim();
+    cluster_info['keyname'] = row.cells[2].innerHTML.trim();
 
-        var new_row = prior_row.clone(true);
-        new_row.find('input[name="ip"]').val("");
-        new_row.find('input[name="username"]').val("");
-        new_row.find('select').val(prior_row.find('select').val());
-        prior_row.after(new_row);
-        return false;
+    var jsonDataToBeSent = JSON.stringify(cluster_info);
+    updateMsg( { status : true, msg : "Deleting..." }, '#clusterInfoMsg');
+    $.ajax({
+        type: "DELETE",
+        url: "/clusterCredentials",
+        contentType: "application/json",
+        dataType: "json",
+        data: jsonDataToBeSent,
+        success: function () {
+        },
+        error: function (x, e) {
+        },
+        complete: function () {
+            document.location.reload();
+        }
     });
-
-    // $("#delete_cluster_node").click(function () {
-    //     if ($('#cluster_info_table tr').length == 1) {
-    //         $('#cluster_info_table tr:last').find('input').val("");
-    //     }
-    //     else {
-    //         var rowCount = $('#cluster_info_table tr').length;
-    //         $('#cluster_info_table tr').eq(rowCount - 2).remove();
-    //     }
-    //     return false;
-    // });
-});
+}
 
 var Cluster = Cluster || {}
 
@@ -257,6 +239,5 @@ window.onload = function () {
     $('#cluster_ssh_key_table_table').css('border-bottom', '1px solid #ddd');
     $('#cluster_ssh_key_table_table thead th').css('border-bottom', '1px solid #ddd');
     $( '#submit_info_button' ).click( save_cluster_info );
-
     cont.render();
 };
