@@ -251,16 +251,33 @@ class SimulatePage(BaseHandler):
         return True
     
     def get(self):
+        context = self.__get_context()
+        self.render_response('simulate.html', **context)
+
+    def __get_context(self):
+        context = {}
+        result = {}
+
         all_models = []
         # Query the datastore
         for model in modeleditor.ModelManager.getModels(self):
-            all_models.append({ "name" : model["name"],
-                                "id" : model["id"],
-                                "units" : model["units"],
-                                "isSpatial" : model["isSpatial"] })
+            all_models.append({"name": model["name"],
+                               "id": model["id"],
+                               "units": model["units"],
+                               "isSpatial": model["isSpatial"]})
         context = {'all_models': all_models}
 
-        self.render_response('simulate.html',**context)
+        context['resources'] = []
+        # Important for UI, do not change key_file_id.
+        context['resources'].append(dict(key_file_id=0, username="", ip="Default (local resources)"))
+        for resource in self.user_data.get_cluster_node_info():
+            resource['json'] = json.dumps(resource)
+            context['resources'].append(resource)
+        context['selected'] = self.user_data.get_selected()
+        logging.info("context['selected'] = {0}".format(context['selected']))
+        context = dict(result, **context)
+        # logging.debug("Parametersweep.py\n" + str(context))
+        return context
 
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """

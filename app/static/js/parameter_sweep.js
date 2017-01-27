@@ -483,7 +483,13 @@ ParameterSweep.Controller = Backbone.View.extend(
 
                     var resource_info = $('select[name=resource_picker]').val();
                     var resource_info_str = resource_info.replace(/'/g, '"');
-                    resource_info = JSON.parse(resource_info_str);
+                    try{
+                        resource_info = JSON.parse(resource_info_str);
+                    }
+                    catch (err){
+                        resource_info = {}
+                        resource_info['key_file_id'] = 0
+                    }
 
                     var message = "Running on ";
                     if(resource_info['key_file_id'] == 0)

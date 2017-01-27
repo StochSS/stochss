@@ -490,58 +490,45 @@ var run = function()
 
                        handle_type();
 
-                       $( "#runLocal" ).click( _.partial(function(selectTable) {
-                           updateMsg( { status: true,
-                                        msg: "Running job locally..." } );
+                       $("#run").click(_.partial(function(selectTable){
+                           var resource_info = $('select[name=resource_picker]').val();
+                           var resource_info_str = resource_info.replace(/'/g, '"');
+                           try{
+                               resource_info = JSON.parse(resource_info_str);
+                           }
+                           catch(err){
+                               resource_info = {}
+                               resource_info['key_file_id'] = 0
+                           }
                            var data = checkAndGet(selectTable);
-                           
+
                            if(!data)
                                return;
-
-                           data.id = id;
-                           data.resource = "local";
-
-                           var url = "";
-                           
-                           if(data.execType == "sensitivity")
+                           var message = "Running on ";
+                           if(resource_info['key_file_id'] == 0)
                            {
-                               url = "/sensitivity";
+                                message += "StochSS Server"
+                                data.resource = "local";
                            }
-                           else if(data.execType == "spatial")
-                           {
-                               url = "/spatial";
+                           else if (resource_info['key_file_id'] == 1){
+                               message += "Cloud"
+                               data.resource = "cloud";
+
+                           }
+                           else if (resource_info['key_file_id'] == 2){
+                               message += "Molns Cloud"
+                               data.resource = "molns";
                            }
                            else
                            {
-                               url = "/simulate";
+                               message += resource_info['username'] + "@" + resource_info['ip']
+                               data.resource = "qsub";
                            }
-                           jobName = data.jobName
-
-                           $.post( url = url,
-                                   data = { reqType : "newJob",
-                                            data : JSON.stringify(data) }, //Watch closely...
-                                   success = function(data)
-                                   {
-                                       updateMsg(data);
-                                       if(data.status)
-                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
-                                   },
-                                   dataType = "json" );
-                       }, selectTable));
-
-                       $( "#runMolns" ).click( _.partial( function(selectTable) {
                            updateMsg( { status: true,
-                                        msg: "Running job in MOLNs cloud..." } );
-                           var data = checkAndGet(selectTable);
-
-                           if(!data)
-                               return;
+                               msg: message });
 
                            data.id = id;
-                           data.resource = "molns";
-
                            var url = "";
-
                            data.selections = selectTable.state.selections;
 
                            if(data.execType == "sensitivity")
@@ -568,49 +555,8 @@ var run = function()
                                            window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
                                    },
                                    dataType = "json" );
+
                        }, selectTable));
-
-                       $( "#runCloud" ).click( _.partial( function(selectTable) {
-                           updateMsg( { status: true,
-                                        msg: "Running job in cloud..." } );
-                           var data = checkAndGet(selectTable);
-
-                           if(!data)
-                               return;
-
-                           data.id = id;
-                           data.resource = "cloud";
-
-                           var url = "";
-
-                           data.selections = selectTable.state.selections;
-
-                           if(data.execType == "sensitivity")
-                           {
-                               url = "/sensitivity";
-                           }
-                           else if(data.execType == "spatial")
-                           {
-                               url = "/spatial";
-                           }
-                           else
-                           {
-                               url = "/simulate";
-                           }
-                           jobName = data.jobName
-
-                           $.post( url = url,
-                                   data = { reqType : "newJob",
-                                            data : JSON.stringify(data) }, //Watch closely...
-                                   success = function(data)
-                                   {
-                                       updateMsg(data);
-                                       if(data.status)
-                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
-                                   },
-                                   dataType = "json" );
-                       }, selectTable));
-
                        $( "#modelSelect" ).hide();
                        $( "#simulationConf" ).show();
                    },

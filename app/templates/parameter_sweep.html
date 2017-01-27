@@ -214,10 +214,7 @@
         <br>
         <br>
 
-        <!--<button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Local </button>-->
-        <!--&lt;!&ndash;<button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run via Cloud </button>&ndash;&gt;-->
-        <!--<button id="runQsub" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run via Qsub </button>-->
-          <label for="resource_picker"><h4>Choose compute resource </h4></label>
+          <label for="resource_picker"><h4>Choose a compute resource: </h4></label>
           <select name="resource_picker" id="resource_picker" class="selectpicker">
             {% for resource in resources %}
                 {% if resource.key_file_id == selected %}
