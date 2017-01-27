@@ -8,25 +8,25 @@ function get_cluster_info_input() {
     var cluster_node_info = [];
     var cluster_node = {};
     var row = $('#cluster_info_table').find('#form_row');
-    var no_ip = false;
-    var no_username = false;
-    try {
-        cluster_node['ip'] = row.find('input[name="ip"]').val().trim();
-        cluster_node['username'] = row.find('input[name="username"]').val().trim();
-        cluster_node['key_file_id'] = parseInt(row.find('select').val());
+
+    cluster_node['ip'] = row.find('input[name="ip"]').val().trim();
+    if (cluster_node['ip'] == ''){
+        return null
     }
-    catch (err){
+    cluster_node['username'] = row.find('input[name="username"]').val().trim();
+    if (cluster_node['username'] == ''){
+        return null
     }
-    if (!(no_ip || no_username)){
-        cluster_node_info.push(cluster_node);
-    }
+    cluster_node['key_file_id'] = parseInt(row.find('select').val());
+
     return cluster_node_info
 }
 
 function save_cluster_info() {
     var cluster_info = get_cluster_info_input();
     if (cluster_info == null) {
-        updateMsg( { status : false, msg : "Changes unsuccessful." }, '#clusterInfoMsg');
+        updateMsg( { status : false, msg : "Please make sure the IP address and username is not blank." }, '#clusterInfoMsg');
+        alert("Please make sure the IP address and username is not blank.");
         return;
     }
     var jsonDataToBeSent = {};
