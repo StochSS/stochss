@@ -148,7 +148,7 @@ class ParameterSweepPage(BaseHandler):
 
             self.user_data.set_selected(received_cluster_info['key_file_id'])
 
-            logging.info("PARAMETER_SWEEP_CLUSTER_INFO = {0}".format(cluster_info))
+            #logging.info("PARAMETER_SWEEP_CLUSTER_INFO = {0}".format(cluster_info))
             #cluster_info = json.loads(self.request.get('cluster_info'))
 
             job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
@@ -175,6 +175,7 @@ class ParameterSweepPage(BaseHandler):
                           'msg':'Error: {0}'.format(e)}
                 self.response.write(json.dumps(result))
                 return
+
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
 

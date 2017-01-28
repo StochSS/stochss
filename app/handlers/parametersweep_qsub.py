@@ -8,7 +8,11 @@ import tempfile
 import cluster_execution.cluster_parameter_sweep
 import cluster_execution.remote_execution
 
-def getParameters(data):
+
+def getParameters(data, return_none=False):
+    if return_none:
+        return None
+
     parameters = dict()
     if data['logA']:
         parameters[data['parameterA']] = numpy.logspace(numpy.log10(data['minValueA']), numpy.log10(data['maxValueA']), data['stepsA'])
@@ -22,8 +26,15 @@ def getParameters(data):
             parameters[data['parameterB']] = numpy.linspace(data['minValueB'], data['maxValueB'], data['stepsB'])
     return parameters
 
-def deterministic(data, cluster_info):
+
+def deterministic(data, cluster_info, not_full_parameter_sweep=False):
     statsSpecies = sorted([specie for specie, doStats in data['speciesSelect'].items() if doStats])
+
+    def passThroughMapAnalysis(result):
+        return result
+
+    def passThroughReduceAnalysis(metricsList, parameters=None):
+        return metricsList
 
     def mapAnalysis(result):
         metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
@@ -124,14 +135,26 @@ def deterministic(data, cluster_info):
             self.timespan(numpy.concatenate((numpy.arange(maxTime / increment) * increment, [maxTime])))
 
     rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port=22)
-    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data), remote_host = rh)
+    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data, not_full_parameter_sweep), remote_host = rh)
 
-    x = cps.run_async(mapper = mapAnalysis, reducer = reduceAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], store_realizations = True)
+    if not_full_parameter_sweep:
+        x = cps.run_async(mapper=passThroughMapAnalysis, reducer=passThroughReduceAnalysis,
+                          number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
+    else:
+        x = cps.run_async(mapper=mapAnalysis, reducer=reduceAnalysis,
+                          number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
 
     return x
 
-def stochastic(data, cluster_info):
+
+def stochastic(data, cluster_info, not_full_parameter_sweep=False):
     statsSpecies = sorted([specie for specie, doStats in data['speciesSelect'].items() if doStats])
+
+    def passThroughMapAnalysis(result):
+        return result
+
+    def passThroughReduceAnalysis(metricsList, parameters=None):
+        return metricsList
 
     def mapAnalysis(result):
         metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
@@ -229,16 +252,29 @@ def stochastic(data, cluster_info):
             self.timespan(numpy.concatenate((numpy.arange(maxTime / increment) * increment, [maxTime])))
 
     rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port=22)
-    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data), remote_host = rh)
+    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data, not_full_parameter_sweep), remote_host = rh)
 
-    x = cps.run_async(mapper = mapAnalysis, reducer = reduceAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], store_realizations = True)
+    if not_full_parameter_sweep:
+        x = cps.run_async(mapper=passThroughMapAnalysis, reducer=passThroughReduceAnalysis,
+                          number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
+    else:
+        x = cps.run_async(mapper=mapAnalysis, reducer=reduceAnalysis,
+                          number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
 
     return x
 
-def spatial(data, cluster_info):
+
+def spatial(data, cluster_info, not_full_parameter_sweep=False):
     statsSpecies = sorted([specie for specie, doStats in data['speciesSelect'].items() if doStats])
 
+    def passThroughMapAnalysis(result):
+        return result
+
+    def passThroughReduceAnalysis(metricsList, parameters=None):
+        return metricsList
+
     def mapAnalysis(result):
+
         metrics = { 'max' : {}, 'min' : {}, 'avg' : {}, 'var' : {}, 'finalTime' : {} }
         for i, specie in enumerate(statsSpecies):
             val = result.get_species(specie)
@@ -252,6 +288,7 @@ def spatial(data, cluster_info):
         return metrics
 
     def reduceAnalysis(metricsList, parameters = None):
+
         reduced = {}
 
         keys1 = ['max', 'min', 'avg', 'var', 'finalTime']
@@ -357,9 +394,14 @@ def spatial(data, cluster_info):
 
     rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port = 22)
 
-    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data), remote_host = rh)
+    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data, not_full_parameter_sweep), remote_host = rh)
 
-    x = cps.run_async(mapper = mapAnalysis, reducer = reduceAnalysis, number_of_trajectories = StochSSModel.json_data['trajectories'], store_realizations = True)
+    if not_full_parameter_sweep:
+        x = cps.run_async(mapper=passThroughMapAnalysis, reducer=passThroughReduceAnalysis,
+                          number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
+    else:
+        x = cps.run_async(mapper=mapAnalysis, reducer=reduceAnalysis,
+                          number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
 
     return x
 

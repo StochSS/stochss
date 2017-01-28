@@ -547,7 +547,8 @@ var run = function()
 
                            $.post( url = url,
                                    data = { reqType : "newJob",
-                                            data : JSON.stringify(data) }, //Watch closely...
+                                            data : JSON.stringify(data),
+                                            cluster_info: resource_info_str }, //Watch closely...
                                    success = function(data)
                                    {
                                        updateMsg(data);
