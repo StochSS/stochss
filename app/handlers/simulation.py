@@ -561,9 +561,8 @@ class SimulatePage(BaseHandler):
 
     def runQsub(self, data, cluster_info):
         from db_models.parameter_sweep_job import ParameterSweepJobWrapper
+        from modeleditor import StochKitModelWrapper
         import parametersweep_qsub
-        import mesheditor
-        import fileserver
 
         logging.error("*" * 80)
         logging.error("simulate.runQsub() modelType={0}".format(data['execType']))
@@ -582,6 +581,7 @@ class SimulatePage(BaseHandler):
         job.outData = dataDir
         job.status = "Pending"
         job.output_stored = False
+        job.is_simulation = True
 
         try:
             templateData = {
@@ -590,12 +590,12 @@ class SimulatePage(BaseHandler):
                 "species": modelDb.species,
                 "parameters": modelDb.parameters,
                 "reactions": modelDb.reactions,
-                #"speciesSelect": data['speciesSelect'],
+                # "speciesSelect": data['speciesSelect'],
                 "speciesSelect": data['selections'],
-                #"maxTime": data['maxTime'],
+                # "maxTime": data['maxTime'],
                 "maxTime": data['time'],
                 "increment": data['increment'],
-                #"trajectories": data['trajectories'],
+                # "trajectories": data['trajectories'],
                 "trajectories": data['realizations'],
                 "seed": data['seed'],
                 "isSpatial": modelDb.isSpatial,
@@ -671,11 +671,7 @@ class SimulatePage(BaseHandler):
             result = self.runQsub(data=data, cluster_info=cluster_info)
 
             return result
-            # return self.response.write(json.dumps({
-            #     "status": True,
-            #     "msg": "Job launched",
-            #     "id": result.key().id()
-            # }))
+
         except Exception as e:
             logging.exception(e)
             result = {'status': False,

@@ -241,6 +241,8 @@ class SpatialPage(BaseHandler):
                     result = self.runLocal(data)
                 elif data["resource"] == "cloud":
                     result = self.runCloud(data)
+                elif data["resource"] == "qsub":
+                    result = self.runQsubWrapper(data)
                 else:
                     raise Exception("Unknown resource {0}".format(data["resource"]))
                 self.response.write(json.dumps({"status" : True,
@@ -658,3 +660,121 @@ class SpatialPage(BaseHandler):
 
         return job
 
+    def runQsub(self, data, cluster_info):
+        from db_models.parameter_sweep_job import ParameterSweepJobWrapper
+        from modeleditor import StochKitModelWrapper
+        import parametersweep_qsub
+
+        logging.error("*" * 80)
+        logging.error("simulate.runQsub() modelType={0}".format(data['execType']))
+        logging.error("*" * 80)
+
+        modelDb = StochKitModelWrapper.get_by_id(data["id"])
+        path = os.path.abspath(os.path.dirname(__file__))
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir=basedir + 'output')
+        job = ParameterSweepJobWrapper()
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = data["jobName"]
+        job.inData = json.dumps(data)
+        job.modelName = modelDb.name
+        job.outData = dataDir
+        job.status = "Pending"
+        job.output_stored = False
+        job.is_simulation = True
+
+        try:
+            templateData = {
+                "name": modelDb.name,
+                "modelType": modelDb.type,
+                "species": modelDb.species,
+                "parameters": modelDb.parameters,
+                "reactions": modelDb.reactions,
+                # "speciesSelect": data['speciesSelect'],
+                "speciesSelect": data['selections'],
+                # "maxTime": data['maxTime'],
+                "maxTime": data['time'],
+                "increment": data['increment'],
+                # "trajectories": data['trajectories'],
+                "trajectories": data['realizations'],
+                "seed": data['seed'],
+                "isSpatial": modelDb.isSpatial,
+                "isLocal": True
+            }
+
+            if modelDb.isSpatial:
+                try:
+                    meshWrapperDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                except Exception as e:
+                    logging.exception(e)
+                    logging.error("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                    raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                try:
+                    meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile=False)
+                    templateData["mesh"] = meshFileObj["data"]
+                except IOError as e:
+                    logging.exception(e)
+                    logging.error("Mesh file inaccessible. Try another mesh")
+                    raise Exception("Mesh file inaccessible. Try another mesh")
+
+                templateData['reaction_subdomain_assignments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assignments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
+                templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
+                templateData['subdomains'] = meshWrapperDb.subdomains
+
+            if data['execType'] == "stochastic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.stochastic(templateData, cluster_info,
+                                                                             not_full_parameter_sweep=True))
+            elif data['execType'] == "deterministic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData, cluster_info,
+                                                                                not_full_parameter_sweep=True))
+            elif data['execType'] == "spatial":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.spatial(templateData, cluster_info,
+                                                                          not_full_parameter_sweep=True))
+            else:
+                raise Exception("Trying to runQsub on unsupported modelType {0}".format(data['modelType']))
+
+            job.resource = "qsub"
+            job.put()
+        except Exception as e:
+            logging.exception(e)
+            job.status = 'Failed'
+            job.delete(self)
+            raise
+
+        return job
+
+    def runQsubWrapper(self, data):
+        import fileserver
+        cluster_info = dict()
+        received_cluster_info = json.loads(self.request.get('cluster_info'))
+        cluster_info['ip_address'] = received_cluster_info['ip']
+        cluster_info['username'] = received_cluster_info['username']
+        cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
+
+        self.user_data.set_selected(received_cluster_info['key_file_id'])
+
+        job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
+                          self.user.user_id(),
+                          data["jobName"].strip()).get()
+
+        logging.debug("DATA:   \n\n {0} \n\n".format(data))
+
+        if job != None:
+            logging.error("parametersweep.newJobQsub: error: Job name must be unique")
+            self.response.write(json.dumps({"status": False,
+                                            "msg": "Job name must be unique"}))
+            return
+
+        try:
+            result = self.runQsub(data=data, cluster_info=cluster_info)
+
+            return result
+        except Exception as e:
+            logging.exception(e)
+            result = {'status': False,
+                      'msg': 'Error: {0}'.format(e)}
+            self.response.write(json.dumps(result))
+            return

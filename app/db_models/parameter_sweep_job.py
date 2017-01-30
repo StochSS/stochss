@@ -22,6 +22,9 @@ class ParameterSweepJobWrapper(db.Model):
     qsubHandle = db.TextProperty()
     molnsPID = db.IntegerProperty()
 
+    is_simulation = db.BooleanProperty(False)
+    is_spatial = db.BooleanProperty(False)
+
     def getJSON(self):
         return { 'id' : self.key().id(),
                  'user_id' : self.user_id,
@@ -35,7 +38,9 @@ class ParameterSweepJobWrapper(db.Model):
                  'zipFileName' : self.zipFileName,
                  'output_stored' : self.output_stored,
                  'resource' : self.resource,
-                 'molnsPID' : self.molnsPID }
+                 'molnsPID' : self.molnsPID,
+                 'is_spatial': self.is_spatial,
+                 'is_simulation': self.is_simulation }
 
     def delete(self, handler):
         if self.outData is not None and os.path.exists(self.outData):

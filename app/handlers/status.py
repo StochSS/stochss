@@ -18,6 +18,7 @@ import tempfile
 import datetime
 import pprint
 import fileserver
+import numpy
 
 from google.appengine.ext import db
 
@@ -420,8 +421,20 @@ class StatusPage(BaseHandler):
                         for nm in val:
                             results.append({ "parameters" : nm.parameters, "result" : nm.result })
 
-                        with open(os.path.join(job.outData, 'results'), 'w') as f:
-                            pickle.dump(results, f)
+                        if not job.is_simulation:
+                            with open(os.path.join(job.outData, 'results'), 'w') as f:
+                                pickle.dump(results, f)
+                        else:
+                            result_dir = os.path.join(job.outData, "result")
+                            stats_dir = os.path.join(result_dir, "stats")
+                            trajectories_dir = os.path.join(result_dir, "trajectories")
+                            os.mkdir(result_dir)
+                            os.mkdir(stats_dir)
+                            os.mkdir(trajectories_dir)
+                            results = results[0]
+                            StatusPage.__write_simulation_trajectories_files(trajectories_dir, results['result'])
+                            StatusPage.__write_simulation_mean(stats_dir, results['result'])
+                            StatusPage.__write_simulation_variance(stats_dir, results['result'])
 
                         with open(file_to_check, 'w') as f:
                             f.write('0')
@@ -494,3 +507,28 @@ class StatusPage(BaseHandler):
                      "startTime" : job.startTime,
                      "id" : job.key().id() }
 
+    @staticmethod
+    def __write_simulation_trajectories_files(path, results):
+        for i, result in enumerate(results):
+            with open(os.path.join(path, "trajectory{0}.txt".format(i)), 'w') as trajectory_file:
+                trajectory_file.write("time\tS\n")
+                for entry in result:
+                    trajectory_file.write("{0}\t{1}\n".format(int(entry[0]), int(entry[1])))
+
+    @staticmethod
+    def __write_simulation_mean(path, results):
+        mean = numpy.mean(results, axis=0)
+        with open(os.path.join(path, "mean.txt"), 'w') as mean_file:
+            mean_file.write("time\tS\n")
+            for entry in mean:
+                mean_file.write("{0}\t{1}\n".format(int(entry[0]), int(entry[1])))
+
+    @staticmethod
+    def __write_simulation_variance(path, results):
+        variance = numpy.var(results, axis=0)
+        with open(os.path.join(path, "variance.txt"), 'w') as var_file:
+            var_file.write("time\tS\n")
+            counter = 0
+            for entry in variance:
+                var_file.write("{0}\t{1}\n".format(counter, int(entry[1])))
+                counter += 1
