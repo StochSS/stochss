@@ -670,11 +670,12 @@ class SimulatePage(BaseHandler):
         try:
             result = self.runQsub(data=data, cluster_info=cluster_info)
 
-            return self.response.write(json.dumps({
-                "status": True,
-                "msg": "Job launched",
-                "id": result.key().id()
-            }))
+            return result
+            # return self.response.write(json.dumps({
+            #     "status": True,
+            #     "msg": "Job launched",
+            #     "id": result.key().id()
+            # }))
         except Exception as e:
             logging.exception(e)
             result = {'status': False,
