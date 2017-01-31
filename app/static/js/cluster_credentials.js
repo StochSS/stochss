@@ -19,7 +19,7 @@ function get_cluster_info_input() {
     }
     cluster_node['key_file_id'] = parseInt(row.find('select').val());
 
-    return cluster_node_info
+    return cluster_node
 }
 
 function save_cluster_info() {

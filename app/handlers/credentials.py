@@ -86,7 +86,7 @@ class ClusterCredentialsPage(BaseHandler):
         new_cluster_info = data_received['cluster_info']
 
         cluster_node_info = self.user_data.get_cluster_node_info()
-        cluster_node_info.extend(new_cluster_info)
+        cluster_node_info.append(new_cluster_info)
         self.user_data.set_cluster_node_info(cluster_node_info)
         self.user_data.put()
 
