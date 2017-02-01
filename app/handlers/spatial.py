@@ -673,15 +673,15 @@ class SpatialPage(BaseHandler):
         path = os.path.abspath(os.path.dirname(__file__))
         basedir = path + '/../'
         dataDir = tempfile.mkdtemp(dir=basedir + 'output')
-        job = ParameterSweepJobWrapper()
+        job = SpatialJobWrapper()
         job.user_id = self.user.user_id()
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.name = data["jobName"]
-        job.inData = json.dumps(data)
+        job.indata = json.dumps(data)
         job.modelName = modelDb.name
         job.outData = dataDir
         job.status = "Pending"
-        job.output_stored = False
+        job.output_stored = "False"
         job.is_simulation = True
 
         try:

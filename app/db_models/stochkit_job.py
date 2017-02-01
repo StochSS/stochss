@@ -40,8 +40,11 @@ class StochKitJobWrapper(db.Model):
     outputURL = db.StringProperty()
     result = db.StringProperty()
     qsubHandle = db.TextProperty()
+
+    # TODO delete these maybe?
     is_simulation = db.BooleanProperty(False)
     is_spatial = db.BooleanProperty(False)
+
     stdout = db.StringProperty()
     stderr = db.StringProperty()
     

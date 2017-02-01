@@ -12,7 +12,7 @@ class InvalidVolumeName(Exception):
     pass
 
 
-class Docker:
+class DockerProxy:
 
     """ A wrapper over docker-py and some utility methods and classes. """
 
@@ -41,7 +41,7 @@ class Docker:
         to 8080 of locahost by default"""
 
         docker_image = DockerImage.from_string(image_str)
-        volume_dir = Docker.get_container_volume_from_working_dir(working_directory)
+        volume_dir = DockerProxy.get_container_volume_from_working_dir(working_directory)
 
         if name is None:
             import uuid
@@ -52,7 +52,7 @@ class Docker:
 
         logging.info("Using image {0}".format(image))
         import os
-        if Docker._verify_directory(working_directory) is False:
+        if DockerProxy._verify_directory(working_directory) is False:
             if working_directory is not None:
                 raise InvalidVolumeName("\n\nMOLNs uses certain reserved names for its configuration files in the "
                                         "controller environment, and unfortunately the provided name for working "
@@ -61,7 +61,7 @@ class Docker:
                                         "Here is the list of forbidden names: \n{0}"
                                         .format(Constants.ForbiddenVolumeNames))
 
-            logging.warning(Docker.LOG_TAG + "Unable to verify provided directory to use to as volume. Volume will NOT "
+            logging.warning(DockerProxy.LOG_TAG + "Unable to verify provided directory to use to as volume. Volume will NOT "
                                              "be created.")
             hc = self.client.create_host_config(privileged=True, port_bindings=port_bindings)
             container = self.client.create_container(image=image, name=name, command="/bin/bash", tty=True, detach=True,
@@ -129,11 +129,11 @@ class Docker:
 
     def start_container(self, container_id):
         """ Start the container with given ID."""
-        logging.info(Docker.LOG_TAG + " Starting container " + container_id)
+        logging.info(DockerProxy.LOG_TAG + " Starting container " + container_id)
         try:
             self.client.start(container=container_id)
         except (NotFound, NullResource) as e:
-            print (Docker.LOG_TAG + "Something went wrong while starting container.", e)
+            print (DockerProxy.LOG_TAG + "Something went wrong while starting container.", e)
             return False
         return True
 
@@ -142,14 +142,14 @@ class Docker:
         run_command = "/bin/bash -c \"" + command + "\""
         # print("CONTAINER: {0} COMMAND: {1}".format(container_id, run_command))
         if self.start_container(container_id) is False:
-            print (Docker.LOG_TAG + "Could not start container.")
+            print (DockerProxy.LOG_TAG + "Could not start container.")
             return None
         try:
             exec_instance = self.client.exec_create(container_id, run_command)
             response = self.client.exec_start(exec_instance)
             return [self.client.exec_inspect(exec_instance), response]
         except (NotFound, APIError) as e:
-            print (Docker.LOG_TAG + " Could not execute command.", e)
+            print (DockerProxy.LOG_TAG + " Could not execute command.", e)
             return None
 
     def build_image(self, dockerfile):
@@ -161,9 +161,9 @@ class Docker:
         last_line = ""
         try:
             for line in self.client.build(fileobj=dockerfile, rm=True, tag=image_tag):
-                print(Docker._decorate(line))
+                print(DockerProxy._decorate(line))
                 if "errorDetail" in line:
-                    raise Docker.ImageBuildException()
+                    raise DockerProxy.ImageBuildException()
                 last_line = line
 
             # Return image ID. It's a hack around the fact that docker-py's build image command doesn't return an image
@@ -172,8 +172,8 @@ class Docker:
             logging.info("Image ID: {0}".format(image_id))
             return str(DockerImage(image_id, image_tag))
 
-        except (Docker.ImageBuildException, IndexError) as e:
-            raise Docker.ImageBuildException(e)
+        except (DockerProxy.ImageBuildException, IndexError) as e:
+            raise DockerProxy.ImageBuildException(e)
 
     @staticmethod
     def _decorate(some_line):
@@ -243,7 +243,7 @@ class Docker:
 
         logging.info("target path in container: {0}".format(target_path_in_container))
         if not self.client.put_archive(container_id, target_path_in_container, tar_file_bytes):
-            logging.error(Docker.LOG_TAG + "Failed to copy.")
+            logging.error(DockerProxy.LOG_TAG + "Failed to copy.")
 
     def get_container_ip_address(self, container_id):
         """ Returns the IP Address of given container."""

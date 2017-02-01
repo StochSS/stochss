@@ -11,7 +11,7 @@ import urllib2
 
 from constants import Constants
 
-from Docker import Docker
+from DockerProxy import DockerProxy
 from ssh import SSH
 from DockerSSH import DockerSSH
 
@@ -554,7 +554,7 @@ class SSHDeploy:
                 self.__transfer_cluster_ssh_key_file(remote_target_dir=home_dir, controller_obj=controller_obj)
                 if controller_obj.provider.type == Constants.DockerProvider:
                     self.ssh.exec_command("mv {0}*.ipynb {1}".format(home_dir,
-                                                                     Docker.get_container_volume_from_working_dir(
+                                                                     DockerProxy.get_container_volume_from_working_dir(
                                                                          controller_obj.config["working_directory"])))
 
             # If provider is Docker, then ipython controller and ipengines aren't started

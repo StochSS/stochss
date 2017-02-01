@@ -2,7 +2,7 @@ import logging
 import os
 import tempfile
 import time
-import Docker
+import DockerProxy
 import constants
 import installSoftware
 from collections import OrderedDict
@@ -24,7 +24,7 @@ class DockerBase(ProviderBase):
 
     def __init__(self, name, config=None, config_dir=None, **kwargs):
         ProviderBase.__init__(self, name, config, config_dir, **kwargs)
-        self.docker = Docker.Docker()
+        self.docker = DockerProxy.DockerProxy()
         self.ssh = DockerSSH(self.docker)
 
     def _get_container_status(self, container_id):
@@ -197,7 +197,7 @@ class DockerProvider(DockerBase):
     @staticmethod
     def _preprocess(command):
         """ Prepends "shell only" commands with '/bin/bash -c'. """
-        for shell_command in Docker.Docker.shell_commands:
+        for shell_command in DockerProxy.DockerProxy.shell_commands:
             if shell_command in command:
                 replace_string = "/bin/bash -c \"" + shell_command
                 command = command.replace(shell_command, replace_string)
