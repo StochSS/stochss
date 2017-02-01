@@ -400,7 +400,8 @@ def spatial(data, cluster_info, not_full_parameter_sweep=False):
 
     rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port = 22)
 
-    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = StochSSModel, parameters = getParameters(data, not_full_parameter_sweep), remote_host = rh)
+    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls=StochSSModel,
+                                                                          parameters=getParameters(data, not_full_parameter_sweep), remote_host=rh)
 
     if not_full_parameter_sweep:
         x = cps.run_async(mapper=passThroughMapAnalysis, reducer=passThroughReduceAnalysis,

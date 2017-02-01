@@ -45,6 +45,10 @@ from boto.dynamodb import condition
 
 import matplotlib.cm
 
+from db_models.parameter_sweep_job import ParameterSweepJobWrapper
+from modeleditor import StochKitModelWrapper
+import parametersweep_qsub
+
 cm = matplotlib.cm.ScalarMappable()
 
 from db_models.spatial_job import SpatialJobWrapper
@@ -661,10 +665,6 @@ class SpatialPage(BaseHandler):
         return job
 
     def runQsub(self, data, cluster_info):
-        from db_models.parameter_sweep_job import ParameterSweepJobWrapper
-        from modeleditor import StochKitModelWrapper
-        import parametersweep_qsub
-
         logging.error("*" * 80)
         logging.error("simulate.runQsub() modelType={0}".format(data['execType']))
         logging.error("*" * 80)
