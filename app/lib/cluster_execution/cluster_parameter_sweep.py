@@ -40,8 +40,8 @@ class ClusterParameterSweep:
         """ Creates a new remote_job and deploys it on the cluster. Returns RemoteJob deployed. """
 
         # Verify that given parameters are not referenced from other modules, as that produces referenced cloudpickling.
-        calling_module = inspect.getmodule(inspect.stack()[1][0])
-        logging.info("Caller module: {0}".format(calling_module))
+        #calling_module = inspect.getmodule(inspect.stack()[1][0])
+        #logging.info("Caller module: {0}".format(calling_module))
         # calling_module_name = calling_module.__name__ if calling_module is not None else None
         # ClusterParameterSweep.check_ingredients_to_be_pickled(self.model_cls, mapper, aggregator, reducer,
         #                                                      module_name=calling_module_name)

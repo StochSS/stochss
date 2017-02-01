@@ -91,7 +91,7 @@ def startserver():
                          "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)).split(), stdout=stdout, stderr=stderr)
     else:
         return subprocess.Popen((
-                         "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(
+                         "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(
                              path, host_ip)).split(), stdout=stdout, stderr=stderr)
 
 def startjupyternotebook():

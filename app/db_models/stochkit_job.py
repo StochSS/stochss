@@ -39,7 +39,9 @@ class StochKitJobWrapper(db.Model):
     outData = db.StringProperty()
     outputURL = db.StringProperty()
     result = db.StringProperty()
-
+    qsubHandle = db.TextProperty()
+    is_simulation = db.BooleanProperty(False)
+    is_spatial = db.BooleanProperty(False)
     stdout = db.StringProperty()
     stderr = db.StringProperty()
     

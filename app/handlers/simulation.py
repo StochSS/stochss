@@ -569,18 +569,59 @@ class SimulatePage(BaseHandler):
         logging.error("*" * 80)
 
         modelDb = StochKitModelWrapper.get_by_id(data["id"])
+
+        # TODO: Ben needs to fix the following code to work directly with StochKitModelWrappers
+        # model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
+        #
+        # if not model:
+        #     raise Exception('Failed to retrive the model \'{0}\' to simulate'.format(params["id"]))
+        #
+        # # Execute as concentration or population?
+        # exec_type = params['execType'].lower()
+        #
+        # if exec_type not in ["deterministic", "stochastic"]:
+        #     raise Exception('exec_type must be concentration or population. Found \'{0}\''.format(exec_type))
+        #
+        # if model.units.lower() == 'concentration' and exec_type.lower() == 'stochastic':
+        #     raise Exception('Concentration models cannot be executed Stochastically' )
+        #
+        # document = model.serialize()
+        #
+        # # Wow, what a hack
+        #
+        # if executable == 'deterministic' and model.units.lower() == 'population':
+        #     model = StochMLDocument.fromString(document).toModel(model.name)
+        #
+        #     for reactionN in model.getAllReactions():
+        #         reaction = model.getAllReactions()[reactionN]
+        #         if reaction.massaction:
+        #             if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+        #                 reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
         path = os.path.abspath(os.path.dirname(__file__))
         basedir = path + '/../'
         dataDir = tempfile.mkdtemp(dir=basedir + 'output')
-        job = ParameterSweepJobWrapper()
+        job = StochKitJobWrapper()
         job.user_id = self.user.user_id()
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.name = data["jobName"]
-        job.inData = json.dumps(data)
+        #job.inData = json.dumps(data)
+        job.indata = json.dumps({ "type" : 'StochKit2 Ensemble',
+                                  "final_time" : data['time'],
+                                  "realizations" : data['realizations'],
+                                  "increment" : data['increment'],
+                                  "seed" : data['seed'],
+                                  "exec_type" : data['execType'],
+                                  "units" : modelDb.units.lower(),
+                                  "epsilon" : data['epsilon'],
+                                  "rTol" : data['rTol'],
+                                  "aTol" : data['aTol'],
+                                  "mxSteps" : data['mxSteps'],
+                                  "threshold" : data['threshold'] })
         job.modelName = modelDb.name
         job.outData = dataDir
         job.status = "Pending"
-        job.output_stored = False
+        job.output_stored = "False"
         job.is_simulation = True
 
         try:

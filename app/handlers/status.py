@@ -432,6 +432,7 @@ class StatusPage(BaseHandler):
                             os.mkdir(stats_dir)
                             os.mkdir(trajectories_dir)
                             results = results[0]
+                            StatusPage.__write_stdout_stderr(job.outData)
                             StatusPage.__write_simulation_trajectories_files(trajectories_dir, results['result'])
                             StatusPage.__write_simulation_mean(stats_dir, results['result'])
                             StatusPage.__write_simulation_variance(stats_dir, results['result'])
@@ -518,7 +519,7 @@ class StatusPage(BaseHandler):
     @staticmethod
     def __write_simulation_mean(path, results):
         mean = numpy.mean(results, axis=0)
-        with open(os.path.join(path, "mean.txt"), 'w') as mean_file:
+        with open(os.path.join(path, "means.txt"), 'w') as mean_file:
             mean_file.write("time\tS\n")
             for entry in mean:
                 mean_file.write("{0}\t{1}\n".format(int(entry[0]), int(entry[1])))
@@ -526,9 +527,16 @@ class StatusPage(BaseHandler):
     @staticmethod
     def __write_simulation_variance(path, results):
         variance = numpy.var(results, axis=0)
-        with open(os.path.join(path, "variance.txt"), 'w') as var_file:
+        with open(os.path.join(path, "variances.txt"), 'w') as var_file:
             var_file.write("time\tS\n")
             counter = 0
             for entry in variance:
                 var_file.write("{0}\t{1}\n".format(counter, int(entry[1])))
                 counter += 1
+
+    @staticmethod
+    def __write_stdout_stderr(path):
+        with open(os.path.join(path, "stdout.log"), 'w') as f:
+            f.write("hello")
+        with open(os.path.join(path, "stderr.log"), 'w') as f:
+            f.write("hello")
