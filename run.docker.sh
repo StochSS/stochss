@@ -3,7 +3,7 @@ docker rm stochsscontainer1_8_dev
 
 #sudo docker run -it -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master aviralcse/stochss_dev
 
-sudo docker run -it -p 8084:8080 -p 8020:8000 -p 9997:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master aviralcse/stochss_qsub:works_on_mac sh -c "cd /stochss-master; bash"
+docker run -it -p 8084:8080 -p 8020:8000 -p 9997:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master aviralcse/stochss_qsub:works_on_mac sh -c "cd /stochss-master; ./run.ubuntu.sh --yy -a 0.0.0.0"
 
 
 #sudo docker run -it -p 8082:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master --workdir /stochss-master aviralcse/stochss_qsub bash -c "apt-get install -yy docker ; pip install docker-py ; ./run.ubuntu.sh --yy -a 0.0.0.0"
