@@ -25,6 +25,7 @@ class SpatialJobWrapper(db.Model):
     # TODO delete these maybe?
     is_simulation = db.BooleanProperty(False)
     is_spatial = db.BooleanProperty(False)
+    qsubHandle = db.TextProperty()
 
     preprocessed = object_property.ObjectProperty()
     preprocessedDir = db.StringProperty() # THis is a path to the output data on the filesystem
