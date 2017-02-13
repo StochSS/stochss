@@ -4,7 +4,7 @@ import time
 import constants
 from molns_provider import ProviderBase
 from constants import Constants
-from docker import Client
+from docker import APIClient as Client
 from docker.errors import NotFound, NullResource, APIError
 
 
