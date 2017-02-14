@@ -414,17 +414,12 @@ class StatusPage(BaseHandler):
                 if job.status != "Finished" and job.status != "Failed":
                     try:
                         val = cps.get_sweep_result(pickle.loads(job.qsubHandle))
-                        # TODO delete this
-                        print val
 
                         results = []
                         for nm in val:
                             results.append({ "parameters" : nm.parameters, "result" : nm.result })
 
-                        if not job.is_simulation:
-                            with open(os.path.join(job.outData, 'results'), 'w') as f:
-                                pickle.dump(results, f)
-                        else:
+                        if job.is_simulation:
                             result_dir = os.path.join(job.outData, "result")
                             stats_dir = os.path.join(result_dir, "stats")
                             trajectories_dir = os.path.join(result_dir, "trajectories")
@@ -436,6 +431,14 @@ class StatusPage(BaseHandler):
                             StatusPage.__write_simulation_trajectories_files(trajectories_dir, results['result'])
                             StatusPage.__write_simulation_mean(stats_dir, results['result'])
                             StatusPage.__write_simulation_variance(stats_dir, results['result'])
+
+                        elif job.is_spatial:
+                            result_dir = os.path.join(job.outData, "results")
+                            os.mkdir(result_dir)
+                            StatusPage.__write_spatial_results(job.outData, result_dir, results[0]['result'])
+                        else:
+                            with open(os.path.join(job.outData, 'results'), 'w') as f:
+                                pickle.dump(results, f)
 
                         with open(file_to_check, 'w') as f:
                             f.write('0')
@@ -509,6 +512,19 @@ class StatusPage(BaseHandler):
                      "id" : job.key().id() }
 
     @staticmethod
+    def __write_spatial_results(output_path, results_path, results):
+        StatusPage.__write_stdout_stderr(output_path)
+        with open(os.path.join(output_path, "return_code"), 'w') as f:
+            f.write('0')
+        with open(os.path.join(output_path, "model_file.pkl"), 'w') as f:
+            f.write(pickle.dumps('Not available. TODO'))
+        with open(os.path.join(results_path, 'complete'), 'w') as f:
+            f.write('1')
+        for i, result in enumerate(results):
+            with open(os.path.join(results_path, "result{0}".format(i)), 'w') as f:
+                f.write(result)
+
+    @staticmethod
     def __write_simulation_trajectories_files(path, results):
         for i, result in enumerate(results):
             with open(os.path.join(path, "trajectory{0}.txt".format(i)), 'w') as trajectory_file:
@@ -537,6 +553,6 @@ class StatusPage(BaseHandler):
     @staticmethod
     def __write_stdout_stderr(path):
         with open(os.path.join(path, "stdout.log"), 'w') as f:
-            f.write("hello")
+            f.write("Not available. TODO")
         with open(os.path.join(path, "stderr.log"), 'w') as f:
-            f.write("hello")
+            f.write("Not available. TODO")

@@ -13,7 +13,7 @@ import cluster_execution.cluster_parameter_sweep
 import time
 import json
 import cluster_execution.remote_execution
-
+import molnsutil.molns_cloudpickle as cloud_pickle
 
 def getParameters(data, return_none=False):
     if return_none:
@@ -274,10 +274,10 @@ def spatial(data, cluster_info, not_full_parameter_sweep=False):
     statsSpecies = sorted([specie for specie, doStats in data['speciesSelect'].items() if doStats])
 
     def passThroughMapAnalysis(result):
-        return result
+        return cloud_pickle.dumps(result)
 
-    def passThroughReduceAnalysis(metricsList, parameters=None):
-        return metricsList
+    def passThroughReduceAnalysis(results, parameters=None):
+        return results
 
     def mapAnalysis(result):
 
@@ -403,6 +403,7 @@ def spatial(data, cluster_info, not_full_parameter_sweep=False):
     cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls=StochSSModel,
                                                                           parameters=getParameters(data, not_full_parameter_sweep), remote_host=rh)
 
+    logging.debug("Spatial invoked: pyurdme: {0}".format(pyurdme.__file__))
     if not_full_parameter_sweep:
         x = cps.run_async(mapper=passThroughMapAnalysis, reducer=passThroughReduceAnalysis,
                           number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
