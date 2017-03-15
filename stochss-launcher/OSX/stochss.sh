@@ -8,11 +8,11 @@ trap clean_up INT SIGHUP SIGINT SIGTERM
 #STOCHSS_IMAGE_TAG="1.7"
 #STOCHSS_VERSION="1.7"
 
-STOCHSS_IMAGE_NAME="briandrawert/stochss-launcher"
-STOCHSS_CONTAINER_NAME="stochsscontainer1_8"
-STOCHSS_VM_NAME="stochss1-8"
-STOCHSS_IMAGE_TAG="1.8"
-STOCHSS_VERSION="1.8"
+STOCHSS_IMAGE_NAME="aviralcse/stochss_qsub"
+STOCHSS_CONTAINER_NAME="stochsscontainer1_9"
+#STOCHSS_VM_NAME="stochss1-8"
+STOCHSS_IMAGE_TAG="updated_stochss_for_release"
+STOCHSS_VERSION="1.9"
 
 function clean_up(){
 	echo
@@ -29,7 +29,7 @@ then
 	DIR="$( cd ~/.stochss; pwd )"
 	(cat $DIR/.admin_key >> $DIR/.dockerlog 2>&1) || (touch $DIR/.admin_key && echo `uuidgen` > $DIR/.admin_key && echo "Generated key.")
 	token=`cat $DIR/.admin_key`
-	docker start $STOCHSS_CONTAINER_NAME >> $DIR/.dockerlog 2>&1 || { docker run -d -p 8080:8080 -p 9999:9999 --name=$STOCHSS_CONTAINER_NAME $STOCHSS_IMAGE_NAME:$STOCHSS_IMAGE_TAG sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy -a 0.0.0.0" >> $DIR/.dockerlog && echo "Starting StochSS $STOCHSS_VERSION for the first time." && echo "To view Logs, run \"docker logs -f $STOCHSS_CONTAINER_NAME\" from another terminal"; } ||	{ echo "Failed to start server."; clean_up; exit; }
+	docker start $STOCHSS_CONTAINER_NAME >> $DIR/.dockerlog 2>&1 || { docker run -d -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=$STOCHSS_CONTAINER_NAME $STOCHSS_IMAGE_NAME:$STOCHSS_IMAGE_TAG sh -c "cd /stochss-master && export PYTHONPATH=/stochss-master/app/lib/:/usr/local/lib/python2.7/dist-packages:/stochss-master/sdk/python:/stochss-master/sdk/python/google:/stochss-master/sdk/python/lib && ./run.ubuntu.sh -t $token -a 0.0.0.0" >> $DIR/.dockerlog && echo "Starting StochSS $STOCHSS_VERSION for the first time." && echo "To view Logs, run \"docker logs -f $STOCHSS_CONTAINER_NAME\" from another terminal"; } ||	{ echo "Failed to start server."; clean_up; exit; }
 
 
 	echo "Starting server. This process may take up to 5 minutes..."

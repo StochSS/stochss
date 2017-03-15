@@ -392,6 +392,7 @@ app = webapp2.WSGIApplication([
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials', CredentialsPage),
                                ('/ec2Credentials', EC2CredentialsPage),
+                               ('/clusterCredentials', ClusterCredentialsPage),
                                ('/flexCloudCredentials', FlexCredentialsPage),
                                ('/cost_analysis',CostAnalysisPage),
                                ('/localsettings',LocalSettingsPage),

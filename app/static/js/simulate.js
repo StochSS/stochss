@@ -427,7 +427,7 @@ var run = function()
 
                       if(data.status == "Finished")
                       {
-                          if(data.job.output_location != null && (data.job.resource.toLowerCase() == 'local' || data.job.output_stored == "True"))
+                          if(data.job.output_location != null && (data.job.resource.toLowerCase() == 'local' || data.job.resource.toLowerCase() == 'qsub' || data.job.output_stored == "True"))
                           {
                               var plotData = []
 
@@ -612,6 +612,164 @@ var run = function()
     }
     else
     {
+        $( "#modelSelect" ).show();
+        $( "#simulationConf" ).hide();
+        $( "#jobInfo" ).hide();
+
+        $( "#next" ).click( function() {
+            var values = $( "input:radio[name=model_to_simulate]:checked" ).val().split(" ");
+            var id = parseInt(values[1]);
+            
+            var simTemplate = _.template( $( "#simulationConfTemplate" ).html() );
+
+            $.get( url = "/models/list/" + id,
+                   success = function(data) {
+                       //I suck, but these three lines have to come before the rest of this to work...
+                       var name = data.name;
+                       var units = data.units;
+                  
+                       $( "#simulationConf" ).html(simTemplate({ name : name,
+                                                                 units : units,
+                                                                 isSpatial : data.isSpatial,
+                                                                 datestr : generate_datestr() }));
+
+                       var selectTable = new Sensitivity.SelectTable();
+                       
+                       var model = new stochkit.Model(data);
+                       
+                       model.parse(data);
+                       
+                       selectTable.attach(model);
+
+                       var handle_type = function() {
+                           if( $( "#deterministic" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).show();
+                               $( ".stochastic" ).hide();
+                               $( ".tau-leaping" ).hide();
+                               $( ".ssa" ).hide();
+                               $( ".sensitivity" ).hide();
+                               $( ".ode" ).show();
+                           }
+                           else if($( "#sensitivity" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).hide();
+                               $( ".stochastic" ).hide();
+                               $( ".tau-leaping" ).hide();
+                               $( ".ssa" ).hide();
+                               $( ".ode" ).hide();
+                               $( ".sensitivity" ).show();
+                           }
+                           else if( $( "#stochastic" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).show();
+                               $( ".sensitivity" ).hide();
+                               $( ".ode" ).hide()
+                               handle_algo();
+                               $( ".stochastic" ).show()
+                           }
+                           else if( $( "#spatial" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).show();
+                               $( ".sensitivity" ).hide();
+                               $( ".ode" ).hide()
+                               $( ".stochastic" ).hide()
+                               $( ".tau-leaping" ).hide();
+                               $( ".ssa" ).hide();
+                               //handle_algo();
+                               $( ".spatial" ).show()
+                           }
+                       };
+                       
+                       var handle_algo = function() {
+                           if( $( "#tau-leaping" ).eq(0).prop('checked') )
+                           {
+                               $( ".ssa" ).hide()
+                               $( ".tau-leaping" ).show()
+                           }else{
+                               $( ".tau-leaping" ).hide()
+                               $( ".ssa" ).show()
+                           }
+                       };
+
+                       $( "#sensitivity, #stochastic, #deterministic, #spatial" ).change(handle_type);
+                       $( "#ssa, #tau-leaping" ).change(handle_algo);
+
+                       handle_type();
+
+                       $("#run").click(_.partial(function(selectTable){
+                           var resource_info = $('select[name=resource_picker]').val();
+                           var resource_info_str = resource_info.replace(/'/g, '"');
+                           try{
+                               resource_info = JSON.parse(resource_info_str);
+                           }
+                           catch(err){
+                               resource_info = {}
+                               resource_info['key_file_id'] = 0
+                           }
+                           var data = checkAndGet(selectTable);
+
+                           if(!data)
+                               return;
+                           var message = "Running on ";
+                           if(resource_info['key_file_id'] == 0)
+                           {
+                                message += "StochSS Server"
+                                data.resource = "local";
+                           }
+                           else if (resource_info['key_file_id'] == 1){
+                               message += "Cloud"
+                               data.resource = "cloud";
+
+                           }
+                           else if (resource_info['key_file_id'] == 2){
+                               message += "Molns Cloud"
+                               data.resource = "molns";
+                           }
+                           else
+                           {
+                               message += resource_info['username'] + "@" + resource_info['ip']
+                               data.resource = "qsub";
+                           }
+                           updateMsg( { status: true,
+                               msg: message });
+
+                           data.id = id;
+                           var url = "";
+                           data.selections = selectTable.state.selections;
+
+                           if(data.execType == "sensitivity")
+                           {
+                               url = "/sensitivity";
+                           }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
+                           }
+                           else
+                           {
+                               url = "/simulate";
+                           }
+                           jobName = data.jobName
+
+                           $.post( url = url,
+                                   data = { reqType : "newJob",
+                                            data : JSON.stringify(data),
+                                            cluster_info: resource_info_str }, //Watch closely...
+                                   success = function(data)
+                                   {
+                                       updateMsg(data);
+                                       if(data.status)
+                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
+                                   },
+                                   dataType = "json" );
+
+                       }, selectTable));
+                       $( "#modelSelect" ).hide();
+                       $( "#simulationConf" ).show();
+                   },
+                   dataType = "json");
+        } );
         var id = $.url().param("model_id");
         if(typeof id === undefined){
             $( "#modelSelect" ).show();

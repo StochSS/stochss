@@ -13,9 +13,12 @@ import time
 import shutil
 import os
 import subprocess
+import pickle
 import tempfile
 import datetime
 import pprint
+import fileserver
+import numpy
 
 from google.appengine.ext import db
 
@@ -27,6 +30,10 @@ import sensitivity
 import simulation
 import spatial
 import stochoptim
+import cluster_execution
+import cluster_execution.remote_execution
+import cluster_execution.cluster_parameter_sweep
+import cluster_execution.cluster_execution_exceptions
 
 import molns
 
@@ -249,7 +256,7 @@ class StatusPage(BaseHandler):
             context['time_zone_name'] = "({0})".format(self.request.cookies.get('time_zone_name'))
         else:
             context['time_zone_name'] = '(UTC)'
-    
+        logging.info("STATUS: CONTEXT \n {0}".format(context))
         return context
 
     def __process_getJobStatus(self,service,job, number):
@@ -389,7 +396,64 @@ class StatusPage(BaseHandler):
                     job.status = status
                 else:
                     job.status = 'Unknown'
+            elif job.resource.lower() == "qsub":  # TODO
+                cluster_node_info = self.user_data.get_cluster_node_info()[0]
+                files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
+                cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
 
+                cluster_info = dict()
+                cluster_info['ip_address'] = cluster_node_info['ip']
+                cluster_info['username'] = cluster_node_info['username']
+                cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(
+                    cluster_ssh_key_info[cluster_node_info['key_file_id']]['id']).storePath
+
+                rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'], cluster_info['ssh_key'], port=22)
+
+                cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls = None, parameters = None, remote_host = rh)
+
+                if job.status != "Finished" and job.status != "Failed":
+                    try:
+                        val = cps.get_sweep_result(pickle.loads(job.qsubHandle))
+
+                        results = []
+                        for nm in val:
+                            results.append({ "parameters" : nm.parameters, "result" : nm.result })
+
+                        if job.is_simulation:
+                            result_dir = os.path.join(job.outData, "result")
+                            stats_dir = os.path.join(result_dir, "stats")
+                            trajectories_dir = os.path.join(result_dir, "trajectories")
+                            os.mkdir(result_dir)
+                            os.mkdir(stats_dir)
+                            os.mkdir(trajectories_dir)
+                            results = results[0]
+                            StatusPage.__write_stdout_stderr(job.outData)
+                            StatusPage.__write_simulation_trajectories_files(trajectories_dir, results['result'])
+                            StatusPage.__write_simulation_mean(stats_dir, results['result'])
+                            StatusPage.__write_simulation_variance(stats_dir, results['result'])
+
+                        elif job.is_spatial:
+                            result_dir = os.path.join(job.outData, "results")
+                            os.mkdir(result_dir)
+                            StatusPage.__write_spatial_results(job.outData, result_dir, results[0]['result'])
+                        else:
+                            with open(os.path.join(job.outData, 'results'), 'w') as f:
+                                pickle.dump(results, f)
+
+                        with open(file_to_check, 'w') as f:
+                            f.write('0')
+
+                        status = "Finished"
+                    except cluster_execution.cluster_execution_exceptions.RemoteJobNotFinished as e:
+                        status = "Running"
+                    except cluster_execution.cluster_execution_exceptions.RemoteJobFailed as e:
+                        status = "Failed"
+
+                        with open(file_to_check, 'w') as f:
+                            f.write('1')
+
+                job.status = status
+                #status = qsub.check_status(job.qsubjob)
             elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 # running in cloud
                 task_status = service.describeTasks(job)
@@ -447,3 +511,48 @@ class StatusPage(BaseHandler):
                      "startTime" : job.startTime,
                      "id" : job.key().id() }
 
+    @staticmethod
+    def __write_spatial_results(output_path, results_path, results):
+        StatusPage.__write_stdout_stderr(output_path)
+        with open(os.path.join(output_path, "return_code"), 'w') as f:
+            f.write('0')
+        with open(os.path.join(output_path, "model_file.pkl"), 'w') as f:
+            f.write(pickle.dumps('Not available. TODO'))
+        with open(os.path.join(results_path, 'complete'), 'w') as f:
+            f.write('1')
+        for i, result in enumerate(results):
+            with open(os.path.join(results_path, "result{0}".format(i)), 'w') as f:
+                f.write(result)
+
+    @staticmethod
+    def __write_simulation_trajectories_files(path, results):
+        for i, result in enumerate(results):
+            with open(os.path.join(path, "trajectory{0}.txt".format(i)), 'w') as trajectory_file:
+                trajectory_file.write("time\tS\n")
+                for entry in result:
+                    trajectory_file.write("{0}\t{1}\n".format(int(entry[0]), int(entry[1])))
+
+    @staticmethod
+    def __write_simulation_mean(path, results):
+        mean = numpy.mean(results, axis=0)
+        with open(os.path.join(path, "means.txt"), 'w') as mean_file:
+            mean_file.write("time\tS\n")
+            for entry in mean:
+                mean_file.write("{0}\t{1}\n".format(int(entry[0]), int(entry[1])))
+
+    @staticmethod
+    def __write_simulation_variance(path, results):
+        variance = numpy.var(results, axis=0)
+        with open(os.path.join(path, "variances.txt"), 'w') as var_file:
+            var_file.write("time\tS\n")
+            counter = 0
+            for entry in variance:
+                var_file.write("{0}\t{1}\n".format(counter, int(entry[1])))
+                counter += 1
+
+    @staticmethod
+    def __write_stdout_stderr(path):
+        with open(os.path.join(path, "stdout.log"), 'w') as f:
+            f.write("Not available. TODO")
+        with open(os.path.join(path, "stderr.log"), 'w') as f:
+            f.write("Not available. TODO")

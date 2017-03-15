@@ -435,6 +435,7 @@ def get_hostname(module=None,
     InvalidInstancesError if the given instance value is invalid.
     TypeError if the given instance type is invalid.
   """
+  return "localhost"
   def _ResultHook(rpc):
     mapped_errors = [modules_service_pb.ModulesServiceError.INVALID_MODULE,
                      modules_service_pb.ModulesServiceError.INVALID_INSTANCES]

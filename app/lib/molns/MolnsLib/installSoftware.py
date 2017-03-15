@@ -46,25 +46,23 @@ class InstallSW:
             # EC2/S3 and OpenStack APIs
             "sudo pip install boto",
             "sudo apt-get -y install pandoc",
-            # This set of packages is needed for OpenStack, as molnsutil uses them for hybrid cloud deployment
+            # This set of packages is needed for OpenStack, as molns_util uses them for hybrid cloud deployment
             "sudo apt-get -y install libxml2-dev libxslt1-dev python-dev",
             "sudo pip install python-novaclient",
             "sudo easy_install -U pip",
             "sudo pip install python-keystoneclient",
             "sudo pip install python-swiftclient",
         ],
-                    
+        # TODO pip install molnsutil while building image
         [
          "sudo rm -rf /usr/local/molnsutil;sudo mkdir -p /usr/local/molnsutil;sudo chown ubuntu /usr/local/molnsutil",
-         #"cd /usr/local/ && git clone https://github.com/Molns/molnsutil.git",
-         "cd /usr/local/ && git clone https://github.com/briandrawert/molnsutil.git",
-         "cd /usr/local/molnsutil && git checkout molnsutil_state",
-         "cd /usr/local/molnsutil && sudo python setup.py install"
+         "cd /usr/local/ && git clone https://github.com/aviral26/molnsutil.git && cd /usr/local/molnsutil && git checkout qsub_support"
         ],
 
         # So the workers can mount the controller via SSHfs
         [   "sudo apt-get -y install sshfs",
             "sudo gpasswd -a ubuntu fuse",
+            "mkdir -p /home/ubuntu/.ssh/",
             "echo 'ServerAliveInterval 60' >> /home/ubuntu/.ssh/config",
         ],
                     
@@ -86,7 +84,7 @@ class InstallSW:
             "cd /usr/local/StochKit && ./install.sh",
          
             #"wget https://github.com/StochSS/stochss/blob/master/ode-1.0.4.tgz?raw=true -q -O /tmp/ode.tgz",
-            "wget https://github.com/StochSS/StochKit_ode/archive/master.tar.gz?raw=true -q -O /tmp/ode.tgz"
+            "wget https://github.com/StochSS/StochKit_ode/archive/master.tar.gz?raw=true -q -O /tmp/ode.tgz",
             "cd /tmp && tar -xzf /tmp/ode.tgz",
             "sudo mv /tmp/StochKit_ode-master /usr/local/ode",
             "rm /tmp/ode.tgz",
@@ -109,18 +107,20 @@ class InstallSW:
             # Gmsh for Finite Element meshes
             "sudo apt-get install -y gmsh",
         ],
-        
+
+        ["sudo apt-get install docker", "sudo pip install docker-py", "sudo pip install sqlalchemy",
+         "sudo pip install boto", "sudo pip install python-novaclient", "sudo pip install paramiko"],
         # pyurdme
-        [   "sudo rm -rf /usr/local/pyurdme;sudo mkdir -p /usr/local/pyurdme;sudo chown ubuntu /usr/local/pyurdme",
+        [   "sudo rm -rf /usr/local/pyurdme && sudo mkdir -p /usr/local/pyurdme && sudo chown ubuntu /usr/local/pyurdme",
             "cd /usr/local/ && git clone https://github.com/MOLNs/pyurdme.git",
             #"cd /usr/local/pyurdme && git checkout develop",  # for development only
-            "cp /usr/local/pyurdme/pyurdme/data/three.js_templates/js/* .ipython/profile_default/static/custom/",
+            "cp /usr/local/pyurdme/pyurdme/data/three.js_templates/js/* $HOME/.ipython/profile_default/static/custom/",
             "source /usr/local/pyurdme/pyurdme_init && python -c 'import pyurdme'",
         ],
          
         # example notebooks
-        [  "rm -rf MOLNS_notebooks;git clone https://github.com/Molns/MOLNS_notebooks.git",
-            "cp MOLNS_notebooks/*.ipynb .;rm -rf MOLNS_notebooks;",
+        [  "rm -rf MOLNS_notebooks && git clone https://github.com/Molns/MOLNS_notebooks.git",
+            "cp MOLNS_notebooks/*.ipynb . && rm -rf MOLNS_notebooks",
             "ls *.ipynb"
         ],
                     
@@ -128,10 +128,10 @@ class InstallSW:
         "sudo apt-get -y remove python-scipy",
         "sudo pip install scipy",
         
-        "sudo pip install jsonschema jsonpointer",  #redo this install to be sure it has not been removed.
-
+        "sudo pip install jsonschema jsonpointer",  # redo this install to be sure it has not been removed.
+        "sudo pip install paramiko",
         
-        "sync",  # This is critial for some infrastructures.
+        "sync",  # This is critical for some infrastructures.
     ]
     
     # How many time do we try to install each package.
@@ -271,7 +271,6 @@ class InstallSW:
                 raise SystemExit("CRITICAL ERROR: could not complete command '{0}'. Exiting.".format(command))
         print "Installation complete in {0}s".format(time.time() - tic)
 
-
     def log_exec(self, msg):
         if self.log_file is not None:
             self.log_file.write(msg)
@@ -335,6 +334,11 @@ class InstallSW:
             print "FAILED......\t{0}:{1}\t{2}\t{3}".format(self.hostname, self.ssh_endpoint, command, e)
             raise InstallSWException()
 
+    @staticmethod
+    def get_command_list():
+        """Returns the whole list of dependency installation commands. """
+        return InstallSW.command_list
+
 if __name__ == "__main__":
     print "{0}".format(InstallSW.command_list)
     print "len={0}".format(len(InstallSW.command_list))
@@ -345,4 +349,3 @@ if __name__ == "__main__":
         else:
             cnt += 1
     print "cnt={0}".format(cnt)
-

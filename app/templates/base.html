@@ -92,8 +92,8 @@
               <li><a href="/status" TITLE = "Monitor the progress of a simulation">Job Status</a></li>
               <li class="nav-header"><i class="icon-cog"></i> Settings</li>
               {% if user.is_admin_user() %}
-                  <li><a href="/admin">Admin Panel</a></li>
-                  <li><a href="/ec2Credentials" TITLE = "Set AWS credentials and manage computational resources in the cloud">Cloud Computing</a></li>
+                  <li><a href="/admin">User Admin</a></li>
+                  <li><a href="/credentials" TITLE = "Configure Compute Resources">Compute Resources</a></li>
               {% endif %}
               <li><a href="/import" TITLE = "Manage backup archives">Backup</a></li>
             </ul>

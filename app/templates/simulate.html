@@ -235,10 +235,38 @@
         <br>
         <br>
 
-        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
-        <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>
-        <button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Molns Cloud</button>
-        
+        <!---->
+        <!--<button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>-->
+        <!--<button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>-->
+        <!--<button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Molns Cloud</button>-->
+        <button id="run" type="submit" class="btn btn-primary btn-large"><i class="icon-play"></i> Run </button>
+        <br>
+        <br>
+
+          <label for="resource_picker"><h4>Choose a compute resource: </h4></label>
+          <select name="resource_picker" id="resource_picker" class="selectpicker">
+            {% for resource in resources %}
+                {% if resource.key_file_id == selected %}
+                    <option selected="selected" value="{{ resource.json }}">
+                        {% if resource.key_file_id == 0 %}
+                            {{resource.ip}}
+                        {% else %}
+                            {{resource.username}}@{{resource.ip}}
+                        {% endif %}
+                    </option>
+                {% else %}
+                    <option value="{{ resource.json }}">
+                        {% if resource.key_file_id == 0 %}
+                            {{resource.ip}}
+                        {% else %}
+                            {{resource.username}}@{{resource.ip}}
+                        {% endif %}
+                    </option>
+                {% endif %}
+            {% endfor %}
+                    <option value="{'key_file_id' : 1}">Run via Cloud</option>
+                    <option value="{'key_file_id' : 2}">Run via Molns Cloud</option>
+          </select>
         <!-- Prevent Submission on pressing enter -->
         <!--<script>
             document.getElementById('submit_stochkit_ensemble').addEventListener('keypress', function(event) {
