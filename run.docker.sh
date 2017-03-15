@@ -8,4 +8,4 @@ then
     docker run -it -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume /Users:/Users $IMAGE_NAME bash -c "cd $PWD; ./run.ubuntu.sh -a 0.0.0.0"
 else
     docker run -it -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master $IMAGE_NAME bash -c "cd /stochss-master ;./run.ubuntu.sh -a 0.0.0.0"
-#fi
+fi
