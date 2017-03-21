@@ -1,6 +1,10 @@
 #!/bin/bash
 
-export PYTHONPATH=/stochss-master/app/lib/:/usr/local/lib/python2.7/dist-packages:/stochss-master/sdk/python:/stochss-master/sdk/python/google:/stochss-master/sdk/python/lib
+EXE_FILE=$0
+MY_PATH=$(dirname "$EXE_FILE")
+MY_PATH=$(cd "$MY_PATH"; pwd)
+
+export PYTHONPATH=$MY_PATH/app/lib/:/usr/local/lib/python2.7/dist-packages:$MY_PATH/sdk/python:$MY_PATH/sdk/python/google:$MY_PATH/sdk/python/lib
 
 mode="run"
 install_mode="false"

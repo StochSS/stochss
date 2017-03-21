@@ -1,5 +1,10 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.9.0
+=============================
+- Support for simulation and parameter sweep jobs on batch cluster computing (Qsub based computing clusters)
+- Configuration of batch computing resources
+
 1.8.0
 =============================
 - Parameter Sweep tool allow 1D/2D parameter sweeps for all models
