@@ -497,17 +497,21 @@ class SimulatePage(BaseHandler):
                 if job.outData is not None:
                     if os.path.isfile(job.outData + '/stdout'):
                         fstdoutHandle = open(job.outData + '/stdout', 'r')
-                    else:
+                        stdout = fstdoutHandle.read()
+                        fstdoutHandle.close()
+                    elif os.path.isfile(job.outData + '/stdout.log'):
                         fstdoutHandle = open(job.outData + '/stdout.log', 'r')
-                    stdout = fstdoutHandle.read()
-                    fstdoutHandle.close()
+                        stdout = fstdoutHandle.read()
+                        fstdoutHandle.close()
 
                     if os.path.isfile(job.outData + '/stderr'):
                         fstderrHandle = open(job.outData + '/stderr', 'r')
-                    else:
+                        stderr = fstderrHandle.read()
+                        fstderrHandle.close()
+                    elif os.path.isfile(job.outData + '/stderr.log'):
                         fstderrHandle = open(job.outData + '/stderr.log', 'r')
-                    stderr = fstderrHandle.read()
-                    fstderrHandle.close()
+                        stderr = fstderrHandle.read()
+                        fstderrHandle.close()
 
                 self.response.write(json.dumps({ "status" : "Failed",
                                                  "job" : JobManager.getJob(self, job.key().id()),
@@ -568,7 +572,7 @@ class SimulatePage(BaseHandler):
         logging.error("simulate.runQsub() modelType={0}".format(data['execType']))
         logging.error("*" * 80)
 
-        modelDb = StochKitModelWrapper.get_by_id(data["id"])
+        modelDb = StochKitModelWrapper.get_by_id(int(data["id"]))
 
         # TODO: Ben needs to fix the following code to work directly with StochKitModelWrappers
         # model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
