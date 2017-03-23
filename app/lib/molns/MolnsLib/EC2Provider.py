@@ -169,7 +169,7 @@ class EC2Provider(EC2Base):
 
 ##########################################
 class EC2Controller(EC2Base):
-    """ Provider handle for an open stack controller. """
+    """ Provider handle for an EC2 controller. """
     
     OBJ_NAME = 'EC2Controller'
 
@@ -272,7 +272,7 @@ class EC2Controller(EC2Base):
 
 ##########################################
 class EC2WorkerGroup(EC2Controller):
-    """ Provider handle for an open stack controller. """
+    """ Provider handle for EC2 worker group. """
     
     OBJ_NAME = 'EC2WorkerGroup'
 
@@ -464,7 +464,7 @@ class CreateVM:
             raise ProviderException("Could not find image_id={0}".format(image_id))
         if img.state != "available":
             if img.state != "pending":
-                raise ProviderException("Image {0} is not available, it has state is {1}.".format(image_id, img.state))
+                raise ProviderException("Image {0} is not available, it's state is {1}.".format(image_id, img.state))
             while img.state == "pending":
                 print "Image {0} has state {1}, waiting {2} seconds for it to become available.".format(image_id, img.state, self.PENDING_IMAGE_WAITTIME)
                 time.sleep(self.PENDING_IMAGE_WAITTIME)

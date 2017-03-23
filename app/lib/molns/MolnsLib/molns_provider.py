@@ -1,16 +1,21 @@
 import os
 import collections
+from ssh import SSH
+
+
 class ProviderException(Exception):
     pass
 
-class ProviderBase():
+
+class ProviderBase:
     """ Abstract class. """
     
     STATUS_RUNNING = 'running'
     STATUS_STOPPED = 'stopped'
     STATUS_TERMINATED = 'terminated'
 
-    SecurityGroupRule = collections.namedtuple("SecurityGroupRule", ["ip_protocol", "from_port", "to_port", "cidr_ip", "src_group_name"])
+    SecurityGroupRule = collections.namedtuple("SecurityGroupRule", ["ip_protocol", "from_port", "to_port", "cidr_ip",
+                                                                     "src_group_name"])
 
     FIREWALL_RULES = [
         SecurityGroupRule("tcp", "22", "22", "0.0.0.0/0", None),
@@ -22,7 +27,7 @@ class ProviderBase():
         SecurityGroupRule("tcp", "9000", "65535", "0.0.0.0/0", None),
     ]
     
-    def __init__(self, name, config=None, config_dir=None,**kwargs):
+    def __init__(self, name, config=None, config_dir=None, **kwargs):
         self.config = {}
         self.name = name
         self.type = self.PROVIDER_TYPE
@@ -35,6 +40,7 @@ class ProviderBase():
                 self.config[k] = v
         for k,v in kwargs.iteritems():
             self.__dict__[k] = v
+        self.ssh = SSH()
 
     def __getitem__(self, key):
         if key not in self.CONFIG_VARS.keys():

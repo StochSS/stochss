@@ -21,7 +21,8 @@ class PendingUsersList(db.Model):
     """
     users_waiting_approval = db.StringListProperty()
     approved_users = db.StringListProperty()
-    
+    user_verification_method = db.StringProperty()  # 'admin' (default), 'email', 'none'
+
     @classmethod
     def shared_list(cls):
         """
@@ -73,27 +74,39 @@ class PendingUsersList(db.Model):
         """
         if self.approved_users and (user_email in self.approved_users):
             return False
-        if awaiting_approval:
-            self.users_waiting_approval.remove(user_email)
-        self.approved_users.append(user_email)
+        if not self.is_user_approved(user_email):
+            self.approved_users.append(user_email)
+        self.users_waiting_approval.remove(user_email)
         self.put()
         return True
     
     def remove_user_from_approved_list(self, user_email):
         self.approved_users.remove(user_email)
+        self.users_waiting_approval.append(user_email)
+        self.put()
+
+    def remove_user_from_approval_waitlist(self, user_email):
+        if  self.users_waiting_approval and (user_email in self.users_waiting_approval):
+            self.users_waiting_approval.remove(user_email)
         self.put()
 
 def admin_required(handler):
     """
     Decorator for requiring admin access to page.
-    Assumes user already logged in, so redirects to profile page if not admin
+    Assumes user already logged in, so redirects to a page with information if not admin
     """
     def check_admin(self, *args, **kwargs):
         if self.user.is_admin_user():
             return handler(self, *args, **kwargs)
         else:
-            self.redirect('/profile')
+            self.redirect('/restricted')
     return check_admin
+
+class RestrictedPageHandler(BaseHandler):
+    """ Handles the case when user's try to access a restricted page. """
+
+    def get(self):
+        self.render_response('restricted.html')
 
 class AdminPage(BaseHandler):
     """
@@ -168,7 +181,7 @@ class AdminPage(BaseHandler):
         """ Remove user from approved users list """
         pending_users_list = PendingUsersList.shared_list()
         pending_users_list.remove_user_from_approved_list(email)
-        pending_users_list.add_user_to_approval_waitlist(email)
+        #pending_users_list.add_user_to_approval_waitlist(email)
         return True
 
     def _revoke_preapproved_user(self, email):

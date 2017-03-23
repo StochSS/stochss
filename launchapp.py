@@ -16,6 +16,8 @@ mac = False
 if 'mac' in sys.argv:
     mac = True
 
+host_ip = "localhost"
+
 try:
     admin_token = sys.argv[3]
 except IndexError:
@@ -83,12 +85,15 @@ def startserver():
     print "#"*80
     if '--debug' in sys.argv:
         print "Debug = Yes"
+
+    print "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)
+        
     if 'debug' in sys.argv:
         return subprocess.Popen((
                          "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)).split(), stdout=stdout, stderr=stderr)
     else:
         return subprocess.Popen((
-                         "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(
+                         "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(
                              path, host_ip)).split(), stdout=stdout, stderr=stderr)
 
 def startjupyternotebook():
@@ -165,7 +170,8 @@ for tryy in range(0, 20):
     #     if e.code == 302 and e.reason.endswith('Found'):
     #         serverUp = True
     #         break
-    except Exception:
+    except Exception as e:
+        print "{0}".format(e)
         req = None
 
     if req:

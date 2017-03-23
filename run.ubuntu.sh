@@ -1,5 +1,11 @@
 #!/bin/bash
 
+EXE_FILE=$0
+MY_PATH=$(dirname "$EXE_FILE")
+MY_PATH=$(cd "$MY_PATH"; pwd)
+
+export PYTHONPATH=$MY_PATH/app/lib/:/usr/local/lib/python2.7/dist-packages:$MY_PATH/sdk/python:$MY_PATH/sdk/python/google:$MY_PATH/sdk/python/lib
+
 mode="run"
 install_mode="false"
 token="not_set"
@@ -651,10 +657,11 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 
-export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
+export PYTHONPATH="$(pwd -P)/app:"$PYTHONPATH
 
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
+    env
     exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode
 fi

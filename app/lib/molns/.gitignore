@@ -1,3 +1,12 @@
 *.pyc
 .molns/
 molns_install.log
+.ec2_creds_molns
+.idea/
+*.tar.gz
+*.tar
+notes
+qsubscript
+/dockerfile_*
+\#qsubscript\#
+docker_test.py
