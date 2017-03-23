@@ -45,6 +45,10 @@ from boto.dynamodb import condition
 
 import matplotlib.cm
 
+from db_models.parameter_sweep_job import ParameterSweepJobWrapper
+from modeleditor import StochKitModelWrapper
+import parametersweep_qsub
+
 cm = matplotlib.cm.ScalarMappable()
 
 from db_models.spatial_job import SpatialJobWrapper
@@ -55,7 +59,7 @@ class SpatialPage(BaseHandler):
         return True
     
     def get(self):
-        logging.debug('GET self.request.body = {}'.format(self.request.body))
+        logging.info('GET self.request.body = {}'.format(self.request.body))
         reqType = self.request.get('reqType')
 
         if reqType == 'getJobInfo':
@@ -240,6 +244,8 @@ class SpatialPage(BaseHandler):
                     result = self.runLocal(data)
                 elif data["resource"] == "cloud":
                     result = self.runCloud(data)
+                elif data["resource"] == "qsub":
+                    result = self.runQsubWrapper(data)
                 else:
                     raise Exception("Unknown resource {0}".format(data["resource"]))
                 self.response.write(json.dumps({"status" : True,
@@ -320,6 +326,45 @@ class SpatialPage(BaseHandler):
                                              'msg' : 'Job downloaded',
                                              'url' : relpath }))
             return
+        elif reqType == 'openJupyterNotebook' or reqType == 'redirectJupyterNotebook':
+            try:
+                jobID = json.loads(self.request.get('id'))
+                job = SpatialJobWrapper.get_by_id(int(jobID))
+                #Check if notebook already exists, if not create one
+                notebook_filename = "{0}.ipynb".format(job.name)
+                local_path = os.path.relpath(os.path.abspath(job.outData), os.path.abspath(__file__+'/../../../'))
+                notebook_file_path =  os.path.abspath(job.outData) + "/" + notebook_filename
+                notebook_template_path = os.path.abspath(__file__+'/../../../jupyter_notebook_templates')+"/Spatial.ipynb"
+                if not os.path.isfile(notebook_file_path):
+                    logging.info("Creating {0} from {1}".format(notebook_file_path,notebook_template_path))
+                    shutil.copyfile(notebook_template_path, notebook_file_path)
+
+
+                if self.request.get('hostname') is not None:
+                    host = self.request.get('hostname')
+                else:
+                    host = 'localhost'
+                port = 9999
+                proto = 'http'
+                #
+                # return the url of the notebook
+                notebook_url = '{0}://{1}:{2}/notebooks/{3}/{4}'.format(proto,host,port,local_path,notebook_filename)
+                if reqType == 'openJupyterNotebook':
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write(json.dumps({ 'status' : True,
+                                                     'msg' : 'Notebook ready',
+                                                     'url' : notebook_url }))
+                else:
+                    self.redirect(notebook_url)
+            except Exception as e:
+                logging.error("Error in openJupyterNotebook: {0}".format(e))
+                if reqType == 'openJupyterNotebook':
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write(json.dumps({ 'status' : False,
+                                                     'msg' : 'error:{0}'.format(e) }))
+                else:
+                    self.response.write('Error: {0}'.format(e))
+            return    
         elif reqType == 'getVtkLocal':
             def zipdir(path, ziph, prefix):
                 # ziph is zipfile handle
@@ -427,9 +472,9 @@ class SpatialPage(BaseHandler):
     def construct_pyurdme_model(self, data):
         '''
         '''
-        json_model_refs = ModelManager.getModel(self, data["id"]) # data["id"] is the model id of the selected model I think
+        json_model_refs = ModelManager.getModel(self, int(data["id"])) # data["id"] is the model id of the selected model I think
 
-        stochkit_model_obj = StochKitModelWrapper.get_by_id(data["id"]).createStochKitModel()
+        stochkit_model_obj = StochKitModelWrapper.get_by_id(int(data["id"])).createStochKitModel()
         #print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
         try:
             meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
@@ -618,3 +663,289 @@ class SpatialPage(BaseHandler):
 
         return job
 
+    def runQsub(self, data, cluster_info):
+        logging.error("*" * 80)
+        logging.error("simulate.runQsub() modelType={0}".format(data['execType']))
+        logging.error("*" * 80)
+
+        modelDb = StochKitModelWrapper.get_by_id(data["id"])
+        path = os.path.abspath(os.path.dirname(__file__))
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir=basedir + 'output')
+        job = SpatialJobWrapper()
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = data["jobName"]
+        job.indata = json.dumps(data)
+        job.modelName = modelDb.name
+        job.outData = dataDir
+        job.status = "Pending"
+        job.output_stored = "False"
+        job.is_spatial = True
+
+        try:
+            templateData = {
+                "name": modelDb.name,
+                "modelType": modelDb.type,
+                "species": modelDb.species,
+                "parameters": modelDb.parameters,
+                "reactions": modelDb.reactions,
+                # "speciesSelect": data['speciesSelect'],
+                "speciesSelect": data['selections'],
+                # "maxTime": data['maxTime'],
+                "maxTime": data['time'],
+                "increment": data['increment'],
+                # "trajectories": data['trajectories'],
+                "trajectories": data['realizations'],
+                "seed": data['seed'],
+                "isSpatial": modelDb.isSpatial,
+                "isLocal": True
+            }
+
+            if modelDb.isSpatial:
+                try:
+                    meshWrapperDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                except Exception as e:
+                    logging.exception(e)
+                    logging.error("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                    raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                try:
+                    meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile=False)
+                    templateData["mesh"] = meshFileObj["data"]
+                except IOError as e:
+                    logging.exception(e)
+                    logging.error("Mesh file inaccessible. Try another mesh")
+                    raise Exception("Mesh file inaccessible. Try another mesh")
+
+                templateData['reaction_subdomain_assignments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assignments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
+                templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
+                templateData['subdomains'] = meshWrapperDb.subdomains
+
+            if data['execType'] == "stochastic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.stochastic(templateData, cluster_info,
+                                                                             not_full_parameter_sweep=True))
+            elif data['execType'] == "deterministic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData, cluster_info,
+                                                                                not_full_parameter_sweep=True))
+            elif data['execType'] == "spatial":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.spatial(templateData, cluster_info,
+                                                                          not_full_parameter_sweep=True))#
+            else:
+                raise Exception("Trying to runQsub on unsupported modelType {0}".format(data['modelType']))
+
+            job.resource = "qsub"
+            job.put()
+        except Exception as e:
+            logging.exception(e)
+            job.status = 'Failed'
+            job.delete(self)
+            raise
+
+        return job
+
+    def runQsubWrapper(self, data):
+        import fileserver
+        cluster_info = dict()
+        received_cluster_info = json.loads(self.request.get('cluster_info'))
+        cluster_info['ip_address'] = received_cluster_info['ip']
+        cluster_info['username'] = received_cluster_info['username']
+        cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
+
+        self.user_data.set_selected(received_cluster_info['key_file_id'])
+
+        job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
+                          self.user.user_id(),
+                          data["jobName"].strip()).get()
+
+        logging.debug("DATA:   \n\n {0} \n\n".format(data))
+
+        if job != None:
+            logging.error("parametersweep.newJobQsub: error: Job name must be unique")
+            self.response.write(json.dumps({"status": False,
+                                            "msg": "Job name must be unique"}))
+            return
+
+        try:
+            result = self.runQsub(data=data, cluster_info=cluster_info)
+
+            return result
+        except Exception as e:
+            logging.exception(e)
+            result = {'status': False,
+                      'msg': 'Error: {0}'.format(e)}
+            self.response.write(json.dumps(result))
+            return
+import itertools
+import cluster_execution
+
+
+def getParameters(data, return_none=False):
+    if return_none:
+        return None
+
+    parameters = dict()
+    if data['logA']:
+        parameters[data['parameterA']] = numpy.logspace(numpy.log10(data['minValueA']), numpy.log10(data['maxValueA']), data['stepsA'])
+    else:
+        parameters[data['parameterA']] = numpy.linspace(data['minValueA'], data['maxValueA'], data['stepsA'])
+
+    if data['variableCount'] != 1:
+        if data['logB']:
+            parameters[data['parameterB']] = numpy.logspace(numpy.log10(data['minValueB']), numpy.log10(data['maxValueB']), data['stepsB'])
+        else:
+            parameters[data['parameterB']] = numpy.linspace(data['minValueB'], data['maxValueB'], data['stepsB'])
+    return parameters
+
+def spatial(data, cluster_info, not_full_parameter_sweep=False):
+    statsSpecies = sorted([specie for specie, doStats in data['speciesSelect'].items() if doStats])
+
+    def passThroughMapAnalysis(result):
+        return result
+
+    def passThroughReduceAnalysis(metricsList, parameters=None):
+        return metricsList
+
+    def mapAnalysis(result):
+
+        metrics = {'max': {}, 'min': {}, 'avg': {}, 'var': {}, 'finalTime': {}}
+        for i, specie in enumerate(statsSpecies):
+            val = result.get_species(specie)
+            non_spatial_val = numpy.sum(val, axis=1)
+            metrics['max'][specie] = numpy.max(non_spatial_val)
+            metrics['min'][specie] = numpy.min(non_spatial_val)
+            metrics['avg'][specie] = numpy.mean(non_spatial_val)
+            metrics['var'][specie] = numpy.var(non_spatial_val)
+            metrics['finalTime'][specie] = non_spatial_val[-1]
+
+        return metrics
+
+    def reduceAnalysis(metricsList, parameters=None):
+
+        reduced = {}
+
+        keys1 = ['max', 'min', 'avg', 'var', 'finalTime']
+        for key1, key2 in itertools.product(keys1, statsSpecies):
+            toReduce = [metrics[key1][key2] for metrics in metricsList]
+
+            if key1 not in reduced:
+                reduced[key1] = {}
+
+            reduced[key1][key2] = {
+                'max': numpy.max(toReduce),
+                'min': numpy.min(toReduce),
+                'avg': numpy.mean(toReduce),
+                'var': numpy.var(toReduce)
+            }
+
+        return reduced
+
+    class StochSSModel(pyurdme.URDMEModel):
+        json_data = data
+
+        def __init__(self, **kwargs):
+            modelType = self.json_data["modelType"]
+            species = self.json_data["species"]
+            parameters = self.json_data["parameters"]
+            reactions = self.json_data["reactions"]
+            maxTime = self.json_data["maxTime"]
+            if maxTime is None:
+                maxTime = 100
+            increment = self.json_data["increment"]
+            if increment is None:
+                increment = 1
+            reaction_subdomain_assignments = self.json_data["reaction_subdomain_assignments"]  # e.g. {'R1':[1,2,3]}
+            species_subdomain_assignments = self.json_data["species_subdomain_assignments"]  # e.g. {'S1':[1,2,3]}
+            species_diffusion_coefficients = self.json_data["species_diffusion_coefficients"]  # e.g. {'S1':0.5}
+            initial_conditions = self.json_data[
+                "initial_conditions"]  # e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
+
+            pyurdme.URDMEModel.__init__(self, name=self.json_data["name"])
+            mesh_file = tempfile.NamedTemporaryFile(suffix='.xml')
+            mesh_file.write(self.json_data["mesh"])
+            mesh_file.seek(0)
+            self.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(mesh_file.name))
+            self.set_subdomain_vector(numpy.array(self.json_data["subdomains"]))
+
+            parameterByName = dict()
+
+            for parameter in parameters:
+                if parameter['name'] in kwargs:
+                    parameterByName[parameter['name']] = pyurdme.Parameter(name=parameter['name'],
+                                                                           expression=kwargs[parameter['name']])
+                else:
+                    parameterByName[parameter['name']] = pyurdme.Parameter(name=parameter['name'],
+                                                                           expression=parameter['value'])
+
+                self.add_parameter(parameterByName[parameter['name']])
+
+            speciesByName = dict()
+
+            for specie in species:
+                speciesByName[specie['name']] = pyurdme.Species(name=specie['name'], diffusion_constant=float(
+                    species_diffusion_coefficients[specie['name']]))
+                self.add_species(speciesByName[specie['name']])
+            for s, sd_list in species_subdomain_assignments.iteritems():
+                spec = self.listOfSpecies[s]
+                self.restrict(spec, sd_list)
+
+            for reaction in reactions:
+                inReactants = dict()
+                for reactant in reaction['reactants']:
+                    if reactant['specie'] not in inReactants:
+                        inReactants[reactant['specie']] = 0
+
+                    inReactants[reactant['specie']] += reactant['stoichiometry']
+
+                inProducts = dict()
+                for product in reaction['products']:
+                    if product['specie'] not in inProducts:
+                        inProducts[product['specie']] = 0
+
+                    inProducts[product['specie']] += product['stoichiometry']
+
+                reactants = dict([(speciesByName[reactant[0]], reactant[1]) for reactant in inReactants.items()])
+
+                products = dict([(speciesByName[product[0]], product[1]) for product in inProducts.items()])
+
+                if (reaction['type'] == 'custom'):
+                    self.add_reaction(pyurdme.Reaction(name=reaction['name'], reactants=reactants, products=products,
+                                                       propensity_function=reaction['equation']))
+                else:
+                    self.add_reaction(pyurdme.Reaction(name=reaction['name'], reactants=reactants, products=products,
+                                                       rate=parameterByName[reaction['rate']]))
+            for r in reaction_subdomain_assignments:
+                self.listOfReactions[r].restrict_to = reaction_subdomain_assignments[r]
+
+            for ic in initial_conditions:
+                spec = self.listOfSpecies[ic['species']]
+                if ic['type'] == "place":
+                    self.set_initial_condition_place_near({spec: int(ic['count'])},
+                                                          point=[float(ic['x']), float(ic['y']), float(ic['z'])])
+                elif ic['type'] == "scatter":
+                    self.set_initial_condition_scatter({spec: int(ic['count'])}, subdomains=[int(ic['subdomain'])])
+                elif ic['type'] == "distribute":
+                    self.set_initial_condition_distribute_uniformly({spec: int(ic['count'])},
+                                                                    subdomains=[int(ic['subdomain'])])
+                else:
+                    raise Exception("Unknown initial condition type {0}".format(ic['type']))
+
+            self.timespan(numpy.concatenate((numpy.arange(maxTime / increment) * increment, [maxTime])))
+
+    rh = cluster_execution.remote_execution.RemoteHost(cluster_info['ip_address'], cluster_info['username'],
+                                                       cluster_info['ssh_key'], port=22)
+
+    cps = cluster_execution.cluster_parameter_sweep.ClusterParameterSweep(model_cls=StochSSModel,
+                                                                          parameters=getParameters(data,
+                                                                                                   not_full_parameter_sweep),
+                                                                          remote_host=rh)
+
+    if not_full_parameter_sweep:
+        x = cps.run_async(mapper=passThroughMapAnalysis, reducer=passThroughReduceAnalysis,
+                          number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
+    else:
+        x = cps.run_async(mapper=mapAnalysis, reducer=reduceAnalysis,
+                          number_of_trajectories=StochSSModel.json_data['trajectories'], store_realizations=True)
+
+    return x

@@ -625,6 +625,8 @@ Spatial.Controller = Backbone.View.extend( {
 
                           if(time.length == 0)
                               return
+                          if(typeof(data) == 'undefined')
+                              return
                           for (var i = 0; i < time.length; i++) {
                               var t = time[i]; 
                               this.cache[t] = { colors : data.colors[t],
@@ -904,6 +906,32 @@ Spatial.Controller = Backbone.View.extend( {
                 });
     },
 
+    handleAccessNotebookButton : function(event)
+    {
+        updateMsg( { status : true,
+                     msg : "Opening simulation results in Jupyter notebook" } );
+
+        $.ajax( { type : "POST",
+                  url : "/spatial",
+                  data : { reqType : "openJupyterNotebook",
+                           id : this.attributes.id },
+                  success : function(data) {
+                      updateMsg(data);
+                      
+                      if(data.status == true)
+                      {
+                          window.location = data.url;
+                      }
+                  },                      
+                  error: function(data)
+                  {
+                      updateMsg( { status : false,
+                                   msg : "Server error" } );
+                  },
+                  dataType : 'json'
+                });
+    },
+
     handleAccessVtkDataButton : function(event)
     {
         updateMsg( { status : true,
@@ -1129,12 +1157,16 @@ Spatial.Controller = Backbone.View.extend( {
                 $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
 
                 $( "#accessVtk" ).hide();
+                $( "#accessNotebook" ).hide();
                 $( "#accessCsv" ).hide();
             }
             else
             {
                 $( "#access" ).html('<i class="icon-download-alt"></i> Access Local Data');
                 $( "#access" ).click(_.bind(this.handleAccessDataButton, this));
+
+                $( "#accessNotebook" ).show();
+                //$( "#accessNotebook" ).click(_.bind(this.handleAccessNotebookButton, this));
 
                 $( "#accessVtk" ).show();
                 $( "#accessVtk" ).click(_.bind(this.handleAccessVtkDataButton, this));

@@ -1,5 +1,17 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.9.0
+=============================
+- Support for simulation and parameter sweep jobs on batch cluster computing (Qsub based computing clusters)
+- Configuration of batch computing resources
+
+1.8.0
+=============================
+- Parameter Sweep tool allow 1D/2D parameter sweeps for all models
+- Integration of Jupyter Notebooks on job result pages for post-processing analysis
+- Status page updates for filtering and automatic forwarding of running->finished jobs
+- Added option to change tolerances for ODE simulation
+
 1.7.0
 =============================
 - Volume rendering visualization for spatial jobs.

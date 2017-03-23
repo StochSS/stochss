@@ -98,9 +98,10 @@ Import.ImportTable = Backbone.View.extend(
             this.sjc = this.$el.find( '#stochkitJobContainer' );
             this.snc = this.$el.find( '#sensitivityJobContainer' );
             this.soc = this.$el.find( '#stochOptimJobContainer' );
+            this.psc = this.$el.find( '#parameterSweepJobContainer' );
             this.spc = this.$el.find( '#spatialJobContainer' );
 
-            this.state = { id : undefined, selections : { mc : {}, soc : {}, spc : {}, sjc : {}, snc : {} } };
+            this.state = { id : undefined, selections : { mc : {}, soc : {}, spc : {}, sjc : {}, psc : {}, snc : {} } };
             
             this.$el.hide();
         },
@@ -116,12 +117,13 @@ Import.ImportTable = Backbone.View.extend(
 
         render: function(data)
         {
-            this.state = { id : undefined, selections : { mc : {}, soc : {}, spc : {}, sjc : {}, snc : {} } };
+            this.state = { id : undefined, selections : { mc : {}, soc : {}, spc : {}, sjc : {}, psc : {}, snc : {} } };
 
             this.soc.empty();
             this.spc.empty();
             this.mc.empty();
             this.sjc.empty();
+            this.psc.empty();
             this.snc.empty();
 
             if(typeof data != 'undefined') {
@@ -223,6 +225,30 @@ Import.ImportTable = Backbone.View.extend(
                     boxparam.find('input').change( _.partial(function(state, id, event) {
                         state[id] = $( event.target ).prop( 'checked' );
                     }, this.state.selections.spc, name) );
+                }
+
+                $( ".parameterSweepContainerTr" ).hide();
+                for(var name in this.data.headers.parameterSweepJobs) {
+                    $( ".parameterSweepContainerTr" ).show();
+                    var job = this.data.headers.parameterSweepJobs[name];
+
+                    var color = "red";
+                    var version = job.version + " (newer than current StochSS)";
+                    if(versionCompare(this.version, job.version) >= 0)
+                    {
+                        color = "green";
+                        version = job.version;
+                    }
+
+                    var html = this.sensitivityTemplate( { job : job,
+                                                           color : color,
+                                                           version : version});
+
+                    var boxparam = $( html ).appendTo( this.psc );
+
+                    boxparam.find('input').change( _.partial(function(state, id, event) {
+                        state[id] = $( event.target ).prop( 'checked' );
+                    }, this.state.selections.psc, name) );
                 }
 
                 $( ".sensitivityContainerTr" ).hide();
@@ -378,13 +404,22 @@ var run = function()
                 spatialJobsToExport.push(checkboxes[i].value);
             }
         }
+        var parameterSweepJobsToExport = [];
+        checkboxes = document.getElementsByName('select_parameter_sweep_job');
+        for (var i = 0; i < checkboxes.length; i++)
+        {
+            if (checkboxes[i].checked) {
+                parameterSweepJobsToExport.push(checkboxes[i].value);
+            }
+        }
         var ajaxData = {
             reqType : "backup",
             globalOp : $( "#globalOp" ).prop('checked'),
             stochKitJobs: stochKitJobsToExport,
             sensitivityJobs: sensitivityJobsToExport,
             spatialJobs: spatialJobsToExport,
-            stochOptimJobs : stochOptimJobsToExport
+            stochOptimJobs : stochOptimJobsToExport,
+            parameterSweepJobs : parameterSweepJobsToExport
         };
         $.ajax( { type : "POST",
                   url : "/export",

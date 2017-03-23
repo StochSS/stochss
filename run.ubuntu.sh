@@ -1,10 +1,16 @@
 #!/bin/bash
 
+EXE_FILE=$0
+MY_PATH=$(dirname "$EXE_FILE")
+MY_PATH=$(cd "$MY_PATH"; pwd)
+
+export PYTHONPATH=$MY_PATH/app/lib/:/usr/local/lib/python2.7/dist-packages:$MY_PATH/sdk/python:$MY_PATH/sdk/python/google:$MY_PATH/sdk/python/lib
+
 mode="run"
 install_mode="false"
 token="not_set"
 browser="true"
-ip=0
+ip="localhost"
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -59,7 +65,7 @@ echo "Installing in $STOCHSS_HOME"
 STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
-ODE_VERSION="ode-1.0.3"
+ODE_VERSION="ode-1.0.4"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
@@ -105,7 +111,29 @@ else
 fi
 
 #####################
-
+function check_gillespy_sub {
+    RET=`python -c "import gillespy" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_gillespy {
+    if check_gillespy_sub; then
+        return 0 #True
+    else
+        GILLESPY_DIR="$STOCHSS_HOME/app/lib/gillespy/"
+        if [ -e $GILLESPY_DIR ];then
+            echo "GillesPy install found $GILLESPY_DIR."
+            export PYTHONPATH=$GILLESPY_DIR:$PYTHONPATH
+            if check_gillespy_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
 function check_pyurdme_sub {
     RET=`python -c "import pyurdme" 2>/dev/null`
     RC=$?
@@ -144,10 +172,10 @@ function check_lib {
 
 function check_pip {
     if which pip > /dev/null;then
-        echo "pip is installed on your system, using it<br />"
+        echo "pip is installed on your system, using it"
         return 0 #True
     else
-        echo "pip is not installed on your system<br />"
+        echo "pip is not installed on your system"
         return 1 #False
     fi
 }
@@ -272,6 +300,24 @@ function check_and_install_deps {
     if ! check_lib "mysql.connector";then
         install_lib "python-mysql.connector"
     fi
+    if ! check_lib "paramiko";then
+        install_lib "python-paramiko"
+    fi
+    if ! check_lib "sqlalchemy";then
+        install_lib "python-sqlalchemy"
+    fi
+    if ! check_lib "novaclient";then
+        install_lib "python-novaclient"
+    fi
+    if ! check_lib "boto";then
+        install_lib "python-boto"
+    fi
+    if ! check_lib "celery";then
+        install_lib "python-celery"
+    fi
+    if ! check_lib "jupyter";then
+        install_lib_pip "jupyter"
+    fi
 }
 
 function check_dolfin {
@@ -307,6 +353,30 @@ function install_dolfin {
     fi
 }
 
+function check_molns_sub {
+    RET=`python -c "import molns" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_molns {
+    if check_molns_sub; then
+        return 0 #True
+    else
+        MOLNS_DIR="$STOCHSS_HOME/app/lib/molns/"
+        if [ -e $MOLNS_DIR ];then
+            echo "Molns local install found $MOLNS_DIR."
+            export PYTHONPATH=$MOLNS_DIR:$PYTHONPATH
+            if check_molns_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
+
 function check_python_package_installation {
     check_and_install_deps
     echo "Checking for FEniCS/Dolfin"
@@ -329,6 +399,19 @@ function check_python_package_installation {
         echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
         return 1 #False
     fi
+    if check_molns; then
+        echo "MOLNs detected successfully."
+    else
+        echo "Failed to detect MOLNs."
+        return 1 #False
+    fi
+    if check_gillespy; then
+        echo "GillesPy detected successfully."
+    else
+        echo "Failed to detect GillesPy."
+        return 1 #False
+    fi
+
     return 0 #True
 }
 
@@ -500,6 +583,7 @@ else
 
     echo "Cleaning up anything already there..."
     rm -rf "$STOCHSS_HOME/ode" >& /dev/null
+    rm -rf $STOCHKIT_ODE >& /dev/null
 
     stdout="$STOCHSS_HOME/stdout.log"
     stderr="$STOCHSS_HOME/stderr.log"
@@ -516,19 +600,19 @@ else
     cd "cvodes-2.7.0"
     ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes configure)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes make)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     make install 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (cvodes make install)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
@@ -537,7 +621,7 @@ else
     export STOCHKIT_ODE="$(pwd -P)"
     make 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
-        echo "Failed"
+        echo "Failed (ode make)"
         echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
@@ -550,8 +634,10 @@ else
     if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
         echo "Success!"
     else
-        echo "Failed"
-        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        echo "Failed (ode test)"
+        echo "StochKit ODE failed to install. See below for errors:"
+        echo "export STOCHKIT_ODE=\"$STOCHKIT_ODE\"; $STOCHKIT_ODE/ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 1 -i 1 --out-dir $rundir"
+        eval "export STOCHKIT_ODE=\"$STOCHKIT_ODE\"; $STOCHKIT_ODE/ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 1 -i 1 --out-dir $rundir"
         exit -1
     fi
 fi
@@ -571,8 +657,11 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 
+export PYTHONPATH="$(pwd -P)/app:"$PYTHONPATH
+
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
+    env
     exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode
 fi

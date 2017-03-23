@@ -485,8 +485,6 @@ class StochOptimVisualization(BaseHandler):
 #                        cloud_result["msg"]
 #                    ))
 
-        result = status.getJobStatus(service, optimization)
-
         try:
             fd = os.open("{0}/stdout".format(optimization.outData), os.O_RDONLY)
             f = os.fdopen(fd)
@@ -517,7 +515,7 @@ class StochOptimVisualization(BaseHandler):
 #        print optimization.indata
 
         output["nameToIndex"] = json.loads(optimization.nameToIndex)
-        output["status"] = result["status"]
+        output["status"] = optimization.status
         output["jobName"] = optimization.name
         output["modelName"] = optimization.modelName
         output["resource"] = optimization.resource

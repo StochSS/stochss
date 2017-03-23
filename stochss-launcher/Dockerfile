@@ -1,7 +1,4 @@
-#AUTHOR Aviral Takkar <aviraltakkar@cs.ucsb.edu>
-
 FROM phusion/baseimage:0.9.15
-MAINTAINER Aviral Takkar
 
 ENV HOME /root
 
@@ -53,10 +50,6 @@ RUN apt-get install -yy \
     libcgal-dev \
     unzip
 
-# TODO: Parmetis, SLEPC, PETSc4py, PASTIX?
-# Trilinos has been deprecated, for now.
-# Sphinx is not necessary for this build.
-
 # Install sympy using pip instead of Ubuntu packages, much smaller footprint.
 RUN pip install sympy
 
@@ -82,7 +75,7 @@ RUN apt-get clean && \
 #RUN echo "y" > /etc/container_environment/LIBGL_ALWAYS_INDIRECT
 
 # Put environment variables into
-RUN echo "source /usr/local/share/dolfin/dolfin.conf" >> /etc/bash.bashrc
+#RUN echo "source /usr/local/share/dolfin/dolfin.conf" >> /etc/bash.bashrc # not needed, causes errors
 
 #..................................................................................
 
@@ -95,12 +88,14 @@ RUN wget https://github.com/StochSS/stochss/archive/develop.tar.gz && \
     apt-get update && \
     apt-get install -yy curl && \
     apt-get install -yy libbz2-dev && \
-    apt-get install -yy uuid-runtime && \
+    apt-get install -yy uuid-runtime \
+    libpng12-dev \
+    libffi-dev && \
     pip install python-libsbml && \
     pip install boto && \
     pip install celery && \
     pip install setuptools --upgrade && \
-    pip install http://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-2.0.4.zip#md5=3df394d89300db95163f17c843ef49df && \
+    pip install http://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-2.0.4.zip && \
     apt-get -yy install \
     gcc-multilib \
     gcc \
@@ -116,9 +111,13 @@ RUN wget https://github.com/StochSS/stochss/archive/develop.tar.gz && \
     cython \
     libbz2-dev \
     vim \
+    docker \
     libhdf5-mpi-dev && \
+    pip install docker-py && \
     chmod 777 run.ubuntu.sh && \
     ./run.ubuntu.sh --install
-
+#md5=3df394d89300db95163f17c843ef49df
 EXPOSE 8000
 EXPOSE 8080
+
+CMD ["./stochss-master/run.ubuntu.sh", "-yy", "-a", "0.0.0.0"]

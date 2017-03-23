@@ -39,6 +39,11 @@ class StochKitJobWrapper(db.Model):
     outData = db.StringProperty()
     outputURL = db.StringProperty()
     result = db.StringProperty()
+    qsubHandle = db.TextProperty()
+
+    # TODO delete these maybe?
+    is_simulation = db.BooleanProperty(False)
+    is_spatial = db.BooleanProperty(False)
 
     stdout = db.StringProperty()
     stderr = db.StringProperty()
@@ -56,31 +61,37 @@ class StochKitJobWrapper(db.Model):
 
     def stop(self, user_data):
         # TODO: Call the backend to kill and delete the job and all associated files.
-        service = backendservices(user_data)
-
-        if self.resource.lower() == 'local':
-            service.stopTaskLocal([self.pid])
+        if self.resource.lower() == 'molns':
+            return
         else:
-            service.stopTasks(self)
+            service = backendservices(user_data)
+            if self.resource.lower() == 'local':
+                service.stopTaskLocal([self.pid])
+            else:
+                service.stopTasks(self)
 
     def delete(self, handle):
         self.stop(handle.user_data)
 
-        # TODO: Call the backend to kill and delete the job and all associated files.
-        service = backendservices(handle.user_data)
+        if self.resource.lower() == 'molns':
+            # TODO: call 'molns exec cleanup'
+            pass
+        else:
+            # Call the backend to kill and delete the job and all associated files.
+            service = backendservices(handle.user_data)
 
-        if self.zipFileName is not None and os.path.exists(self.zipFileName):
-            os.remove(self.zipFileName)
-        
-        #delete the ouput results of execution locally, if exists.       
-        if self.outData is not None and os.path.exists(str(self.outData)):
-            shutil.rmtree(self.outData)
+            if self.zipFileName is not None and os.path.exists(self.zipFileName):
+                os.remove(self.zipFileName)
+            
+            #delete the ouput results of execution locally, if exists.       
+            if self.outData is not None and os.path.exists(str(self.outData)):
+                shutil.rmtree(self.outData)
 
-        if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            try:
-                service.deleteTasks(self)
-            except Exception as e:
-                logging.error("Failed to delete cloud resources of job {0}".format(self.key().id()))
-                logging.error(e)
+            if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                try:
+                    service.deleteTasks(self)
+                except Exception as e:
+                    logging.error("Failed to delete cloud resources of job {0}".format(self.key().id()))
+                    logging.error(e)
 
         super(StochKitJobWrapper, self).delete()

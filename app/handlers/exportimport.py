@@ -22,9 +22,12 @@ import modeleditor
 import shutil
 from google.appengine.api import users
 
+import molns
+
 import sensitivity
 import stochoptim
 import mesheditor
+import parametersweep
 import fileserver
 import pyurdme
 import spatial
@@ -60,11 +63,12 @@ def versionCmp(version1, version2):
     return cmp(normalize(version1), normalize(version2))
 
 class SuperZip:
-    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = [], stochOptimJobsToDownload = [], spatialJobsToDownload = []):
+    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = [], stochOptimJobsToDownload = [], spatialJobsToDownload = [], parameterSweepJobsToDownload = []):
         self.stochKitJobsToDownload = stochKitJobsToDownload
         self.sensitivityJobsToDownload = sensitivityJobsToDownload
         self.stochOptimJobsToDownload = stochOptimJobsToDownload
         self.spatialJobsToDownload = spatialJobsToDownload
+        self.parameterSweepJobsToDownload = parameterSweepJobsToDownload
         if directory == None and zipfile == None:
             raise Exception("SuperZip must have either directory or zipFileName defined in constructor")
 
@@ -202,7 +206,7 @@ class SuperZip:
                     outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.outData)
                     jsonJob["output_location"] = outputLocation
             # For local jobs, we need to include the output location in the zip archive
-            elif job.resource == 'Local':
+            elif job.resource.lower() == 'local':
                 outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.outData)
                 jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
                 jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
@@ -288,6 +292,49 @@ class SuperZip:
                     jsonJob["outData"] = outputLocation
             self.addBytes('sensitivityJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
+    def addParameterSweepJob(self, job, globalOp = False, handler = None):
+        if job.resource == 'molns':
+            # Only grab S3 data if user wants us to
+            if (job.name in self.parameterSweepJobsToDownload) or globalOp:
+                # If job isn't downloaded, download it
+                if not job.output_stored:
+                    molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", handler.user.user_id()).get()
+
+                    if not molnsConfigDb:
+                        return
+
+                    molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+
+                    log = molns.MOLNSExec.job_logs([job.molnsPID], molnsConfig)
+                      
+                    with open(os.path.join(job.outData, 'stdout'), 'w') as f:
+                        f.write(log['msg'])
+                          
+                    molns.MOLNSExec.fetch_job_results([job.molnsPID, "results", os.path.join(job.outData, 'results')], molnsConfig)
+
+                    job.output_stored = True
+
+                    # Save the updated status
+                    job.put()
+        
+        jsonJob = job.getJSON()
+
+        jsonJob["version"] = self.version
+
+        del jsonJob['molnsPID']
+        del jsonJob['zipFileName']
+
+        # Only add the folder if it actually exists
+        if job.outData is not None and os.path.exists(job.outData):
+            outputLocation = self.addFolder('parameterSweepJobs/data/{0}'.format(job.name), job.outData)
+            jsonJob["outData"] = outputLocation
+
+            jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
+            jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
+
+        self.addBytes('parameterSweepJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+        pass
+
     def addSpatialJob(self, job, globalOp = False, handler = None):
         jsonJob = { "version" : self.version,
                     "user_id" : job.user_id,
@@ -297,7 +344,7 @@ class SuperZip:
                     "modelName" : job.modelName,
                     "indata" : json.loads(job.indata),
                     "outData" : job.outData,
-                    "resource" : "Local",
+                    "resource" : "local",
                     "uuid" : job.uuid,
                     "status" : job.status }
         
@@ -328,6 +375,65 @@ class SuperZip:
 
         self.addBytes('spatialJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
         pass
+
+    def extractParameterSweepJob(self, path, userId = None, handler = None, rename = None):
+        jsonJob = json.loads(self.zipfb.read(path))
+        path = os.path.abspath(os.path.dirname(__file__))
+
+        zipPath = jsonJob["outData"]
+
+        job = parametersweep.ParameterSweepJobWrapper()
+
+        jobNames = [x.name for x in db.Query(parametersweep.ParameterSweepJobWrapper).filter('user_id =', handler.user.user_id()).run()]
+
+        #print jobNames
+
+        if jsonJob["name"] in jobNames:
+            if rename:
+
+                i = 1
+                tryName = '{0}_{1}'.format(jsonJob["name"], i)
+
+                while tryName in jobNames:
+                    i = i + 1
+                    tryName = '{0}_{1}'.format(jsonJob["name"], i)
+                    
+                jsonJob["name"] = tryName
+
+        if jsonJob["user_id"] not in [x.user_id() for x in User.query().fetch()]:
+            jsonJob["user_id"] = handler.user.user_id()
+
+        if userId:
+            jsonJob["user_id"] = userId
+
+        outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+            
+
+        for name in self.zipfb.namelist():
+            if re.search('^{0}/.*$'.format(zipPath), name):
+                relname = os.path.relpath(name, zipPath)
+
+                if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
+                    os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
+
+                fhandle = open("{0}/{1}".format(outPath, relname), 'w')
+                fhandle.write(self.zipfb.read(name))
+                fhandle.close()
+
+        job.user_id = jsonJob["user_id"]
+        job.pid = jsonJob["pid"]
+        job.name = jsonJob["name"]
+        job.startTime = jsonJob["startTime"]
+        job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
+        job.inData = json.dumps(jsonJob["inData"])
+        job.outData = outPath
+        job.resource = jsonJob["resource"]
+        job.status = jsonJob["status"]
+        job.output_stored = jsonJob["output_stored"]
+
+        job.put()
+
+        return job.key().id()
 
     def extractSpatialJob(self, path, userId = None, handler = None, rename = None):
         jsonJob = json.loads(self.zipfb.read(path))
@@ -570,7 +676,7 @@ class SuperZip:
 
         jobj["modelName"] = jobj["modelName"] if "modelName" in jobj else None
 
-        jobj["resource"] = 'Local'
+        jobj["resource"] = 'local'
         jobj["output_location"] = outPath
         jobj["stdout"] = "{0}/stdout".format(outPath)
         jobj["stderr"] = "{0}/stderr".format(outPath)
@@ -753,7 +859,7 @@ class ExportPage(BaseHandler):
 
             for job in jobs:
                 if job.status == "Finished":
-                    if job.resource == 'Local':
+                    if job.resource.lower() == 'local':
                         numberOfFiles += 1
                         totalSize += get_size(job.job.outData)
 
@@ -780,6 +886,11 @@ class ExportPage(BaseHandler):
                 selected_stochkit_jobs = request_data["stochKitJobs"]
             else:
                 selected_stochkit_jobs = []
+
+            if "parameterSweepJobs" in request_data:
+                selected_parameter_sweep_jobs = request_data["parameterSweepJobs"]
+            else:
+                selected_parameter_sweep_jobs = []
 
             #logging.info('Processing backup export request with stochkit jobs: {0} sensitivity jobs: {1}'.format(selected_stochkit_jobs, selected_sensitivity_jobs))
 
@@ -808,7 +919,8 @@ class ExportPage(BaseHandler):
                 stochKitJobsToDownload=selected_stochkit_jobs,
                 sensitivityJobsToDownload=selected_sensitivity_jobs,
                 stochOptimJobsToDownload=selected_stochoptim_jobs,
-                spatialJobsToDownload=selected_spatial_jobs
+                spatialJobsToDownload=selected_spatial_jobs,
+                parameterSweepJobsToDownload=selected_parameter_sweep_jobs
             )
 
             if not globalOp:
@@ -855,6 +967,14 @@ class ExportPage(BaseHandler):
 
             for job in jobs:
                 szip.addStochKitJob(job, globalOp, handler = self)
+
+            if not globalOp:
+                jobs = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1", self.user.user_id()).run()
+            else:
+                jobs = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper").run()
+
+            for job in jobs:
+                szip.addParameterSweepJob(job, globalOp, handler = self)
 
             szip.close()
 
@@ -963,6 +1083,20 @@ class ImportPage(BaseHandler):
             output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
             spatial_jobs.append(cloud_job)
 
+        # Parameter Sweep Jobs
+        parameter_sweep_jobs_query = parametersweep.ParameterSweepJobWrapper.all()
+        parameter_sweep_jobs_query.filter("user_id =", self.user.user_id())
+        parameter_sweep_jobs_query.filter("status =", "Finished")
+        parameter_sweep_jobs = []
+        for cloud_job in parameter_sweep_jobs_query.run():
+            if cloud_job.resource is None or cloud_job.resource not in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                continue
+            if cloud_job.outputURL is None or cloud_job.outData is not None:
+                continue
+
+            #output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
+            parameter_sweep_jobs.append(cloud_job)
+
         job_sizes = service.getSizeOfOutputResults(output_results_to_check)
 
         logging.info('job_sizes = \n{}'.format(pprint.pformat(job_sizes)))
@@ -972,6 +1106,7 @@ class ImportPage(BaseHandler):
         context["sensitivity_jobs"] = []
         context["stochoptim_jobs"] = []
         context["spatial_jobs"] = []
+        context["parameter_sweep_jobs"] = []
         for cloud_job in stochkit_jobs:
             job_name = cloud_job.name
             job_id = cloud_job.key().id()
@@ -1038,6 +1173,16 @@ class ImportPage(BaseHandler):
                     'size': '{0} KB'.format(round(size/1024, 1)),
                     'no_data' : no_data
                 })
+        for cloud_job in parameter_sweep_jobs:
+            job_name = cloud_job.name
+            job_id = cloud_job.key().id()
+
+            context["parameter_sweep_jobs"].append({
+                'name': job_name,
+                'exec_type': 'spatial',
+                'size': '?',
+                'no_data' : False
+            })
         return self.render_response('exportimport.html', **context)
 
     def post(self):
@@ -1069,7 +1214,7 @@ class ImportPage(BaseHandler):
 
                 zipFile = zipfile.ZipFile(fieldStorage.file, 'r')
 
-                headers = { "models" : {}, "stochkitJobs" : {}, "stochOptimJobs" : {}, "sensitivityJobs" : {}, "spatialJobs" : {} }
+                headers = { "models" : {}, "stochkitJobs" : {}, "stochOptimJobs" : {}, "sensitivityJobs" : {}, "parameterSweepJobs" : {}, "spatialJobs" : {} }
                 for name in zipFile.namelist():
                     if re.search('models/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['models'][name] = json.loads(zipFile.read(name))
@@ -1081,6 +1226,8 @@ class ImportPage(BaseHandler):
                         headers['stochOptimJobs'][name] = json.loads(zipFile.read(name))
                     elif re.search('spatialJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['spatialJobs'][name] = json.loads(zipFile.read(name))
+                    elif re.search('parameterSweepJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                        headers['parameterSweepJobs'][name] = json.loads(zipFile.read(name))
 
                 #print headers['stochOptimJobs']
 
@@ -1217,26 +1364,15 @@ class ImportPage(BaseHandler):
                     rename = False
                     
                     dbName = getEither(headers['models'][name], "name", "jobName")
-                    jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
+                    models = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
-                    if len(jobs) > 0:
-                        otherJob = jobs[0]
+                    if len(models) > 0:
+                        otherModel = models[0]
 
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            #print 'deleting', dbName, 'hehe'
-                            otherJob.delete()
-                        #elif overwriteType == 'renameOld':
-                        #    i = 1
-                        #    tryName = name + '_' + str(i)
-
-                        #    while len(list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name", self.user.user_id(), tryName).run())) > 0:
-                        #        i += 1
-                        #        tryName = name + '_' + str(i)
-
-                        #    otherJob.name = tryName
-                        #    otherJob.put()
+                            otherModel.delete()
                         elif overwriteType == 'renameNew':
                             rename = True
                             
@@ -1305,7 +1441,7 @@ class ImportPage(BaseHandler):
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
@@ -1337,7 +1473,7 @@ class ImportPage(BaseHandler):
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
@@ -1370,12 +1506,45 @@ class ImportPage(BaseHandler):
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
                     importedObjects += 1
                     szip.extractSpatialJob(name, userId, self, rename = rename)
+
+                for name in state['selections']['psc']:
+                    if not state['selections']['psc'][name]:
+                        continue
+
+                    totalObjects += 1
+
+                    if userId == None:
+                        userID = getEither(headers['parameterSweepJobs'][name], "user_id", "userId")
+#["user_id"]
+
+                        if userID not in validUsers:
+                            userID = userId
+                    else:
+                        userID = userId
+
+                    dbName = getEither(headers['parameterSweepJobs'][name], "name", "jobName")
+                    jobs = list(db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
+
+                    rename = False
+
+                    if len(jobs) > 0:
+                        otherJob = jobs[0]
+
+                        if overwriteType == 'keepOld':
+                            continue
+                        elif overwriteType == 'overwriteOld':
+                            otherJob.delete(self)
+                        elif overwriteType == 'renameNew':
+                            rename = True
+
+                    importedObjects += 1
+                    szip.extractParameterSweepJob(name, userId, self, rename = rename)
 
                 szip.close()
 

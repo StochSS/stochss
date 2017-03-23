@@ -16,13 +16,6 @@ mac = False
 if 'mac' in sys.argv:
     mac = True
 
-#try:
-#    if mac:
-#        host_ip = "localhost"
-#    else:
-#        host_ip = socket.gethostbyname(socket.gethostname())
-#except socket.gaierror:
-#    print("Failed to get hostname...defaulting to localhost.")
 host_ip = "localhost"
 
 try:
@@ -31,11 +24,11 @@ except IndexError:
     print("Admin token not received. Will generate one.")
 
 try:
-    vm_ip = sys.argv[4]
-    if vm_ip == "0":
-        vm_ip = host_ip
+    host_ip = sys.argv[4]
+    if host_ip == "0":
+        host_ip = "localhost"
 except IndexError:
-    vm_ip = host_ip
+    host_ip = "localhost"
 
 path = os.path.abspath(os.path.dirname(__file__))
 
@@ -76,6 +69,8 @@ h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout
                      stderr=subprocess.PIPE)
 h.communicate()
 
+proc = {}
+
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
 
@@ -83,39 +78,78 @@ stderr = open('stderr.log', 'w')
 # print path
 def startserver():
     import sys
+    print "#"*80
+    print "#"*80
+    print sys.argv
+    print "#"*80
+    print "#"*80
+    if '--debug' in sys.argv:
+        print "Debug = Yes"
+
+    print "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)
+        
     if 'debug' in sys.argv:
-        h = subprocess.Popen((
+        return subprocess.Popen((
                          "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)).split(), stdout=stdout, stderr=stderr)
     else:
-        h = subprocess.Popen((
-                         "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(
+        return subprocess.Popen((
+                         "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(
                              path, host_ip)).split(), stdout=stdout, stderr=stderr)
 
+def startjupyternotebook():
+     return subprocess.Popen((
+        "jupyter notebook --NotebookApp.open_browser=False --ip={1} --port=9999 --config={0}/jupyter_profile/jupyter.config".format(path, host_ip)).split(),         
+        stdout=stdout, stderr=stderr, preexec_fn=os.setsid)
 
-startserver()
-
-print "Starting admin server at: http://{0}:8000".format(vm_ip)
-if mac:
-    print "<br />"
-sys.stdout.flush()
-
-
-def clean_up_and_exit(signal, stack):
-    print "Killing webserver proces..."
+def clean_up_and_exit(in_signal, stack):
+    print "Killing webserver process..."
     if mac:
-        print "<br /></body></html>"
+        print "<br />"
     sys.stdout.flush()
 
     try:
-        h.terminate()
+        proc['server'].terminate()
     except:
         pass
+
+    try:
+        print "Killing jupyter notebook process [pid={0}]...".format(proc['jupyternotebook'].pid)
+        if mac:
+            print "<br /></body></html>"
+        sys.stdout.flush()
+        pgrp = os.getpgid(proc['jupyternotebook'].pid)
+        os.killpg(pgrp, signal.SIGINT)
+        time.sleep(0.1)
+        os.killpg(pgrp, signal.SIGTERM)
+    except Exception as e:
+        print "Failed to kill notebook: {0}".format(e)
+       
 
     if signal == None:
         exit(0)
     else:
         exit(-1)
 
+
+#print "Starting admin server at: http://{0}:8000".format(host_ip)
+print "Starting server at: http://{0}:8080".format(host_ip)
+if mac:
+    print "<br />"
+try:
+    proc['server'] = startserver()
+except Exception as e:
+    print "Error starting server: {0}".format(e)
+    sys.exit(1)
+sys.stdout.flush()
+
+print "Starting jupyter notebook server at: http://{0}:9999".format(host_ip)
+if mac:
+    print "<br />"
+try:
+    proc['jupyternotebook'] = startjupyternotebook()
+except Exception as e:
+    print "Error startring jupyter notebook: {0}".format(e)
+sys.stdout.flush()
 
 signal.signal(signal.SIGHUP, clean_up_and_exit)
 signal.signal(signal.SIGINT, clean_up_and_exit)
@@ -136,7 +170,8 @@ for tryy in range(0, 20):
     #     if e.code == 302 and e.reason.endswith('Found'):
     #         serverUp = True
     #         break
-    except Exception:
+    except Exception as e:
+        print "{0}".format(e)
         req = None
 
     if req:
@@ -207,7 +242,7 @@ if serverUp:
     sys.stdout.flush()
 
     try:
-        print "Navigate to http://{1}:8080/login?secret_key={0} to access StochSS".format(admin_token, vm_ip)
+        print "Navigate to http://{1}:8080/login?secret_key={0} to access StochSS".format(admin_token, host_ip)
         if mac:
             print "<br />"
 

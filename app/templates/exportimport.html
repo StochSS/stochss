@@ -23,6 +23,12 @@
       checkboxes[i].checked = source.checked;
     }
   }
+  function toggleParameterSweepJobs(source) {
+    var checkboxes = document.getElementsByName('select_parameter_sweep_job');
+    for (var i=0, n=checkboxes.length; i<n; i++) {
+      checkboxes[i].checked = source.checked;
+    }
+  }
   function toggleSensitivityJobs(source) {
     var checkboxes = document.getElementsByName('select_sensitivity_job');
     for (var i=0, n=checkboxes.length; i<n; i++) {
@@ -169,6 +175,37 @@
                                         {% else %}
                                         <tr>
                                             <td><input type="checkbox" name="select_spatial_job" value="{{job.name}}"> </td>
+                                            <td><span>{{job.name}}</span></td>
+                                            <td><span>{{job.size}}</span></td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+                            {% if parameter_sweep_jobs %}
+                            <div class="control-group">
+                                <label class="control-label" for="parameter-sweep-jobs-table">Cloud Parameter Sweeps:</label>
+                                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='parameter-sweep-jobs-table'>
+                                    <thead>
+                                        <tr>
+                                            <th width="40pt"><input type="checkbox" onClick="toggleParameterSweepJobs(this)"/></th>
+                                            <th>Job name </th>
+                                            <th width="200pt">Output size </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for job in parameter_sweep_jobs %}
+                                        {% if job.no_data %}
+                                        <tr>
+                                            <td><input type="checkbox" disabled> </td>
+                                            <td><span>{{job.name}}</span></td>
+                                            <td><font color="red">No data stored for job</font></td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td><input type="checkbox" name="select_parameter_sweep_job" value="{{job.name}}"> </td>
                                             <td><span>{{job.name}}</span></td>
                                             <td><span>{{job.size}}</span></td>
                                         </tr>
@@ -325,6 +362,24 @@
                                         </table>
 				    </td>
                                 </tr>
+                                <tr class="parameterSweepContainerTr">
+				    <th>Parameter Sweep Jobs</th>
+                                </tr>
+                                <tr class="parameterSweepContainerTr">
+				    <td valign="top">
+                                        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
+					    <thead>
+                                                <tr>
+						    <th width="40pt">Import</th>
+						    <th>Job name</th>
+						    <th width="100pt">Version</th>
+                                                </tr>
+					    </thead>
+					    <tbody id="parameterSweepJobContainer">
+					    </tbody>
+                                        </table>
+				    </td>
+                                </tr>
 			    </table>
 			    <br />
 			    <button class="btn-primary btn-large" id="import">Import</button>
@@ -347,14 +402,9 @@
 <script type="text/javascript" src = "/static/utils.js"></script>
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
-<link rel="stylesheet" href="/static/css/nv.d3.css">
 
 <script src="/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
 <script type="text/javascript" src = "/static/js/purl.js"></script>
-<script type="text/javascript" src = "/static/js/canvas2image.js"></script>
-<script type="text/javascript" src = "/static/js/splot.js"></script>
-<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
-<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
 <script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
 <script src="/static/js/jfu/js/jquery.fileupload.js"></script>
 <script type="text/javascript" src = "/static/js/importMain.js"></script>

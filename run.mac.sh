@@ -9,7 +9,7 @@ fi
 mode=""
 token="not_set"
 browser="true"
-ip=0
+ip="localhost"
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -45,7 +45,7 @@ STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`"
 STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
-ODE_VERSION="ode-1.0.3"
+ODE_VERSION="ode-1.0.4"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
@@ -55,25 +55,46 @@ echo "<html>"
 echo "<body>"
 
 if [ "$(echo $STOCHSS_HOME | grep " ")" != "" ]; then
-    echo "<font color=\"red\"><h2>Cannot install StochSS under any directory that contains spaces (which \"$STOCHSS_HOME\" has). This is an known issue</h2></font>"
+    echo "Cannot install StochSS under any directory that contains spaces (which \"$STOCHSS_HOME\" has). This is an known issue"
     exit -1
 fi
 
-echo "<h2>Checking StochSS configuration</h2><br />"
+echo "<h2>Checking StochSS configuration</h2>"
 
 echo -n "Testing if Xcode & Command Line Tools installed... "
 
 if ! which gcc > /dev/null; then
-    echo "No<br />"
-    echo "<font color=\"red\">"
+    echo "No"
     echo "Gcc not found. Xcode or Command Line Tools not installed -- refer to documentation"
-    echo "</font>"
     exit -1
 fi
 
-echo "Yes<br />"
+echo "Yes"
 
 #################
+function check_molns_sub {
+    RET=`python -c "import molns" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_molns {
+    if check_molns_sub; then
+        return 0 #True
+    else
+        MOLNS_DIR="$STOCHSS_HOME/app/lib/molns/"
+        if [ -e $MOLNS_DIR ];then
+            echo "Molns local install found $MOLNS_DIR."
+            export PYTHONPATH=$MOLNS_DIR:$PYTHONPATH
+            if check_molns_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
 # Check to see if the 'dolfin' python module is installed and active in this terminal.
 function check_dolfin_sub {
     RET=`python -c "import dolfin" 2>/dev/null`
@@ -89,7 +110,7 @@ function check_dolfin {
     else
         FENICS_MAC_APP_CONF="/Applications/FEniCS.app/Contents/Resources/share/fenics/fenics.conf"
         if [ -e $FENICS_MAC_APP_CONF ];then
-            echo "FEniCS.app found, sourcing $FENICS_MAC_APP_CONF.<br />"
+            echo "FEniCS.app found, sourcing $FENICS_MAC_APP_CONF."
             FENICS_CONF_SILENT=1
             source $FENICS_MAC_APP_CONF
             if check_dolfin_sub;then
@@ -116,7 +137,29 @@ function check_for_lib {
     fi
     return 0 #True
 }
-
+function check_gillespy_sub {
+    RET=`python -c "import gillespy" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_gillespy {
+    if check_gillespy_sub; then
+        return 0 #True
+    else
+        GILLESPY_DIR="$STOCHSS_HOME/app/lib/gillespy/"
+        if [ -e $GILLESPY_DIR ];then
+            echo "GillesPy install found $GILLESPY_DIR."
+            export PYTHONPATH=$GILLESPY_DIR:$PYTHONPATH
+            if check_gillespy_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
 function check_pyurdme_sub {
     RET=`python -c "import pyurdme" 2>/dev/null`
     RC=$?
@@ -128,7 +171,7 @@ function check_pyurdme_sub {
 function check_pyurdme {
     PYURDME_CONF="$STOCHSS_HOME/app/lib/pyurdme-stochss/pyurdme_init"
     if [ -e $PYURDME_CONF ];then
-        echo "PyURDME local install found, sourcing $PYURDME_CONF.<br />"
+        echo "PyURDME local install found, sourcing $PYURDME_CONF."
         source $PYURDME_CONF
         if check_pyurdme_sub;then
             return 0 #True
@@ -138,12 +181,12 @@ function check_pyurdme {
 }
 
 function check_python_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python" "paramiko" "sqlalchemy" "novaclient" "boto")
     for dep in "${deps[@]}"
     do
-        echo "Checking for $dep<br />"
+        echo "Checking for $dep"
         if check_for_lib "$dep";then
-            echo "$dep detected successfully.<br />"
+            echo "$dep detected successfully."
         else
             return 1 #False
         fi
@@ -152,28 +195,28 @@ function check_python_dependencies {
 }
 
 function install_dependencies_via_applescript {
-    echo "Installing missing dependencies with Applescript. This will take a few minutes.<br />"
+    echo "Installing missing dependencies with Applescript. This will take a few minutes."
     /usr/bin/env osascript run_mac_install.scpt
 }
 
 function check_python_installation {
     if check_python_dependencies; then
-        echo "All python dependencies detected.<br />"
+        echo "All python dependencies detected."
     else
         install_dependencies_via_applescript
         if check_python_dependencies; then
-            echo "All python dependencies detected.<br />"
+            echo "All python dependencies detected."
         else
-            echo "Error: dependencies not installed, exiting.<br />"
+            echo "Error: dependencies not installed, exiting."
             return 1 #False
         fi
     fi
 
     if check_dolfin; then
-        echo "FEniCS/Dolfin detected successfully.<br />"
+        echo "FEniCS/Dolfin detected successfully."
     else
-        echo "FEniCS/Dolfin not installed, please check installation instructions.<br />"
-        echo "You can download FEniCS from http://fenicsproject.org/<br />"
+        echo "FEniCS/Dolfin not installed, please check installation instructions."
+        echo "You can download FEniCS from http://fenicsproject.org/"
         return 1 #False
     fi
 
@@ -181,21 +224,34 @@ function check_python_installation {
     /Applications/FEniCS.app/Contents/Resources/bin/instant-clean
 
     if check_pyurdme; then
-        echo "PyURDME detected successfully.<br />"
+        echo "PyURDME detected successfully."
     else
         echo "PyURDME import from $STOCHSS_HOME/app/lib/pyurdme-stochss/ not working (check if all required python modules are installed)"
         return 1 #False
     fi
+    if check_molns; then
+        echo "MOLNs detected successfully."
+    else
+        echo "Failed to detect MOLNs."
+        return 1 #False
+    fi
+    if check_gillespy; then
+        echo "GillesPy detected successfully."
+    else
+        echo "Failed to detect GillesPy."
+        return 1 #False
+    fi
+
     return 0 #True
 }
 
 #####################
 
-echo "Check if python libraries are installed.<br />"
+echo "Check if python libraries are installed."
 if check_python_installation;then
-    echo "Spatial libraries installed correctly.<br />"
+    echo "Spatial libraries installed correctly."
 else
-    echo "Error checking the python libraries.<br />"
+    echo "Error checking the python libraries."
     exit 1
 fi
 #################
@@ -227,32 +283,32 @@ rundir=$(mktemp -d /tmp/tmp.XXXXXX)
 
 rm -r "$rundir" >& /dev/null
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
-    echo "Yes <br />"
-    echo "$STOCHKIT_VERSION found in $STOCHKIT_HOME<br />"
+    echo "Yes "
+    echo "$STOCHKIT_VERSION found in $STOCHKIT_HOME"
 else
-    echo "No<br />"
+    echo "No"
 
-    echo "Installing in $STOCHSS_HOME/$STOCHKIT_VERSION<br />"
+    echo "Installing in $STOCHSS_HOME/$STOCHKIT_VERSION"
 
-    echo "Cleaning up anything already there...<br />"
+    echo "Cleaning up anything already there..."
     rm -rf "$STOCHKIT_PREFIX/$STOCHKIT_VERSION" >& /dev/null
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
 	echo "Downloading $STOCHKIT_VERSION..."
-	#curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
-	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
+	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz/download"
+	#curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
     fi
 
-    echo "Building StochKit<br />"
+    echo "Building StochKit"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
     retry_command "tar -xzf \"$STOCHKIT_VERSION.tgz\""
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     mv "$STOCHKIT_HOME" "$tmpdir/"
     cd "$tmpdir/$STOCHKIT_VERSION"
-    echo " Stdout available at $STOCHSS_HOME/stdout.log and <br />"
-    echo " Stderr available at $STOCHSS_HOME/stderr.log<br />"
-    echo "<font color=\"blue\"><h3>This process will take at least 5 minutes to complete. Please be patient.</h3></font>"
+    echo " Stdout available at $STOCHSS_HOME/stdout.log and "
+    echo " Stderr available at $STOCHSS_HOME/stderr.log"
+    echo "<h3>This process will take at least 5 minutes to complete. Please be patient."
     STOCHKIT_HOME_R=$STOCHKIT_HOME
     export STOCHKIT_HOME="$(pwd -P)"
     ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
@@ -264,11 +320,10 @@ else
 # Test that StochKit was installed successfully by running it on a sample model
 
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
-	echo "Success!<br \>"
+	echo "Success!"
     else
-        echo "<font color=red>"
-	echo "Failed<br \>"
-	echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME<br \></font>"
+	echo "Failed"
+	echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME"
 	exit -1
     fi
 fi
@@ -288,20 +343,20 @@ function check_if_StochOptim_Installed {
 }
 
 if check_if_StochOptim_Installed; then
-    echo "Yes <br />"
-    echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM <br />"
+    echo "Yes "
+    echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM "
 else
-    echo "No <br />"
+    echo "No "
 
-    echo "Installing in $STOCHSS_HOME/$STOCHOPTIM_VERSION <br />"
+    echo "Installing in $STOCHSS_HOME/$STOCHOPTIM_VERSION "
 
-    echo "Cleaning up anything already there... <br />"
+    echo "Cleaning up anything already there... "
     rm -rf "$STOCHOPTIM" >& /dev/null
 
-    echo "Building StochOptim <br />"
-    echo " Logging stdout in $STOCHSS_HOME/stdout.log and <br />"
-    echo " stderr in $STOCHSS_HOME/stderr.log <br />"
-    echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete. Please be patient</h3></font>"
+    echo "Building StochOptim "
+    echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
+    echo " stderr in $STOCHSS_HOME/stderr.log "
+    echo " This process will take at least 5 minutes to complete. Please be patient"
 
 
     retry_command "tar -xzf \"$STOCHOPTIM.tgz\""
@@ -323,10 +378,10 @@ else
 
     # Test that StochKit was installed successfully by running it on a sample model
     if check_if_StochOptim_Installed; then
-    	echo "Success!<br />"
+    	echo "Success!"
     else
-	    echo "Failed<br />"
-	    echo "$STOCHOPTIM failed to install. Consult logs above for errors<br />"
+	    echo "Failed"
+	    echo "$STOCHOPTIM failed to install. Consult logs above for errors"
 	    exit -1
     fi
 fi
@@ -335,22 +390,24 @@ echo -n "Testing if StochKit2 ODE built... "
 
 rm -r "$rundir" >& /dev/null
 if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
-    echo "Yes <br />"
-    echo "ode found in $STOCHKIT_ODE <br />"
+    echo "Yes "
+    echo "ode found in $STOCHKIT_ODE "
 else
-    echo "No <br />"
+    echo "No "
 
-    echo "Installing in $STOCHSS_HOME/$ODE_VERSION <br />"
+    echo "Installing in $STOCHSS_HOME/$ODE_VERSION "
 
-    echo "Cleaning up anything already there...<br />"
+    echo "Cleaning up anything already there..."
     rm -rf "$STOCHSS_HOME/ode" >& /dev/null
+    rm -rf "$STOCHKIT_ODE" >& /dev/null
 
     stdout="$STOCHSS_HOME/stdout.log"
     stderr="$STOCHSS_HOME/stderr.log"
-    echo "Building StochKit ODE<br />"
-    echo " Logging stdout in $STOCHSS_HOME/stdout.log and <br />"
-    echo " stderr in $STOCHSS_HOME/stderr.log <br />"
-    echo "<font color=\"blue\"><h3>This process should take about a minute to complete. Please be patient</h3></font><br />"
+    echo "" > "$stdout"
+    echo "" > "$stderr"
+    echo "Building StochKit ODE"
+    echo "Logging stdout/stderr to $STOCHSS_HOME/stderr.log "
+    echo "This process should take about a minute to complete. Please be patient"
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     retry_command "tar -xzf \"$STOCHKIT_ODE.tgz\""
@@ -358,39 +415,31 @@ else
     cd "$tmpdir/$ODE_VERSION/cvodes"
     retry_command "tar -xzf \"cvodes-2.7.0.tar.gz\""
     cd "cvodes-2.7.0"
-    ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
+    ./configure --prefix="$PWD/cvodes" >>"$stderr" 2>&1
     if [ $? != 0 ]; then
-        echo "<font color=red>"
-	echo "Failed<br />"
-	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE<br />"
-	echo "</font>"
+	echo "Failed (cvodes configure)"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
-    make 1>"$stdout" 2>"$stderr"
+    make >>"$stderr" 2>&1
     if [ $? != 0 ]; then
-        echo "<font color=red>"
-	echo "Failed<br />"
-	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE<br />"
-	echo "</font>"
+        echo "Failed (cvodes make)"
+        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
-    make install 1>"$stdout" 2>"$stderr"
+    make install >>"$stderr" 2>&1
     if [ $? != 0 ]; then
-        echo "<font color=red>"
-	echo "Failed<br />"
-	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE<br />"
-	echo "</font>"
+        echo "Failed (cvodes make install)"
+        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     cd ../../
     STOCHKIT_ODE_R=$STOCHKIT_ODE
     export STOCHKIT_ODE="$(pwd -P)"
-    make 1>"$stdout" 2>"$stderr"
+    make >>"$stderr" 2>&1
     if [ $? != 0 ]; then
-        echo "<font color=red>"
-	echo "Failed<br />"
-	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE<br />"
-	echo "</font>"
+        echo "Failed (ode make)"
+        echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
         exit -1
     fi
     export STOCHKIT_ODE="$STOCHKIT_ODE_R"
@@ -400,20 +449,21 @@ else
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
-	echo "Success!"
+        echo "Success!"
     else
-        echo "<font color=red>"
-	echo "Failed<br />"
-	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE</font><br />"
-	exit -1
+        echo "Failed (ode test)"
+        echo "StochKit ODE failed to install. See below for errors:"
+        echo "export STOCHKIT_ODE=\"$STOCHKIT_ODE\"; $STOCHKIT_ODE/ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 1 -i 1 --out-dir $rundir"
+        eval "export STOCHKIT_ODE=\"$STOCHKIT_ODE\"; $STOCHKIT_ODE/ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 1 -i 1 --out-dir $rundir"
+        exit -1
     fi
 fi
 
 rm -r "$rundir" >& /dev/null
 
-echo "Configuring the app to use $STOCHKIT_HOME for StochKit... <br />"
-echo "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... <br />"
-echo "Configuring the app to use $STOCHOPTIM for Stochoptim... <br />"
+echo "Configuring the app to use $STOCHKIT_HOME for StochKit... "
+echo "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... "
+echo "Configuring the app to use $STOCHOPTIM for Stochoptim... "
 
 ln -s "$STOCHKIT_ODE" ode >& /dev/null
 ln -s "$STOCHKIT_HOME" StochKit >& /dev/null
@@ -424,4 +474,9 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode mac
+export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
+
+echo "PYTHONPATH :: $PYTHONPATH"
+
+#echo "python \"$STOCHSS_HOME/launchapp.py\" $0 $browser $token $ip $mode"
+exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode

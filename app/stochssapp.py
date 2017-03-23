@@ -42,27 +42,6 @@ jinja_environment = jinja2.Environment(autoescape=True,
 
 from db_models.object_property import ObjectProperty
 
-#?class DictionaryProperty(db.Property):
-#?    """  A db property to store objects. """
-#?
-#?    def get_value_for_datastore(self, dict_prty):
-#?        result = super(DictionaryProperty, self).get_value_for_datastore(dict_prty)
-#?        result = pickle.dumps(dict_prty)
-#?        return db.Blob(result)
-#?
-#?    def make_value_from_datastore(self, value):
-#?        if value is None:
-#?            return None
-#?        return pickle.loads(value)
-#?
-#?    def empty(self, value):
-#?        return value is None
-
-
-
-
-
-
 class BaseHandler(webapp2.RequestHandler):
     """
     The base handler that extends the dispatch() method to start the session store and save all sessions at the end of a request:
@@ -133,7 +112,6 @@ class BaseHandler(webapp2.RequestHandler):
         # Using memcache for storing sessions.
         self.session = self.session_store.get_session(name='mc_session',
                                                       factory=sessions_memcache.MemcacheSessionFactory)
-
         try:
             # Dispatch the request.
             webapp2.RequestHandler.dispatch(self)
@@ -275,8 +253,8 @@ except:
 from handlers.exportimport import *
 import handlers.modeleditor
 import handlers.stochoptim
+import handlers.parametersweep
 import handlers.mesheditor
-import handlers.volume
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -289,6 +267,7 @@ from handlers.auth import *
 from handlers.admin import *
 import handlers.fileserver
 import handlers.spatial
+import handlers.molnsconfig
 from backend import pricing
 
 
@@ -383,18 +362,17 @@ app = webapp2.WSGIApplication([
                                ('/meshes.*', handlers.mesheditor.MeshBackboneInterface),
                                ('/models/list.*', handlers.modeleditor.ModelBackboneInterface),
                                ('/stochkit/list.*', JobBackboneInterface),
-                               #('/modeleditor/converttopopulation', ConvertToPopulationPage),
-                               #('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
-                               #('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
-                               #('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
                                ('/modeleditor.*', handlers.modeleditor.ModelEditorPage),
                                ('/publicLibrary.*', handlers.modeleditor.PublicModelPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/spatial',handlers.spatial.SpatialPage),
-                               ('/volume',handlers.volume.VolumePage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
-                               webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),#/<queryType>
+                               ('/parametersweep', handlers.parametersweep.ParameterSweepPage),
+                               webapp2.Route('/parametersweep/<jobID>', handler = handlers.parametersweep.ParameterSweepVisualizationPage),
+                               webapp2.Route('/molnsconfig', handler = handlers.molnsconfig.MolnsConfig),
+                               webapp2.Route('/molnsconfig/<reqType>', handler = handlers.molnsconfig.MolnsConfig),
+                               webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
                                webapp2.Route('/stochoptim/<queryType>/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
                                ## Fileserver handlers
                                # This route is for listing all files
@@ -414,6 +392,7 @@ app = webapp2.WSGIApplication([
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials', CredentialsPage),
                                ('/ec2Credentials', EC2CredentialsPage),
+                               ('/clusterCredentials', ClusterCredentialsPage),
                                ('/flexCloudCredentials', FlexCredentialsPage),
                                ('/cost_analysis',CostAnalysisPage),
                                ('/localsettings',LocalSettingsPage),
