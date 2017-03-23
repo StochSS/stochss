@@ -24,6 +24,7 @@ from backend.databases.dynamo_db import DynamoDB
 from db_models.vm_state_model import VMStateModel
 
 import fileserver
+from handlers import admin
 
 
 class ClusterCredentialsPage(BaseHandler):
@@ -365,7 +366,8 @@ class FlexCredentialsPage(BaseHandler):
 class CredentialsPage(BaseHandler):
     def authentication_required(self):
         return True
-    
+
+    @admin.admin_required
     def get(self):
         logging.debug('GET')
 
