@@ -300,22 +300,22 @@ class PasswordResetHandler(BaseHandler):
             if user_token == token:
                 user.signup_token = None
                 user.put()
-       context = {'user_email':user_email}
+                context = {'user_email':user_email}
                 self.render_response('passwordreset.html',**context)
                 
             else:
                 context = {
                     'error_alert': True,
                     'alert_message': 'Password reset token not validated. Please contact the administrator for assistance.'
-       }                    
-       self.render_response('passwordreset.html', **context)
+                }                    
+                self.render_response('passwordreset.html', **context)
    
         else:
             context = {
                 'error_alert': True,
                 'alert_message': 'Password reset failed. No such user.'
-               }
-       self.render_response('passwordreset.html', **context)
+            }
+            self.render_response('passwordreset.html', **context)
                
 
     def post(self):
@@ -328,7 +328,7 @@ class PasswordResetHandler(BaseHandler):
         try:
             new_password = self.request.POST["password"]
             password_confirmation =  self.request.POST["password_confirmation"]
-       user_email = self.request.POST['user_email']
+            user_email = self.request.POST['user_email']
         except KeyError:
             new_password = None
             password_confirmation = None   
@@ -342,16 +342,16 @@ class PasswordResetHandler(BaseHandler):
             # Incorrect
             context['error_alert'] = 'Password and confirmation must match: {0}'.format(self.request.POST)
             context["user_email"] = user_email
-       context["password"]=password
-       context["password_confirmation"] = password_confirmation
+            context["password"]=password
+            context["password_confirmation"] = password_confirmation
             return self.render_response('passwordreset.html', **context)
         
         # Was anything updated?
         if should_update_user:
             user.put()
             context['success_alert'] = True 
-       context['alert_message']='Successfully updated password!'
-       self.render_response('login.html',**context)
+            context['alert_message']='Successfully updated password!'
+            self.render_response('login.html',**context)
         else:
             context['error_alert'] = "Failed to reset password"
             self.render_response("passwordreset.html",**context)

@@ -23,7 +23,7 @@ class EmailConfig(db.Model):
         ret['smtp_username'] = ''
         ret['smtp_password'] = ''
         ret['from_email'] = ''
-  ret['url_prefix']=''
+        ret['url_prefix']=''
         config = db.GqlQuery("SELECT * FROM EmailConfig").get()
         if config is not None:
             ret['smtp_host'] = config.smtp_host
@@ -31,7 +31,7 @@ class EmailConfig(db.Model):
             ret['smtp_username'] = config.smtp_username
             ret['smtp_password'] = config.smtp_password
             ret['from_email'] = config.from_email
-      ret['url_prefix']=config.url_prefix
+            ret['url_prefix']=config.url_prefix
         return ret
 
     @classmethod
@@ -44,7 +44,7 @@ class EmailConfig(db.Model):
         config.smtp_username = smtp_username
         config.smtp_password = smtp_password
         config.from_email    = from_email
-  config.url_prefix    = url_prefix
+        config.url_prefix    = url_prefix
         config.put()
 
     @classmethod
@@ -78,12 +78,12 @@ class EmailConfig(db.Model):
         config = db.GqlQuery("SELECT * FROM EmailConfig").get()
         if config is None:
             return False
-  msg = "Please click the following link in order to verify your account: {0}".format(str(config.url_prefix)+"/verify?user_email={0}&signup_token={1}".format(user_email, token))
-  status = self.send_email(user_email,"StochSS registration verification", msg)
+        msg = "Please click the following link in order to verify your account: {0}".format(str(config.url_prefix)+"/verify?user_email={0}&signup_token={1}".format(user_email, token))
+        status = self.send_email(user_email,"StochSS registration verification", msg)
         if status:
-     return True
-  else:
-     return False
+            return True
+        else:
+            return False
 
     @classmethod
     def send_password_reset_email(self,user_email, token):
