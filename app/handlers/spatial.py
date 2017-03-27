@@ -668,7 +668,7 @@ class SpatialPage(BaseHandler):
         logging.error("simulate.runQsub() modelType={0}".format(data['execType']))
         logging.error("*" * 80)
 
-        modelDb = StochKitModelWrapper.get_by_id(data["id"])
+        modelDb = StochKitModelWrapper.get_by_id(int(data["id"]))
         path = os.path.abspath(os.path.dirname(__file__))
         basedir = path + '/../'
         dataDir = tempfile.mkdtemp(dir=basedir + 'output')
