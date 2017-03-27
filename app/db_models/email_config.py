@@ -8,6 +8,7 @@ import logging
 
 class EmailConfig(db.Model):
     """ A Model to store config for sending email """
+    enabled = db.BooleanProperty()
     smtp_host = db.StringProperty()
     smtp_port = db.StringProperty()
     smtp_username = db.StringProperty()
@@ -32,6 +33,7 @@ class EmailConfig(db.Model):
             ret['smtp_password'] = config.smtp_password
             ret['from_email'] = config.from_email
             ret['url_prefix']=config.url_prefix
+            ret['email_enabled'] = bool(config.enabled)
         return ret
 
     @classmethod
@@ -39,6 +41,7 @@ class EmailConfig(db.Model):
         config = db.GqlQuery("SELECT * FROM EmailConfig").get()
         if config is None:
             config = EmailConfig()
+            config.enabled = False
         config.smtp_host     = smtp_host
         config.smtp_port     = smtp_port
         config.smtp_username = smtp_username
@@ -48,11 +51,29 @@ class EmailConfig(db.Model):
         config.put()
 
     @classmethod
-    def is_enabled():
+    def set_enabled_true(self):
+        config = db.GqlQuery("SELECT * FROM EmailConfig").get()
+        if config is not None:
+            config.enabled = True
+            config.put()
+            return True
+        return False
+
+    @classmethod
+    def set_enabled_false(self):
+        config = db.GqlQuery("SELECT * FROM EmailConfig").get()
+        if config is not None:
+            config.enabled = False
+            config.put()
+            return True
+        return False
+
+    @classmethod
+    def is_enabled(self):
         config = db.GqlQuery("SELECT * FROM EmailConfig").get()
         if config is None:
             return False
-        return True
+        return bool(config.enabled)
         
 
     @classmethod

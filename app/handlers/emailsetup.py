@@ -26,17 +26,27 @@ class EmailSetupPage(BaseHandler):
                     params['smtp_username'],
                     params['smtp_password'],
                     params['from_email'],
-            params['url_prefix']
+                    params['url_prefix']
                 )
                 context['msg'] = 'Config Saved'
             elif 'test' in params:
-                context = EmailConfig.get_config()
                 EmailConfig.send_email(
                     params['to_email'],
                     'Test email from StochSS',
                     'Test email from StochSS'
                 )
                 context['msg'] = 'Test Email Sent'
+            elif 'enable' in params:
+                if EmailConfig.set_enabled_true():
+                    context['msg'] = 'Email system enabled'
+                else: 
+                    context['msg'] = 'Could not enable email system'
+                    
+            elif 'disable' in params:
+                if EmailConfig.set_enabled_false():
+                    context['msg'] = 'Email system disabled'
+                else: 
+                    context['msg'] = 'Could not disable email system'
         except Exception as e:
             context['msg'] = "Error: {0}".format(e)
         context.update( EmailConfig.get_config() )

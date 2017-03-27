@@ -22,14 +22,23 @@
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>{{ user.name }}</td>
-                    <td>{{ user.email_address }}</td>
+                    <td>{{ user.email_address }}<BR>
+                    {% if user.verified %}
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                    <div width=100% align=right>
+                    <i align=right>verified</i>
+                    </div>
+                    {% endif %}
+                    </td>
                     <td>
-                        {% if not user.is_admin_user() %}
+                        {% if user.is_admin_user() %}
+                        Admin
+                        {% else %}
                         <button class="btn btn-warning table-action-button" data-action="reset">Reset Password</button>
                         {% if user.email_address in users_waiting_approval %}
-                        <button class="btn btn-success table-action-button" data-action="approve">Activate Account</button>
+                        <button class="btn btn-success table-action-button" data-action="approve">Approve Account</button>
                         {% else %}
-                        <button class="btn btn-danger table-action-button" data-action="revoke">Revoke Permissions</button>
+                        <button class="btn btn-danger table-action-button" data-action="revoke">Revoke Account</button>
                         {% endif %}
                         <button class="btn btn-danger table-action-button" data-action="delete">Delete</button>
                         {% endif %}
@@ -78,8 +87,33 @@
     </div>
 </div>
 <div class="span3">
-    <div class="well well-lg">
+    <div class="well well-large">
+            <form id="verification-method-form" action="/admin" method="post">
+            <input style="display: none;" name="action" value="change_verification_method">
             <h3>User Verification Method</h3>
+            <table class="table table-bordered"><tbody>
+            <TR><TD>
+            {% if admin_approval_required %}
+            Require Admin approval of all users: </TD><TD>
+            <button class="btn btn-success table-action-button" type=submit name="admin_approval_required"  value="Yes">Yes</button>
+            {% else %}
+            Require Admin approval of all users:</TD><TD>
+            <button class="btn btn-danger table-action-button" type=submit name="admin_approval_required" value="No">No</button>
+            {% endif %}</TD></TR><TR><TD>
+            Sending of verification email:</TD><TD> 
+            {% if email_setup %}
+            <B>Enabled</B>
+            {% else %}
+            <B>NOT configured</B>
+            {% endif %}
+            </TD></TR><TR><TD>
+            Require Users to have verified email address:</TD><TD>
+            {% if email_verification_required %}
+            <button class="btn btn-success table-action-button" type=submit name="email_verification_required"  value="Yes">Yes</button>
+            {% else %}
+            <button class="btn btn-danger table-action-button" type=submit name="email_verification_required" value="No" {% if not email_setup %}disabled{% endif %}>No</button>
+            {% endif %}
+            </TD></TR>
     </div>
 </div>
 {% endblock %}

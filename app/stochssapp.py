@@ -195,7 +195,10 @@ class User(WebApp2User):
         return self.email_address
 
     def is_verified(self):
-        return self.verified
+        if hasattr(self, 'verified'):
+            return self.verified
+        else:
+            return False
 
     def change_auth_id(self, auth_id):
         '''

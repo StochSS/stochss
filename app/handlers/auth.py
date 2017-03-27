@@ -100,35 +100,6 @@ class UserRegistrationPage(BaseHandler):
 
             # If the user does not exist, we create it.
             if not bool(User.get_by_auth_id(user_email)):
-
-                # Now add to approval waitlist
-                if pending_users_list.is_user_approved(user_email):
-                    success = True
-                    approved = True
-                elif pending_users_list.user_exists(user_email):
-                    success = True
-                    approved = False
-                else:
-                    success = pending_users_list.add_user_to_approval_waitlist(user_email)
-                    approved = False
-
-                # Has the user been preapproved? If so, we just verify it.
-                if pending_users_list.is_user_approved(user_email):
-                    user.verified = True
-                    user.put()
-                    pending_users_list.remove_user_from_approved_list()
-                else:
-                    # Create a signup token for the user and send a verification email
-                    token = str(uuid.uuid4())
-                    user.signup_token = token
-                    user.signup_token_time_created=None
-                    user.put()
-                    EmailConfig.send_verification_email(user_email, token)
-
-
-
-            if success:
-                # Then create the user
                 _attrs = {
                     'email_address': user_email,
                     'name': self.request.POST['name'],
@@ -136,33 +107,54 @@ class UserRegistrationPage(BaseHandler):
                     'verified': False
                 }
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
+
+                if success:
+                    # check if user is preapproved
+                    if pending_users_list.is_user_approved(user_email):
+                        success = True
+                        approved = True
+                        # Has the user been preapproved? If so, we just verify it.
+                        user.verified = True
+                        user.put()
+                    elif pending_users_list.user_exists(user_email):
+                        success = True
+                        approved = False
+                    else:
+                        success = pending_users_list.add_user_to_approval_waitlist(user_email)
+                        approved = False
                 
                 if success:
-                    if approved:
+                    if approved or (not pending_users_list.email_verification_required and not pending_users_list.admin_approval_required):
                         context = {
                             'success_alert': True,
                             'alert_message': 'Account creation successful! Your account is approved and you can log in immediately.'
                         }
-                    #else: #TODO: check if email is necessary here
-                    #    context = {
-                    #        'success_alert': True,
-                    #        'alert_message': 'Account creation successful! You will recieve a verification email, please follow the instructions to activate your account. 
-                    #    }
-                    else:
+                    elif pending_users_list.email_verification_required:
+                        # Create a signup token for the user and send a verification email
+                        token = str(uuid.uuid4())
+                        user.signup_token = token
+                        user.signup_token_time_created=None
+                        user.put()
+                        EmailConfig.send_verification_email(user_email, token)
+                        context = {
+                            'success_alert': True,
+                            'alert_message': 'Account creation successful! You will recieve a verification email, please follow the instructions to activate your account.'
+                        }
+                    elif pending_users_list.admin_approval_required:
                         context = {
                             'success_alert': True,
                             'alert_message': 'Account creation successful! Once an admin has approved your account, you can login.'
                         }
 
                     return self.render_response('login.html', **context)
-                else:
-                    logging.info("Account registration failed for: {0}".format(user))
-                    context = {
-                        'email_address': self.request.POST['email'],
-                        'name': self.request.POST['name'],
-                        'user_registration_failed': True
-                    }
-                    return self.render_response('user_registration.html', **context)
+
+                logging.info("Account registration failed for: {0}".format(user))
+                context = {
+                    'email_address': self.request.POST['email'],
+                    'name': self.request.POST['name'],
+                    'user_registration_failed': True
+                }
+                return self.render_response('user_registration.html', **context)
             else:
                 context = {
                     'error_alert': True,
@@ -413,17 +405,26 @@ class LoginPage(BaseHandler):
                 isAdmin = False
 
             #TODO: check this over, does this work with email verification
-            if pending_users_list.is_user_approved(email_address) or userdb.verified:
-                self.auth.set_session(user)
-                return self.redirect('/')
-            else:
+            if not isAdmin and pending_users_list.email_verification_required and not userdb.is_verified():
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'You need to verify your account before you can login.'
+                    }
+                return self.render_response('login.html', **context)
+
+            if not isAdmin and pending_users_list.admin_approval_required and not pending_users_list.is_user_approved(email_address):
                 # Not approved, add to approval waitlist
                 pending_users_list.add_user_to_approval_waitlist(email_address)
                 context = {
                     'error_alert': True,
-                    'alert_message': 'You need to verify your account or be approved by the admin before you can login.'
+                    'alert_message': 'You need to be approved by the admin before you can login.'
                     }
                 return self.render_response('login.html', **context)
+
+            # All Clear
+            self.auth.set_session(user)
+            return self.redirect('/')
+
         except (InvalidAuthIdError, InvalidPasswordError) as e:
             logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
             context = {
