@@ -16,6 +16,8 @@ mac = False
 if 'mac' in sys.argv:
     mac = True
 
+host_ip = "localhost"
+
 try:
     admin_token = sys.argv[3]
 except IndexError:
