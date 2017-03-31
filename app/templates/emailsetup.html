@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block csscontent %}<link href="/static/css/admin_panel.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+<CENTER><FONT COLOR="red">{{ msg }}</FONT></CENTER>
+<div class="active span7">
+    <h1>Configure Email</h1>
+    <div class="well well-large">
+        <form method=POST>
+        <TABLE class="table table-bordered active-usr-table" border=0>
+        <TR>
+            <TD> SMTP Server Name: </TD>
+            <TD> <INPUT TYPE=text name="smtp_host" value="{{ smtp_host }}"> </TD>
+        </TR>
+        <TR>
+            <TD> SMTP Server Port: </TD>
+            <TD> <INPUT TYPE=text size=3 name="smtp_port" value="{{ smtp_port }}"> </TD>
+        </TR>
+        <TR>
+            <TD> Username: </TD>
+            <TD> <INPUT TYPE=text name="smtp_username" value="{{ smtp_username }}"> </TD>
+        </TR>
+        <TR>
+            <TD> Password: </TD>
+            <TD> <INPUT TYPE=password name="smtp_password" value="{{ smtp_password }}"> </TD>
+        </TR>
+        <TR>
+            <TD> From Email: </TD>
+            <TD> <INPUT TYPE=text name="from_email" value="{{ from_email }}"> </TD>
+        </TR>
+        <TR>
+            <TD> URL of this App: </TD>
+            <TD> <INPUT TYPE=text id="url_prefix"  name="url_prefix" value="{{ url_prefix }}">
+            <INPUT class="btn btn-primary btn-small" TYPE=BUTTON OnClick="document.getElementById('url_prefix').value=location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: ''); " VALUE="Fill">
+           </TD>
+        </TR>
+        <TR>
+        <TR>
+            <TD> &nbsp; </TD>
+            <TD> <INPUT class="btn btn-primary btn-large" TYPE=submit name="save" value="Save"> </TD>
+        </TR>
+        </form>
+        <TR>
+            <TD> Email System Status: </TD>
+            <TD><form action="/emailsetup" method=post>
+            {% if email_enabled %}
+            <INPUT class="btn btn-success btn-large" TYPE=submit name="disable" value="Enabled">
+            {% else %}
+            <INPUT class="btn btn-danger btn-large" TYPE=submit name="enable" value="Disabled">
+            {% endif %}
+            </form>
+            </TD>
+        </TR>
+        </TABLE>
+    </div>
+
+    <h1>Send Test Email</h1>
+    <div class="well well-large">
+        <form method=POST>
+        <TABLE class="table table-bordered active-usr-table" border=0>
+        <TR>
+            <TD> Email Address: </TD>
+            <TD> <INPUT TYPE=text name="to_email" value=""> </TD>
+        </TR>
+        <TR>
+            <TD> &nbsp; </TD>
+            <TD> <INPUT TYPE=submit name="test" class="btn btn-primary btn-large" value="Send Test Email"> </TD>
+        </TR>
+        </TABLE>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}<script src="/static/js/admin_page.js"></script>{% endblock %}
