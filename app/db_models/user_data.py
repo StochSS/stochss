@@ -27,7 +27,7 @@ class UserData(db.Model):
     # The user's S3 bucket name used to store simulation results in S3
     S3_bucket_name = db.StringProperty()
 
-    # Is the amazon db table initalizes
+    # Is the amazon db table initalized
     is_amazon_db_table = db.BooleanProperty()
 
     # Cluster Info

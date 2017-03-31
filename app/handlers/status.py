@@ -37,6 +37,12 @@ import cluster_execution.cluster_execution_exceptions
 
 import molns
 
+#TODO: remove the 4 lines below?  From Saas branch
+#from sensitivity import SensitivityJobWrapper
+#from simulation import StochKitJobWrapper
+#from spatial import SpatialJobWrapper
+#from stochoptim import StochOptimJobWrapper
+
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        

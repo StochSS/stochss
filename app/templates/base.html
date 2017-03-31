@@ -90,12 +90,13 @@
               <li><a href="/stochoptim" TITLE = "Launch a parameter estimation job">Parameter Estimation</a></li>
               <li><a href="/parametersweep" TITLE = "Launch a parameter estimation job">Parameter Sweep</a></li>
               <li><a href="/status" TITLE = "Monitor the progress of a simulation">Job Status</a></li>
-              <li class="nav-header"><i class="icon-cog"></i> Settings</li>
+              <li><a href="/import" TITLE = "Manage backup archives">Backup</a></li>
               {% if user.is_admin_user() %}
-                  <li><a href="/admin">User Admin</a></li>
+                <li class="nav-header"><i class="icon-cog"></i> Admin</li>
+                  <li><a href="/admin">Manage Users</a></li>
+                  <li><a href="/emailsetup">Configure Email</a></li>
                   <li><a href="/credentials" TITLE = "Configure Compute Resources">Compute Resources</a></li>
               {% endif %}
-              <li><a href="/import" TITLE = "Manage backup archives">Backup</a></li>
             </ul>
           </div><!--/.well -->
         </div><!--/span2-->

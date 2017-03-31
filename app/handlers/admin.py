@@ -11,6 +11,8 @@ from google.appengine.ext import db
 from stochssapp import BaseHandler
 from stochssapp import User
 
+from db_models.email_config import EmailConfig
+
 class PendingUsersList(db.Model):
     """
     A model to store the list of pending users.
@@ -21,7 +23,10 @@ class PendingUsersList(db.Model):
     """
     users_waiting_approval = db.StringListProperty()
     approved_users = db.StringListProperty()
-    
+    #user_verification_method = db.StringProperty()  # 'admin' (default), 'email', 'none'
+    admin_approval_required = db.BooleanProperty()
+    email_verification_required = db.BooleanProperty()
+
     @classmethod
     def shared_list(cls):
         """
@@ -31,9 +36,25 @@ class PendingUsersList(db.Model):
         shared_list = db.GqlQuery("SELECT * FROM " + cls.__name__).get()
         if shared_list is None:
             shared_list = cls()
+            shared_list.admin_approval_required = True
+            shared_list.email_verification_required = False
             shared_list.put()
+        if not hasattr(shared_list,'admin_approval_required'):
+            shared_list.admin_approval_required = True
+        if not hasattr(shared_list,'email_verification_required'):
+            shared_list.email_verification_required = False
         return shared_list
-    
+
+    def set_admin_approval_required(self, value):
+        """ Update the value of 'admin_approval_required' (boolean). """
+        self.admin_approval_required = value
+        self.put()
+
+    def set_email_verification_required(self, value):
+        """ Update the value of 'email_verification_required' (boolean). """
+        self.email_verification_required = value
+        self.put()
+
     def is_user_approved(self, user_email):
         """ Check if the given email address belongs to an approved user """
         if self.approved_users and (user_email in self.approved_users):
@@ -73,27 +94,44 @@ class PendingUsersList(db.Model):
         """
         if self.approved_users and (user_email in self.approved_users):
             return False
-        if awaiting_approval:
+        if not self.is_user_approved(user_email):
+            self.approved_users.append(user_email)
+        if user_email in self.users_waiting_approval:
             self.users_waiting_approval.remove(user_email)
-        self.approved_users.append(user_email)
         self.put()
         return True
     
     def remove_user_from_approved_list(self, user_email):
-        self.approved_users.remove(user_email)
+        logging.info('remove_user_from_approved_list()')
+        logging.info('self.approved_users = {0}'.format(self.approved_users))
+        logging.info('self.users_waiting_approval = {0}'.format(self.users_waiting_approval))
+        if user_email in self.approved_users:
+            self.approved_users.remove(user_email)
+        self.users_waiting_approval.append(user_email)
+        self.put()
+
+    def remove_user_from_approval_waitlist(self, user_email):
+        if self.users_waiting_approval and (user_email in self.users_waiting_approval):
+            self.users_waiting_approval.remove(user_email)
         self.put()
 
 def admin_required(handler):
     """
     Decorator for requiring admin access to page.
-    Assumes user already logged in, so redirects to profile page if not admin
+    Assumes user already logged in, so redirects to a page with information if not admin
     """
     def check_admin(self, *args, **kwargs):
         if self.user.is_admin_user():
             return handler(self, *args, **kwargs)
         else:
-            self.redirect('/profile')
+            self.redirect('/restricted')
     return check_admin
+
+class RestrictedPageHandler(BaseHandler):
+    """ Handles the case when user's try to access a restricted page. """
+
+    def get(self):
+        self.render_response('restricted.html')
 
 class AdminPage(BaseHandler):
     """
@@ -115,6 +153,9 @@ class AdminPage(BaseHandler):
         preapproved_users = approved_users - active_users
 
         context = {
+            'admin_approval_required' : pending_users_list.admin_approval_required,
+            'email_verification_required' : pending_users_list.email_verification_required,
+            'email_setup' : EmailConfig.is_enabled(),
             'active_users': users,
             'preapproved_users': preapproved_users,
             'users_waiting_approval': pending_users_list.users_waiting_approval
@@ -149,6 +190,10 @@ class AdminPage(BaseHandler):
         elif action == 'reset':
             result, password = self._reset_user_password(email)
             json_result['password'] = password
+        elif action == 'change_verification_method':
+            self._change_verification_method() 
+            self.redirect('/admin')
+            return
         else:
             json_result['success'] = False
             return self.response.write(json.dumps(json_result))
@@ -158,10 +203,24 @@ class AdminPage(BaseHandler):
             json_result['message'] = failure_message
         return self.response.write(json.dumps(json_result))
     
+    def _change_verification_method(self):
+        """ Switch the value of the verification method """
+        logging.info("self.request.get('admin_approval_required') == {0}".format(self.request.get('admin_approval_required')))
+        if self.request.get('admin_approval_required') is not None and self.request.get('admin_approval_required') != '':
+            pending_users_list = PendingUsersList.shared_list()
+            logging.info('switching admin_approval_required to {0}'.format(not pending_users_list.admin_approval_required))
+            pending_users_list.set_admin_approval_required(not pending_users_list.admin_approval_required)
+        logging.info("self.request.get('email_verification_required') == {0}".format(self.request.get('email_verification_required')))
+        if self.request.get('email_verification_required') is not None and self.request.get('email_verification_required') != '':
+            pending_users_list = PendingUsersList.shared_list()
+            logging.info('switching email_verification_required to {0}'.format(not pending_users_list.email_verification_required))
+            pending_users_list.set_email_verification_required(not pending_users_list.email_verification_required)
+
     def _approve_user(self, email, awaiting_approval):
         """ Add user to approved users list and remove it from the waiting approval list if necessary """
         pending_users_list = PendingUsersList.shared_list()
         success = pending_users_list.approve_user(email, awaiting_approval)
+        print "HIIIIIIIIIIIIIIIIIIIIIIIIIIII"
         return success
         
     def _revoke_user(self, email):

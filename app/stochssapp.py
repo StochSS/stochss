@@ -159,7 +159,7 @@ class BaseHandler(webapp2.RequestHandler):
             ctx = {'user': self.user}
         else:
             ctx = {}
-
+        ctx.update(self.app.config)   
         ctx.update(context)
 
         if 'model_edited' not in ctx:
@@ -193,6 +193,12 @@ class User(WebApp2User):
 
     def user_id(self):
         return self.email_address
+
+    def is_verified(self):
+        if hasattr(self, 'verified'):
+            return self.verified
+        else:
+            return False
 
     def change_auth_id(self, auth_id):
         '''
@@ -269,6 +275,8 @@ import handlers.fileserver
 import handlers.spatial
 import handlers.molnsconfig
 from backend import pricing
+from handlers.emailsetup import *
+
 
 
 class MainPage(BaseHandler):
@@ -399,9 +407,14 @@ app = webapp2.WSGIApplication([
                                ('/updates',UpdatesPage),
                                ('/register', UserRegistrationPage),
                                ('/login', LoginPage),
+                               ('/verify', VerificationHandler),
+                               ('/passwordresetrequest', PasswordResetRequestHandler),
+                               ('/passwordreset', PasswordResetHandler),
                                ('/logout', LogoutHandler),
                                ('/admin', AdminPage),
                                ('/account_settings', AccountSettingsPage),
+                               ('/restricted', RestrictedPageHandler),
+                               ('/emailsetup', EmailSetupPage),
                                ],
                                 config=config,
                                 debug=True)
