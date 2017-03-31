@@ -220,6 +220,7 @@ class AdminPage(BaseHandler):
         """ Add user to approved users list and remove it from the waiting approval list if necessary """
         pending_users_list = PendingUsersList.shared_list()
         success = pending_users_list.approve_user(email, awaiting_approval)
+        print "HIIIIIIIIIIIIIIIIIIIIIIIIIIII"
         return success
         
     def _revoke_user(self, email):
