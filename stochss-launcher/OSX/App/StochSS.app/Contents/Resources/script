@@ -1,9 +1,11 @@
 #!/bin/bash
 trap clean_up INT SIGHUP SIGINT SIGTERM
 
-STOCHSS_IMAGE_NAME="aviralcse/stochss_qsub"
+# STOCHSS_IMAGE_NAME="aviralcse/stochss_qsub"
+#STOCHSS_IMAGE_TAG="updated_stochss_for_release"
+STOCHSS_IMAGE_NAME="briandrawert/stochss-launcher"
+STOCHSS_IMAGE_TAG="1.9Beta"
 STOCHSS_CONTAINER_NAME="stochsscontainer1_9"
-STOCHSS_IMAGE_TAG="updated_stochss_for_release"
 STOCHSS_VERSION="1.9"
 PATH=$PATH":/usr/local/bin/"
 try_again="true"
@@ -33,6 +35,13 @@ then
 	if [ ! -d ~/.stochss ]; then mkdir ~/.stochss; fi
 	DIR="$( cd ~/.stochss; pwd )"
 	APPLE_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    DOCKERFILE=`which docker`
+    if [[ "x$DOCKERFILE" == "x" ]]
+    then
+        echo "Error: Docker not found.  Check to be sure it is running."
+        echo 'If Docker is not installed, Please install it from <A HREF="http://www.docker.com/">www.docker.com</A>'
+        exit 1
+    fi
 	DOCKERPATH=$(dirname $(which docker))
 
 	(more $DIR/.admin_key >> $DIR/.dockerlog 2>&1) || (echo `uuidgen` > $DIR/.admin_key && echo "Generated key.")
