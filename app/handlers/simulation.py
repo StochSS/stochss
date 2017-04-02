@@ -269,9 +269,9 @@ class SimulatePage(BaseHandler):
 
         context['resources'] = []
         # Important for UI, do not change key_file_id.
-        context['resources'].append(dict(json="{'uuid':0, 'key_file_id':0}", name="Default (local resources)"))
-        context['resources'].append(dict(json="{'uuid':1, 'key_file_id':1}", name="Amazon AWS Cloud", disabled=(not self.user_data.valid_credentials)))
-        #context['resources'].append(dict(json="{'key_file_id' : 2}" name"Molns Configured Cloud Resources"))
+        context['resources'].append(dict(json="{'uuid':0, 'key_file_id':0}", uuid=0, name="Default (local resources)"))
+        context['resources'].append(dict(json="{'uuid':1, 'key_file_id':1}", uuid=1,name="Amazon AWS Cloud", disabled=(not self.user_data.valid_credentials)))
+        #context['resources'].append(dict(json="{'key_file_id' : 2}", uuid=2, name="Molns Configured Cloud Resources"))
         
         
         for resource in self.user_data.get_cluster_node_info():
