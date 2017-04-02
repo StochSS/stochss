@@ -57,9 +57,10 @@ class ParameterSweepPage(BaseHandler):
 
         context['resources'] = []
         # Important for UI, do not change key_file_id.
-        context['resources'].append(dict(key_file_id=0, username="", ip="Default (local resources)"))
+        context['resources'].append(dict(json="{'uuid':0, 'key_file_id':0}", uuid=0, name="Default (local resources)"))
         for resource in self.user_data.get_cluster_node_info():
             resource['json'] = json.dumps(resource)
+            resource['name'] = 'Cluster: '+resource['username']+'@'+resource['ip']
             context['resources'].append(resource)
         context['selected'] = self.user_data.get_selected()
         logging.info("context['selected'] = {0}".format(context['selected']))
