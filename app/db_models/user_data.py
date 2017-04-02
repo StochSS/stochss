@@ -76,7 +76,7 @@ class UserData(db.Model):
 
     def get_selected(self):
         try:
-            val = int(json.loads(self.selected, encoding="ascii"))
+            val = json.loads(self.selected, encoding="ascii")
             logging.debug("get_selected() ascii = {0}".format(val))
             return val
         except:

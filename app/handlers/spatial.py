@@ -742,7 +742,7 @@ class SpatialPage(BaseHandler):
         except Exception as e:
             logging.exception(e)
             job.status = 'Failed'
-            job.delete(self)
+            #job.delete(self)
             raise
 
         return job
@@ -755,7 +755,7 @@ class SpatialPage(BaseHandler):
         cluster_info['username'] = received_cluster_info['username']
         cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
 
-        self.user_data.set_selected(received_cluster_info['key_file_id'])
+        self.user_data.set_selected(received_cluster_info['uuid'])
 
         job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
                           self.user.user_id(),
@@ -769,16 +769,9 @@ class SpatialPage(BaseHandler):
                                             "msg": "Job name must be unique"}))
             return
 
-        try:
-            result = self.runQsub(data=data, cluster_info=cluster_info)
+        return self.runQsub(data=data, cluster_info=cluster_info)
 
-            return result
-        except Exception as e:
-            logging.exception(e)
-            result = {'status': False,
-                      'msg': 'Error: {0}'.format(e)}
-            self.response.write(json.dumps(result))
-            return
+
 import itertools
 import cluster_execution
 

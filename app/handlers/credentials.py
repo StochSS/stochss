@@ -18,6 +18,7 @@ import re
 import pprint
 import time
 import glob
+import uuid
 
 from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig, JobDatabaseConfig
 from backend.databases.dynamo_db import DynamoDB
@@ -85,6 +86,7 @@ class ClusterCredentialsPage(BaseHandler):
         print("json data received = \n{0}".format(pprint.pformat(data_received)))
 
         new_cluster_info = data_received['cluster_info']
+        new_cluster_info['uuid'] = str(uuid.uuid4())
 
         cluster_node_info = self.user_data.get_cluster_node_info()
         cluster_node_info.append(new_cluster_info)

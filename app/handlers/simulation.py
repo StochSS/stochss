@@ -269,8 +269,8 @@ class SimulatePage(BaseHandler):
 
         context['resources'] = []
         # Important for UI, do not change key_file_id.
-        context['resources'].append(dict(json="{'key_file_id' : 0}", name="Default (local resources)"))
-        context['resources'].append(dict(json="{'key_file_id' : 1}", name="Amazon AWS Cloud", disabled=(not self.user_data.valid_credentials)))
+        context['resources'].append(dict(json="{'uuid':0, 'key_file_id':0}", name="Default (local resources)"))
+        context['resources'].append(dict(json="{'uuid':1, 'key_file_id':1}", name="Amazon AWS Cloud", disabled=(not self.user_data.valid_credentials)))
         #context['resources'].append(dict(json="{'key_file_id' : 2}" name"Molns Configured Cloud Resources"))
         
         
@@ -708,7 +708,7 @@ class SimulatePage(BaseHandler):
         cluster_info['username'] = received_cluster_info['username']
         cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
 
-        self.user_data.set_selected(received_cluster_info['key_file_id'])
+        self.user_data.set_selected(received_cluster_info['uuid'])
 
         job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
                           self.user.user_id(),

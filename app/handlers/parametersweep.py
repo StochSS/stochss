@@ -150,7 +150,7 @@ class ParameterSweepPage(BaseHandler):
             cluster_info['username'] = received_cluster_info['username']
             cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
 
-            self.user_data.set_selected(received_cluster_info['key_file_id'])
+            self.user_data.set_selected(received_cluster_info['uuid'])
 
             #logging.info("PARAMETER_SWEEP_CLUSTER_INFO = {0}".format(cluster_info))
             #cluster_info = json.loads(self.request.get('cluster_info'))

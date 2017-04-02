@@ -247,7 +247,7 @@
           <select name="resource_picker" id="resource_picker" class="selectpicker">
             {% for resource in resources %}
                 <option 
-                {% if resource.key_file_id == selected %} selected="selected" {% endif %}
+                {% if resource.uuid == selected %} selected="selected" {% endif %}
                 value="{{ resource.json }}"
                 {% if resource.disabled %}disabled{%endif%}
                 >

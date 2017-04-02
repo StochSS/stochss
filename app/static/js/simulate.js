@@ -272,30 +272,30 @@ var display_simulation_conf = function(id){
                            }
                            catch(err){
                                resource_info = {}
-                               resource_info['key_file_id'] = 0
+                               resource_info['uuid'] = 0
                            }
                            var data = checkAndGet(selectTable);
 
                            if(!data)
                                return;
                            var message = "Running on ";
-                           if(resource_info['key_file_id'] == 0)
+                           if(resource_info['uuid'] == 0)
                            {
-                                message += "StochSS Server"
+                                message += "Local Resources"
                                 data.resource = "local";
                            }
-                           else if (resource_info['key_file_id'] == 1){
+                           else if (resource_info['uuid'] == 1){
                                message += "Cloud"
                                data.resource = "cloud";
 
                            }
-                           else if (resource_info['key_file_id'] == 2){
+                           else if (resource_info['uuid'] == 2){
                                message += "Molns Cloud"
                                data.resource = "molns";
                            }
                            else
                            {
-                               message += resource_info['username'] + "@" + resource_info['ip']
+                               message += 'Cluster: ' + resource_info['username'] + "@" + resource_info['ip']
                                data.resource = "qsub";
                            }
                            updateMsg( { status: true,
