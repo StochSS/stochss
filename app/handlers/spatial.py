@@ -561,6 +561,7 @@ class SpatialPage(BaseHandler):
 
     def runLocal(self, data):
         ''' Run a PyURDME run using local compute recources. '''
+        self.user_data.set_selected(0)
         #####
         pymodel = self.construct_pyurdme_model(data)
         #####
@@ -610,9 +611,10 @@ class SpatialPage(BaseHandler):
     
     # This takes in the unserialized JSON object data and runs a model!
     def runCloud(self, data):
+        self.user_data.set_selected(1)
         service = backendservices(self.user_data)
         if not service.isOneOrMoreComputeNodesRunning():
-            raise Exception('No cloud computing resources found')
+            raise Exception('No cloud computing resources found. (Have they been started?)')
 
         # If the seed is negative, this means choose a seed >= 0 randomly
         if int(data['seed']) < 0:

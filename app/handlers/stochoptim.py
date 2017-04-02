@@ -288,6 +288,7 @@ class StochOptimPage(BaseHandler):
     def runLocal(self, data):
         '''
         '''
+        self.user_data.set_selected(0)
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
 
         berniemodel = StochOptimModel()
@@ -364,6 +365,11 @@ class StochOptimPage(BaseHandler):
         return job
 
     def runCloud(self, data):
+        self.user_data.set_selected(1)
+        service = backendservices(self.user_data)
+        if not service.isOneOrMoreComputeNodesRunning():
+            raise Exception('No cloud computing resources found. (Have they been started?)')
+
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
 
         berniemodel = StochOptimModel()

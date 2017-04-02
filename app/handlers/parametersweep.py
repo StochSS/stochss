@@ -73,7 +73,11 @@ class ParameterSweepPage(BaseHandler):
         self.response.content_type = 'application/json'
 
         if reqType == 'newJob':
+            # Run via Molns cloud
             data = json.loads(self.request.get('data'))
+            
+            self.user_data.set_selected(2)
+
 
             job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
                               self.user.user_id(),
@@ -256,6 +260,7 @@ class ParameterSweepPage(BaseHandler):
                                          'msg' : 'Success'}))
 
     def runLocal(self, data):
+        self.user_data.set_selected(0)
         logging.error("*"*80)
         logging.error("parametersweep.runLocal() modelType={0}".format(data['modelType']))
         logging.error("*"*80)
@@ -449,6 +454,7 @@ class ParameterSweepPage(BaseHandler):
         return job
 
     def runMolns(self, data):
+        self.user_data.set_selected(2)
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
 
         path = os.path.abspath(os.path.dirname(__file__))

@@ -269,12 +269,22 @@ class SimulatePage(BaseHandler):
 
         context['resources'] = []
         # Important for UI, do not change key_file_id.
-        context['resources'].append(dict(key_file_id=0, username="", ip="Default (local resources)"))
+        context['resources'].append(dict(json="{'key_file_id' : 0}", name="Default (local resources)"))
+        context['resources'].append(dict(json="{'key_file_id' : 1}", name="Amazon AWS Cloud", disabled=(not self.user_data.valid_credentials)))
+        #context['resources'].append(dict(json="{'key_file_id' : 2}" name"Molns Configured Cloud Resources"))
+        
+        
         for resource in self.user_data.get_cluster_node_info():
             resource['json'] = json.dumps(resource)
+            resource['name'] = 'Cluster: '+resource['username']+'@'+resource['ip']
             context['resources'].append(resource)
+        
         context['selected'] = self.user_data.get_selected()
         logging.info("context['selected'] = {0}".format(context['selected']))
+        
+        context['valid_ec2_credentials'] = self.user_data.valid_credentials
+        logging.info("context['valid_ec2_credentials'] = {0}".format(context['valid_ec2_credentials']))
+        
         context = dict(result, **context)
         # logging.debug("Parametersweep.py\n" + str(context))
         return context
@@ -734,6 +744,8 @@ class SimulatePage(BaseHandler):
         sys.stderr.write("*"*80 + "\n")
         sys.stderr.write("*"*80 + "\n")
 
+        self.user_data.set_selected(2)  # set default
+        
         if not modelDb:
             return {'status':False,
                     'msg':'Failed to retrive the model to simulate.'}
@@ -849,7 +861,13 @@ class SimulatePage(BaseHandler):
 
 
     def runCloud(self, params):
+        self.user_data.set_selected(1)  # set default
+        service = backendservices(self.user_data)
+        if not service.isOneOrMoreComputeNodesRunning():
+            raise Exception('No cloud computing resources found. (Have they been started?)')
+
         model = StochKitModelWrapper.get_by_id(int(params["id"])).createStochKitModel()
+
 
         if not model:
             raise Exception('Failed to retrive the model \'{0}\' to simulate'.format(params["id"]))
@@ -992,6 +1010,9 @@ class SimulatePage(BaseHandler):
     def runStochKitLocal(self, params):
         """ Submit a local StochKit job """
         modelDb = StochKitModelWrapper.get_by_id(int(params["id"]))
+
+        self.user_data.set_selected(0)  # set default
+
 
         if not modelDb:
             return {'status':False,
