@@ -95,7 +95,7 @@ class JobManager():
 
     @staticmethod
     def getJob(handler, job_id):
-        job = StochKitJobWrapper.get_by_id(job_id)
+        job = StochKitJobWrapper.get_by_id(int(job_id))
         indata = json.loads(job.indata)
         logging.debug('getJob() job.id = {0} job.indata = {1}'.format(job.key().id(), indata))
 
@@ -189,12 +189,12 @@ class JobManager():
 
     @staticmethod
     def deleteJob(handler, job_id):
-        job = StochKitJobWrapper.get_by_id(job_id)
+        job = StochKitJobWrapper.get_by_id(int(job_id))
         job.delete()
 
     @staticmethod
     def updateJob(handler, job):
-        jobWrap = StochKitJobWrapper.get_by_id(job_id)
+        jobWrap = StochKitJobWrapper.get_by_id(int(job_id))
         jobWrap.user_id = handler.user.user_id()
         jobWrap.put()
         
@@ -542,7 +542,7 @@ class SimulatePage(BaseHandler):
     
     def runMolns(self, params):
         """ Submit a remote molns StochKit job """
-        modelDb = StochKitModelWrapper.get_by_id(params["id"])
+        modelDb = StochKitModelWrapper.get_by_id(int(params["id"]))
         sys.stderr.write("*"*80 + "\n")
         sys.stderr.write("*"*80 + "\n")
         sys.stderr.write("runMolns\n")
@@ -584,7 +584,7 @@ class SimulatePage(BaseHandler):
 
             args += '--seed {0} '.format(params['seed'])
         else:
-            executable = "/usr/local/ode-1.0.2/stochkit_ode.py"
+            executable = "/usr/local/ode/stochkit_ode.py"
 
         # Columns need to be labeled for visulatization page to work.  
         args += ' --label'
@@ -665,7 +665,7 @@ class SimulatePage(BaseHandler):
 
 
     def runCloud(self, params):
-        model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
+        model = StochKitModelWrapper.get_by_id(int(params["id"])).createStochKitModel()
 
         if not model:
             raise Exception('Failed to retrive the model \'{0}\' to simulate'.format(params["id"]))
@@ -807,7 +807,7 @@ class SimulatePage(BaseHandler):
 
     def runStochKitLocal(self, params):
         """ Submit a local StochKit job """
-        modelDb = StochKitModelWrapper.get_by_id(params["id"])
+        modelDb = StochKitModelWrapper.get_by_id(int(params["id"]))
 
         if not modelDb:
             return {'status':False,
