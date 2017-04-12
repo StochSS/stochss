@@ -284,6 +284,12 @@ class SimulatePage(BaseHandler):
         
         context['valid_ec2_credentials'] = self.user_data.valid_credentials
         logging.info("context['valid_ec2_credentials'] = {0}".format(context['valid_ec2_credentials']))
+
+        # exec_type
+        # time
+        # increment
+        # realizations
+        # algorithm
         
         context = dict(result, **context)
         # logging.debug("Parametersweep.py\n" + str(context))
