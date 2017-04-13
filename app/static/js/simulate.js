@@ -334,6 +334,8 @@ var display_simulation_conf = function(id){
                        }, selectTable));
                        $( "#modelSelect" ).hide();
                        $( "#simulationConf" ).show();
+                       startup_default_values();
+
                    },
                    dataType = "json");
 }
