@@ -16,11 +16,49 @@ from email.mime.text import MIMEText
 from db_models.email_config import EmailConfig
 from admin import PendingUsersList
 
+
+class SingleMultiUserMode(db.Model):
+    ''' Single or multi-user mode for StochSS '''
+    
+    single_user_mode = db.BooleanProperty()
+
+    @classmethod
+    def is_single_user_mode(cls):
+        ''' Is StochSS in single user mode?'''
+        mode = db.GqlQuery("SELECT * FROM " + cls.__name__).get()
+        if mode is None:
+            mode = cls()
+            mode.single_user_mode = True
+            mode.put()
+        return mode.single_user_mode
+
+    @classmethod
+    def set_single_user_mode(cls):
+        ''' Set StochSS to be a single user'''
+        mode = db.GqlQuery("SELECT * FROM " + cls.__name__).get()
+        if mode is None:
+            mode = cls()
+        mode.single_user_mode = True
+        mode.put()
+
+    @classmethod
+    def set_multi_user_mode(cls):
+        ''' Set StochSS to be a single user'''
+        mode = db.GqlQuery("SELECT * FROM " + cls.__name__).get()
+        if mode is None:
+            mode = cls()
+        mode.single_user_mode = False
+        mode.put()
+
+
 class SecretKey(db.Model):
     '''
     '''
     key_string = db.StringProperty()
     
+
+
+
     @classmethod
     def clear_stored_key(cls):
         ''' Deletes the secret token(s) currently stored in the DB. '''
@@ -187,11 +225,18 @@ class UserRegistrationPage(BaseHandler):
                     if success:
                         # Invalidate the token
                         SecretKey.clear_stored_key()
-                        context = {
-                            'success_alert': True,
-                            'alert_message': 'Account creation successful! You may now log in with your new account.'
-                        }
-                        return self.render_response('login.html', **context)
+                        if 'user_mode' in self.request.POST:
+                            if self.request.POST['user_mode'] == 'single':
+                                logging.info("UserRegistrationPage: user_mode set to single")
+                                SingleMultiUserMode.set_single_user_mode()
+                            elif self.request.POST['user_mode'] == 'multi':
+                                logging.info("UserRegistrationPage: user_mode set to multi")
+                                SingleMultiUserMode.set_multi_user_mode()
+                            else:
+                                logging.info("UserRegistrationPage: unknown user_mode {0}".format(self.request.POST['user_mode']))
+                        else:
+                            logging.info("UserRegistrationPage: user_mode not set")
+                        return self.redirect('/login?secret_key={0}'.format(secret_key))
                     else:
                         context = {
                             'email_address': self.request.POST['email'],
@@ -363,6 +408,7 @@ class LoginPage(BaseHandler):
         if self.logged_in():
             return self.redirect("/")
         # Need to log in
+
         try:
             secret_key = self.request.GET['secret_key']
         except KeyError:
@@ -372,11 +418,18 @@ class LoginPage(BaseHandler):
             secret_key_attempt = SecretKey(key_string=secret_key)
             if secret_key_attempt.isEqualToAdminKey() and not User.admin_exists():
                 return self.redirect('/register?secret_key={0}'.format(secret_key))
-            else:
-                # Unauthorized secret key query string param, just ignore it completely...
-                pass
-        
-        self.render_response('login.html')
+            elif secret_key_attempt.isEqualToAdminKey() and  User.admin_exists() and SingleMultiUserMode.is_single_user_mode():
+                # Single user mode, login user and forward to / page
+                user_subobj = self.auth.store.user_model.get_by_auth_id(User.get_admin_user_id())
+                user = self.auth.store.user_to_dict(user_subobj)
+                self.auth.set_session(user)
+                return self.redirect('/')
+
+        # Normal user login
+        if SingleMultiUserMode.is_single_user_mode() or not User.admin_exists():
+            self.render_response('login_disabled.html')
+        else:
+            self.render_response('login.html')
     
     def post(self):
         '''
@@ -404,7 +457,6 @@ class LoginPage(BaseHandler):
             else:
                 isAdmin = False
 
-            #TODO: check this over, does this work with email verification
             if not isAdmin and pending_users_list.email_verification_required and not userdb.is_verified():
                 context = {
                     'error_alert': True,

@@ -190,6 +190,18 @@ class User(WebApp2User):
         '''
         admin = User.query().filter(ndb.GenericProperty('is_admin') == 'YES').get()
         return admin is not None
+    
+    @classmethod
+    def get_admin_user_id(self):
+        """
+        """
+        admin = User.query().filter(ndb.GenericProperty('is_admin') == 'YES').get()
+        if admin is None:
+            raise Excpetion('Admin user is not set')
+        if hasattr(admin, 'email_address'):
+            return admin.email_address
+        else:
+            raise Excpetion('Admin user email_address not set')
 
     def user_id(self):
         return self.email_address

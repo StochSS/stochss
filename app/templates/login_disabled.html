@@ -1,0 +1,51 @@
+{% extends "login_base.html" %}
+{% block title %}Login{% endblock %}
+{% block csscontent %}<link href="/static/css/login.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+  {% if error_alert %}
+    <p class="alert alert-error">{{alert_message}}</p>
+  {% elif success_alert %}
+    <p class="alert alert-success">{{alert_message}}</p>
+  {% endif %}
+  
+  <div class="span3 offset4 well">
+    <h4 class="well-title">
+      <a data-toggle="modal" href="#login_modal">
+        Please log in to continue <i class="icon-question-sign"></i>
+      </a>
+    </h4>
+    {% set help_modal_id = "login_modal" %}
+    {% set help_modal_title = "Logging In" %}
+    {% set help_modal_message = "To access StochSS you need to have an account. To create an account, you must request access (below) and be approved by the administrator. Once you have been approved, you can create your account and immediately log in below." %}
+    {% include "help_modal.html" %}
+    {{help_modal|safe}}
+    
+    <BR><BR><h2>Multi-user mode is disabled. Use the launcher to access StochSS.</h2><BR><BR>
+
+    <form action="/login" method="post">
+      <fieldset>
+        <div class="control-group">
+          <input type="email" name="email" placeholder="email@example.com" autofocus="autofocus" disabled>
+        </div>
+        <div class="control-group">
+          <input type="password" name="password" placeholder="password" disabled>
+        </div>
+        <div class="control-group">
+          <button type="submit" class="btn btn-primary" disabled>Submit</button>
+        </div>
+      </fieldset>
+    </form>
+    <h4 class="well-separator">Or</h4>
+    <form action="/register" method="get">
+      <fieldset>
+        <div class="control-group create-account">
+          <button class="btn btn-primary" disabled>Create Account</button>
+        </div>
+      </fieldset>
+    </form>
+    <BR>
+    <BR>
+  </div>
+  
+{% endblock %}
