@@ -573,11 +573,11 @@ class SimulatePage(BaseHandler):
                                                   "msg" : "Job launched",
                                                   "id" : job.key().id() } ))
             except Exception as e:
-                traceback.print_exc()
+                #traceback.print_exc()
 
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps( { "status" : False,
-                                                  "msg" : str(e) } ))
+                                                  "msg" : "{0}:{1}".format(e.__class__.__name__,e) } ))
 
     def runQsub(self, data, cluster_info):
         from db_models.parameter_sweep_job import ParameterSweepJobWrapper
@@ -643,6 +643,7 @@ class SimulatePage(BaseHandler):
         job.status = "Pending"
         job.output_stored = "False"
         job.is_simulation = True
+        job.resource = "qsub"
 
         try:
             templateData = {
@@ -696,13 +697,16 @@ class SimulatePage(BaseHandler):
             else:
                 raise Exception("Trying to runQsub on unsupported modelType {0}".format(data['modelType']))
 
-            job.resource = "qsub"
             job.put()
         except Exception as e:
+            exc_info = sys.exc_info()
             logging.exception(e)
             job.status = 'Failed'
-            job.delete(self)
-            raise
+            try:
+                job.delete(self)
+            except Exception as e:
+                pass
+            raise exc_info[1], None, exc_info[2]
 
         return job
 
@@ -734,11 +738,12 @@ class SimulatePage(BaseHandler):
             return result
 
         except Exception as e:
+            exc_info = sys.exc_info()
             logging.exception(e)
-            result = {'status': False,
-                      'msg': 'Error: {0}'.format(e)}
-            self.response.write(json.dumps(result))
-            return
+            #result = {'status': False,
+            #          'msg': 'Error: {0}'.format(e)}
+            #self.response.write(json.dumps(result))
+            raise exc_info[1], None, exc_info[2]
 
     def runMolns(self, params):
         """ Submit a remote molns StochKit job """

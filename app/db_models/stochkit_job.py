@@ -65,8 +65,12 @@ class StochKitJobWrapper(db.Model):
             return
         else:
             service = backendservices(user_data)
-            if self.resource.lower() == 'local':
+            if self.resource is None:
+                return # avoid error on "NoneType.lower()"
+            elif self.resource.lower() == 'local':
                 service.stopTaskLocal([self.pid])
+            elif self.resource.lower() == 'qsub' or self.resource.lower() == 'molns':
+                return # can't stop batching processing tasks (at least not easily)
             else:
                 service.stopTasks(self)
 
