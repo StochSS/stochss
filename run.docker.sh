@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 docker rm stochsscontainer1_8_dev
-IMAGE_NAME='aviralcse/stochss_qsub:updated_stochss_for_release'
+#IMAGE_NAME='aviralcse/stochss_qsub:updated_stochss_for_release'
+IMAGE_NAME='briandrawert/stochss-launcher:1.9base'
 
 if [[ $(uname -s) == 'Darwin' ]]
 then

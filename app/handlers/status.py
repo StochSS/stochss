@@ -267,10 +267,10 @@ class StatusPage(BaseHandler):
 
     def __process_getJobStatus(self,service,job, number):
         try:
-            if self.molnsConfig is None:
-                molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
-                if molnsConfigDb:
-                    self.molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+            #if self.molnsConfig is None:
+            #    molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+            #    if molnsConfigDb:
+            #        self.molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
 
             status = self.getJobStatus(service, job, self.molnsConfig)
         except Exception as e:
