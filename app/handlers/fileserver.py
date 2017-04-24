@@ -280,7 +280,7 @@ class LargeFileServerInterface(BaseHandler):
                 if type(fieldStorage) is unicode:
                     continue
 
-                if key == 'flexKeyFiles':
+                if key == 'flexKeyFiles' or key == 'clusterKeyFiles':
                     fileID = FileManager.createFile(handler=self, pathKey="{0}".format(key),
                                                     path="{0}".format(fieldStorage.filename),
                                                     data=fieldStorage.value, perm=int('600', 8))
