@@ -419,7 +419,8 @@ class StatusPage(BaseHandler):
 
                 if job.status != "Finished" and job.status != "Failed":
                     try:
-                        val = cps.get_sweep_result(pickle.loads(job.qsubHandle))
+                        job_handle = pickle.loads(job.qsubHandle)
+                        val = cps.get_sweep_result(job_handle)
 
                         results = []
                         for nm in val:
@@ -457,6 +458,10 @@ class StatusPage(BaseHandler):
 
                         with open(file_to_check, 'w') as f:
                             f.write('1')
+                        with open(os.path.join(job.outData, "stdout.log"), 'w') as f:
+                            f.write( cps.cluster_deploy.get_job_debug_logs(job_handle)  )
+                        with open(os.path.join(job.outData, "stderr.log"), 'w') as f:
+                            f.write( cps.cluster_deploy.get_job_logs(job_handle)  )
 
                 job.status = status
                 #status = qsub.check_status(job.qsubjob)
