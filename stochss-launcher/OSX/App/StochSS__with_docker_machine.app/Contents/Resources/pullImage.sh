@@ -7,10 +7,10 @@ export PATH=$1:$PATH
 #STOCHSS_VERSION="1.7"
 
 STOCHSS_IMAGE_NAME="briandrawert/stochss-launcher"
-STOCHSS_CONTAINER_NAME="stochsscontainer1_8"
-STOCHSS_VM_NAME="stochss1-8"
-STOCHSS_IMAGE_TAG="1.8"
-STOCHSS_VERSION="1.8"
+STOCHSS_CONTAINER_NAME="stochsscontainer1_9"
+STOCHSS_VM_NAME="stochss1-9"
+STOCHSS_IMAGE_TAG="1.9"
+STOCHSS_VERSION="1.9"
 
 docker-machine env $STOCHSS_VM_NAME >> .pullImageLog || (echo "cannot set environment" && exit -1)
 eval "$(docker-machine env $STOCHSS_VM_NAME)"
