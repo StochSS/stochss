@@ -4,37 +4,66 @@ trap clean_up INT SIGHUP SIGINT SIGTERM
 # STOCHSS_IMAGE_NAME="aviralcse/stochss_qsub"
 #STOCHSS_IMAGE_TAG="updated_stochss_for_release"
 STOCHSS_IMAGE_NAME="briandrawert/stochss-launcher"
-STOCHSS_IMAGE_TAG="1.9Beta"
+STOCHSS_IMAGE_TAG="1.9"
 STOCHSS_CONTAINER_NAME="stochsscontainer1_9"
 STOCHSS_VERSION="1.9"
+
+####################################################################
+####################################################################
+
 PATH=$PATH":/usr/local/bin/"
 try_again="true"
+DIR="$( cd ~/.stochss; pwd )"
 
 function clean_up(){
 	echo
 	echo "Please wait while StochSS $STOCHSS_VERSION is stopped correctly..."
 	IR="$( cd ~/.stochss; pwd )"
 	docker stop $STOCHSS_CONTAINER_NAME >> $IR/.dockerlog 2>&1
-	echo "Done"
+	echo "StochSS stopped."
 	exit
 }
 
-function create_container_and_try_again(){
-	DI="$( cd ~/.stochss; pwd )"
+function attempt_to_download_image(){
+	#DI="$( cd ~/.stochss; pwd )"
 	APPLE_SCRIPT_PAT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	echo "Failed to get image."
-	docker ps -aq | grep "[a-z;0-9]" && docker rm `docker ps -aq`
-	docker rmi $STOCHSS_CONTAINER_NAME >> $DI/.dockerlog 2>&1
-	echo "Trying once more."
-	echo "Another terminal window should open up to download StochSS. Waiting for image..." && osascript $APPLE_SCRIPT_PAT/StochSS.scpt $(dirname $(which docker))
-	return 0
+	#echo "Failed to get image."
+	#docker ps -aq | grep "[a-z;0-9]" && docker rm `docker ps -aq`
+	#docker rmi $STOCHSS_IMAGE_NAME$STOCHSS_IMAGE_TAG >> $DI/.dockerlog 2>&1
+	echo "Trying to download StochSS image from Docker Hub."
+	echo "A terminal window should open up to download StochSS. Waiting for image..." && osascript $APPLE_SCRIPT_PAT/StochSS.scpt $(dirname $(which docker))
+}
+
+function check_if_image_exists(){
+    echo "Checking for StochSS image $STOCHSS_IMAGE_NAME:$STOCHSS_IMAGE_TAG"
+    docker images "$STOCHSS_IMAGE_NAME:$STOCHSS_IMAGE_TAG" | grep -oh "$STOCHSS_IMAGE_NAME" > /dev/null 2>&1
+    return $?
+}
+
+function initialize_error_log(){
+	if [ ! -d ~/.stochss ]; then mkdir ~/.stochss; fi
+    echo `date` > $DIR/.dockerlog
+    echo `uname -a` >> $DIR/.dockerlog
+}
+
+function clean_up_and_show_error_log(){
+	echo 
+	echo "Please wait while StochSS $STOCHSS_VERSION is stopped correctly..."
+	DIR="$( cd ~/.stochss; pwd )"
+	docker stop $STOCHSS_CONTAINER_NAME >> $DIR/.dockerlog 2>&1
+	echo "StochSS stopped."
+    echo ""
+    echo ""
+    echo ""
+    echo "Error Log:"
+    echo `cat $DIR/.dockerlog`
 }
 
 if [[ $(uname -s) == 'Darwin' ]]
 then
-	if [ ! -d ~/.stochss ]; then mkdir ~/.stochss; fi
-	DIR="$( cd ~/.stochss; pwd )"
-	APPLE_SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    #
+    initialize_error_log
+
     DOCKERFILE=`which docker`
     if [[ "x$DOCKERFILE" == "x" ]]
     then
@@ -42,41 +71,47 @@ then
         echo 'If Docker is not installed, Please install it from <A HREF="http://www.docker.com/">www.docker.com</A>'
         exit 1
     fi
-	DOCKERPATH=$(dirname $(which docker))
 
-	(more $DIR/.admin_key >> $DIR/.dockerlog 2>&1) || (echo `uuidgen` > $DIR/.admin_key && echo "Generated key.")
-	token=`more $DIR/.admin_key`
+    if [[ ! -e $DIR/.admin_key ]];then
+        echo `uuidgen` > $DIR/.admin_key 
+        echo "Generated admin key."
+    fi
+	token=`cat $DIR/.admin_key`
 
-	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
+	# Start container if it already exists, else run image to create a new one
+    echo "docker start $STOCHSS_CONTAINER_NAME" >> $DIR/.dockerlog 2>&1
 	if ! docker start $STOCHSS_CONTAINER_NAME >> $DIR/.dockerlog 2>&1 ; then
-	 	if ! docker images | grep "$STOCHSS_IMAGE_NAME" | grep -oh "STOCHSS_IMAGE_TAG" ; then
-			 echo "A terminal window should open up to download StochSS. Waiting for image..." && osascript $APPLE_SCRIPT_PATH/StochSS.scpt $DOCKERPATH
-			 if ! docker images | grep "$STOCHSS_IMAGE_NAME" | grep -oh "$STOCHSS_IMAGE_TAG" ; then
-					if [ "$try_again" == 'true' ]; then
-		 				if ! create_container_and_try_again ; then
-								echo "Failed to get image."
-								clean_up
-								exit 1
-						fi;
-					else
-						echo "Failed to get image."
-						clean_up
-						exit 1
-					fi;
-			 fi;
-			 first_time=true
-			 if ! docker images | grep "$STOCHSS_IMAGE_NAME" | grep -oh "$STOCHSS_IMAGE_TAG" ; then
-				 echo "Failed to get image."
-				 clean_up
+	 	if ! check_if_image_exists ; then
+             attempt_to_download_image
+             if [ "$try_again" == 'true' ]; then
+			    if ! check_if_image_exists ; then
+                    echo "Error downloading image (try 1)."
+                        attempt_to_download_image
+			            if ! check_if_image_exists ; then
+                            echo "Error downloading image (try 2).."
+                            attempt_to_download_image
+		 				    if ! check_if_image_exists ; then
+                                echo "Error downloading image (try 3)."
+						    fi
+						fi
+					fi
+			 fi
+			 if ! check_if_image_exists ; then
+				 echo "Unable to download StochSS docker image.  Be sure that your internet connection is working and that you are able to connect to http://hub.docker.com/"
+                 clean_up_and_show_error_log
 				 exit 1
-			 fi;
-			 if docker run -d -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=$STOCHSS_CONTAINER_NAME $STOCHSS_IMAGE_NAME:$STOCHSS_IMAGE_TAG sh -c "cd /stochss-master && export PYTHONPATH=/stochss-master/app/lib/:/usr/local/lib/python2.7/dist-packages:/stochss-master/sdk/python:/stochss-master/sdk/python/google:/stochss-master/sdk/python/lib && ./run.ubuntu.sh -t $token -a 0.0.0.0" >> $DIR/.dockerlog; then
-			    echo "Starting StochSS $STOCHSS_VERSION for the first time."
-			 else
-				 echo "Failed to start server."; clean_up; exit 1;
-			 fi;
-		fi;
-	fi;
+			 fi
+	    fi
+		echo "docker run -d -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=$STOCHSS_CONTAINER_NAME $STOCHSS_IMAGE_NAME:$STOCHSS_IMAGE_TAG sh -c \"cd /stochss-master && export PYTHONPATH=/stochss-master/app/lib/:/usr/local/lib/python2.7/dist-packages:/stochss-master/sdk/python:/stochss-master/sdk/python/google:/stochss-master/sdk/python/lib && ./run.ubuntu.sh -t $token -a 0.0.0.0\"" >> $DIR/.dockerlog
+
+		if docker run -d -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=$STOCHSS_CONTAINER_NAME $STOCHSS_IMAGE_NAME:$STOCHSS_IMAGE_TAG sh -c "cd /stochss-master && export PYTHONPATH=/stochss-master/app/lib/:/usr/local/lib/python2.7/dist-packages:/stochss-master/sdk/python:/stochss-master/sdk/python/google:/stochss-master/sdk/python/lib && ./run.ubuntu.sh -t $token -a 0.0.0.0" >> $DIR/.dockerlog; then
+		    echo "Starting StochSS $STOCHSS_VERSION for the first time."
+	    else
+			echo "Failed to start server."
+            clean_up_and_show_error_log
+            exit 1
+		fi
+	fi
 	# test server is up and connect to it
 	echo "Starting server. This process may take up to 5 minutes..."
 	until $(curl --output /dev/null --silent --head --fail localhost:8080);
@@ -91,6 +126,7 @@ then
 else
 	echo "This operating system is not recognized."
 	clean_up
+    exit 1
 fi
 
 while :
