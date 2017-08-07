@@ -208,9 +208,8 @@ class UserRegistrationPage(BaseHandler):
                 # Then we can attempt to create an admin
                 if User.admin_exists():
                     logging.info("Admin already exists...")
-                    # Delete the token from the DB and redirect to login, only one admin allowed
-                    SecretKey.clear_stored_key()
-                    return self.redirect('/login')
+                    # Redirect to login, only one admin allowed
+                    return self.redirect('/login?secret_key={0}'.format(secret_key))
                 else:
                     # CREATE THE ADMIN ALREADY
                     _attrs = {

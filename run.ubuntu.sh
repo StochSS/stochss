@@ -318,6 +318,9 @@ function check_and_install_deps {
     if ! check_lib "jupyter";then
         install_lib_pip "jupyter"
     fi
+    if ! check_lib "docker";then
+        install_lib_pip "docker"
+    fi
 }
 
 function check_dolfin {
@@ -341,7 +344,7 @@ function install_dolfin {
     if [ "$install_mode" = "true" ] || [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         echo "Running 'sudo apt-get install ..."
         sudo apt-get -y install python-software-properties
-        sudo add-apt-repository ppa:fenics-packages/fenics
+        sudo add-apt-repository -y  ppa:fenics-packages/fenics
         sudo apt-get update
         sudo apt-get -y install fenics
         return 0 # True
