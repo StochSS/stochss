@@ -68,10 +68,10 @@ class PendingUsersList(db.Model):
         """
         Add the given email address to the list of users waiting approval
          as long as the given user_email is not a current user's email.
-        Returns False if email address already in list, else True.
+        Returns True if email address already in list, or if it is added.
         """
         if (self.users_waiting_approval and (user_email in self.users_waiting_approval)):
-            return False
+            return True
 
         self.users_waiting_approval.append(user_email)
         self.put()
@@ -80,10 +80,9 @@ class PendingUsersList(db.Model):
     def remove_user_from_approval_waitlist(self, user_email):
         '''
         Removes the given email address from the approval waitlist.
-        This function is currently only called when the email exists in the waitlist so 
-         theres no checking to do.
         '''
-        self.users_waiting_approval.remove(user_email)
+        if user_email in self.users_waiting_approval:
+            self.users_waiting_approval.remove(user_email)
         self.put()
         
     def approve_user(self, user_email, awaiting_approval):
@@ -107,7 +106,6 @@ class PendingUsersList(db.Model):
         logging.info('self.users_waiting_approval = {0}'.format(self.users_waiting_approval))
         if user_email in self.approved_users:
             self.approved_users.remove(user_email)
-        self.users_waiting_approval.append(user_email)
         self.put()
 
     def remove_user_from_approval_waitlist(self, user_email):
@@ -220,7 +218,6 @@ class AdminPage(BaseHandler):
         """ Add user to approved users list and remove it from the waiting approval list if necessary """
         pending_users_list = PendingUsersList.shared_list()
         success = pending_users_list.approve_user(email, awaiting_approval)
-        print "HIIIIIIIIIIIIIIIIIIIIIIIIIIII"
         return success
         
     def _revoke_user(self, email):
@@ -248,6 +245,7 @@ class AdminPage(BaseHandler):
             pending_users_list = PendingUsersList.shared_list()
             if(pending_users_list.is_user_approved(email)):
                 pending_users_list.remove_user_from_approved_list(email)
+            pending_users_list.remove_user_from_approval_waitlist(email)
 
             # Need to delete the auth_id from the 'unique' model store
             # see https://code.google.com/p/webapp-improved/source/browse/webapp2_extras/appengine/auth/models.py

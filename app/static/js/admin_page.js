@@ -11,9 +11,9 @@ $('.users').on('click', 'button.table-action-button', function(e) {
     var action = clickedButton.data('action');
     var email = '';
     if (tableColumns.size() == 4) {
-        email = tableColumns[2].innerText.trim();
+        email = tableColumns[2].innerText.trim().split('\n')[0];
     } else if (tableColumns.size() == 3) {
-        email = tableColumns[1].innerText.trim();
+        email = tableColumns[1].innerText.trim().split('\n')[0];
     } else {
         return;
     }

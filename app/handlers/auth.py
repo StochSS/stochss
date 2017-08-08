@@ -154,9 +154,6 @@ class UserRegistrationPage(BaseHandler):
                         # Has the user been preapproved? If so, we just verify it.
                         user.verified = True
                         user.put()
-                    elif pending_users_list.user_exists(user_email):
-                        success = True
-                        approved = False
                     else:
                         success = pending_users_list.add_user_to_approval_waitlist(user_email)
                         approved = False
