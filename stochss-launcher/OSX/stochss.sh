@@ -2,17 +2,12 @@
 trap clean_up INT SIGHUP SIGINT SIGTERM
 
 
-#STOCHSS_IMAGE_NAME="stochss/stochss-launcher"
-#STOCHSS_CONTAINER_NAME="stochsscontainer1_7"
-#STOCHSS_VM_NAME="stochss1-7"
-#STOCHSS_IMAGE_TAG="1.7"
-#STOCHSS_VERSION="1.7"
-
-STOCHSS_IMAGE_NAME="aviralcse/stochss_qsub"
+STOCHSS_IMAGE_NAME="briandrawert/stochss-launcher"
 STOCHSS_CONTAINER_NAME="stochsscontainer1_9"
 #STOCHSS_VM_NAME="stochss1-8"
-STOCHSS_IMAGE_TAG="updated_stochss_for_release"
+STOCHSS_IMAGE_TAG="1.9"
 STOCHSS_VERSION="1.9"
+
 
 function clean_up(){
 	echo

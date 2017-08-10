@@ -4,6 +4,7 @@ StochSS - Stochastic Simulation Service: Release Notes
 =============================
 - Support for simulation and parameter sweep jobs on batch cluster computing (Qsub based computing clusters)
 - Configuration of batch computing resources
+- Enhancement to multi-user setup, including email authentication
 
 1.8.0
 =============================

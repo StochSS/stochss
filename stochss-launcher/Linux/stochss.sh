@@ -1,10 +1,10 @@
 #!/bin/bash
 trap clean_up INT SIGHUP SIGINT SIGTERM
 
-STOCHSS_IMAGE_NAME="aviralcse/stochss_qsub"
+STOCHSS_IMAGE_NAME="briandrawert/stochss-launcher"
+STOCHSS_IMAGE_TAG="1.9"
 STOCHSS_CONTAINER_NAME="stochsscontainer1_9"
 STOCHSS_VM_NAME="stochss1-9"
-STOCHSS_IMAGE_TAG="updated_stochss_for_release"
 STOCHSS_VERSION="1.9"
 
 function clean_up(){
