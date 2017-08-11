@@ -479,12 +479,32 @@ ParameterSweep.Controller = Backbone.View.extend(
                 this.selectVariableCount();
 
 
-                $( "#runLocal" ).click( _.bind(function() {
+                $( "#run" ).click( _.bind(function() {
+
+                    var resource_info = $('select[name=resource_picker]').val();
+                    var resource_info_str = resource_info.replace(/'/g, '"');
+                    try{
+                        resource_info = JSON.parse(resource_info_str);
+                    }
+                    catch (err){
+                        resource_info = {}
+                        resource_info['key_file_id'] = 0
+                    }
+
+                    var message = "Running on ";
+                    if(resource_info['key_file_id'] == 0)
+                    {
+                        message += "StochSS Server"
+                    }
+                    else
+                    {
+                        message += resource_info['username'] + "@" + resource_info['ip']
+                    }
                     updateMsg( { status: true,
-                                 msg: "Running job locally..." } );
+                                 msg: message });
 
                     var data = checkAndGet();
-                    
+
                     if(!data)
                         return;
 
@@ -502,8 +522,10 @@ ParameterSweep.Controller = Backbone.View.extend(
 
                     var url = "/parametersweep";
                     jobName = data.jobName
-                    
-                    $.post( url = url,
+
+                    if(resource_info['key_file_id'] == 0)
+                    {
+                        $.post( url = url,
                             data = { reqType : "newJobLocal",
                                      data : JSON.stringify(data) }, //Watch closely...
                             success = function(data)
@@ -515,45 +537,101 @@ ParameterSweep.Controller = Backbone.View.extend(
                                 }
                             },
                             dataType = "json" );
-                }, this));
-
-                $( "#runMolns" ).click( _.bind(function() {
-                    updateMsg( { status: true,
-                                 msg: "Running job in the Molns cloud..." } );
-
-                    var data = checkAndGet();
-                    
-                    if(!data)
-                        return;
-
-                    data.modelID = this.model.attributes.id;
-                    data.resource = "molns";
-                    data.variableCount = this.variableCount;
-
-                    var speciesSelect = {};
-                    for(var name in this.speciesSelectCheckboxes)
-                    {
-                        speciesSelect[name] = this.speciesSelectCheckboxes[name].find('input').prop('checked');
                     }
-
-                    data.speciesSelect = speciesSelect;
-
-                    var url = "/parametersweep";
-                    jobName = data.jobName
-                    
-                    $.post( url = url,
-                            data = { reqType : "newJob",
-                                     data : JSON.stringify(data) }, //Watch closely...
-                            success = function(data)
-                            {
-                                updateMsg(data);
-                                if(data.status)
+                    else
+                    {
+                        $.post( url = url,
+                                data = { reqType : "newJobQsub",
+                                         data : JSON.stringify(data),
+                                         cluster_info : resource_info_str}, //Watch closely...
+                                success = function(data)
                                 {
-                                    window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
-                                }
-                            },
-                            dataType = "json" );
+                                    updateMsg(data);
+                                    if(data.status)
+                                    {
+                                        window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
+                                    }
+                                },
+                                dataType = "json" );
+                    }
                 }, this));
+
+                // $( "#runMolns" ).click( _.bind(function() {
+                //     updateMsg( { status: true,
+                //                  msg: "Running job in the Molns cloud..." } );
+                //
+                //     var data = checkAndGet();
+                //
+                //     if(!data)
+                //         return;
+                //
+                //     data.modelID = this.model.attributes.id;
+                //     data.resource = "molns";
+                //     data.variableCount = this.variableCount;
+                //
+                //     var speciesSelect = {};
+                //     for(var name in this.speciesSelectCheckboxes)
+                //     {
+                //         speciesSelect[name] = this.speciesSelectCheckboxes[name].find('input').prop('checked');
+                //     }
+                //
+                //     data.speciesSelect = speciesSelect;
+                //
+                //     var url = "/parametersweep";
+                //     jobName = data.jobName
+                //
+                //     $.post( url = url,
+                //             data = { reqType : "newJob",
+                //                      data : JSON.stringify(data) }, //Watch closely...
+                //             success = function(data)
+                //             {
+                //                 updateMsg(data);
+                //                 if(data.status)
+                //                 {
+                //                     window.location = '/status?autoforward=1&filter_type=name&filter_value=' + jobName;
+                //                 }
+                //             },
+                //             dataType = "json" );
+                // }, this));
+                //
+                // $( "#runQsub" ).click( _.bind(function() {
+                //
+                //     updateMsg( { status: true,
+                //                  msg: "Running job in Qsub cluster..." } );
+                //
+                //     var data = checkAndGet();
+                //
+                //     if(!data)
+                //         return;
+                //
+                //     data.modelID = this.model.attributes.id;
+                //     data.resource = "qsub";
+                //     data.variableCount = this.variableCount;
+                //
+                //     var speciesSelect = {};
+                //     for(var name in this.speciesSelectCheckboxes)
+                //     {
+                //         speciesSelect[name] = this.speciesSelectCheckboxes[name].find('input').prop('checked');
+                //     }
+                //
+                //     data.speciesSelect = speciesSelect;
+                //
+                //     var url = "/parametersweep";
+                //     jobName = data.jobName
+                //
+                //     $.post( url = url,
+                //             data = { reqType : "newJobQsub",
+                //                      data : JSON.stringify(data) }, //Watch closely...
+                //             success = function(data)
+                //             {
+                //                 updateMsg(data);
+                //                 if(data.status)
+                //                 {
+                //                     window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
+                //                 }
+                //             },
+                //             dataType = "json" );
+                // }, this));
             }
             
             this.delegateEvents();

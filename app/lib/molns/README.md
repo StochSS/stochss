@@ -2,9 +2,9 @@
 
 MOLNs is a cloud appliance that will set up, start and manage a virtual platform for scalable, distributed computational experiments using (spatial) stochastic simulation software such as PyURDME (www.pyurdme.org) and StochKit/Gillespy (www.github.com/Gillespy/gillespy). In addition, MOLNs by default makes FEniCS/Dolfin available as-a Service.  
 
-Since MOLNs will configure and manage a virtual IPython Cluster (with a Notebook frontend), with Numpy, SciPy and Ipython Parallel enabled, it can also be useful for general contextualization and management of dynamic, cloud-agnostic (supports EC2 and OpenStack-based clouds) virtual IPython environments, even if you are not into spatial stochstic simulations in systems biology. 
+Since MOLNs will configure and manage a virtual IPython Cluster (with a Notebook frontend), with Numpy, SciPy and Ipython Parallel enabled, it can also be useful for general contextualization and management of dynamic, cloud-agnostic (supports EC2 and OpenStack-based clouds) virtual IPython environments, even if you are not into spatial stochastic simulations in systems biology. 
 
-Note: MOLNs is currenly compatible only with 'EC2-Classic', we are working on supporting Amazon VPC. 
+Note: MOLNs is currently compatible only with 'EC2-Classic', we are working on supporting Amazon VPC. 
 
 ### Prerequisites ###
 To use MOLNs, you need valid credentials to an OpenStack cloud, Amazon Elastic Compute Cloud (EC2) or HP Helion public cloud. You also need Python, and the following packages:

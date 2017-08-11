@@ -44,8 +44,13 @@
         </div>
         {% if create_admin %}
           <input type="hidden" name="secret_key" value="{{secret_key}}">
-        {% else %}
-          <p class="new-user-warning">Note: You will not be able to log in until your account is approved by the admin.<p>
+        <div class="control-group">
+          <label class="control-label">Single/Multi-User Mode</label>
+          <div class="controls">
+            <input id="single_user_mode" type="radio" name="user_mode" value="single" checked> <B>Single-User Mode</B> In single user mode, you will be automatically logged in as the admin user when starting StochSS.  <BR>
+            <input id="multi_user_mode" type="radio" name="user_mode" value="multi"> <B>Multi-User Mode</B> In multi-user mode multiple users can create seperate accounts on this instance of StochSS. <BR>
+          </div>
+        </div>
         {% endif %}
         <div class="form-actions">
           <button id="submit-btn" type="submit" class="btn btn-primary">Submit</button>

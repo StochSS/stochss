@@ -18,12 +18,131 @@ import re
 import pprint
 import time
 import glob
+import uuid
 
 from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig, JobDatabaseConfig
 from backend.databases.dynamo_db import DynamoDB
 from db_models.vm_state_model import VMStateModel
 
 import fileserver
+from handlers import admin
+
+
+class ClusterCredentialsPage(BaseHandler):
+
+    def authentication_required(self):
+        return True
+
+    def delete(self):
+        logging.debug('DELETE /clusterCredentials')
+        logging.debug("request.body = {0}".format(self.request.body))
+        logging.debug("CONTENT_TYPE = {0}".format(self.request.environ['CONTENT_TYPE']))
+
+        user_id = self.user.user_id()
+        if user_id is None:
+            raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
+
+        data_received = json.loads(self.request.body)
+        logging.debug("json data = \n{0}".format(pprint.pformat(data_received)))
+        print("json data received = \n{0}".format(pprint.pformat(data_received)))
+
+        cluster_info = {}
+        cluster_info['ip'] = data_received['ip']
+        cluster_info['username'] = data_received['username']
+        cluster_info['keyname'] = data_received['keyname']
+
+        cluster_node_info = self.user_data.get_cluster_node_info()
+        cluster_key_info = self.__get_cluster_ssh_key_info()
+
+        for cluster in cluster_node_info:
+            if cluster['ip'] == cluster_info['ip'] and cluster['username'] == cluster_info['username']:
+                if cluster_key_info[cluster['key_file_id']]['keyname'] == cluster_info['keyname']:
+                    logging.debug("Deleting cluster_info {0}".format(cluster))
+                    cluster_node_info.remove(cluster)
+                    break
+
+        self.user_data.set_cluster_node_info(cluster_node_info)
+        self.user_data.put()
+
+        return True
+
+    def post(self):
+        logging.debug('POST /clusterCredentials')
+        logging.debug("request.body = {0}".format(self.request.body))
+        logging.debug("CONTENT_TYPE = {0}".format(self.request.environ['CONTENT_TYPE']))
+
+        user_id = self.user.user_id()
+        if user_id is None:
+            raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
+
+        data_received = json.loads(self.request.body)
+        logging.debug("json data = \n{0}".format(pprint.pformat(data_received)))
+        print("json data received = \n{0}".format(pprint.pformat(data_received)))
+
+        new_cluster_info = data_received['cluster_info']
+        new_cluster_info['uuid'] = str(uuid.uuid4())
+
+        cluster_node_info = self.user_data.get_cluster_node_info()
+        cluster_node_info.append(new_cluster_info)
+        self.user_data.set_cluster_node_info(cluster_node_info)
+        self.user_data.put()
+
+        return True
+
+    def get(self):
+        logging.debug('GET /clusterCredentials')
+
+        user_id = self.user.user_id()
+        if user_id is None:
+            raise InvalidUserException('Cannot determine the current user!')
+
+        if not self.user.is_admin_user():
+            raise InvalidUserException('Non-admin user not allowed to set credentials')
+
+        context = self.__get_context(user_id)
+
+        logging.info("context: " + str(context))
+
+        self.render_response('cluster_credentials.html', **context)
+
+    def __get_context(self, user_id):
+        return self.__get_cluster_context(user_id)
+
+    def __get_cluster_context(self, user_id):
+        context = {}
+        result = {}
+
+        cluster_node_info = self.user_data.get_cluster_node_info()
+        logging.debug("cluster_node_info =\n{0}".format(pprint.pformat(cluster_node_info)))
+
+        result['is_cluster_info_set'] = True
+
+        # Fill with dummy if empty
+        if cluster_node_info is None or len(cluster_node_info) == 0:
+            logging.debug('Adding dummy cluster node for UI rendering...')
+            cluster_node_info = [{'ip': '', 'keyname': '', 'username': ''}]
+            result['is_cluster_info_set'] = False
+
+        context['cluster_node_info'] = cluster_node_info
+
+        # Get cluster SSH Key Info
+        cluster_ssh_key_info = self.__get_cluster_ssh_key_info()
+        context['cluster_ssh_key_info'] = cluster_ssh_key_info
+
+        context = dict(result, **context)
+        return context
+
+    def __get_cluster_ssh_key_info(self):
+        files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
+        cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
+        return cluster_ssh_key_info
+
 
 class FlexCredentialsPage(BaseHandler):
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
@@ -249,7 +368,8 @@ class FlexCredentialsPage(BaseHandler):
 class CredentialsPage(BaseHandler):
     def authentication_required(self):
         return True
-    
+
+    @admin.admin_required
     def get(self):
         logging.debug('GET')
 

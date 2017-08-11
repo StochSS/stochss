@@ -159,7 +159,7 @@ class BaseHandler(webapp2.RequestHandler):
             ctx = {'user': self.user}
         else:
             ctx = {}
-
+        ctx.update(self.app.config)   
         ctx.update(context)
 
         if 'model_edited' not in ctx:
@@ -190,9 +190,27 @@ class User(WebApp2User):
         '''
         admin = User.query().filter(ndb.GenericProperty('is_admin') == 'YES').get()
         return admin is not None
+    
+    @classmethod
+    def get_admin_user_id(self):
+        """
+        """
+        admin = User.query().filter(ndb.GenericProperty('is_admin') == 'YES').get()
+        if admin is None:
+            raise Excpetion('Admin user is not set')
+        if hasattr(admin, 'email_address'):
+            return admin.email_address
+        else:
+            raise Excpetion('Admin user email_address not set')
 
     def user_id(self):
         return self.email_address
+
+    def is_verified(self):
+        if hasattr(self, 'verified'):
+            return self.verified
+        else:
+            return False
 
     def change_auth_id(self, auth_id):
         '''
@@ -269,6 +287,8 @@ import handlers.fileserver
 import handlers.spatial
 import handlers.molnsconfig
 from backend import pricing
+from handlers.emailsetup import *
+
 
 
 class MainPage(BaseHandler):
@@ -392,15 +412,21 @@ app = webapp2.WSGIApplication([
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials', CredentialsPage),
                                ('/ec2Credentials', EC2CredentialsPage),
+                               ('/clusterCredentials', ClusterCredentialsPage),
                                ('/flexCloudCredentials', FlexCredentialsPage),
                                ('/cost_analysis',CostAnalysisPage),
                                ('/localsettings',LocalSettingsPage),
                                ('/updates',UpdatesPage),
                                ('/register', UserRegistrationPage),
                                ('/login', LoginPage),
+                               ('/verify', VerificationHandler),
+                               ('/passwordresetrequest', PasswordResetRequestHandler),
+                               ('/passwordreset', PasswordResetHandler),
                                ('/logout', LogoutHandler),
                                ('/admin', AdminPage),
                                ('/account_settings', AccountSettingsPage),
+                               ('/restricted', RestrictedPageHandler),
+                               ('/emailsetup', EmailSetupPage),
                                ],
                                 config=config,
                                 debug=True)

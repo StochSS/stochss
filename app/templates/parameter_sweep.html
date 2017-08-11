@@ -207,11 +207,26 @@
             </label>
         </div>
         <br>
-            
+
         <div id="msg"></div>
 
-        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Local </button>
-        <!--<button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run via Cloud </button>-->
+        <button id="run" type="submit" class="btn btn-primary btn-large"><i class="icon-play"></i> Run </button>
+        <br>
+        <br>
+
+          <label for="resource_picker"><h4>Choose a compute resource: </h4></label>
+          <select name="resource_picker" id="resource_picker" class="selectpicker">
+            {% for resource in resources %}
+                <option
+                {% if resource.uuid == selected %} selected="selected" {% endif %}
+                value="{{ resource.json }}"
+                {% if resource.disabled %}disabled{%endif%}
+                >
+                {{resource.name}}
+                </option>
+            {% endfor %}
+          </select>
+
     </div>
 </script>
 {% endblock %}

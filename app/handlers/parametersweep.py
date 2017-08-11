@@ -32,6 +32,7 @@ import mesheditor
 import molns
 
 from db_models.parameter_sweep_job import ParameterSweepJobWrapper
+import parametersweep_qsub
 
 import status
 logging.getLogger().setLevel(logging.DEBUG)
@@ -47,14 +48,37 @@ class ParameterSweepPage(BaseHandler):
         return True
     
     def get(self):
-        self.render_response('parameter_sweep.html', **{ 'initialData' : json.dumps(ModelManager.getModels(self)) })
+        context = self.__get_context()
+        self.render_response('parameter_sweep.html', **context)
+
+    def __get_context(self):
+        context = {}
+        result = {}
+
+        context['resources'] = []
+        # Important for UI, do not change key_file_id.
+        context['resources'].append(dict(json="{'uuid':0, 'key_file_id':0}", uuid=0, name="Default (local resources)"))
+        for resource in self.user_data.get_cluster_node_info():
+            resource['json'] = json.dumps(resource)
+            resource['name'] = 'Cluster: '+resource['username']+'@'+resource['ip']
+            context['resources'].append(resource)
+        context['selected'] = self.user_data.get_selected()
+        logging.info("context['selected'] = {0}".format(context['selected']))
+        context['initialData'] = json.dumps(ModelManager.getModels(self))
+        context = dict(result, **context)
+        # logging.debug("Parametersweep.py\n" + str(context))
+        return context
 
     def post(self):
         reqType = self.request.get('reqType')
         self.response.content_type = 'application/json'
 
         if reqType == 'newJob':
+            # Run via Molns cloud
             data = json.loads(self.request.get('data'))
+            
+            self.user_data.set_selected(2)
+
 
             job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
                               self.user.user_id(),
@@ -85,6 +109,8 @@ class ParameterSweepPage(BaseHandler):
             logging.error("*"*80)
             data = json.loads(self.request.get('data'))
 
+            self.user_data.set_selected(0)
+
             job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
                               self.user.user_id(),
                               data["jobName"].strip()).get()
@@ -109,6 +135,52 @@ class ParameterSweepPage(BaseHandler):
                           'msg':'Error: {0}'.format(e)}
                 self.response.write(json.dumps(result))
                 return
+        elif reqType == 'newJobQsub':
+            logging.error("*"*80)
+            logging.error("parametersweep.newJobQsub")
+            logging.error("*"*80)
+            data = json.loads(self.request.get('data'))
+
+            # cluster_node_info = self.user_data.get_cluster_node_info()[0]
+            # files = fileserver.FileManager.getFiles(self, 'clusterKeyFiles')
+            # cluster_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
+
+            cluster_info = dict()
+            received_cluster_info = json.loads(self.request.get('cluster_info'))
+            cluster_info['ip_address'] = received_cluster_info['ip']
+            cluster_info['username'] = received_cluster_info['username']
+            cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
+
+            self.user_data.set_selected(received_cluster_info['uuid'])
+
+            #logging.info("PARAMETER_SWEEP_CLUSTER_INFO = {0}".format(cluster_info))
+            #cluster_info = json.loads(self.request.get('cluster_info'))
+
+            job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
+                              self.user.user_id(),
+                              data["jobName"].strip()).get()
+
+            if job != None:
+                logging.error("parametersweep.newJobQsub: error: Job name must be unique")
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Job name must be unique"}))
+                return
+
+            try:
+                result = self.runQsub(data=data, cluster_info=cluster_info)
+
+                return self.response.write(json.dumps({
+                    "status": True,
+                    "msg": "Job launched",
+                    "id": result.key().id()
+                }))
+            except Exception as e:
+                logging.exception(e)
+                result = {'status':False,
+                          'msg':'Error: {0}'.format(e)}
+                self.response.write(json.dumps(result))
+                return
+
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
 
@@ -189,6 +261,7 @@ class ParameterSweepPage(BaseHandler):
                                          'msg' : 'Success'}))
 
     def runLocal(self, data):
+        self.user_data.set_selected(0)
         logging.error("*"*80)
         logging.error("parametersweep.runLocal() modelType={0}".format(data['modelType']))
         logging.error("*"*80)
@@ -247,7 +320,7 @@ class ParameterSweepPage(BaseHandler):
                 try:
                     meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
                     templateData["mesh"] = meshFileObj["data"]
-                except IOError as e: 
+                except IOError as e:
                     logging.exception(e)
                     logging.error("Mesh file inaccessible. Try another mesh")
                     raise Exception("Mesh file inaccessible. Try another mesh")
@@ -295,7 +368,94 @@ class ParameterSweepPage(BaseHandler):
 
         return job
 
+    def runQsub(self, data, cluster_info):
+        logging.error("*"*80)
+        logging.error("parametersweep.runQsub() modelType={0}".format(data['modelType']))
+        logging.error("*"*80)
+
+        modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
+        path = os.path.abspath(os.path.dirname(__file__))
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+        job = ParameterSweepJobWrapper()
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = data["jobName"]
+        job.inData = json.dumps(data)
+        job.modelName = modelDb.name
+        job.outData = dataDir
+        job.status = "Pending"
+        job.output_stored = False
+
+        try:
+            templateData = {
+                "name" : modelDb.name,
+                "modelType" : modelDb.type,
+                "species" : modelDb.species,
+                "parameters" : modelDb.parameters,
+                "reactions" : modelDb.reactions,
+                "speciesSelect" : data['speciesSelect'],
+                "maxTime" : data['maxTime'],
+                "increment" : data['increment'],
+                "trajectories" : data['trajectories'],
+                "seed" : data['seed'],
+                "parameterA" : data['parameterA'],
+                "minValueA" : data['minValueA'],
+                "maxValueA" : data['maxValueA'],
+                "stepsA" : data['stepsA'],
+                "logA" : data['logA'],
+                "parameterB" : data['parameterB'],
+                "minValueB" : data['minValueB'],
+                "maxValueB" : data['maxValueB'],
+                "stepsB" : data['stepsB'],
+                "logB" : data['logB'],
+                "variableCount" : data['variableCount'],
+                "isSpatial" : modelDb.isSpatial,
+                "isLocal" : True
+            }
+
+            if modelDb.isSpatial:
+                try:
+                    meshWrapperDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                except Exception as e:
+                    logging.exception(e)
+                    logging.error("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                    raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                try:
+                    meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
+                    templateData["mesh"] = meshFileObj["data"]
+                except IOError as e:
+                    logging.exception(e)
+                    logging.error("Mesh file inaccessible. Try another mesh")
+                    raise Exception("Mesh file inaccessible. Try another mesh")
+
+                templateData['reaction_subdomain_assignments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assignments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
+                templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
+                templateData['subdomains'] = meshWrapperDb.subdomains
+
+            if data['modelType'] == "stochastic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.stochastic(templateData, cluster_info))
+            elif data['modelType'] == "deterministic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData, cluster_info))
+            elif data['modelType'] == "spatial":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.spatial(templateData, cluster_info))
+            else:
+                raise Exception("Trying to runQsub on unsupported modelType {0}".format(data['modelType']))
+
+            job.resource = "qsub"
+            job.put()
+        except Exception as e:
+            logging.exception(e)
+            job.status='Failed'
+            job.delete(self)
+            raise
+
+        return job
+
     def runMolns(self, data):
+        self.user_data.set_selected(2)
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
 
         path = os.path.abspath(os.path.dirname(__file__))
@@ -315,7 +475,10 @@ class ParameterSweepPage(BaseHandler):
 
         # # execute cloud task
         try:
-            with open(os.path.join(path, 'parametersweep_template.py'), 'r') as f:
+            template_filename = 'parametersweep_template_{0}.py'.format(data['modelType'])
+            logging.error("parametersweep.runMolns() template_filename={0}".format(template_filename))
+            logging.error("*"*80)
+            with open(os.path.join(path,template_filename ), 'r') as f:
                 template = f.read()
 
             templateData = {
@@ -404,26 +567,29 @@ class ParameterSweepVisualizationPage(BaseHandler):
 
         initialData = jobDb.getJSON()
 
-        try:
-            with open(os.path.join(jobDb.outData, 'stdout'), 'r') as f:
-                initialData['stdout'] = f.read()
-            with open(os.path.join(jobDb.outData, 'stderr'), 'r') as f:
-                initialData['stderr'] = f.read()
-        except IOError as e:
-            molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
-            initialData['data'] = {}
-            if not molnsConfigDb:
-                initialData['stdout'] = 'ERROR: could not lookup molnsConfigDb'
-            molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
-            #TODO: Check if the molns service is active
+        if jobDb.resource == 'qsub':
+            initialData['stdout'] = ""
+            initialData['stderr'] = ""
+        else:
             try:
-                log = molns.MOLNSExec.job_logs([jobDb.molnsPID], molnsConfig)
-                initialData['stdout'] = log['msg']
-            except (IOError, molns.MOLNSException) as e:
-                initialData['stdout'] = str(e)
-
+                with open(os.path.join(jobDb.outData, 'stdout'), 'r') as f:
+                    initialData['stdout'] = f.read()
+                with open(os.path.join(jobDb.outData, 'stderr'), 'r') as f:
+                    initialData['stderr'] = f.read()
+            except IOError as e:
+                molnsConfigDb = db.GqlQuery("SELECT * FROM MolnsConfigWrapper WHERE user_id = :1", self.user.user_id()).get()
+                initialData['data'] = {}
+                if not molnsConfigDb:
+                    initialData['stdout'] = 'ERROR: could not lookup molnsConfigDb'
+                molnsConfig = molns.MOLNSConfig(config_dir = molnsConfigDb.folder)
+                #TODO: Check if the molns service is active
+                try:
+                    log = molns.MOLNSExec.job_logs([jobDb.molnsPID], molnsConfig)
+                    initialData['stdout'] = log['msg']
+                except (IOError, molns.MOLNSException) as e:
+                    initialData['stdout'] = str(e)
                 
-        if jobDb.resource == 'local' or  jobDb.output_stored:
+        if jobDb.resource == 'local' or jobDb.resource == 'qsub' or jobDb.output_stored:
             try:
                 with open(os.path.join(jobDb.outData, 'results'), 'r') as f:
                     initialData['data'] = pickle.load(f)
@@ -479,5 +645,3 @@ class ParameterSweepVisualizationPage(BaseHandler):
             return
         else:
             self.get(int(jobID))
-
-     

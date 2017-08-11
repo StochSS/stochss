@@ -1,5 +1,11 @@
 #!/bin/bash
 
+EXE_FILE=$0
+MY_PATH=$(dirname "$EXE_FILE")
+MY_PATH=$(cd "$MY_PATH"; pwd)
+
+export PYTHONPATH=$MY_PATH/app/lib/:/usr/local/lib/python2.7/dist-packages:$MY_PATH/sdk/python:$MY_PATH/sdk/python/google:$MY_PATH/sdk/python/lib
+
 mode="run"
 install_mode="false"
 token="not_set"
@@ -312,6 +318,9 @@ function check_and_install_deps {
     if ! check_lib "jupyter";then
         install_lib_pip "jupyter"
     fi
+    if ! check_lib "docker";then
+        install_lib_pip "docker"
+    fi
 }
 
 function check_dolfin {
@@ -335,7 +344,7 @@ function install_dolfin {
     if [ "$install_mode" = "true" ] || [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         echo "Running 'sudo apt-get install ..."
         sudo apt-get -y install python-software-properties
-        sudo add-apt-repository ppa:fenics-packages/fenics
+        sudo add-apt-repository -y  ppa:fenics-packages/fenics
         sudo apt-get update
         sudo apt-get -y install fenics
         return 0 # True
@@ -651,10 +660,11 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 
-export PYTHONPATH=$PYTHONPATH":$(pwd -P)/app"
+export PYTHONPATH="$(pwd -P)/app:"$PYTHONPATH
 
 if [ "$mode" = "run" ] || [ "$mode" = "debug" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
+    env
     exec python "$STOCHSS_HOME/launchapp.py" $0 $browser $token $ip $mode
 fi

@@ -625,6 +625,8 @@ Spatial.Controller = Backbone.View.extend( {
 
                           if(time.length == 0)
                               return
+                          if(typeof(data) == 'undefined')
+                              return
                           for (var i = 0; i < time.length; i++) {
                               var t = time[i]; 
                               this.cache[t] = { colors : data.colors[t],

@@ -276,6 +276,7 @@ class SensitivityPage(BaseHandler):
     def runLocal(self, data):
         '''
         '''
+        self.user_data.set_selected(0)
         job = SensitivityJobWrapper()
         job.resource = "local"
         job.user_id = self.user.user_id()
@@ -338,12 +339,13 @@ class SensitivityPage(BaseHandler):
         return job
     
     def runCloud(self, data):
+        self.user_data.set_selected(1)
         job = SensitivityJobWrapper()
 
         service = backendservices(self.user_data)
 
         if not service.isOneOrMoreComputeNodesRunning():
-            raise Exception('No cloud computing resources found')
+            raise Exception('No cloud computing resources found. (Have they been started?)')
 
         job.user_id = self.user.user_id()
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])

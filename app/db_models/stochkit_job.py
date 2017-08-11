@@ -39,6 +39,11 @@ class StochKitJobWrapper(db.Model):
     outData = db.StringProperty()
     outputURL = db.StringProperty()
     result = db.StringProperty()
+    qsubHandle = db.TextProperty()
+
+    # TODO delete these maybe?
+    is_simulation = db.BooleanProperty(False)
+    is_spatial = db.BooleanProperty(False)
 
     stdout = db.StringProperty()
     stderr = db.StringProperty()
@@ -60,8 +65,12 @@ class StochKitJobWrapper(db.Model):
             return
         else:
             service = backendservices(user_data)
-            if self.resource.lower() == 'local':
+            if self.resource is None:
+                return # avoid error on "NoneType.lower()"
+            elif self.resource.lower() == 'local':
                 service.stopTaskLocal([self.pid])
+            elif self.resource.lower() == 'qsub' or self.resource.lower() == 'molns':
+                return # can't stop batching processing tasks (at least not easily)
             else:
                 service.stopTasks(self)
 

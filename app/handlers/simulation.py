@@ -15,8 +15,8 @@ import logging
 import boto
 from boto.dynamodb import condition
 from google.appengine.api import users
-import molns
 
+import molns
 
 from stochss.model import *
 from stochss.stochkit import *
@@ -95,7 +95,7 @@ class JobManager():
 
     @staticmethod
     def getJob(handler, job_id):
-        job = StochKitJobWrapper.get_by_id(job_id)
+        job = StochKitJobWrapper.get_by_id(int(job_id))
         indata = json.loads(job.indata)
         logging.debug('getJob() job.id = {0} job.indata = {1}'.format(job.key().id(), indata))
 
@@ -189,12 +189,12 @@ class JobManager():
 
     @staticmethod
     def deleteJob(handler, job_id):
-        job = StochKitJobWrapper.get_by_id(job_id)
+        job = StochKitJobWrapper.get_by_id(int(job_id))
         job.delete()
 
     @staticmethod
     def updateJob(handler, job):
-        jobWrap = StochKitJobWrapper.get_by_id(job_id)
+        jobWrap = StochKitJobWrapper.get_by_id(int(job_id))
         jobWrap.user_id = handler.user.user_id()
         jobWrap.put()
         
@@ -251,16 +251,49 @@ class SimulatePage(BaseHandler):
         return True
     
     def get(self):
+        context = self.__get_context()
+        self.render_response('simulate.html', **context)
+
+    def __get_context(self):
+        context = {}
+        result = {}
+
         all_models = []
         # Query the datastore
         for model in modeleditor.ModelManager.getModels(self):
-            all_models.append({ "name" : model["name"],
-                                "id" : model["id"],
-                                "units" : model["units"],
-                                "isSpatial" : model["isSpatial"] })
+            all_models.append({"name": model["name"],
+                               "id": model["id"],
+                               "units": model["units"],
+                               "isSpatial": model["isSpatial"]})
         context = {'all_models': all_models}
 
-        self.render_response('simulate.html',**context)
+        context['resources'] = []
+        # Important for UI, do not change key_file_id.
+        context['resources'].append(dict(json="{'uuid':0, 'key_file_id':0}", uuid=0, name="Default (local resources)"))
+        context['resources'].append(dict(json="{'uuid':1, 'key_file_id':1}", uuid=1,name="Amazon AWS Cloud", disabled=(not self.user_data.valid_credentials)))
+        #context['resources'].append(dict(json="{'key_file_id' : 2}", uuid=2, name="Molns Configured Cloud Resources"))
+        
+        
+        for resource in self.user_data.get_cluster_node_info():
+            resource['json'] = json.dumps(resource)
+            resource['name'] = 'Cluster: '+resource['username']+'@'+resource['ip']
+            context['resources'].append(resource)
+        
+        context['selected'] = self.user_data.get_selected()
+        logging.info("context['selected'] = {0}".format(context['selected']))
+        
+        context['valid_ec2_credentials'] = self.user_data.valid_credentials
+        logging.info("context['valid_ec2_credentials'] = {0}".format(context['valid_ec2_credentials']))
+
+        # exec_type
+        # time
+        # increment
+        # realizations
+        # algorithm
+        
+        context = dict(result, **context)
+        # logging.debug("Parametersweep.py\n" + str(context))
+        return context
 
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
@@ -480,17 +513,21 @@ class SimulatePage(BaseHandler):
                 if job.outData is not None:
                     if os.path.isfile(job.outData + '/stdout'):
                         fstdoutHandle = open(job.outData + '/stdout', 'r')
-                    else:
+                        stdout = fstdoutHandle.read()
+                        fstdoutHandle.close()
+                    elif os.path.isfile(job.outData + '/stdout.log'):
                         fstdoutHandle = open(job.outData + '/stdout.log', 'r')
-                    stdout = fstdoutHandle.read()
-                    fstdoutHandle.close()
+                        stdout = fstdoutHandle.read()
+                        fstdoutHandle.close()
 
                     if os.path.isfile(job.outData + '/stderr'):
                         fstderrHandle = open(job.outData + '/stderr', 'r')
-                    else:
+                        stderr = fstderrHandle.read()
+                        fstderrHandle.close()
+                    elif os.path.isfile(job.outData + '/stderr.log'):
                         fstderrHandle = open(job.outData + '/stderr.log', 'r')
-                    stderr = fstderrHandle.read()
-                    fstderrHandle.close()
+                        stderr = fstderrHandle.read()
+                        fstderrHandle.close()
 
                 self.response.write(json.dumps({ "status" : "Failed",
                                                  "job" : JobManager.getJob(self, job.key().id()),
@@ -527,6 +564,8 @@ class SimulatePage(BaseHandler):
                     job = self.runCloud(params)
                 elif params['resource'] == 'molns':
                     job = self.runMolns(params)
+                elif params['resource'] == 'qsub':
+                    job = self.runQsubWrapper(params)
                 else:
                     raise Exception("Unknown resource {0}".format(params["resource"]))
                 self.response.headers['Content-Type'] = 'application/json'
@@ -534,15 +573,181 @@ class SimulatePage(BaseHandler):
                                                   "msg" : "Job launched",
                                                   "id" : job.key().id() } ))
             except Exception as e:
-                traceback.print_exc()
+                #traceback.print_exc()
 
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps( { "status" : False,
-                                                  "msg" : str(e) } ))
-    
+                                                  "msg" : "{0}:{1}".format(e.__class__.__name__,e) } ))
+
+    def runQsub(self, data, cluster_info):
+        from db_models.parameter_sweep_job import ParameterSweepJobWrapper
+        from modeleditor import StochKitModelWrapper
+        import parametersweep_qsub
+
+        logging.error("*" * 80)
+        logging.error("simulate.runQsub() modelType={0}".format(data['execType']))
+        logging.error("*" * 80)
+
+        modelDb = StochKitModelWrapper.get_by_id(int(data["id"]))
+
+        # TODO: Ben needs to fix the following code to work directly with StochKitModelWrappers
+        # model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
+        #
+        # if not model:
+        #     raise Exception('Failed to retrive the model \'{0}\' to simulate'.format(params["id"]))
+        #
+        # # Execute as concentration or population?
+        # exec_type = params['execType'].lower()
+        #
+        # if exec_type not in ["deterministic", "stochastic"]:
+        #     raise Exception('exec_type must be concentration or population. Found \'{0}\''.format(exec_type))
+        #
+        # if model.units.lower() == 'concentration' and exec_type.lower() == 'stochastic':
+        #     raise Exception('Concentration models cannot be executed Stochastically' )
+        #
+        # document = model.serialize()
+        #
+        # # Wow, what a hack
+        #
+        # if executable == 'deterministic' and model.units.lower() == 'population':
+        #     model = StochMLDocument.fromString(document).toModel(model.name)
+        #
+        #     for reactionN in model.getAllReactions():
+        #         reaction = model.getAllReactions()[reactionN]
+        #         if reaction.massaction:
+        #             if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+        #                 reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
+        path = os.path.abspath(os.path.dirname(__file__))
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir=basedir + 'output')
+        job = StochKitJobWrapper()
+        job.user_id = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = data["jobName"]
+        #job.inData = json.dumps(data)
+        job.indata = json.dumps({ "type" : 'StochKit2 Ensemble',
+                                  "final_time" : data['time'],
+                                  "realizations" : data['realizations'],
+                                  "increment" : data['increment'],
+                                  "seed" : data['seed'],
+                                  "exec_type" : data['execType'],
+                                  "units" : modelDb.units.lower(),
+                                  "epsilon" : data['epsilon'],
+                                  "rTol" : data['rTol'],
+                                  "aTol" : data['aTol'],
+                                  "mxSteps" : data['mxSteps'],
+                                  "threshold" : data['threshold'] })
+        job.modelName = modelDb.name
+        job.outData = dataDir
+        job.status = "Pending"
+        job.output_stored = "False"
+        job.is_simulation = True
+        job.resource = "qsub"
+
+        try:
+            templateData = {
+                "name": modelDb.name,
+                "modelType": modelDb.type,
+                "species": modelDb.species,
+                "parameters": modelDb.parameters,
+                "reactions": modelDb.reactions,
+                # "speciesSelect": data['speciesSelect'],
+                "speciesSelect": data['selections'],
+                # "maxTime": data['maxTime'],
+                "maxTime": data['time'],
+                "increment": data['increment'],
+                # "trajectories": data['trajectories'],
+                "trajectories": data['realizations'],
+                "seed": data['seed'],
+                "isSpatial": modelDb.isSpatial,
+                "isLocal": True
+            }
+
+            if modelDb.isSpatial:
+                try:
+                    meshWrapperDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                except Exception as e:
+                    logging.exception(e)
+                    logging.error("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                    raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
+                try:
+                    meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile=False)
+                    templateData["mesh"] = meshFileObj["data"]
+                except IOError as e:
+                    logging.exception(e)
+                    logging.error("Mesh file inaccessible. Try another mesh")
+                    raise Exception("Mesh file inaccessible. Try another mesh")
+
+                templateData['reaction_subdomain_assignments'] = modelDb.spatial["reactions_subdomain_assignments"]
+                templateData['species_subdomain_assignments'] = modelDb.spatial["species_subdomain_assignments"]
+                templateData['species_diffusion_coefficients'] = modelDb.spatial["species_diffusion_coefficients"]
+                templateData['initial_conditions'] = modelDb.spatial["initial_conditions"]
+                templateData['subdomains'] = meshWrapperDb.subdomains
+
+            if data['execType'] == "stochastic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.stochastic(templateData, cluster_info,
+                                                                             not_full_parameter_sweep=True))
+            elif data['execType'] == "deterministic":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.deterministic(templateData, cluster_info,
+                                                                                not_full_parameter_sweep=True))
+            elif data['execType'] == "spatial":
+                job.qsubHandle = pickle.dumps(parametersweep_qsub.spatial(templateData, cluster_info,
+                                                                          not_full_parameter_sweep=True))
+            else:
+                raise Exception("Trying to runQsub on unsupported modelType {0}".format(data['modelType']))
+
+            job.put()
+        except Exception as e:
+            exc_info = sys.exc_info()
+            logging.exception(e)
+            job.status = 'Failed'
+            try:
+                job.delete(self)
+            except Exception as e:
+                pass
+            raise exc_info[1], None, exc_info[2]
+
+        return job
+
+    def runQsubWrapper(self, data):
+        import fileserver
+        cluster_info = dict()
+        received_cluster_info = json.loads(self.request.get('cluster_info'))
+        cluster_info['ip_address'] = received_cluster_info['ip']
+        cluster_info['username'] = received_cluster_info['username']
+        cluster_info['ssh_key'] = fileserver.FileWrapper.get_by_id(received_cluster_info['key_file_id']).storePath
+
+        self.user_data.set_selected(received_cluster_info['uuid'])
+
+        job = db.GqlQuery("SELECT * FROM ParameterSweepJobWrapper WHERE user_id = :1 AND name = :2",
+                          self.user.user_id(),
+                          data["jobName"].strip()).get()
+
+        logging.debug("DATA:   \n\n {0} \n\n".format(data))
+
+        if job != None:
+            logging.error("parametersweep.newJobQsub: error: Job name must be unique")
+            self.response.write(json.dumps({"status": False,
+                                            "msg": "Job name must be unique"}))
+            return
+
+        try:
+            result = self.runQsub(data=data, cluster_info=cluster_info)
+
+            return result
+
+        except Exception as e:
+            exc_info = sys.exc_info()
+            logging.exception(e)
+            #result = {'status': False,
+            #          'msg': 'Error: {0}'.format(e)}
+            #self.response.write(json.dumps(result))
+            raise exc_info[1], None, exc_info[2]
+
     def runMolns(self, params):
         """ Submit a remote molns StochKit job """
-        modelDb = StochKitModelWrapper.get_by_id(params["id"])
+        modelDb = StochKitModelWrapper.get_by_id(int(params["id"]))
         sys.stderr.write("*"*80 + "\n")
         sys.stderr.write("*"*80 + "\n")
         sys.stderr.write("runMolns\n")
@@ -550,6 +755,8 @@ class SimulatePage(BaseHandler):
         sys.stderr.write("*"*80 + "\n")
         sys.stderr.write("*"*80 + "\n")
 
+        self.user_data.set_selected(2)  # set default
+        
         if not modelDb:
             return {'status':False,
                     'msg':'Failed to retrive the model to simulate.'}
@@ -584,7 +791,7 @@ class SimulatePage(BaseHandler):
 
             args += '--seed {0} '.format(params['seed'])
         else:
-            executable = "/usr/local/ode-1.0.2/stochkit_ode.py"
+            executable = "/usr/local/ode/stochkit_ode.py"
 
         # Columns need to be labeled for visulatization page to work.  
         args += ' --label'
@@ -665,7 +872,13 @@ class SimulatePage(BaseHandler):
 
 
     def runCloud(self, params):
-        model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
+        self.user_data.set_selected(1)  # set default
+        service = backendservices(self.user_data)
+        if not service.isOneOrMoreComputeNodesRunning():
+            raise Exception('No cloud computing resources found. (Have they been started?)')
+
+        model = StochKitModelWrapper.get_by_id(int(params["id"])).createStochKitModel()
+
 
         if not model:
             raise Exception('Failed to retrive the model \'{0}\' to simulate'.format(params["id"]))
@@ -807,7 +1020,10 @@ class SimulatePage(BaseHandler):
 
     def runStochKitLocal(self, params):
         """ Submit a local StochKit job """
-        modelDb = StochKitModelWrapper.get_by_id(params["id"])
+        modelDb = StochKitModelWrapper.get_by_id(int(params["id"]))
+
+        self.user_data.set_selected(0)  # set default
+
 
         if not modelDb:
             return {'status':False,

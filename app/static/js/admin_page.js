@@ -11,9 +11,9 @@ $('.users').on('click', 'button.table-action-button', function(e) {
     var action = clickedButton.data('action');
     var email = '';
     if (tableColumns.size() == 4) {
-        email = tableColumns[2].innerHTML;
+        email = tableColumns[2].innerText.trim().split('\n')[0];
     } else if (tableColumns.size() == 3) {
-        email = tableColumns[1].innerHTML;
+        email = tableColumns[1].innerText.trim().split('\n')[0];
     } else {
         return;
     }
@@ -32,12 +32,12 @@ $('.users').on('click', 'button.table-action-button', function(e) {
             if (response["success"]) {
                 if (action == "approve") {
                     clickedButton.data('action', 'revoke');
-                    clickedButton.text('Revoke Permissions');
+                    clickedButton.text('Revoke Account');
                     clickedButton.removeClass('btn-success');
                     clickedButton.addClass('btn-danger');
                 } else if (action == "revoke") {
                     clickedButton.data('action', 'approve');
-                    clickedButton.text('Activate Account');
+                    clickedButton.text('Approve Account');
                     clickedButton.removeClass('btn-danger');
                     clickedButton.addClass('btn-success');
                 } else if (action == "delete" || action == "revoke_preapproved") {

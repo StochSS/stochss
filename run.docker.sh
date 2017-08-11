@@ -1,9 +1,12 @@
+#!/usr/bin/env bash
 docker rm stochsscontainer1_8_dev
-sudo docker run -it -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master briandrawert/stochss-launcher:1.8 sh -c "cd /stochss-master; ./run.ubuntu.sh --yy -a 0.0.0.0"
-#sudo docker run -it -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master stochss/stochss-launcher:1.7 sh -c "cd /stochss-master; ./run.ubuntu.sh --yy -a 0.0.0.0"
+#IMAGE_NAME='aviralcse/stochss_qsub:updated_stochss_for_release'
+IMAGE_NAME='briandrawert/stochss-launcher:1.9base'
 
-
-#sudo docker run -it -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master stochss/stochss-launcher:1.7 sh -c /bin/bash
-#
-#
-#sudo docker run -it --name=test_stochss --volume `pwd`:/stochss-master  stochss/stochss-launcher:1.7 /bin/bash
+if [[ $(uname -s) == 'Darwin' ]]
+then
+    PWD=$(pwd)
+    docker run -it -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume /Users:/Users $IMAGE_NAME bash -c "cd $PWD; ./run.ubuntu.sh -a 0.0.0.0 --debug"
+else
+    docker run -it -p 8080:8080 -p 8000:8000 -p 9999:9999 --name=stochsscontainer1_8_dev --volume `pwd`:/stochss-master $IMAGE_NAME bash -c "cd /stochss-master ;./run.ubuntu.sh -a 0.0.0.0"
+fi

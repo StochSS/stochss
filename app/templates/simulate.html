@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title%}View Parameter Sweep{% endblock %}
+{% block title%}Simulate{% endblock %}
 
 {% block content %}
 <div class="span9">
@@ -118,14 +118,15 @@
         <br />
         <% if(!isSpatial) { %>
         <% if(units == "concentration") { %>
-        <input id="deterministic" type="radio" name="exec_type" value="deterministic" checked> Deterministic <br />
-        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
+        <input save-default-values id="deterministic" type="radio" name="exec_type" value="deterministic" checked> Deterministic <br />
+      
+        <input save-default-values id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
         <% } else if (units == "population") { %>
-        <input id="deterministic" type="radio" name="exec_type" value="deterministic"> Deterministic
+        <input save-default-values id="deterministic" type="radio" name="exec_type" value="deterministic"> Deterministic
         <br />
-        <input id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
+        <input save-default-values id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
         <br />
-        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
+        <input save-default-values id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
         <% } %>
         <% } else { %>
         <input id="spatial" type="radio" name="exec_type" value="spatial" checked> Spatial <br />
@@ -166,14 +167,14 @@
         <br />
         <input type="text" class="input-small" disabled="disabled" value="0">
         &nbsp; to &nbsp;
-        <input type="text" class="input-small" id="time" value="100">
+        <input save-default-values type="text" class="input-small" id="time" value="100">
         &nbsp; store state every &nbsp;
-        <input type="text" class="input-small" id="increment" value="1.0"> &nbsp; time units.
+        <input save-default-values type="text" class="input-small" id="increment" value="1.0"> &nbsp; time units.
         
         <span class="stochastic spatial">
             <br />
             <label>Realizations</label>
-            <input type="text" class="span3" id="realizations" value="1">
+            <input save-default-values type="text" class="span3" id="realizations" value="1">
             <span class="help-block">Number of realizations in this ensemble.</span>
         </span>
         <br />
@@ -189,37 +190,37 @@
             <div class="stochastic spatial">
                 <B>Algorithm:</B><br />
                 <% if(!isSpatial) { %>
-                SSA <input id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
-                Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
+                SSA <input save-default-values id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
+                Tau-leaping <input save-default-values id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
                 <% } else { %>
-                Next Subvolume Method <input id="nsm" type="radio" name="algorithm" value="nsm" checked><br />
+                Next Subvolume Method <input save-default-values id="nsm" type="radio" name="algorithm" value="nsm" checked><br />
                 <% } %>
             </div>
 
             <br>
 
             <label class="tau-leaping ssa spatial">Seed
-                <input type="text" class="span3" id="seed" value="-1">
+                <input save-default-values type="text" class="span3" id="seed" value="-1">
                 <span class="help-block">Seed the random number generator (set to -1 for a random seed).</span>
             </label>
             
             <label class="tau-leaping">Threshold
-                <input type="text" class="span3" id="threshold" value="10">
+                <input save-default-values type="text" class="span3" id="threshold" value="10">
                 <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
             </label>
             
             <label class="tau-leaping">Epsilon
-                <input type="text" class="span3" id="epsilon" value="0.01">
+                <input save-default-values type="text" class="span3" id="epsilon" value="0.01">
                 <span class="help-block tau-leaping">Set the tolerance. Valid values: must be greater than 0.0 and less than 1.0.</span>
             </label>
             
             <label class="ode">Relative tolerance
-                <input type="text" class="span3" id="rTol" value="1e-6">
+                <input save-default-values type="text" class="span3" id="rTol" value="1e-6">
                 <span class="help-block">Relative tolerance of the ODE solver (CVODES). Valid values: must be greater than 0.0.</span>
             </label>
             
             <label class="ode">Absolute tolerance
-                <input type="text" class="span3" id="aTol" value="1e-9">
+                <input save-default-values type="text" class="span3" id="aTol" value="1e-9">
                 <span class="help-block">Absolute tolerance of the ODE solver (CVODES). Valid values: must be greater than 0.0.</span>
             </label>
             
@@ -235,10 +236,26 @@
         <br>
         <br>
 
-        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
-        <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>
+        <!---->
+        <!--<button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>-->
+        <!--<button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>-->
         <!--<button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Molns Cloud</button>-->
-        
+        <button id="run" type="submit" class="btn btn-primary btn-large"><i class="icon-play"></i> Run </button>
+        <br>
+        <br>
+
+          <label for="resource_picker"><h4>Choose a compute resource: </h4></label>
+          <select name="resource_picker" id="resource_picker" class="selectpicker">
+            {% for resource in resources %}
+                <option 
+                {% if resource.uuid == selected %} selected="selected" {% endif %}
+                value="{{ resource.json }}"
+                {% if resource.disabled %}disabled{%endif%}
+                >
+                {{resource.name}}
+                </option>
+            {% endfor %}
+          </select>
         <!-- Prevent Submission on pressing enter -->
         <!--<script>
             document.getElementById('submit_stochkit_ensemble').addEventListener('keypress', function(event) {
