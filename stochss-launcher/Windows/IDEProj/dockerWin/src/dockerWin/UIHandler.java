@@ -17,7 +17,7 @@ import javax.swing.text.DefaultCaret;
 
 public class UIHandler{
 	
-	public enum State { loading, startup, notInstall, running, stopped}
+	public enum State { loading, startup, notInstall, running, stopped, startupVM}
 	
 	State state;
 	private final int width = 500;
@@ -136,6 +136,10 @@ public class UIHandler{
     					setLoading(); 
     					m.startStochSS();
     					break;
+    	case startupVM:
+    					setLoading();
+    					m.startVM();
+    					break;
     	case notInstall: 
     					setLoading();
     					stochSSButton.setText("Installing...");
@@ -167,6 +171,12 @@ public class UIHandler{
     	state = State.loading;
     	stochSSButton.setText("Loading...");
     }
+    
+	public void setStartupVM() {
+		state = State.startupVM;
+		stochSSButton.setText("Start StochSS VM");
+		
+	}
     
     public void setStartup() {
     	state = State.startup;

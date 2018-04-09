@@ -11,6 +11,9 @@ public class StochSSWindowsLauncher {
 		main.initialize();
 		
 		try {
+			if (main.getToolbox() && main.checkIfVMInstalled()) {
+				window.setStartupVM();
+			} else 
 			if (main.checkIfInstalled()) {
 				window.setStartup();
 			} else {

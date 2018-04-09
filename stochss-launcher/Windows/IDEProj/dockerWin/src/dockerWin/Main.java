@@ -42,6 +42,9 @@ public class Main {
 	/*7*/ "docker rmi stochss/stochss-launcher:1.9",							//uninstall image
 	/*8  - Toolbox*/ "docker-machine rm " + VMname,								//uninstall VM
 	/*9*/ "docker create -t -p 9999:9999 -p 8080:8080 --name=" + containerName + " " + imageName, //create container
+	/*10*/ 
+	/*11*/
+	/*12*/
 	};
 	
 	private ProcessBuilder builder;
@@ -109,10 +112,6 @@ public class Main {
 	}
 	/**
 	 * This function checks if StochSS is installed. 
-	 * TODO:
-	 * 1. check docker-machine existence [docker-machine ls]
-	 * 2. start docker-machine [docker-machine start stochss1-9]
-	 * 3. set eval [eval "$(docker-machine env stochss1-9)"]
 	 * @return boolean whether or not stochss is installed
 	 * @throws IOException
 	 */
@@ -131,6 +130,47 @@ public class Main {
 	    	}
 	    }
 	    return false;
+	}
+	
+	public boolean checkIfVMInstalled() throws IOException {
+		String line;
+		stdin.write("docker-machine ls");
+		stdin.newLine();
+		stdin.write(commands[5]);
+		stdin.newLine();
+		stdin.flush();
+		while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+	    	window.addText(line);
+	    	if (line.contains(VMname)) {
+	    		return true;
+	    	}
+	    }
+		return false;
+	}
+	
+	public void startVM() throws IOException {
+		String line;
+		stdin.write("docker-machine start stochss1-9");
+		stdin.newLine();
+		stdin.write(commands[5]);
+		stdin.newLine();
+		stdin.flush();
+		while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+	    	window.addText(line);
+	    }
+		stdin.write("eval \"$(docker-machine env stochss1-9)\"");
+		stdin.newLine();
+		stdin.write(commands[5]);
+		stdin.newLine();
+		stdin.flush();
+		while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+	    	window.addText(line);
+	    }
+		if (checkIfInstalled()) {
+			window.setStartup();
+		} else {
+			window.setnotInstall();
+		}
 	}
 	
 	public void install() throws IOException {
@@ -250,6 +290,10 @@ public class Main {
 		log(s, exit);
 	}
 	
+	public boolean getToolbox() {
+		return toolbox;
+	}
+	
 	public void log(String str, boolean exit) {
 		if(exit) {
 			try {
@@ -303,16 +347,7 @@ public class Main {
 		    	}
 		    }
 			toolboxPath = "\"" + toolbox2 + "bin\\bash.exe\" --login -i \"" + toolbox1 + "start.sh\"";
-		}
-		
-/* *fuck this code in particular**
-		p.destroy();//????
-		builder.directory(new File(toolbox1));
-		p = builder.start();
-		in = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
-	    out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-**********************************/
-		
+		}		
 		
 		in.write(toolboxPath);
 		in.newLine();
