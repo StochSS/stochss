@@ -45,9 +45,11 @@ public class Main {
 	};
 	
 	private ProcessBuilder builder;
+	
 	private Process process;
 	private BufferedWriter stdin;
 	private BufferedReader stdout;
+	
 	private UIHandler window;
 	private Process subp;
 	private String toolbox1, toolbox2, toolboxPath;
@@ -77,7 +79,7 @@ public class Main {
 	
 	private boolean checkToolbox() {
 		//TODO
-		return false;
+		return true;
 	}
 
 	public void uninstall() throws IOException {
@@ -105,7 +107,15 @@ public class Main {
 			};
 		worker.execute();
 	}
-	
+	/**
+	 * This function checks if StochSS is installed. 
+	 * TODO:
+	 * 1. check docker-machine existence [docker-machine ls]
+	 * 2. start docker-machine [docker-machine start stochss1-9]
+	 * 3. set eval [eval "$(docker-machine env stochss1-9)"]
+	 * @return boolean whether or not stochss is installed
+	 * @throws IOException
+	 */
 	public boolean checkIfInstalled() throws IOException {
 		String line;
 	    stdin.write(commands[0]); 
@@ -266,7 +276,7 @@ public class Main {
 	private void enterToolbox(BufferedWriter in, BufferedReader out, Process p) throws IOException {
 		String line;
 		if (toolboxPath == null) {
-			
+//			/"C:\Program Files\Git\bin\bash.exe" --login -i "C:\Program Files\Docker Toolbox\start.sh"
 			in.write("where docker");
 			in.newLine();
 			in.write(commands[5]);
@@ -294,18 +304,22 @@ public class Main {
 		    }
 			toolboxPath = "\"" + toolbox2 + "bin\\bash.exe\" --login -i \"" + toolbox1 + "start.sh\"";
 		}
-		p.destroy();
+		
+/* *fuck this code in particular**
+		p.destroy();//????
 		builder.directory(new File(toolbox1));
 		p = builder.start();
 		in = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
 	    out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
+**********************************/
+		
+		
 		in.write(toolboxPath);
 		in.newLine();
 		in.write(commands[5]);
 		in.newLine();
 		in.flush();
-		while((line = out.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+		while((line = out.readLine()) != null && !(line.contains("finish"/*commands[5]*/) /*&& !line.contains(">")*/)) { 
 	    	window.addText(line);
 	    }
 		System.out.println(toolbox1 + " " + toolbox2 + " " + toolboxPath);
