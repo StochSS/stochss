@@ -82,7 +82,7 @@ public class Main {
 	
 	private boolean checkToolbox() {
 		//TODO
-		return true;
+		return false;
 	}
 
 	public void uninstall() throws IOException {

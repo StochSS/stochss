@@ -13,8 +13,7 @@ public class StochSSWindowsLauncher {
 		try {
 			if (main.getToolbox() && main.checkIfVMInstalled()) {
 				window.setStartupVM();
-			} else 
-			if (main.checkIfInstalled()) {
+			} else if (main.checkIfInstalled()) {
 				window.setStartup();
 			} else {
 				window.setnotInstall();

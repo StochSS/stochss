@@ -161,7 +161,7 @@ public class UIHandler{
     private void webButtonPressed() {
     	if (state == State.running) {
     		if (!m.openURL()) {
-    			System.out.println("There was a problem opening the URL. Please paste " 
+    		addText("There was a problem opening the URL. Please paste " 
     									+ m.getURL() + " into your preferred browser.");
     		}
     	}
@@ -253,3 +253,6 @@ public class UIHandler{
 	}
 
 }
+
+
+//getstohsslogfile <-- for settings. Execute docker command and it's cat /stochss-master/stderr.log
