@@ -98,7 +98,7 @@ public class Main {
 				 stdin.write(Commands.commandFinished());
 				 stdin.newLine();
 				 stdin.flush();
-
+		while((line = stdout.readLine()) != null && !line.contains(Commands.commandFinished())) {
 				    window.addText(line);
 				}
 				if (toolbox) {} //TODO
