@@ -21,15 +21,19 @@ import javax.swing.SwingWorker;
  */
 public class Main {
 	
+
 	private static String containerName = Commands.containerName;
 	private String VMname = Commands.VMname;
 	private String imageName = Commands.imageName;
+
 	private int logLimit = 100;
 	private boolean toolbox = false;
 	
 	private String ip = "127.0.0.1";
 	private String url;
 	
+
+  
 	
 	private ProcessBuilder builder;
 	
@@ -45,9 +49,11 @@ public class Main {
 		window = w;
 		builder = new ProcessBuilder("cmd");
 	}
+
 	/**
 	 * Initiliazes the main in order to run stochss, creating a standard input and output, and tries to enter the toolbox
 	 */
+
 	public void initialize() {
 		try { 
 			process = builder.start();
@@ -65,6 +71,7 @@ public class Main {
 			}
 	    }
 	}
+
 	/**
 	 * uhhhhh @KateLynn is this needed?
 	 * @return
@@ -73,6 +80,7 @@ public class Main {
 		//TODO
 		return true;
 	}
+
 	/**
 	 * Uninstalls stochSS
 	 * @throws IOException
@@ -82,6 +90,7 @@ public class Main {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
+
 				 stdin.write(Commands.uninstallContainer()); 
 				 stdin.newLine();
 				 stdin.write(Commands.uninstallImage());
@@ -89,7 +98,7 @@ public class Main {
 				 stdin.write(Commands.commandFinished());
 				 stdin.newLine();
 				 stdin.flush();
-				 while((line = stdout.readLine()) != null && !line.contains(Commands.commandFinished())) { 
+		while((line = stdout.readLine()) != null && !line.contains(Commands.commandFinished())) {
 				    window.addText(line);
 				}
 				if (toolbox) {} //TODO
@@ -113,6 +122,7 @@ public class Main {
 	 */
 	public boolean checkIfInstalled() throws IOException {
 		String line;
+
 	    stdin.write(Commands.searchForContainerName()); 
 	    stdin.newLine();
 	    stdin.write(Commands.commandFinished()); 
@@ -120,6 +130,7 @@ public class Main {
 	    stdin.flush();
 	    //while((line = stdout.readLine()) != null && !(line.contains(Commands.commandFinished()) && !line.contains(">"))) {  this DOES also works, but is less readable
 	    while(!commandHasFinished(line = stdout.readLine() )) { 
+
 	    	window.addText(line);
 	    	if (line.contains(containerName)) {
 	    		window.setStartup();
@@ -129,23 +140,29 @@ public class Main {
 	    return false;
 	}
 	
+
 	/**
 	 * Installs stochSS
 	 * @throws IOException
 	 */
+
 	public void install() throws IOException {
 		SwingWorker<Boolean, String> worker = new SwingWorker<Boolean, String>() {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				String line;
+
 				stdin.write(Commands.downloadImage());
+
 				stdin.newLine();
 				stdin.flush();
 				while((line = stdout.readLine()) != null && !line.startsWith("Status: ")) {
 				 	window.addText(line);
 				}
 				window.addText(line);
+
 				stdin.write(Commands.createContainer());
+
 				stdin.newLine();
 				stdin.flush();
 				window.addText(stdout.readLine());
@@ -166,16 +183,19 @@ public class Main {
 			};
 		worker.execute();		
 	}
+
 	
 	/**
 	 * Attemps to start the StochSS process
 	 * @throws IOException
 	 */
+
 	public void startStochSS() throws IOException {
 		SwingWorker<Boolean, String> worker = new SwingWorker<Boolean, String>() {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
+
 				 stdin.write(Commands.startContainer());
 				 stdin.newLine();
 				 stdin.write(Commands.runStochSS());
@@ -204,11 +224,13 @@ public class Main {
 			};
 		worker.execute();
 	}
+
 	
 	/**
 	 * Runs stochSS in the browser (I think, @KateLynn needs to confirm)
 	 * @return
 	 */
+
 	public boolean openURL() {
 		if (Desktop.isDesktopSupported()) {
 	    	try {
@@ -226,6 +248,7 @@ public class Main {
 	 * Attemps to safely exit, stopping StochSS and clearing memory
 	 * @throws IOException
 	 */
+
 	public void safeExit() throws IOException { //TODO: if any of these hang, need to detect it and destroyProcesses that way
 		subp = builder.start();	
 		BufferedWriter exitin = new BufferedWriter(new OutputStreamWriter(subp.getOutputStream()));
@@ -234,6 +257,7 @@ public class Main {
 	    	enterToolbox(exitin, exitout, subp); 
 	    }
 	    String line;
+
 	    exitin.write(Commands.stopContainer());
 	    exitin.newLine();
 	    exitin.write(Commands.commandFinished());
@@ -249,17 +273,20 @@ public class Main {
 	/**
 	 * Destroys the current process to prevent memory leaks
 	 */
+
 	private void destroyProcesses() {
 		if (process != null) 
 			process.destroy();
 		if (subp != null)
 			subp.destroy();
 	}
+
 	/**
 	 * Log function is called when an error occurs, and attempts to log the error and (may) safely exit the process
 	 * @param e The Exception/Error that occurs
 	 * @param exit Whether or not to exit the process
 	 */
+
 	public void log(Exception e, boolean exit) {
 		String s = "";
 		StringWriter errors = new StringWriter();
@@ -267,11 +294,13 @@ public class Main {
 		s += errors.toString(); 
 		log(s, exit);
 	}
+
 	/**
 	 * Overloaded function of previous log, documents the error, and attempts to stop the process safely if exit is true
 	 * @param str String variable of error
 	 * @param exit boolean whether or not to exit
 	 */
+
 	public void log(String str, boolean exit) {
 		if(exit) {
 			try {
@@ -294,6 +323,7 @@ public class Main {
 	public String getURL() {
 		return url;
 	}
+
 	/**
 	 * NOTE: Katelynn correct if im wrong, im just adding javadoc as much as I can
 	 * @param in Input BufferedWriter to write to
@@ -301,6 +331,7 @@ public class Main {
 	 * @param p Process (Seperate Thread?) to use
 	 * @throws IOException
 	 */
+
 	
 	private void enterToolbox(BufferedWriter in, BufferedReader out, Process p) throws IOException {
 		String line;
@@ -308,10 +339,12 @@ public class Main {
 //			/"C:\Program Files\Git\bin\bash.exe" --login -i "C:\Program Files\Docker Toolbox\start.sh"
 			in.write("where docker");
 			in.newLine();
+
 			in.write(Commands.commandFinished());
 			in.newLine();
 			in.flush();
 			while((line = out.readLine()) != null && !(line.contains(Commands.commandFinished()) && !line.contains(">"))) { 
+
 		    	window.addText(line);
 		    	if (line.contains("Docker Toolbox")) {
 		    		toolbox1 = line.substring(0, line.indexOf("docker.exe"));
@@ -321,10 +354,12 @@ public class Main {
 			
 			in.write("where git");
 			in.newLine();
+
 			in.write(Commands.commandFinished());
 			in.newLine();
 			in.flush();
 			while((line = out.readLine()) != null && !(line.contains(Commands.commandFinished()) && !line.contains(">"))) { 
+
 		    	window.addText(line);
 		    	if (line.contains("cmd\\git.exe")) {
 		    		toolbox2 = line.substring(0, line.indexOf("cmd\\git.exe"));
@@ -345,10 +380,12 @@ public class Main {
 		
 		in.write(toolboxPath);
 		in.newLine();
+
 		in.write(Commands.commandFinished());
 		in.newLine();
 		in.flush();
 		while((line = out.readLine()) != null && !(line.contains(Commands.commandFinished()))) {/* adding '&& !line.contains(">")' will make this NOT work*/ 
+
 	    	window.addText(line);
 	    }
 		System.out.println(toolbox1 + " " + toolbox2 + " " + toolboxPath);
@@ -364,6 +401,7 @@ public class Main {
 			"var2" -login -i "var1"
 		 */
 	}
+
 	/**
 	 * This program checks whether or not the finished string has been output
 	 * @return Boolean Whether or not a command has finished execution
@@ -372,6 +410,7 @@ public class Main {
 	private boolean commandHasFinished(String outputToCheck) throws IOException {
 		return !(outputToCheck != null && !(outputToCheck.contains(Commands.commandFinished()) && !outputToCheck.contains(">")));
 	}
+
 }
 
 
