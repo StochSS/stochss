@@ -21,26 +21,33 @@ import javax.swing.SwingWorker;
  */
 public class Main {
 	
-
-	private static String containerName = Commands.containerName;
-	private String VMname = Commands.VMname;
-	private String imageName = Commands.imageName;
-
+	private String containerName = "stochsscontainer1_9";
+	private String VMname = "stochss1-9";
+	private String imageName = "stochss/stochss-launcher:1.9";
 	private int logLimit = 100;
 	private boolean toolbox = false;
 	
 	private String ip = "127.0.0.1";
 	private String url;
 	
-
-  
+	private final String commands[] = {
+	/*0*/ "docker ps -a -f name=" + containerName, 								//search for container of container name
+	/*1*/ "docker pull " + imageName, 											//download image
+	/*2*/ "docker start " + containerName,										//start container
+	/*3*/ "docker exec -i " + containerName + " /bin/bash -c \"cd " +
+				"stochss-master && ./run.ubuntu.sh -a 0.0.0.0 -t secretkey\"", 	//run StochSS
+	/*4*/ "docker stop " + containerName,										//stop container
+	/*5*/ "echo ---finished---",												//arbitrary echo to tell if operation is over
+	/*6*/ "docker rm " + containerName,											//uninstall container
+	/*7*/ "docker rmi stochss/stochss-launcher:1.9",							//uninstall image
+	/*8  - Toolbox*/ "docker-machine rm " + VMname,								//uninstall VM
+	/*9*/ "docker create -t -p 9999:9999 -p 8080:8080 --name=" + containerName + " " + imageName, //create container
+	};
 	
 	private ProcessBuilder builder;
-	
 	private Process process;
 	private BufferedWriter stdin;
 	private BufferedReader stdout;
-	
 	private UIHandler window;
 	private Process subp;
 	private String toolbox1, toolbox2, toolboxPath;
@@ -49,11 +56,7 @@ public class Main {
 		window = w;
 		builder = new ProcessBuilder("cmd");
 	}
-
-	/**
-	 * Initiliazes the main in order to run stochss, creating a standard input and output, and tries to enter the toolbox
-	 */
-
+	
 	public void initialize() {
 		try { 
 			process = builder.start();
@@ -71,34 +74,25 @@ public class Main {
 			}
 	    }
 	}
-
-	/**
-	 * uhhhhh @KateLynn is this needed?
-	 * @return
-	 */
+	
 	private boolean checkToolbox() {
 		//TODO
-		return true;
+		return false;
 	}
 
-	/**
-	 * Uninstalls stochSS
-	 * @throws IOException
-	 */
 	public void uninstall() throws IOException {
 		SwingWorker<Boolean, String> worker = new SwingWorker<Boolean, String>() {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
-
-				 stdin.write(Commands.uninstallContainer()); 
+				 stdin.write(commands[6]); 
 				 stdin.newLine();
-				 stdin.write(Commands.uninstallImage());
+				 stdin.write(commands[7]);
 				 stdin.newLine();
-				 stdin.write(Commands.commandFinished());
+				 stdin.write(commands[5]);
 				 stdin.newLine();
 				 stdin.flush();
-
+				 while((line = stdout.readLine()) != null && !line.contains(commands[5])) { 
 				    window.addText(line);
 				}
 				if (toolbox) {} //TODO
@@ -111,26 +105,15 @@ public class Main {
 			};
 		worker.execute();
 	}
-	/**
-	 * This function checks if StochSS is installed. 
-	 * TODO:
-	 * 1. check docker-machine existence [docker-machine ls]
-	 * 2. start docker-machine [docker-machine start stochss1-9]
-	 * 3. set eval [eval "$(docker-machine env stochss1-9)"]
-	 * @return boolean whether or not stochss is installed
-	 * @throws IOException
-	 */
+	
 	public boolean checkIfInstalled() throws IOException {
 		String line;
-
-	    stdin.write(Commands.searchForContainerName()); 
+	    stdin.write(commands[0]); 
 	    stdin.newLine();
-	    stdin.write(Commands.commandFinished()); 
+	    stdin.write(commands[5]); 
 	    stdin.newLine();
 	    stdin.flush();
-	    //while((line = stdout.readLine()) != null && !(line.contains(Commands.commandFinished()) && !line.contains(">"))) {  this DOES also works, but is less readable
-	    while(!commandHasFinished(line = stdout.readLine() )) { 
-
+	    while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
 	    	window.addText(line);
 	    	if (line.contains(containerName)) {
 	    		window.setStartup();
@@ -140,29 +123,19 @@ public class Main {
 	    return false;
 	}
 	
-
-	/**
-	 * Installs stochSS
-	 * @throws IOException
-	 */
-
 	public void install() throws IOException {
 		SwingWorker<Boolean, String> worker = new SwingWorker<Boolean, String>() {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				String line;
-
-				stdin.write(Commands.downloadImage());
-
+				stdin.write(commands[1]);
 				stdin.newLine();
 				stdin.flush();
 				while((line = stdout.readLine()) != null && !line.startsWith("Status: ")) {
 				 	window.addText(line);
 				}
 				window.addText(line);
-
-				stdin.write(Commands.createContainer());
-
+				stdin.write(commands[9]);
 				stdin.newLine();
 				stdin.flush();
 				window.addText(stdout.readLine());
@@ -183,22 +156,15 @@ public class Main {
 			};
 		worker.execute();		
 	}
-
-	
-	/**
-	 * Attemps to start the StochSS process
-	 * @throws IOException
-	 */
-
+	    
 	public void startStochSS() throws IOException {
 		SwingWorker<Boolean, String> worker = new SwingWorker<Boolean, String>() {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
-
-				 stdin.write(Commands.startContainer());
+				 stdin.write(commands[2]);
 				 stdin.newLine();
-				 stdin.write(Commands.runStochSS());
+				 stdin.write(commands[3]);
 				 stdin.newLine();
 				 stdin.flush();
 				 while((line = stdout.readLine()) != null && !line.startsWith("Navigate to ")) {
@@ -224,13 +190,7 @@ public class Main {
 			};
 		worker.execute();
 	}
-
-	
-	/**
-	 * Runs stochSS in the browser (I think, @KateLynn needs to confirm)
-	 * @return
-	 */
-
+	    
 	public boolean openURL() {
 		if (Desktop.isDesktopSupported()) {
 	    	try {
@@ -243,12 +203,7 @@ public class Main {
 		}
 		return false;
 	}
-	
-	/**
-	 * Attemps to safely exit, stopping StochSS and clearing memory
-	 * @throws IOException
-	 */
-
+		
 	public void safeExit() throws IOException { //TODO: if any of these hang, need to detect it and destroyProcesses that way
 		subp = builder.start();	
 		BufferedWriter exitin = new BufferedWriter(new OutputStreamWriter(subp.getOutputStream()));
@@ -257,36 +212,26 @@ public class Main {
 	    	enterToolbox(exitin, exitout, subp); 
 	    }
 	    String line;
-
-	    exitin.write(Commands.stopContainer());
+	    exitin.write(commands[4]);
 	    exitin.newLine();
-	    exitin.write(Commands.commandFinished());
+	    exitin.write(commands[5]);
 	    exitin.newLine();
 	    exitin.flush();
-	    while((line = exitout.readLine()) != null && !line.contains(Commands.commandFinished())) {  //[1]
+	    while((line = exitout.readLine()) != null && !line.contains(commands[5])) {  //[1]
 	    	window.addText(line); 
 		}
 		destroyProcesses();
-		// [1] For some reason this hangs if changed to the !(line.contains(Commands.commandFinished()) && !line.contains(">")) version, 
-		//which is supposed to be MORE robust/less error-prone than !line.contains(Commands.commandFinished())
+		// [1] For some reason this hangs if changed to the !(line.contains(commands[5]) && !line.contains(">")) version, 
+		//which is supposed to be MORE robust/less error-prone than !line.contains(commands[5])
 	}
-	/**
-	 * Destroys the current process to prevent memory leaks
-	 */
-
+	
 	private void destroyProcesses() {
 		if (process != null) 
 			process.destroy();
 		if (subp != null)
 			subp.destroy();
 	}
-
-	/**
-	 * Log function is called when an error occurs, and attempts to log the error and (may) safely exit the process
-	 * @param e The Exception/Error that occurs
-	 * @param exit Whether or not to exit the process
-	 */
-
+	
 	public void log(Exception e, boolean exit) {
 		String s = "";
 		StringWriter errors = new StringWriter();
@@ -294,13 +239,7 @@ public class Main {
 		s += errors.toString(); 
 		log(s, exit);
 	}
-
-	/**
-	 * Overloaded function of previous log, documents the error, and attempts to stop the process safely if exit is true
-	 * @param str String variable of error
-	 * @param exit boolean whether or not to exit
-	 */
-
+	
 	public void log(String str, boolean exit) {
 		if(exit) {
 			try {
@@ -323,28 +262,17 @@ public class Main {
 	public String getURL() {
 		return url;
 	}
-
-	/**
-	 * NOTE: Katelynn correct if im wrong, im just adding javadoc as much as I can
-	 * @param in Input BufferedWriter to write to
-	 * @param out Output BufferedReader to read from
-	 * @param p Process (Seperate Thread?) to use
-	 * @throws IOException
-	 */
-
 	
 	private void enterToolbox(BufferedWriter in, BufferedReader out, Process p) throws IOException {
 		String line;
 		if (toolboxPath == null) {
-//			/"C:\Program Files\Git\bin\bash.exe" --login -i "C:\Program Files\Docker Toolbox\start.sh"
+			
 			in.write("where docker");
 			in.newLine();
-
-			in.write(Commands.commandFinished());
+			in.write(commands[5]);
 			in.newLine();
 			in.flush();
-			while((line = out.readLine()) != null && !(line.contains(Commands.commandFinished()) && !line.contains(">"))) { 
-
+			while((line = out.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
 		    	window.addText(line);
 		    	if (line.contains("Docker Toolbox")) {
 		    		toolbox1 = line.substring(0, line.indexOf("docker.exe"));
@@ -354,12 +282,10 @@ public class Main {
 			
 			in.write("where git");
 			in.newLine();
-
-			in.write(Commands.commandFinished());
+			in.write(commands[5]);
 			in.newLine();
 			in.flush();
-			while((line = out.readLine()) != null && !(line.contains(Commands.commandFinished()) && !line.contains(">"))) { 
-
+			while((line = out.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
 		    	window.addText(line);
 		    	if (line.contains("cmd\\git.exe")) {
 		    		toolbox2 = line.substring(0, line.indexOf("cmd\\git.exe"));
@@ -368,24 +294,18 @@ public class Main {
 		    }
 			toolboxPath = "\"" + toolbox2 + "bin\\bash.exe\" --login -i \"" + toolbox1 + "start.sh\"";
 		}
-		
-/* *fuck this code in particular**
-		p.destroy();//????
+		p.destroy();
 		builder.directory(new File(toolbox1));
 		p = builder.start();
 		in = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
 	    out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-**********************************/
-		
-		
+
 		in.write(toolboxPath);
 		in.newLine();
-
-		in.write(Commands.commandFinished());
+		in.write(commands[5]);
 		in.newLine();
 		in.flush();
-		while((line = out.readLine()) != null && !(line.contains(Commands.commandFinished()))) {/* adding '&& !line.contains(">")' will make this NOT work*/ 
-
+		while((line = out.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
 	    	window.addText(line);
 	    }
 		System.out.println(toolbox1 + " " + toolbox2 + " " + toolboxPath);
@@ -400,15 +320,6 @@ public class Main {
 			cd var 1, ending at "\start.sh"
 			"var2" -login -i "var1"
 		 */
-	}
-
-	/**
-	 * This program checks whether or not the finished string has been output
-	 * @return Boolean Whether or not a command has finished execution
-	 * @throws IOException
-	 */
-	private boolean commandHasFinished(String outputToCheck) throws IOException {
-		return !(outputToCheck != null && !(outputToCheck.contains(Commands.commandFinished()) && !outputToCheck.contains(">")));
 	}
 
 }
