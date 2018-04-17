@@ -20,6 +20,8 @@ import javax.swing.SwingWorker;
  *
  */
 public class Main {
+	private static final boolean debug = true;
+	
 	
 	private String containerName = "stochsscontainer1_9";
 	private String VMname = "stochss1-9";
@@ -30,6 +32,8 @@ public class Main {
 	private String ip = "127.0.0.1";
 	private String url;
 	
+	private final String finishedStr = "---finished---";
+	
 	private final String commands[] = {
 	/*0*/ "docker ps -a -f name=" + containerName, 								//search for container of container name
 	/*1*/ "docker pull " + imageName, 											//download image
@@ -37,7 +41,7 @@ public class Main {
 	/*3*/ "docker exec -i " + containerName + " /bin/bash -c \"cd " +
 				"stochss-master && ./run.ubuntu.sh -a 0.0.0.0 -t secretkey\"", 	//run StochSS
 	/*4*/ "docker stop " + containerName,										//stop container
-	/*5*/ "echo ---finished---",												//arbitrary echo to tell if operation is over
+	/*5*/ "echo " + finishedStr,												//arbitrary echo to tell if operation is over
 	/*6*/ "docker rm " + containerName,											//uninstall container
 	/*7*/ "docker rmi stochss/stochss-launcher:1.9",							//uninstall image
 	/*8  - Toolbox*/ "docker-machine rm " + VMname,								//uninstall VM
@@ -139,13 +143,19 @@ public class Main {
 		stdin.write(commands[5]);
 		stdin.newLine();
 		stdin.flush();
-		while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+		/*
+		 * !(A && !B)
+
+		 *	!A + B
+		 */
+		while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) { 
 	    	window.addText(line);
 	    	if (line.contains(VMname)) {
+	    		if(debug) {System.out.println("Check if vm installed: true");}
 	    		return true;
 	    	}
 	    }
-		//
+		if(debug) {System.out.println("Check if vm installed: false");}
 		return false;
 	}
 	
@@ -155,21 +165,30 @@ public class Main {
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
 				 stdin.write("docker-machine start stochss1-9");
+				 
+				 if(debug) { System.out.println("docker-machine start stochss1-9"); }
+				 
 				 stdin.newLine();
 				 stdin.write(commands[5]);
 				 stdin.newLine();
 				 stdin.flush();
-				 while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
-				    	window.addText(line);
+				 while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(">"))) { 
+					 if(debug) {System.out.println(line);}
+					 window.addText(line);
 				 }
 				 stdin.write("eval \"$(docker-machine env stochss1-9)\"");
+				 
+				 if(debug) { System.out.println("eval \"$(docker-machine env stochss1-9)\""); }
+				 
 				 stdin.newLine();
 				 stdin.write(commands[5]);
 				 stdin.newLine();
 				 stdin.flush();
-				 while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
-				   	window.addText(line);
+				 while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(">"))) { 
+					 
+					 window.addText(line);
 				 }
+				if(debug) {System.out.println("Returns true");}
 				return true;
 			  }
 			  @Override
