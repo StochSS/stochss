@@ -82,7 +82,7 @@ public class Main {
 	
 	private boolean checkToolbox() {
 		//TODO
-		return false;
+		return true;
 	}
 
 	public void uninstall() throws IOException {
@@ -149,28 +149,42 @@ public class Main {
 	}
 	
 	public void startVM() throws IOException {
-		String line;
-		stdin.write("docker-machine start stochss1-9");
-		stdin.newLine();
-		stdin.write(commands[5]);
-		stdin.newLine();
-		stdin.flush();
-		while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
-	    	window.addText(line);
-	    }
-		stdin.write("eval \"$(docker-machine env stochss1-9)\"");
-		stdin.newLine();
-		stdin.write(commands[5]);
-		stdin.newLine();
-		stdin.flush();
-		while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
-	    	window.addText(line);
-	    }
-		if (checkIfInstalled()) {
-			window.setStartup();
-		} else {
-			window.setnotInstall();
-		}
+		SwingWorker<Boolean, String> worker = new SwingWorker<Boolean, String>() {
+			 @Override
+			 protected Boolean doInBackground() throws IOException {
+				 String line;
+				 stdin.write("docker-machine start stochss1-9");
+				 stdin.newLine();
+				 stdin.write(commands[5]);
+				 stdin.newLine();
+				 stdin.flush();
+				 while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+				    	window.addText(line);
+				 }
+				 stdin.write("eval \"$(docker-machine env stochss1-9)\"");
+				 stdin.newLine();
+				 stdin.write(commands[5]);
+				 stdin.newLine();
+				 stdin.flush();
+				 while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+				   	window.addText(line);
+				 }
+				return true;
+			  }
+			  @Override
+			  protected void done() {
+				try {
+					if (checkIfInstalled()) {
+						window.setStartup();
+					} else {
+						window.setnotInstall();
+					}
+				} catch (IOException e) {
+					log(e, true);
+				}
+			  }
+			};
+		worker.execute();
 	}
 	
 	public void install() throws IOException {
