@@ -17,6 +17,7 @@
 """Tests for google.appengine.tools.devappserver2.wsgi_server."""
 
 
+import errno
 import json
 import select
 import socket
@@ -87,7 +88,7 @@ class SharedCherryPyThreadPoolTest(unittest.TestCase):
   def setUp(self):
     self.mox = mox.Mox()
     self.mox.StubOutWithMock(wsgi_server._THREAD_POOL, 'submit')
-    self.thread_pool = wsgi_server.SharedCherryPyThreadPool()
+    self.thread_pool = wsgi_server._SharedCherryPyThreadPool()
 
   def tearDown(self):
     self.mox.UnsetStubs()
@@ -125,24 +126,23 @@ class SharedCherryPyThreadPoolTest(unittest.TestCase):
     self.assertEqual(set(), self.thread_pool._connections)
 
   def test_stop(self):
-    wsgi_server._THREAD_POOL.submit(self.thread_pool._stop, 3)
     self.mox.ReplayAll()
     self.thread_pool.stop(3)
     self.mox.VerifyAll()
 
-  def test__stop_no_connections(self):
+  def test_stop_no_connections(self):
     self.mox.ReplayAll()
-    self.thread_pool._stop(0.1)
+    self.thread_pool.stop(0.1)
     self.mox.VerifyAll()
 
-  def test__stop_with_connections(self):
+  def test_stop_with_connections(self):
     connection = self.mox.CreateMock(wsgiserver.HTTPConnection)
     self.thread_pool._connections.add(connection)
     self.mox.StubOutWithMock(self.thread_pool, '_shutdown_connection')
     self.thread_pool._shutdown_connection(connection)
 
     self.mox.ReplayAll()
-    self.thread_pool._stop(1)
+    self.thread_pool.stop(1)
     self.mox.VerifyAll()
 
   def test_shutdown_connection(self):
@@ -261,7 +261,7 @@ class SelectThreadTest(unittest.TestCase):
 
     select.poll().AndReturn(poll)
     poll.register(s.fileno(), select.POLLIN)
-    poll.poll(1).AndReturn([(s.fileno(), select.POLLIN)])
+    poll.poll(1000).AndReturn([(s.fileno(), select.POLLIN)])
 
     callback()
     self.mox.ReplayAll()
@@ -287,7 +287,7 @@ class SelectThreadTest(unittest.TestCase):
 
     select.poll().AndReturn(poll)
     poll.register(s.fileno(), select.POLLIN)
-    poll.poll(1).AndReturn([])
+    poll.poll(1000).AndReturn([])
 
     self.mox.ReplayAll()
     self.select_thread.add_socket(s, callback)
@@ -299,7 +299,7 @@ class WsgiServerStartupTest(unittest.TestCase):
 
   def setUp(self):
     self.mox = mox.Mox()
-    self.server = wsgi_server.WsgiServer(('localhost', 0), None)
+    self.server = wsgi_server.WsgiServer(('localhost', 123), None)
 
   def tearDown(self):
     self.mox.UnsetStubs()
@@ -313,8 +313,8 @@ class WsgiServerStartupTest(unittest.TestCase):
         wsgi_server._SingleAddressWsgiServer)
     self.mox.StubOutWithMock(wsgi_server, '_SingleAddressWsgiServer')
     self.mox.StubOutWithMock(socket, 'getaddrinfo')
-    socket.getaddrinfo('localhost', 0, socket.AF_UNSPEC, socket.SOCK_STREAM, 0,
-                       socket.AI_PASSIVE).AndReturn(
+    socket.getaddrinfo('localhost', 123, socket.AF_UNSPEC, socket.SOCK_STREAM,
+                       0, socket.AI_PASSIVE).AndReturn(
                            [(None, None, None, None, ('foo', 'bar', 'baz')),
                             (None, None, None, None, (1, 2, 3, 4, 5)),
                             (None, None, None, None, (3, 4))])
@@ -339,8 +339,8 @@ class WsgiServerStartupTest(unittest.TestCase):
         wsgi_server._SingleAddressWsgiServer)
     self.mox.StubOutWithMock(wsgi_server, '_SingleAddressWsgiServer')
     self.mox.StubOutWithMock(socket, 'getaddrinfo')
-    socket.getaddrinfo('localhost', 0, socket.AF_UNSPEC, socket.SOCK_STREAM, 0,
-                       socket.AI_PASSIVE).AndReturn(
+    socket.getaddrinfo('localhost', 123, socket.AF_UNSPEC, socket.SOCK_STREAM,
+                       0, socket.AI_PASSIVE).AndReturn(
                            [(None, None, None, None, ('foo', 'bar', 'baz'))])
     wsgi_server._SingleAddressWsgiServer(('foo', 'bar'), None).AndReturn(
         failing_server)
@@ -348,6 +348,27 @@ class WsgiServerStartupTest(unittest.TestCase):
 
     self.mox.ReplayAll()
     self.assertRaises(wsgi_server.BindError, self.server.start)
+    self.mox.VerifyAll()
+
+  def test_remove_duplicates(self):
+    foo_server = self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+    foo2_server = self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+    self.mox.StubOutWithMock(wsgi_server, '_SingleAddressWsgiServer')
+    self.mox.StubOutWithMock(socket, 'getaddrinfo')
+    socket.getaddrinfo('localhost', 123, socket.AF_UNSPEC, socket.SOCK_STREAM,
+                       0, socket.AI_PASSIVE).AndReturn(
+                           [(0, 0, 0, '', ('127.0.0.1', 123)),
+                            (0, 0, 0, '', ('::1', 123, 0, 0)),
+                            (0, 0, 0, '', ('127.0.0.1', 123))])
+    wsgi_server._SingleAddressWsgiServer(('127.0.0.1', 123), None).AndReturn(
+        foo_server)
+    foo_server.start()
+    wsgi_server._SingleAddressWsgiServer(('::1', 123), None).AndReturn(
+        foo2_server)
+    foo2_server.start()
+
+    self.mox.ReplayAll()
+    self.server.start()
     self.mox.VerifyAll()
 
   def test_quit(self):
@@ -358,6 +379,124 @@ class WsgiServerStartupTest(unittest.TestCase):
     self.mox.ReplayAll()
     self.server.quit()
     self.mox.VerifyAll()
+
+
+class WsgiServerPort0StartupTest(unittest.TestCase):
+
+  def setUp(self):
+    self.mox = mox.Mox()
+    self.server = wsgi_server.WsgiServer(('localhost', 0), None)
+
+  def tearDown(self):
+    self.mox.UnsetStubs()
+
+  def test_basic_behavior(self):
+    inet4_server = self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+    inet6_server = self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+    self.mox.StubOutWithMock(wsgi_server, '_SingleAddressWsgiServer')
+    self.mox.StubOutWithMock(socket, 'getaddrinfo')
+    socket.getaddrinfo('localhost', 0, socket.AF_UNSPEC, socket.SOCK_STREAM, 0,
+                       socket.AI_PASSIVE).AndReturn(
+                           [(None, None, None, None, ('127.0.0.1', 0, 'baz')),
+                            (None, None, None, None, ('::1', 0, 'baz'))])
+    wsgi_server._SingleAddressWsgiServer(('127.0.0.1', 0), None).AndReturn(
+        inet4_server)
+    inet4_server.start()
+    inet4_server.port = 123
+    wsgi_server._SingleAddressWsgiServer(('::1', 123), None).AndReturn(
+        inet6_server)
+    inet6_server.start()
+    self.mox.ReplayAll()
+    self.server.start()
+    self.mox.VerifyAll()
+    self.assertItemsEqual([inet4_server, inet6_server],
+                          self.server._servers)
+
+  def test_retry_eaddrinuse(self):
+    inet4_server = self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+    inet6_server = self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+    inet4_server_retry = self.mox.CreateMock(
+        wsgi_server._SingleAddressWsgiServer)
+    inet6_server_retry = self.mox.CreateMock(
+        wsgi_server._SingleAddressWsgiServer)
+    self.mox.StubOutWithMock(wsgi_server, '_SingleAddressWsgiServer')
+    self.mox.StubOutWithMock(socket, 'getaddrinfo')
+    socket.getaddrinfo('localhost', 0, socket.AF_UNSPEC, socket.SOCK_STREAM, 0,
+                       socket.AI_PASSIVE).AndReturn(
+                           [(None, None, None, None, ('127.0.0.1', 0, 'baz')),
+                            (None, None, None, None, ('::1', 0, 'baz'))])
+    # First try
+    wsgi_server._SingleAddressWsgiServer(('127.0.0.1', 0), None).AndReturn(
+        inet4_server)
+    inet4_server.start()
+    inet4_server.port = 123
+    wsgi_server._SingleAddressWsgiServer(('::1', 123), None).AndReturn(
+        inet6_server)
+    inet6_server.start().AndRaise(
+        wsgi_server.BindError('message', (errno.EADDRINUSE, 'in use')))
+    inet4_server.quit()
+    # Retry
+    wsgi_server._SingleAddressWsgiServer(('127.0.0.1', 0), None).AndReturn(
+        inet4_server_retry)
+    inet4_server_retry.start()
+    inet4_server_retry.port = 456
+    wsgi_server._SingleAddressWsgiServer(('::1', 456), None).AndReturn(
+        inet6_server_retry)
+    inet6_server_retry.start()
+    self.mox.ReplayAll()
+    self.server.start()
+    self.mox.VerifyAll()
+    self.assertItemsEqual([inet4_server_retry, inet6_server_retry],
+                          self.server._servers)
+
+  def test_retry_limited(self):
+    inet4_servers = [self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+                     for _ in range(wsgi_server._PORT_0_RETRIES)]
+    inet6_servers = [self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+                     for _ in range(wsgi_server._PORT_0_RETRIES)]
+    self.mox.StubOutWithMock(wsgi_server, '_SingleAddressWsgiServer')
+    self.mox.StubOutWithMock(socket, 'getaddrinfo')
+    socket.getaddrinfo('localhost', 0, socket.AF_UNSPEC, socket.SOCK_STREAM, 0,
+                       socket.AI_PASSIVE).AndReturn(
+                           [(None, None, None, None, ('127.0.0.1', 0, 'baz')),
+                            (None, None, None, None, ('::1', 0, 'baz'))])
+    for offset, (inet4_server, inet6_server) in enumerate(zip(
+        inet4_servers, inet6_servers)):
+      wsgi_server._SingleAddressWsgiServer(('127.0.0.1', 0), None).AndReturn(
+          inet4_server)
+      inet4_server.start()
+      inet4_server.port = offset + 1
+      wsgi_server._SingleAddressWsgiServer(('::1', offset + 1), None).AndReturn(
+          inet6_server)
+      inet6_server.start().AndRaise(
+          wsgi_server.BindError('message', (errno.EADDRINUSE, 'in use')))
+      inet4_server.quit()
+    self.mox.ReplayAll()
+    self.assertRaises(wsgi_server.BindError, self.server.start)
+    self.mox.VerifyAll()
+
+  def test_ignore_other_errors(self):
+    inet4_server = self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+    inet6_server = self.mox.CreateMock(wsgi_server._SingleAddressWsgiServer)
+    self.mox.StubOutWithMock(wsgi_server, '_SingleAddressWsgiServer')
+    self.mox.StubOutWithMock(socket, 'getaddrinfo')
+    socket.getaddrinfo('localhost', 0, socket.AF_UNSPEC, socket.SOCK_STREAM, 0,
+                       socket.AI_PASSIVE).AndReturn(
+                           [(None, None, None, None, ('127.0.0.1', 0, 'baz')),
+                            (None, None, None, None, ('::1', 0, 'baz'))])
+    wsgi_server._SingleAddressWsgiServer(('127.0.0.1', 0), None).AndReturn(
+        inet4_server)
+    inet4_server.start()
+    inet4_server.port = 123
+    wsgi_server._SingleAddressWsgiServer(('::1', 123), None).AndReturn(
+        inet6_server)
+    inet6_server.start().AndRaise(
+        wsgi_server.BindError('message', (errno.ENOPROTOOPT, 'no protocol')))
+    self.mox.ReplayAll()
+    self.server.start()
+    self.mox.VerifyAll()
+    self.assertItemsEqual([inet4_server],
+                          self.server._servers)
 
 
 class _SingleAddressWsgiServerStartupTest(unittest.TestCase):
@@ -397,7 +536,7 @@ class _SingleAddressWsgiServerStartupTest(unittest.TestCase):
     self.mox.StubOutWithMock(wsgi_server._SELECT_THREAD, 'remove_socket')
     self.server.socket = object()
     self.server.requests = self.mox.CreateMock(
-        wsgi_server.SharedCherryPyThreadPool)
+        wsgi_server._SharedCherryPyThreadPool)
     wsgi_server._SELECT_THREAD.remove_socket(self.server.socket)
     self.server.requests.stop(timeout=1)
     self.mox.ReplayAll()

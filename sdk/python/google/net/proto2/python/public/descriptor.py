@@ -23,11 +23,14 @@ file, in types that make this information accessible in Python.
 """
 
 
-
 from google.net.proto2.python.internal import api_implementation
 
 
 if api_implementation.Type() == 'cpp':
+
+  import os
+  import uuid
+
   if api_implementation.Version() == 2:
     from google.net.proto2.python.internal.cpp import _message
   else:
@@ -239,6 +242,8 @@ class Descriptor(_NestedDescriptorBase):
     self.fields_by_name = dict((f.name, f) for f in fields)
 
     self.nested_types = nested_types
+    for nested_type in nested_types:
+      nested_type.containing_type = self
     self.nested_types_by_name = dict((t.name, t) for t in nested_types)
 
     self.enum_types = enum_types
@@ -449,12 +454,17 @@ class FieldDescriptor(DescriptorBase):
     if api_implementation.Type() == 'cpp':
       if is_extension:
         if api_implementation.Version() == 2:
-          self._cdescriptor = _message.GetExtensionDescriptor(full_name)
+
+          self._cdescriptor = (
+              _message.Message._GetExtensionDescriptor(full_name))
+
         else:
           self._cdescriptor = cpp_message.GetExtensionDescriptor(full_name)
       else:
         if api_implementation.Version() == 2:
-          self._cdescriptor = _message.GetFieldDescriptor(full_name)
+
+          self._cdescriptor = _message.Message._GetFieldDescriptor(full_name)
+
         else:
           self._cdescriptor = cpp_message.GetFieldDescriptor(full_name)
     else:
@@ -648,8 +658,8 @@ class FileDescriptor(DescriptorBase):
   package: name of the package
   serialized_pb: (str) Byte string of serialized
     descriptor_pb2.FileDescriptorProto.
-  dependencies: List of other files this file depends on.
-  messages: List of Descriptors for messages in this file.
+  dependencies: List of other FileDescriptors this FileDescriptor depends on.
+  message_types_by_name: Dict of message names of their descriptors.
   enum_types_by_name: Dict of enum names and their descriptors.
   extensions_by_name: Dict of extension names and their descriptors.
   """
@@ -671,7 +681,9 @@ class FileDescriptor(DescriptorBase):
     if (api_implementation.Type() == 'cpp' and
         self.serialized_pb is not None):
       if api_implementation.Version() == 2:
-        _message.BuildFile(self.serialized_pb)
+
+        _message.Message._BuildFile(self.serialized_pb)
+
       else:
         cpp_message.BuildFile(self.serialized_pb)
 
@@ -694,29 +706,96 @@ def _ParseOptions(message, string):
   return message
 
 
-def MakeDescriptor(desc_proto, package=''):
+def MakeDescriptor(desc_proto, package='', build_file_if_cpp=True):
   """Make a protobuf Descriptor given a DescriptorProto protobuf.
+
+  Handles nested descriptors. Note that this is limited to the scope of defining
+  a message inside of another message. Composite fields can currently only be
+  resolved if the message is defined in the same scope as the field.
 
   Args:
     desc_proto: The descriptor_pb2.DescriptorProto protobuf message.
     package: Optional package name for the new message Descriptor (string).
-
+    build_file_if_cpp: Update the C++ descriptor pool if api matches.
+                       Set to False on recursion, so no duplicates are created.
   Returns:
     A Descriptor for protobuf messages.
   """
+  if api_implementation.Type() == 'cpp' and build_file_if_cpp:
+
+
+
+
+    from google.net.proto2.proto import descriptor_pb2
+    file_descriptor_proto = descriptor_pb2.FileDescriptorProto()
+    file_descriptor_proto.message_type.add().MergeFrom(desc_proto)
+
+
+
+
+
+    proto_name = str(uuid.uuid4())
+
+    if package:
+      file_descriptor_proto.name = os.path.join(package.replace('.', '/'),
+                                                proto_name + '.proto')
+      file_descriptor_proto.package = package
+    else:
+      file_descriptor_proto.name = proto_name + '.proto'
+
+    if api_implementation.Version() == 2:
+
+      _message.Message._BuildFile(file_descriptor_proto.SerializeToString())
+
+    else:
+      cpp_message.BuildFile(file_descriptor_proto.SerializeToString())
+
   full_message_name = [desc_proto.name]
   if package: full_message_name.insert(0, package)
+
+
+  enum_types = {}
+  for enum_proto in desc_proto.enum_type:
+    full_name = '.'.join(full_message_name + [enum_proto.name])
+    enum_desc = EnumDescriptor(
+      enum_proto.name, full_name, None, [
+          EnumValueDescriptor(enum_val.name, ii, enum_val.number)
+          for ii, enum_val in enumerate(enum_proto.value)])
+    enum_types[full_name] = enum_desc
+
+
+  nested_types = {}
+  for nested_proto in desc_proto.nested_type:
+    full_name = '.'.join(full_message_name + [nested_proto.name])
+
+
+    nested_desc = MakeDescriptor(nested_proto,
+                                 package='.'.join(full_message_name),
+                                 build_file_if_cpp=False)
+    nested_types[full_name] = nested_desc
+
   fields = []
   for field_proto in desc_proto.field:
     full_name = '.'.join(full_message_name + [field_proto.name])
+    enum_desc = None
+    nested_desc = None
+    if field_proto.HasField('type_name'):
+      type_name = field_proto.type_name
+      full_type_name = '.'.join(full_message_name +
+                                [type_name[type_name.rfind('.')+1:]])
+      if full_type_name in nested_types:
+        nested_desc = nested_types[full_type_name]
+      elif full_type_name in enum_types:
+        enum_desc = enum_types[full_type_name]
+
     field = FieldDescriptor(
         field_proto.name, full_name, field_proto.number - 1,
         field_proto.number, field_proto.type,
         FieldDescriptor.ProtoTypeToCppProtoType(field_proto.type),
-        field_proto.label, None, None, None, None, False, None,
+        field_proto.label, None, nested_desc, enum_desc, None, False, None,
         has_default_value=False)
     fields.append(field)
 
   desc_name = '.'.join(full_message_name)
   return Descriptor(desc_proto.name, desc_name, None, None, fields,
-                    [], [], [])
+                    nested_types.values(), enum_types.values(), [])

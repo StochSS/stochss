@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Configure Cloud{% endblock %}
+
+{% block content %}
+<div class="span9">
+    <div class="row-fluid">
+        <!--
+            Initial JSON to fill page will appear in this Div
+          -->
+        <div style="display: none;" class="jsonData">
+            {{ json }}
+        </div>
+
+        <div class="loading">
+            Loading cloud configuration tool...
+        </div>
+
+        <div style="display: none;" class="content" border="1">
+            <h1>Molns Configuration: using EC2 Cloud</h1>
+            <br>
+
+            <div class="well well-large">
+                <label> Access Key </label>
+                <input class="span3" type="text" name="aws_access_key" autocomplete="off">
+                <label> Secret Key </label>
+                <input class="span3" type="text" name="aws_secret_key" autocomplete="off">
+                <div>
+                    <label> Head Node Type </label>
+                    <input type="radio" name="headNode" value="c3.large">c3.large<br><!-- molns EC2 provider default_instance_type -->
+                    <input type="radio" name="workerNode" value="m3.large">m3.large<br>
+                    <input type="radio" name="workerNode" value="m3.xlarge">m3.xlarge<br>
+                </div>
+                <br>
+                <div>
+                    <label> Worker Node Type </label><!-- molns EC2 worker instance_type -->
+                    <input type="radio" name="workerNode" value="c3.large">c3.large<br>
+                    <input type="radio" name="workerNode" value="c3.xlarge">c3.xlarge<br>
+                    <input type="radio" name="workerNode" value="c3.4xlarge">c3.4xlarge<br>
+                    <input type="radio" name="workerNode" value="c3.8xlarge">c3.8xlarge<br>
+                </div>
+                <br>
+                <label> Number of Workers </label><!-- molns EC2 worker num_vms -->
+                <input type="number" name="workerCount" value="0">
+            
+                <div>
+                    <button class="btn btn-primary startCluster">Start Cluster</button>
+                    <button class="btn btn-primary stopCluster">Stop Cluster</button>
+                    <button class="btn btn-primary terminateCluster">Terminate Cluster (data loss)</button>
+                    <button class="btn btn-primary rebuildCluster">Rebuild Cluster</button>
+                </div>
+
+                <br>
+
+                <span style="display: none;" id="stateMessage">
+                </span>
+            </div>
+
+            <div style="display: none;" class="statusDiv">
+                <h2>Cluster Status</h2>
+                <br>
+                
+                <div class="well well-large">
+                    <table class="table" style="width=100%">
+                    </table>
+                </div>
+            </div>
+
+            <h2>Info Terminal</h2>
+            <br>
+
+            <div style="width : 100%; background-color : #FAFAF0; color : #714D03; border : 4px double #AAAAA0;" class="processStatus">
+            </div>
+
+            <!--Style taken from http://www.html.am/html-codes/scrollboxes/html-scrollbox.cfm-->
+            <div style="width : 100%; height : 200px; overflow-x : hidden; overflow-y : scroll; background-color : #FAFAFA; color : #714D03; border : 4px double #AAAAAA;" class="messages">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src="/static/js/underscore.js"></script>
+<script type="text/javascript" src="/static/js/backbone.js"></script>
+<script type="text/javascript" src="/static/js/molnsconfig.js"></script>
+{% endblock %}

@@ -22,6 +22,19 @@ import array
 import httplib
 import re
 import struct
+try:
+
+
+  import google.net.proto.proto1 as proto1
+except ImportError:
+
+  class ProtocolBufferDecodeError(Exception): pass
+  class ProtocolBufferEncodeError(Exception): pass
+  class ProtocolBufferReturnError(Exception): pass
+else:
+  ProtocolBufferDecodeError = proto1.ProtocolBufferDecodeError
+  ProtocolBufferEncodeError = proto1.ProtocolBufferEncodeError
+  ProtocolBufferReturnError = proto1.ProtocolBufferReturnError
 
 __all__ = ['ProtocolMessage', 'Encoder', 'Decoder',
            'ExtendableProtocolMessage',
@@ -29,8 +42,8 @@ __all__ = ['ProtocolMessage', 'Encoder', 'Decoder',
            'ProtocolBufferEncodeError',
            'ProtocolBufferReturnError']
 
-
 URL_RE = re.compile('^(https?)://([^/]+)(/.*)$')
+
 
 class ProtocolMessage:
 
@@ -954,11 +967,7 @@ class ExtendableProtocolMessage(ProtocolMessage):
         extension.number, extension)
     if actual_handle is not extension:
       raise AssertionError(
-          'Extensions "%s" and "%s" both try to extend message type "%s" with'
+          'Extensions "%s" and "%s" both try to extend message type "%s" with '
           'field number %d.' %
           (extension.full_name, actual_handle.full_name,
            cls.__name__, extension.number))
-
-class ProtocolBufferDecodeError(Exception): pass
-class ProtocolBufferEncodeError(Exception): pass
-class ProtocolBufferReturnError(Exception): pass

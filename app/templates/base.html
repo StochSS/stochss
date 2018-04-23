@@ -29,6 +29,7 @@
       }
     </style>
     <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
+    
     {% block csscontent %}{% endblock %}
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -48,28 +49,31 @@
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container-fluid">
+	  <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+
+	  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+	  </a>
+ 
           <a class="brand" href="/">StochSS</a>
-          <div class="btn-group pull-right">
-            <!-- <a class="btn" href="/signout">Sign Out</a> -->
-            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-              <i class="icon-user"></i> {{ user.name }}
-              <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu">
-              <li><a href="/account_settings">Account Settings</a></li>
-              <li class="divider"></li>
-              <li><a href="/logout">Sign Out</a></li>
-            </ul>
-          </div>
-          <div class="nav-collapse">
+
+	  <div class="nav-collapse">
             <ul class="nav">
               <li class="active"><a href="/">Home</a></li>
               <li><a href="http://www.stochss.org" target="_blank">About</a></li>
               <li><a href="http://www.stochss.org/?page_id=476" target="_blank">Documentation</a></li>
               <li><a href="mailto:stochss-users@googlegroups.com">Contact</a></li>
-              
+              <li><a href="https://github.com/StochSS/stochss/issues/new">Report Issue</a></li>
             </ul>
-          </div><!--/.nav-collapse -->
+            <div class="pull-right">
+	      <ul class="nav">
+		<li><a href="/account_settings">Settings</a></li>
+		<li><a href="/logout">Sign Out</a></li>
+	      </ul>
+            </div>
+	  </div>
         </div><!-- container fluid -->
       </div><!-- navbar inner -->
     </div><!-- navbar fixed -->
@@ -79,18 +83,20 @@
         <div class="span2">
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
-              <li class="nav-header"><i class="icon-beaker"></i>Modelling</li>
-              <li><a href="/modeleditor" TITLE = "Create/Import models">Model editor</a></li>
+              <li class="nav-header"><i class="icon-beaker"></i>Modeling</li>
+              <li><a href="/modeleditor" TITLE = "Create/Import models">Model Editor</a></li>
               <li class="nav-header"><i class="icon-play"></i> Simulation</li>
-              <li><a href="/simulate" TITLE = "Configure and submit simulations">Simulation manager</a></li>
+              <li><a href="/simulate" TITLE = "Configure and submit simulations">Simulation Manager</a></li>
               <li><a href="/stochoptim" TITLE = "Launch a parameter estimation job">Parameter Estimation</a></li>
+              <li><a href="/parametersweep" TITLE = "Launch a parameter estimation job">Parameter Sweep</a></li>
               <li><a href="/status" TITLE = "Monitor the progress of a simulation">Job Status</a></li>
-              <li class="nav-header"><i class="icon-cog"></i> Settings</li>
-              {% if user.is_admin_user() %}
-                  <li><a href="/admin">Admin Panel</a></li>
-              {% endif %}
-              <li><a href="/credentials" TITLE = "Set AWS credentials and manage computational resources in the cloud">Cloud computing</a></li>
               <li><a href="/import" TITLE = "Manage backup archives">Backup</a></li>
+              {% if user.is_admin_user() %}
+                <li class="nav-header"><i class="icon-cog"></i> Admin</li>
+                  <li><a href="/admin">Manage Users</a></li>
+                  <li><a href="/emailsetup">Configure Email</a></li>
+                  <li><a href="/credentials" TITLE = "Configure Compute Resources">Compute Resources</a></li>
+              {% endif %}
             </ul>
           </div><!--/.well -->
         </div><!--/span2-->
@@ -111,11 +117,11 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <!-- -->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
     <script src="/static/js/jquery-ui-1.10.3/js/jquery-1.9.1.js"></script>
-    <script src="/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
-    <script src="/static/js/bootstrap.js"></script>
-    <script src="/static/js/jquery.flot2.js"></script>
     <script src="/static/js/custom.js"></script>
+    <script src="/static/js/bootstrap.js"></script>    
+    <script src="/static/js/default_values.js"></script>
 
     {% block jscontent %}{% endblock %}
 

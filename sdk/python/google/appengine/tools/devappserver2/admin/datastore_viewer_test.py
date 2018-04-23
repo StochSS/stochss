@@ -17,6 +17,7 @@
 """Tests for devappserver2.admin.datastore_viewer."""
 
 
+import datetime
 import os
 import unittest
 
@@ -694,6 +695,7 @@ class DatastoreEditRequestHandlerTest(unittest.TestCase):
     self.entity1 = datastore.Entity('Kind1', id=123, _app=self.app_id)
     self.entity1['intprop'] = 1
     self.entity1['listprop'] = [7, 8, 9]
+    self.entity1['dateprop'] = datastore_types._OverflowDateTime(2**60)
     datastore.Put(self.entity1)
 
     self.entity2 = datastore.Entity('Kind1', id=124, _app=self.app_id)
@@ -712,6 +714,13 @@ class DatastoreEditRequestHandlerTest(unittest.TestCase):
     self.entity4['listprop'] = [10, 11]
     datastore.Put(self.entity4)
 
+    self.entity5 = datastore.Entity('Kind1', id=127, _app=self.app_id)
+    self.entity5['intprop'] = 0
+    self.entity5['boolprop'] = False
+    self.entity5['stringprop'] = ''
+    self.entity5['floatprop'] = 0.0
+    datastore.Put(self.entity5)
+
   def tearDown(self):
     self.mox.UnsetStubs()
 
@@ -723,7 +732,17 @@ class DatastoreEditRequestHandlerTest(unittest.TestCase):
 
     handler.render(
         'datastore_edit.html',
-        {'fields': [('intprop',
+        {'fields': [('boolprop',
+                     'bool',
+                     mox.Regex('^<select class="bool"(.|\n)*$')),
+                    ('dateprop',
+                     'overflowdatetime',
+                     mox.Regex('^<input class="overflowdatetime".*'
+                               'value="".*$')),
+                    ('floatprop',
+                     'float',
+                     mox.Regex('^<input class="float".*value="".*$')),
+                    ('intprop',
                      'int',
                      mox.Regex('^<input class="int".*value="".*$')),
                     ('listprop', 'list', ''),
@@ -766,7 +785,11 @@ class DatastoreEditRequestHandlerTest(unittest.TestCase):
 
     handler.render(
         'datastore_edit.html',
-        {'fields': [('intprop',
+        {'fields': [('dateprop',
+                     'overflowdatetime',
+                     mox.Regex('^<input class="overflowdatetime".*'
+                               'value="1152921504606846976".*$')),
+                    ('intprop',
                      'int',
                      mox.Regex('^<input class="int".*value="1".*$')),
                     ('listprop', 'list', mox.Regex(r'\[7L?, 8L?, 9L?\]'))],
@@ -783,10 +806,44 @@ class DatastoreEditRequestHandlerTest(unittest.TestCase):
     handler.get(str(self.entity1.key()))
     self.mox.VerifyAll()
 
+  def test_get_entity_zero_props(self):
+    request = webapp2.Request.blank(
+        '/datastore/edit/%s?next=http://next/' % self.entity5.key())
+    response = webapp2.Response()
+    handler = datastore_viewer.DatastoreEditRequestHandler(request, response)
+
+    handler.render(
+        'datastore_edit.html',
+        {'fields': [('boolprop',
+                     'bool',
+                     mox.Regex('^<select class="bool"(.|\n)*$')),
+                    ('floatprop',
+                     'float',
+                     mox.Regex('^<input class="float".*value="0\.0".*$')),
+                    ('intprop',
+                     'int',
+                     mox.Regex('^<input class="int".*value="0".*$')),
+                    ('stringprop',
+                     'string',
+                     mox.Regex('^<input class="string".*value="".*$'))],
+         'key': str(self.entity5.key()),
+         'key_id': 127,
+         'key_name': None,
+         'kind': 'Kind1',
+         'namespace': '',
+         'next': 'http://next/',
+         'parent_key': None,
+         'parent_key_string': None})
+
+    self.mox.ReplayAll()
+    handler.get(str(self.entity5.key()))
+    self.mox.VerifyAll()
+
   def test_post_no_entity_key_string(self):
     request = webapp2.Request.blank(
         '/datastore/edit',
         POST={'kind': 'Kind1',
+              'overflowdatetime|dateprop': '2009-12-24 23:59:59',
               'int|intprop': '123',
               'string|stringprop': 'Hello',
               'next': 'http://redirect/'})
@@ -802,13 +859,16 @@ class DatastoreEditRequestHandlerTest(unittest.TestCase):
 
     # Check that the entity was added.
     query = datastore.Query('Kind1')
-    query.update({'intprop': 123, 'stringprop': 'Hello'})
+    query.update({'dateprop': datetime.datetime(2009, 12, 24, 23, 59, 59),
+                  'intprop': 123,
+                  'stringprop': 'Hello'})
     self.assertEquals(1, query.Count())
 
   def test_post_entity_key_string(self):
     request = webapp2.Request.blank(
         '/datastore/edit/%s' % self.entity4.key(),
-        POST={'int|intprop': '123',
+        POST={'overflowdatetime|dateprop': str(2**60),
+              'int|intprop': '123',
               'string|stringprop': '',
               'next': 'http://redirect/'})
     response = webapp2.Response()
@@ -823,7 +883,7 @@ class DatastoreEditRequestHandlerTest(unittest.TestCase):
 
     # Check that the entity was updated.
     entity = datastore.Get(self.entity4.key())
-    print entity
+    self.assertEqual(2**60, entity['dateprop'])
     self.assertEqual(123, entity['intprop'])
     self.assertEqual([10, 11], entity['listprop'])
     self.assertNotIn('stringprop', entity)

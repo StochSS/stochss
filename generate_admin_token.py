@@ -1,6 +1,7 @@
 #! /usr/bin/python
 import sys
 import urllib, urllib2
+import os
 
 def print_usage_and_exit():
     '''
@@ -11,12 +12,11 @@ def print_usage_and_exit():
 def main(key):
     '''
     '''
-    url = 'http://localhost:8080/secret_key'
-    values = { 'key_string': key }
-    data = urllib.urlencode(values)
-    request = urllib2.Request(url, data)
-    response = urllib2.urlopen(request)
-
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/handlers/admin_uuid.txt'), 'w') as file:
+            file.write(str(key))
+    except Exception as e:
+        print " File write error: cannot create admin token {0}".format(str(e))
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         main(sys.argv[1])

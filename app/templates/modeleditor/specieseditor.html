@@ -18,6 +18,11 @@
 	<li>
 	    <a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
 	</li>
+{% if isSpatial %}
+	<li>
+	    <a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
+	</li>
+{% endif %}
 	<li class="dropdown">
 	    <!--<a class="dropdown-toggle" data-toggle="dropdown">Geometry<b class="caret"></b></a> -->
 	    <ul class="dropdown-menu">
@@ -76,8 +81,13 @@
 			<input type="text" name="name" style="width: 160px" TITLE = "Give a Name to the Reactant" >
 		    </div>
 		    <div>
+                        {% if isSpatial %}
+			<label>Diffusion coefficient</label>
+			<input type="text" class="span3" name="diffusion_coefficient">
+                        {% else %}
 			<label>Initial value</label>
-			<input type="text" class="span3" name="initial_value" TITLE = "Insert an Integer">
+			<input type="text" class="span3" name="initial_value">
+                        {% endif %}
 		    </div>
 		    <div style="clear: both"></div>
 		    <button type="submit" class="btn btn-primary" style="float: right;">
@@ -107,7 +117,13 @@
 		    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
 			<thead>
 			    <tr>
-				<th>Name </th><th>Initial value </th><th>&nbsp;</th>
+				<th>Name </th>
+                                {% if isSpatial %}
+                                <th>Diffusion constant </th>
+                                {% else %}
+                                <th>Initial value </th>
+                                {% endif %}
+                                <th>&nbsp;</th>
 			    </tr>
 			</thead>
 <!--<th>Unit</th>-->
@@ -118,16 +134,20 @@
 			    {% for key, value in all_species.items() %}
 			    <tr>
 				<td>
-				    <input type="text" name="{{loop.index}}-name" value="{{key}}" style="width: 100px;" class="update_box auto_complete">
+				    <input type="text" name="{{key}}-name" value="{{key}}" style="width: 100px;" class="update_box auto_complete">
 				</td>
 				<td>
-				    <input type="text" name="{{loop.index}}-initial_value" value="{{value.initial_value}}" style="width: 100px;" class="update_box">
+                                    {% if isSpatial %}
+				    <input type="text" name="{{key}}-diffusion_constant" value="{{spatial['species_diffusion_coefficients'][key]}}" style="width: 100px;" class="update_box">
+                                    {% else %}
+				    <input type="text" name="{{key}}-initial_value" value="{{value.initial_value}}" style="width: 100px;" class="update_box">
+                                    {% endif %}
 				</td>
 				<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a></td>
 			    </tr>
 			    {% endfor %}
 			</tbody>
-		    </table>					
+		    </table>
 		</form>
 	    </div>
 	    {% endif %}
@@ -145,6 +165,12 @@
 
 {% endblock %}
 {% block innerjscontent %}
+<script src="/static/utils.js"></script>
+<!--<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+
+<script src="/static/js/modeleditor/specieseditor.js"></script>-->
+
 <script type="text/javascript">
 	// Global variables that will be used in the jscontent block in modeleditor
 	var isParameterEditor = false;

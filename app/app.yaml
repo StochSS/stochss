@@ -2,7 +2,7 @@ application: stochssapp
 version: 1
 runtime: python27
 api_version: 1
-threadsafe: no
+threadsafe: false
 
 handlers:
 - url: /static/ico/favicon.ico
@@ -12,6 +12,12 @@ handlers:
   static_dir: static
 - url: /lib/flot
   static_dir: lib/flot
+
+- url: /backend/synchronizedb
+  script: backend.backend_handler.app
+
+- url: /backend/queue
+  script: backend.backend_handler.app
 
 - url: /.*
   script: stochssapp.app

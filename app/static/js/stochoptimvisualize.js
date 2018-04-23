@@ -118,7 +118,6 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                                     this.stage = 3;
                                 }
 
-                                console.log(key);
                                 //dataKeys.push(key);
                                 data[key] = []
                             }

@@ -1,0 +1,13 @@
+cl__1 = 1;
+Point(1) = {0, 0, 0, 1};
+Point(2) = {1, 0, 0, 1};
+Point(3) = {0, 1, 0, 1};
+Point(5) = {-1, 0, 0, 1};
+Point(6) = {0, -1, 0, 1};
+Circle(1) = {5, 1, 3};
+Circle(2) = {3, 1, 2};
+Circle(3) = {5, 1, 6};
+Circle(4) = {2, 1, 6};
+Line Loop(6) = {1, 2, 4, -3};
+Plane Surface(6) = {6};
+Coherence;

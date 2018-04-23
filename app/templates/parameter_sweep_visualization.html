@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title%}Manage Simulations{% endblock %}
+{% block csscontent %}{% endblock %}
+{% block content %}
+
+<div class="span9">
+    <div class="row-fluid">
+        <div id="stochoptim">
+            Loading output...
+        </div>
+
+        <div style="display: none; border-style: solid; border-width: 1px; padding: 2px;">
+        <div  id="initialData">
+            {{ initialData }}
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<script type="text/javascript" src = "/static/js/d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/splot.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.min.js"></script>
+<link rel="stylesheet" href="/static/css/nv.d3.min.css">
+
+<script type="text/javascript" src = "/static/js/parameter_sweep_visualization.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/css/parameter_sweep_visualization.css">
+
+<script id="visualizationTemplate" type="text/template">
+    <ol class="breadcrumb">
+  	<li><a href="/status">Job Status</a></li>
+  	<li class="active"><%= name %></a></li>
+    </ol>
+    <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
+    <br />
+    <div class="well">
+        <div class="metadata row">
+            <div class="span8">
+                <h3>Metadata</h3>
+                <p class="thispage">
+                    Resource: <%= resource %>
+                    <br />
+                    Simulation status: <%= status %>
+                    <br />
+                    Model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+                    <br />
+                    Max time: <%= inData.maxTime %>
+                    <br />
+                    Number of trajectories: <%= inData.trajectories %>
+                    <br />
+                </p>
+            </div>
+            <div class="span3">
+              <!-- Put help info here-->
+            </div>
+        </div>
+        <div>
+            <table class="table">
+                <tr>
+                    <th>
+                        Sweep Variable
+                    </th>
+                    <th>
+                        Minimum value (inclusive)
+                    </th>
+                    <th>
+                        Maximum value (inclusive)
+                    </th>
+                    <th>
+                        Steps
+                    </th>
+                    <th>
+                        Log scale
+                    </th>
+                </tr>
+                <tr>
+                    <td><%= inData.parameterA %></td>
+                    <td><%= inData.minValueA %></td>
+                    <td><%= inData.maxValueA %></td>
+                    <td><%= inData.stepsA %></td>
+                    <td><%= inData.logA %></td>
+                </tr>
+                <% if (inData.variableCount > 1) { %>
+                <tr>
+                    <td><%= inData.parameterB %></td>
+                    <td><%= inData.minValueB %></td>
+                    <td><%= inData.maxValueB %></td>
+                    <td><%= inData.stepsB %></td>
+                    <td><%= inData.logB %></td>
+                </tr>
+                <% } %>
+            </table>
+        </div>
+    </div>
+
+    <% if(status == "Finished") { %>
+
+    <div>
+        <table border=0 cellpadding=0 cellspacing=0>
+        <TR><TD>
+            Select analysis to perform on each trajectory:
+        </TD><TD>
+            <select id="mapperSelect"></select>
+        </TD></TR>
+        <TR><TD>
+            Then select analysis to perform over ensemble of trajectories:
+        </TD><TD>
+            <select id="reducerSelect"></select>
+        </TD</TR>
+        </TABLE>
+      
+        <div id="speciesSelectDiv" style="display : none;">
+            Select species to analyze:
+            <select id="speciesSelect"></select>
+        </div>
+      
+        <div id="speciesCheckboxDiv" style="display : none;">
+            Select species to analyze:
+            <div id="speciesCheckboxes">
+            </div>
+
+            <div class="btn-group">
+		<button class="btn btn-small selectAll">Select All</button>
+		<button class="btn btn-small clearAll">Clear All</button>
+	    </div>
+        </div>
+    </div>
+
+    <div id="graphs" style="display: none;">
+      <div id="legend"></div><div id="chart"></div>
+    </div>
+    <% } else { %>
+    <div style="border-style: solid; border-width: 1px; padding: 5px;" id="initialData">
+        <div id="stdout_show" style="display: inline;"><B>Stdout:</B> <%= stdout %></div>
+        <div id="stderr_show" style="display: inline;"><B>Stderr:</B> <%= stderr %></div>
+    </div>
+    <% } %>
+
+    <div id="msg" style="clear:both; display: none;"></div>
+
+    <% if(status == "Finished"){ %>
+    <div id="accessOutput" class="well" style="clear:both; display: none;">        
+        <h3>Output:</h3>
+        <br />
+
+        <form method=post action="" target="_blank"  onsubmit="document.getElementById('notebook_hostname').value = window.location.hostname;"><input type=hidden name="modelType" value="<%= inData.modelType %>"><input type=hidden name="reqType" value="redirectJupyterNotebook"><input type="hidden" id="notebook_hostname" name="hostname" value=""><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Jupyter Notebook</button></form>
+        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+
+    </div>
+    <% } %>
+</script>
+{% endblock %}

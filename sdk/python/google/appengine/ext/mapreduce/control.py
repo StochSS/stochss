@@ -37,22 +37,23 @@ __all__ = ["start_map"]
 
 
 
-import logging
-import google
 
-from google.appengine.ext.mapreduce import base_handler
+
+import logging
+
+from google.appengine.ext import db
 from google.appengine.ext.mapreduce import handlers
 from google.appengine.ext.mapreduce import model
-
-
-_DEFAULT_SHARD_COUNT = 8
+from google.appengine.ext.mapreduce import parameters
+from google.appengine.ext.mapreduce import util
+from google.appengine.ext.mapreduce.api import map_job
 
 
 def start_map(name,
               handler_spec,
               reader_spec,
               mapper_parameters,
-              shard_count=_DEFAULT_SHARD_COUNT,
+              shard_count=None,
               output_writer_spec=None,
               mapreduce_parameters=None,
               base_path=None,
@@ -61,48 +62,59 @@ def start_map(name,
               countdown=None,
               hooks_class_name=None,
               _app=None,
-              transactional=False,
-              transactional_parent=None):
+              in_xg_transaction=False):
   """Start a new, mapper-only mapreduce.
+
+  Deprecated! Use map_job.start instead.
+
+  If a value can be specified both from an explicit argument and from
+  a dictionary, the value from the explicit argument wins.
 
   Args:
     name: mapreduce name. Used only for display purposes.
     handler_spec: fully qualified name of mapper handler function/class to call.
     reader_spec: fully qualified name of mapper reader to use
     mapper_parameters: dictionary of parameters to pass to mapper. These are
-      mapper-specific and also used for reader initialization.
+      mapper-specific and also used for reader/writer initialization.
+      Should have format {"input_reader": {}, "output_writer":{}}. Old
+      deprecated style does not have sub dictionaries.
     shard_count: number of shards to create.
     mapreduce_parameters: dictionary of mapreduce parameters relevant to the
       whole job.
     base_path: base path of mapreduce library handler specified in app.yaml.
       "/mapreduce" by default.
-    queue_name: executor queue name to be used for mapreduce tasks. If
-      unspecified it will be the "default" queue or inherit the queue of
-      the currently running request.
+    queue_name: taskqueue queue name to be used for mapreduce tasks.
+      see util.get_queue_name.
     eta: absolute time when the MR should execute. May not be specified
       if 'countdown' is also supplied. This may be timezone-aware or
       timezone-naive.
     countdown: time in seconds into the future that this MR should execute.
       Defaults to zero.
     hooks_class_name: fully qualified name of a hooks.Hooks subclass.
-    transactional: specifies if job should be started as a part of already
-      opened transaction.
-    transactional_parent: specifies the entity which is already a part of
-      transaction. Child entity will be used to store task payload if mapreduce
-      specification is too big.
+    in_xg_transaction: controls what transaction scope to use to start this MR
+      job. If True, there has to be an already opened cross-group transaction
+      scope. MR will use one entity group from it.
+      If False, MR will create an independent transaction to start the job
+      regardless of any existing transaction scopes.
 
   Returns:
     mapreduce id as string.
   """
-  if not shard_count:
-    shard_count = _DEFAULT_SHARD_COUNT
-  if base_path is None:
-    base_path = base_handler._DEFAULT_BASE_PATH
+  if shard_count is None:
+    shard_count = parameters.config.SHARD_COUNT
 
   if mapper_parameters:
     mapper_parameters = dict(mapper_parameters)
+
+
+  mr_params = map_job.JobConfig._get_default_mr_params()
   if mapreduce_parameters:
-    mapreduce_parameters = dict(mapreduce_parameters)
+    mr_params.update(mapreduce_parameters)
+
+
+  if base_path:
+    mr_params["base_path"] = base_path
+  mr_params["queue_name"] = util.get_queue_name(queue_name)
 
   mapper_spec = model.MapperSpec(handler_spec,
                                  reader_spec,
@@ -110,24 +122,19 @@ def start_map(name,
                                  shard_count,
                                  output_writer_spec=output_writer_spec)
 
-  if transactional and not transactional_parent:
-
-
-
-    logging.error(
-        "transactional_parent should be specified for transactional starts."
-        "Your job will fail to start if mapreduce specification is too big.")
+  if in_xg_transaction and not db.is_in_transaction():
+    logging.warning("Expects an opened xg transaction to start mapreduce "
+                    "when transactional is True.")
 
   return handlers.StartJobHandler._start_map(
       name,
       mapper_spec,
-      mapreduce_parameters or {},
-      base_path=base_path,
-      queue_name=queue_name,
+      mr_params,
+
+
+      queue_name=mr_params["queue_name"],
       eta=eta,
       countdown=countdown,
       hooks_class_name=hooks_class_name,
       _app=_app,
-      transactional=transactional,
-      parent_entity=transactional_parent)
-
+      in_xg_transaction=in_xg_transaction)

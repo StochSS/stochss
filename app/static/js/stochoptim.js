@@ -1,3 +1,20 @@
+function generate_datestr() {
+    var temp = new Date();
+    //var dateStr = padStr(temp.getFullYear()) +
+    var dateStr = padStr(temp.getYear()-100) +
+                  padStr(1 + temp.getMonth()) +
+                  padStr(temp.getDate()) + '_' +
+                  padStr(temp.getHours()) +
+                  padStr(temp.getMinutes()) +
+                  padStr(temp.getSeconds());
+    //console.log(dateStr );
+    return dateStr
+}
+
+function padStr(i) {
+    return (i < 10) ? "0" + i : "" + i;
+}
+
 var mean = function(array)
 {
     var sum = 0;
@@ -377,9 +394,41 @@ StochOptim.Controller = Backbone.View.extend(
                 if(typeof this.models != 'undefined')
                 {
                     data = this.models.models;
+
+                    for(var i in data)
+                    {
+                        var model = data[i];
+
+                        var isMassAction = true;
+                        for(var j in model.attributes.reactions)
+                        {
+                            if(model.attributes.reactions[j].type == 'custom')
+                            {
+                                isMassAction = false;
+                                break;
+                            }
+                        }
+
+                        model.attributes.isMassAction = isMassAction;
+                    }
                 } 
 
                 $( this.el ).html( modelSelectTemplate( { models : data } ) );
+                $( this.el ).find( ':radio:not(:disabled):first' ).click();
+
+                $( this.el ).find( '.mainTable' )
+                    .DataTable( { "bLengthChange" : false, "bFilter" : false } );
+
+                $( this.el ).find( '.mainTable' ).css('border-bottom', '1px solid #ddd');
+                $( this.el ).find( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
+
+                for(var i in data)
+                {
+                    if(!(data[i].attributes.units == 'concentration' || data[i].attributes.isSpatial))
+                    {
+                        $( "#next" ).prop('disabled', false);
+                    }
+                }
 
                 // Set event handler on the next button
 
@@ -393,11 +442,14 @@ StochOptim.Controller = Backbone.View.extend(
 
                 var simulationConfTemplate = _.template( $( "#simulationConfTemplate" ).html() );
 
-                $( this.el ).html( simulationConfTemplate( { model : this.model, initialData : (typeof this.initialDataFiles != 'undefined' && this.initialDataFiles.models.length > 0), trajectories : (typeof this.trajectoriesFiles != 'undefined' && this.trajectoriesFiles.models.length > 0) } ) );
+                $( this.el ).html( simulationConfTemplate( { model : this.model,
+                                                             initialData : (typeof this.initialDataFiles != 'undefined' && this.initialDataFiles.models.length > 0),
+                                                             trajectories : (typeof this.trajectoriesFiles != 'undefined' && this.trajectoriesFiles.models.length > 0),
+                                                             datestr : generate_datestr() } ) );
 
                 var checkboxTemplate = _.template("<input type='checkbox' value='<%= name %>'/><span>&nbsp;<%= name %>&nbsp;<span />");
 
-                var parameters = this.model.getParameters();
+                var parameters = this.model.attributes.parameters;
 
                 var initialCheckbox = undefined;
 
@@ -431,6 +483,20 @@ StochOptim.Controller = Backbone.View.extend(
                     initialCheckbox.trigger("click");
                 }
 
+                $( '.selectAll' ).click( _.bind(function() {
+                    this.activateDiv.find('input').each(function() {
+                        if(!this.checked)
+                            this.click();
+                    });
+                }, this));
+
+                $( '.clearAll' ).click( _.bind(function() {
+                    this.activateDiv.find('input').each(function() {
+                        if(this.checked)
+                            this.click();
+                    });
+                }, this));
+
                 this.renderFiles();
 
                 $( "#runLocal" ).click( _.bind(function() {
@@ -441,7 +507,15 @@ StochOptim.Controller = Backbone.View.extend(
                     
                     if(!data)
                         return;
-                    
+
+                    if(!this.selectedTrajectories || !this.selectedInitialData || !this.selectedTrajectories.attributes || !this.selectedInitialData.attributes)
+                    {
+                        updateMsg( { status : false,
+                                     msg : "Trajectory and Initial Data files must be supplied" } );
+
+                        return;                        
+                    }
+
                     data.trajectoriesID = this.selectedTrajectories.attributes.id;
                     data.initialDataID = this.selectedInitialData.attributes.id;
                     data.modelID = this.model.attributes.id;
@@ -487,7 +561,15 @@ StochOptim.Controller = Backbone.View.extend(
                     
                     if(!data)
                         return;
-                    
+
+                    if(!this.selectedTrajectories || !this.selectedInitialData || !this.selectedTrajectories.attributes || !this.selectedInitialData.attributes)
+                    {
+                        updateMsg( { status : false,
+                                     msg : "Trajectory and Initial Data files must be supplied" } );
+
+                        return;                        
+                    }
+
                     data.trajectoriesID = this.selectedTrajectories.attributes.id;
                     data.initialDataID = this.selectedInitialData.attributes.id;
                     data.modelID = this.model.attributes.id;
@@ -536,7 +618,7 @@ StochOptim.Controller = Backbone.View.extend(
                 {
                     $( '.initialData' ).show();
 
-	            this.optionTemp = _.template('<tr> \
+                    this.optionTemp = _.template('<tr> \
 <td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="initialDataFiles"></td><td><%= attributes.path %></td>\
 </tr>');
                     
@@ -614,7 +696,7 @@ StochOptim.Controller = Backbone.View.extend(
                 {
                     $( '.trajectories' ).show();
 
-	            this.optionTemp = _.template('<tr> \
+                    this.optionTemp = _.template('<tr> \
 <td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="trajectoriesFiles"></td><td><%= attributes.path %></td>\
 </tr>');
 

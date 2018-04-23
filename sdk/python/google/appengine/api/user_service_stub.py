@@ -44,12 +44,15 @@ _OAUTH_CONSUMER_KEY = 'example.com'
 _OAUTH_EMAIL = 'example@example.com'
 _OAUTH_USER_ID = '0'
 _OAUTH_AUTH_DOMAIN = _DEFAULT_AUTH_DOMAIN
+_OAUTH_CLIENT_ID = '123456789.apps.googleusercontent.com'
 
 
 class UserServiceStub(apiproxy_stub.APIProxyStub):
   """Trivial implementation of the UserService."""
 
   _ACCEPTS_REQUEST_ID = True
+
+  THREADSAFE = True
 
   def __init__(self,
                login_url=_DEFAULT_LOGIN_URL,
@@ -77,7 +80,7 @@ class UserServiceStub(apiproxy_stub.APIProxyStub):
     self._logout_url = logout_url
     self.__scopes = None
 
-    self.SetOAuthUser()
+    self.SetOAuthUser(is_admin=(os.environ.get('OAUTH_IS_ADMIN', '0') == '1'))
 
 
 
@@ -89,7 +92,8 @@ class UserServiceStub(apiproxy_stub.APIProxyStub):
                    domain=_OAUTH_AUTH_DOMAIN,
                    user_id=_OAUTH_USER_ID,
                    is_admin=False,
-                   scopes=None):
+                   scopes=None,
+                   client_id=_OAUTH_CLIENT_ID):
     """Set test OAuth user.
 
     Determines what user is returned by requests to GetOAuthUser.
@@ -101,12 +105,14 @@ class UserServiceStub(apiproxy_stub.APIProxyStub):
       user_id: User ID of oauth user.
       is_admin:  Whether the user is an admin.
       scopes: List of scopes that user is authenticated against.
+      client_id: Client ID of the OAuth2 request
     """
     self.__email = email
     self.__domain = domain
     self.__user_id = user_id
     self.__is_admin = is_admin
     self.__scopes = scopes
+    self.__client_id = client_id
 
   def _Dynamic_CreateLoginURL(self, request, response, request_id):
     """Trivial implementation of UserService.CreateLoginURL().
@@ -149,15 +155,22 @@ class UserServiceStub(apiproxy_stub.APIProxyStub):
       raise apiproxy_errors.ApplicationError(
           user_service_pb.UserServiceError.OAUTH_INVALID_REQUEST)
     else:
-      if self.__scopes is not None:
+      if self.__scopes is None:
+        authorized_scopes = set()
+      else:
 
-        if request.scope() not in self.__scopes:
+        authorized_scopes = set(request.scopes_list()).intersection(
+            self.__scopes)
+        if not authorized_scopes:
           raise apiproxy_errors.ApplicationError(
               user_service_pb.UserServiceError.OAUTH_INVALID_TOKEN)
       response.set_email(self.__email)
       response.set_user_id(self.__user_id)
       response.set_auth_domain(self.__domain)
       response.set_is_admin(self.__is_admin)
+      response.set_client_id(self.__client_id)
+      for scope in authorized_scopes:
+        response.add_scopes(scope)
 
   def _Dynamic_CheckOAuthSignature(self, unused_request, response, request_id):
     """Trivial implementation of UserService.CheckOAuthSignature().
@@ -186,8 +199,14 @@ class UserServiceStub(apiproxy_stub.APIProxyStub):
     if host and protocol:
       return continue_url
 
-    protocol, host, _, _, _, _ = urlparse.urlparse(
-        self.request_data.get_request_url(request_id))
+    try:
+      protocol, host, _, _, _, _ = urlparse.urlparse(
+          self.request_data.get_request_url(request_id))
+    except KeyError:
+
+
+
+      pass
 
 
     if path == '':

@@ -1,23 +1,64 @@
 import logging
-
+import socket
 from google.appengine.ext import ndb
 from google.appengine.ext import db
-
+import os
 from webapp2_extras.auth import InvalidAuthIdError, InvalidPasswordError
 from webapp2_extras import security
-
+import webapp2_extras.appengine.auth.models
 from stochssapp import BaseHandler
 from stochssapp import User
+import datetime
+import uuid
 
-#from simpleauth import SimpleAuthHandler
-
+import smtplib
+from email.mime.text import MIMEText
+from db_models.email_config import EmailConfig
 from admin import PendingUsersList
+
+
+class SingleMultiUserMode(db.Model):
+    ''' Single or multi-user mode for StochSS '''
+    
+    single_user_mode = db.BooleanProperty()
+
+    @classmethod
+    def is_single_user_mode(cls):
+        ''' Is StochSS in single user mode?'''
+        mode = db.GqlQuery("SELECT * FROM " + cls.__name__).get()
+        if mode is None:
+            mode = cls()
+            mode.single_user_mode = True
+            mode.put()
+        return mode.single_user_mode
+
+    @classmethod
+    def set_single_user_mode(cls):
+        ''' Set StochSS to be a single user'''
+        mode = db.GqlQuery("SELECT * FROM " + cls.__name__).get()
+        if mode is None:
+            mode = cls()
+        mode.single_user_mode = True
+        mode.put()
+
+    @classmethod
+    def set_multi_user_mode(cls):
+        ''' Set StochSS to be a single user'''
+        mode = db.GqlQuery("SELECT * FROM " + cls.__name__).get()
+        if mode is None:
+            mode = cls()
+        mode.single_user_mode = False
+        mode.put()
+
 
 class SecretKey(db.Model):
     '''
     '''
     key_string = db.StringProperty()
     
+
+
+
     @classmethod
     def clear_stored_key(cls):
         ''' Deletes the secret token(s) currently stored in the DB. '''
@@ -34,29 +75,18 @@ class SecretKey(db.Model):
     def isEqualToAdminKey(self):
         '''
         '''
-        admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
+        #admin_key = db.GqlQuery("SELECT * FROM SecretKey").get()
+        try:
+            basename = os.path.dirname(os.path.abspath(__file__))
+            with open(os.path.join(basename,"admin_uuid.txt"),'r') as file:
+                admin_key = file.read()
+        except:
+            admin_key = None
+
         if admin_key is None:
             return False
         else:
-            return self.isEqualTo(admin_key)
-
-class SecretKeyHandler(BaseHandler):
-    '''
-    Handles the endpoint for secret key creation.
-    '''
-    def authentication_required(self):
-        return False
-    
-    def post(self):
-        '''
-        A POST to /secret_key means a new secret key should be generated from the string in the request body.
-        '''
-        # Dont allow requests from outside connections
-        if self.request.headers['Host'].find('localhost') == -1:
-            return
-        SecretKey.clear_stored_key()
-        SecretKey(key_string=self.request.get('key_string')).put()
-        self.response.out.write('Successful secret key creation!')
+            return self.key_string == admin_key
 
 class UserRegistrationPage(BaseHandler):
     '''
@@ -92,7 +122,6 @@ class UserRegistrationPage(BaseHandler):
         A user can register only if they have been approved by the admin, i.e. they are in the approved_users
         list (see admin.py).
         '''
-        logging.info(self.request.POST)
 
         try:
             secret_key = self.request.POST['secret_key']
@@ -103,39 +132,68 @@ class UserRegistrationPage(BaseHandler):
             # Normal user registration
             logging.info('Registering a normal user...')
             user_email = self.request.POST['email']
-            # Has this user been approved?
+
+            # Just an email address here, we should first make sure they have not been approved
             pending_users_list = PendingUsersList.shared_list()
-            if pending_users_list.is_user_approved(user_email):
-                # Then create the user
+
+            # If the user does not exist, we create it.
+            if not bool(User.get_by_auth_id(user_email)):
                 _attrs = {
                     'email_address': user_email,
                     'name': self.request.POST['name'],
-                    'password_raw': self.request.POST['password']
+                    'password_raw': self.request.POST['password'],
+                    'verified': False
                 }
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
+
+                if success:
+                    # check if user is preapproved
+                    if pending_users_list.is_user_approved(user_email):
+                        success = True
+                        approved = True
+                        # Has the user been preapproved? If so, we just verify it.
+                        user.verified = True
+                        user.put()
+                    else:
+                        success = pending_users_list.add_user_to_approval_waitlist(user_email)
+                        approved = False
                 
                 if success:
-                    # Remove the user from the approved list now
-                    pending_users_list.remove_user_from_approved_list(user_email)
-                    context = {
-                        'success_alert': True,
-                        'alert_message': 'Account creation successful! You may now log in with your new account.'
-                    }
+                    if approved or (not pending_users_list.email_verification_required and not pending_users_list.admin_approval_required):
+                        context = {
+                            'success_alert': True,
+                            'alert_message': 'Account creation successful! Your account is approved and you can log in immediately.'
+                        }
+                    elif pending_users_list.email_verification_required:
+                        # Create a signup token for the user and send a verification email
+                        token = str(uuid.uuid4())
+                        user.signup_token = token
+                        user.signup_token_time_created=None
+                        user.put()
+                        EmailConfig.send_verification_email(user_email, token)
+                        context = {
+                            'success_alert': True,
+                            'alert_message': 'Account creation successful! You will recieve a verification email, please follow the instructions to activate your account.'
+                        }
+                    elif pending_users_list.admin_approval_required:
+                        context = {
+                            'success_alert': True,
+                            'alert_message': 'Account creation successful! Once an admin has approved your account, you can login.'
+                        }
+
                     return self.render_response('login.html', **context)
-                else:
-                    logging.info("Acount registration failed for: {0}".format(user))
-                    context = {
-                        'email_address': self.request.POST['email'],
-                        'name': self.request.POST['name'],
-                        'user_registration_failed': True
-                    }
-                    return self.render_response('user_registration.html', **context)
+
+                logging.info("Account registration failed for: {0}".format(user))
+                context = {
+                    'email_address': self.request.POST['email'],
+                    'name': self.request.POST['name'],
+                    'user_registration_failed': True
+                }
+                return self.render_response('user_registration.html', **context)
             else:
-                # Not approved, add to approval waitlist
-                pending_users_list.add_user_to_approval_waitlist(user_email)
                 context = {
                     'error_alert': True,
-                    'alert_message': 'You need to be approved by the admin before you can create an account.'
+                    'alert_message': 'You have already requested an account.'
                 }
                 return self.render_response('login.html', **context)
         else:
@@ -147,27 +205,34 @@ class UserRegistrationPage(BaseHandler):
                 # Then we can attempt to create an admin
                 if User.admin_exists():
                     logging.info("Admin already exists...")
-                    # Delete the token from the DB and redirect to login, only one admin allowed
-                    SecretKey.clear_stored_key()
-                    return self.redirect('/login')
+                    # Redirect to login, only one admin allowed
+                    return self.redirect('/login?secret_key={0}'.format(secret_key))
                 else:
                     # CREATE THE ADMIN ALREADY
                     _attrs = {
                         'email_address': self.request.POST['email'],
                         'name': self.request.POST['name'],
                         'password_raw': self.request.POST['password'],
-                        'is_admin': 'YES'
+                        'is_admin': 'YES',
+                        'verified': True
                     }
                     success, user = self.auth.store.user_model.create_user(_attrs['email_address'], **_attrs)
                     
                     if success:
                         # Invalidate the token
                         SecretKey.clear_stored_key()
-                        context = {
-                            'success_alert': True,
-                            'alert_message': 'Account creation successful! You may now log in with your new account.'
-                        }
-                        return self.render_response('login.html', **context)
+                        if 'user_mode' in self.request.POST:
+                            if self.request.POST['user_mode'] == 'single':
+                                logging.info("UserRegistrationPage: user_mode set to single")
+                                SingleMultiUserMode.set_single_user_mode()
+                            elif self.request.POST['user_mode'] == 'multi':
+                                logging.info("UserRegistrationPage: user_mode set to multi")
+                                SingleMultiUserMode.set_multi_user_mode()
+                            else:
+                                logging.info("UserRegistrationPage: unknown user_mode {0}".format(self.request.POST['user_mode']))
+                        else:
+                            logging.info("UserRegistrationPage: user_mode not set")
+                        return self.redirect('/login?secret_key={0}'.format(secret_key))
                     else:
                         context = {
                             'email_address': self.request.POST['email'],
@@ -184,6 +249,149 @@ class UserRegistrationPage(BaseHandler):
                 }
                 return self.render_response('login.html', **context)
 
+class VerificationHandler(BaseHandler):
+    """ Handles email verification requests. """
+    def authentication_required(self):
+        return False
+    
+    def get(self):
+        """ Corresponds to /verify """
+        user_email = self.request.GET['user_email']
+        token = self.request.GET['signup_token']
+        user = self.auth.store.user_model.get_by_auth_id(user_email)
+   
+        if user:
+            # Verify the token
+            user_token = user.signup_token
+            
+            if user_token == token:
+                user.verified = True
+                user.signup_token = None
+                user.put()
+                context = {
+                    'success_alert': True,
+                    'alert_message': 'Account verficiation successful. You can now log in.'
+                }
+            else:
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'Account verficiation failed. Please contact the administrator for assistance.'
+                }
+        else:
+            context = {
+                'error_alert': True,
+                'alert_message': 'Account verficiation failed. No such user.'
+                }
+        
+        return self.render_response('login.html', **context)
+
+class PasswordResetRequestHandler(BaseHandler):
+    """ Handles password reset requests. """
+    def authentication_required(self):
+        return False
+    
+    def get(self):
+        context = {}
+        self.render_response('passwordresetrequest.html', **context)
+    
+    def post(self):
+        
+        """ Corresponds to /passwordresetrequest """
+        user_email = self.request.POST['email']
+        user = self.auth.store.user_model.get_by_auth_id(user_email)
+        
+        if user:
+            # Create a token
+            token = str(uuid.uuid4())
+            user.signup_token = token
+            user.signup_token_time_created=None
+            user.put()
+            status=EmailConfig.send_password_reset_email(user_email, token)
+            if status:
+                context = {
+                    'success_alert': True,
+                    'alert_message': 'Password reset link has been sent, please follow the instructions to reset your password'
+            }
+    
+        return self.render_response('passwordresetrequest.html', **context)
+
+class PasswordResetHandler(BaseHandler):
+    """ Reset user password """
+    def authentication_required(self):
+        return False
+    
+    def get(self):
+        """ Corresponds to /passwordreset """
+        user_email = self.request.GET['user_email']
+        token = self.request.GET['token']
+        user = self.auth.store.user_model.get_by_auth_id(user_email)
+  
+        if user:
+            # Verify the token
+            user_token = user.signup_token
+            
+            if user_token == token:
+                user.signup_token = None
+                user.put()
+                context = {'user_email':user_email}
+                self.render_response('passwordreset.html',**context)
+                
+            else:
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'Password reset token not validated. Please contact the administrator for assistance.'
+                }                    
+                self.render_response('passwordreset.html', **context)
+   
+        else:
+            context = {
+                'error_alert': True,
+                'alert_message': 'Password reset failed. No such user.'
+            }
+            self.render_response('passwordreset.html', **context)
+               
+
+    def post(self):
+        '''
+            Corresponds to an attempt to change the password.
+            
+        '''
+        context = {}
+        should_update_user = False
+        try:
+            new_password = self.request.POST["password"]
+            password_confirmation =  self.request.POST["password_confirmation"]
+            user_email = self.request.POST['user_email']
+        except KeyError:
+            new_password = None
+            password_confirmation = None   
+        
+        if new_password not in [None, ''] and new_password == password_confirmation:
+            user = self.auth.store.user_model.get_by_auth_id(user_email)
+            user.set_password(new_password)
+            should_update_user = True
+       
+        else:
+            # Incorrect
+            context['error_alert'] = 'Password and confirmation must match: {0}'.format(self.request.POST)
+            context["user_email"] = user_email
+            context["password"]=password
+            context["password_confirmation"] = password_confirmation
+            return self.render_response('passwordreset.html', **context)
+        
+        # Was anything updated?
+        if should_update_user:
+            user.put()
+            context['success_alert'] = True 
+            context['alert_message']='Successfully updated password!'
+            self.render_response('login.html',**context)
+        else:
+            context['error_alert'] = "Failed to reset password"
+            self.render_response("passwordreset.html",**context)
+
+
+
+
 class LoginPage(BaseHandler):
     """
     """
@@ -196,6 +404,7 @@ class LoginPage(BaseHandler):
         if self.logged_in():
             return self.redirect("/")
         # Need to log in
+
         try:
             secret_key = self.request.GET['secret_key']
         except KeyError:
@@ -205,25 +414,18 @@ class LoginPage(BaseHandler):
             secret_key_attempt = SecretKey(key_string=secret_key)
             if secret_key_attempt.isEqualToAdminKey() and not User.admin_exists():
                 return self.redirect('/register?secret_key={0}'.format(secret_key))
-            else:
-                # Unauthorized secret key query string param, just ignore it completely...
-                pass
-        
-        self.render_response('login.html')
-        # # This is one way to allow local access with no login, but it doesnt cover every case
-        # # Also, it means there is a separate account for local access that can only see its own models
-        # if self.request.headers['Host'].find('localhost') != -1:
-        # auth_id = 'default:local'
-        # _attrs = {
-        #     'name': 'Local Access',
-        #     'email_address': 'do-not-use@stochss.local'
-        # }
-        # user = self.auth.store.user_model.get_by_auth_id(auth_id)
-        # if user is None:
-        #     ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
-        # 
-        # self.auth.set_session(self.auth.store.user_to_dict(user))
-        # self.redirect('/')
+            elif secret_key_attempt.isEqualToAdminKey() and  User.admin_exists() and SingleMultiUserMode.is_single_user_mode():
+                # Single user mode, login user and forward to / page
+                user_subobj = self.auth.store.user_model.get_by_auth_id(User.get_admin_user_id())
+                user = self.auth.store.user_to_dict(user_subobj)
+                self.auth.set_session(user)
+                return self.redirect('/')
+
+        # Normal user login
+        if SingleMultiUserMode.is_single_user_mode() or not User.admin_exists():
+            self.render_response('login_disabled.html')
+        else:
+            self.render_response('login.html')
     
     def post(self):
         '''
@@ -235,43 +437,49 @@ class LoginPage(BaseHandler):
         except KeyError:
             request_account = False
             
-        if request_account:
-            # Just an email address here, we should first make sure they havent been approved
+        # Login attempt, need to grab password too
+        password = self.request.POST['password']
+        try:
+            user = self.auth.get_user_by_password(email_address, password, remember=True)
+            # Success, put user in the session and redirect to home page
+
+            # Has this user been approved? Or is the user the admin? Login either way
             pending_users_list = PendingUsersList.shared_list()
-            if pending_users_list.is_user_approved(email_address):
-                context = {
-                    'approved_user_message': True
-                }
-                return self.render_response('user_registration.html', **context)
-            # Now add to approval waitlist
-            success = pending_users_list.add_user_to_approval_waitlist(email_address)
-            if success:
-                context = {
-                    'success_alert': True,
-                    'alert_message': 'Successfully requested an account!'
-                }
-                return self.render_response('login.html', **context)
+
+            userdb = User.get_by_id(user["user_id"])
+
+            if hasattr(userdb, 'is_admin'):
+                isAdmin = userdb.is_admin
             else:
+                isAdmin = False
+
+            if not isAdmin and pending_users_list.email_verification_required and not userdb.is_verified():
                 context = {
                     'error_alert': True,
-                    'alert_message': 'You have already requested an account.'
-                }
+                    'alert_message': 'You need to verify your account before you can login.'
+                    }
                 return self.render_response('login.html', **context)
-        else:
-            # Login attempt, need to grab password too
-            password = self.request.POST['password']
-            try:
-                user = self.auth.get_user_by_password(email_address, password, remember=True)
-                # Success, put user in the session and redirect to home page
-                self.auth.set_session(user)
-                return self.redirect('/')
-            except (InvalidAuthIdError, InvalidPasswordError) as e:
-                logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
+
+            if not isAdmin and pending_users_list.admin_approval_required and not pending_users_list.is_user_approved(email_address):
+                # Not approved, add to approval waitlist
+                pending_users_list.add_user_to_approval_waitlist(email_address)
                 context = {
                     'error_alert': True,
-                    'alert_message': 'The email or password you entered is incorrect.'
-                }
+                    'alert_message': 'You need to be approved by the admin before you can login.'
+                    }
                 return self.render_response('login.html', **context)
+
+            # All Clear
+            self.auth.set_session(user)
+            return self.redirect('/')
+
+        except (InvalidAuthIdError, InvalidPasswordError) as e:
+            logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
+            context = {
+                'error_alert': True,
+                'alert_message': 'The email or password you entered is incorrect.'
+                }
+            return self.render_response('login.html', **context)
 
 class LogoutHandler(BaseHandler):
     '''
@@ -319,17 +527,6 @@ class AccountSettingsPage(BaseHandler):
         if self.user.name != new_name:
             self.user.name = new_name
             should_update_user = True
-        # if self.user.email_address != new_email:
-        #     if self.user.change_auth_id(new_email):
-        #         self.user.email_address = new_email
-        #         should_update_user = True
-        #     else:
-        #         context = {
-        #             'name': self.user.name,
-        #             'email_address': self.user.email_address,
-        #             'error_alert': 'A user with that email address already exists.'
-        #         }
-        #         return self.render_response('account_settings.html', **context)
         context = {
             'name': self.user.name,
             'email_address': self.user.email_address

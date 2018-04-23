@@ -78,9 +78,8 @@ def main():
 	sleep(120) 
 	print "Update complete"
 
-	month = strftime("%b")
-	day = strftime("%d")
-	new_ami_name = "StochSS-Server-" + month + day
+	date_str = strftime("%y%b%d%H%M%S")
+	new_ami_name = "StochSS-Server-" + date_str
 
 	print "Creating AMI of updated instance..."
 	new_ami_id = conn.create_image(inst.id, new_ami_name)
@@ -118,6 +117,21 @@ def main():
 		)
 		print "Copying new AMI to " + aws_regions[i]
 		next_ami_id = conn.copy_image(aws_regions[0],new_ami_id,name=new_ami_name).image_id
+
+                print "Next AMI pending..."
+                next_ami = conn.get_image(next_ami_id)
+                while next_ami.state != 'available':
+                        next_ami.update()
+
+                print "Next AMI ID: " + next_ami_id
+                print "Making the new AMI Public"
+                conn.modify_image_attribute(
+                        next_ami_id, 
+                        attribute='launchPermission', 
+                        operation='add', 
+                        groups='all'
+                        )
+                
 		new_ami_ids.append(next_ami_id)
 
 	# Overwrite the current AMI ID config file with the updated AMI IDs

@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+{% block title%}Manage Models{% endblock %}
+{% block content %}
+{% block csscontent %}
+<link href="/static/css/jquery-ui-1.9.1.custom.min.css" rel="stylesheet">
+<link href="/static/modelEditor/app.css" rel="stylesheet">
+<link href="/static/css/controls.css" rel="stylesheet">
+{% endblock %}
+
+<div class="modelEditor">
+    <div class="span8">
+        <div>
+            <h1>Model Editor</h1>
+            <br>
+            <div class="well">
+                <div data-hook='selector'>
+                    <div class="selectAccordion">
+                        <div class="accordion-group">
+                            <div class="accordion-heading">
+                                <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#selectAccordion" href="#collapseSelector">Select Model <span data-hook="modelName"></span></a></h2>
+                            </div>
+                            <div id="collapseSelector" class="accordion-body collapse in">
+                                <div class="accordion-inner">
+                                    <div data-hook="modelSelect">
+                                        <div id="modelSelect">
+                                            <div class="modelLoader">
+                                            </div>
+                                            <div class="publicModelLoader">
+                                            </div>
+                                            <div class="meshLoader">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-hook='editor'></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="span2 modelRightBar">
+        <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+                <li class="nav-header">Import / Export</li>
+                <li><a href="/import?tab=1">Import from .zip</a></li>
+                <li><a href="/importFromXML">Import from .XML</a></li>
+                <li><a href="/importFromSBML">Import from .SBML</a></li>
+                <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
+                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li class="reqNonSpatialModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><span><a data-hook="exportToSBML" href="#">Export to SBML</a> <a href="#sbmlModal" data-toggle="modal"><i class="icon-info-sign"></i></a></span></li>
+                <li class="nav-header">Public Library</li>
+                <li><a href="/publicLibrary">Import from Public Library</a></li>
+                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
+                <li class="nav-header">Simulation</li>
+                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="runSimulation" href="#">Run Simulation</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div id="sbmlModal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel">Warnings on Export to SBML</h3>
+        </div>
+        <div class="modal-body">
+            <ul>
+                <li>StochSS assumes a model volume of 1 for all concentration and population models when exporting to SBML.</li>
+                <li>Units are important in SBML models. However, StochSS puts no constraints on how units are used internally. It is possible this can lead to errors when exporting to SBML, especially with custom propensities and non-concentration models.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block jscontent %}
+
+<script class="modelEditorTemplate" type="text/template">
+    <div>
+        <div data-hook="saveMessage" class="alert alert-success"></div>
+        <div data-hook="editor">
+            <div class="spatial">
+                <div class="mesh3dAccordion">
+                    <div class="accordion-group">
+                        <div class="accordion-heading">
+                            <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#mesh3dAccordion" href="#collapseMesh3d">Mesh Editor</a></h2>
+                        </div>
+                        <div id="collapseMesh3d" class="accordion-body collapse">
+                            <div class="accordion-inner">
+                                <div data-hook="mesh"></div>
+                                <hr />
+                                <div data-hook="mesh3d"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="speciesAccordion">
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#speciesAccordion" href="#collapseSpecies">Species Editor</a></h2>
+                    </div>
+                    <div id="collapseSpecies" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div data-hook="specie" style="z-index: 1;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="spatial">
+                <div class="initialConditionsAccordion">
+                    <div class="accordion-group">
+                        <div class="accordion-heading">
+                            <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#initialConditionsAccordion" href="#collapseInitialConditions">Initial Conditions Editor</a></h2>
+                        </div>
+                        <div id="collapseInitialConditions" class="accordion-body collapse">
+                            <div class="accordion-inner">
+                                Define the initial conditions for a spatial simulation.
+                                <ul>
+                                    <li>A <b>'Scatter'</b> initial condition distributes 'Count' particles over the chosen subdomain.</li>
+                                    <li>A <b>'Place'</b> initial condition places 'Count' particles at a given X, Y, Z coordinate.</li>
+                                    <li>A <b>'Distribute Uniformly per Voxel'</b> initial condition puts 'Count' particles in each voxel of the chosen subdomain.</li>
+                                </ul>
+
+                                <div data-hook="initialConditions" style="z-index: 1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="parametersAccordion">
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#parametersAccordion" href="#collapseParameters">Parameters Editor</a></h2>
+                    </div>
+                    <div id="collapseParameters" class="accordion-body collapse">
+                        <div class="accordion-inner" style="z-index: 1">
+                            Define the model parameters. Parameter constants are used to defined reaction rates in the simulation. Stochkit syntax is used to define the parameters. They can be functions of other parameters or simple math operations.
+                            <div data-hook="parameter"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="reactionsAccordion">
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#reactionsAccordion" href="#collapseReactions">Reactions Editor</a></h2>
+                    </div>
+                    <div id="collapseReactions" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div data-hook="reaction" style="min-width: 600px"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div data-hook="convertToPopulation"></div>
+    </div>
+</script>
+
+<script class="convertToPopulationTemplate" type="text/template">
+    <div>
+        <div class="speciesAccordion">
+            <div class="accordion-group">
+                <div class="accordion-heading">
+                    <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#speciesAccordion" href="#collapseSpecies">Convert to Population</a></h2>
+                </div>
+                <div id="collapseSpecies" class="accordion-body collapse in">
+                    <div class="accordion-inner">
+                        To convert the model from concentration to population you must specify a system volume, initial conditions will be converted as initial_population = initial_concentration * volume.
+                        <br><br>
+                        Converting concentration models to population models should be automatic for models with mass action reactions with two or less reactants. For more complex reactions, or ones with custom propensities, conversion must be done manually. Conversion to population is still possible in the cases where automatic conversion fails; the user will be responsible for fixing the reactions which were not automatically converted though.
+                        <br><br>
+                        <h4>Volume</h4>
+                        <div data-hook="volume"></div>
+                        <div data-hook="specie"></div>
+                        <div data-hook="parameter"></div>
+                        <div data-hook="reaction"></div>
+                        <br>
+                        <button class="btn btn-primary" data-hook="finishConvertToPopulationButton">Finish conversion</button>
+                        <button class="btn btn-danger" data-hook="cancelConvertToPopulationButton">Cancel conversion</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script class="meshCollectionTemplate" type="text/template">
+    <div>
+        <div class="accordion" id="accordion22">
+            <div class="accordion-group" data-hook="meshDescriptionAccordion">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion22" href="#collapseOne2">
+                        Current Mesh
+                    </a>
+                </div>
+                <div id="collapseOne2" class="accordion-body collapse in">
+                    <div class="accordion-inner">
+                        <div data-hook="meshDescription">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-group" data-hook="meshLibraryAccordion">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion22" href="#collapseTwo2">
+                        Select a Mesh
+                    </a>
+                </div>
+                <div id="collapseTwo2" class="accordion-body collapse">
+                    <div class="accordion-inner">
+                        <div class="row">
+                            <div class="span11">
+                                Select a model mesh and visualize the subdomains. The subdomain information will be used to define where species can diffuse and where reactions occur.
+                            </div>
+
+                            <div class="span8">
+                                <div data-hook="meshTable">
+                                </div>
+                            </div>
+                            <div class="span3 meshSelectDescriptionDiv">
+				<div class="descriptionContainer">
+                                    <h4>Description:</h4>
+                                    <pre class="description">
+                                    </pre>
+				</div>
+                            </div>
+                        </div>
+			<br>
+                        <button data-hook="doneSelectButton" class="btn btn-primary">Done</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-group">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion22" href="#collapseThree2">
+                        Upload a Mesh
+                    </a>
+                </div>
+                <div id="collapseThree2" class="accordion-body collapse uploadMeshDiv">
+                    <div data-hook="addMeshForm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script class="meshCollectionAddTemplate" type="text/template">
+    <div class="accordion-inner">
+        <form id="meshForm">
+            <div>For a guide on the .xml/.txt mesh format used here, look at <a href="http://iguana.cs.ucsb.edu/releases/tutorials/dolfin_notes.pdf">dolfin_notes.pdf</a> (which can also be found in the documentation on the StochSS website).</div><br />
+
+            <div class="row">
+                <div class="span5">
+                    <div>Select mesh file:</div>
+                    <div>
+                        <input id="meshDataUpload" type="file" name="files[]" multiple>
+                    </div>
+                    <div id="meshDataUploadStatus">
+                    </div>
+                    <div>Select subdomain file:</div>
+                    <div>
+                        <input id="subdomainDataUpload" type="file" name="files[]" multiple>
+                    </div>
+                    <div id="subdomainDataUploadStatus">
+                    </div>
+                </div>
+                <div class="span6">
+                    <div>
+                        Model name:<br>
+                        <input type="text" class="name">
+                    </div>
+                    <div>
+                        Model description:<br>
+                        <textarea class="form-control descriptionText" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <button data-hook="meshUploadButton" type="button" class="btn btn-primary btn-lg">
+                <span class="icon-plus"></span> Upload PyURDME Mesh
+            </button>
+
+            <button data-hook="resetFormButton" type="button" class="btn btn-primary btn-lg">
+                <span class="icon-remove"></span> Reset
+            </button>
+        </form>
+        <br />
+    </div>
+</script>
+
+<script class="mesh3dTemplate" type="text/template">
+    <div>
+        <h3>Mesh Preview</h3>
+        <div data-hook="container">
+            <center>
+                <div class="button-container button-container-left" >
+                    <button class="button" data-hook="zoomPlus_btn"><i class="icon-plus"></i></button> 
+                    Zoom
+                    <button class="button" data-hook="zoomMinus_btn"><i class="icon-minus"></i></button> 
+                </div>
+                &nbsp; 
+                <div class="button-container">
+                    <button class="button" data-hook="panLeft_btn"><i class="icon-arrow-left"></i></button> 
+                    <button class="button" data-hook="panUp_btn"><i class="icon-arrow-up"></i></button> 
+                    Pan
+                    <button class="button" data-hook="panDown_btn"><i class="icon-arrow-down"></i></button>
+                    <button class="button" data-hook="panRight_btn"><i class="icon-arrow-right"></i></button>
+                </div>
+                &nbsp; 
+                <div class="button-container">
+                    <button class="button" data-hook="rotateLeft_btn"><i class="icon-arrow-left"></i></button>
+                    <button class="button" data-hook="rotateUp_btn"><i class=" icon-arrow-up"></i></button> 
+                    Rotate
+                    <button class="button" data-hook="rotateDown_btn"><i class="icon-arrow-down"></i></button> 
+                    <button class="button" data-hook="rotateRight_btn"><i class="icon-arrow-right"></i></button> 
+                </div>
+                &nbsp; 
+                <div class="button-container button-container-right">
+                    <button class="button" data-hook="reset_btn">Reset</button>
+                </div>
+            </center>
+        </div>
+        <div data-hook="inset"></div>
+        <div data-hook="mesh">
+        </div>
+        <h3>Highlight Subdomains</h3>
+        <div data-hook="subdomains">
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript" src = "/static/modelEditor/app.bundle.js"></script>
+{% endblock %}

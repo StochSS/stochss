@@ -37,14 +37,15 @@ from google.appengine.api.files import file_service_pb
 from google.appengine.api.images import images_service_pb
 from google.appengine.api.logservice import log_service_pb
 from google.appengine.api.memcache import memcache_service_pb
+from google.appengine.api.modules import modules_service_pb
 from google.appengine.api.prospective_search import prospective_search_pb
 from google.appengine.api.remote_socket import remote_socket_service_pb
 from google.appengine.api.search import search_service_pb
-from google.appengine.api.servers import servers_service_pb
 from google.appengine.api.system import system_service_pb
 from google.appengine.api.taskqueue import taskqueue_service_pb
 from google.appengine.api.xmpp import xmpp_service_pb
 from google.appengine.datastore import datastore_pb
+from google.appengine.datastore import datastore_v4_pb
 from google.appengine.ext.remote_api import remote_api_pb
 
 
@@ -58,6 +59,9 @@ SERVICE_PB_MAP = {
         'GetServiceAccountName': (
             app_identity_service_pb.GetServiceAccountNameRequest,
             app_identity_service_pb.GetServiceAccountNameResponse),
+        'GetDefaultGcsBucketName': (
+            app_identity_service_pb.GetDefaultGcsBucketNameRequest,
+            app_identity_service_pb.GetDefaultGcsBucketNameResponse),
         'GetAccessToken': (app_identity_service_pb.GetAccessTokenRequest,
                            app_identity_service_pb.GetAccessTokenResponse),
     },
@@ -88,7 +92,6 @@ SERVICE_PB_MAP = {
         'Get':        (datastore_pb.GetRequest, datastore_pb.GetResponse),
         'Put':        (datastore_pb.PutRequest, datastore_pb.PutResponse),
         'Delete':     (datastore_pb.DeleteRequest, datastore_pb.DeleteResponse),
-        'Count':      (datastore_pb.Query, api_base_pb.Integer64Proto),
         'AllocateIds':(datastore_pb.AllocateIdsRequest,
                        datastore_pb.AllocateIdsResponse),
         'RunQuery':   (datastore_pb.Query,
@@ -102,6 +105,10 @@ SERVICE_PB_MAP = {
                             api_base_pb.VoidProto),
         'GetIndices':      (api_base_pb.StringProto,
                             datastore_pb.CompositeIndices),
+    },
+    'datastore_v4': {
+        'AllocateIds': (datastore_v4_pb.AllocateIdsRequest,
+                        datastore_v4_pb.AllocateIdsResponse),
     },
     'file': {
         'Create': (file_service_pb.CreateRequest,
@@ -234,23 +241,23 @@ SERVICE_PB_MAP = {
         'Search': (search_service_pb.SearchRequest,
                    search_service_pb.SearchResponse),
     },
-    'servers': {
-        'GetServers': (servers_service_pb.GetServersRequest,
-                       servers_service_pb.GetServersResponse),
-        'GetVersions': (servers_service_pb.GetVersionsRequest,
-                        servers_service_pb.GetVersionsResponse),
-        'GetDefaultVersion': (servers_service_pb.GetDefaultVersionRequest,
-                              servers_service_pb.GetDefaultVersionResponse),
-        'GetNumInstances': (servers_service_pb.GetNumInstancesRequest,
-                            servers_service_pb.GetNumInstancesResponse),
-        'SetNumInstances': (servers_service_pb.SetNumInstancesRequest,
-                            servers_service_pb.SetNumInstancesResponse),
-        'StartServer': (servers_service_pb.StartServerRequest,
-                        servers_service_pb.StartServerResponse),
-        'StopServer': (servers_service_pb.StopServerRequest,
-                       servers_service_pb.StopServerResponse),
-        'GetHostname': (servers_service_pb.GetHostnameRequest,
-                        servers_service_pb.GetHostnameResponse),
+    'modules': {
+        'GetModules': (modules_service_pb.GetModulesRequest,
+                       modules_service_pb.GetModulesResponse),
+        'GetVersions': (modules_service_pb.GetVersionsRequest,
+                        modules_service_pb.GetVersionsResponse),
+        'GetDefaultVersion': (modules_service_pb.GetDefaultVersionRequest,
+                              modules_service_pb.GetDefaultVersionResponse),
+        'GetNumInstances': (modules_service_pb.GetNumInstancesRequest,
+                            modules_service_pb.GetNumInstancesResponse),
+        'SetNumInstances': (modules_service_pb.SetNumInstancesRequest,
+                            modules_service_pb.SetNumInstancesResponse),
+        'StartModule': (modules_service_pb.StartModuleRequest,
+                        modules_service_pb.StartModuleResponse),
+        'StopModule': (modules_service_pb.StopModuleRequest,
+                       modules_service_pb.StopModuleResponse),
+        'GetHostname': (modules_service_pb.GetHostnameRequest,
+                        modules_service_pb.GetHostnameResponse),
     },
     'system': {
         'GetSystemStats': (system_service_pb.GetSystemStatsRequest,
@@ -280,13 +287,13 @@ SERVICE_PB_MAP = {
         'PurgeQueue': (taskqueue_service_pb.TaskQueuePurgeQueueRequest,
                        taskqueue_service_pb.TaskQueuePurgeQueueResponse),
         'DeleteQueue': (taskqueue_service_pb.TaskQueueDeleteQueueRequest,
-                        taskqueue_service_pb.TaskQueueDeleteQueueRequest),
+                        taskqueue_service_pb.TaskQueueDeleteQueueResponse),
         'DeleteGroup': (taskqueue_service_pb.TaskQueueDeleteGroupRequest,
-                        taskqueue_service_pb.TaskQueueDeleteGroupRequest),
+                        taskqueue_service_pb.TaskQueueDeleteGroupResponse),
         'QueryTasks': (taskqueue_service_pb.TaskQueueQueryTasksRequest,
                        taskqueue_service_pb.TaskQueueQueryTasksResponse),
-        'FetchTasks': (taskqueue_service_pb.TaskQueueFetchTaskRequest,
-                       taskqueue_service_pb.TaskQueueFetchTaskRequest),
+        'FetchTask': (taskqueue_service_pb.TaskQueueFetchTaskRequest,
+                      taskqueue_service_pb.TaskQueueFetchTaskResponse),
         'QueryAndOwnTasks': (
             taskqueue_service_pb.TaskQueueQueryAndOwnTasksRequest,
             taskqueue_service_pb.TaskQueueQueryAndOwnTasksResponse),
@@ -326,7 +333,5 @@ SERVICE_PB_MAP = {
                           channel_service_pb.CreateChannelResponse),
         'SendChannelMessage': (channel_service_pb.SendMessageRequest,
                                api_base_pb.VoidProto),
-        'GetChannelPresence': (channel_service_pb.ChannelPresenceRequest,
-                               channel_service_pb.ChannelPresenceResponse),
     },
 }

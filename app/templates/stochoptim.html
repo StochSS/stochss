@@ -18,11 +18,15 @@
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <script type="text/javascript" src = "/static/js/jquery.csv-0.71.js"></script>
-<link rel="stylesheet" href="/static/css/nv.d3.css">
+<link rel="stylesheet" href="/static/css/nv.d3.min.css">
 
+<link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
+
+<script type="text/javascript" src="/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
 <script type="text/javascript" src = "/static/js/purl.js"></script>
-<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
-<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
+<script type="text/javascript" src = "/static/js/d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.min.js"></script>
 <script type="text/javascript" src = "/static/js/tablePlot.js"></script>
 <script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
 <script src="/static/js/jfu/js/jquery.fileupload.js"></script>
@@ -31,21 +35,62 @@
 
 <script id="modelSelectTemplate" type="text/template">
     <div id="modelSelect">
+        <h1>Parameter Estimation</h1>
+        <br>
         <div class="well">
             <% if(typeof models != 'undefined' && models.length > 0) { %>
             <h3> Select model to analyze </h3>
             <br />
-            <% for(var model in models) { %>
-            <label class="radio">
-                <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" checked <%= (models[model].attributes.units == 'concentration') ? 'disabled' : '' %>/><%= models[model].attributes.name %> <%= (models[model].attributes.units == 'concentration') ? '<span style="color : red;">&nbsp;&#45;&#45; Concentration models incompatible with parameter estimation code</span>' : '' %>
-                <br />
-            </label>
-            <% } %>
+            <table class="table table-striped table-bordered mainTable">
+                <thead>
+                    <tr>
+                        <th width="25px"></th>
+                        <th width="200px">Name</th>
+                        <th>Units</th>
+                        <th>Spatial</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for(var model in models) { %>
+                    <tr>
+                        <td>
+                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial || models[model].attributes.isMassAction == false) ? 'disabled' : '' %>/>
+                        </td>
+                        <td>
+                            <%= models[model].attributes.name %>
+                        </td>
+                        <td>
+                            <%= models[model].attributes.units %>
+                        </td>
+                        <td>
+                            <% if(models[model].attributes.isSpatial) { %>
+                            True
+                            <% } else { %>
+                            False
+                            <% } %>
+                        </td>
+                        <td>
+                          <% if(models[model].attributes.units == 'population' && !models[model].attributes.isSpatial && models[model].attributes.isMassAction) { %>
+                          <span style="color : green;">Model compatible with Stochoptim</span>
+                          <% } else if(models[model].attributes.units == 'concentration') { %>
+                          <span style="color : red;">StochOptim does not work with concentration models</span>
+                          <% } else if(models[model].attributes.isMassAction == false) { %>
+                          <span style="color : red;">StochOptim does not work with non-mass action models</span>
+                          <% } else if(models[model].attributes.isSpatial) { %>
+                          <span style="color : red;">StochOptim does not work with spatial models</span>
+                          <% } %>
+                        </td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+
             <br />
-            <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
+            <button id="next" type="submit" class="btn-primary btn-large" disabled>Next&raquo;</button>
             <% } else { %>
-            <h2>There are no models in the system</h2><br />
-            <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
+            <h2>There are no models in the system.</h2><br />
+            <a style="font-size:18px;" href="/modeleditor"> Create a new model </a>
             <% } %>
         </div>
     </div>
@@ -72,7 +117,7 @@
         Units: <h3><%= model.attributes.units %></h3>
         <hr />
         <label>Name:</label>
-        <input type="text" class="span3" id="jobName" value="<%= model.attributes.name %>_job" />
+        <input type="text" class="span3" id="jobName" value="<%= model.attributes.name %>_job_<%= datestr %>" />
         
         <span class="help-block">This name will be used to reference the estimation.</span>
         <br />
@@ -80,6 +125,10 @@
         <!--List parameters that can be parameter-swept-->
         Select parameters to estimate:<br />
         <div id="activate"></div>
+	<div class="btn-group">
+	    <button class="btn btn-small selectAll">Select All</button>
+	    <button class="btn btn-small clearAll">Clear All</button>
+	</div>
 
         <br />
         <!--List of valid datafiles to include-->
