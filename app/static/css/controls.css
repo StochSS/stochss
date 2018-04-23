@@ -1,0 +1,36 @@
+.button-container{
+  display: inline-block;
+  padding: 2px;
+  border-style:solid;
+  border-color: #C6C6C6;
+  border-radius: 5px;
+  border-width: 1px;
+}
+
+#container {
+  border-style: solid;
+  border-color: #C6C6C6;
+  border-radius: 5px;
+  border-width: 1px;
+  color: black;
+  padding: 5px;
+  background-color: #F5F5F5;
+}
+
+.button {
+    height : 25px;
+}
+
+[data-hook="inset"] {
+    position: absolute;
+    z-index: 1;
+}
+
+#inset {
+    position: absolute;
+    z-index: 1;
+}
+
+.controls {
+    display : none;
+}

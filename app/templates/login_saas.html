@@ -1,0 +1,53 @@
+{% extends "login_base.html" %}
+{% block title %}Login{% endblock %}
+{% block csscontent %}<link href="/static/css/login.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+  {% if error_alert %}
+    <p class="alert alert-error">{{alert_message}}</p>
+  {% elif success_alert %}
+    <p class="alert alert-success">{{alert_message}}</p>
+  {% endif %}
+  
+  <div class="span3 offset4 well">
+    <h4 class="well-title">
+      <a data-toggle="modal" href="#login_modal">
+        Please log in to continue <i class="icon-question-sign"></i>
+      </a>
+    </h4>
+    {% set help_modal_id = "login_modal" %}
+    {% set help_modal_title = "Logging In" %}
+    {% set help_modal_message = "To access StochSS you need to have an account. To create an account, you must request access (below) and be approved by the administrator. Once you have been approved, you can create your account and immediately log in below." %}
+    {% include "help_modal.html" %}
+    {{help_modal|safe}}
+    <form action="/login" method="post">
+      <fieldset>
+        <div class="control-group">
+          <input type="email" name="email" placeholder="email@example.com" autofocus="autofocus">
+        </div>
+        <div class="control-group">
+          <input type="password" name="password" placeholder="password">
+        </div>
+        <div class="control-group">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </fieldset>
+    </form>
+    <h4 class="well-separator">Or</h4>
+    <form action="/register" method="get">
+      <fieldset>
+        <div class="control-group create-account">
+	  <center><H3>If you do not have a account yet:</H3></center>
+          <button class="btn btn-primary">Create Account</button>
+        </div>
+      </fieldset>
+    </form>
+    <BR>
+    <BR>
+    <a href="/passwordresetrequest">Forgot your password?</a>
+    <BR>
+    <BR>
+    <div style="padding: 10px; border-width: 1px; border-style: solid; background-color: #fcf8e3"> This is a trial deployment that lets users get familiar with StochSS. Be adviced that we do not regularly back up this server, and hence can leave no guarantees regarding availability of the models and data you create in the app. Remember to download any models or results frequently.    
+ Visit <a href="http://www.stochss.org">http://www.stochss.org</a> for instructions on how to download StochSS for local use or how to deploy your own service. </div> 
+  </div>
+{% endblock %}

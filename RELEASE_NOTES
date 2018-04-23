@@ -1,5 +1,63 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.9.0
+=============================
+- Support for simulation and parameter sweep jobs on batch cluster computing (Qsub based computing clusters)
+- Configuration of batch computing resources
+- Enhancement to multi-user setup, including email authentication
+
+1.8.0
+=============================
+- Parameter Sweep tool allow 1D/2D parameter sweeps for all models
+- Integration of Jupyter Notebooks on job result pages for post-processing analysis
+- Status page updates for filtering and automatic forwarding of running->finished jobs
+- Added option to change tolerances for ODE simulation
+
+1.7.0
+=============================
+- Volume rendering visualization for spatial jobs.
+- StochSS-launcher uses docker containers to run StochSS. Includeds support for newest OSX and Windows operating systems.
+- Added RSS feed and StochSS registration to front page
+
+1.6.1
+=============================
+- Updated PyURDME to work with FEniCS 1.6
+
+1.6.0
+=============================
+- Spatial visualization now supports animation, wireframe rendering, and mesh slicing 
+- FlexCloud:  run ‘cloud’ jobs on dedicated hardware (in addition to using EC2)
+- Import SBML models
+- Many bug fixes and stability enhancements
+
+1.5.1
+=============================
+- Bugfix release
+
+1.5.0
+=============================
+- Launching VMs is done asynchronously
+- Instance types can be configured for head and worker nodes
+- Job reproduction system introduced for cloud. Data for cloud jobs can be deleted and then reproduced when needed
+- Cost analysis system introduced for cloud. Cost analysis tests can be run to figure out the cost of running different jobs on different computers
+- Model editor rebuilt to be more efficient
+
+1.4.1
+=============================
+- Bugfix release
+
+1.4.0
+=============================
+- Integration of PyURDME: Spatial stochastic simulation on complex
+  geometries using tetrahedral meshes.  
+- Advanced visualization of mesh geometries and spatial simulation
+  results via WebGL.
+
+1.3.0
+=============================
+- Added interface to StochOptim stochastic parameter estimation toolbox
+- real-time visualization of parameter value convergence 
+
 1.2.0
 =============================
 - Implement deterministic sensitivity analysis

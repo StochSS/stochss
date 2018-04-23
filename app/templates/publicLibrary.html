@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title%}Import Model from Public Library{% endblock %}
+{% block content %}
+{% block csscontent %}
+<link href="/static/modelEditor/app.css" rel="stylesheet">
+{% endblock %}
+
+<div class="span9">
+    <h1>Public Model Library</h1>
+    <br>
+    <div class="well well-large">
+        <div data-hook="publicModelDiv">Loading models...</div>
+    </div>
+</div>
+
+{% endblock %}
+{% block jscontent %}
+<script class="modelSelectorTemplate" type="text/template">
+    <div>
+        <div class="alert alert-success" data-hook="saveMessage"></div>
+        <table data-hook='modelTable' class='table table-bordered'>
+            <thead>
+                <th></th><th>Name</th><th>Type</th>
+            </thead>
+            <tbody data-hook='modelTBody'></tbody>
+        </table>
+    </div>
+</script>
+
+<script type="text/javascript" src = "/static/modelEditor/publicLibrary.bundle.js"></script>
+{% endblock %}

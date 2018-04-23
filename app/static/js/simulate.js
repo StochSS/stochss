@@ -1,3 +1,19 @@
+function generate_datestr() {
+    var temp = new Date();
+    //var dateStr = padStr(temp.getFullYear()) +
+    var dateStr = padStr(temp.getYear()-100) +
+                  padStr(1 + temp.getMonth()) +
+                  padStr(temp.getDate()) + '_' +
+                  padStr(temp.getHours()) +
+                  padStr(temp.getMinutes()) +
+                  padStr(temp.getSeconds());
+    //console.log(dateStr );
+    return dateStr
+}
+
+function padStr(i) {
+    return (i < 10) ? "0" + i : "" + i;
+}
 
 $( document ).ready( function() {
     //loadTemplate("speciesEditorTemplate", "/model/speciesEditor.html");
@@ -16,6 +32,7 @@ var checkAndGet = function(selectTable)
     {
         updateMsg( { status : false,
                      msg : "Job name must be letters (a-z and A-Z), underscores, and numbers only, and start with a letter or an underscore" } );
+        return false;
     }
 
     var execType = $( "input:radio[name=exec_type]:checked" ).val();
@@ -47,7 +64,7 @@ var checkAndGet = function(selectTable)
     if(!/^[0-9]+$/.test(realizations))
     {
         updateMsg( { status : false,
-                     msg : "Seed must be an integer" } );
+                     msg : "Realizations must be an integer" } );
         return false;
     }
 
@@ -56,10 +73,10 @@ var checkAndGet = function(selectTable)
     var algorithm = $( "input:radio[name=algorithm]:checked" ).val();
     var seed = $( "#seed" ).val();
 
-    if(!/^[0-9]+$/.test(seed))
+    if(!/^[0-9]+$/.test(seed) && seed.trim() != "-1")
     {
         updateMsg( { status : false,
-                     msg : "Seed must be an integer" } );
+                     msg : "Seed must be an integer (or -1 for random seed)" } );
         return false;
     }
 
@@ -77,6 +94,39 @@ var checkAndGet = function(selectTable)
                      msg : "Threshold must be a valid floating point number" } );
         return false;
     }
+
+    var rTol = $( "#rTol" ).val();
+
+    rTol = parseFloat(rTol);
+
+    if(isNaN(rTol) || rTol <= 0.0)
+    {
+        updateMsg( { status : false,
+                     msg : "Relative tolerance must be a valid floating point number greater than 0.0" } );
+        return false;
+    }
+
+    var aTol = $( "#aTol" ).val();
+
+    aTol = parseFloat(aTol);
+
+    if(isNaN(aTol) || aTol <= 0.0)
+    {
+        updateMsg( { status : false,
+                     msg : "Absolute tolerance must be a valid floating point number greater than 0.0" } );
+        return false;
+    }
+
+    /*var mxSteps = $( "#mxSteps" ).val();
+
+    if(!/^[0-9]+$/.test(mxSteps) || parseInt(mxSteps) <= 0)
+    {
+        updateMsg( { status : false,
+                     msg : "Max steps must be a valid integer greater than 0" } );
+        return false;
+    }
+
+    mxSteps = parseInt(mxSteps);*/
 
     var epsilon = $( "#epsilon" ).val();
 
@@ -119,7 +169,10 @@ var checkAndGet = function(selectTable)
              seed : seed,
              threshold : threshold,
              epsilon : epsilon,
-             selections : selections};
+             selections : selections,
+             aTol : aTol,
+             rTol : rTol,
+             mxSteps : 10000 }; // mxSteps is not actually working yet.
 }
 
 var updateMsg = function(data)
@@ -132,18 +185,177 @@ var updateMsg = function(data)
     $( "#msg" ).show();
 };
 
+
+var display_simulation_conf = function(id){
+            var simTemplate = _.template( $( "#simulationConfTemplate" ).html() );
+
+            $.get( url = "/models/list/" + id,
+                   success = function(data) {
+                       //I suck, but these three lines have to come before the rest of this to work...
+                       var name = data.name;
+                       var units = data.units;
+                  
+                       $( "#simulationConf" ).html(simTemplate({ name : name,
+                                                                 units : units,
+                                                                 isSpatial : data.isSpatial,
+                                                                 datestr : generate_datestr() }));
+
+                       var selectTable = new Sensitivity.SelectTable();
+                       
+                       var model = new stochkit.Model(data);
+                       
+                       model.parse(data);
+                       
+                       selectTable.attach(model);
+
+                       var handle_type = function() {
+                           if( $( "#deterministic" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).show();
+                               $( ".stochastic" ).hide();
+                               $( ".tau-leaping" ).hide();
+                               $( ".ssa" ).hide();
+                               $( ".sensitivity" ).hide();
+                               $( ".ode" ).show();
+                           }
+                           else if($( "#sensitivity" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).hide();
+                               $( ".stochastic" ).hide();
+                               $( ".tau-leaping" ).hide();
+                               $( ".ssa" ).hide();
+                               $( ".ode" ).hide();
+                               $( ".sensitivity" ).show();
+                           }
+                           else if( $( "#stochastic" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).show();
+                               $( ".sensitivity" ).hide();
+                               $( ".ode" ).hide()
+                               handle_algo();
+                               $( ".stochastic" ).show()
+                           }
+                           else if( $( "#spatial" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).show();
+                               $( ".sensitivity" ).hide();
+                               $( ".ode" ).hide()
+                               $( ".stochastic" ).hide()
+                               $( ".tau-leaping" ).hide();
+                               $( ".ssa" ).hide();
+                               //handle_algo();
+                               $( ".spatial" ).show()
+                           }
+                       };
+                       
+                       var handle_algo = function() {
+                           if( $( "#tau-leaping" ).eq(0).prop('checked') )
+                           {
+                               $( ".ssa" ).hide()
+                               $( ".tau-leaping" ).show()
+                           }else{
+                               $( ".tau-leaping" ).hide()
+                               $( ".ssa" ).show()
+                           }
+                       };
+
+                       $( "#sensitivity, #stochastic, #deterministic, #spatial" ).change(handle_type);
+                       $( "#ssa, #tau-leaping" ).change(handle_algo);
+
+                       handle_type();
+
+                       $("#run").click(_.partial(function(selectTable){
+                           var resource_info = $('select[name=resource_picker]').val();
+                           var resource_info_str = resource_info.replace(/'/g, '"');
+                           try{
+                               resource_info = JSON.parse(resource_info_str);
+                           }
+                           catch(err){
+                               resource_info = {}
+                               resource_info['uuid'] = 0
+                           }
+                           var data = checkAndGet(selectTable);
+
+                           if(!data)
+                               return;
+                           var message = "Running on ";
+                           if(resource_info['uuid'] == 0)
+                           {
+                                message += "Local Resources"
+                                data.resource = "local";
+                           }
+                           else if (resource_info['uuid'] == 1){
+                               message += "Cloud"
+                               data.resource = "cloud";
+
+                           }
+                           else if (resource_info['uuid'] == 2){
+                               message += "Molns Cloud"
+                               data.resource = "molns";
+                           }
+                           else
+                           {
+                               message += 'Cluster: ' + resource_info['username'] + "@" + resource_info['ip']
+                               data.resource = "qsub";
+                           }
+                           updateMsg( { status: true,
+                               msg: message });
+
+                           data.id = id;
+                           var url = "";
+                           data.selections = selectTable.state.selections;
+
+                           if(data.execType == "sensitivity")
+                           {
+                               url = "/sensitivity";
+                           }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
+                           }
+                           else
+                           {
+                               url = "/simulate";
+                           }
+                           jobName = data.jobName
+
+                           $.post( url = url,
+                                   data = { reqType : "newJob",
+                                            data : JSON.stringify(data),
+                                            cluster_info: resource_info_str }, //Watch closely...
+                                   success = function(data)
+                                   {
+                                       updateMsg(data);
+                                       if(data.status)
+                                           window.location = '/status?autoforward=1&filter_type=name&filter_value='+jobName;
+                                   },
+                                   dataType = "json" );
+
+                       }, selectTable));
+                       $( "#modelSelect" ).hide();
+                       $( "#simulationConf" ).show();
+                       startup_default_values();
+
+                   },
+                   dataType = "json");
+}
+
+
 var run = function()
 {
+    $( '.mainTable' ).DataTable( { "bLengthChange": false, "bFilter" : false } );
+    $( ':radio:not(:disabled):first' ).click();
+    $( '.mainTable' ).css('border-bottom', '1px solid #ddd');
+    $( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
+
     var id = $.url().param("id");
     var tid = $.url().param("tid");
 
-    if(typeof tid === undefined)
-    {
+    if(typeof tid === undefined){
         tid = 'mean';
     }
 
-    if(id)
-    {
+    if(id){
         $( "#jobInfo" ).show();
         $( "#modelSelect" ).hide();
         $( "#simulationConf" ).hide();
@@ -162,29 +374,38 @@ var run = function()
 
                       if(data.status == "Finished")
                       {
-                          if(data.job.output_location != null)
+                          if(data.job.output_location != null && (data.job.resource.toLowerCase() == 'local' || data.job.resource.toLowerCase() == 'qsub' || data.job.output_stored == "True"))
                           {
                               var plotData = []
 
-                              var selectTemplate = _.template("<option value='<%= name %>'>trajectory <%= name %></option>");
-
-                              for(var i = 0; i < data.job.realizations; i++)
+                              if(data.job.exec_type == "stochastic")
                               {
-                                  $( selectTemplate( { name : i } ) ).appendTo( $( "#trajectorySelect" ))
+                                  $( '#trajectorySelectHide' ).show();
+
+                                  var selectTemplate = _.template("<option value='<%= name %>'>trajectory <%= name %></option>");
+                                  
+                                  for(var i = 0; i < data.job.realizations; i++)
+                                  {
+                                      $( selectTemplate( { name : i } ) ).appendTo( $( "#trajectorySelect" ))
+                                  }
+                                  
+                                  $( "#trajectorySelect" ).val( tid );
+                                  
+                                  $( "#trajectorySelect" ).change( _.partial(function(id) {
+                                      //var text = $(this).text();
+                                      //var hiddenForm = $('<form class="hidden-form" action="something.php" method="post" style="display: none;"><textarea name="id">' + id + '</textarea><textarea name="tid">' + tid + '</textarea></form>').appendTo('body');
+                                      //hiddenForm.submit();
+                                      window.location = window.location.pathname + "?id=" + id + "&tid=" + $(this).val();
+                                  }, id));
                               }
-
-                              $( "#trajectorySelect" ).val( tid );
-
-                              $( "#trajectorySelect" ).change( _.partial(function(id) {
-                                  //var text = $(this).text();
-                                  //var hiddenForm = $('<form class="hidden-form" action="something.php" method="post" style="display: none;"><textarea name="id">' + id + '</textarea><textarea name="tid">' + tid + '</textarea></form>').appendTo('body');
-                                  //hiddenForm.submit();
-                                  window.location = window.location.pathname + "?id=" + id + "&tid=" + $(this).val();
-                              }, id));
+                              else
+                              {
+                                  $( '#trajectorySelectHide' ).hide();
+                              }
 
                               $( "#plotRegion" ).show();
 
-                              $( "#access" ).text( "Access local data" );
+                              $( "#access" ).html( '<i class="icon-download-alt"></i> Access local data' );
                               $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,
                                                msg : "Packing up data... (will forward you to file when ready)" } );
@@ -242,16 +463,23 @@ var run = function()
                                   for(var i = 0; i < pts; i++)
                                   {
                                       var id = Math.floor(mult * i);
-                                      series.push( { x : data.values.time[id + 1], y : data.values.trajectories[specie][id]} );
+                                      series.push( { x : data.values.time[id], y : data.values.trajectories[specie][id]} );
                                   }
 
                                   plotData.push( { label : specie,
                                                    data : series } );
                               }
 
-                              label = data.job.units.charAt(0).toUpperCase() + data.job.units.slice(1)
+                              if(!data.job.units)
+                              {
+                                  label = "";
+                              }
+                              else
+                              {
+                                  label = data.job.units.charAt(0).toUpperCase() + data.job.units.slice(1);
+                              }
 
-                              gplot = Splot.plot( $( "#plot" ), plotData, label);
+                              gplot = Splot.plot( "Species select", $( "#plot" ), plotData, label);
                               //$( "#plotButton" ).click( gplot.getImage );
                           }
                           else
@@ -289,7 +517,7 @@ var run = function()
 
                           if(data.job.output_location != null)
                           {                          
-                              $( "#access" ).text( "Access input data for debugging" );
+                              $( "#access" ).html( '<i class="icon-download-alt"></i> Access input data for debugging' );
                               $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,
                                                msg : "Packing up data... (will forward you to file when ready)" } );
@@ -316,7 +544,7 @@ var run = function()
                           }
                           else
                           {
-                              $( "#access" ).text( "No input data available for debugging" );
+                              $( "#access" ).html( '<i class="icon-download-alt"></i>No input data available for debugging' );
                               $( "#access" ).prop("disabled",true);
                           }
                       }
@@ -328,155 +556,24 @@ var run = function()
                   },
                   dataType : 'json'
                 });
-    }
-    else
-    {
-        $( "#modelSelect" ).show();
-        $( "#simulationConf" ).hide();
-        $( "#jobInfo" ).hide();
+    } else {          
+        var model_id = $.url().param("model_id");
+        if(model_id){
+            $( "#modelSelect" ).hide();
+            $( "#simulationConf" ).show();
+            $( "#jobInfo" ).hide();
+            display_simulation_conf(model_id);
+        }else{
+            $( "#modelSelect" ).show();
+            $( "#simulationConf" ).hide();
+            $( "#jobInfo" ).hide();
 
-        $( "#next" ).click( function() {
-            var values = $( "input:radio[name=model_to_simulate]:checked" ).val().split(" ");
-            var id = parseInt(values[1]);
-            
-            var simTemplate = _.template( $( "#simulationConfTemplate" ).html() );
-
-            $.get( url = "/models/list/" + id,
-                   success = function(data) {
-                       //I suck, but these three lines have to come before the rest of this to work...
-                       var name = data.name;
-                       var units = data.units;
-
-                       $( "#simulationConf" ).html(simTemplate({ name : name,
-                                                                 units : units }));
-
-                       var selectTable = new Sensitivity.SelectTable();
-                       
-                       var model = new stochkit.Model(data);
-                       
-                       model.parse(data);
-                       
-                       selectTable.attach(model);
-
-                       var handle_type = function() {
-                           if( $( "#deterministic" )[0].checked )
-                           {
-                               $( ".advanced-settings" ).hide();
-                               $( ".stochastic" ).hide();
-                               $( ".tau-leaping" ).hide();
-                               $( ".ssa" ).hide();
-                               $( ".sensitivity" ).hide();
-                               $( ".ode" ).show();
-                           }
-                           else if($( "#sensitivity" )[0].checked)
-                           {
-                               $( ".advanced-settings" ).hide();
-                               $( ".stochastic" ).hide();
-                               $( ".tau-leaping" ).hide();
-                               $( ".ssa" ).hide();
-                               $( ".ode" ).hide();
-                               $( ".sensitivity" ).show();
-                           }
-                           else if( $( "#stochastic" )[0].checked )
-                           {
-                               $( ".advanced-settings" ).show();
-                               $( ".sensitivity" ).hide();
-                               $( ".ode" ).hide()
-                               handle_algo();
-                               $( ".stochastic" ).show()
-                           }
-                       };
-                       
-                       var handle_algo = function() {
-                           if( $( "#tau-leaping" )[0].checked )
-                           {
-                               $( ".ssa" ).hide()
-                               $( ".tau-leaping" ).show()
-                           }else{
-                               $( ".tau-leaping" ).hide()
-                               $( ".ssa" ).show()
-                           }
-                       };
-
-                       $( "#sensitivity, #stochastic, #deterministic" ).change(handle_type);
-                       $( "#ssa, #tau-leaping" ).change(handle_algo);
-
-                       handle_type();
-
-                       $( "#runLocal" ).click( _.partial(function(selectTable) {
-                           updateMsg( { status: true,
-                                        msg: "Running job locally..." } );
-                           var data = checkAndGet(selectTable);
-                           
-                           if(!data)
-                               return;
-
-                           data.id = id;
-                           data.resource = "local";
-
-                           var url = "";
-                           
-                           if(data.execType == "sensitivity")
-                           {
-                               url = "/sensitivity";
-                           }
-                           else
-                           {
-                               url = "/simulate";
-                           }
-
-                           $.post( url = url,
-                                   data = { reqType : "newJob",
-                                            data : JSON.stringify(data) }, //Watch closely...
-                                   success = function(data)
-                                   {
-                                       updateMsg(data);
-                                       if(data.status)
-                                           window.location = '/status';
-                                   },
-                                   dataType = "json" );
-                       }, selectTable));
-
-                       $( "#runCloud" ).click( _.partial( function(selectTable) {
-                           updateMsg( { status: true,
-                                        msg: "Running job in cloud..." } );
-                           var data = checkAndGet(selectTable);
-
-                           if(!data)
-                               return;
-
-                           data.id = id;
-                           data.resource = "cloud";
-
-                           var url = "";
-
-                           data.selections = selectTable.state.selections;
-
-                           if(data.execType == "sensitivity")
-                           {
-                               url = "/sensitivity";
-                           }
-                           else
-                           {
-                               url = "/simulate";
-                           }
-
-                           $.post( url = url,
-                                   data = { reqType : "newJob",
-                                            data : JSON.stringify(data) }, //Watch closely...
-                                   success = function(data)
-                                   {
-                                       updateMsg(data);
-                                       if(data.status)
-                                           window.location = '/status';
-                                   },
-                                   dataType = "json" );
-                       }, selectTable));
-
-                       $( "#modelSelect" ).hide();
-                       $( "#simulationConf" ).show();
-                   },
-                   dataType = "json");
-        } );
+            $( "#next" ).click( function() {
+                var values = $( "input:radio[name=model_to_simulate]:checked" ).val().split(" ");
+                var model_id = parseInt(values[1]);
+                display_simulation_conf(model_id);
+                
+                });
+        }
     }
 }

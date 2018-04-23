@@ -35,6 +35,11 @@ if len(config) == 1:
 else:
    STOCHKIT_ODE = config[1]
 
+if len(config) == 2:
+   STOCHOPTIM=''
+else:
+   STOCHOPTIM = config[2]
+
 # If a configuration variable is not set, try to set it from system environment variables
 if STOCHKIT_HOME=='':
    try:
@@ -48,6 +53,12 @@ if STOCHKIT_ODE=='':
    except:
       pass
 
+if STOCHOPTIM=='':
+   try:
+      STOCHOPTIM=os.environ['STOCHOPTIM']
+   except:
+      pass
+
 try:
     config_file=os.path.join(os.path.dirname(__file__),'../app/conf/app_config.py')
     fh = open(config_file,'w')
@@ -58,6 +69,8 @@ try:
         fh.write("app_config['STOCHKIT_HOME']="+"'"+STOCHKIT_HOME+"'"+os.linesep)
     if STOCHKIT_ODE is not '':
         fh.write("app_config['STOCHKIT_ODE']="+"'"+STOCHKIT_ODE+"'"+os.linesep)
+    if STOCHOPTIM is not '':
+        fh.write("app_config['STOCHOPTIM']="+"'"+STOCHOPTIM+"'"+os.linesep)
     
     fh.close()
 except:

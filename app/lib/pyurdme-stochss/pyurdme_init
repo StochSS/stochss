@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Initalize pyurdme. Set PYURMDEHOME and PYTHONPATH
+if [ "$0"="-bash" -o "$0"="bash" ];then
+    #echo "this file is being sourced"
+    EXE_FILE="${BASH_SOURCE[0]}";
+else
+    EXE_FILE=$0
+fi
+#echo "EXE_FILE = $EXE_FILE"
+##############
+if [ -L "$EXE_FILE" ]; then
+  MY_PATH=$(cd $(dirname $(readlink $EXE_FILE)); pwd)
+else
+  MY_PATH=$(cd $(dirname $EXE_FILE); pwd)
+fi
+export PYURDMEHOME=$MY_PATH
+export PYTHONPATH="$PYURDMEHOME:$PYTHONPATH"
+export C_INCLUDE_PATH=/usr/lib/openmpi/include
+export C_INCLUDE_PATH=/usr/lib/openmpi/include
+export INSTANT_SYSTEM_CALL_METHOD=SUBPROCESS
+

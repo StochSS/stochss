@@ -55,11 +55,14 @@ class ParameterEditorPage(BaseHandler):
         Get all the parameters belonging to the currently edited model.
         This model must be in cache.
         """
-        model = self.get_model_edited()
+        full_model = self.get_model_edited_full()
+
+        #model = self.get_model_edited()
+        model = full_model.model
         if model is None:
             return None
 
-        return {'all_parameters': model.getAllParameters()}
+        return {'all_parameters': model.getAllParameters(), 'isSpatial' : full_model.isSpatial}
 
     def delete_parameter(self):
         """
@@ -248,7 +251,7 @@ class ParameterEditorPage(BaseHandler):
             logging.debug('Expression %s for parameter %s added to queue', eval_parameter.expression, eval_parameter.name)
             return False
 
-    def get_model_edited(self):
+    def get_model_edited_full(self):
         model_edited = self.get_session_property('model_edited')
 
         if model_edited == None:
@@ -256,7 +259,10 @@ class ParameterEditorPage(BaseHandler):
 
         db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
 
-        return db_model.model
+        return db_model
+
+    def get_model_edited(self):
+        return self.get_model_edited_full().model
 
     def set_model_edited(self, model):
         db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model.name).get()

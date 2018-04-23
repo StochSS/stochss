@@ -9,12 +9,26 @@ import threading
 import urllib2
 import webbrowser
 import uuid
+import socket
 
-source_exec = sys.argv[1]
-
+open_browser = sys.argv[2]
 mac = False
-if len(sys.argv) == 3:
+if 'mac' in sys.argv:
     mac = True
+
+host_ip = "localhost"
+
+try:
+    admin_token = sys.argv[3]
+except IndexError:
+    print("Admin token not received. Will generate one.")
+
+try:
+    host_ip = sys.argv[4]
+    if host_ip == "0":
+        host_ip = "localhost"
+except IndexError:
+    host_ip = "localhost"
 
 path = os.path.abspath(os.path.dirname(__file__))
 
@@ -28,44 +42,6 @@ try:
 except:
     pass
 
-if os.path.isfile('app/update'):
-    if mac:
-        print "<h2>Updating application now</h2><br />"
-    else:
-        sys.stdout.write('Updating application now...')
-    sys.stdout.flush()
-    
-    h = subprocess.Popen('git stash'.split())
-    h.communicate()
-    if h.returncode != 0:
-        os.remove('app/update')
-        print "Error in updating, exiting"
-        if mac:
-            print "<br />"
-        sys.stdout.flush()
-        exit(-1)
-        
-    h = subprocess.Popen('git pull'.split())
-    h.communicate()
-    if h.returncode != 0:
-        os.remove('app/update')
-        print "Error in updating, exiting"
-        if mac:
-            print "<br />"
-        sys.stdout.flush()
-        exit(-1)
-
-    #print "Success"
-    print "Done updating, relaunching {0}...".format(source_exec)
-    if mac:
-        print "<br />"
-    os.remove('app/update')
-
-    sys.stderr.flush()
-    sys.stdout.flush()
-
-    os.execl(source_exec, source_exec)
-
 if mac:
     print "<h2>Running StochSS Server</h2><br />"
 else:
@@ -73,7 +49,7 @@ else:
 
 req = None
 try:
-    req = urllib2.urlopen("http://localhost:8080/")
+    req = urllib2.urlopen("http://{0}:8080/".format(host_ip))
 except:
     pass
 
@@ -82,46 +58,98 @@ if req:
         if mac:
             print "<font color=red>"
 
-        print "There seems to be another webserver already running on localhost:8080"
-        
+        print "There seems to be another webserver already running on {0}:8080".format(host_ip)
+
         if mac:
             print "</font><br />"
 
         exit(-1)
 
-h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
 h.communicate()
+
+proc = {}
 
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
 
-# Deploy the app on localhost
-#print path
+# Deploy the app on host_ip
+# print path
 def startserver():
-    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(path)).split(), stdout = stdout, stderr = stderr)
+    import sys
+    print "#"*80
+    print "#"*80
+    print sys.argv
+    print "#"*80
+    print "#"*80
+    if '--debug' in sys.argv:
+        print "Debug = Yes"
 
-startserver()
+    print "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)
+        
+    if 'debug' in sys.argv:
+        return subprocess.Popen((
+                         "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(path, host_ip)).split(), stdout=stdout, stderr=stderr)
+    else:
+        return subprocess.Popen((
+                         "python " + path + "/sdk/python/dev_appserver.py --host={1} --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(
+                             path, host_ip)).split(), stdout=stdout, stderr=stderr)
 
-print "Starting admin server at: http://localhost:8000"
-if mac:
-    print "<br />"
-sys.stdout.flush()
+def startjupyternotebook():
+     return subprocess.Popen((
+        "jupyter notebook --NotebookApp.open_browser=False --ip={1} --port=9999 --config={0}/jupyter_profile/jupyter.config".format(path, host_ip)).split(),         
+        stdout=stdout, stderr=stderr, preexec_fn=os.setsid)
 
-def clean_up_and_exit(signal, stack):
-    print "Killing webserver proces..."
+def clean_up_and_exit(in_signal, stack):
+    print "Killing webserver process..."
     if mac:
-        print "<br /></body></html>"
+        print "<br />"
     sys.stdout.flush()
 
     try:
-        h.terminate()
+        proc['server'].terminate()
     except:
         pass
+
+    try:
+        print "Killing jupyter notebook process [pid={0}]...".format(proc['jupyternotebook'].pid)
+        if mac:
+            print "<br /></body></html>"
+        sys.stdout.flush()
+        pgrp = os.getpgid(proc['jupyternotebook'].pid)
+        os.killpg(pgrp, signal.SIGINT)
+        time.sleep(0.1)
+        os.killpg(pgrp, signal.SIGTERM)
+    except Exception as e:
+        print "Failed to kill notebook: {0}".format(e)
+       
 
     if signal == None:
         exit(0)
     else:
         exit(-1)
+
+
+#print "Starting admin server at: http://{0}:8000".format(host_ip)
+print "Starting server at: http://{0}:8080".format(host_ip)
+if mac:
+    print "<br />"
+try:
+    proc['server'] = startserver()
+except Exception as e:
+    print "Error starting server: {0}".format(e)
+    sys.exit(1)
+sys.stdout.flush()
+
+print "Starting jupyter notebook server at: http://{0}:9999".format(host_ip)
+if mac:
+    print "<br />"
+try:
+    proc['jupyternotebook'] = startjupyternotebook()
+except Exception as e:
+    print "Error startring jupyter notebook: {0}".format(e)
+sys.stdout.flush()
 
 signal.signal(signal.SIGHUP, clean_up_and_exit)
 signal.signal(signal.SIGINT, clean_up_and_exit)
@@ -134,15 +162,16 @@ signal.signal(signal.SIGFPE, clean_up_and_exit)
 serverUp = False
 for tryy in range(0, 20):
     try:
-        req = urllib2.urlopen("http://localhost:8080/login")
+        req = urllib2.urlopen("http://{0}:8080/login".format(host_ip))
     # This was a hack in place to get around issue that arose from allowing
-    #  users accessing the app from localhost to not have to login.
+    #  users accessing the app from host_ip to not have to login.
     # except urllib2.HTTPError as e:
     #     req = None
     #     if e.code == 302 and e.reason.endswith('Found'):
     #         serverUp = True
     #         break
-    except Exception:
+    except Exception as e:
+        print "{0}".format(e)
         req = None
 
     if req:
@@ -158,24 +187,24 @@ for tryy in range(0, 20):
                 if mac:
                     print "<font color=red>"
 
-                print "There seems to be another webserver already running on localhost:8080"
+                print "There seems to be another webserver already running on {0}:8080".format(host_ip)
 
                 if mac:
                     print "</font><br />"
 
                 sys.stdout.flush()
                 serverUp = False
-            break;
+            break
         else:
             ret = h.poll()
-        
-        # Sometimes the server fails to start for weird reason, make sure it keeps trying to start
+
+            # Sometimes the server fails to start for weird reason, make sure it keeps trying to start
             if ret is not None:
                 if ret != 0:
                     startserver()
-                
+
     time.sleep(2)
-    print "Checking if launched -- try " + str(tryy + 1) +" of 20"
+    print "Checking if launched -- try " + str(tryy + 1) + " of 20"
     if mac:
         print "<br />"
     sys.stdout.flush()
@@ -183,17 +212,25 @@ for tryy in range(0, 20):
 ###print serverUp
 
 if serverUp:
-    # Create an admin token
-    admin_token = uuid.uuid4()
-    generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
-    os.system(generate_admin_token_command)
-    stochss_url = 'http://localhost:8080/login?secret_key={0}'.format(admin_token)
-    # Open web browser
+    # Set up admin token
+    if admin_token == "not_set":
+        admin_token = uuid.uuid4()
+        generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
+        os.system(generate_admin_token_command)
+    else:
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/handlers/admin_uuid.txt'), 'w') as file:
+                file.write(str(admin_token))
+        except Exception as e:
+            print " File write error: cannot create admin token {0}".format(str(e))
 
-    if mac:
+    stochss_url = 'http://{1}:8080/login?secret_key={0}'.format(admin_token, host_ip)
+    # Open web browserterminal
+
+    if mac and open_browser == "true":
         wbrowser = subprocess.Popen('open {0}'.format(stochss_url).split())
         wbrowser.communicate()
-    else:
+    elif open_browser == "true":
         webbrowser.open_new(stochss_url)
 
     if mac:
@@ -205,7 +242,7 @@ if serverUp:
     sys.stdout.flush()
 
     try:
-        print "Navigate to {0} to access StochSS".format(stochss_url)
+        print "Navigate to http://{1}:8080/login?secret_key={0} to access StochSS".format(admin_token, host_ip)
         if mac:
             print "<br />"
 

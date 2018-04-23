@@ -29,6 +29,7 @@
                         </td>-->
                     </tr>
                 </table>
+		<button class="selectAll">Select All</button><button class="clearAll">Clear All</button>
 
                 <br />
                 Simulation time
@@ -55,27 +56,37 @@
 
 {% block jscontent %}
 <script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/js/underscore_natural_sort.js"></script>
 <script type="text/javascript" src = "/static/utils.js"></script>
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
-<link rel="stylesheet" href="/static/css/nv.d3.css">
+<link rel="stylesheet" href="/static/css/nv.d3.min.css">
 
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>
-<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
-<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
-<script type="text/javascript" src = "/static/sensitivity.js"></script>
-<script type="text/javascript" src = "/static/sensitivityMain.js"></script>
+<script type="text/javascript" src = "/static/js/d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/sensitivity.js"></script>
+<script type="text/javascript" src = "/static/js/sensitivityMain.js"></script>
+<script type="text/javascript" src="static/js/status.js"></script>
+
 
 <script id="jobInfoTemplate" type="text/template">
+	<ol class="breadcrumb">
+  		<li><a href="/status">Job Status</a></li>
+  		<li class="active"><%= jobName %></a></li>
+	</ol>
     <h2> Job summary: <span style="COLOR:green;"><%= jobName %></span></h2>
     <br />
     <div class="well">                    
         <h3>Metadata</h3>
         <p class="thispage">
-            Resource: <%= jobName %>
+            Resource: <%= resource %>
             <br />
+            Simulation status: <%= status %>
+            <br />
+            Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
         </p>
     </div>
 
@@ -86,17 +97,45 @@
     </div>
 
     <div id="error"></div>
-                        
-    <br />
 
     <div id="msg"></div>
     
-    <br />
     <div class="well">
-      <h3>Output</h3>
-      <br />
-      <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Output Data</button>
+        <h3>Output</h3>
+        <br />    
+        <% if(outData != null) { %>
+            <form method=post action="" target="_blank"  onsubmit="document.getElementById('notebook_hostname').value = window.location.hostname;"><input type=hidden name="reqType" value="redirectJupyterNotebook"><input type="hidden" id="notebook_hostname" name="hostname" value=""><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Jupyter Notebook</button></form>
+        <% } %>
+
+        <% if (resource == "local" || output_stored == "True"){ %>
+     		<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Output Data</button>
+    	<% } %>
+    	
+    	<% if (resource == "flex-cloud" || resource == "ec2-cloud") { %>
+    		<% if(output_stored == "True"){ %>
+    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=sensitivity&uuid=<%= uuid %>', 'delete', '/sensitivity?id=<%=id%>');"> Delete Output</button>
+    		<% }else{ %>
+    		<p>No output stored.</p>
+    		<% } %>		
+    	<% } %>
     </div>
+
+    <% if (status != "Failed" && (resource == "ec2-cloud")){ %>
+    <div class="well">
+        <h3>Reproduction and Cost Analysis</h3>
+        <br />
+    	<% if (resource == "ec2-cloud") { %>
+    		<% if(output_stored != "True"){ %>
+		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=sensitivity&uuid=<%= uuid %>', 'rerun', '/status');"> Reproduce Results</button>    		
+    		<% } %>
+    		
+    		<button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=sensitivity&id=<%= id %>';"> Cost Analysis</button>
+
+		<% } else if (resource == "flex-cloud") { %>
+        <p>Flex Cloud job. No reproduction and cost analysis available</p>
+    	<% } %>    	
+    </div>
+    <% } %>    	
 
 </script>
 {% endblock %}

@@ -3,13 +3,58 @@
 {% block content %}
 
 
+<script type="text/javascript">
+<!--
+    function show_reg_form() {
+        document.getElementById('registration_link').style.display = 'none';
+        var e = document.getElementById('registration_form');
+        e.innerHTML = '<iframe src="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true" width="700" height="800" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>';
+        e.style.display = 'block';
+    }
+    /**
+     * Set the local time offset to display time values in the users local time
+     */
+    function setTimeOffset() {
+        // Create all the dates necessary
+        var now = later = new Date();
+        // Set time for how long the cookie should be saved - 1 year
+        later.setTime(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+        var off = now.getTimezoneOffset() / 60;
+        document.cookie ='time_zone_utc_offset='+off+'; expires='+ later +'; path=/';
+        var tz = now.toLocaleString('en-US', {timeZoneName :'short'}).split(" ").reverse()[0];
+        document.cookie ='time_zone_name='+tz+'; expires='+ later +'; path=/';
+    }
+
+    // Trigger the time offset cookie creation
+    setTimeOffset();
+//-->
+</script>
+
 <div class="span9">
     
     <div class="page-header">
         <h1> Welcome to StochSS <small>Stochastic Simulation Service</small></h1>
     </div>
     <div class="hero-unit">
-        <p>Welcome to StochSS! To get started, head over to the <a href="/modeleditor" style="font-size: 20px;">Model Editor</a> and create new deterministic or well-mixed stochastic models for simulation. Or, if time is short, feel free to try out a model in the <a href="/modeleditor/import/publiclibrary" style="font-size:20px;">Example Library</a>.
+    <div class="jumbotron">
+        <div id="registration_form" style="display: none">
+        </div>
+        <div id="registration_link" style="display: block">
+        <p><a href="#" onclick="show_reg_form();" style="font-size: 20px;"><B>Click here to Register StochSS</B></a> 
+        StochSS is open-source software.  To obtain continued funding for sustained
+        development, we must show that StochSS is making an impact in the scientific
+        community.  For this, we need to know who is using the software, and a bit
+        about what they are using it for.  Please consider registering StochSS to show your
+        support.
+        </p>
+        </div>
+
+    </div>
+    <hr>
+   
+    {{ stochss_news|safe }}
+    
+        <p>Welcome to StochSS! To get started, head over to the <a href="/modeleditor" style="font-size: 20px;">Model Editor</a> and create new deterministic or well-mixed stochastic models for simulation. Or, if time is short, feel free to try out a model in the <a href="/publicLibrary" style="font-size:20px;">Example Library</a>.
         
             Once you have defined your model, go to the <a style="font-size: 20px;" href="/simulate" >Simulation Manager</a> to perform your experiments, and then to the <a style="font-size: 20px;" href="/status" >Status Page</a> to view the output.
         </p>
@@ -23,7 +68,7 @@
         </p>
         </br>
         <p>
-            For more information, consult the <a href="https://docs.google.com/document/d/1otYWuz30Tl64LXJ5QykX5Ib-acl2UbcyDTXTnm0DOnc/edit" target=_blank">User's Manual</a>. Also, make sure to join the <a href="https://groups.google.com/forum/?fromgroups#!forum/stochss-users">StochSS Users Google group</a> to receive information about updates and to ask questions.
+            For more information, consult the <a href="http://www.stochss.org/?page_id=476" target=_blank>StochSS Documentation</a>. Also, make sure to join the <a href="https://groups.google.com/forum/?fromgroups#!forum/stochss-users" target="_blank">StochSS Users Google group</a> to receive information about updates and to ask questions.
         </p>
         
     </div>
@@ -31,4 +76,8 @@
     
     
 </div><!--/span-->
+{% endblock %}
+{% block jscontent %}
+<script type="text/javascript" src="/static/js/jquery-1.8.3.js"></script>
+<script type="text/javascript" src="/static/js/mainPage.js"></script>
 {% endblock %}

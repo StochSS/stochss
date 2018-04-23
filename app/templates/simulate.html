@@ -1,25 +1,51 @@
 {% extends "base.html" %}
-{% block title%}Manage Simulations{% endblock %}
+{% block title%}Simulate{% endblock %}
 
 {% block content %}
 <div class="span9">
     <div class="row-fluid">
-        <div id="modelSelect">
+        <div style="display : none;" id="modelSelect">
+            <h1>Simulation Manager</h1>
+            <br>
             <div class="well">
                 {% if all_models %}
                 <h3> Select model to simulate </h3>
                 <br />
-                {% for item in all_models %}
-                <label class="radio">
-                    <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />{{ item.name }}
-                    <br />
-                </label>
-                {% endfor %}
+                <table class="table table-striped table-bordered mainTable">
+                    <thead>
+                        <tr>
+                            <th width="25px"></th>
+                            <th width="200px">Name</th>
+                            <th>Properties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in all_models %}
+                        <tr>
+                            <td>
+                                <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" />
+                            </td>
+                            <td>
+                                {{ item.name }}
+                            </td>
+                            <td>
+			        {% if item.units == "concentration" and not item.isSpatial %}
+			        Concentration, non-spatial
+			        {% elif item.units == "population" and not item.isSpatial %}
+			        Population, non-spatial
+			        {% elif item.units == "population" and item.isSpatial %}
+			        Population, spatial
+			        {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 <br />
                 <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
                 {% else %}
-                <h2>There are no models in the system</h2><br />
-                <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
+                <h2>There are no models in the system.</h2><br />
+                <a style="font-size:18px;" href="/modeleditor"> Create a new model </a>
                 {% endif %}
             </div>
         </div>
@@ -27,7 +53,7 @@
         <div style="display : none;" id="simulationConf">
         </div>
 
-        <div style="display : none;" id="jobInfo">
+        <div id="jobInfo">
             Downloading data to browser...
         </div>
     </div>
@@ -38,22 +64,27 @@
 
 {% block jscontent %}
 <script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/js/underscore_natural_sort.js"></script>
 <script type="text/javascript" src = "/static/utils.js"></script>
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
-<link rel="stylesheet" href="/static/css/nv.d3.css">
+<link href="/static/css/nv.d3.min.css" rel="stylesheet" type="text/css">
+
+<link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
 
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>
-<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
-<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
-<script type="text/javascript" src = "/static/sensitivity.js"></script>
+<script type="text/javascript" src = "/static/js/d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.min.js"></script>
+<script type="text/javascript" src = "/static/js/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <script type="text/javascript" src = "/static/js/simulate.js"></script>
 
 <script id="simulationConfTemplate" type="text/template">
     <div class="well well-large">
+        <% if(!isSpatial) { %>
         <h2> <a data-toggle="modal" href="#help_modal1" style="text-decoration: none">New StochKit2 Ensemble <i class="icon-question-sign"></i> </a>
             
             {% set help_modal_id = "help_modal1" %}
@@ -63,27 +94,42 @@
             {{help_modal|safe}}
             
         </h2>
+        <% } else { %> 
+        <h2> <a data-toggle="modal" href="#help_modal2" style="text-decoration: none">New PyURDME Ensemble <i class="icon-question-sign"></i> </a>
+            
+            {% set help_modal_id = "help_modal2" %}
+            {% set help_modal_title = "PyURDME Ensemble" %}
+            {% set help_modal_message = "A PyURDME Ensemble is a collection of trajectories, or realizations, of a given spatial model. Since the model is stochastic, each trajectory represents an independent sample of the model for the given parameters." %}
+            {% include "help_modal.html" %}
+            {{help_modal|safe}}
+        </h2>
+        <% } %>
 
         Model Name: <h2><%= name %></h2>
         Units: <h3><%= units %></h3>
+        Type: <h3><% if(isSpatial) { %>Spatial<% } else { %>Well-mixed<% } %></h3>
         <hr />
         <label>Name:</label>
-        <input type="text" class="span3" id="jobName" value="<%= name %>_job" />
+        <input type="text" class="span3" id="jobName" value="<%= name %>_job_<%= datestr %>" />
         
         <span class="help-block">This name will be used to reference the ensemble.</span>
         <br />
-        <br />
         Simulation type
         <br />
+        <% if(!isSpatial) { %>
         <% if(units == "concentration") { %>
-        <input id="deterministic" type="radio" name="exec_type" value="deterministic" checked> Deterministic <br />
-        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
+        <input save-default-values id="deterministic" type="radio" name="exec_type" value="deterministic" checked> Deterministic <br />
+      
+        <input save-default-values id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
         <% } else if (units == "population") { %>
-        <input id="deterministic" type="radio" name="exec_type" value="deterministic"> Deterministic
+        <input save-default-values id="deterministic" type="radio" name="exec_type" value="deterministic"> Deterministic
         <br />
-        <input id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
+        <input save-default-values id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
         <br />
-        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
+        <input save-default-values id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
+        <% } %>
+        <% } else { %>
+        <input id="spatial" type="radio" name="exec_type" value="spatial" checked> Spatial <br />
         <% } %>
         <hr />
 
@@ -92,6 +138,10 @@
             <br />
             <div id="parameterContainer">
             </div>
+	    <div class="btn-group">
+		<button class="btn btn-small selectAll">Select All</button>
+		<button class="btn btn-small clearAll">Clear All</button>
+	    </div>
         </div>
 
         <!--<table id="selectTable2" class="sensitivity" border=1 width="50%">
@@ -117,14 +167,14 @@
         <br />
         <input type="text" class="input-small" disabled="disabled" value="0">
         &nbsp; to &nbsp;
-        <input type="text" class="input-small" id="time" value="100">
+        <input save-default-values type="text" class="input-small" id="time" value="100">
         &nbsp; store state every &nbsp;
-        <input type="text" class="input-small" id="increment" value="0.1"> &nbsp; time units.
+        <input save-default-values type="text" class="input-small" id="increment" value="1.0"> &nbsp; time units.
         
-        <span class="stochastic">
+        <span class="stochastic spatial">
             <br />
             <label>Realizations</label>
-            <input type="text" class="span3" id="realizations" value="10">
+            <input save-default-values type="text" class="span3" id="realizations" value="1">
             <span class="help-block">Number of realizations in this ensemble.</span>
         </span>
         <br />
@@ -137,26 +187,47 @@
         </h3>
         
         <div id="advanced-settings" class="collapse advanced-settings">
-            <div class="stochastic">
-                Algorithm<br />
-                SSA <input id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
-                Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tauLeaping">
+            <div class="stochastic spatial">
+                <B>Algorithm:</B><br />
+                <% if(!isSpatial) { %>
+                SSA <input save-default-values id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
+                Tau-leaping <input save-default-values id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
+                <% } else { %>
+                Next Subvolume Method <input save-default-values id="nsm" type="radio" name="algorithm" value="nsm" checked><br />
+                <% } %>
             </div>
 
-            <label class="tau-leaping ssa">Seed
-                <input type="text" class="span3" id="seed" value="0">
-                <span class="help-block">Seed the random number generator (leave empty for a random seed).</span>
+            <br>
+
+            <label class="tau-leaping ssa spatial">Seed
+                <input save-default-values type="text" class="span3" id="seed" value="-1">
+                <span class="help-block">Seed the random number generator (set to -1 for a random seed).</span>
             </label>
             
             <label class="tau-leaping">Threshold
-                <input type="text" class="span3" id="threshold" value="10">
+                <input save-default-values type="text" class="span3" id="threshold" value="10">
                 <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
             </label>
             
             <label class="tau-leaping">Epsilon
-                <input type="text" class="span3" id="epsilon" value="0.01">
+                <input save-default-values type="text" class="span3" id="epsilon" value="0.01">
                 <span class="help-block tau-leaping">Set the tolerance. Valid values: must be greater than 0.0 and less than 1.0.</span>
             </label>
+            
+            <label class="ode">Relative tolerance
+                <input save-default-values type="text" class="span3" id="rTol" value="1e-6">
+                <span class="help-block">Relative tolerance of the ODE solver (CVODES). Valid values: must be greater than 0.0.</span>
+            </label>
+            
+            <label class="ode">Absolute tolerance
+                <input save-default-values type="text" class="span3" id="aTol" value="1e-9">
+                <span class="help-block">Absolute tolerance of the ODE solver (CVODES). Valid values: must be greater than 0.0.</span>
+            </label>
+            
+            <!--<label class="ode">Max time steps
+                <input type="text" class="span3" id="mxSteps" value="10000">
+                <span class="help-block">Set the maximum number of timesteps the solver can take (this is different than the number of points the solver produces output). Valid values: must be greater than 0.</span>
+            </label>-->
         </div> <!-- Advanced settings -->
         
         <!-- Display status messages -->
@@ -165,9 +236,26 @@
         <br>
         <br>
 
-        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
-        <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>
-        
+        <!---->
+        <!--<button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>-->
+        <!--<button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>-->
+        <!--<button id="runMolns" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Molns Cloud</button>-->
+        <button id="run" type="submit" class="btn btn-primary btn-large"><i class="icon-play"></i> Run </button>
+        <br>
+        <br>
+
+          <label for="resource_picker"><h4>Choose a compute resource: </h4></label>
+          <select name="resource_picker" id="resource_picker" class="selectpicker">
+            {% for resource in resources %}
+                <option 
+                {% if resource.uuid == selected %} selected="selected" {% endif %}
+                value="{{ resource.json }}"
+                {% if resource.disabled %}disabled{%endif%}
+                >
+                {{resource.name}}
+                </option>
+            {% endfor %}
+          </select>
         <!-- Prevent Submission on pressing enter -->
         <!--<script>
             document.getElementById('submit_stochkit_ensemble').addEventListener('keypress', function(event) {
@@ -180,25 +268,35 @@
 </script>
 
 <script type="text/template" id="jobInfoTemplate">
+	<ol class="breadcrumb">
+  		<li><a href="/status">Job Status</a></li>
+  		<li class="active"><%= name %></a></li>
+	</ol>
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <br />
     <div class="well">                    
         <h3>Metadata</h3>
         <p class="thispage">
-            Resource: <%= type %>
+            Resource: <%= resource %>
             <br />
-            Simulation endtime: <%= final_time %>
-            <!--<button id="plotButton">button</button>-->
+            Simulation status: <%= status %>
             <br />
-            Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>
+            Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+            <!--Resource: <%= type %>
+                    <br />
+                    Simulation endtime: <%= final_time %>
+                    <br />
+                    Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>-->
         </p>
     </div>
 
     <div id="plotRegion">
-        Plot
-        <select id="trajectorySelect">
-            <option value="mean">the mean</option>
-        </select>.
+        <div id="trajectorySelectHide">
+            Plot
+            <select id="trajectorySelect">
+                <option value="mean">the mean</option>
+            </select>.
+        </div>
 
         <div id="interpolateWarning" class="alert alert-block alert-info">Note: The lines on this graph have been downsampled and interpolated to improve rendering performance.</div>
         <div id="plot"></div>
@@ -207,15 +305,47 @@
     <div id="error">
     </div>
       
-    <br />
-      
     <div id="msg"></div>
-    <br />
+    
     
     <div class="well">
         <h3>Output</h3>
         <br />
-        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+        <% if(output_location != null) { %>
+            <form method=post action="" target="_blank" onsubmit="document.getElementById('notebook_hostname').value = window.location.hostname;"><input type=hidden name="reqType" value="redirectJupyterNotebook"><input type="hidden" id="notebook_hostname" name="hostname" value=""><button id="accessNotebook" type="submit" class="btn btn-primary btn-large"><i class="fa fa-code" aria-hidden="true"></i>Analyze using interactive Jupyter Notebook</button></form>
+        <% } %>
+
+        <% if (resource == "local" || output_stored == "True"){ %>
+        	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+    	<% } %>
+    	
+    	<% if (resource == "flex-cloud" || resource == "ec2-cloud") { %>
+    		<% if(output_stored == "True"){ %>
+    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid=<%= cloudDatabaseID %>', 'delete', '/simulate?id=<%=id%>');"> Delete Output</button>
+    		<% }else{ %>
+    		<p>No output stored.</p>
+    		<% } %>		
+    	<% } %>
     </div>
+
+    <% if(status != "Failed" && (resource == "ec2-cloud")) { %>
+    <div class="well">
+        <h3>Reproduction and Cost Analysis</h3>
+        <br />
+    	<% if (resource == "ec2-cloud") { %>
+    		<% if(output_stored != "True"){ %>
+		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= cloudDatabaseID %>', 'rerun', '/status');"> Reproduce Results</button>
+    		<% } %>
+
+    		 <button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=stochkit&id=<%= id %>';"> Cost Analysis</button>
+
+
+    	<% } else if (resource == "flex-cloud") { %>
+            <p>Flex Cloud job. No reproduction and cost analysis available</p>
+        <% } %>
+    </div>
+    <% } %>
+        
 </script>
+
 {% endblock %}

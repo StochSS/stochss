@@ -150,10 +150,6 @@ class ConfigDefaults(object):
   CHANNEL_CREATE_COST = _to_micropennies_per_op(1, 100)
 
 
-
-  CHANNEL_PRESENCE_COST = _to_micropennies_per_op(10, 100000)
-
-
   XMPP_STANZA_COST = _to_micropennies_per_op(10, 100000)
 
 
@@ -349,8 +345,8 @@ class Recorder(object):
     if config.DATASTORE_DETAILS:
       details = trace.mutable_datastore_details()
       for key in response.key_list():
-        newent = details.add_keys_written()
-        newent.CopyFrom(key)
+        detail = details.add_keys_written()
+        detail.CopyFrom(key)
     if config.CALC_RPC_COSTS:
       writes = response.cost().entity_writes() + response.cost().index_writes()
       trace.set_call_cost_microdollars(writes * config.DATASTORE_WRITE_OP_COST)
@@ -400,8 +396,8 @@ class Recorder(object):
     if config.DATASTORE_DETAILS:
       details = trace.mutable_datastore_details()
       for key in request.key_list():
-        newent = details.add_keys_read()
-        newent.CopyFrom(key)
+        detail = details.add_keys_read()
+        detail.CopyFrom(key)
       for entity_present in response.entity_list():
         details.add_get_successful_fetch(entity_present.has_entity())
     if config.CALC_RPC_COSTS:
@@ -437,12 +433,12 @@ class Recorder(object):
       trace: IndividualStatsProto where information must be recorded.
     """
     details = trace.mutable_datastore_details()
-    if not response.keys_only():
+    if not response.small_ops():
 
 
       for entity in response.result_list():
-        newent = details.add_keys_read()
-        newent.CopyFrom(entity.key())
+        detail = details.add_keys_read()
+        detail.CopyFrom(entity.key())
     if call == 'RunQuery':
 
       if config.DATASTORE_DETAILS:
@@ -470,7 +466,7 @@ class Recorder(object):
     if config.CALC_RPC_COSTS:
       num_results = len(response.result_list()) + response.skipped_results()
       cost_micropennies = config.DATASTORE_READ_OP_COST * baseline_reads
-      if response.keys_only():
+      if response.small_ops():
 
         cost_micropennies += config.DATASTORE_SMALL_OP_COST * num_results
         trace.set_call_cost_microdollars(cost_micropennies)
@@ -524,10 +520,6 @@ class Recorder(object):
       trace.set_call_cost_microdollars(config.CHANNEL_CREATE_COST)
       _add_billed_op_to_trace(trace, 1,
                               datamodel_pb.BilledOpProto.CHANNEL_OPEN)
-    elif call == 'GetPresence':
-      trace.set_call_cost_microdollars(config.CHANNEL_PRESENCE_COST)
-      _add_billed_op_to_trace(trace, 1,
-                              datamodel_pb.BilledOpProto.CHANNEL_PRESENCE)
 
   def record_mail_details(self, call, request, trace):
     """Records information relating to mail RPCs.

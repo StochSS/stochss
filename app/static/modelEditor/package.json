@@ -1,0 +1,51 @@
+{
+  "name": "model-editor",
+  "author": "Ben Bales",
+  "version": "0.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "amp-extend": "^1.0.1",
+    "ampersand-checkbox-view": "^2.0.2",
+    "ampersand-collection": "^1.4.5",
+    "ampersand-dom": "^1.4.0",
+    "ampersand-events": "^1.1.1",
+    "ampersand-form-view": "git+https://github.com/StochSS/ampersand-form-view.git",
+    "ampersand-input-view": "^4.0.5",
+    "ampersand-model": "^5.0.3",
+    "ampersand-rest-collection": "^4.0.0",
+    "ampersand-router": "^3.0.2",
+    "ampersand-select-view": "git+https://github.com/StochSS/ampersand-select-view.git",
+    "ampersand-state": "^4.5.4",
+    "ampersand-subcollection": "^2.0.3",
+    "ampersand-view": "^7.3.0",
+    "ampersand-view-switcher": "^2.0.0",
+    "async": "^0.9.0",
+    "blueimp-file-upload": "^9.9.3",
+    "clientconfig": "^1.0.0",
+    "domready": "^1.0.8",
+    "getconfig": "^2.1.0",
+    "jquery": "^2.1.4",
+    "katex": "^0.1.1",
+    "three": "^0.71.0",
+    "three-orbit-controls": "^69.0.4",
+    "underscore": "^1.8.3",
+    "underscore.string": "^3.0.3",
+    "url-parse": "^1.0.0"
+  },
+  "devDependencies": {
+    "browserify": "^10.0.0",
+    "watchify": "^3.2.1"
+  },
+  "jshintConfig": {
+    "asi": false,
+    "browser": true,
+    "curly": false,
+    "expr": true,
+    "indent": 4,
+    "loopfunc": true,
+    "node": true,
+    "trailing": true,
+    "undef": true,
+    "white": true
+  }
+}

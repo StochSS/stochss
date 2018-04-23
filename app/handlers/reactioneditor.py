@@ -25,36 +25,119 @@ class ReactionEditorPage(BaseHandler):
         return True
     
     def get(self):
-        all_reactions = self.get_all_reactions()
-        if all_reactions is not None:
-            self.render_response('modeleditor/reactioneditor.html', **all_reactions)            
-        else:
+        # There are two possible types of requests
+        #    Either json requests to get the reactionsSubdomainsAssignment data (expecting JSON return)
+        #    Or just vanilla browser http requests wanting to load up the page. The variable 'reqType' determines what is what
+        # Both request types need the model loaded up tho
+        model_edited = self.get_session_property('model_edited')
+        if model_edited == None:
             self.render_response('modeleditor/reactioneditor.html')
+            return
+
+        row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+        if row is None:
+            self.render_response('modeleditor/reactioneditor.html')
+            return
+
+
+        if self.request.get('reqType') == 'reactionsSubdomainAssignments':
+            # Looks like a reactionsSubdomainAssignments request
+            self.response.content_type = 'application/json'
+
+            if 'reactions_subdomain_assignments' in row.spatial:
+                reactionsSubdomainAssignments = row.spatial['reactions_subdomain_assignments']
+            else:
+                reactionsSubdomainAssignments = None
+            
+            self.response.write( json.dumps( { 'subdomains' : row.spatial['subdomains'],
+                                               'reactionsSubdomainAssignments' : reactionsSubdomainAssignments } ) )
+            return
+        else:
+            result = { "isSpatial" : row.isSpatial, "spatial" : row.spatial }
+
+            all_reactions = self.get_all_reactions()
+            
+            result.update(all_reactions)
+
+            if all_reactions is not None:
+                self.render_response('modeleditor/reactioneditor.html', **result)            
+            else:
+                self.render_response('modeleditor/reactioneditor.html')
 
     def post(self):
-        if self.request.get('update') == "1":
-            # Update the page
-            result = self.update_reaction()
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps(result))
-            
-        elif self.request.get('delete') == "1":
-            #Delete a reaction
-            result = self.delete_reaction(self.request.get('toDelete'))
-            all_reactions = self.get_all_reactions()
-            if all_reactions is not None:
-                result = dict(result, **all_reactions)
-                
-            self.render_response('modeleditor/reactioneditor.html', **result)            
-                
-        else:
-            # Create a new reaction
-            result = self.create_reaction()
-            all_reactions = self.get_all_reactions()
-            if all_reactions is not None:
-                result = dict(result, **all_reactions)
+        # There are two possible types of requests
+        #    Either json requests to update the reactionsSubdomainsAssignment data (expecting JSON return)
+        #    Or browser http form post requests adding reactions (that are expected to return a new page to the browser)
 
-            self.render_response('modeleditor/reactioneditor.html', **result)
+        model_edited = self.get_session_property('model_edited')
+        if model_edited == None:
+            self.render_response('modeleditor/reactioneditor.html')
+            return
+
+        row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+        if row is None:
+            self.render_response('modeleditor/reactioneditor.html')
+            return
+
+        if self.request.get('reqType') == 'setReactionSubdomainAssignment':
+            # Looks like a speciesSubdomainAssignments request
+            self.response.content_type = 'application/json'
+
+            data = json.loads( self.request.get('data') );
+
+            reactionId = data['reactionId']
+            subdomainId = data['subdomainId']
+            value = data['value']
+
+            selectedSubdomains = row.spatial['reactions_subdomain_assignments'][reactionId]
+
+            if value:
+                if subdomainId not in selectedSubdomains:
+                    selectedSubdomains.append(subdomainId)
+            else:
+                if subdomainId in selectedSubdomains:
+                    selectedSubdomains.remove(subdomainId)
+
+            row.spatial['reactions_subdomain_assignments'][reactionId] = selectedSubdomains
+
+            row.put()
+            
+            self.response.write( json.dumps( { "status" : True,
+                                               "msg" : "Reaction {0} subdomain assignment updated".format(reactionId) } ) )
+            return
+        else:
+            # This appears to be a JSON request as well! I'm not sure this does anything. Better have a closer look later (Ben 8-30-2014)
+            if self.request.get('update') == "1":
+                # Update the page
+                result = self.update_reaction()
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
+
+            # browser request!
+            elif self.request.get('delete') == "1":
+                #Delete a reaction
+                result = self.delete_reaction(self.request.get('toDelete'))
+                all_reactions = self.get_all_reactions()
+                if all_reactions is not None:
+                    result = dict(result, **all_reactions)
+
+                result.update({ "isSpatial" : row.isSpatial, "spatial" : row.spatial })
+                
+                self.render_response('modeleditor/reactioneditor.html', **result)            
+                
+            # browser request!
+            else:
+                # Create a new reaction
+                result = self.create_reaction()
+                all_reactions = self.get_all_reactions()
+                if all_reactions is not None:
+                    result = dict(result, **all_reactions)
+
+                result.update({ "isSpatial" : row.isSpatial, "spatial" : row.spatial })
+
+                self.render_response('modeleditor/reactioneditor.html', **result)
 
     def get_all_reactions(self):
         """
@@ -86,6 +169,12 @@ class ReactionEditorPage(BaseHandler):
             model = self.get_model_edited()
             model.deleteReaction(name)
 
+            model_edited = self.get_session_property('model_edited')
+            row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+            
+            del row.spatial['reactions_subdomain_assignments'][name]
+
+            row.put()
             # Update the cache
             self.set_model_edited(model)
             return {'status': True, 'msg': 'Reaction ' + name + ' deleted successfully.'}
@@ -98,7 +187,16 @@ class ReactionEditorPage(BaseHandler):
         """ Create a new reaction. """
         
         # Grab the currently edited model
-        model = self.get_model_edited()
+        model_edited = self.get_session_property('model_edited')
+        if model_edited == None:
+            return
+
+        row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+        if row is None:
+            return
+
+        model = row.model
 
         if model is None:
             return {'status': False, 'msg': 'You have not selected any model to edit.'}
@@ -205,6 +303,11 @@ class ReactionEditorPage(BaseHandler):
                 reaction = Reaction(name=name, propensity_function=propensity_function, reactants=reactants, products=products)
 
             model.addReaction(reaction)
+            
+            row.spatial['reactions_subdomain_assignments'][name] = []
+
+            row.model = model
+            row.put()
 
             # Update the cache
             self.set_model_edited(model)
