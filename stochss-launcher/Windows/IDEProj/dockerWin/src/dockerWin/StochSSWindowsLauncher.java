@@ -9,6 +9,9 @@ public class StochSSWindowsLauncher {
 		Main main = new Main(window);
 		window.setMain(main);
 		main.initialize();
+		if(Main.debug) {System.out.println("Initilization Finished");}
+		
+		
 		
 		try {
 			if (main.getToolbox() && main.checkIfVMInstalled()) {

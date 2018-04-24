@@ -21,7 +21,7 @@ public class UIHandler{
 	
 	State state;
 	private final int width = 500;
-	private final int height = 300;
+	private final int height = 320;
 	private JButton stochSSButton, webButton, settingsButton;
 	private String title = "StochSS Launcher";
 	private Main m;

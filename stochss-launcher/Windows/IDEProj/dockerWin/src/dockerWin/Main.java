@@ -20,7 +20,7 @@ import javax.swing.SwingWorker;
  *
  */
 public class Main {
-	private static final boolean debug = true;
+	static final boolean debug = true;
 	
 	
 	private String containerName = "stochsscontainer1_9";
@@ -121,28 +121,25 @@ public class Main {
 	 */
 	public boolean checkIfInstalled() throws IOException {
 		String line;
-	    stdin.write(commands[0]); 
-	    stdin.newLine();
-	    stdin.write(commands[5]); 
-	    stdin.newLine();
-	    stdin.flush();
-	    while((line = stdout.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+	    
+		terminalWrite(commands[0],commands[5],stdin); 
+	    
+		while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) { 
 	    	window.addText(line);
-	    	if (line.contains(containerName)) {
+	    	if (line.contains(containerName) && !line.contains(commands[0])) {
 	    		window.setStartup();
+	    		if(debug) {System.out.println("checkIfInstalled returns true");}
 	    		return true;
 	    	}
 	    }
+		if(debug) {System.out.println("checkIfInstalled returns false");}
 	    return false;
 	}
 	
 	public boolean checkIfVMInstalled() throws IOException {
 		String line;
-		stdin.write("docker-machine ls");
-		stdin.newLine();
-		stdin.write(commands[5]);
-		stdin.newLine();
-		stdin.flush();
+
+		terminalWrite("docker-machine ls",commands[5],stdin);
 		/*
 		 * !(A && !B)
 
@@ -164,31 +161,24 @@ public class Main {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
-				 stdin.write("docker-machine start stochss1-9");
+				 
+				 terminalWrite("docker-machine start stochss1-9",commands[5],stdin);
 				 
 				 if(debug) { System.out.println("docker-machine start stochss1-9"); }
 				 
-				 stdin.newLine();
-				 stdin.write(commands[5]);
-				 stdin.newLine();
-				 stdin.flush();
-				 while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(">"))) { 
+				 while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) { 
 					 if(debug) {System.out.println(line);}
 					 window.addText(line);
 				 }
-				 stdin.write("eval \"$(docker-machine env stochss1-9)\"");
 				 
 				 if(debug) { System.out.println("eval \"$(docker-machine env stochss1-9)\""); }
 				 
-				 stdin.newLine();
-				 stdin.write(commands[5]);
-				 stdin.newLine();
-				 stdin.flush();
+				 terminalWrite("eval \"$(docker-machine env stochss1-9)\"",commands[5],stdin);
+				 
 				 while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(">"))) { 
-					 
 					 window.addText(line);
 				 }
-				if(debug) {System.out.println("Returns true");}
+				if(debug) {System.out.println("StartVM returns true");}
 				return true;
 			  }
 			  @Override
@@ -355,12 +345,10 @@ public class Main {
 		String line;
 		if (toolboxPath == null) {
 //			/"C:\Program Files\Git\bin\bash.exe" --login -i "C:\Program Files\Docker Toolbox\start.sh"
-			in.write("where docker");
-			in.newLine();
-			in.write(commands[5]);
-			in.newLine();
-			in.flush();
-			while((line = out.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+			
+			terminalWrite("where docker",commands[5],in);
+			
+			while((line = out.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) {  
 		    	window.addText(line);
 		    	if (line.contains("Docker Toolbox")) {
 		    		toolbox1 = line.substring(0, line.indexOf("docker.exe"));
@@ -368,12 +356,10 @@ public class Main {
 		    	}
 		    }
 			
-			in.write("where git");
-			in.newLine();
-			in.write(commands[5]);
-			in.newLine();
-			in.flush();
-			while((line = out.readLine()) != null && !(line.contains(commands[5]) && !line.contains(">"))) { 
+			terminalWrite("where git",commands[5],in);
+			
+			
+			while((line = out.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) {  
 		    	window.addText(line);
 		    	if (line.contains("cmd\\git.exe")) {
 		    		toolbox2 = line.substring(0, line.indexOf("cmd\\git.exe"));
@@ -383,12 +369,10 @@ public class Main {
 			toolboxPath = "\"" + toolbox2 + "bin\\bash.exe\" --login -i \"" + toolbox1 + "start.sh\"";
 		}		
 		
-		in.write(toolboxPath);
-		in.newLine();
-		in.write(commands[5]);
-		in.newLine();
-		in.flush();
-		while((line = out.readLine()) != null && !(line.contains("finish"/*commands[5]*/) /*&& !line.contains(">")*/)) { 
+		terminalWrite(toolboxPath,commands[5],in);
+		
+		
+		while((line = out.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) {  
 	    	window.addText(line);
 	    }
 		System.out.println(toolbox1 + " " + toolbox2 + " " + toolboxPath);
@@ -403,6 +387,29 @@ public class Main {
 			cd var 1, ending at "\start.sh"
 			"var2" -login -i "var1"
 		 */
+	}
+	/**
+	 * 
+	 * @param command
+	 * @param in
+	 * @throws IOException
+	 */
+	private void terminalWrite(String command,BufferedWriter in) throws IOException{
+		in.write(command);
+		in.newLine();
+		in.flush();
+	}
+	/**
+	 * 
+	 * @param command1
+	 * @param command2
+	 * @param in
+	 * @throws IOException
+	 */
+	private void terminalWrite(String command1, String command2, BufferedWriter in) throws IOException{
+		in.write(command1 + " && " + command2);
+		in.newLine();
+		in.flush();
 	}
 
 }
