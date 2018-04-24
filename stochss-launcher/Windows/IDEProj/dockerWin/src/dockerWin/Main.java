@@ -15,41 +15,13 @@ import java.net.URISyntaxException;
 
 import javax.swing.SwingWorker;
 
-/**
- * 
- *
- */
 public class Main {
 	static final boolean debug = true;
-	
-	
-	private String containerName = "stochsscontainer1_9";
-	private String VMname = "stochss1-9";
-	private String imageName = "stochss/stochss-launcher:1.9";
 	private int logLimit = 100;
 	private boolean toolbox = false;
 	
 	private String ip = "127.0.0.1";
 	private String url;
-	
-	private final String finishedStr = "---finished---";
-	
-	private final String commands[] = {
-	/*0*/ "docker ps -a -f name=" + containerName, 								//search for container of container name
-	/*1*/ "docker pull " + imageName, 											//download image
-	/*2*/ "docker start " + containerName,										//start container
-	/*3*/ "docker exec -i " + containerName + " /bin/bash -c \"cd " +
-				"stochss-master && ./run.ubuntu.sh -a 0.0.0.0 -t secretkey\"", 	//run StochSS
-	/*4*/ "docker stop " + containerName,										//stop container
-	/*5*/ "echo " + finishedStr,												//arbitrary echo to tell if operation is over
-	/*6*/ "docker rm " + containerName,											//uninstall container
-	/*7*/ "docker rmi stochss/stochss-launcher:1.9",							//uninstall image
-	/*8  - Toolbox*/ "docker-machine rm " + VMname,								//uninstall VM
-	/*9*/ "docker create -t -p 9999:9999 -p 8080:8080 --name=" + containerName + " " + imageName, //create container
-	/*10*/ 
-	/*11*/
-	/*12*/
-	};
 	
 	private ProcessBuilder builder;
 	
@@ -72,9 +44,11 @@ public class Main {
 		} catch (IOException e) {
 			log(e, true);
 		}
-	    stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+	    
+		stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
 	    stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	    if (checkToolbox()) {
+
+	    if(checkToolbox()) {
 	    	toolbox = true;
 	    	try {
 				enterToolbox(stdin, stdout, process);
@@ -94,24 +68,24 @@ public class Main {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
-				 stdin.write(commands[6]); 
-				 stdin.newLine();
-				 stdin.write(commands[7]);
-				 stdin.newLine();
-				 stdin.write(commands[5]);
-				 stdin.newLine();
-				 stdin.flush();
-				 while((line = stdout.readLine()) != null && !line.contains(commands[5])) { 
+				 
+				 terminalWrite(Commands.uninstallContainer(),stdin); 
+				 
+				 terminalWrite(Commands.uninstallImage(),Commands.commandFinished(),stdin);
+				 
+				 while((line = waitForFinishFlag(stdout)) != null) { 
 				    window.addText(line);
-				}
-				if (toolbox) {} //TODO
-				return true;
+				 }
+				 if (toolbox) {
+					 //TODO
+				 } 
+				 return true;
 			  }
 			  @Override
 			  protected void done() {
 			    window.setUninstallDone();
 			  }
-			};
+		};
 		worker.execute();
 	}
 	/**
@@ -122,11 +96,11 @@ public class Main {
 	public boolean checkIfInstalled() throws IOException {
 		String line;
 	    
-		terminalWrite(commands[0],commands[5],stdin); 
+		terminalWrite(Commands.searchForContainerName(),Commands.commandFinished(),stdin); 
 	    
-		while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) { 
+		while((line = waitForFinishFlag(stdout)) != null) { 
 	    	window.addText(line);
-	    	if (line.contains(containerName) && !line.contains(commands[0])) {
+	    	if (line.contains(Commands.containerName) && !line.contains(Commands.searchForContainerName())) {
 	    		window.setStartup();
 	    		if(debug) {System.out.println("checkIfInstalled returns true");}
 	    		return true;
@@ -139,15 +113,11 @@ public class Main {
 	public boolean checkIfVMInstalled() throws IOException {
 		String line;
 
-		terminalWrite("docker-machine ls",commands[5],stdin);
-		/*
-		 * !(A && !B)
-
-		 *	!A + B
-		 */
-		while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) { 
+		terminalWrite("docker-machine ls",Commands.commandFinished(),stdin);
+		
+		while((line = waitForFinishFlag(stdout)) != null) { 
 	    	window.addText(line);
-	    	if (line.contains(VMname)) {
+	    	if (line.contains(Commands.VMname)) {
 	    		if(debug) {System.out.println("Check if vm installed: true");}
 	    		return true;
 	    	}
@@ -162,20 +132,20 @@ public class Main {
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
 				 
-				 terminalWrite("docker-machine start stochss1-9",commands[5],stdin);
+				 terminalWrite(Commands.startVM(),Commands.commandFinished(),stdin);
 				 
 				 if(debug) { System.out.println("docker-machine start stochss1-9"); }
 				 
-				 while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) { 
+				 while((line = waitForFinishFlag(stdout)) != null) { 
 					 if(debug) {System.out.println(line);}
 					 window.addText(line);
 				 }
 				 
 				 if(debug) { System.out.println("eval \"$(docker-machine env stochss1-9)\""); }
 				 
-				 terminalWrite("eval \"$(docker-machine env stochss1-9)\"",commands[5],stdin);
+				 terminalWrite(Commands.connectToVM(),Commands.commandFinished(),stdin);
 				 
-				 while((line = stdout.readLine()) != null && !(line.contains(finishedStr) && !line.contains(">"))) { 
+				 while((line = waitForFinishFlag(stdout)) != null) { 
 					 window.addText(line);
 				 }
 				if(debug) {System.out.println("StartVM returns true");}
@@ -202,16 +172,17 @@ public class Main {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				String line;
-				stdin.write(commands[1]);
-				stdin.newLine();
-				stdin.flush();
+				
+				terminalWrite(Commands.downloadImage(),stdin);
+				
 				while((line = stdout.readLine()) != null && !line.startsWith("Status: ")) {
 				 	window.addText(line);
 				}
+				
 				window.addText(line);
-				stdin.write(commands[9]);
-				stdin.newLine();
-				stdin.flush();
+				
+				terminalWrite(Commands.createContainer(),stdin);
+				
 				window.addText(stdout.readLine());
 				return true;
 			  }
@@ -236,11 +207,11 @@ public class Main {
 			 @Override
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
-				 stdin.write(commands[2]);
-				 stdin.newLine();
-				 stdin.write(commands[3]);
-				 stdin.newLine();
-				 stdin.flush();
+				 
+				 terminalWrite(Commands.startContainer(),stdin);
+				
+				 terminalWrite(Commands.runStochSS(),stdin);
+				 
 				 while((line = stdout.readLine()) != null && !line.startsWith("Navigate to ")) {
 				 	window.addText(line);
 				}
@@ -286,17 +257,14 @@ public class Main {
 	    	enterToolbox(exitin, exitout, subp); 
 	    }
 	    String line;
-	    exitin.write(commands[4]);
-	    exitin.newLine();
-	    exitin.write(commands[5]);
-	    exitin.newLine();
-	    exitin.flush();
-	    while((line = exitout.readLine()) != null && !line.contains(commands[5])) {  //[1]
+	    
+	    terminalWrite(Commands.stopContainer(),Commands.commandFinished(),exitin);
+	    
+	    while((line = waitForFinishFlag(stdout)) != null) { 
 	    	window.addText(line); 
 		}
+	    
 		destroyProcesses();
-		// [1] For some reason this hangs if changed to the !(line.contains(commands[5]) && !line.contains(">")) version, 
-		//which is supposed to be MORE robust/less error-prone than !line.contains(commands[5])
 	}
 	
 	private void destroyProcesses() {
@@ -346,9 +314,9 @@ public class Main {
 		if (toolboxPath == null) {
 //			/"C:\Program Files\Git\bin\bash.exe" --login -i "C:\Program Files\Docker Toolbox\start.sh"
 			
-			terminalWrite("where docker",commands[5],in);
+			terminalWrite("where docker",Commands.commandFinished(),in);
 			
-			while((line = out.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) {  
+			while((line = waitForFinishFlag(stdout)) != null) {
 		    	window.addText(line);
 		    	if (line.contains("Docker Toolbox")) {
 		    		toolbox1 = line.substring(0, line.indexOf("docker.exe"));
@@ -356,10 +324,10 @@ public class Main {
 		    	}
 		    }
 			
-			terminalWrite("where git",commands[5],in);
+			terminalWrite("where git",Commands.commandFinished(),in);
 			
 			
-			while((line = out.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) {  
+			while((line = waitForFinishFlag(stdout)) != null) { 
 		    	window.addText(line);
 		    	if (line.contains("cmd\\git.exe")) {
 		    		toolbox2 = line.substring(0, line.indexOf("cmd\\git.exe"));
@@ -369,10 +337,10 @@ public class Main {
 			toolboxPath = "\"" + toolbox2 + "bin\\bash.exe\" --login -i \"" + toolbox1 + "start.sh\"";
 		}		
 		
-		terminalWrite(toolboxPath,commands[5],in);
+		terminalWrite(toolboxPath,Commands.commandFinished(),in);
 		
 		
-		while((line = out.readLine()) != null && !(line.contains(finishedStr) && !line.contains(commands[5]))) {  
+		while((line = waitForFinishFlag(stdout)) != null) {  
 	    	window.addText(line);
 	    }
 		System.out.println(toolbox1 + " " + toolbox2 + " " + toolboxPath);
@@ -390,8 +358,8 @@ public class Main {
 	}
 	/**
 	 * 
-	 * @param command
-	 * @param in
+	 * @param command Command to run
+	 * @param in BufferedWriter to run the commands with
 	 * @throws IOException
 	 */
 	private void terminalWrite(String command,BufferedWriter in) throws IOException{
@@ -401,9 +369,9 @@ public class Main {
 	}
 	/**
 	 * 
-	 * @param command1
-	 * @param command2
-	 * @param in
+	 * @param command1 First command to run
+	 * @param command2 Second command to run, waiting for the first one to finish
+	 * @param in BufferedWriter to run the commands with
 	 * @throws IOException
 	 */
 	private void terminalWrite(String command1, String command2, BufferedWriter in) throws IOException{
@@ -411,7 +379,25 @@ public class Main {
 		in.newLine();
 		in.flush();
 	}
+	
+	/**
+	 * 
+	 * @param read BufferedReader to read
+	 * @return Returns the string to output when the loop should continue, or null when the finished flag is found
+	 * @throws IOException
+	 */
+	/*
+	 * !(A && !B)
 
+	 *	!A + B
+	 */
+	private String waitForFinishFlag(BufferedReader read) throws IOException {
+		String line;
+		if((line = read.readLine()) != null && !(line.contains(Commands.finishedStr) && !line.contains(Commands.commandFinished()))) {
+			return line;
+		}
+		return null;
+	}
 }
 
 
