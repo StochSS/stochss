@@ -260,7 +260,7 @@ public class Main {
 	    
 	    terminalWrite(Commands.stopContainer(),Commands.commandFinished(),exitin);
 	    
-	    while((line = waitForFinishFlag(stdout)) != null) { 
+	    while((line = waitForFinishFlag(exitout)) != null) { 
 	    	window.addText(line); 
 		}
 	    
