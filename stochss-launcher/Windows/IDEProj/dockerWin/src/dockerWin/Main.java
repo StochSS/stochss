@@ -20,7 +20,7 @@ public class Main {
 	private int logLimit = 100;
 	private boolean toolbox = false;
 	
-	private String ip = "127.0.0.1";
+	//private String ip = "127.0.0.1";
 	private String url;
 	
 	private ProcessBuilder builder;
@@ -154,10 +154,12 @@ public class Main {
 				 
 				 while((line = waitForFinishFlag(stdout)) != null) {
 					 window.addText(line);
-					 //ip = someIPString
-					 //try running that command in docker terminal after starting stochss1-9
-					 //if it only gives you back one line, and that line is the IP, you don't even need a while loop
-					 //it would just be ip = stdout.readline or w/e. 
+					 if(!line.contains(Commands.getIP())) {
+						 Commands.updateIP(line.trim());
+						 if(debug) {
+							 System.out.println("Found IP is " + Commands.ip);
+						 }
+					 }
 				 }
 				 
 				if(debug) {System.out.println("StartVM returns true");}
@@ -222,7 +224,7 @@ public class Main {
 				 
 				 terminalWrite(Commands.startContainer(),stdin);
 				
-				 terminalWrite(Commands.runStochSS(ip),stdin);
+				 terminalWrite(Commands.runStochSS(),stdin);
 				 
 				 while((line = stdout.readLine()) != null && !line.startsWith("Navigate to ")) {
 				 	window.addText(line);
@@ -231,7 +233,7 @@ public class Main {
 				   	url = line.substring(12, line.indexOf(" to access StochSS"));
 				   	if(url.contains("0.0.0.0")) {
 				   		int temp = url.indexOf("0.0.0.0");
-				   		url = url.substring(0, temp) + ip + url.substring(temp + 7);
+				   		url = url.substring(0, temp) + Commands.ip + url.substring(temp + 7);
 				   	}
 				   	window.addText("Navigate to " + url + " to access StochSS");
 				   	return true;
