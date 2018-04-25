@@ -58,4 +58,10 @@ public class Commands {
 	public static String connectToVM() {
 		return commands[11];
 	}
+	public static String getIP() {
+		return "docker-machine ip " + VMname;
+	}
+	public static String stopVM() {
+		return "docker-machine stop " + VMname;
+	}
 }

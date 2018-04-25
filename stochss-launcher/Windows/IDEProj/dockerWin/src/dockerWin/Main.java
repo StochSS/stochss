@@ -33,6 +33,7 @@ public class Main {
 	private Process subp;
 	private String toolbox1, toolbox2, toolboxPath;
 	
+	
 	public Main(UIHandler w) {
 		window = w;
 		builder = new ProcessBuilder("cmd");
@@ -148,6 +149,17 @@ public class Main {
 				 while((line = waitForFinishFlag(stdout)) != null) { 
 					 window.addText(line);
 				 }
+				 
+				 terminalWrite(Commands.getIP(), Commands.commandFinished(), stdin);
+				 
+				 while((line = waitForFinishFlag(stdout)) != null) {
+					 window.addText(line);
+					 //ip = someIPString
+					 //try running that command in docker terminal after starting stochss1-9
+					 //if it only gives you back one line, and that line is the IP, you don't even need a while loop
+					 //it would just be ip = stdout.readline or w/e. 
+				 }
+				 
 				if(debug) {System.out.println("StartVM returns true");}
 				return true;
 			  }
@@ -248,6 +260,11 @@ public class Main {
 		}
 		return false;
 	}
+	
+	private boolean VMRunning(BufferedWriter in, BufferedReader out) {
+		//TODO docker-machine ls for stochss, if it has "running" it's running - use exitin/exitout
+		return true;
+	}
 		
 	public void safeExit() throws IOException { //TODO: if any of these hang, need to detect it and destroyProcesses that way
 		subp = builder.start();	
@@ -256,6 +273,13 @@ public class Main {
 	    if (toolbox) { 
 	    	enterToolbox(exitin, exitout, subp); 
 	    }
+	    
+	    boolean VMRun = VMRunning(exitin, exitout);
+	    
+	    if (VMRun) {
+	     		terminalWrite(Commands.connectToVM(), exitin);
+	    }
+	    
 	    String line;
 	    
 	    terminalWrite(Commands.stopContainer(),Commands.commandFinished(),exitin);
@@ -264,6 +288,14 @@ public class Main {
 	    	window.addText(line); 
 		}
 	    
+	    if (VMRun) {
+	    	terminalWrite(Commands.stopVM(), Commands.commandFinished(), exitin);
+	    }
+	    
+	    while((line = waitForFinishFlag(exitout)) != null) { 
+	    	window.addText(line); 
+		}
+	    	    
 		destroyProcesses();
 	}
 	
