@@ -222,7 +222,7 @@ public class Main {
 				 
 				 terminalWrite(Commands.startContainer(),stdin);
 				
-				 terminalWrite(Commands.runStochSS(),stdin);
+				 terminalWrite(Commands.runStochSS(ip),stdin);
 				 
 				 while((line = stdout.readLine()) != null && !line.startsWith("Navigate to ")) {
 				 	window.addText(line);

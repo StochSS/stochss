@@ -31,8 +31,9 @@ public class Commands {
 	public static String startContainer() {
 		return commands[2];
 	}
-	public static String runStochSS() {
-		return commands[3];
+	public static String runStochSS(String ip) {
+		//return commands[3];
+		return "docker exec -i " + containerName + " /bin/bash -c \"cd " + "stochss-master && ./run.ubuntu.sh -a " +  ip + " -t secretkey\"";
 	}
 	public static String stopContainer() {
 		return commands[4];
