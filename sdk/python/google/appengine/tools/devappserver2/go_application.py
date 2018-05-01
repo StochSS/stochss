@@ -47,6 +47,18 @@ def _rmtree(directory):
     pass
 
 
+def _escape_tool_flags(*flags):
+  """Escapes a list of flags for consumption by gab.
+
+  This is reverse to the encoding in //apphosting/runtime/go/builder/flags.go.
+  Args:
+    *flags:  A list of flag arguments to be escaped.
+  Returns:
+    A single escaped string.
+  """
+  return ','.join([f.replace('\\', r'\\').replace(',', r'\,') for f in flags])
+
+
 class BuildError(errors.Error):
   """Building the GoApplication failed."""
 
@@ -54,19 +66,20 @@ class BuildError(errors.Error):
 class GoApplication(object):
   """An abstraction around the source and executable for a Go application."""
 
-  def __init__(self, server_configuration):
-    """Initializer for Server.
+  def __init__(self, module_configuration):
+    """Initializer for Module.
 
     Args:
-      server_configuration: An application_configuration.ServerConfiguration
-          instance storing the configuration data for a server.
+      module_configuration: An application_configuration.ModuleConfiguration
+          instance storing the configuration data for a module.
     """
-    self._server_configuration = server_configuration
+    self._module_configuration = module_configuration
     self._go_file_to_mtime = {}
     self._extras_hash = None
     self._go_executable = None
     self._work_dir = None
     self._arch = self._get_architecture()
+    self._pkg_path = self._get_pkg_path()
 
   @property
   def go_executable(self):
@@ -76,8 +89,9 @@ class GoApplication(object):
   def get_environment(self):
     """Return the environment that used be used to run the Go executable."""
     environ = {'GOROOT': _GOROOT,
-               'PWD': self._server_configuration.application_root,
-               'TZ': 'UTC'}
+               'PWD': self._module_configuration.application_root,
+               'TZ': 'UTC',
+               'RUN_WITH_DEVAPPSERVER': '1'}
     if 'SYSTEMROOT' in os.environ:
       environ['SYSTEMROOT'] = os.environ['SYSTEMROOT']
     if 'USER' in os.environ:
@@ -98,22 +112,33 @@ class GoApplication(object):
       architecture = platform.split('_', 1)[1]
       if architecture in architecture_map:
         return architecture_map[architecture]
-    if not architecture:
-      raise BuildError('no compiler found found in goroot (%s)' % _GOROOT)
+    raise BuildError('No known compiler found in goroot (%s)' % _GOROOT)
+
+  @staticmethod
+  def _get_pkg_path():
+    for n in os.listdir(os.path.join(_GOROOT, 'pkg')):
+      # Look for 'linux_amd64_appengine', 'windows_386_appengine', etc.
+      if n.endswith('_appengine'):
+        return os.path.join(_GOROOT, 'pkg', n)
+    raise BuildError('No package path found in goroot (%s)' % _GOROOT)
 
   def _get_gab_args(self):
     # Go's regexp package does not implicitly anchor to the start.
-    nobuild_files = '^' + str(self._server_configuration.nobuild_files)
+    nobuild_files = '^' + str(self._module_configuration.nobuild_files)
     gab_args = [
         _GAB_PATH,
-        '-app_base', self._server_configuration.application_root,
+        '-app_base', self._module_configuration.application_root,
         '-arch', self._arch,
         '-binary_name', '_go_app',
         '-dynamic',
+        '-extra_imports', 'appengine_internal/init',
         '-goroot', _GOROOT,
         '-nobuild_files', nobuild_files,
         '-unsafe',
-        '-work_dir', self._work_dir]
+        '-work_dir', self._work_dir,
+        '-gcflags', _escape_tool_flags('-I', self._pkg_path),
+        '-ldflags', _escape_tool_flags('-L', self._pkg_path),
+    ]
     if 'GOPATH' in os.environ:
       gab_args.extend(['-gopath', os.environ['GOPATH']])
     return gab_args
@@ -128,16 +153,16 @@ class GoApplication(object):
     """
     go_file_to_mtime = {}
     for root, _, file_names in os.walk(
-        self._server_configuration.application_root):
+        self._module_configuration.application_root):
       for file_name in file_names:
         if not file_name.endswith('.go'):
           continue
         full_path = os.path.join(root, file_name)
         rel_path = os.path.relpath(
-            full_path, self._server_configuration.application_root)
-        if self._server_configuration.skip_files.match(rel_path):
+            full_path, self._module_configuration.application_root)
+        if self._module_configuration.skip_files.match(rel_path):
           continue
-        if self._server_configuration.nobuild_files.match(rel_path):
+        if self._module_configuration.nobuild_files.match(rel_path):
           continue
 
         try:
@@ -168,8 +193,8 @@ class GoApplication(object):
     gab_stdout, gab_stderr = gab_process.communicate()
     if gab_process.returncode:
       raise BuildError(
-          '%s\n\n(Executed command: %s)' % (gab_stderr,
-                                            ' '.join(gab_args)))
+          '(Executed command: %s)\n\n%s' % (' '.join(gab_args),
+                                            gab_stderr))
     else:
       return gab_stdout
 
@@ -187,9 +212,9 @@ class GoApplication(object):
     gab_stdout, gab_stderr = gab_process.communicate()
     if gab_process.returncode:
       raise BuildError(
-          '%s\n%s\n\n(Executed command: %s)' % (gab_stdout,
-                                                gab_stderr,
-                                                ' '.join(gab_args)))
+          '(Executed command: %s)\n\n%s\n%s' % (' '.join(gab_args),
+                                                gab_stdout,
+                                                gab_stderr))
     else:
       logging.debug('Build succeeded:\n%s\n%s', gab_stdout, gab_stderr)
       self._go_executable = os.path.join(self._work_dir, '_go_app')
@@ -202,6 +227,11 @@ class GoApplication(object):
           or the GOPATH have changed since the last call to maybe_build, False
           otherwise. This argument is used to decide whether a build is Required
           or not.
+
+    Returns:
+      True if compilation was successfully performed (will raise
+        an exception if compilation was attempted but failed).
+      False if compilation was not attempted.
 
     Raises:
       BuildError: if building the executable fails for any reason.
@@ -216,7 +246,7 @@ class GoApplication(object):
       raise BuildError('Required Go components are missing from the SDK.')
 
     if self._go_executable and not maybe_modified_since_last_build:
-      return
+      return False
 
     (self._go_file_to_mtime,
      old_go_file_to_mtime) = (self._get_go_files_to_mtime(),
@@ -224,7 +254,7 @@ class GoApplication(object):
 
     if not self._go_file_to_mtime:
       raise BuildError('no .go files found in %s' %
-                       self._server_configuration.application_root)
+                       self._module_configuration.application_root)
 
     self._extras_hash, old_extras_hash = (self._get_extras_hash(),
                                           self._extras_hash)
@@ -232,7 +262,7 @@ class GoApplication(object):
     if (self._go_executable and
         self._go_file_to_mtime == old_go_file_to_mtime and
         self._extras_hash == old_extras_hash):
-      return
+      return False
 
     if self._go_file_to_mtime != old_go_file_to_mtime:
       logging.debug('Rebuilding Go application due to source modification')
@@ -241,3 +271,4 @@ class GoApplication(object):
     else:
       logging.debug('Building Go application')
     self._build()
+    return True

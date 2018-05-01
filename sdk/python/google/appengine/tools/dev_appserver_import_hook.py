@@ -509,7 +509,8 @@ class FakeFile(file):
                                                  normcase=normcase,
                                                  py27_optional=py27_optional)
       FakeFile._availability_cache[logical_filename] = result
-    return result
+    return True
+#result
 
   @staticmethod
   def _IsFileAccessibleNoCache(logical_filename, normcase=os.path.normcase,
@@ -791,7 +792,6 @@ class HardenedModulesHook(object):
       'datetime',
       'errno',
       'exceptions',
-      'fcntl',
       'gc',
       'itertools',
       'math',
@@ -879,6 +879,7 @@ class HardenedModulesHook(object):
   __PY27_OPTIONAL_ALLOWED_MODULES = {
 
     'django': [],
+    'endpoints': [],
     'jinja2': ['_debugsupport', '_speedups'],
     'lxml': ['etree', 'objectify'],
     'markupsafe': ['_speedups'],
@@ -1004,7 +1005,6 @@ class HardenedModulesHook(object):
           'pardir',
           'path',
           'pathsep',
-          'popen',
           'R_OK',
           'readlink',
           'remove',
@@ -1017,7 +1017,6 @@ class HardenedModulesHook(object):
           'stat_float_times',
           'stat_result',
           'strerror',
-          'system',
           'TMP_MAX',
           'unlink',
           'urandom',
@@ -1158,7 +1157,6 @@ class HardenedModulesHook(object):
 
 
 
-
           if 'django' not in self._module_dict:
             version = libentry.version
             if version == 'latest':
@@ -1186,6 +1184,18 @@ class HardenedModulesHook(object):
             else:
               logging.warn('Enabling Django version %s (no directory found)',
                            version)
+        elif libentry.name == 'endpoints':
+          try:
+
+            from google.third_party.apphosting.python.endpoints import v1_0
+            sys.path.append(os.path.dirname(v1_0.__file__))
+            del v1_0
+          except ImportError:
+
+
+            endpoints_path = os.path.join(SDK_ROOT, 'lib', 'endpoints-1.0')
+            if endpoints_path not in sys.path:
+              sys.path.append(endpoints_path)
 
 
   @Trace

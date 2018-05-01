@@ -3,122 +3,118 @@
 {% block csscontent %}<link href="/static/css/admin_panel.css" rel="stylesheet">{% endblock %}
 
 {% block content %}
-<div class="span7">
-    <div id="admin-table-tabs-div" class="tabbable">
-      <ul class="nav nav-tabs">
-        
-        <li class="active"><a href="#tab1" data-toggle="tab">Active Users</a></li>
-        
-        <li><a href="#tab2" data-toggle="tab">Approved Users</a></li>
-        
-        <li><a href="#tab3" data-toggle="tab">Users Awaiting Approval</a></li>
-        
-      </ul>
-      <div class="tab-content">
-        
-        <div class="tab-pane active" id="tab1">
-          <div class="well well-large">
-            <table class="table table-bordered active-usr-table">
-              <thead>
+<div class="active span7">
+    <h1>Manage users</h1>
+    <br>
+    <div class="users well well-large">
+        <h3>Users</h3>
+        <table class="table table-bordered active-usr-table">
+            <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Actions</th>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Actions</th>
                 </tr>
-              </thead>
-              <tbody>
+            </thead>
+            <tbody>
                 {% for user in active_users %}
                 <tr>
-                  <td>{{ loop.index }}</td>
-                  <td>{{ user.name }}</td>
-                  <td>{{ user.email_address }}</td>
-                  <td>
-                    {% if not user.is_admin_user() %}
-                    <button class="btn btn-warning table-action-button" data-action="reset">Reset Password</button>
-                    <button class="btn btn-danger table-action-button" data-action="delete">Delete</button>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email_address }}<BR>
+                    {% if user.verified %}
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                    <div width=100% align=right>
+                    <i align=right>verified</i>
+                    </div>
                     {% endif %}
-                  </td>
+                    </td>
+                    <td>
+                        {% if user.is_admin_user() %}
+                        Admin
+                        {% else %}
+                        <button class="btn btn-warning table-action-button" data-action="reset">Reset Password</button>
+                        {% if user.email_address in users_waiting_approval %}
+                        <button class="btn btn-success table-action-button" data-action="approve">Approve Account</button>
+                        {% else %}
+                        <button class="btn btn-danger table-action-button" data-action="revoke">Revoke Account</button>
+                        {% endif %}
+                        <button class="btn btn-danger table-action-button" data-action="delete">Delete</button>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        
-        <div class="tab-pane" id="tab2">
-          <div class="well well-large">
-            {% if approved_users %}
-            <table class="table table-bordered approved-usr-table">
-              <thead>
+            </tbody>
+        </table>
+
+        {% if preapproved_users|length %}
+        <h3>Pre-approved Users</h3>
+        <table class="table table-bordered">
+            <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Email</th>
-                  <th>Actions</th>
+                    <th>#</th>
+                    <th>Email</th>
+                    <th>Actions</th>
                 </tr>
-              </thead>
-              <tbody>
-                {% for approved_email in approved_users %}
+            </thead>
+            <tbody>
+                {% for user in preapproved_users %}
                 <tr>
-                  <td>{{ loop.index }}</td>
-                  <td>{{ approved_email }}</td>
-                  <td><button class="btn btn-danger table-action-button" data-action="revoke">Revoke</button></td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-            {% else %}
-            <p class="empty-table-message">There are no approved users who have not logged in.</p>
-            {% endif %}
-          </div>
-        </div>
-        
-        <div class="tab-pane" id="tab3">
-          <div class="well well-large">
-            {% if users_waiting_approval %}
-            <table class="table table-bordered waiting-aprvl-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Email</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for email in users_waiting_approval %}
-                <tr>
-                  <td>{{ loop.index }}</td>
-                  <td>{{ email }}</td>
-                  <td>
-                    <button class="btn btn-success table-action-button" data-action="approve1">Approve</button>
-                    <button class="btn btn-danger table-action-button" data-action="deny">Deny</button>
-                  </td>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ user }}</td>
+                    <td>
+                        <button class="btn btn-danger table-action-button" data-action="revoke_preapproved">Revoke Access</button>
+                    </td>
                 </tr>
                 {% endfor %}
-              </tbody>
-            </table>
-            {% else %}
-            <p class="empty-table-message">There are no users currently awaiting approval.</p>
-            {% endif %}
-          </div>
-        </div>
-        
-      </div>
+            </tbody>
+        </table>
+        {% endif %}
     </div>
 </div>
 <div class="span3">
-  <div class="well well-large">
-    <form id='approve-user-form' action="/admin" method="post">
-      <fieldset>
-        <legend>Grant Access</legend>
-        <p>When you grant access to someone, their email address will appear in the approved users table. The Users Awaiting Approval table contains the email addresses of people that attempted to log in to your system, but were not yet approved. You can approve these people by clicking the <b>+</b> button in the corresponding row.</p>
-        <label>Alternatively, you can enter the email address of the person you wish to grant access to this system below:</label>
-        <input id="email-input" type="email" placeholder="example@example.com">
-      
-        <button id="grant-access-button" class="btn btn-primary btn-large" type="submit">Grant Access</button>
-      </fieldset>
-    </form>
-  </div>
+    <div class="well well-large">
+        <form id='approve-user-form' action="/admin" method="post">
+            <fieldset>
+                <legend>Pre-approve User</legend>
+                <label>Type an e-mail address in the box below to add a pre-approved user:</label>
+                <input style="display: none;" name="action" value="preapprove">
+                <input name="email" type="email" placeholder="example@example.com" required>
+                <button id="grant-access-button" class="btn btn-primary btn-large" type="submit">Pre-approve User</button>
+            </fieldset>
+        </form>
+    </div>
+</div>
+<div class="span3">
+    <div class="well well-large">
+            <form id="verification-method-form" action="/admin" method="post">
+            <input style="display: none;" name="action" value="change_verification_method">
+            <h3>User Verification Method</h3>
+            <table class="table table-bordered"><tbody>
+            <TR><TD>
+            {% if admin_approval_required %}
+            Require Admin approval of all users: </TD><TD>
+            <button class="btn btn-success table-action-button" type=submit name="admin_approval_required"  value="Yes">Yes</button>
+            {% else %}
+            Require Admin approval of all users:</TD><TD>
+            <button class="btn btn-danger table-action-button" type=submit name="admin_approval_required" value="No">No</button>
+            {% endif %}</TD></TR><TR><TD>
+            Sending of verification email:</TD><TD> 
+            {% if email_setup %}
+            <B>Enabled</B>
+            {% else %}
+            <B>NOT configured</B>
+            {% endif %}
+            </TD></TR><TR><TD>
+            Require Users to have verified email address:</TD><TD>
+            {% if email_verification_required %}
+            <button class="btn btn-success table-action-button" type=submit name="email_verification_required"  value="Yes">Yes</button>
+            {% else %}
+            <button class="btn btn-danger table-action-button" type=submit name="email_verification_required" value="No" {% if not email_setup %}disabled{% endif %}>No</button>
+            {% endif %}
+            </TD></TR>
+    </div>
 </div>
 {% endblock %}
 

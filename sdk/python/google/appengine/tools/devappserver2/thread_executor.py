@@ -30,6 +30,7 @@ import threading
 
 import google
 from concurrent import futures
+import logging
 
 def _worker(future, fn, args, kwargs):
   if not future.set_running_or_notify_cancel():
@@ -37,10 +38,12 @@ def _worker(future, fn, args, kwargs):
 
   try:
     result = fn(*args, **kwargs)
-  except BaseException as e:
-    future.set_exception(e)
-  else:
     future.set_result(result)
+  except BaseException as e:
+    logging.info('EXCEPTION: {0}'.format(e))
+    future.set_exception(e)
+    
+    
 
 
 class ThreadExecutor(futures.Executor):
@@ -56,7 +59,7 @@ class ThreadExecutor(futures.Executor):
         raise RuntimeError('cannot schedule new futures after shutdown')
 
     f = futures.Future()
-    t = threading.Thread(target=_worker, args=(f, fn, args, kwargs))
+    t = threading.Thread(target=_worker, args=(f, fn, args, kwargs))   
     t.start()
     return f
   submit.__doc__ = futures.Executor.submit.__doc__

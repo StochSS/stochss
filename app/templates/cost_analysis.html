@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% block title%}Cost Analysis{% endblock %}
+{% block content%}
+
+<div class="span9">
+    <div class="row-fluid">
+    <ol class="breadcrumb">
+  		<li><a href="/status">Job Status</a></li>
+  		{% if(job_type=="stochkit") %}
+  		<li><a href="/simulate?id={{id}}">{{name}}</a></li>
+  		{% elif(job_type=="spatial") %}
+  		<li><a href="/spatial?id={{id}}">{{name}}</a></li>
+  		{% elif(job_type=="sensitivity") %}
+  		<li><a href="/sensitivity?id={{id}}">{{name}}</a></li>
+  		{% endif %}
+  		<li class="active">Cost Analysis</li>
+	</ol>
+	<div class"span9">
+            <h2><a data-toggle="modal" class="show" href="#help_modal1" style="text-decoration: none"> Cost Analysis <i class="icon-question-sign"></i></a>
+                {% set help_modal_id = "help_modal1" %}
+                {% set help_modal_title = "Cost Analysis" %}
+                {% set help_modal_message = "Cost Analysis is used to help you compare and analyze the time and money cost to run each job with different kinds of node(instance) types. Click the 'Analyze' below the type of node you would like to analyze. You can run as many times as you want with the same type if you would like to. The two graphs under the analyzing table will give you intuitive results about the time and money cost." %}
+                {% include "help_modal.html" %}
+                {{help_modal|safe}}
+            </h2>
+			
+			<h3> Job Name: {{ name }} </h3>
+</br>
+<div>
+<span><button class="btn btn-primary btn-large"  style="float: right; margin-bottom: 10pt;" onClick="window.location='/cost_analysis?job_type={{job_type}}&id={{id}}';"><i class="icon-refresh"></i> Refresh</button></span>
+<span id="msg"></span>
+</div>
+</br>
+<table cellpadding="10pt" cellspacing="30pt" border="0" class="table table-striped table-bordered" id="dataTable" >
+	<thead>
+		<tr>
+			<th width="150pt">Node Type</th>
+			{% for each_instance_type in all_instance_types %}
+    		<td width="100pt">
+    			{{each_instance_type}}
+    		</td>
+    		{% endfor%}
+    	</tr>
+    </thead>
+    <tbody>
+		<tr>
+			<th width="150pt">Run Analysis</th>
+			{% for each_instance_type in all_instance_types %}
+    		<td width="100pt">
+                {% if analyzed_instance_types[each_instance_type] %}
+    			<a href="javascript:void(0)" onclick="costrun('/cost_analysis?req_type=analyze&job_type={{job_type}}&id={{id}}&instance_type={{each_instance_type}}', '{{uuid}}', '{{name}}', '{{each_instance_type}}');">Analyze</a>
+  		        {% endif %}
+    		</td>
+    		{% endfor%}
+    	</tr>
+    </tbody>
+    <tbody>
+    	<tr>
+    		<th>Analysis Status</th>
+    		{% for each_instance_type in all_instance_types %}
+			<td><span id="status_{{each_instance_type}}"></span></td>
+    		{% endfor%}
+    	</tr>
+    </tbody>
+    <tbody>
+        <tr>
+                <th>Actual Cost ($)</th>
+                {% for each_instance_type in all_instance_types %}
+                        <td><span id="actual_cost_{{each_instance_type}}"></span></td>
+                {% endfor%}
+        </tr>
+    </tbody>
+</table>
+<p> *The actual cost charged by EC2 is by hour </p>
+</br>
+<table>
+<tr>
+	<td align="center"><h3>time(min) vs. instance</h3></td>
+	<td align="center"><h3>cost($) vs. instance</h3></td>
+</tr>
+<tr>
+	<td width="500pt" height="300pt">
+		<span id="time_chart">
+		<svg onload="plot_time_chart('{{jobs}}');">
+		</span>
+	</td>
+	<td width="500pt" height="300pt">
+		<span id="cost_chart">
+		<svg onload="plot_cost_chart('{{jobs}}');">
+		</span>
+	</td>
+</tr>
+</table>
+
+
+</div>
+</div>
+</div>
+
+
+{% endblock %}
+
+{% block jscontent%}
+<script src="static/js/d3.min.js"></script>
+<script src="static/js/nv.d3.min.js"></script>
+<script>
+
+function plot_time_chart(jobs){
+	var my_jobs = JSON.parse(jobs);
+	var times = [];
+	
+	var max_value = 0.0;
+	var min_value = 0.0;
+	for(var i = 0; i < my_jobs.length; i++){
+		var job = my_jobs[i];
+		var label_value_time = {
+			"label": job['instance_type'],
+			"value": job['time']
+		};
+		if(parseFloat(job['time'])<min_value){
+			min_value = parseFloat(job['time']);
+		}
+		if(parseFloat(job['time'])>max_value){
+			max_value = parseFloat(job['time']);
+		}
+		var span = document.getElementById("status_"+job['instance_type']);
+		span.appendChild( document.createTextNode(job['status']) );
+		var span2 = document.getElementById("actual_cost_"+job['instance_type']);
+		span2.appendChild(document.createTextNode(job['cost_by_hour']));
+		times.push(label_value_time);
+	}
+	
+	var time = [
+	{
+		key: "time vs. instance type", 
+		values: times	
+	}
+	];
+	
+	nv.addGraph(function() {
+
+    	var time_chart = nv.models.discreteBarChart()
+      					.x(function(d) { return d.label })    //Specify the data accessors.
+      					.y(function(d) { return d.value })
+      					.forceY([0, max_value])
+      					.staggerLabels(true)    //Too many bars and not enough room? Try staggering labels.
+      					.tooltips(false)        //Don't show tooltips
+      					.showValues(true)
+      					.transitionDuration(1000);    
+      	
+      	if(min_value >= 0.01){ // if the minium value is larger than 0.01, use the float 2 presentation
+      		time_chart.valueFormat(d3.format(',.2f'));
+   			time_chart.yAxis
+   					.axisLabel("time: sec")
+   					.tickFormat(d3.format(',.2f'));
+  		}else{ // else use the scientific presentation
+  			time_chart.valueFormat(d3.format(',.2e'));
+   			time_chart.yAxis
+   					.axisLabel("time: min")
+   					.tickFormat(d3.format(',.2e'));
+  		}
+  			
+
+  		d3.select('#time_chart svg')
+      		.datum(time)
+      		.call(time_chart);
+      
+
+  		nv.utils.windowResize(time_chart.update);
+
+  		return time_chart;
+	});
+}
+
+
+function plot_cost_chart(jobs){
+	var my_jobs = JSON.parse(jobs);
+	var costs = [];
+	var max_value = 0.0;
+	var min_value = 0.0;
+	for(var i = 0; i < my_jobs.length; i++){
+		var job = my_jobs[i];
+		var label_value_cost = {
+			"label": job['instance_type'],
+			"value": job['cost']
+		};
+		if(parseFloat(job['cost'])<min_value){
+			min_value = parseFloat(job['cost']);
+		}
+		if(parseFloat(job['cost'])>max_value){
+			max_value = parseFloat(job['cost']);
+		}
+		costs.push(label_value_cost);
+	}
+	
+	var cost = [
+	{
+		key: "cost vs. instance type", 
+		values: costs	
+	}
+	];
+	
+	nv.addGraph(function() {
+
+    	var cost_chart = nv.models.discreteBarChart()
+      					.x(function(d) { return d.label })    
+      					.y(function(d) { return d.value })
+      					.forceY([0, max_value])
+      					.staggerLabels(true)    
+      					.tooltips(false)        
+      					.showValues(true)  
+      					.transitionDuration(1000);
+
+  		if(min_value >= 0.01){ // if the minium value is larger than 0.01, use the float 2 presentation
+      		cost_chart.valueFormat(d3.format(',.2f'));
+   			cost_chart.yAxis.tickFormat(d3.format(',.2f'));
+  		}else{ // else use the scientific presentation
+  			cost_chart.valueFormat(d3.format(',.2e'));
+   			cost_chart.yAxis.tickFormat(d3.format(',.2e'));
+  		}
+      
+		d3.select('#cost_chart svg')
+  			.datum(cost)
+      		.call(cost_chart);
+      
+
+  		nv.utils.windowResize(cost_chart.update);
+
+  		return cost_chart;
+	});
+}
+
+var updateMsg = function(data)
+{
+    $( "#msg" ).text(data.msg);
+    if(data.status)
+    $( "#msg" ).prop('class', 'alert alert-success');
+    else
+    $( "#msg" ).prop('class', 'alert alert-error');
+    $( "#msg" ).show();
+};
+
+function costrun(path, uuid, name, instance_type)
+{
+	msg = "Submitting analysis request to the cloud... Instance type: "+instance_type;
+    updateMsg( { status: true,
+              msg: msg } );
+            
+    $.ajax({ url : path,
+             type : 'POST',
+             success : function(data){
+                     updateMsg(data);
+                     if(data.status)
+                     location.reload();
+                     //window.location = '/cost_analysis?job_type='+job_type+'&id='+id;
+             },
+             error : function(data){
+                     location.reload();
+             }
+          });
+                     
+    return false;
+}
+
+</script>
+{% endblock%}
+
+

@@ -1101,7 +1101,8 @@ class DatastoreSqliteStub(datastore_stub_util.BaseDatastore,
         prefix,
         self._CreateFilterString(filters, params),
         self.__CreateOrderString(orders))
-    query = ('SELECT Entities.__path__, Entities.entity '
+    query = ('SELECT Entities.__path__, Entities.entity, '
+             'EntitiesByProperty.name, EntitiesByProperty.value '
              'FROM "%s!EntitiesByProperty" AS EntitiesByProperty INNER JOIN '
              '"%s!Entities" AS Entities USING (__path__) %s %s' % format_args)
     return query, params
@@ -1335,8 +1336,9 @@ class DatastoreSqliteStub(datastore_stub_util.BaseDatastore,
         else:
           db_cursor = _DedupingEntityGenerator(conn.execute(sql_stmt, params))
         dsquery = datastore_stub_util._MakeQuery(query, filters, orders)
-        cursor = datastore_stub_util.IteratorCursor(
-            query, dsquery, orders, index_list, db_cursor)
+        cursor = datastore_stub_util.ListCursor(
+            query, dsquery, orders, index_list,
+            [r for r in db_cursor])
       finally:
         self._ReleaseConnection(conn)
     return cursor
@@ -1385,7 +1387,7 @@ class DatastoreSqliteStub(datastore_stub_util.BaseDatastore,
     end = max(max_id, start - 1)
     return start, end
 
-  def _AllocateIds(self, reference, size=1, max_id=None):
+  def _AllocateSequentialIds(self, reference, size=1, max_id=None):
     conn = self._GetConnection()
     try:
       datastore_stub_util.CheckAppId(self._trusted, self._app_id,
@@ -1407,28 +1409,28 @@ class DatastoreSqliteStub(datastore_stub_util.BaseDatastore,
     finally:
       self._ReleaseConnection(conn)
 
-  def _AllocateScatteredIds(self, keys):
+  def _AllocateIds(self, references):
     conn = self._GetConnection()
     try:
       full_keys = []
-      for key in keys:
+      for key in references:
         datastore_stub_util.CheckAppId(self._trusted, self._app_id, key.app())
         prefix = self._GetTablePrefix(key)
         last_element = key.path().element_list()[-1]
-        datastore_stub_util.Check(not last_element.has_name(),
-                                  'Cannot allocate named key.')
 
-        if last_element.id():
-          count, id_space = datastore_stub_util.IdToCounter(last_element.id())
-          table, _ = self.__id_counter_tables[id_space]
-          self.__AdvanceIdCounter(conn, prefix, count, table)
+        if last_element.id() or last_element.has_name():
+          for el in key.path().element_list():
+            if el.id():
+              count, id_space = datastore_stub_util.IdToCounter(el.id())
+              table, _ = self.__id_counter_tables[id_space]
+              self.__AdvanceIdCounter(conn, prefix, count, table)
 
         else:
           count, _ = self.__AllocateIdsFromBlock(conn, prefix, 1,
                                                  self.__id_map_scattered,
                                                  'ScatteredIdCounters')
           last_element.set_id(datastore_stub_util.ToScatteredId(count))
-        full_keys.append(key)
+          full_keys.append(key)
       return full_keys
     finally:
       self._ReleaseConnection(conn)

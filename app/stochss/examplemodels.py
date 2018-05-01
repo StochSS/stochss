@@ -44,6 +44,7 @@ def birthdeath(model_name=""):
     """
     if model_name == "":
         model_name = "birth_death"
+
     model = StochKitModel(name=model_name);
 
     # Species
@@ -52,8 +53,8 @@ def birthdeath(model_name=""):
     model.addSpecies([S])
 
     # Parameters
-    k1 = Parameter(name="k1",expression=1.0)
-    k2 = Parameter(name="k2",expression=1.0)
+    k1 = Parameter(name="k1",expression=3.0)
+    k2 = Parameter(name="k2",expression=0.03)
     
     model.addParameter([k1,k2])
     

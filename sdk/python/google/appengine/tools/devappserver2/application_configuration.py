@@ -32,10 +32,11 @@ from google.appengine.api import appinfo
 from google.appengine.api import appinfo_includes
 from google.appengine.api import backendinfo
 from google.appengine.api import dispatchinfo
+from google.appengine.tools import yaml_translator
 from google.appengine.tools.devappserver2 import errors
 
 # Constants passed to functions registered with
-# ServerConfiguration.add_change_callback.
+# ModuleConfiguration.add_change_callback.
 NORMALIZED_LIBRARIES_CHANGED = 1
 SKIP_FILES_CHANGED = 2
 HANDLERS_CHANGED = 3
@@ -45,8 +46,14 @@ ERROR_HANDLERS_CHANGED = 6
 NOBUILD_FILES_CHANGED = 7
 
 
-class ServerConfiguration(object):
-  """Stores server configuration information.
+def java_supported():
+  """True if this SDK supports running Java apps in the dev appserver."""
+  java_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'java')
+  return os.path.isdir(java_dir)
+
+
+class ModuleConfiguration(object):
+  """Stores module configuration information.
 
   Most configuration options are mutable and may change any time
   check_for_updates is called. Client code must be able to cope with these
@@ -61,29 +68,38 @@ class ServerConfiguration(object):
       ('version', 'major_version'),
       ('runtime', 'runtime'),
       ('threadsafe', 'threadsafe'),
-      ('server', 'server_name'),
+      ('module', 'module_name'),
       ('basic_scaling', 'basic_scaling'),
       ('manual_scaling', 'manual_scaling'),
       ('automatic_scaling', 'automatic_scaling')]
 
-  def __init__(self, yaml_path):
-    """Initializer for ServerConfiguration.
+  def __init__(self, config_path):
+    """Initializer for ModuleConfiguration.
 
     Args:
-      yaml_path: A string containing the full path of the yaml file containing
-          the configuration for this server.
+      config_path: A string containing the full path of the yaml or xml file
+          containing the configuration for this module.
     """
-    self._yaml_path = yaml_path
-    self._app_info_external = None
-    self._application_root = os.path.realpath(os.path.dirname(yaml_path))
+    self._config_path = config_path
+    root = os.path.dirname(config_path)
+    self._is_java = os.path.normpath(config_path).endswith(
+        os.sep + 'WEB-INF' + os.sep + 'appengine-web.xml')
+    if self._is_java:
+      # We assume Java's XML-based config files only if config_path is
+      # something like /foo/bar/WEB-INF/appengine-web.xml. In this case,
+      # the application root is /foo/bar. Other apps, configured with YAML,
+      # have something like /foo/bar/app.yaml, with application root /foo/bar.
+      root = os.path.dirname(root)
+    self._application_root = os.path.realpath(root)
     self._last_failure_message = None
 
     self._app_info_external, files_to_check = self._parse_configuration(
-        self._yaml_path)
-    self._mtimes = self._get_mtimes([self._yaml_path] + files_to_check)
-    self._application = 'dev~%s' % self._app_info_external.application
+        self._config_path)
+    self._mtimes = self._get_mtimes(files_to_check)
+    self._application = '%s~%s' % (self.partition,
+                                   self.application_external_name)
     self._api_version = self._app_info_external.api_version
-    self._server_name = self._app_info_external.server
+    self._module_name = self._app_info_external.module
     self._version = self._app_info_external.version
     self._threadsafe = self._app_info_external.threadsafe
     self._basic_scaling = self._app_info_external.basic_scaling
@@ -96,7 +112,7 @@ class ServerConfiguration(object):
           '"python27" runtime will be used instead. A description of the '
           'differences between the two can be found here:\n'
           'https://developers.google.com/appengine/docs/python/python25/diff27',
-           self._yaml_path)
+          self._config_path)
     self._minor_version_id = ''.join(random.choice(string.digits) for _ in
                                      range(18))
 
@@ -110,32 +126,48 @@ class ServerConfiguration(object):
     return self._application
 
   @property
+  def partition(self):
+    return 'dev'
+
+  @property
+  def application_external_name(self):
+    return self._app_info_external.application
+
+  @property
   def api_version(self):
     return self._api_version
 
   @property
-  def server_name(self):
-    return self._server_name or 'default'
+  def module_name(self):
+    return self._module_name or appinfo.DEFAULT_MODULE
 
   @property
   def major_version(self):
     return self._version
 
   @property
+  def minor_version(self):
+    return self._minor_version_id
+
+  @property
   def version_id(self):
-    if self.server_name == 'default':
+    if self.module_name == appinfo.DEFAULT_MODULE:
       return '%s.%s' % (
           self.major_version,
           self._minor_version_id)
     else:
       return '%s:%s.%s' % (
-          self.server_name,
+          self.module_name,
           self.major_version,
           self._minor_version_id)
 
   @property
   def runtime(self):
     return self._runtime
+
+  @property
+  def effective_runtime(self):
+    return self._app_info_external.GetEffectiveRuntime()
 
   @property
   def threadsafe(self):
@@ -198,7 +230,7 @@ class ServerConfiguration(object):
 
     try:
       app_info_external, files_to_check = self._parse_configuration(
-          self._yaml_path)
+          self._config_path)
     except Exception, e:
       failure_message = str(e)
       if failure_message != self._last_failure_message:
@@ -207,7 +239,7 @@ class ServerConfiguration(object):
       return set()
     self._last_failure_message = None
 
-    self._mtimes = self._get_mtimes([self._yaml_path] + files_to_check)
+    self._mtimes = self._get_mtimes(files_to_check)
 
     for app_info_attribute, self_attribute in self._IMMUTABLE_PROPERTIES:
       app_info_value = getattr(app_info_external, app_info_attribute)
@@ -220,13 +252,13 @@ class ServerConfiguration(object):
         continue
 
       if isinstance(app_info_value, types.StringTypes):
-        logging.warning('Restart the development server to see updates to "%s" '
+        logging.warning('Restart the development module to see updates to "%s" '
                         '["%s" => "%s"]',
                         app_info_attribute,
                         self_value,
                         app_info_value)
       else:
-        logging.warning('Restart the development server to see updates to "%s"',
+        logging.warning('Restart the development module to see updates to "%s"',
                         app_info_attribute)
 
     changes = set()
@@ -264,30 +296,73 @@ class ServerConfiguration(object):
           raise
     return filename_to_mtime
 
-  @staticmethod
-  def _parse_configuration(configuration_path):
-    # TODO: It probably makes sense to catch the exception raised
-    # by Parse() and re-raise it using a module-specific exception.
-    with open(configuration_path) as f:
-      return appinfo_includes.ParseAndReturnIncludePaths(f)
+  def _parse_configuration(self, configuration_path):
+    """Parse a configuration file (like app.yaml or appengine-web.xml).
+
+    Args:
+      configuration_path: A string containing the full path of the yaml file
+          containing the configuration for this module.
+
+    Returns:
+      A tuple where the first element is the parsed appinfo.AppInfoExternal
+      object and the second element is a list of the paths of the files that
+      were used to produce it, namely the input configuration_path and any
+      other file that was included from that one.
+    """
+    if self._is_java:
+      config, files = self._parse_java_configuration(configuration_path)
+    else:
+      with open(configuration_path) as f:
+        config, files = appinfo_includes.ParseAndReturnIncludePaths(f)
+    return config, [configuration_path] + files
+
+  def _parse_java_configuration(self, app_engine_web_xml_path):
+    """Parse appengine-web.xml and web.xml.
+
+    Args:
+      app_engine_web_xml_path: A string containing the full path of the
+          .../WEB-INF/appengine-web.xml file. The corresponding
+          .../WEB-INF/web.xml file must also be present.
+
+    Returns:
+      A tuple where the first element is the parsed appinfo.AppInfoExternal
+      object and the second element is a list of the paths of the files that
+      were used to produce it, namely the input appengine-web.xml file and the
+      corresponding web.xml file.
+    """
+    with open(app_engine_web_xml_path) as f:
+      app_engine_web_xml_str = f.read()
+    web_inf_dir = os.path.dirname(app_engine_web_xml_path)
+    web_xml_path = os.path.join(web_inf_dir, 'web.xml')
+    with open(web_xml_path) as f:
+      web_xml_str = f.read()
+    has_jsps = False
+    for _, _, filenames in os.walk(self.application_root):
+      if any(f.endswith('.jsp') for f in filenames):
+        has_jsps = True
+        break
+    app_yaml_str = yaml_translator.TranslateXmlToYamlForDevAppServer(
+        app_engine_web_xml_str, web_xml_str, has_jsps, self.application_root)
+    config = appinfo.LoadSingleAppInfo(app_yaml_str)
+    return config, [app_engine_web_xml_path, web_xml_path]
 
 
 class BackendsConfiguration(object):
   """Stores configuration information for a backends.yaml file."""
 
-  def __init__(self, app_yaml_path, backend_yaml_path):
+  def __init__(self, app_config_path, backend_config_path):
     """Initializer for BackendsConfiguration.
 
     Args:
-      app_yaml_path: A string containing the full path of the yaml file
-          containing the configuration for this server.
-      backend_yaml_path: A string containing the full path of the backends.yaml
-          file containing the configuration for backends.
+      app_config_path: A string containing the full path of the yaml file
+          containing the configuration for this module.
+      backend_config_path: A string containing the full path of the
+          backends.yaml file containing the configuration for backends.
     """
     self._update_lock = threading.RLock()
-    self._base_server_configuration = ServerConfiguration(app_yaml_path)
+    self._base_module_configuration = ModuleConfiguration(app_config_path)
     backend_info_external = self._parse_configuration(
-        backend_yaml_path)
+        backend_config_path)
 
     self._backends_name_to_backend_entry = {}
     for backend in backend_info_external.backends or []:
@@ -304,7 +379,7 @@ class BackendsConfiguration(object):
       return backendinfo.LoadBackendInfo(f)
 
   def get_backend_configurations(self):
-    return [BackendConfiguration(self._base_server_configuration, self, entry)
+    return [BackendConfiguration(self._base_module_configuration, self, entry)
             for entry in self._backends_name_to_backend_entry.values()]
 
   def check_for_updates(self, backend_name):
@@ -319,10 +394,10 @@ class BackendsConfiguration(object):
       constants.
     """
     with self._update_lock:
-      server_changes = self._base_server_configuration.check_for_updates()
-      if server_changes:
+      module_changes = self._base_module_configuration.check_for_updates()
+      if module_changes:
         for backend_changes in self._changes.values():
-          backend_changes.update(server_changes)
+          backend_changes.update(module_changes)
       changes = self._changes[backend_name]
       self._changes[backend_name] = set()
     return changes
@@ -331,21 +406,21 @@ class BackendsConfiguration(object):
 class BackendConfiguration(object):
   """Stores backend configuration information.
 
-  This interface is and must remain identical to ServerConfiguration.
+  This interface is and must remain identical to ModuleConfiguration.
   """
 
-  def __init__(self, server_configuration, backends_configuration,
+  def __init__(self, module_configuration, backends_configuration,
                backend_entry):
     """Initializer for BackendConfiguration.
 
     Args:
-      server_configuration: A ServerConfiguration to use.
+      module_configuration: A ModuleConfiguration to use.
       backends_configuration: The BackendsConfiguration that tracks updates for
           this BackendConfiguration.
       backend_entry: A backendinfo.BackendEntry containing the backend
           configuration.
     """
-    self._server_configuration = server_configuration
+    self._module_configuration = module_configuration
     self._backends_configuration = backends_configuration
     self._backend_entry = backend_entry
 
@@ -363,38 +438,54 @@ class BackendConfiguration(object):
   @property
   def application_root(self):
     """The directory containing the application e.g. "/home/user/myapp"."""
-    return self._server_configuration.application_root
+    return self._module_configuration.application_root
 
   @property
   def application(self):
-    return self._server_configuration.application
+    return self._module_configuration.application
+
+  @property
+  def partition(self):
+    return self._module_configuration.partition
+
+  @property
+  def application_external_name(self):
+    return self._module_configuration.application_external_name
 
   @property
   def api_version(self):
-    return self._server_configuration.api_version
+    return self._module_configuration.api_version
 
   @property
-  def server_name(self):
+  def module_name(self):
     return self._backend_entry.name
 
   @property
   def major_version(self):
-    return self._server_configuration.major_version
+    return self._module_configuration.major_version
+
+  @property
+  def minor_version(self):
+    return self._minor_version_id
 
   @property
   def version_id(self):
     return '%s:%s.%s' % (
-        self.server_name,
+        self.module_name,
         self.major_version,
         self._minor_version_id)
 
   @property
   def runtime(self):
-    return self._server_configuration.runtime
+    return self._module_configuration.runtime
+
+  @property
+  def effective_runtime(self):
+    return self._module_configuration.effective_runtime
 
   @property
   def threadsafe(self):
-    return self._server_configuration.threadsafe
+    return self._module_configuration.threadsafe
 
   @property
   def basic_scaling(self):
@@ -410,19 +501,19 @@ class BackendConfiguration(object):
 
   @property
   def normalized_libraries(self):
-    return self._server_configuration.normalized_libraries
+    return self._module_configuration.normalized_libraries
 
   @property
   def skip_files(self):
-    return self._server_configuration.skip_files
+    return self._module_configuration.skip_files
 
   @property
   def nobuild_files(self):
-    return self._server_configuration.nobuild_files
+    return self._module_configuration.nobuild_files
 
   @property
   def error_handlers(self):
-    return self._server_configuration.error_handlers
+    return self._module_configuration.error_handlers
 
   @property
   def handlers(self):
@@ -430,16 +521,16 @@ class BackendConfiguration(object):
       return [appinfo.URLMap(
           url='/_ah/start',
           script=self._backend_entry.start,
-          login='admin')] + self._server_configuration.handlers
-    return self._server_configuration.handlers
+          login='admin')] + self._module_configuration.handlers
+    return self._module_configuration.handlers
 
   @property
   def inbound_services(self):
-    return self._server_configuration.inbound_services
+    return self._module_configuration.inbound_services
 
   @property
   def env_variables(self):
-    return self._server_configuration.env_variables
+    return self._module_configuration.env_variables
 
   @property
   def is_backend(self):
@@ -463,10 +554,10 @@ class BackendConfiguration(object):
 class DispatchConfiguration(object):
   """Stores dispatcher configuration information."""
 
-  def __init__(self, yaml_path):
-    self._yaml_path = yaml_path
-    self._mtime = os.path.getmtime(self._yaml_path)
-    self._process_dispatch_entries(self._parse_configuration(self._yaml_path))
+  def __init__(self, config_path):
+    self._config_path = config_path
+    self._mtime = os.path.getmtime(self._config_path)
+    self._process_dispatch_entries(self._parse_configuration(self._config_path))
 
   @staticmethod
   def _parse_configuration(configuration_path):
@@ -476,11 +567,11 @@ class DispatchConfiguration(object):
       return dispatchinfo.LoadSingleDispatch(f)
 
   def check_for_updates(self):
-    mtime = os.path.getmtime(self._yaml_path)
+    mtime = os.path.getmtime(self._config_path)
     if mtime > self._mtime:
       self._mtime = mtime
       try:
-        dispatch_info_external = self._parse_configuration(self._yaml_path)
+        dispatch_info_external = self._parse_configuration(self._config_path)
       except Exception, e:
         failure_message = str(e)
         logging.error('Configuration is not valid: %s', failure_message)
@@ -495,7 +586,7 @@ class DispatchConfiguration(object):
       if parsed_url.host:
         hostname_entries.append(entry)
       else:
-        path_only_entries.append((parsed_url, entry.server))
+        path_only_entries.append((parsed_url, entry.module))
     if hostname_entries:
       logging.warning(
           'Hostname routing is not supported by the development server. The '
@@ -511,76 +602,154 @@ class DispatchConfiguration(object):
 class ApplicationConfiguration(object):
   """Stores application configuration information."""
 
-  def __init__(self, yaml_paths):
+  def __init__(self, config_paths):
     """Initializer for ApplicationConfiguration.
 
     Args:
-      yaml_paths: A list of strings containing the paths to yaml files.
+      config_paths: A list of strings containing the paths to yaml files,
+          or to directories containing them.
     """
-    self.servers = []
+    self.modules = []
     self.dispatch = None
-    if len(yaml_paths) == 1 and os.path.isdir(yaml_paths[0]):
-      directory_path = yaml_paths[0]
-      for app_yaml_path in [os.path.join(directory_path, 'app.yaml'),
-                            os.path.join(directory_path, 'app.yml')]:
-        if os.path.exists(app_yaml_path):
-          yaml_paths = [app_yaml_path]
-          break
-      else:
-        raise errors.AppConfigNotFoundError(
-            'no app.yaml file at %r' % directory_path)
-      for backends_yaml_path in [os.path.join(directory_path, 'backends.yaml'),
-                                 os.path.join(directory_path, 'backends.yml')]:
-        if os.path.exists(backends_yaml_path):
-          yaml_paths.append(backends_yaml_path)
-          break
-    for yaml_path in yaml_paths:
-      if os.path.isdir(yaml_path):
-        raise errors.InvalidAppConfigError(
-            '"%s" is a directory and a yaml configuration file is required' %
-            yaml_path)
-      elif (yaml_path.endswith('backends.yaml') or
-            yaml_path.endswith('backends.yml')):
-        # TODO: Reuse the ServerConfiguration created for the app.yaml
+    # It's really easy to add a test case that passes in a string rather than
+    # a list of strings, so guard against that.
+    assert not isinstance(config_paths, basestring)
+    config_paths = self._config_files_from_paths(config_paths)
+    for config_path in config_paths:
+      # TODO: add support for backends.xml and dispatch.xml here
+      if (config_path.endswith('backends.yaml') or
+          config_path.endswith('backends.yml')):
+        # TODO: Reuse the ModuleConfiguration created for the app.yaml
         # instead of creating another one for the same file.
-        self.servers.extend(
-            BackendsConfiguration(yaml_path.replace('backends.y', 'app.y'),
-                                  yaml_path).get_backend_configurations())
-      elif (yaml_path.endswith('dispatch.yaml') or
-            yaml_path.endswith('dispatch.yml')):
+        self.modules.extend(
+            BackendsConfiguration(config_path.replace('backends.y', 'app.y'),
+                                  config_path).get_backend_configurations())
+      elif (config_path.endswith('dispatch.yaml') or
+            config_path.endswith('dispatch.yml')):
         if self.dispatch:
           raise errors.InvalidAppConfigError(
               'Multiple dispatch.yaml files specified')
-        self.dispatch = DispatchConfiguration(yaml_path)
+        self.dispatch = DispatchConfiguration(config_path)
       else:
-        server_configuration = ServerConfiguration(yaml_path)
-        self.servers.append(server_configuration)
-    application_ids = set(server.application
-                          for server in self.servers)
+        module_configuration = ModuleConfiguration(config_path)
+        self.modules.append(module_configuration)
+    application_ids = set(module.application
+                          for module in self.modules)
     if len(application_ids) > 1:
       raise errors.InvalidAppConfigError(
           'More than one application ID found: %s' %
           ', '.join(sorted(application_ids)))
 
     self._app_id = application_ids.pop()
-    server_names = set()
-    for server in self.servers:
-      if server.server_name in server_names:
-        raise errors.InvalidAppConfigError('Duplicate server: %s' %
-                                           server.server_name)
-      server_names.add(server.server_name)
+    module_names = set()
+    for module in self.modules:
+      if module.module_name in module_names:
+        raise errors.InvalidAppConfigError('Duplicate module: %s' %
+                                           module.module_name)
+      module_names.add(module.module_name)
     if self.dispatch:
-      if 'default' not in server_names:
+      if appinfo.DEFAULT_MODULE not in module_names:
         raise errors.InvalidAppConfigError(
-            'A default server must be specified.')
-      missing_servers = (
-          set(server_name for _, server_name in self.dispatch.dispatch) -
-          server_names)
-      if missing_servers:
+            'A default module must be specified.')
+      missing_modules = (
+          set(module_name for _, module_name in self.dispatch.dispatch) -
+          module_names)
+      if missing_modules:
         raise errors.InvalidAppConfigError(
-            'Servers %s specified in dispatch.yaml are not defined by a yaml '
-            'file.' % sorted(missing_servers))
+            'Modules %s specified in dispatch.yaml are not defined by a yaml '
+            'file.' % sorted(missing_modules))
+
+  def _config_files_from_paths(self, config_paths):
+    """Return a list of the configuration files found in the given paths.
+
+    For any path that is a directory, the returned list will contain the
+    configuration files (app.yaml and optionally backends.yaml) found in that
+    directory. If the directory is a Java app (contains a subdirectory
+    WEB-INF with web.xml and application-web.xml files), then the returned
+    list will contain the path to the application-web.xml file, which is treated
+    as if it included web.xml. Paths that are not directories are added to the
+    returned list as is.
+
+    Args:
+      config_paths: a list of strings that are file or directory paths.
+
+    Returns:
+      A list of strings that are file paths.
+    """
+    config_files = []
+    for path in config_paths:
+      config_files += (
+          self._config_files_from_dir(path) if os.path.isdir(path) else [path])
+    return config_files
+
+  def _config_files_from_dir(self, dir_path):
+    """Return a list of the configuration files found in the given directory.
+
+    If the directory contains a subdirectory WEB-INF then we expect to find
+    web.xml and application-web.xml in that subdirectory. The returned list
+    will consist of the path to application-web.xml, which we treat as if it
+    included xml.
+
+    Otherwise, we expect to find an app.yaml and optionally a backends.yaml,
+    and we return those in the list.
+
+    Args:
+      dir_path: a string that is the path to a directory.
+
+    Returns:
+      A list of strings that are file paths.
+    """
+    web_inf = os.path.join(dir_path, 'WEB-INF')
+    if java_supported() and os.path.isdir(web_inf):
+      return self._config_files_from_web_inf_dir(web_inf)
+    app_yamls = self._files_in_dir_matching(dir_path, ['app.yaml', 'app.yml'])
+    if not app_yamls:
+      or_web_inf = ' or a WEB-INF subdirectory' if java_supported() else ''
+      raise errors.AppConfigNotFoundError(
+          '"%s" is a directory but does not contain app.yaml or app.yml%s' %
+          (dir_path, or_web_inf))
+    backend_yamls = self._files_in_dir_matching(
+        dir_path, ['backends.yaml', 'backends.yml'])
+    return app_yamls + backend_yamls
+
+  def _config_files_from_web_inf_dir(self, web_inf):
+    required = ['appengine-web.xml', 'web.xml']
+    missing = [f for f in required
+               if not os.path.exists(os.path.join(web_inf, f))]
+    if missing:
+      raise errors.AppConfigNotFoundError(
+          'The "%s" subdirectory exists but is missing %s' %
+          (web_inf, ' and '.join(missing)))
+    return [os.path.join(web_inf, required[0])]
+
+  @staticmethod
+  def _files_in_dir_matching(dir_path, names):
+    abs_names = [os.path.join(dir_path, name) for name in names]
+    files = [f for f in abs_names if os.path.exists(f)]
+    if len(files) > 1:
+      raise errors.InvalidAppConfigError(
+          'Directory "%s" contains %s' % (dir_path, ' and '.join(names)))
+    return files
 
   @property
   def app_id(self):
     return self._app_id
+
+
+def get_app_error_file(module_configuration):
+  """Returns application specific file to handle errors.
+
+  Dev AppServer only supports 'default' error code.
+
+  Args:
+    module_configuration: ModuleConfiguration.
+
+  Returns:
+      A string containing full path to error handler file or
+      None if no 'default' error handler is specified.
+  """
+  for error_handler in module_configuration.error_handlers or []:
+    if not error_handler.error_code or error_handler.error_code == 'default':
+      return os.path.join(module_configuration.application_root,
+                          error_handler.file)
+  return None
