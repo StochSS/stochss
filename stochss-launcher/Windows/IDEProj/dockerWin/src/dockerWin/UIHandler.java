@@ -7,7 +7,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+
+import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -30,7 +34,7 @@ public class UIHandler{
 	private String output = "";
 
 
-    public UIHandler() {
+    public UIHandler() throws IOException {
     	state = State.loading;
     	frame = new JFrame(title);
         Dimension size = new Dimension(width, height);
@@ -42,7 +46,10 @@ public class UIHandler{
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
         frame.getContentPane().setLayout(new FlowLayout());
-
+        
+        File iconImage = new File("src" + File.separator + "dockerWin" + File.separator +"icon_clear.png");
+        BufferedImage img = ImageIO.read(iconImage);
+        frame.setIconImage(img);
         
         stochSSButton = new JButton("Loading...");
         stochSSButton.addActionListener(new ActionListener() {
