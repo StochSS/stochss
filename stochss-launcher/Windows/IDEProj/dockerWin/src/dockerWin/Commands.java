@@ -4,6 +4,7 @@ public class Commands {
 	public static String containerName = "stochsscontainer1_9";
 	public static String VMname = "stochss1-9";
 	public static String imageName = "stochss/stochss-launcher:1.9";
+	
 	public static String ip = "127.0.0.1";
 	public static final  String finishedStr = "---finished---";
 	
@@ -21,7 +22,7 @@ public class Commands {
 		/*8  - Toolbox*/ "docker-machine rm " + VMname,								//uninstall VM
 		/*9*/ "docker create -t -p 9999:9999 -p 8080:8080 --name=" + containerName + " " + imageName, //create container
 		/*10*/ "docker-machine start " + VMname, 									//start stochss VM
-		/*11*/ "eval \"$(docker-machine env " + VMname + "\"", 						//Connect the machine to normal docker input
+		/*11*/ "eval $(docker-machine env " + VMname + ")", 						//Connect the machine to normal docker input
 		/*12*/ "docker-machine ip " + VMname,										//Get IP address associated w/ VM
 		/*13*/ "docker-machine stop " + VMname										//Stop the VM
 		};

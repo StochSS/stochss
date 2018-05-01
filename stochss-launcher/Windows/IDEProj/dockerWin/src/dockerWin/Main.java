@@ -142,14 +142,25 @@ public class Main {
 					 window.addText(line);
 				 }
 				 
-				 if(debug) { System.out.println("eval \"$(docker-machine env stochss1-9)\""); }
+				 //if(debug) { System.out.println("eval \"$(docker-machine env stochss1-9)\""); }
 				 
 				 terminalWrite(Commands.connectToVM(),Commands.commandFinished(),stdin);
 				 
 				 while((line = waitForFinishFlag(stdout)) != null) { 
 					 window.addText(line);
+					 if(debug) {
+						 System.out.println("CONNECT TO VM OUTPUT: " + line);
+					 }
 				 }
-				 
+				 if(debug) {
+					 terminalWrite("docker ps",Commands.commandFinished(),stdin);
+					 while((line = waitForFinishFlag(stdout)) != null) { 
+						 System.out.println("DOCKER PS OUTPUT: " + line);
+					 }
+//					 while((line = waitForFinishFlag(stdout)) != null) { 
+//						 System.out.println("DOCKER PS/2 OUTPUT: " + line);
+//					 }
+				 }
 				 terminalWrite(Commands.getIP(), Commands.commandFinished(), stdin);
 				 
 				 while((line = waitForFinishFlag(stdout)) != null) {
