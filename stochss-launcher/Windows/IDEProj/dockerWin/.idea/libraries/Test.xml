@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Test">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/dockerWin/Test.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
