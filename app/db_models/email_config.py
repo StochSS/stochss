@@ -89,7 +89,8 @@ class EmailConfig(db.Model):
         msg['Subject'] = subject
         msg['From'] = config.from_email
         smtp.starttls()
-        smtp.login(config.smtp_username, config.smtp_password)
+        if(config.smtp_username != '' and config.smtp_password != ''):
+            smtp.login(config.smtp_username, config.smtp_password)
         smtp.sendmail(config.from_email, to_email_address, msg.as_string())
         smtp.quit()
         return True
