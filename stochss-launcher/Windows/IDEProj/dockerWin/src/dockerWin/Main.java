@@ -3,8 +3,6 @@ package dockerWin;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -26,8 +24,9 @@ public class Main {
 	private ProcessBuilder builder;
 	
 	private Process process;
+	
 	private BufferedWriter stdin;
-	private BufferedReader stdout;
+	private BufferedReader stdout,stderr;
 	
 	private UIHandler window;
 	private Process subp;
@@ -48,7 +47,8 @@ public class Main {
 	    
 		stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
 	    stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
+	    stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+	    
 	    if(checkToolbox()) {
 	    	toolbox = true;
 	    	try {
@@ -355,6 +355,7 @@ public class Main {
 	}
 	
 	private void enterToolbox(BufferedWriter in, BufferedReader out, Process p) throws IOException {
+		
 		String line;
 		if (toolboxPath == null) {
 //			/"C:\Program Files\Git\bin\bash.exe" --login -i "C:\Program Files\Docker Toolbox\start.sh"
@@ -388,7 +389,12 @@ public class Main {
 		while((line = waitForFinishFlag(stdout)) != null) {  
 	    	window.addText(line);
 	    }
-		System.out.println(toolbox1 + " " + toolbox2 + " " + toolboxPath);
+		
+		redirectStdErr();
+		
+		terminalWrite("(>&2 echo \"error\")",stdin);
+		if(debug)
+			System.out.println(toolbox1 + " " + toolbox2 + " " + toolboxPath);
 			
 		/* TODO
 		 * where docker 
@@ -442,6 +448,28 @@ public class Main {
 			return line;
 		}
 		return null;
+	}
+	/**
+	 * This function runs on a seperate thread looking for standard error messages and pumping that into stdin
+	 */
+	private void redirectStdErr() {
+		Thread stdErrReader = new Thread("Standard Error Reader") {
+			public void run() {
+				try {
+					String input, output;
+					while(true) {
+							input = stderr.readLine();
+							output = "\\e" + input + "\\e";
+							window.addText(output);
+							if(debug)
+								System.out.println(output);
+						}
+					}
+				 catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		};
 	}
 }
 
