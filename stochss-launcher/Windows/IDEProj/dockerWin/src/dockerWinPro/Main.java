@@ -183,10 +183,6 @@ public class Main {
 	    while((line = waitForFinishFlag(exitout)) != null) { 
 	    	window.addText(line); 
 		}
-	    
-	    while((line = waitForFinishFlag(exitout)) != null) { 
-	    	window.addText(line); 
-		}
 	    	    
 		destroyProcesses();
 	}
@@ -258,11 +254,6 @@ public class Main {
 	 * @param read BufferedReader to read
 	 * @return Returns the string to output when the loop should continue, or null when the finished flag is found
 	 * @throws IOException
-	 */
-	/*
-	 * !(A && !B)
-
-	 *	!A + B
 	 */
 	private String waitForFinishFlag(BufferedReader read) throws IOException {
 		String line;
