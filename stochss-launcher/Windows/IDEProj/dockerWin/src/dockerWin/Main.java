@@ -18,7 +18,6 @@ public class Main {
 	private int logLimit = 100;
 	private boolean toolbox = false;
 	
-	//private String ip = "127.0.0.1";
 	private String url;
 	
 	private ProcessBuilder builder;
@@ -60,8 +59,8 @@ public class Main {
 	}
 	
 	private boolean checkToolbox() {
-		//TODO
-		return true;
+		/*non-Toolbox only release*/
+		return false;
 	}
 
 	public void uninstall() throws IOException {
@@ -244,7 +243,7 @@ public class Main {
 				   	url = line.substring(12, line.indexOf(" to access StochSS"));
 				   	if(url.contains("0.0.0.0")) {
 				   		int temp = url.indexOf("0.0.0.0");
-				   		url = url.substring(0, temp) + Commands.ip + url.substring(temp + 7);
+				   		url = url.substring(0, temp) + Commands.ipReplace + url.substring(temp + 7);
 				   	}
 				   	window.addText("Navigate to " + url + " to access StochSS");
 				   	return true;
@@ -274,24 +273,24 @@ public class Main {
 		return false;
 	}
 	
-	private boolean VMRunning(BufferedWriter in, BufferedReader out) {
-		//TODO docker-machine ls for stochss, if it has "running" it's running - use exitin/exitout
-		return true;
-	}
+//	private boolean VMRunning(BufferedWriter in, BufferedReader out) {
+//		//TODO docker-machine ls for stochss, if it has "running" it's running - use exitin/exitout
+//		return false;
+//	}
 		
 	public void safeExit() throws IOException { //TODO: if any of these hang, need to detect it and destroyProcesses that way
 		subp = builder.start();	
 		BufferedWriter exitin = new BufferedWriter(new OutputStreamWriter(subp.getOutputStream()));
 	    BufferedReader exitout = new BufferedReader(new InputStreamReader(subp.getInputStream()));
-	    if (toolbox) { 
-	    	enterToolbox(exitin, exitout, subp); 
-	    }
-	    
-	    boolean VMRun = VMRunning(exitin, exitout);
-	    
-	    if (VMRun) {
-	     		terminalWrite(Commands.connectToVM(), exitin);
-	    }
+//	    boolean VMRun = false;
+//	    if (toolbox) { 
+//	    	 enterToolbox(exitin, exitout, subp);
+//	    	 VMRun = VMRunning(exitin, exitout);
+//	 	    
+//	 	    if (VMRun) {
+//	 	     		terminalWrite(Commands.connectToVM(), exitin);
+//	 	    }
+//	    }
 	    
 	    String line;
 	    
@@ -301,9 +300,9 @@ public class Main {
 	    	window.addText(line); 
 		}
 	    
-	    if (VMRun) {
-	    	terminalWrite(Commands.stopVM(), Commands.commandFinished(), exitin);
-	    }
+//	    if (toolbox && VMRun) {
+//	    	terminalWrite(Commands.stopVM(), Commands.commandFinished(), exitin);
+//	    }
 	    
 	    while((line = waitForFinishFlag(exitout)) != null) { 
 	    	window.addText(line); 
