@@ -1,4 +1,4 @@
-package dockerWin;
+package dockerWinPro;
 
 import java.io.IOException;
 
@@ -11,9 +11,7 @@ public class StochSSWindowsLauncher {
 		main.initialize();
 		if(Main.debug) {System.out.println("Initilization Finished");}
 		try {
-			if (main.getToolbox() && main.checkIfVMInstalled()) {
-				window.setStartupVM();
-			} else if (main.checkIfInstalled()) {
+			if (main.checkIfInstalled()) {
 				window.setStartup();
 			} else {
 				window.setnotInstall();
