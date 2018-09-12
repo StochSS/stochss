@@ -47,9 +47,13 @@ public class UIHandler{
         frame.setVisible(true);
         frame.getContentPane().setLayout(new FlowLayout());
         
-        File iconImage = new File("src" + File.separator + "dockerWin" + File.separator +"icon_clear.png");
-        BufferedImage img = ImageIO.read(iconImage);
-        frame.setIconImage(img);
+        try {
+        	File iconImage = new File("icon_clear.png");
+        	BufferedImage img = ImageIO.read(iconImage);
+        	frame.setIconImage(img);
+        } catch (Exception e) {
+        	
+        }
         
         stochSSButton = new JButton("Loading...");
         stochSSButton.addActionListener(new ActionListener() {

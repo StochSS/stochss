@@ -56,14 +56,18 @@ public class Main {
 				 
 				 while((line = waitForFinishFlag(stdout)) != null) { 
 				    window.addText(line);
+				    if (Commands.errorContain(line)) {
+				    	log(Commands.errorMeaning(line), false);
+				    	return true;
+				    }
 				 }
+				 window.addText(Commands.adviseUninstalled());
 				 return true;
 			  }
 			  @Override
 			  protected void done() {
 			    window.setUninstallDone();
 			    window.setStopped();
-			    window.addText("Container " + Commands.containerName + " and image " + Commands.imageName + " have been uninstalled.");
 			  }
 		};
 		worker.execute();
@@ -142,6 +146,11 @@ public class Main {
 				 
 				 while((line = stdout.readLine()) != null && !line.startsWith("Navigate to ")) {
 				 	window.addText(line);
+				 	if (Commands.errorContain(line)) {
+				 		window.addText(Commands.errorMeaning(line));
+					   	url = Commands.backupURL("0.0.0.0");
+				 		return true;
+				 	}
 				}
 				 try {
 				   	url = line.substring(12, line.indexOf(" to access StochSS"));

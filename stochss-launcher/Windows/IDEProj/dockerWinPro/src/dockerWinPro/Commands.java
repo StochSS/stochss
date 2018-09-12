@@ -37,24 +37,39 @@ public class Commands {
 		return "docker create -t -p 9999:9999 -p 8080:8080 --name=" + containerName + " " + imageName; //create container
 	}
 	public static boolean errorContain(String line) {
-		if (line.contains("error during connect: ")) {
+		if (line.contains("error during connect: Get http")) {
 			return true;
 		}
 		if (line.contains("is not recognized as an internal or external command")) {
+			return true;
+		}
+		if (line.contains("There seems to be another webserver already running")) {
 			return true;
 		}
 		return false;
 	}
 	public static String errorMeaning(String line) {
-		if (line.contains("error during connect:" )) {
+		if (line.contains("error during connect: Get http" )) {
 			return "Docker may not be running, or Docker Toolbox might be running on Windows 10 Professional/Enterprise.";
 		}
 		if (line.contains("is not recognized as an internal or external command")) {
 			return "Docker might not be installed. Please go to https://docs.docker.com/docker-for-windows/install/";
 		}
+		if (line.contains("There seems to be another webserver already running")) {
+			return "StochSS or another VM is running at the target address. You can try launching StochSS or shutting the process down with stop.";
+		}
 		return "";
 	}
 	public static String adviseNotInstalled() {
 		return "***NOTICE*** Container " + Commands.containerName + " not found, you can install StochSS with container name " + Commands.containerName + " by clicking below. If you do not have the image " + Commands.imageName + " installed, Docker will connect to the internet and download it automatically. This might take a while, as the download is large.";
+	}
+	public static String adviseUninstalled() {
+		return "Container " + Commands.containerName + " and image " + Commands.imageName + " have been uninstalled.";
+	}
+	public static String backupURL(String string) {
+		if (string.contains("0.0.0.0")) {
+			string = ipReplace;
+		}
+		return "http://" + string + ":8080/login?secret_key=secretkey";
 	}
 }
