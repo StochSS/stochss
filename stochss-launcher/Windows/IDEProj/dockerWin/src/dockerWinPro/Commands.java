@@ -36,4 +36,19 @@ public class Commands {
 	public static String createContainer() {
 		return "docker create -t -p 9999:9999 -p 8080:8080 --name=" + containerName + " " + imageName; //create container
 	}
+	public static boolean errorContain(String line) {
+		if (line.contains("error during connect: ")) {
+			return true;
+		}
+		return false;
+	}
+	public static String errorMeaning(String line) {
+		if (line.contains("error during connect:" )) {
+			return "Docker may not be running, or Docker Toolbox might be installed on Windows 10 Professional/Enterprise.";
+		}
+		return "";
+	}
+	public static String adviseNotInstalled() {
+		return "***NOTICE*** Container " + Commands.containerName + " not found, you can install StochSS with container name " + Commands.containerName + " by clicking below. If you do not have the image " + Commands.imageName + " installed, Docker will connect to the internet and download it automatically. This might take a while, as the download is large.";
+	}
 }

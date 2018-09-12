@@ -42,7 +42,7 @@ public class UIHandler{
         frame.setMaximumSize(size);
         frame.setMinimumSize(size);
         frame.setResizable(false);
-        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
         frame.getContentPane().setLayout(new FlowLayout());
@@ -77,23 +77,6 @@ public class UIHandler{
 			public void actionPerformed(ActionEvent e) {
 				settingsButtonPressed();
 			}
-        });
-        
-        frame.addWindowListener(new WindowAdapter() {
-        	@Override
-            public void windowClosing(WindowEvent e) {
-        		if (state != State.stopped) {
-            		try {
-            			m.safeExit();
-            		} catch (IOException e1) {
-            			m.log(e1, true);
-            		}
-            		dispose();
-            	} else {
-            		dispose();
-            		System.exit(0);
-            	}
-            }
         });
         
         area = new JTextArea();
@@ -164,8 +147,8 @@ public class UIHandler{
     private void webButtonPressed() {
     	if (state == State.running) {
     		if (!m.openURL()) {
-    		addText("There was a problem opening the URL. Please paste " 
-    									+ m.getURL() + " into your preferred browser.");
+    			addText("There was a problem opening the URL. Please paste " 
+    								+ m.getURL() + " into your preferred browser.");
     		}
     	}
     }
