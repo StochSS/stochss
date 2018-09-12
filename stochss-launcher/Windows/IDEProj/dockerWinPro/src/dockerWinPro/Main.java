@@ -158,7 +158,7 @@ public class Main {
 				   		int temp = url.indexOf("0.0.0.0");
 				   		url = url.substring(0, temp) + Commands.ipReplace + url.substring(temp + 7);
 				   	}
-				   	window.addText("Navigate to " + url + " to access StochSS");
+				   	window.addText("Click 'Launch StochSS' below or navigate to " + url + " to access StochSS.");
 				   	return true;
 				 } catch (Exception e) {
 				   	log(e, true);
