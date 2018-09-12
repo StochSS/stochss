@@ -40,11 +40,17 @@ public class Commands {
 		if (line.contains("error during connect: ")) {
 			return true;
 		}
+		if (line.contains("is not recognized as an internal or external command")) {
+			return true;
+		}
 		return false;
 	}
 	public static String errorMeaning(String line) {
 		if (line.contains("error during connect:" )) {
-			return "Docker may not be running, or Docker Toolbox might be installed on Windows 10 Professional/Enterprise.";
+			return "Docker may not be running, or Docker Toolbox might be running on Windows 10 Professional/Enterprise.";
+		}
+		if (line.contains("is not recognized as an internal or external command")) {
+			return "Docker might not be installed. Please go to https://docs.docker.com/docker-for-windows/install/";
 		}
 		return "";
 	}
