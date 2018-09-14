@@ -1,0 +1,22 @@
+Launch4j: http://launch4j.sourceforge.net
+
+Instructions for creating a new portable StochSS launcher: 
+
+1. Export working .jar file to ./StochSS as Resources.jar
+2. Settings, icons, etc go to ./StochSS/src
+3. Download Java and install to ./StochSS/src/Java
+
+4. Import launch4jSettings.xml to Launch4j. Change executable path to absolute path where /StochSS/StochSS.exe
+
+5. All other settings should be fine, they're based off of the executable's path. Create executable.
+
+6. If you test via Launch4j's run button, it'll generate a log if it fails. Delete log once done troubleshooting.
+
+7. Compress into self-extracting .zip file  
+	[insert instructions when I figure it out]
+
+Instructions for Java-dependent StochSS launcher:
+
+As above, but skip step 3 and in step 4 import launch4jSettingsJavaDependent.xml instead. 
+
+Optionally update minimum Java version in JRE tab to whatever Java version was used in development, originally set at 1.8 in settings. 
