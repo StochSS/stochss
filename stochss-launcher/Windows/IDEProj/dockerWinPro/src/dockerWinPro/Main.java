@@ -15,7 +15,6 @@ import javax.swing.SwingWorker;
 
 public class Main {
 	static final boolean debug = true;
-	//private int logLimit = 100;
 	
 	private String url;
 	
@@ -51,18 +50,24 @@ public class Main {
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
 				 
-				 terminalWrite(Commands.uninstallContainer(),stdin); 
+				 terminalWrite(Commands.uninstallContainer(), stdin, true); 
 				 
-				 terminalWrite(Commands.uninstallImage(),Commands.commandFinished(),stdin);
+				 terminalWrite(Commands.uninstallImage(), Commands.commandFinished(), stdin, true);
 				 
 				 while((line = waitForFinishFlag(stdout)) != null) { 
 				    window.addText(line);
+				    if (Commands.errorContain(line)) {
+				    	log(Commands.errorMeaning(line), false);
+				    	return true;
+				    }
 				 }
+				 window.addText(Commands.adviseUninstalled());
 				 return true;
 			  }
 			  @Override
 			  protected void done() {
 			    window.setUninstallDone();
+			    window.setStopped();
 			  }
 		};
 		worker.execute();
@@ -72,21 +77,25 @@ public class Main {
 	 * @return boolean whether or not stochss is installed
 	 * @throws IOException
 	 */
-	public boolean checkIfInstalled() throws IOException {
+	public int checkIfInstalled() throws IOException {
 		String line;
 	    
-		terminalWrite(Commands.searchForContainerName(),Commands.commandFinished(),stdin); 
+		terminalWrite(Commands.searchForContainerName(), Commands.commandFinished(), stdin, true); 
 	    
 		while((line = waitForFinishFlag(stdout)) != null) { 
 	    	window.addText(line);
+	    	if (Commands.errorContain(line)) {
+	    		log(Commands.errorMeaning(line), true);
+	    		return -1;
+	    	}
 	    	if (line.contains(Commands.containerName) && !line.contains(Commands.searchForContainerName())) {
 	    		window.setStartup();
-	    		if(debug) {System.out.println("checkIfInstalled returns true");}
-	    		return true;
+	    		return 1;
 	    	}
 	    }
-		if(debug) {System.out.println("checkIfInstalled returns false");}
-	    return false;
+		
+		window.addText(Commands.adviseNotInstalled());
+	    return 0;
 	}
 	
 	public void install() throws IOException {
@@ -95,7 +104,7 @@ public class Main {
 			 protected Boolean doInBackground() throws IOException {
 				String line;
 				
-				terminalWrite(Commands.downloadImage(),stdin);
+				terminalWrite(Commands.downloadImage(), stdin, true);
 				
 				while((line = stdout.readLine()) != null && !line.startsWith("Status: ")) {
 				 	window.addText(line);
@@ -103,7 +112,7 @@ public class Main {
 				
 				window.addText(line);
 				
-				terminalWrite(Commands.createContainer(),stdin);
+				terminalWrite(Commands.createContainer(), stdin, true);
 				
 				window.addText(stdout.readLine());
 				return true;
@@ -111,10 +120,11 @@ public class Main {
 			  @Override
 			  protected void done() {
 				try {
-					if (checkIfInstalled()) {
+					int installed = checkIfInstalled();
+					if (installed == 1) {
 						window.setStartup();
-					} else {
-						log("Installation Failed", true);
+					} else if (installed == 0) {
+						window.setnotInstall();
 					}
 				} catch (IOException e) {
 					log(e, true);
@@ -130,12 +140,17 @@ public class Main {
 			 protected Boolean doInBackground() throws IOException {
 				 String line;
 				 
-				 terminalWrite(Commands.startContainer(),stdin);
+				 terminalWrite(Commands.startContainer(), stdin, true);
 				
-				 terminalWrite(Commands.runStochSS(),stdin);
+				 terminalWrite(Commands.runStochSS(), stdin, false);
 				 
 				 while((line = stdout.readLine()) != null && !line.startsWith("Navigate to ")) {
 				 	window.addText(line);
+				 	if (Commands.errorContain(line)) {
+				 		window.addText(Commands.errorMeaning(line));
+					   	url = Commands.backupURL("0.0.0.0");
+				 		return true;
+				 	}
 				}
 				 try {
 				   	url = line.substring(12, line.indexOf(" to access StochSS"));
@@ -143,7 +158,7 @@ public class Main {
 				   		int temp = url.indexOf("0.0.0.0");
 				   		url = url.substring(0, temp) + Commands.ipReplace + url.substring(temp + 7);
 				   	}
-				   	window.addText("Navigate to " + url + " to access StochSS");
+				   	window.addText("Click 'Launch StochSS' below or navigate to " + url + " to access StochSS.");
 				   	return true;
 				 } catch (Exception e) {
 				   	log(e, true);
@@ -178,10 +193,14 @@ public class Main {
 	    
 	    String line;
 	    
-	    terminalWrite(Commands.stopContainer(),Commands.commandFinished(),exitin);
+	    terminalWrite(Commands.stopContainer(),Commands.commandFinished(),exitin, true);
 	    
 	    while((line = waitForFinishFlag(exitout)) != null) { 
 	    	window.addText(line); 
+	    	if (Commands.errorContain(line)) {
+	    		log(Commands.errorMeaning(line), false);
+	    		break;
+	    	}
 		}
 	    	    
 		destroyProcesses();
@@ -213,12 +232,7 @@ public class Main {
 				window.setStopped();
 			}
 		}
-//		try {
-//			//TODO saveLog(window.getWindowText() + "\n\r" + str);
-//		} catch (FileNotFoundException e) {
-//			str += "\nLog file creation failed.\n";
-//		}
-		window.addText(str);
+		window.addText("***ERROR*** " + str);
 	}
 
 	public String getURL() {
@@ -231,8 +245,12 @@ public class Main {
 	 * @param in BufferedWriter to run the commands with
 	 * @throws IOException
 	 */
-	private void terminalWrite(String command,BufferedWriter in) throws IOException{
-		in.write(command);
+	private void terminalWrite(String command, BufferedWriter in, boolean reroute) throws IOException{
+		String route = "";
+		if (reroute) {
+			route += "2>&1 ";
+		}
+		in.write(route + command);
 		in.newLine();
 		in.flush();
 	}
@@ -243,8 +261,12 @@ public class Main {
 	 * @param in BufferedWriter to run the commands with
 	 * @throws IOException
 	 */
-	private void terminalWrite(String command1, String command2, BufferedWriter in) throws IOException{
-		in.write(command1 + " && " + command2);
+	private void terminalWrite(String command1, String command2, BufferedWriter in, boolean reroute) throws IOException{
+		String route = "";
+		if (reroute) {
+			route += "2>&1 ";
+		}
+		in.write(route + command1 + " && " + route + command2);
 		in.newLine();
 		in.flush();
 	}

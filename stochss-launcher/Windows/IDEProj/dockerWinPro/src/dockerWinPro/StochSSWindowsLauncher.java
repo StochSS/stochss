@@ -11,9 +11,10 @@ public class StochSSWindowsLauncher {
 		main.initialize();
 		if(Main.debug) {System.out.println("Initilization Finished");}
 		try {
-			if (main.checkIfInstalled()) {
+			int installed = main.checkIfInstalled();
+			if (installed == 1) {
 				window.setStartup();
-			} else {
+			} else if (installed == 0) {
 				window.setnotInstall();
 			}
 		} catch (IOException e) {
