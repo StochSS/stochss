@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# This script bootstraps a local kubernetes cluster using minikube
+#
+# Exit codes:
+#   158: Failed to create minikube cluster
+
+# Bootstrap a local kubernetes cluster with 5GB of memory and 2 cpus.
+minikube --memory 5000 --cpus 2 start
+
+# If something went wrong then stop the script.
+if (( $? != 0 )); then
+  echo "Failed to create the minikube cluster."
+  exit 158;
+fi
+
+# Install Helm (package manager for kubernetes)
+# Helm is split into a client (helm) and server (tiller).
+# The tiller (server) runs on a pod inside the kubernetes cluster in
+# the 'kube-system' namespace. The helm client is a CLI tool.
+helm version --client >> /dev/null
+HELM_EXIT_CODE=$?
+if (( $HELM_EXIT_CODE != 0 )); then
+  echo
+  echo "Installing Helm..."
+  curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
+else
+  echo
+  echo "Found helm..."
+fi
+
+# Setup a ServiceAccount to be used by tiller.
+echo
+echo "Setting up ServiceAccount for tiller..."
+kubectl --namespace kube-system create serviceaccount tiller
+
+# Make the tiller sa an admin of the cluster
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+
+# Initialize helm and tiller
+echo
+echo "Initializing helm..."
+helm init --service-account tiller --wait
+
+# Only allow tiller to listen to instructions from localhost
+echo
+echo "Securing tiller..."
+kubectl patch deployment tiller-deploy --namespace=kube-system --type=json --patch='[{"op": "add", "path": "/spec/template/spec/containers/0/command", "value": ["/tiller", "--listen=localhost:44134"]}]'
+

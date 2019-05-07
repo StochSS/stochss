@@ -1,0 +1,11 @@
+config:
+  BinderHub:
+    use_registry: true
+    image_prefix: DOCKERID/binder-
+    hub_url: http://HUBPROXYIP
+
+binderhub:
+  jupyterhub:
+    singleuser:
+      storage:
+        type: none
