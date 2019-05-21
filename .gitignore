@@ -1,2 +1,3 @@
-secret.yaml
-secret.yml
+node_modules/
+.swp
+.swo
