@@ -1,0 +1,9 @@
+tr
+  td: a.btn.btn-outline-primary(data-hook="edit-link")
+    | Edit
+  td(data-hook="name")
+  td
+    select(data-hook="version-select")
+      each version_tag in this.model.get("version_tags")
+        option(value=version_tag)= version_tag
+  td(data-hook="public")

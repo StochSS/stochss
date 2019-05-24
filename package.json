@@ -1,0 +1,59 @@
+{
+  "name": "stochss",
+  "version": "2.0.0",
+  "description": "",
+  "main": "webpack.config.js",
+  "scripts": {
+    "server": "node dev-server.js",
+    "start": "webpack-dev-server --env dev --open",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stochss/stochss.git"
+  },
+  "author": "StochSS Team (bdrawert@unca.edu)",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/stochss/stochss/issues"
+  },
+  "homepage": "https://github.com/stochss/stochss#readme",
+  "dependencies": {
+    "ampersand-app": "^2.0.0",
+    "ampersand-collection": "^2.0.2",
+    "ampersand-events": "^2.0.2",
+    "ampersand-form-view": "^7.1.0",
+    "ampersand-input-view": "^7.0.0",
+    "ampersand-model": "^8.0.1",
+    "ampersand-rest-collection": "^6.0.0",
+    "ampersand-router": "^5.0.0",
+    "ampersand-select-view": "^8.0.0",
+    "ampersand-state": "^5.0.3",
+    "ampersand-view": "^10.0.3",
+    "ampersand-view-switcher": "^3.0.0",
+    "bootstrap": "^4.3.1",
+    "domify": "^1.4.0",
+    "domready": "^1.0.8",
+    "jquery": "^3.4.1",
+    "katex": "^0.10.2",
+    "local-links": "^1.4.1",
+    "popper.js": "^1.15.0",
+    "pug": "^2.0.3",
+    "underscore": "^1.9.1",
+    "xhr": "^2.5.0"
+  },
+  "devDependencies": {
+    "clean-webpack-plugin": "^2.0.2",
+    "css-loader": "^2.1.1",
+    "express": "^4.17.0",
+    "html-webpack-plugin": "^3.2.0",
+    "json-server": "^0.15.0",
+    "pug-loader": "^2.4.0",
+    "puglatizer": "^1.2.0",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.32.1",
+    "webpack-cli": "^3.3.2",
+    "webpack-dev-middleware": "^3.7.0",
+    "webpack-dev-server": "^3.4.1"
+  }
+}
