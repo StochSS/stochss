@@ -5,6 +5,7 @@ var View = require('ampersand-view');
 var SpeciesEditorView = require('./species-editor');
 var ParametersEditorView = require('./parameters-editor');
 var ReactionsEditorView = require('./reactions-editor');
+var RunModelView = require('./run-model');
 var ModelStateButtonsView = require('./model-state-buttons');
 
 var template = require('../templates/includes/modelVersionEditor.pug');
@@ -72,6 +73,15 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new ReactionsEditorView({
           collection: this.model.reactions
+        });
+      }
+    },
+    runModel: {
+      selector: '[data-hook=run-model-container]',
+      waitFor: 'model',
+      prepareView: function (el) {
+        return new RunModelView({
+          model: this.model
         });
       }
     },

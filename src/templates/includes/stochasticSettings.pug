@@ -1,0 +1,31 @@
+div#stochastic-settings.card.card-body
+
+  table.table
+    thread
+      tr
+        th(scope="col") Realizations
+      tr
+        td: div(data-hook="realizations-container")
+
+  h5 Advanced Settings
+
+  table.table
+    thread
+      tr
+        th(scope="col", colspan="2") Algorithm
+
+      tr
+        td
+          input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="SSA", checked) 
+          |  SSA
+
+        td
+          input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="Tau-Leaping")
+          |  Tau-leaping
+
+    thread
+      tr
+        th(scope="col", colspan="2") Seed
+
+      tr
+        td(colspan="2"): div(data-hook="seed-container")

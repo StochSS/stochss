@@ -9,7 +9,8 @@ module.exports = View.extend({
     this.model.version_open_tag = this.model.latest_version;
   },
   events: {
-    "change [data-hook='version-select']": "selectVersion"
+    "change [data-hook='version-select']": "selectVersion",
+    "click [data-hook=remove]" : "clickRemoveHandler"
   },
   bindings: {
     'model.name' : '[data-hook~=name]',
@@ -38,8 +39,26 @@ module.exports = View.extend({
       hook: 'version-select'
     }
   },
+  clickRemoveHandler: function (e) {
+    this.removeModel();
+  },
   selectVersion: function (e) {
     this.model.version_open_tag = parseInt(e.target.value);
+  },
+  removeModel: function () {
+    var model = this.model;
+    if (!model.isNew()){
+      this.remove();
+      this.model.collection.remove(this.model);
+      model.destroy({
+        success: function () {
+          alert("The model was successfully deleted.");
+        },
+        error: function () {
+          alert("Oops, something went wrong.");
+        },
+      });
+    }
   }
 
 });

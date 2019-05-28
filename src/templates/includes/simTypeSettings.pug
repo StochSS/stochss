@@ -1,0 +1,16 @@
+div#sim-type-settings.card.card-body
+
+  table.table
+    thread
+      tr
+        th(scope="col", colspan="2") Simulation Type
+      tr
+        td
+          input(type="radio", name="simType", data-hook="select", data-name="deterministic", checked)
+          |  Deterministic
+
+        td
+          input(type="radio", name="simType", data-hook="select", data-name="stochastic")
+          |   Stochastic
+    
+  div(data-hook='advanced-settings-container')

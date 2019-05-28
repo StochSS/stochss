@@ -21,6 +21,7 @@ app.extend({
   models: new Models(),
   router: new Router(),
   me: new Me(),
+  
 
   init: function () {
     this.me.fetch();

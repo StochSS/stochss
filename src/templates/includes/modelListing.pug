@@ -7,3 +7,4 @@ tr
       each version_tag in this.model.get("version_tags")
         option(value=version_tag)= version_tag
   td(data-hook="public")
+  td: button.btn.btn-outline-secondary(data-hook="remove") X
