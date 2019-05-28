@@ -10,6 +10,7 @@ module.exports = View.extend({
   template: template,
   render: function () {
   	this.renderWithTemplate();
+    return this;
   },
   subviews: {
     inputRealizations: {

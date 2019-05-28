@@ -1,5 +1,7 @@
 div#sim-type-settings.card.card-body
 
+  h3 Run Model
+
   table.table
     thread
       tr
@@ -14,3 +16,15 @@ div#sim-type-settings.card.card-body
           |   Stochastic
     
   div(data-hook='advanced-settings-container')
+
+  table.table
+    thread
+      tr
+        th(scope="col") Simulation Time
+
+        th(scope="col") Time Units
+
+      tr
+        td: div(data-hook="end-sim-container")
+        
+        td: div(data-hook="time-units-container")

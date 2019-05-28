@@ -10,6 +10,7 @@ module.exports = View.extend({
   template: template,
   render: function () {
   	this.renderWithTemplate();
+    return this;
   },
   subviews: {
     inputRelativeTolerance: {
@@ -19,7 +20,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'relative-tolerance',
-          label: '',
+          label: 'Relative tolerance of the ODE solver (CVODES).  Valid valeus must be greater than 0.0:  ',
           tests: tests.valueTests,
           modelKey: 'relative-tolerance',
           valueType: 'number',
@@ -34,7 +35,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'absolute-tolerance',
-          label: '',
+          label: 'Absolute Tolerance of the ODE solver (CVODES).  Valid values must be greater than 0.0:  ',
           tests: tests.valueTests,
           modelKey: 'absolute-tolerance',
           valueType: 'number',
