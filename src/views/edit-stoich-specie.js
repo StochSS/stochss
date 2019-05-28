@@ -4,7 +4,7 @@ var template = require('../templates/includes/editStoichSpecie.pug');
 
 module.exports = SelectView.extend({
   // SelectView expects a string template, so pre-render it
-  template: template,
+  template: template(),
   bindings: {
     'model.ratio' : {
       hook: 'ratio'

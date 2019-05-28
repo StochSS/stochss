@@ -1,0 +1,196 @@
+{
+  "user": {
+    "name": "myuser"
+  },
+  "models": [
+    {
+      "id": 1,
+      "latest_version": 1,
+      "username": "myuser",
+      "name": "MyModel",
+      "public": false,
+      "is_stochastic": false,
+      "is_spatial": false,
+      "versions": [
+        {
+          "id": 1,
+          "version": 1,
+          "species": [
+            {
+              "id": 1,
+              "name": "S1",
+              "value": 1000
+            },
+            {
+              "id": 2,
+              "name": "S2",
+              "value": 0
+            }
+          ],
+          "parameters": [
+            {
+              "id": 1,
+              "name": "k0",
+              "value": 3
+            },
+            {
+              "id": 2,
+              "name": "k1",
+              "value": 0.03
+            }
+          ],
+          "reactions": [
+            {
+              "id": 1,
+              "name": "R0",
+              "annotation": "",
+              "massaction": false,
+              "rate": {
+                "id": 1,
+                "name": "k0",
+                "value": 3
+              },
+              "reactants": [
+                {
+                  "id": 1,
+                  "ratio": 1,
+                  "specie": {
+                    "id": 1,
+                    "name": "S1",
+                    "value": 1000
+                  }
+                }
+              ],
+              "products": [
+                {
+                  "id": 2,
+                  "ratio": 1,
+                  "specie": {
+                    "id": 2,
+                    "name": "S2",
+                    "value": 0
+                  }
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "R1",
+              "annotation": "",
+              "massaction": false,
+              "rate": {
+                "id": 2,
+                "name": "k1",
+                "value": 0.03
+              },
+              "reactants": [
+                {
+                  "id": 2,
+                  "ratio": 1,
+                  "specie": {
+                    "id": 2,
+                    "name": "S2",
+                    "value": 0
+                  }
+                }
+              ],
+              "products": [
+                {
+                  "id": 1,
+                  "ratio": 1,
+                  "specie": {
+                    "id": 1,
+                    "name": "S1",
+                    "value": 1000
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "latest_version": 1,
+      "username": "myuser",
+      "name": "MyModelAgain",
+      "public": false,
+      "is_stochastic": false,
+      "is_spatial": false,
+      "versions": [
+        {
+          "version": 1,
+          "species": [
+            {
+              "name": "S1",
+              "value": 0
+            },
+            {
+              "name": "S2",
+              "value": 0
+            },
+            {
+              "name": "S3",
+              "value": 0
+            }
+          ],
+          "parameters": [
+            {
+              "name": "k0",
+              "value": 0
+            },
+            {
+              "name": "k1",
+              "value": 0
+            },
+            {
+              "name": "k2",
+              "value": 0
+            }
+          ],
+          "reactions": [
+            {
+              "name": "R0",
+              "annotation": "",
+              "massaction": false,
+              "rate": {
+                "name": "k0",
+                "value": 0
+              },
+              "reactants": [
+                {
+                  "ratio": 1,
+                  "specie": {
+                    "name": "S1",
+                    "value": 0
+                  }
+                }
+              ],
+              "products": []
+            },
+            {
+              "name": "R1",
+              "annotation": "",
+              "massaction": false,
+              "rate": {
+                "name": "k0",
+                "value": 0
+              },
+              "reactants": [],
+              "products": [
+                {
+                  "ratio": 1,
+                  "specie": {
+                    "name": "S1",
+                    "value": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "id": 2
+    }
+  ]
+}

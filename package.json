@@ -5,7 +5,6 @@
   "main": "webpack.config.js",
   "scripts": {
     "server": "node dev-server.js",
-    "start": "webpack-dev-server --env dev --open",
     "build": "webpack"
   },
   "repository": {

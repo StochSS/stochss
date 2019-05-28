@@ -7,7 +7,7 @@ const compiler = webpack(config);
 
 const jsonServer = require('json-server');
 const server = jsonServer.create();
-const router = jsonServer.router('db.json');
+const router = jsonServer.router('dev-db.json');
 const jsonServerMiddlewares = jsonServer.defaults();
 
 server.use('/api', jsonServerMiddlewares);
