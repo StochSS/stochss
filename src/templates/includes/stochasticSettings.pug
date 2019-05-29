@@ -7,25 +7,28 @@ div#stochastic-settings.card.card-body
       tr
         td: div(data-hook="realizations-container")
 
-  h5 Advanced Settings
+  h5
+    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings')
+      |Advanced Settings
 
-  table.table
-    thread
-      tr
-        th(scope="col", colspan="2") Algorithm
+  div(id='advanced-settings', class='collapse')
+    table.table
+      thread
+        tr
+          th(scope="col", colspan="2") Algorithm
 
-      tr
-        td
-          input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="SSA", checked) 
-          |  SSA
+        tr
+          td
+            input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="SSA", checked) 
+            |  SSA
 
-        td
-          input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="Tau-Leaping")
-          |  Tau-leaping
+          td
+            input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="Tau-Leaping")
+            |  Tau-leaping
 
-    thread
-      tr
-        th(scope="col", colspan="2") Seed
+      thread
+        tr
+          th(scope="col", colspan="2") Seed
 
-      tr
-        td(colspan="2"): div(data-hook="seed-container")
+        tr
+          td(colspan="2"): div(data-hook="seed-container")

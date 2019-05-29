@@ -38,7 +38,7 @@ module.exports = View.extend({
     this.stochasitcSettingsView = new StochasitcSettingsView({
       model: this.model.stochasticSettings
     });
-    this.simTypeSettingsViewSwitcher.set(this.deterministicSettingsView);
+    this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView);
   },
   subviews: {
     inputSimEnd: {
