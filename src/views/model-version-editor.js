@@ -81,7 +81,7 @@ module.exports = View.extend({
       waitFor: 'model',
       prepareView: function (el) {
         return new SimSettingsView({
-          model: this.model.simulationSettings
+          model: this.model.simSettings
         });
       }
     },

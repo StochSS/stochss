@@ -11,16 +11,26 @@ var template = require('../templates/includes/simSettings.pug');
 
 module.exports = View.extend({
   template: template,
-  binding: {
+  bindings: {
+    'model.endSim': {
+      type: 'value',
+      hook: 'end-sim-container'
+    },
+    'model.timeStep': {
+      type: 'value',
+      hook: 'time-units-container'
+    }
   },
   events: {
     'change [data-hook=select]' : 'setSimTypeSettings'
+  },
+  update: function (e) {
   },
   render: function () {
     this.renderWithTemplate();
     this.advancedSettingsContainer = this.queryByHook('advanced-settings-container');
     this.simTypeSettingsViewSwitcher = new ViewSwitcher({
-    	el: this.advancedSettingsContainer,
+      el: this.advancedSettingsContainer,
     });
     this.deterministicSettingsView = new DeterministicSettingsView({
       model: this.model.deterministicSettings
@@ -40,9 +50,9 @@ module.exports = View.extend({
           name: 'end-sim',
           label: '0 to ',
           tests: tests.valueTests,
-          modelKey: 'end-sim',
+          modelKey: 'endSim',
           valueType: 'number',
-          value: '100'
+          value: this.model.endSim
         });
       },
     },
@@ -55,19 +65,19 @@ module.exports = View.extend({
           name: 'time-units',
           label: 'store state every ',
           tests: tests.valueTests,
-          modelKey: 'time-units',
+          modelKey: 'timeStep',
           valueTypes: 'number',
-          value: '1.0'
+          value: this.model.timeStep
         });
       },
     },
   },
   setSimTypeSettings: function (e) {
-	  var simulationType = e.target.dataset.name;
-	  if(simulationType === 'deterministic'){
+    var simulationType = e.target.dataset.name;
+    if(simulationType === 'deterministic'){
       this.simTypeSettingsViewSwitcher.set(this.deterministicSettingsView);
-	  }else{
+    }else{
       this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView);
-	  }
+    }
   },
 });

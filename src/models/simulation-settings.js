@@ -4,12 +4,21 @@ var DeterministicSettings = require('./deterministic-settings');
 
 module.exports = State.extend({
   props: {
-    simType: 'string',
-    endSim: 'number',
-    timeStep: 'number'
+    simType: {
+      type: 'string',
+      default: 'stochastic'
+    },
+    endSim: {
+      type: 'number',
+      default: 100
+    },
+    timeStep: {
+      type: 'number',
+      default: 1.0
+    },
   },
   children: {
     stochasticSettings: StochasticSettings,
-    deterministicsSettings: DeterministicSettings
+    deterministicSettings: DeterministicSettings
   }
 });
