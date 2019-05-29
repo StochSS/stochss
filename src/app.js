@@ -22,7 +22,6 @@ app.extend({
   router: new Router(),
   me: new Me(),
   
-
   init: function () {
     this.me.fetch();
     this.models.fetch();

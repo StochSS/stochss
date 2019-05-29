@@ -1,18 +1,21 @@
 div#deterministic-settings.card.card-body
 
-  h5 Advanced Settings
+  h5
+    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings')
+      |Advanced Settings
 
-  table.table
-    thread
-      tr
-        th(scope="col", colspan="2") Relative Tolerance
+  div(id='advanced-settings', class='collapse')
+    table.table
+      thread
+        tr
+          th(scope="col", colspan="2") Relative Tolerance
 
-      tr
-        td(colspan="2"): div(data-hook="relative-tolerance-container") Relative tolerance of the ODE solver (CVODES).  Valid valeus must be greater than 0.0:  
+        tr
+          td(colspan="2"): div(data-hook="relative-tolerance-container")
 
-    thread
-      tr
-        th(scope="col", colspan="2") Absolute Tolerance
+      thread
+        tr
+          th(scope="col", colspan="2") Absolute Tolerance
 
-      tr
-        td(colspan="2"): div(data-hook="absolute-tolerance-container") Absolute Tolerance of the ODE solver (CVODES).  Valid values must be greater than 0.0:  
+        tr
+          td(colspan="2"): div(data-hook="absolute-tolerance-container")

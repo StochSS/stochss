@@ -8,8 +8,17 @@ var template = require('../templates/includes/deterministicSettings.pug');
 
 module.exports = View.extend({
   template: template,
-  render: function () {
-  	this.renderWithTemplate();
+  bindings: {
+    'model.relativeTolerance': {
+      type: 'value',
+      hook: 'relative-tolerance-container'
+    },
+    'model.absoluteTolerance': {
+      type: 'value',
+      hook: 'absolute-tolerance-container'
+    }
+  },
+  update: function (e) {
   },
   subviews: {
     inputRelativeTolerance: {
@@ -19,11 +28,11 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'relative-tolerance',
-          label: '',
+          label: 'Relative tolerance of the ODE solver (CVODES).  Valid valeus must be greater than 0.0:  ',
           tests: tests.valueTests,
-          modelKey: 'relative-tolerance',
+          modelKey: 'relativeTolerance',
           valueType: 'number',
-          value: '1e-6'
+          value: this.model.relativeTolerance
         });
       },
     },
@@ -34,11 +43,11 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'absolute-tolerance',
-          label: '',
+          label: 'Absolute Tolerance of the ODE solver (CVODES).  Valid values must be greater than 0.0:  ',
           tests: tests.valueTests,
-          modelKey: 'absolute-tolerance',
+          modelKey: 'absoluteTolerance',
           valueType: 'number',
-          value: '1e-9'
+          value: this.model.absoluteTolerance
         });
       }
     }

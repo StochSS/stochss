@@ -8,8 +8,17 @@ var template = require('../templates/includes/stochasticSettings.pug');
 
 module.exports = View.extend({
   template: template,
-  render: function () {
-  	this.renderWithTemplate();
+  bindings: {
+    'model.realizations': {
+      type: 'value',
+      hook: 'realizations-container'
+    },
+    'model.seed': {
+      type: 'value',
+      hook: 'seed-container'
+    }
+  },
+  update: function (e) {
   },
   subviews: {
     inputRealizations: {
@@ -23,7 +32,7 @@ module.exports = View.extend({
           tests: tests.valueTests,
           modelKey: 'realizations',
           valueType: 'number',
-          value: '1'
+          value: this.model.realizations
         });
       },
     },
@@ -38,7 +47,7 @@ module.exports = View.extend({
           tests: tests.valueTests,
           modelKey: 'seed',
           valueType: 'number',
-          value: '-1'
+          value: this.model.seed
         });
       }
     }

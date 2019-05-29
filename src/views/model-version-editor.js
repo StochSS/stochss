@@ -5,7 +5,7 @@ var View = require('ampersand-view');
 var SpeciesEditorView = require('./species-editor');
 var ParametersEditorView = require('./parameters-editor');
 var ReactionsEditorView = require('./reactions-editor');
-var RunModelView = require('./run-model');
+var SimSettingsView = require('./sim-settings');
 var ModelStateButtonsView = require('./model-state-buttons');
 
 var template = require('../templates/includes/modelVersionEditor.pug');
@@ -76,12 +76,12 @@ module.exports = View.extend({
         });
       }
     },
-    runModel: {
-      selector: '[data-hook=run-model-container]',
+    simSettings: {
+      selector: '[data-hook=sim-settings-container]',
       waitFor: 'model',
       prepareView: function (el) {
-        return new RunModelView({
-          model: this.model
+        return new SimSettingsView({
+          model: this.model.simSettings
         });
       }
     },
