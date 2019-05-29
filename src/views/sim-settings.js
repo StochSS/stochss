@@ -11,6 +11,8 @@ var template = require('../templates/includes/simSettings.pug');
 
 module.exports = View.extend({
   template: template,
+  binding: {
+  },
   events: {
     'change [data-hook=select]' : 'setSimTypeSettings'
   },
@@ -20,8 +22,12 @@ module.exports = View.extend({
     this.simTypeSettingsViewSwitcher = new ViewSwitcher({
     	el: this.advancedSettingsContainer,
     });
-    this.deterministicSettingsView = new DeterministicSettingsView();
-    this.stochasitcSettingsView = new StochasitcSettingsView();
+    this.deterministicSettingsView = new DeterministicSettingsView({
+      model: this.model.deterministicSettings
+    });
+    this.stochasitcSettingsView = new StochasitcSettingsView({
+      model: this.model.stochasticSettings
+    });
     this.simTypeSettingsViewSwitcher.set(this.deterministicSettingsView);
   },
   subviews: {

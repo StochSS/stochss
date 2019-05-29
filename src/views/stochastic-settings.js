@@ -8,10 +8,6 @@ var template = require('../templates/includes/stochasticSettings.pug');
 
 module.exports = View.extend({
   template: template,
-  render: function () {
-  	this.renderWithTemplate();
-    return this;
-  },
   subviews: {
     inputRealizations: {
       hook: 'realizations-container',

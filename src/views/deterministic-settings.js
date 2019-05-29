@@ -8,10 +8,6 @@ var template = require('../templates/includes/deterministicSettings.pug');
 
 module.exports = View.extend({
   template: template,
-  render: function () {
-  	this.renderWithTemplate();
-    return this;
-  },
   subviews: {
     inputRelativeTolerance: {
       hook: 'relative-tolerance-container',
