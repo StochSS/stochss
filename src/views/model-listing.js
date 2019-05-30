@@ -1,5 +1,6 @@
 var View = require('ampersand-view');
 var _ = require('underscore');
+var $ = require('jquery');
 
 var template = require('../templates/includes/modelListing.pug');
 
@@ -10,7 +11,7 @@ module.exports = View.extend({
   },
   events: {
     "change [data-hook='version-select']": "selectVersion",
-    "click [data-hook=remove]" : "clickRemoveHandler"
+    "click [data-hook=confirm-delete]" : "clickRemoveHandler"
   },
   bindings: {
     'model.name' : '[data-hook~=name]',
@@ -40,6 +41,9 @@ module.exports = View.extend({
     }
   },
   clickRemoveHandler: function (e) {
+    
+    //$('#delete-modal').modal('show');
+    //alert("You confirmed the deletion of this Model!");
     this.removeModel();
   },
   selectVersion: function (e) {
@@ -48,8 +52,6 @@ module.exports = View.extend({
   removeModel: function () {
     var model = this.model;
     if (!model.isNew()){
-      this.remove();
-      this.model.collection.remove(this.model);
       model.destroy({
         success: function () {
           alert("The model was successfully deleted.");
