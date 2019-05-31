@@ -3,6 +3,7 @@ var domify = require('domify');
 var View = require('ampersand-view');
 var FormView = require('ampersand-form-view');
 var SelectView = require('ampersand-select-view');
+var InputView = require('./input');
 // Config
 var ReactionTypes = require('../reaction-types');
 var tests = require('./tests');
@@ -11,11 +12,18 @@ var StoichSpecie = require('../models/stoich-specie');
 var StoichSpecies = require('../models/stoich-species');
 // Views
 var EditStoichSpecieView = require('./edit-stoich-specie');
+var EditCustomStoichSpecieView = require('./edit-custom-stoich-specie')
 
 var template = require('../templates/includes/reactionDetails.pug');
 
 module.exports = View.extend({
   template: template,
+  bindings: {
+    'model.propensity': {
+      type: 'value',
+      hook: 'select-rate-parameter'
+    }
+  },
   events: {
     'change [data-hook=select-rate-parameter]' : 'selectRateParam',
     'change [data-hook=select-reaction-type]'  : 'selectReactionType',
@@ -60,10 +68,9 @@ module.exports = View.extend({
   selectReactionType: function (e) {
     var label = e.target.selectedOptions.item(0).value;
     var type = _.findKey(ReactionTypes, function (o) { return o.label === label; });
-    // model.type is inferred from the structure of reactants and products
+    this.model.type = type;
     this.updateStoichSpeciesForReactionType(type);
-    // Update specie.inUse for every species
-    app.trigger("stoichSpecieSelectChange");
+    this.render();
   },
   render: function () {
     var self = this;
@@ -83,7 +90,18 @@ module.exports = View.extend({
             options: self.getReactionTypeLabels(),
             value: ReactionTypes[self.model.type].label,
           }),
-          new SelectView({
+          (this.model.type === 'custom-propensity') ?
+          new InputView({
+            el: self.queryByHook('select-rate-parameter'),
+            parent: this,
+            required: true,
+            name: 'rate',
+            label: 'Rate Parameter:',
+            tests:'',
+            modelKey:'propensity',
+            valueType: 'string',
+            value: this.model.propensity
+          }) : new SelectView({
             el: self.queryByHook('select-rate-parameter'),
             label: 'Rate parameter:',
             name: 'rate',
@@ -118,18 +136,21 @@ module.exports = View.extend({
         unselectedText: 'Pick a species',
       }
     }
+    var type = this.model.type;
+    var StoichSpeciesView = (type === 'custom-propensity' || type === 'custom-massaction') ? EditCustomStoichSpecieView : EditStoichSpecieView
     this.form.renderCollection(
       this.model.reactants,
-      EditStoichSpecieView,
+      StoichSpeciesView,
       this.queryByHook('reactants-editor'),
       args
     );
     this.form.renderCollection(
       this.model.products,
-      EditStoichSpecieView,
+      StoichSpeciesView,
       this.queryByHook('products-editor'),
       args
     );
+    //setup dom toggle binding
   },
   getReactionTypeLabels: function () {
     return _.map(ReactionTypes, function (val, key) { return val.label; })

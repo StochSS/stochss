@@ -1,6 +1,6 @@
 var SelectView = require('ampersand-select-view');
 
-var template = require('../templates/includes/editStoichSpecie.pug');
+var template = require('../templates/includes/editCustomStoichSpecie.pug');
 
 module.exports = SelectView.extend({
   // SelectView expects a string template, so pre-render it
@@ -11,7 +11,10 @@ module.exports = SelectView.extend({
     }
   },
   events: {
-    'change select' : 'selectChangeHandler'
+    'change select' : 'selectChangeHandler',
+    'click [data-hook=increment]' : 'handleIncrement',
+    'click [data-hook=decrement]' : 'handleDecrement',
+    'click [data-hook=remove]' : 'deleteSpecie'
   },
   initialize: function () {
     SelectView.prototype.initialize.apply(this, arguments);
@@ -39,7 +42,16 @@ module.exports = SelectView.extend({
     //
     //     this.(StoichSpecie).(StoichSpecies).(Reaction).(Reactions).(Version).species
     return this.model.collection.parent.collection.parent.species;
+  },
+  handleIncrement: function () {
+    this.model.ratio++;
+  },
+  handleDecrement: function () {
+    this.model.ratio > 1 ? this.model.ratio-- : this.model.ratio = 1;
+  },
+  deleteSpecie: function () {
+    this.model.collection.remove(this.model);
+    //TODO:  Remove the specie from the collection of reactants or products
   }
-  
 });
 
