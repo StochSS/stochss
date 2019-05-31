@@ -205,6 +205,12 @@ svg {
   vertical-align: middle;
 }
 
+span {
+  padding-right: 0.35rem;
+  padding-left: 0.35rem;
+  font-size: 1rem;
+}
+
 table {
   border-collapse: collapse;
 }

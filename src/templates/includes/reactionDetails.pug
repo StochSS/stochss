@@ -1,35 +1,15 @@
 div.reaction-details(data-hook="reaction-details-container")
 
-  //- block comment
-    div.col-md-12
-      label(for="select-reaction-type")
-        | Reaction Type:
-      select#select-reaction-type(data-hook="select-reaction-type")
-        option(data-hook="creation") O -> A
-        option(data-hook="destruction") A -> O
-        option(data-hook="change") A -> B
-        option(data-hook="dimerization") A+A -> B
-        option(data-hook="merge") A+B -> C
-        option(data-hook="split") A -> B+C
-        option(data-hook="four") A+B -> C+D
-        option(data-hook="custom-massaction") Custom mass action
-        option(data-hook="custom-propensity") Custom propensity
-
+  
   div.col-md-12(data-hook="select-reaction-type")
 
   div.col-md-12(data-hook="select-rate-parameter")
 
-  //- comment block
-    div.col-md-12 
-      label(for="select-rate-parameter")
-        | Rate parameter:
-      select#select-rate-parameter(data-hook="select-rate-parameter")
-        each param in this.model.parameters.models
-          option(value=param.name)= param.name
-
   div.row(data-hook="stoich-species-container")
     div.col-md-6(data-hook="reactants-editor")
       h5 Reactants
+      //div
     div.col-md-6(data-hook="products-editor")
       h5 Products
+      //div
 

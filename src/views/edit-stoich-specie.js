@@ -40,5 +40,6 @@ module.exports = SelectView.extend({
     //     this.(StoichSpecie).(StoichSpecies).(Reaction).(Reactions).(Version).species
     return this.model.collection.parent.collection.parent.species;
   }
+  
 });
 

@@ -10,7 +10,9 @@ module.exports = State.extend({
     name:  'string',
     annotation: 'string',
     // True indicates a custom mass action equation
-    massaction: 'boolean'
+    massaction: 'boolean',
+    type: 'string',
+    propensity: 'string'
   },
   children: {
     rate: Parameter,
@@ -26,44 +28,5 @@ module.exports = State.extend({
       default: true
     }
   },
-  derived: {
-    type: {
-      // The reaction type is not persisted to the database,
-      // so we infer it based on the structure of reactants and products
-      deps: ['massaction', 'reactants', 'products'],
-      fn: function () {
-        var numReactants = this.reactants.length;
-        var numProducts = this.products.length;
-        if (!this.massaction) {
-          if (!numReactants) {
-            return 'creation';
-          }
-          if (!numProducts) {
-            return 'destruction';
-          }
-          if (numReactants === 1 && numProducts === 1) {
-            var reactant = this.reactants.at(0);
-            if (reactant.ratio === 1) {
-              return 'change';
-            } else { // ratio is 2
-              return 'dimerization';
-            }
-          }
-          if (numReactants === 2 && numProducts === 1) {
-            return 'merge';
-          }
-          if (numReactants === 1 && numProducts === 2) {
-            return 'split';
-          }
-          if (numReactants === 2 && numProducts === 2) {
-            return 'four';
-          }
-        } else {
-          // TODO handle case for custom mass action
-          // Use defaults for new reactions (see reaction-types.js)
-          // otherwise use what we got back from database
-        }
-      }
-    }
-  }
+
 });
