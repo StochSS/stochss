@@ -26,9 +26,4 @@ div#stochastic-settings.card.card-body
             input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="Tau-Leaping")
             |  Tau-leaping
 
-      thread
-        tr
-          th(scope="col", colspan="2") Seed
-
-        tr
-          td(colspan="2"): div(data-hook="seed-container")
+    div(data-hook="algorithm-settings-container")
