@@ -15,7 +15,7 @@ div#stochastic-settings.card.card-body
     table.table
       thread
         tr
-          th(scope="col", colspan="2") Algorithm
+          th(scope="col", colspan="3") Algorithm
 
         tr
           td
@@ -25,5 +25,9 @@ div#stochastic-settings.card.card-body
           td
             input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="Tau-Leaping")
             |  Tau-leaping
+
+          td
+            input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="Hybrid-Tau-Leaping")
+            |  Hybrid Tau-Leaping
 
     div(data-hook="algorithm-settings-container")

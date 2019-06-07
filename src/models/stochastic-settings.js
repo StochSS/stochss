@@ -1,7 +1,7 @@
 var State = require('ampersand-state');
 var SSASettings = require('./ssa-settings');
 var TauLeapingSettings = require('./tau-leaping-settings');
-//var HybridTauSettings = require('./hybrid-tau-settings');
+var HybridTauSettings = require('./hybrid-tau-settings');
 
 module.exports = State.extend({
   props:{
@@ -17,6 +17,6 @@ module.exports = State.extend({
   children: {
     ssaSettings: SSASettings,
     tauLeapingSettings: TauLeapingSettings,
-    //hybridTauSettings: HybridTauSettings
+    hybridTauSettings: HybridTauSettings
   }
 });

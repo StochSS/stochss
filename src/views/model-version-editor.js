@@ -81,7 +81,9 @@ module.exports = View.extend({
       waitFor: 'model',
       prepareView: function (el) {
         return new SimSettingsView({
-          model: this.model.simSettings
+          parent: this,
+          model: this.model.simSettings,
+          species: this.model.species
         });
       }
     },

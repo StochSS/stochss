@@ -42,8 +42,8 @@ module.exports = View.extend({
         return new InputView ({
           parent: this,
           required: true,
-          name: 'tau-tolerance',
-          label: 'Set the tolerance (valid value must be between 0.0 and 0.1): ',
+          name: 'Tau-Tolerance',
+          label: 'Set the tau-tolerance (valid value must be between 0.0 and 1.0): ',
           tests: tests.valueTests,
           modelKey: 'tauTolerance',
           valueType: 'number',

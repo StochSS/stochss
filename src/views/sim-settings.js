@@ -24,6 +24,10 @@ module.exports = View.extend({
   events: {
     'change [data-hook=select]' : 'setSimTypeSettings'
   },
+  initialize: function (args) {
+    this.model = args.model;
+    this.species = args.species;
+  },
   update: function (e) {
   },
   render: function () {
@@ -36,6 +40,7 @@ module.exports = View.extend({
       model: this.model.deterministicSettings
     });
     this.stochasitcSettingsView = new StochasitcSettingsView({
+      parent: this,
       model: this.model.stochasticSettings
     });
     this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView);
