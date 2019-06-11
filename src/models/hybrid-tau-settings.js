@@ -8,11 +8,11 @@ module.exports = State.extend({
     },
     tauTolerance: {
       type: 'number',
-      default: 0.1
+      default: 0.3
     },
     switchingTolerance: {
       type: 'number',
-      default: 0.1
+      default: 0.3
     }
   }
 });

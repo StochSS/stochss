@@ -1,5 +1,6 @@
 var app = require('ampersand-app');
 var tests = require('./tests');
+var $ = require('jquery');
 //Views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -17,6 +18,14 @@ module.exports = View.extend({
       type: 'value',
       hook: 'absolute-tolerance-container'
     }
+  },
+  events: {
+    'click [data-hook=advanced-settings-button]' : 'toggleAdvancedSettings'
+  },
+  render: function () {
+    View.prototype.render.apply(this);
+    if(this.model.isAdvancedSettingsOpen)
+      $(this.queryByHook('advanced-settings')).collapse();
   },
   update: function (e) {
   },
@@ -51,5 +60,12 @@ module.exports = View.extend({
         });
       }
     }
+  },
+  toggleAdvancedSettings: function (e) {
+    this.model.isAdvancedSettingsOpen ? this.setIsAdvancedSettingsOpen(false) : this.setIsAdvancedSettingsOpen(true);
+  },
+  setIsAdvancedSettingsOpen: function (value) {
+    this.model.isAdvancedSettingsOpen = value;
+    this.parent.model.stochasticSettings.isAdvancedSettingsOpen = value;
   }
 });

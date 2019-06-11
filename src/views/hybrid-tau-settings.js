@@ -3,7 +3,8 @@ var tests = require('./tests');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
-//var SelectView = require('ampersand-select-view');
+var SelectView = require('ampersand-select-view');
+var EditSpecieModeView = require('./edit-specie-mode');
 
 var template = require('../templates/includes/hybridTauSettings.pug');
 
@@ -22,6 +23,29 @@ module.exports = View.extend({
       type: 'value',
       hook: 'switching-tolerance-container'
     }
+  },
+  render: function () {
+    var self = this;
+    View.prototype.render.apply(this);
+    var args = {
+      viewOptions: {
+        name: 'specie-mode',
+        label: '',
+        require: true,
+        textAttribute: 'mode',
+        eagerValidate: true,
+        idAttribute: 'mode',
+        options: ['deterministic', 'stochastic', 'dynamic'],
+        unselectedText: 'Select a mode',
+        value: ''
+      }
+    };
+    this.renderCollection(
+      this.parent.parent.species,
+      EditSpecieModeView,
+      this.queryByHook('specie-mode-container'),
+      args
+    );
   },
   update: function (e) {
   },
@@ -67,7 +91,7 @@ module.exports = View.extend({
           tests: tests.valueTests,
           modelKey: 'switchingTolerance',
           valueType: 'number',
-          vlaue: this.model.switchingTolerance
+          value: this.model.switchingTolerance
         });
       }
     }

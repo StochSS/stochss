@@ -18,5 +18,11 @@ module.exports = State.extend({
     ssaSettings: SSASettings,
     tauLeapingSettings: TauLeapingSettings,
     hybridTauSettings: HybridTauSettings
+  },
+  session: {
+    isAdvancedSettingsOpen: {
+      type: 'boolean',
+      default: false
+    }
   }
 });

@@ -1,6 +1,7 @@
 var app = require('ampersand-app');
 var tests = require('./tests');
 var ViewSwitcher = require('ampersand-view-switcher');
+var $ = require('jquery');
 //Views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -19,14 +20,35 @@ module.exports = View.extend({
     'model.timeStep': {
       type: 'value',
       hook: 'time-units-container'
+    },
+    'model.is_stochastic': {
+      type: 'booleanAttribute',
+      hook: 'select-stochastic',
+      name: 'checked',
+      invert: false
+    },
+    'model.is_stochastic': {
+      type: 'booleanAttribute',
+      hook: 'select-deterministic',
+      name: 'checked',
+      invert: true
     }
   },
   events: {
-    'change [data-hook=select]' : 'setSimTypeSettings'
+    'change [data-hook=select-deterministic]' : 'setSimTypeSettings',
+    'change [data-hook=select-stochastic]' : 'setSimTypeSettings'
   },
   initialize: function (args) {
     this.model = args.model;
     this.species = args.species;
+    this.deterministicSettingsView = new DeterministicSettingsView({
+      parent: this,
+      model: this.model.deterministicSettings
+    });
+    this.stochasitcSettingsView = new StochasitcSettingsView({
+      parent: this,
+      model: this.model.stochasticSettings
+    });
   },
   update: function (e) {
   },
@@ -36,14 +58,9 @@ module.exports = View.extend({
     this.simTypeSettingsViewSwitcher = new ViewSwitcher({
       el: this.advancedSettingsContainer,
     });
-    this.deterministicSettingsView = new DeterministicSettingsView({
-      model: this.model.deterministicSettings
-    });
-    this.stochasitcSettingsView = new StochasitcSettingsView({
-      parent: this,
-      model: this.model.stochasticSettings
-    });
-    this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView);
+    this.model.is_stochastic ?
+    this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView) :
+    this.simTypeSettingsViewSwitcher.set(this.deterministicSettingsView);
   },
   subviews: {
     inputSimEnd: {
@@ -84,5 +101,6 @@ module.exports = View.extend({
     }else{
       this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView);
     }
-  },
+    this.model.is_stochastic = (simulationType === 'stochastic');
+  }
 });

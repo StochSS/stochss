@@ -4,9 +4,9 @@ var DeterministicSettings = require('./deterministic-settings');
 
 module.exports = State.extend({
   props: {
-    simType: {
-      type: 'string',
-      default: 'stochastic'
+    is_stochastic: {
+      type: 'boolean',
+      default: true
     },
     endSim: {
       type: 'number',

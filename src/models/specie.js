@@ -1,3 +1,19 @@
-var ReactionVar = require('./reaction-var');
+var State = require('ampersand-state');
 
-module.exports = ReactionVar
+module.exports = State.extend({
+  props: {
+    id: 'number',
+    name: 'string',
+    value: 'number',
+    mode: {
+      type: 'string',
+      default: 'dynamic'
+    }
+  },
+  session: {
+    inUse: {
+      type: 'boolean',
+      default: false
+    }
+  }
+});

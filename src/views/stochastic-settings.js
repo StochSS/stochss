@@ -1,6 +1,7 @@
 var app = require('ampersand-app');
 var tests = require('./tests');
 var ViewSwitcher = require('ampersand-view-switcher');
+var $ = require('jquery');
 //Views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -19,7 +20,20 @@ module.exports = View.extend({
     }
   },
   events: {
-    'change [data-hook=algorithm-select]' : 'setStochasticAlgorithm'
+    'change [data-hook=algorithm-select]' : 'setStochasticAlgorithm',
+    'click [data-hook=advanced-settings-button]' : 'toggleAdvancedSettings'
+  },
+  initialize: function () {
+    this.ssaSettingsView = new SSASettingsView ({
+      model: this.model.ssaSettings
+    });
+    this.tauSettingsView = new TauSettingsView ({
+      model: this.model.tauLeapingSettings
+    });
+    this.hybridSettingsView = new HybridSettingsView ({
+      parent: this,
+      model: this.model.hybridTauSettings
+    });
   },
   update: function (e) {
   },
@@ -29,16 +43,9 @@ module.exports = View.extend({
     this.algorithmSettingsViewSwitcher = new ViewSwitcher({
       el: this.algorithmSettingsContainer,
     });
-    this.ssaSettingsView = new SSASettingsView ({
-      model: this.model.ssaSettings
-    });
-    this.tauSettingsView = new TauSettingsView ({
-      model: this.model.tauLeapingSettings
-    });
-    this.hybridSettingsView = new HybridSettingsView ({
-      model: this.model.hybridTauSettings
-    });
     this.algorithmSettingsViewSwitcher.set(this.ssaSettingsView);
+    if(this.model.isAdvancedSettingsOpen)
+      $(this.queryByHook('advanced-settings')).collapse();
   },
   subviews: {
     inputRealizations: {
@@ -66,5 +73,12 @@ module.exports = View.extend({
       this.algorithmSettingsViewSwitcher.set(this.hybridSettingsView);//throws an error
     else
       this.algorithmSettingsViewSwitcher.set(this.ssaSettingsView);
+  },
+  toggleAdvancedSettings: function (e) {
+    this.model.isAdvancedSettingsOpen ? this.openCloseAdvancedSettings(false) : this.openCloseAdvancedSettings(false);
+  },
+  openCloseAdvancedSettings: function (value) {
+    this.model.isAdvancedSettingsOpen = value;
+    this.parent.model.deterministicSettings.isAdvancedSettingsOpen = value;
   }
 });

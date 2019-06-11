@@ -8,10 +8,10 @@ div#stochastic-settings.card.card-body
         td: div(data-hook="realizations-container")
 
   h5
-    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings')
+    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button')
       |Advanced Settings
 
-  div(id='advanced-settings', class='collapse')
+  div(id='advanced-settings', class='collapse', data-hook='advanced-settings')
     table.table
       thread
         tr

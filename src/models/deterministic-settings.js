@@ -10,5 +10,11 @@ module.exports = State.extend({
       type: 'number',
       default: 1e-9
     }
+  },
+  session: {
+    isAdvancedSettingsOpen: {
+      type: 'boolean',
+      default: false
+    }
   }
 });
