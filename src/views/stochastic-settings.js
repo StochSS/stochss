@@ -20,7 +20,9 @@ module.exports = View.extend({
     }
   },
   events: {
-    'change [data-hook=algorithm-select]' : 'setStochasticAlgorithm',
+    'change [data-hook=ssa-select]' : 'getStochasticAlgorithm',
+    'change [data-hook=tau-leaping-select]' : 'getStochasticAlgorithm',
+    'change [data-hook=hybrid-tau-leaping-select]' : 'getStochasticAlgorithm',
     'click [data-hook=advanced-settings-button]' : 'toggleAdvancedSettings'
   },
   initialize: function () {
@@ -43,7 +45,7 @@ module.exports = View.extend({
     this.algorithmSettingsViewSwitcher = new ViewSwitcher({
       el: this.algorithmSettingsContainer,
     });
-    this.algorithmSettingsViewSwitcher.set(this.ssaSettingsView);
+    this.setStochasticAlgorithm(this.model.algorithm);
     if(this.model.isAdvancedSettingsOpen)
       $(this.queryByHook('advanced-settings')).collapse();
   },
@@ -64,15 +66,24 @@ module.exports = View.extend({
       }
     }
   },
-  setStochasticAlgorithm: function (e) {
+  getStochasticAlgorithm: function (e) {
     var algorithm = e.target.dataset.name;
+    this.setStochasticAlgorithm(algorithm);
+  },
+  setStochasticAlgorithm: function (algorithm) {
     this.model.algorithm = algorithm;
-    if(algorithm === 'Tau-Leaping')
+    if(algorithm === 'Tau-Leaping'){
       this.algorithmSettingsViewSwitcher.set(this.tauSettingsView);
-    else if(algorithm === 'Hybrid-Tau-Leaping')
-      this.algorithmSettingsViewSwitcher.set(this.hybridSettingsView);//throws an error
-    else
+      $(this.queryByHook('tau-leaping-select')).prop('checked', true);
+    }
+    else if(algorithm === 'Hybrid-Tau-Leaping'){
+      this.algorithmSettingsViewSwitcher.set(this.hybridSettingsView);
+      $(this.queryByHook('hybrid-tau-leaping-select')).prop('checked', true);
+    }
+    else{
       this.algorithmSettingsViewSwitcher.set(this.ssaSettingsView);
+      $(this.queryByHook('ssa-select')).prop('checked', true);
+    }
   },
   toggleAdvancedSettings: function (e) {
     this.model.isAdvancedSettingsOpen ? this.openCloseAdvancedSettings(false) : this.openCloseAdvancedSettings(false);

@@ -20,18 +20,6 @@ module.exports = View.extend({
     'model.timeStep': {
       type: 'value',
       hook: 'time-units-container'
-    },
-    'model.is_stochastic': {
-      type: 'booleanAttribute',
-      hook: 'select-stochastic',
-      name: 'checked',
-      invert: false
-    },
-    'model.is_stochastic': {
-      type: 'booleanAttribute',
-      hook: 'select-deterministic',
-      name: 'checked',
-      invert: true
     }
   },
   events: {
@@ -59,8 +47,11 @@ module.exports = View.extend({
       el: this.advancedSettingsContainer,
     });
     this.model.is_stochastic ?
-    this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView) :
-    this.simTypeSettingsViewSwitcher.set(this.deterministicSettingsView);
+      this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView) :
+      this.simTypeSettingsViewSwitcher.set(this.deterministicSettingsView);
+    this.model.is_stochastic ?
+      $(this.queryByHook('select-stochastic')).prop('checked', true) : 
+      $(this.queryByHook('select-deterministic')).prop('checked', true);
   },
   subviews: {
     inputSimEnd: {
