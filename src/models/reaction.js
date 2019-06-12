@@ -26,7 +26,7 @@ module.exports = State.extend({
     selected: {
       type: 'boolean',
       default: true
-    }
+    },
   },
 
 });

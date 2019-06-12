@@ -1,15 +1,10 @@
-div.reaction-details(data-hook="reaction-details-container")
-
+div.row(data-hook="reaction-details")
   
   div.col-md-12(data-hook="select-reaction-type")
 
   div.col-md-12(data-hook="select-rate-parameter")
+  
+  div.col-md-6(data-hook="reactants-editor")
 
-  div.row(data-hook="stoich-species-container")
-    div.col-md-6(data-hook="reactants-editor")
-      h5 Reactants
-      //div
-    div.col-md-6(data-hook="products-editor")
-      h5 Products
-      //div
-
+  div.col-md-6(data-hook="products-editor")
+  

@@ -12,7 +12,8 @@ var StoichSpecie = require('../models/stoich-specie');
 var StoichSpecies = require('../models/stoich-species');
 // Views
 var EditStoichSpecieView = require('./edit-stoich-specie');
-var EditCustomStoichSpecieView = require('./edit-custom-stoich-specie')
+var EditCustomStoichSpecieView = require('./edit-custom-stoich-specie');
+var ReactantProductView = require('./reactant-product');
 
 var template = require('../templates/includes/reactionDetails.pug');
 
@@ -33,6 +34,65 @@ module.exports = View.extend({
     this.model.on("change:type", function (model) {
       self.updateStoichSpeciesForReactionType(model.type);
     });
+  },
+  render: function () {
+    this.renderWithTemplate();
+    var self = this;
+    var reactionTypeSelectView = new SelectView({
+      label: 'Reaction type',
+      name: 'reaction-type',
+      required: true,
+      idAttribute: 'cid',
+      options: self.getReactionTypeLabels(),
+      value: ReactionTypes[self.model.type].label,
+    });
+    var rateParameterView = new SelectView({
+      label: 'Rate parameter:',
+      name: 'rate',
+      required: true,
+      idAttribute: 'cid',
+      textAttribute: 'name',
+      eagerValidate: true,
+      unselectedText: 'Pick a parameter',
+      options: this.model.collection.parent.parameters,
+      // For new reactions (with no rate.name) just use the first parameter in the Parameters collection
+      // Else fetch the right Parameter from Parameters based on existing rate
+      value: this.model.rate.name ? this.getRateFromParameters(this.model.rate.name) : this.model.collection.parent.parameters.at(0),
+    });
+    var propensityView = new InputView({
+      parent: this,
+      required: true,
+      name: 'rate',
+      label: 'Propensity:',
+      tests:'',
+      modelKey:'propensity',
+      valueType: 'string',
+      value: this.model.propensity
+    });
+    var reactantsView = new ReactantProductView({
+      collection: this.model.reactants,
+      species: this.model.collection.parent.species,
+      reactionType: this.model.type,
+      fieldTitle: 'Reactants',
+      isReactants: true
+    });
+    var productsView = new ReactantProductView({
+      collection: this.model.products,
+      species: this.model.collection.parent.species,
+      reactionType: this.model.type,
+      fieldTitle: 'Products',
+      isReactants: false
+    });
+    this.registerRenderSubview(reactionTypeSelectView, 'select-reaction-type');
+    (this.model.type === 'custom-propensity') ? this.registerRenderSubview(propensityView, 'select-rate-parameter') :
+     this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
+    this.registerRenderSubview(reactantsView, 'reactants-editor');
+    this.registerRenderSubview(productsView, 'products-editor');
+    this.totalRatio = this.getTotalReactantRatio();
+  },
+  registerRenderSubview: function (view, hook) {
+    this.registerSubview(view);
+    this.renderSubview(view, this.queryByHook(hook));
   },
   updateStoichSpeciesForReactionType: function (type) {
     var args = this.parent.getStoichArgsForReactionType(type);
@@ -65,92 +125,15 @@ module.exports = View.extend({
     })[0];
     return rate 
   },
+  getTotalReactantRatio: function () {
+    return this.model.reactants.length;
+  },
   selectReactionType: function (e) {
     var label = e.target.selectedOptions.item(0).value;
     var type = _.findKey(ReactionTypes, function (o) { return o.label === label; });
     this.model.type = type;
     this.updateStoichSpeciesForReactionType(type);
     this.render();
-  },
-  render: function () {
-    var self = this;
-    this.renderWithTemplate();
-    this.form = new FormView({
-      autoRender: true,
-      model: this.model,
-      el: this.queryByHook('reaction-details-container'),
-      fields: function () {
-        return [
-          new SelectView({
-            el: self.queryByHook('select-reaction-type'),
-            label: 'Reaction type',
-            name: 'reaction-type',
-            required: true,
-            idAttribute: 'cid',
-            options: self.getReactionTypeLabels(),
-            value: ReactionTypes[self.model.type].label,
-          }),
-          (this.model.type === 'custom-propensity') ?
-          new InputView({
-            el: self.queryByHook('select-rate-parameter'),
-            parent: this,
-            required: true,
-            name: 'rate',
-            label: 'Rate Parameter:',
-            tests:'',
-            modelKey:'propensity',
-            valueType: 'string',
-            value: this.model.propensity
-          }) : new SelectView({
-            el: self.queryByHook('select-rate-parameter'),
-            label: 'Rate parameter:',
-            name: 'rate',
-            required: true,
-            idAttribute: 'cid',
-            textAttribute: 'name',
-            eagerValidate: true,
-            unselectedText: 'Pick a parameter',
-            options: self.model.collection.parent.parameters,
-            // For new reactions (with no rate.name) just use the first parameter in the Parameters collection
-            // Else fetch the right Parameter from Parameters based on existing rate
-            value: self.model.rate.name ? self.getRateFromParameters(self.model.rate.name) : self.model.collection.parent.parameters.at(0),
-          })
-        ];
-      }
-    });
-    this.registerSubview(this.form);
-    this.renderStoichSpeciesEditor();
-  },
-  renderStoichSpeciesEditor: function () {
-    var args = {
-      viewOptions: {
-        name: 'stoich-specie',
-        label: '',
-        required: 'true',
-        textAttribute: 'name',
-        eagerValidate: true,
-        // Set idAttribute to name. Models may not be saved yet so id is unreliable (so is cid).
-        // Use name since it *should be* unique.
-        idAttribute: 'name',
-        options: this.model.collection.parent.species,
-        unselectedText: 'Pick a species',
-      }
-    }
-    var type = this.model.type;
-    var StoichSpeciesView = (type === 'custom-propensity' || type === 'custom-massaction') ? EditCustomStoichSpecieView : EditStoichSpecieView
-    this.form.renderCollection(
-      this.model.reactants,
-      StoichSpeciesView,
-      this.queryByHook('reactants-editor'),
-      args
-    );
-    this.form.renderCollection(
-      this.model.products,
-      StoichSpeciesView,
-      this.queryByHook('products-editor'),
-      args
-    );
-    //setup dom toggle binding
   },
   getReactionTypeLabels: function () {
     return _.map(ReactionTypes, function (val, key) { return val.label; })
