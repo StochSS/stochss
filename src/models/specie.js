@@ -1,14 +1,15 @@
 var State = require('ampersand-state');
+var SpatialSpecie = require('./spatial-specie');
+var NonspatialSpecie = require('./non-spatial-specie');
 
 module.exports = State.extend({
   props: {
     id: 'number',
     name: 'string',
-    value: 'number',
-    mode: {
-      type: 'string',
-      default: 'dynamic'
-    }
+  },
+  children: {
+    spatialSpecies: SpatialSpecie,
+    nonspatialSpecies: NonspatialSpecie
   },
   session: {
     inUse: {

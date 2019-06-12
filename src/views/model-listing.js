@@ -41,9 +41,6 @@ module.exports = View.extend({
     }
   },
   clickRemoveHandler: function (e) {
-    
-    //$('#delete-modal').modal('show');
-    //alert("You confirmed the deletion of this Model!");
     this.removeModel();
   },
   selectVersion: function (e) {
@@ -62,5 +59,4 @@ module.exports = View.extend({
       });
     }
   }
-
 });
