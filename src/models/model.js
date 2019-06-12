@@ -13,7 +13,6 @@ module.exports = Model.extend({
     username: 'string',
     name: 'string',
     public: 'boolean',
-    is_stochastic: 'boolean',
     is_spatial: 'boolean',
   },
   collections: {

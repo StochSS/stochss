@@ -1,10 +1,10 @@
 div#deterministic-settings.card.card-body
 
   h5
-    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings')
+    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button')
       |Advanced Settings
 
-  div(id='advanced-settings', class='collapse')
+  div(id='advanced-settings', class='collapse', data-hook='advanced-settings')
     table.table
       thread
         tr

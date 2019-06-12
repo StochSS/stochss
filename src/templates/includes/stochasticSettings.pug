@@ -8,27 +8,26 @@ div#stochastic-settings.card.card-body
         td: div(data-hook="realizations-container")
 
   h5
-    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings')
+    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button')
       |Advanced Settings
 
-  div(id='advanced-settings', class='collapse')
+  div(id='advanced-settings', class='collapse', data-hook='advanced-settings')
     table.table
       thread
         tr
-          th(scope="col", colspan="2") Algorithm
+          th(scope="col", colspan="3") Algorithm
 
         tr
           td
-            input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="SSA", checked) 
+            input(type="radio", name="algorithm", data-hook="ssa-select", data-name="SSA", checked) 
             |  SSA
 
           td
-            input(type="radio", name="algorithm", data-hook="algorithm-select", data-name="Tau-Leaping")
+            input(type="radio", name="algorithm", data-hook="tau-leaping-select", data-name="Tau-Leaping")
             |  Tau-leaping
 
-      thread
-        tr
-          th(scope="col", colspan="2") Seed
+          td
+            input(type="radio", name="algorithm", data-hook="hybrid-tau-leaping-select", data-name="Hybrid-Tau-Leaping")
+            |  Hybrid Tau-Leaping
 
-        tr
-          td(colspan="2"): div(data-hook="seed-container")
+    div(data-hook="algorithm-settings-container")

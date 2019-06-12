@@ -1,6 +1,7 @@
 var app = require('ampersand-app');
 var tests = require('./tests');
 var ViewSwitcher = require('ampersand-view-switcher');
+var $ = require('jquery');
 //Views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -22,7 +23,20 @@ module.exports = View.extend({
     }
   },
   events: {
-    'change [data-hook=select]' : 'setSimTypeSettings'
+    'change [data-hook=select-deterministic]' : 'setSimTypeSettings',
+    'change [data-hook=select-stochastic]' : 'setSimTypeSettings'
+  },
+  initialize: function (args) {
+    this.model = args.model;
+    this.species = args.species;
+    this.deterministicSettingsView = new DeterministicSettingsView({
+      parent: this,
+      model: this.model.deterministicSettings
+    });
+    this.stochasitcSettingsView = new StochasitcSettingsView({
+      parent: this,
+      model: this.model.stochasticSettings
+    });
   },
   update: function (e) {
   },
@@ -32,13 +46,12 @@ module.exports = View.extend({
     this.simTypeSettingsViewSwitcher = new ViewSwitcher({
       el: this.advancedSettingsContainer,
     });
-    this.deterministicSettingsView = new DeterministicSettingsView({
-      model: this.model.deterministicSettings
-    });
-    this.stochasitcSettingsView = new StochasitcSettingsView({
-      model: this.model.stochasticSettings
-    });
-    this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView);
+    this.model.is_stochastic ?
+      this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView) :
+      this.simTypeSettingsViewSwitcher.set(this.deterministicSettingsView);
+    this.model.is_stochastic ?
+      $(this.queryByHook('select-stochastic')).prop('checked', true) : 
+      $(this.queryByHook('select-deterministic')).prop('checked', true);
   },
   subviews: {
     inputSimEnd: {
@@ -79,5 +92,6 @@ module.exports = View.extend({
     }else{
       this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView);
     }
-  },
+    this.model.is_stochastic = (simulationType === 'stochastic');
+  }
 });
