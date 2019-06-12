@@ -4,7 +4,7 @@ module.exports = State.extend({
   props: {
     seed: {
       type: 'number',
-      defaulf: -1
+      default: -1
     },
     tauTolerance: {
       type: 'number',
