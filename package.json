@@ -51,7 +51,7 @@
     "puglatizer": "^1.2.0",
     "style-loader": "^0.23.1",
     "webpack": "^4.32.1",
-    "webpack-cli": "^3.3.2",
+    "webpack-cli": "^3.3.4",
     "webpack-dev-middleware": "^3.7.0",
     "webpack-dev-server": "^3.4.1"
   }
