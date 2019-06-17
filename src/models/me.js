@@ -3,7 +3,7 @@ var app = require('ampersand-app');
 var Model = require('ampersand-model');
 
 module.exports = Model.extend({
-  url: path.resolve(app.config.apiUrl, 'user'),
+  url: path.resolve(app.config.routePrefix, app.config.apiUrl, 'user'),
   props: {
     name: 'string'
   }

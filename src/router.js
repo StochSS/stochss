@@ -1,14 +1,24 @@
+var path = require('path');
 var app = require('ampersand-app');
 var Router = require('ampersand-router');
 var HomePage = require('./pages/home');
 var ModelBrowser = require('./pages/model-browser');
 var ModelEditor = require('./pages/model-editor');
+var config = require('./config.js')(process.env.NODE_ENV);
+
+const homePath = path.join(config.routePrefix, '()');
+const modelBrowserPath = path.join(config.routePrefix, 'models');
+const modelEditorPath = path.join(config.routePrefix, 'models/edit/(:id)');
+
+console.log(homePath);
+console.log(modelBrowserPath);
+console.log(modelEditorPath);
 
 module.exports = Router.extend({
   routes: {
-    '()': 'home',
-    'models': 'modelBrowser',
-    'models/edit/(:id)': 'modelEditor'
+    homePath: 'home',
+    modelBrowserPath: 'modelBrowser',
+    modelEditorPath: 'modelEditor'
   },
 
   home: function () {

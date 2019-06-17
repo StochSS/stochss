@@ -6,8 +6,8 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-sys.path.insert(0, '..')
-import orm
+sys.path.insert(0, '../stochss/')
+import stochss.orm
 
 load_dotenv(join(dirname(__file__), '../secrets/postgres.env'))
 

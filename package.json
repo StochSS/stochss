@@ -5,7 +5,7 @@
   "main": "webpack.config.js",
   "scripts": {
     "server": "node dev-server.js",
-    "build": "webpack"
+    "watch": "webpack --watch --progress"
   },
   "repository": {
     "type": "git",

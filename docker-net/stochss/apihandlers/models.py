@@ -11,6 +11,7 @@ from ._util import _db, checkUserOrRaise
 
 class UserModelListingsAPIHandler(BaseHandler):
 
+    @web.authenticated
     async def get(self):
         checkUserOrRaise(self)
         db = _db(self.settings)
@@ -20,7 +21,8 @@ class UserModelListingsAPIHandler(BaseHandler):
 
 
 class ModelAPIHandler(BaseHandler):
-
+    
+    @web.authenticated
     async def get(self, model_id):
         checkUserOrRaise(self)
         db = _db(self.settings)
@@ -29,7 +31,8 @@ class ModelAPIHandler(BaseHandler):
             raise web.HTTPError(404)
         self.set_header('Content-Type', 'application/json')
         self.write(r)
-
+    
+    @web.authenticated
     async def post(self):
         checkUserOrRaise(self)
         db = _db(self.settings)
@@ -38,6 +41,7 @@ class ModelAPIHandler(BaseHandler):
         model_json = db.insert_model(data)
         self.write(model_json)
 
+    @web.authenticated
     async def put(self):
         checkUserOrRaise(self)
         db = _db(self.settings)

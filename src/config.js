@@ -11,5 +11,6 @@ module.exports = env => {
 }
 
 const devConfig = {
-  apiUrl: '/api'
+  routePrefix: 'hub/stochss/',
+  apiUrl: 'api/'
 }

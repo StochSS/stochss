@@ -213,7 +213,4 @@ class Product(Base):
         })
 
 
-def create_db(db_url):
-    engine = create_engine(db_url, echo=True)
-    Base.metadata.create_all(engine)
-    
+   

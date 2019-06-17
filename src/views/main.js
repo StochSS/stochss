@@ -5,9 +5,12 @@ var View = require('ampersand-view');
 var ViewSwitcher = require('ampersand-view-switcher');
 var localLinks = require('local-links');
 var domify = require('domify');
+var path = require('path');
 
 var headTemplate = require('!pug-loader!../templates/head.pug');
 var bodyTemplate = require('!pug-loader!../templates/body.pug');
+
+var config = app.config;
 
 module.exports = View.extend({
   template: bodyTemplate,
@@ -46,10 +49,12 @@ module.exports = View.extend({
 
   handleLinkClick: function (e) {
     var localPath = localLinks.pathname(e);
+    var fullPath = path.join(config.routePrefix, localpath);
+    console.log(fullPath);
 
     if (localPath) {
       e.preventDefault();
-      app.navigate(localPath);
+      app.navigate(fullPath);
     }
   }
 });
