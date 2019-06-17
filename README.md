@@ -71,7 +71,7 @@ The process described here will help you build your own local Docker images from
 
 * [Build a StochSS Docker image](stochss_launcher/README.md)
 
-### Deplying StochSS as a Service
+### Deploying StochSS as a Service
 The [saas](https://github.com/StochSS/stochss/develop) branch is used at https://try.stochss.org to deploy as SaaS. It has a modified user authentication system based on email verification. The [MOLNs](https://github.com/ahellander/molns/tree/stochss_saas) software can be used to automate the deployment of StochSS in OpenStack clouds and in Amazon EC2.  
 
 
