@@ -49,12 +49,11 @@ module.exports = View.extend({
 
   handleLinkClick: function (e) {
     var localPath = localLinks.pathname(e);
-    var fullPath = path.join(config.routePrefix, localpath);
-    console.log(fullPath);
+    var localPath = localPath.replace('/hub/stochss/', '');
 
     if (localPath) {
       e.preventDefault();
-      app.navigate(fullPath);
+      app.navigate(localPath);
     }
   }
 });

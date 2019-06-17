@@ -10,22 +10,18 @@ const homePath = path.join(config.routePrefix, '()');
 const modelBrowserPath = path.join(config.routePrefix, 'models');
 const modelEditorPath = path.join(config.routePrefix, 'models/edit/(:id)');
 
-console.log(homePath);
-console.log(modelBrowserPath);
-console.log(modelEditorPath);
-
 module.exports = Router.extend({
   routes: {
-    homePath: 'home',
-    modelBrowserPath: 'modelBrowser',
-    modelEditorPath: 'modelEditor'
+    '()': 'home',
+    'models(/)': 'modelBrowser',
+    'models/edit/(:id)': 'modelEditor'
   },
 
   home: function () {
     app.trigger('page', new HomePage({}));
   },
 
-  modelBrowser: function () {
+  modelBrowser: function (arg) {
     app.trigger('page', new ModelBrowser({
       collection: app.models
     }));

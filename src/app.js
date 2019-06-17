@@ -28,7 +28,7 @@ app.extend({
     this.mainView = new MainView({
       el: document.body 
     });
-    this.router.history.start({ pushState: true });
+    this.router.history.start({ pushState: true, root: '/hub/stochss' });
   },
 
   // This is a helper for navigating around the app.

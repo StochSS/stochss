@@ -10,9 +10,6 @@ module.exports = {
     path: path.resolve(__dirname, "docker-net/stochss/static")
   },
   devtool: 'inline-source-map',
-  devServer: {
-    contentBase: './dist'
-  },
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({

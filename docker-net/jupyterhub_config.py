@@ -48,7 +48,7 @@ c.JupyterHub.extra_handlers = [
         # /run/(model_id)/(version_number)
         (r"/stochss/api/models/run/(\d+)/(\d+)", RunModelAPIHandler),
         # Default
-        (r"/stochss", MainHandler)
+        (r"/stochss.*", MainHandler)
 ]
 
 ## An Application for starting a Multi-User Jupyter Notebook server.

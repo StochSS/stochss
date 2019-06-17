@@ -200,7 +200,7 @@ class DatabaseManager():
             latest_version=data['latest_version'],
             username=data['username'],
             public=data['public'],
-            is_stochastic=data['is_stochastic'],
+            is_stochastic=False,
             is_spatial=data['is_spatial']
         )
         return model
