@@ -8,3 +8,5 @@ secrets/
 *.lock
 *.sqlite
 jupyterhub_cookie_secret
+jupyterhub-proxy.pid
+app.bundle.js
