@@ -251,7 +251,9 @@ class DatabaseManager():
         reaction = Reaction(
                  name=reaction_data['name'],
                  annotation=reaction_data['annotation'],
-                 massaction=reaction_data['massaction']
+                 massaction=reaction_data['massaction'],
+                 reaction_type=reaction_data['reaction_type'],
+                 propensity=reaction_data['propensity']
         )
         rate = list(filter(lambda p: p.name == reaction_data['rate']['name'], params))[0]
         reaction.rate = rate

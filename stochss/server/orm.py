@@ -74,6 +74,8 @@ class Reaction(Base):
     name = Column(String)
     annotation = Column(String)
     massaction = Column(Boolean)
+    reaction_type = Column(String)
+    propensity = Column(String)
     
     # Foreign Keys
     model_id = Column(Integer, ForeignKey("model.id"), nullable=False)
@@ -102,7 +104,9 @@ class Reaction(Base):
             'rate': json.loads(str(self.rate)),
             'reactants': json.loads(str(self.reactants)),
             'products': json.loads(str(self.products)),
-            'annotation': self.annotation
+            'annotation': self.annotation,
+            'reaction_type': self.reaction_type,
+            'propensity': self.propensity
         })
 
 

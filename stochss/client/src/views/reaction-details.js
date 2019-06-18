@@ -31,8 +31,8 @@ module.exports = View.extend({
   },
   initialize: function () {
     var self = this; 
-    this.model.on("change:type", function (model) {
-      self.updateStoichSpeciesForReactionType(model.type);
+    this.model.on("change:reaction_type", function (model) {
+      self.updateStoichSpeciesForReactionType(model.reaction_type);
     });
   },
   render: function () {
@@ -44,7 +44,7 @@ module.exports = View.extend({
       required: true,
       idAttribute: 'cid',
       options: self.getReactionTypeLabels(),
-      value: ReactionTypes[self.model.type].label,
+      value: ReactionTypes[self.model.reaction_type].label,
     });
     var rateParameterView = new SelectView({
       label: 'Rate parameter:',
@@ -72,19 +72,19 @@ module.exports = View.extend({
     var reactantsView = new ReactantProductView({
       collection: this.model.reactants,
       species: this.model.collection.parent.species,
-      reactionType: this.model.type,
+      reactionType: this.model.reaction_type,
       fieldTitle: 'Reactants',
       isReactants: true
     });
     var productsView = new ReactantProductView({
       collection: this.model.products,
       species: this.model.collection.parent.species,
-      reactionType: this.model.type,
+      reactionType: this.model.reaction_type,
       fieldTitle: 'Products',
       isReactants: false
     });
     this.registerRenderSubview(reactionTypeSelectView, 'select-reaction-type');
-    (this.model.type === 'custom-propensity') ? this.registerRenderSubview(propensityView, 'select-rate-parameter') :
+    (this.model.reaction_type === 'custom-propensity') ? this.registerRenderSubview(propensityView, 'select-rate-parameter') :
      this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
     this.registerRenderSubview(reactantsView, 'reactants-editor');
     this.registerRenderSubview(productsView, 'products-editor');
@@ -131,7 +131,7 @@ module.exports = View.extend({
   selectReactionType: function (e) {
     var label = e.target.selectedOptions.item(0).value;
     var type = _.findKey(ReactionTypes, function (o) { return o.label === label; });
-    this.model.type = type;
+    this.model.reaction_type = type;
     this.updateStoichSpeciesForReactionType(type);
     this.render();
   },

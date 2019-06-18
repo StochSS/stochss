@@ -8,11 +8,11 @@ Stochastic Simulation as a Service
 - Install pip for python
 - Install this proxy to global npm packages (need root)
 ```bash
-npm install -g configurable-node-proxy
+npm install -g configurable-http-proxy
 ```
 - Install pipenv with pip
 ```bash
-pip install pipenv
+pip install pipenv 
 ```
 ### Set up the client
 
@@ -36,7 +36,7 @@ npm run build
 - Install python packages to a virtual environment in pipenv
 ```bash
 cd stochss/server
-pipenv install
+pipenv install --dev
 ```
 - Open a shell in the virtualenv
 ```bash

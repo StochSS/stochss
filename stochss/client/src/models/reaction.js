@@ -11,7 +11,7 @@ module.exports = State.extend({
     annotation: 'string',
     // True indicates a custom mass action equation
     massaction: 'boolean',
-    type: 'string',
+    reaction_type: 'string',
     propensity: 'string'
   },
   children: {

@@ -70,11 +70,12 @@ module.exports = View.extend({
     var reactionType = e.target.dataset.hook
     var stoichArgs = this.getStoichArgsForReactionType(reactionType);
     var modelArgs = {
-      type: reactionType,
+      reaction_type: reactionType,
       annotation: '',
       massaction: false,
       reactants: stoichArgs.reactants,
-      products: stoichArgs.products
+      products: stoichArgs.products,
+      propensity: ''
     };
     var reaction = this.newReaction(modelArgs);
     this.collection.trigger("select", reaction);

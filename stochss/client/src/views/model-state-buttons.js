@@ -1,5 +1,7 @@
 var xhr = require('xhr');
+var path = require('path');
 var View = require('ampersand-view');
+var app = require('ampersand-app')
 var Plotly = require('../lib/plotly');
 
 var template = require('../templates/includes/modelStateButtons.pug');
@@ -20,7 +22,7 @@ module.exports = View.extend({
     this.runModel(this.model);
   },
   runModel: function (model) {
-    var endpoint = '/api/models/run/' + model.id + '/' + this.model.version;
+    var endpoint = path.join(app.config.routePrefix, 'api/models/run/', String(model.id), String(this.model.version));
     var self = this;
     xhr(
       { uri: endpoint },
