@@ -7,7 +7,9 @@ module.exports = {
   entry: './src/app.js',
   output: {
     filename: 'app.bundle.js',
-    path: path.resolve(__dirname, "docker-net/stochss/static")
+    // Beware! EVERYTHING in the following directory will be 
+    // DESTROYED to make way for the bundle's awesome power!
+    path: path.resolve(__dirname, "stochss/static")
   },
   devtool: 'inline-source-map',
   plugins: [

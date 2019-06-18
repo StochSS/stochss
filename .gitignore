@@ -5,3 +5,5 @@ package-lock.json
 dev-db.json
 .DS_Store
 secrets/
+*.sqlite
+jupyterhub_cookie_secret

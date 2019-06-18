@@ -5,5 +5,12 @@ var path = require('path');
 
 module.exports = RestCollection.extend({
   model: Model,
-  url: function () { return path.join(app.config.routePrefix, app.config.apiUrl, 'models') }
+  url: function () { 
+    return path.join(
+      app.config.routePrefix,
+      app.config.apiUrl,
+      'models',
+      String(app.me.name)
+    ) 
+  }
 });
