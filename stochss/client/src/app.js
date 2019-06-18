@@ -23,12 +23,20 @@ app.extend({
   me: new Me(),
   
   init: function () {
-    this.me.fetch();
-    this.models.fetch();
-    this.mainView = new MainView({
-      el: document.body 
+    var self = this;
+    this.me.fetch({
+      success: function (model, response, options) {
+        self.models.fetch();
+        self.models.fetch();
+        self.mainView = new MainView({
+          el: document.body 
+        });
+        self.router.history.start({ pushState: true, root: '/hub/stochss' });
+      },
+      error: function (model, response, options) {
+        alert("Fatal error: unable to retrieve username from API");
+      }
     });
-    this.router.history.start({ pushState: true, root: '/hub/stochss' });
   },
 
   // This is a helper for navigating around the app.
