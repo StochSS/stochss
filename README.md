@@ -18,7 +18,7 @@ pip install pipenv
 
 - Install npm packages
 ```bash
-cd client
+cd stochss/client
 npm install
 ```
 - Run webpack in watch mode to generate new bundles on changes to /src
@@ -35,7 +35,7 @@ npm run build
 
 - Install python packages to a virtual environment in pipenv
 ```bash
-cd server
+cd stochss/server
 pipenv install
 ```
 - Open a shell in the virtualenv
