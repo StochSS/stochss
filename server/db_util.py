@@ -30,7 +30,6 @@ class DatabaseManager():
         self.engine = create_engine(db_url)
         Session.configure(bind=self.engine)
 
-
     @contextmanager
     def _session_scope(self):
         session = Session()

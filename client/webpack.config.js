@@ -9,7 +9,7 @@ module.exports = {
     filename: 'app.bundle.js',
     // Beware! EVERYTHING in the following directory will be 
     // DESTROYED to make way for the bundle's awesome power!
-    path: path.resolve(__dirname, "stochss/static")
+    path: path.resolve(__dirname, "../server/static")
   },
   devtool: 'inline-source-map',
   plugins: [

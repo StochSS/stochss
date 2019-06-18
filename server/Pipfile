@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+click = "*"
 
 [packages]
 jupyterhub = "==1.0"
@@ -13,5 +14,3 @@ python-dotenv = "*"
 gillespy2 = "*"
 notebook = "*"
 
-[requires]
-python_version = "3.6"
