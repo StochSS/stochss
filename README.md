@@ -38,17 +38,17 @@ npm run build
 cd server
 pipenv install
 ```
-- Open a shell in the virtualenv and run jupyterhub
+- Open a shell in the virtualenv
 ```bash
 # Make note of the virtualenv path
 pipenv shell
 ```
 - Create a symbolic link to the jupyterhub static directory in the virtualenv folder
-  - Replace `server-**-*****` with the name of the virtualenv folder in ~/.local/share/virtualenvs
+  - Replace `server-**-*****` with the name of the virtualenv folder in `~/.local/share/virtualenvs`
 ```bash
 export VIRTUALENV=server-**-****** && \
 ln -s -T /path/to/stochss/server/static \
-         ~/.local/share/virtualenvs/$VIRTUALENV/share/jupyterhub/static/stochss
+         /home/$USER/.local/share/virtualenvs/$VIRTUALENV/share/jupyterhub/static/stochss
 ```
 - Create a db file to work with
 ```bash
@@ -60,3 +60,4 @@ jupyterhub
 ```
 - Go to `http://localhost:8000/hub/stochss` in a browser
 - Login with local system user credentials
+
