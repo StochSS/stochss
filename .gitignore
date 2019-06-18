@@ -9,4 +9,4 @@ secrets/
 *.sqlite
 jupyterhub_cookie_secret
 jupyterhub-proxy.pid
-app.bundle.js
+server/static/app.bundle.js
