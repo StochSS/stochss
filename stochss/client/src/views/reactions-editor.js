@@ -77,8 +77,9 @@ module.exports = View.extend({
       massaction: false,
       reactants: stoichArgs.reactants,
       products: stoichArgs.products,
-      subdomains: this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name}),
-      propensity: ''
+      propensity: '',
+      subdomains: this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
+
     };
     var reaction = this.newReaction(modelArgs);
     this.collection.trigger("select", reaction);

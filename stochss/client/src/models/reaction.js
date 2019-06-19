@@ -11,12 +11,12 @@ module.exports = State.extend({
     annotation: 'string',
     // True indicates a custom mass action equation
     massaction: 'boolean',
+    reaction_type: 'string',
     propensity: 'string',
     subdomains: {
       type: 'object',
       default: function () { return []; }
-    },
-    reaction_type: 'string'
+
   },
   children: {
     rate: Parameter,

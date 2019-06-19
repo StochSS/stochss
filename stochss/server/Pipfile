@@ -1,16 +1,15 @@
+[scripts]
+db = "python create_db.py"
+certs = "bash make_certs.sh"
+
 [[source]]
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-click = "*"
 
 [packages]
-jupyterhub = "==1.0"
-psycopg2 = "==2.7.7"
-sqlalchemy = "==1.2.18"
+click = "*"
+sqlalchemy = "*"
 python-dotenv = "*"
-gillespy2 = "*"
-notebook = "*"
-
