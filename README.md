@@ -28,7 +28,7 @@ npm run watch
 ```
 ...or do a one-time build...
 ```bash
-npm run build
+npm run webpack
 ```
 ...both of which emit a bundle file to `stochss/server/static/`
 
@@ -43,22 +43,30 @@ pipenv install
 ```bash
 pipenv run db
 ```
+- Make a directory called `secrets` in the `server` folder
 - Generate a self-signed certificate for local development
 ```bash
 pipenv run certs
 ```
-- Register a new [GitHub OAuth Application](https://github.com/settings/applications/new) to use for your personal development environment. 
+- Register a new [GitHub OAuth Application](https://github.com/settings/applications/new) to use for your personal development environment.
   - Set 'Application name' to `initials-stochss-dev` where `initials` is the initials of your name. Or set the application name to whatever you want.
   - Set 'Homepage URL' to `https://localhost/hub`
   - Set 'Authorization callback URL' `https://localhost/hub/oauth_callback`
+  - Click the "Register application" button and keep the confirmation page open for the next step
 
-- After you've registered your oauth app, make a new file in the `secrets` folder called `oauth.env` and make it look like so:
+- After you've registered your oauth app, make a new file in the `secrets` folder called `oauth.env` and make it look like so (replacing `<GITHUB_CLIENT_ID>` and `<GITHUB_CLIENT_SECRET>` with values from the OAuth app confirmation page from above:
 ```bash
 GITHUB_CLIENT_ID=<GITHUB CLIENT ID>
 GITHUB_CLIENT_SECRET=<GITHUB CLIENT SECRET>
 OAUTH_CALLBACK_URL=https://localhost/hub/oauth_callback
 ```
-- Build the docker containerf or user servers
+- Make a new text file in `stochss/server` called `userlist`. This file contains a list of GitHub usernames that are able to use the OAuth credentials you just generated. By putting `admin` after a username, the user will have JupyterHub admin powers in the stochss app.
+
+Example `userlist` file contents:
+```bash
+mygithubuser admin
+```
+- Build the docker container for user servers
 ```bash
 make notebook_image
 ```
