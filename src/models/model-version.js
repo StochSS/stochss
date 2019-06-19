@@ -2,7 +2,8 @@ var Model = require('ampersand-model');
 var Species = require('./species');
 var Parameters = require('./parameters');
 var Reactions = require('./reactions');
-var SimulationSettings = require('./simulation-settings')
+var SimulationSettings = require('./simulation-settings');
+var MeshSettings = require('./mesh-settings');
 
 module.exports = Model.extend({
   props: {
@@ -18,7 +19,8 @@ module.exports = Model.extend({
     reactions: Reactions
   },
   children: {
-    simSettings: SimulationSettings
+    simSettings: SimulationSettings,
+    meshSettings: MeshSettings
   },
   session: {
     selectedReaction: 'object' // Reaction

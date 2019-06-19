@@ -24,7 +24,8 @@ module.exports = View.extend({
   },
   events: {
     'change [data-hook=select-deterministic]' : 'setSimTypeSettings',
-    'change [data-hook=select-stochastic]' : 'setSimTypeSettings'
+    'change [data-hook=select-stochastic]' : 'setSimTypeSettings',
+    'click [data-hook=collapse]' :  'changeCollapseButtonText'
   },
   initialize: function (args) {
     this.model = args.model;
@@ -93,5 +94,9 @@ module.exports = View.extend({
       this.simTypeSettingsViewSwitcher.set(this.stochasitcSettingsView);
     }
     this.model.is_stochastic = (simulationType === 'stochastic');
+  },
+  changeCollapseButtonText: function (e) {
+    var text = $(this.queryByHook('collapse')).text();
+    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
   }
 });

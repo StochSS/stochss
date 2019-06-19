@@ -3,7 +3,11 @@ var InitialCondition = require('./initial-condition')
 
 module.exports = State.extend({
   props: {
-    diffusionCoeff: 'number'
+    diffusionCoeff: 'number',
+    subdomains: {
+      type: 'object',
+      default: function () { return []; }
+    }
   },
   children: {
     initialCondition: InitialCondition

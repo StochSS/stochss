@@ -1,9 +1,7 @@
+var app = require('ampersand-app');
 var _ = require('underscore');
 var domify = require('domify');
-var View = require('ampersand-view');
-var FormView = require('ampersand-form-view');
-var SelectView = require('ampersand-select-view');
-var InputView = require('./input');
+var $ = require('jquery');
 // Config
 var ReactionTypes = require('../reaction-types');
 var tests = require('./tests');
@@ -11,9 +9,14 @@ var tests = require('./tests');
 var StoichSpecie = require('../models/stoich-specie');
 var StoichSpecies = require('../models/stoich-species');
 // Views
+var View = require('ampersand-view');
+var FormView = require('ampersand-form-view');
+var SelectView = require('ampersand-select-view');
+var InputView = require('./input');
 var EditStoichSpecieView = require('./edit-stoich-specie');
 var EditCustomStoichSpecieView = require('./edit-custom-stoich-specie');
 var ReactantProductView = require('./reactant-product');
+var ReactionSubdomainsView = require('./reaction-details-subdomains');
 
 var template = require('../templates/includes/reactionDetails.pug');
 
@@ -69,6 +72,10 @@ module.exports = View.extend({
       valueType: 'string',
       value: this.model.propensity
     });
+    var subdomainsView = new ReactionSubdomainsView({
+      parent: this,
+      isReaction: true,
+    })
     var reactantsView = new ReactantProductView({
       collection: this.model.reactants,
       species: this.model.collection.parent.species,
@@ -86,9 +93,12 @@ module.exports = View.extend({
     this.registerRenderSubview(reactionTypeSelectView, 'select-reaction-type');
     (this.model.type === 'custom-propensity') ? this.registerRenderSubview(propensityView, 'select-rate-parameter') :
      this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
+    this.registerRenderSubview(subdomainsView, 'subdomains-editor');
     this.registerRenderSubview(reactantsView, 'reactants-editor');
     this.registerRenderSubview(productsView, 'products-editor');
     this.totalRatio = this.getTotalReactantRatio();
+    if(this.model.collection.parent.collection.parent.is_spatial)
+      $(this.queryByHook('subdomains-editor')).collapse();
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -137,6 +147,14 @@ module.exports = View.extend({
   },
   getReactionTypeLabels: function () {
     return _.map(ReactionTypes, function (val, key) { return val.label; })
-  }
+  },
+  updateSubdomains: function (element) {
+    var subdomain = element.value.model;
+    var checked = element.value.checked;
 
+    if(checked)
+      this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+    else
+      this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+  }
 });
