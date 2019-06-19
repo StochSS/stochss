@@ -1,0 +1,33 @@
+div#stochastic-settings.card.card-body
+
+  table.table
+    thread
+      tr
+        th(scope="col") Realizations
+      tr
+        td: div(data-hook="realizations-container")
+
+  h5
+    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button')
+      |Advanced Settings
+
+  div(id='advanced-settings', class='collapse', data-hook='advanced-settings')
+    table.table
+      thread
+        tr
+          th(scope="col", colspan="3") Algorithm
+
+        tr
+          td
+            input(type="radio", name="algorithm", data-hook="ssa-select", data-name="SSA", checked) 
+            |  SSA
+
+          td
+            input(type="radio", name="algorithm", data-hook="tau-leaping-select", data-name="Tau-Leaping")
+            |  Tau-leaping
+
+          td
+            input(type="radio", name="algorithm", data-hook="hybrid-tau-leaping-select", data-name="Hybrid-Tau-Leaping")
+            |  Hybrid Tau-Leaping
+
+    div(data-hook="algorithm-settings-container")
