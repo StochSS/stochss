@@ -16,7 +16,7 @@ module.exports = State.extend({
     subdomains: {
       type: 'object',
       default: function () { return []; }
-    }
+
   },
   children: {
     rate: Parameter,

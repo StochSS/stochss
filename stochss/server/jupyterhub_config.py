@@ -37,9 +37,11 @@ from main import MainHandler
 from models import UserModelListingsAPIHandler, ModelAPIHandler
 from username import UsernameHandler
 from run_models import RunModelAPIHandler
+
 from dotenv import load_dotenv
 
 c.StochSS.db_url = os.getenv('STOCHSS_DB_CONNECT')
+
 
 # StochSS request handlers
 c.JupyterHub.extra_handlers = [
@@ -231,7 +233,6 @@ c.JupyterHub.hub_port = 8080
 #      Use JupyterHub.bind_url
 #c.JupyterHub.base_url = '/'
 
-
 ## Whether to shutdown the proxy when the Hub shuts down.
 #  
 #  Disable if you want to be able to teardown the Hub while leaving the proxy
@@ -395,7 +396,6 @@ c.JupyterHub.hub_port = 8080
 #  .. versionadded:: 0.9
 #c.JupyterHub.hub_connect_url = ''
 
-
 ## The location to store certificates automatically created by JupyterHub.
 #  
 #  Use with internal_ssl
@@ -447,7 +447,6 @@ c.JupyterHub.hub_port = 8080
 
 ## File to write PID Useful for daemonizing JupyterHub.
 #c.JupyterHub.pid_file = ''
-
 
 ## DEPRECATED since version 0.8 : Use ConfigurableHTTPProxy.api_url
 #c.JupyterHub.proxy_api_ip = ''
@@ -522,8 +521,6 @@ c.JupyterHub.hub_port = 8080
 
 ## Shuts down all user servers on logout
 #c.JupyterHub.shutdown_on_logout = False
-
-
 
 ## Host to send statsd metrics to. An empty string (the default) disables sending
 #  metrics.

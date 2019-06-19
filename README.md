@@ -7,6 +7,7 @@ Stochastic Simulation as a Service
 - Install python 3, nodejs, npm, openssl
 - Install [pip](https://pip.pypa.io/en/stable/installing/) for python
 - Install this proxy to global npm packages (requires root)
+
 ```bash
 npm install -g configurable-http-proxy
 ```
