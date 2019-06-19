@@ -230,6 +230,8 @@ th {
 label {
   display: inline-block;
   margin-bottom: 0.5rem;
+  padding-right: 0.25rem;
+  padding-left: 0.25rem;
 }
 
 button {
@@ -2695,6 +2697,25 @@ fieldset:disabled a.btn {
 .btn-dark:not(:disabled):not(.disabled):active:focus, .btn-dark:not(:disabled):not(.disabled).active:focus,
 .show > .btn-dark.dropdown-toggle:focus {
   box-shadow: 0 0 0 0.2rem rgba(82, 88, 93, 0.5);
+}
+
+.btn-outline-collapse {
+  color: #000;
+  padding: 0px 10px;
+  font-size: 20px;
+}
+
+.btn-outline-collapse:hover {
+  color: #007bff;
+}
+
+.reaction-subdomain {
+  padding: 0px 0px 0px 20px;
+  border: 0;
+}
+
+.reaction-details-subdomain {
+  padding: 0px 0px 0px 5px;
 }
 
 .btn-outline-primary {

@@ -1,7 +1,9 @@
 var app = require('ampersand-app');
 var _ = require('underscore');
+var $ = require('jquery');
 // Views
 var View = require('ampersand-view');
+var MeshEditorView = require('./mesh-editor');
 var SpeciesEditorView = require('./species-editor');
 var ParametersEditorView = require('./parameters-editor');
 var ReactionsEditorView = require('./reactions-editor');
@@ -17,6 +19,11 @@ module.exports = View.extend({
       this.updateSpeciesInUse();
       this.updateParametersInUse();
     }, this);
+  },
+  render: function () {
+    this.renderWithTemplate();
+    if(this.parent.model.is_spatial)
+      $(this.queryByHook('mesh-editor-container')).collapse();
   },
   updateSpeciesInUse: function () {
     // TODO is there a more efficient/elegant way to update inUse?
@@ -49,6 +56,15 @@ module.exports = View.extend({
     });
   },
   subviews: {
+    meshEditor: {
+      selector: '[data-hook=mesh-editor-container]',
+      waitFor: 'model',
+      prepareView: function (el) {
+        return new MeshEditorView({
+          model: this.model.meshSettings
+        });
+      }
+    },
     speciesEditor: {
       selector: '[data-hook=species-editor-container]',
       waitFor: 'model.species',

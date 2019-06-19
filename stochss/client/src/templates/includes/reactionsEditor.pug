@@ -1,43 +1,49 @@
 div#reactions-editor.card.card-body
 
-  h3 Reactions
-
-  p
-    | Define reactions. Select from the given reaction templates, or use the custom types. 
-    | Using templated reaction types will help eliminate errors. 
-    | For non-linear reactions, use the custom propensity type. 
-
   div.row
-    div.col-md-6: table.table
-      thead: tr
-        td Edit
-        td Name
-        td Summary
-        td Delete
 
-      tbody(data-hook="reaction-list")
+    h3 Reactions
 
-    div.col-md-6(data-hook="reaction-details-container")
-    
-  div.dropdown
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-reaction", data-hook="collapse") +
 
-    button.btn.btn-outline-primary.dropdown-toggle#addReactionBtn(
-      data-hook="add-reaction",
-      data-toggle="dropdown",
-      aria-haspopup="true",
-      aria-expanded="false",
-      type="button"
-    ) Add Reaction <span class="caret"></span>
+  div.collapse(class="show", id="collapse-reaction")
 
-    ul.dropdown-menu(aria-labelledby="addReactionBtn")
-      li.dropdown-item(data-hook="creation") O -> A
-      li.dropdown-item(data-hook="destruction") A -> O
-      li.dropdown-item(data-hook="change") A -> B
-      li.dropdown-item(data-hook="dimerization") A+A -> B
-      li.dropdown-item(data-hook="merge") A+B -> C
-      li.dropdown-item(data-hook="split") A -> B+C
-      li.dropdown-item(data-hook="four") A+B -> C+D
-      li.dropdown-divider
-      li.dropdown-item(data-hook="custom-massaction") Custom mass action
-      li.dropdown-item(data-hook="custom-propensity") Custom propensity
+    p
+      | Define reactions. Select from the given reaction templates, or use the custom types. 
+      | Using templated reaction types will help eliminate errors. 
+      | For non-linear reactions, use the custom propensity type. 
+
+    div.row
+      div.col-md-6: table.table
+        thead: tr
+          td Edit
+          td Name
+          td Summary
+          td Delete
+
+        tbody(data-hook="reaction-list")
+
+      div.col-md-6(data-hook="reaction-details-container")
+      
+    div.dropdown
+
+      button.btn.btn-outline-primary.dropdown-toggle#addReactionBtn(
+        data-hook="add-reaction",
+        data-toggle="dropdown",
+        aria-haspopup="true",
+        aria-expanded="false",
+        type="button"
+      ) Add Reaction <span class="caret"></span>
+
+      ul.dropdown-menu(aria-labelledby="addReactionBtn")
+        li.dropdown-item(data-hook="creation") O -> A
+        li.dropdown-item(data-hook="destruction") A -> O
+        li.dropdown-item(data-hook="change") A -> B
+        li.dropdown-item(data-hook="dimerization") A+A -> B
+        li.dropdown-item(data-hook="merge") A+B -> C
+        li.dropdown-item(data-hook="split") A -> B+C
+        li.dropdown-item(data-hook="four") A+B -> C+D
+        li.dropdown-divider
+        li.dropdown-item(data-hook="custom-massaction") Custom mass action
+        li.dropdown-item(data-hook="custom-propensity") Custom propensity
 

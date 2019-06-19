@@ -16,11 +16,10 @@ module.exports = SelectView.extend({
   initialize: function () {
     SelectView.prototype.initialize.apply(this, arguments);
     this.label = this.model.name;
-    this.value = this.model.mode || 'dynamic';
+    this.value = this.model.nonspatialSpecies.mode || 'dynamic';
   },
   selectChangeHandler: function (e) {
     var mode = e.target.selectedOptions.item(0).text;
-    this.model.mode = mode;
-    console.log(mode);
+    this.model.nonspatialSpecies.mode = mode;
   }
 });

@@ -1,4 +1,5 @@
 var app = require('ampersand-app');
+var $ = require('jquery');
 // Views
 var View = require('ampersand-view');
 var EditParameterView = require('./edit-parameter');
@@ -11,6 +12,7 @@ module.exports = View.extend({
   },
   events: {
     'click [data-hook=add-parameter]' : 'addParameter',
+    'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   render: function () {
     this.renderWithTemplate();
@@ -23,5 +25,9 @@ module.exports = View.extend({
       value: 0
     });
     this.render();
+  },
+  changeCollapseButtonText: function (e) {
+    var text = $(this.queryByHook('collapse')).text();
+    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
   }
 });

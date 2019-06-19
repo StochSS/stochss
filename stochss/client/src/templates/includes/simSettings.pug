@@ -1,30 +1,36 @@
-div#sim-type-settings.card.card-body
+div#sim-settings.card.card-body
 
-  h3 Simulation Settings
+  div.row
 
-  table.table
-    thread
-      tr
-        th(scope="col", colspan="2") Simulation Type
-      tr
-        td
-          input(type="radio", name="simType", data-hook="select-deterministic", data-name="deterministic")
-          |  Deterministic
+    h3 Simulation Settings
 
-        td
-          input(type="radio", name="simType", data-hook="select-stochastic", data-name="stochastic")
-          |   Stochastic
-    
-  div(data-hook='advanced-settings-container')
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings", data-hook="collapse") +
 
-  table.table
-    thread
-      tr
-        th(scope="col") Simulation Time
+  div.collapse(class="show", id="collapse-settings")
 
-        th(scope="col") Time Units
+    table.table
+      thread
+        tr
+          th(scope="col", colspan="2") Simulation Type
+        tr
+          td
+            input(type="radio", name="simType", data-hook="select-deterministic", data-name="deterministic")
+            |  Deterministic
 
-      tr
-        td: div(data-hook="end-sim-container")
-        
-        td: div(data-hook="time-units-container")
+          td
+            input(type="radio", name="simType", data-hook="select-stochastic", data-name="stochastic")
+            |   Stochastic
+      
+    div(data-hook='advanced-settings-container')
+
+    table.table
+      thread
+        tr
+          th(scope="col") Simulation Time
+
+          th(scope="col") Time Units
+
+        tr
+          td: div(data-hook="end-sim-container")
+          
+          td: div(data-hook="time-units-container")
