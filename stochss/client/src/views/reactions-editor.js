@@ -2,6 +2,7 @@ var app = require('ampersand-app');
 var ViewSwitcher = require('ampersand-view-switcher');
 var katex = require('katex');
 var _ = require('underscore');
+var $ = require('jquery');
 // Config
 var ReactionTypes = require('../reaction-types');
 // Models
@@ -26,6 +27,7 @@ module.exports = View.extend({
     'click [data-hook=four]'                   : 'handleAddReactionClick',
     'click [data-hook=custom-massaction]'      : 'handleAddReactionClick',
     'click [data-hook=custom-propensity]'      : 'handleAddReactionClick',
+    'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   initialize: function () {
     this.collection.on("select", function (reaction) {
@@ -75,7 +77,8 @@ module.exports = View.extend({
       massaction: false,
       reactants: stoichArgs.reactants,
       products: stoichArgs.products,
-      propensity: ''
+      propensity: '',
+      subdomains: this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
     };
     var reaction = this.newReaction(modelArgs);
     this.collection.trigger("select", reaction);
@@ -122,6 +125,9 @@ module.exports = View.extend({
   getDefaultSpecie: function () {
     var value = this.collection.parent.species.models[0];
     return value;
+  },
+  changeCollapseButtonText: function (e) {
+    var text = $(this.queryByHook('collapse')).text();
+    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
   }
-
 });
