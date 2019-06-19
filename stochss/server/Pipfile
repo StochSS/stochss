@@ -1,16 +1,21 @@
+[scripts]
+db = "python create_db.py"
+build = "docker-compose build"
+build_singleuser = "docker build -t $(LOCAL_NOTEBOOK_IMAGE) \
+    --build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
+		--build-arg DOCKER_NOTEBOOK_IMAGE=$(DOCKER_NOTEBOOK_IMAGE) \
+		singleuser \
+"
+app = "docker run --rm -p 443:443 -v $PWD:/srv/jupyterhub $DOCKER_STOCHSS_IMAGE:latest"
+
 [[source]]
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-click = "*"
 
 [packages]
-jupyterhub = "==1.0"
-psycopg2 = "==2.7.7"
-sqlalchemy = "==1.2.18"
+click = "*"
+sqlalchemy = "*"
 python-dotenv = "*"
-gillespy2 = "*"
-notebook = "*"
-

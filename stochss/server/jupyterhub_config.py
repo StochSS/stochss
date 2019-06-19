@@ -19,6 +19,8 @@
 # JupyterHub(Application) configuration
 #------------------------------------------------------------------------------
 
+## An Application for starting a Multi-User Jupyter Notebook server.
+
 import sys, os
 sys.path.insert(1, '.')
 
@@ -35,15 +37,15 @@ from main import MainHandler
 from models import UserModelListingsAPIHandler, ModelAPIHandler
 from username import UsernameHandler
 from run_models import RunModelAPIHandler
+from dotenv import load_dotenv
 
-c.StochSS.db_url = os.getenv('DB_CONNECT')
+c.StochSS.db_url = os.getenv('STOCHSS_DB_CONNECT')
 
 # StochSS request handlers
 c.JupyterHub.extra_handlers = [
         # API handlers
         (r"/stochss/api/user", UsernameHandler),
         (r"/stochss/api/model", ModelAPIHandler),
-#        (r"/stochss/api/models", UserModelListingsAPIHandler),
         (r"/stochss/api/models/(\w+)", UserModelListingsAPIHandler),
         (r"/stochss/api/models/(\d+)", ModelAPIHandler),
         # /run/(model_id)/(version_number)
@@ -52,7 +54,76 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss.*", MainHandler)
 ]
 
-## An Application for starting a Multi-User Jupyter Notebook server.
+## Path to SSL certificate file for the public facing interface of the proxy
+#  
+#  When setting this, you should also set ssl_key
+c.JupyterHub.ssl_cert = os.getenv('SSL_CERT')
+
+## Path to SSL key file for the public facing interface of the proxy
+#  
+#  When setting this, you should also set ssl_cert
+c.JupyterHub.ssl_key = os.getenv('SSL_KEY')
+
+## The public facing URL of the whole JupyterHub application.
+#  
+#  This is the address on which the proxy will bind. Sets protocol, ip, base_url
+c.JupyterHub.bind_url = os.getenv('BIND_URL')
+
+## Class for authenticating users.
+#  
+#          This should be a subclass of :class:`jupyterhub.auth.Authenticator`
+#  
+#          with an :meth:`authenticate` method that:
+#  
+#          - is a coroutine (asyncio or tornado)
+#          - returns username on success, None on failure
+#          - takes two arguments: (handler, data),
+#            where `handler` is the calling web.RequestHandler,
+#            and `data` is the POST form data from the login page.
+#  
+#          .. versionchanged:: 1.0
+#              authenticators may be registered via entry points,
+#              e.g. `c.JupyterHub.authenticator_class = 'pam'`
+#  
+#  Currently installed: 
+#    - default: jupyterhub.auth.PAMAuthenticator
+#    - dummy: jupyterhub.auth.DummyAuthenticator
+#    - pam: jupyterhub.auth.PAMAuthenticator
+#
+# Authenticate users with GitHub OAuth
+c.JupyterHub.authenticator_class = 'oauthenticator.GitHubOAuthenticator'
+c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
+
+c.Authenticator.whitelist = whitelist = set()
+c.Authenticator.admin_users = admin = set([])
+
+pwd = os.path.dirname(__file__)
+with open(os.path.join(pwd, 'userlist')) as f:
+    for line in f:
+        if not line:
+            continue
+        parts = line.split()
+        # in case of newline at the end of userlist file
+        if len(parts) >= 1:
+            name = parts[0]
+            whitelist.add(name)
+            if len(parts) > 1 and parts[1] == 'admin':
+                admin.add(name)
+
+## The class to use for spawning single-user servers.
+#  
+#          Should be a subclass of :class:`jupyterhub.spawner.Spawner`.
+#  
+#          .. versionchanged:: 1.0
+#              spawners may be registered via entry points,
+#              e.g. `c.JupyterHub.spawner_class = 'localprocess'`
+#  
+#  Currently installed: 
+#    - default: jupyterhub.spawner.LocalProcessSpawner
+#    - localprocess: jupyterhub.spawner.LocalProcessSpawner
+#    - simple: jupyterhub.spawner.SimpleLocalProcessSpawner
+#c.JupyterHub.spawner_class = 'jupyterhub.spawner.LocalProcessSpawner'
+
 
 ## Maximum number of concurrent servers that can be active at a time.
 #  
@@ -100,28 +171,6 @@ c.JupyterHub.extra_handlers = [
 ## Authentication for prometheus metrics
 #c.JupyterHub.authenticate_prometheus = True
 
-## Class for authenticating users.
-#  
-#          This should be a subclass of :class:`jupyterhub.auth.Authenticator`
-#  
-#          with an :meth:`authenticate` method that:
-#  
-#          - is a coroutine (asyncio or tornado)
-#          - returns username on success, None on failure
-#          - takes two arguments: (handler, data),
-#            where `handler` is the calling web.RequestHandler,
-#            and `data` is the POST form data from the login page.
-#  
-#          .. versionchanged:: 1.0
-#              authenticators may be registered via entry points,
-#              e.g. `c.JupyterHub.authenticator_class = 'pam'`
-#  
-#  Currently installed: 
-#    - default: jupyterhub.auth.PAMAuthenticator
-#    - dummy: jupyterhub.auth.DummyAuthenticator
-#    - pam: jupyterhub.auth.PAMAuthenticator
-#c.JupyterHub.authenticator_class = 'jupyterhub.auth.PAMAuthenticator'
-
 ## The base URL of the entire application.
 #  
 #  Add this to the beginning of all JupyterHub URLs. Use base_url to run
@@ -131,10 +180,6 @@ c.JupyterHub.extra_handlers = [
 #      Use JupyterHub.bind_url
 #c.JupyterHub.base_url = '/'
 
-## The public facing URL of the whole JupyterHub application.
-#  
-#  This is the address on which the proxy will bind. Sets protocol, ip, base_url
-#c.JupyterHub.bind_url = 'http://:8000'
 
 ## Whether to shutdown the proxy when the Hub shuts down.
 #  
@@ -372,14 +417,6 @@ c.JupyterHub.extra_handlers = [
 ## File to write PID Useful for daemonizing JupyterHub.
 #c.JupyterHub.pid_file = ''
 
-## The public facing port of the proxy.
-#  
-#  This is the port on which the proxy will listen. This is the only port through
-#  which JupyterHub should be accessed by users.
-#  
-#  .. deprecated: 0.9
-#      Use JupyterHub.bind_url
-#c.JupyterHub.port = 8000
 
 ## DEPRECATED since version 0.8 : Use ConfigurableHTTPProxy.api_url
 #c.JupyterHub.proxy_api_ip = ''
@@ -455,29 +492,7 @@ c.JupyterHub.extra_handlers = [
 ## Shuts down all user servers on logout
 #c.JupyterHub.shutdown_on_logout = False
 
-## The class to use for spawning single-user servers.
-#  
-#          Should be a subclass of :class:`jupyterhub.spawner.Spawner`.
-#  
-#          .. versionchanged:: 1.0
-#              spawners may be registered via entry points,
-#              e.g. `c.JupyterHub.spawner_class = 'localprocess'`
-#  
-#  Currently installed: 
-#    - default: jupyterhub.spawner.LocalProcessSpawner
-#    - localprocess: jupyterhub.spawner.LocalProcessSpawner
-#    - simple: jupyterhub.spawner.SimpleLocalProcessSpawner
-#c.JupyterHub.spawner_class = 'jupyterhub.spawner.LocalProcessSpawner'
 
-## Path to SSL certificate file for the public facing interface of the proxy
-#  
-#  When setting this, you should also set ssl_key
-#c.JupyterHub.ssl_cert = ''
-
-## Path to SSL key file for the public facing interface of the proxy
-#  
-#  When setting this, you should also set ssl_cert
-#c.JupyterHub.ssl_key = ''
 
 ## Host to send statsd metrics to. An empty string (the default) disables sending
 #  metrics.

@@ -1,0 +1,23 @@
+
+version: "2"
+
+services:
+  stochss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKER_STOCHSS_IMAGE}
+    container_name: stochss
+    restart: always
+    env_file:
+      - secrets/oauth.env
+    ports:
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+      - ".:/srv/jupyterhub"
+
+networks:
+  default:
+    external:
+      name: ${DOCKER_NETWORK_NAME}
