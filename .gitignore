@@ -10,3 +10,5 @@ secrets/
 jupyterhub_cookie_secret
 jupyterhub-proxy.pid
 server/static/app.bundle.js
+__pycache__
+userlist
