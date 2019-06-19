@@ -7,15 +7,16 @@ services:
       context: .
       dockerfile: Dockerfile
     image: ${DOCKER_STOCHSS_IMAGE}
-    container_name: stochss
+    container_name: ${DOCKER_STOCHSS_CONTAINER_NAME}
     restart: always
     env_file:
       - secrets/oauth.env
+      - .env
     ports:
       - "443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
-      - ".:/srv/jupyterhub"
+      - "$PWD:/srv/jupyterhub"
 
 networks:
   default:

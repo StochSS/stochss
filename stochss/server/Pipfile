@@ -1,12 +1,6 @@
 [scripts]
 db = "python create_db.py"
-build = "docker-compose build"
-build_singleuser = "docker build -t $(LOCAL_NOTEBOOK_IMAGE) \
-    --build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
-		--build-arg DOCKER_NOTEBOOK_IMAGE=$(DOCKER_NOTEBOOK_IMAGE) \
-		singleuser \
-"
-app = "docker run --rm -p 443:443 -v $PWD:/srv/jupyterhub $DOCKER_STOCHSS_IMAGE:latest"
+certs = "bash make_certs.sh"
 
 [[source]]
 name = "pypi"

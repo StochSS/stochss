@@ -17,16 +17,18 @@ RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.s
       python=3.6 jupyterhub sqlalchemy tornado jinja2 traitlets requests pip pycurl \
       nodejs configurable-http-proxy
 
-
 RUN /opt/conda/bin/pip install --upgrade \
       pip \
       gillespy2 \
       oauthenticator \
       dockerspawner \
       notebook \
+      python-dotenv \
       # for cli tools
       click && \
     rm /tmp/miniconda.sh
+
+WORKDIR /srv/jupyterhub
 
 ENV PATH=/opt/conda/bin:$PATH
 
