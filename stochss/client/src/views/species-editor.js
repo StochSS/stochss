@@ -25,19 +25,11 @@ module.exports = View.extend({
   },
   addSpecies: function () {
     var defaultName = 'S' + (this.collection.length + 1);
-    this.parent.parent.model.is_spatial ? this.addSpatialSpecies(defaultName) : this.addNonspatialSpecies(defaultName);
-  },
-  addNonspatialSpecies: function (name) {
     this.collection.add({
-      name: name,
+      name: defaultName,
       nonspatialSpecies: {
         value: 0
-      }
-    });
-  },
-  addSpatialSpecies: function (name) {
-    this.collection.add({
-      name: name,
+      },
       spatialSpecies: {
         diffusionCoeff: 0,
         subdomains: this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})

@@ -49,6 +49,9 @@ class ModelVersion(Base):
     # Relationships (many-to-one) 
     model = relationship("Model", back_populates="versions")
 
+    # Relationships (one-to-one)
+    simSettings = relationship("SimSettings", back_populates="version")
+
     # Relationships (one-to-many)
     reactions = relationship("Reaction", back_populates="version")
     parameters = relationship("Parameter", back_populates="version")
@@ -63,8 +66,61 @@ class ModelVersion(Base):
             'version': self.version,
             'species': json.loads(str(self.species)),
             'parameters': json.loads(str(self.parameters)),
-            'reactions': json.loads(str(self.reactions))
+            'reactions': json.loads(str(self.reactions)),
+            'simSettings': json.loads(str(self.simSettings))
         }, default=str)
+
+
+class SimSettings(Base):
+    __tablename__ = 'simSettings'
+
+    id = Column(Integer, primary_key=True)
+    is_stochastic = Column(Boolean)
+    endSim = Column(Integer)
+    timeStep = Column(Integer)
+    realizations = Column(Integer)
+    algorithm = Column(String)
+    ssaSeed = Column(Integer)
+    tauSeed = Column(Integer)
+    hybridSeed = Column(Integer)
+    tauTolerance = Column(Float)
+    hybridTolerance = Column(Float)
+    switchingTolerance = Column(Float)
+    relativeTolerance = Column(Float)
+    absoluteTolerance = Column(Float)
+
+    # Foreign Keys
+    model_version_id = Column(Integer, ForeignKey("model_version.id"), nullable=False)
+
+    # Relationships (one to one)
+    version = relationship("ModelVersion", foreign_keys=[model_version_id], back_populates="simSettings")
+
+    def __repr__(self):
+        return json.dumps({
+            'is_stochastic': self.is_stochastic,
+            'endSim': self.endSim,
+            'timeStep': self.timeStep,
+            'stochasticSetting': {
+              'realizations': self.realizations,
+              'algorithm': self.algorithm,
+              'ssaSettings': {
+                'seed': self.ssaSeed
+              },
+              'tauLeapingSettings': {
+                'seed': self.tauSeed,
+                'tauTolerance': self.tauTolerance
+              },
+              'hybridTauSettings': {
+                'seed': self.hybridSeed,
+                'tauTolerance': self.hybridTolerance,
+                'switchingTolerance': self.switchingTolerance
+              }
+            },
+            'deterministicSettings': {
+              'relativeTolerance': self.relativeTolerance,
+              'absoluteTolerance': self.absoluteTolerance
+            }
+        })
 
 
 class Reaction(Base):
@@ -76,6 +132,7 @@ class Reaction(Base):
     massaction = Column(Boolean)
     reaction_type = Column(String)
     propensity = Column(String)
+    subdomains = Column(String)
     
     # Foreign Keys
     model_id = Column(Integer, ForeignKey("model.id"), nullable=False)
@@ -106,7 +163,8 @@ class Reaction(Base):
             'products': json.loads(str(self.products)),
             'annotation': self.annotation,
             'reaction_type': self.reaction_type,
-            'propensity': self.propensity
+            'propensity': self.propensity,
+            'subdomains': self.subdomains.split(',')
         })
 
 
@@ -143,6 +201,9 @@ class Specie(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     value = Column(Float)
+    mode = Column(String)
+    diffusionCoeff = Column(Float)
+    subdomains = Column(String)
 
     # Foreign Keys
     model_id = Column(Integer, ForeignKey("model.id"), nullable=False)
@@ -160,7 +221,14 @@ class Specie(Base):
         return json.dumps({
             'id': self.id,
             'name': self.name,
-            'value': self.value
+            'spatialSpecies': {
+              'diffusionCoeff': self.diffusionCoeff,
+              'subdomains': self.subdomains.split(',')
+            },
+            'nonspatialSpecies': {
+              'value': self.value,
+              'mode': self.mode
+            }
         })
 
 
@@ -217,4 +285,3 @@ class Product(Base):
         })
 
 
-   

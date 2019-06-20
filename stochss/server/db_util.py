@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, select, Table, Column, MetaData, ForeignKey, Boolean, Integer, String, DateTime, Float
 
 import sys
-from orm import Model, ModelVersion, Specie, Parameter, Reaction, Reactant, Product
+from orm import Model, ModelVersion, Specie, Parameter, Reaction, Reactant, Product, SimSettings
 
 import logging as log
 
@@ -95,6 +95,7 @@ class DatabaseManager():
             if not model:
                 raise
             model.name = data['name']
+            model.is_spatial = data['is_spatial']
             for version in model.versions:
                 v_data = self._get_data_by_id(data['versions'], version.id)
                 self.update_model_version(version, v_data, session)
@@ -142,12 +143,19 @@ class DatabaseManager():
         )
         version.reactions.extend(new_reactions)
 
+        self.update_simSettings(version.simSettings, data['simSettings'], session)
+
 
     def update_reaction(self, reaction, data, species, parameters, version, session):
         if data:
             self.update_stoich_species(reaction.reactants, data['reactants'], species, 'reactant', version, session)
             self.update_stoich_species(reaction.products, data['products'], species, 'product', version, session)
             self.update_reaction_rate(reaction, data['rate'], parameters)
+            reaction.annotation = data['annotation']
+            reaction.massaction = data['massaction']
+            reaction.name = data['name']
+            reaction.type = data['type']
+            reaction.subdomains = ','.join(data['subdomains'])
         else:
             session.delete(reaction)
 
@@ -192,10 +200,29 @@ class DatabaseManager():
     def update_specie(self, specie, data, session):
         if data:
             specie.name = data['name']
-            specie.value = data['value']
+            specie.value = data['nonspatialSpecies']['value']
+            specie.mode = data['nonspatialSpecies']['mode']
+            specie.diffusionCoeff = data['spatialSpecies']['diffusionCoeff']
+            specie.subdomains = ','.join(data['spatialSpecies']['subdomains'])
         else:
             # No data for specie, so it's been deleted
             session.delete(specie)
+
+
+    def update_simSettings(self, simSettings, data, session):
+        simSettings.is_stochastic = data['is_stochastic']
+        simSettings.endSim = data['endSim']
+        simSettings.timeStep = data['timeStep']
+        simSettings.realizations = data['stochasticSettings']['realizations']
+        simSettings.algorithms = data['stochasticSettings']['algorithm']
+        simSettings.ssaSeed = data['stochasticSettings']['ssaSettings']['seed']
+        simSettings.tauSeed = data['stochasticSettings']['tauLeapingSettings']['seed']
+        simSettings.tauTolerance = data['stochasticSettings']['tauLeapingSettings']['tauTolerance']
+        simSettings.hybridSeed = data['stochasticSettings']['hybridTauSettings']['seed']
+        simSettings.hybridTolerance = data['stochasticSettings']['hybridTauSettings']['tauTolerance']
+        simSettings.switchingTolerance = data['stochasticSettings']['hybridTolerance']['switchingTolerance']
+        simSettings.relativeTolerance = data['deterministicSettings']['relativeTolerance']
+        simSettings.absoluteTolerance = data['deterministicSettings']['absoluteTolerance']
 
 
     def insert_model(self, data):
@@ -236,6 +263,8 @@ class DatabaseManager():
         version.species = species
         version.parameters = parameters
         version.reactions = reactions
+        simSettings = self.new_simSettings(version_data['simSettings'], model, version)
+        version.simSettings = [simSettings]
         return version
 
 
@@ -253,7 +282,8 @@ class DatabaseManager():
                  annotation=reaction_data['annotation'],
                  massaction=reaction_data['massaction'],
                  reaction_type=reaction_data['reaction_type'],
-                 propensity=reaction_data['propensity']
+                 propensity=reaction_data['propensity'],
+                 subdomains=','.join(reaction_data['subdomains'])
         )
         rate = list(filter(lambda p: p.name == reaction_data['rate']['name'], params))[0]
         reaction.rate = rate
@@ -306,9 +336,36 @@ class DatabaseManager():
 
 
     def new_specie(self, specie_data, model):
-        specie = Specie(name=specie_data['name'], value=specie_data['value'])
+        specie = Specie(
+                name=specie_data['name'],
+                value=specie_data['nonspatialSpecies']['value'],
+                mode=specie_data['nonspatialSpecies']['mode'],
+                diffusionCoeff=specie_data['spatialSpecies']['diffusionCoeff'],
+                subdomains=','.join(specie_data['spatialSpecies']['subdomains'])
+        )
         # DB schema was set up to have model_id (foreign key) on every table.
         # We have to set the model here to pick up the model_id.
         specie.model = model
         return specie
+
+
+    def new_simSettings(self, simSettings_data, model, version):
+        simSettings = SimSettings(
+                is_stochastic=simSettings_data['is_stochastic'],
+                endSim=simSettings_data['endSim'],
+                timeStep=simSettings_data['timeStep'],
+                realizations=simSettings_data['stochasticSettings']['realizations'],
+                algorithm=simSettings_data['stochasticSettings']['algorithm'],
+                ssaSeed=simSettings_data['stochasticSettings']['ssaSettings']['seed'],
+                tauSeed=simSettings_data['stochasticSettings']['tauLeapingSettings']['seed'],
+                hybridSeed=simSettings_data['stochasticSettings']['hybridTauSettings']['seed'],
+                tauTolerance=simSettings_data['stochasticSettings']['tauLeapingSettings']['tauTolerance'],
+                hybridTolerance=simSettings_data['stochasticSettings']['hybridTauSettings']['tauTolerance'],
+                switchingTolerance=simSettings_data['stochasticSettings']['hybridTauSettings']['switchingTolerance'],
+                relativeTolerance=simSettings_data['deterministicSettings']['relativeTolerance'],
+                absoluteTolerance=simSettings_data['deterministicSettings']['absoluteTolerance']
+        )
+        simSettings.model = model
+        simSettings.version = version
+        return simSettings
 
