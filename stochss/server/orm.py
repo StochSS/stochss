@@ -50,7 +50,7 @@ class ModelVersion(Base):
     model = relationship("Model", back_populates="versions")
 
     # Relationships (one-to-one)
-    simSettings = relationship("SimSettings", back_populates="version")
+    simSettings = relationship("SimSettings", uselist=False, back_populates="version")
 
     # Relationships (one-to-many)
     reactions = relationship("Reaction", back_populates="version")
@@ -100,7 +100,7 @@ class SimSettings(Base):
             'is_stochastic': self.is_stochastic,
             'endSim': self.endSim,
             'timeStep': self.timeStep,
-            'stochasticSetting': {
+            'stochasticSettings': {
               'realizations': self.realizations,
               'algorithm': self.algorithm,
               'ssaSettings': {

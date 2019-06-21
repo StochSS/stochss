@@ -97,7 +97,7 @@ module.exports = View.extend({
     this.registerRenderSubview(reactantsView, 'reactants-editor');
     this.registerRenderSubview(productsView, 'products-editor');
     this.totalRatio = this.getTotalReactantRatio();
-    if(this.model.collection.parent.collection.parent.is_spatial)
+    if(this.parent.parent.parent.model.is_spatial)
       $(this.queryByHook('subdomains-editor')).collapse();
   },
   registerRenderSubview: function (view, hook) {
