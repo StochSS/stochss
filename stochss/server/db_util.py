@@ -154,7 +154,7 @@ class DatabaseManager():
             reaction.annotation = data['annotation']
             reaction.massaction = data['massaction']
             reaction.name = data['name']
-            reaction.type = data['type']
+            reaction.type = data['reaction_type']
             reaction.subdomains = ','.join(data['subdomains'])
         else:
             session.delete(reaction)
@@ -214,13 +214,13 @@ class DatabaseManager():
         simSettings.endSim = data['endSim']
         simSettings.timeStep = data['timeStep']
         simSettings.realizations = data['stochasticSettings']['realizations']
-        simSettings.algorithms = data['stochasticSettings']['algorithm']
+        simSettings.algorithm = data['stochasticSettings']['algorithm']
         simSettings.ssaSeed = data['stochasticSettings']['ssaSettings']['seed']
         simSettings.tauSeed = data['stochasticSettings']['tauLeapingSettings']['seed']
         simSettings.tauTolerance = data['stochasticSettings']['tauLeapingSettings']['tauTolerance']
         simSettings.hybridSeed = data['stochasticSettings']['hybridTauSettings']['seed']
         simSettings.hybridTolerance = data['stochasticSettings']['hybridTauSettings']['tauTolerance']
-        simSettings.switchingTolerance = data['stochasticSettings']['hybridTolerance']['switchingTolerance']
+        simSettings.switchingTolerance = data['stochasticSettings']['hybridTauSettings']['switchingTolerance']
         simSettings.relativeTolerance = data['deterministicSettings']['relativeTolerance']
         simSettings.absoluteTolerance = data['deterministicSettings']['absoluteTolerance']
 
@@ -264,7 +264,7 @@ class DatabaseManager():
         version.parameters = parameters
         version.reactions = reactions
         simSettings = self.new_simSettings(version_data['simSettings'], model, version)
-        version.simSettings = [simSettings]
+        version.simSettings = simSettings
         return version
 
 

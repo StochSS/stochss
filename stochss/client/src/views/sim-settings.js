@@ -80,7 +80,7 @@ module.exports = View.extend({
           label: 'store state every ',
           tests: tests.valueTests,
           modelKey: 'timeStep',
-          valueTypes: 'number',
+          valueType: 'number',
           value: this.model.timeStep
         });
       },
