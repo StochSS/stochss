@@ -17,7 +17,7 @@ class Model(Base):
     is_spatial = Column(Boolean)
     
     # Relationships (one-to-many)
-    versions = relationship("ModelVersion", back_populates="model")
+    versions = relationship("ModelVersion", back_populates="model", cascade='all, delete, delete-orphan')
     parameters = relationship("Parameter", back_populates="model")
     reactions = relationship("Reaction", back_populates="model")
     species = relationship("Specie", back_populates="model")
@@ -50,14 +50,14 @@ class ModelVersion(Base):
     model = relationship("Model", back_populates="versions")
 
     # Relationships (one-to-one)
-    simSettings = relationship("SimSettings", uselist=False, back_populates="version")
+    simSettings = relationship("SimSettings", uselist=False, back_populates="version", cascade='all, delete')
 
     # Relationships (one-to-many)
-    reactions = relationship("Reaction", back_populates="version")
-    parameters = relationship("Parameter", back_populates="version")
-    species = relationship("Specie", back_populates="version")
-    reactants = relationship("Reactant", back_populates="version")
-    products = relationship("Product", back_populates="version")
+    reactions = relationship("Reaction", back_populates="version", cascade='all, delete, delete-orphan')
+    parameters = relationship("Parameter", back_populates="version", cascade='all, delete, delete-orphan')
+    species = relationship("Specie", back_populates="version", cascade='all, delete, delete-orphan')
+    reactants = relationship("Reactant", back_populates="version", cascade='all, delete, delete-orphan')
+    products = relationship("Product", back_populates="version", cascade='all, delete, delete-orphan')
 
     def __repr__(self):
         return json.dumps({
@@ -93,7 +93,7 @@ class SimSettings(Base):
     model_version_id = Column(Integer, ForeignKey("model_version.id"), nullable=False)
 
     # Relationships (one to one)
-    version = relationship("ModelVersion", foreign_keys=[model_version_id], back_populates="simSettings")
+    version = relationship("ModelVersion", back_populates="simSettings")
 
     def __repr__(self):
         return json.dumps({

@@ -15,30 +15,36 @@ from gillespy2 import Species, Parameter, Reaction, Model
 import numpy
 import gillespy2.core.gillespySolver
 from gillespy2.core.gillespyError import SolverError, DirectoryError, BuildError, ExecutionError
+from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
+from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
+from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver
 
 
 class _Model(Model):
 
-    def __init__(self, name, species, parameters, reactions):
+    def __init__(self, name, species, parameters, reactions, endSim, timeStep):
         Model.__init__(self, name=name)
         self.add_parameter(parameters)
         self.add_species(species)
         self.add_reaction(reactions)
-        self.timespan(numpy.linspace(0,20,100))
+        numSteps = int(endSim / timeStep + 1)
+        self.timespan(numpy.linspace(0,endSim,numSteps))
 
 
 class ModelFactory():
 
     def __init__(self, data):
         name = data['name']
+        timeStep = (data['simSettings']['timeStep'])
+        endSim = data['simSettings']['endSim']
         self.species = list(map(lambda s: self.build_specie(s), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
-        self.model = _Model(name, self.species, self.parameters, self.reactions)
+        self.model = _Model(name, self.species, self.parameters, self.reactions, endSim, timeStep)
 
     def build_specie(self, args):
-        return Species(name=args['name'], initial_value=args['value'])
+        return Species(name=args['name'], initial_value=int(args['nonspatialSpecies']['value']), mode=args['nonspatialSpecies']['mode'])
 
     def build_parameter(self, args):
         return Parameter(name=args['name'], expression=args['value'])
@@ -73,7 +79,7 @@ class RunModelAPIHandler(BaseHandler):
         data = json.loads(_data)
         self.set_header('Content-Type', 'application/json')
         _model = ModelFactory(data)
-        _results = _model.model.run(solver=BasicTauLeapingSolver(), show_labels=True)
+        _results = self.run_solver(_model.model, data['simSettings']) 
         # Each element of results is a single realization of the model
         results = _results[0]
         for key in results.keys():
@@ -83,6 +89,63 @@ class RunModelAPIHandler(BaseHandler):
         log.warn(str(results))
         results['data'] = data
         self.write(json.dumps(results))
+
+
+    def ssaSolver(self, model, data):
+        solver = get_best_ssa_solver()
+        return solver.run(
+            model = model,
+            t = data['endSim'],
+            number_of_trajectories = data['stochasticSettings']['realizations'],
+            increment = data['timeStep'],
+            seed = data['stochasticSettings']['ssaSettings']['seed']
+        )
+
+
+    def basicTauLeapingSolver(self, model, data):
+        solver = BasicTauLeapingSolver()
+        return solver.run(
+            model = model,
+            t = data['endSim'],
+            number_of_trajectories = data['stochasticSettings']['realizations'],
+            increment = data['timeStep'],
+            seed = data['stochasticSettings']['tauLeapingSettings']['seed'],
+            tau_tol = data['stochasticSettings']['tauLeapingSettings']['tauTolerance']
+        )
+
+
+    def basicTauHybridSolver(self, model, data):
+        solver = BasicTauHybridSolver()
+        return solver.run(
+            model = model,
+            t = data['endSim'],
+            number_of_trajectories = data['stochasticSettings']['realizations'],
+            increment = data['timeStep'],
+            seed = data['stochasticSettings']['hybridTauSettings']['seed'],
+            hybrid_tol = data['stochasticSettings']['hybridTauSettings']['switchingTolerance'],
+            tau_tol = data['stochasticSettings']['hybridTauSettings']['tauTolerance']
+        )
+
+
+    def basicODESolver(self, model, data):
+        solver = BasicODESolver()
+        return solver.run(
+            model = model,
+            t = data['endSim'],
+            increment = data['timeStep']
+        )
+
+
+    def run_solver(self, model, data):
+        if(data['is_stochastic'] == False):
+            return self.basicODESolver(model, data)
+        algorithm = data['stochasticSettings']['algorithm']
+        if(algorithm == "SSA"):
+            return self.ssaSolver(model, data)
+        if(algorithm == "Tau-Leaping"):
+            return self.basicTauLeapingSolver(model, data)
+        if(algorithm == "Hybrid-Tau-Leaping"):
+            return self.basicTauHybridSolver(model, data)
 
 
 class OpenModeNotebookAPIHandler(BaseHandler):

@@ -35,7 +35,7 @@ module.exports = View.extend({
         textAttribute: 'mode',
         eagerValidate: true,
         idAttribute: 'mode',
-        options: ['deterministic', 'stochastic', 'dynamic'],
+        options: ['continuous', 'discrete', 'dynamic'],
         unselectedText: 'Select a mode',
         value: ''
       }

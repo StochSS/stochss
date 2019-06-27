@@ -11,7 +11,7 @@ from db_util import _db, checkUserOrRaise
 import logging
 log = logging.getLogger()
  
-class UserModelListingsAPIHandler(BaseHandler):
+class ModelAPIGetAllOrPostHandlers(BaseHandler):
 
     @web.authenticated
     async def get(self, user):
@@ -21,6 +21,14 @@ class UserModelListingsAPIHandler(BaseHandler):
         self.set_header('Content-Type', 'application/json')
         self.write(r)
 
+    @web.authenticated
+    async def post(self, user):
+        checkUserOrRaise(self)
+        db = _db(self.settings)
+        self.set_header('Content-Type', 'application/json')
+        data = json.loads(self.request.body)
+        model_json = db.insert_model(data)
+        self.write(model_json)
 
 
 class ModelAPIHandler(BaseHandler):
@@ -36,21 +44,21 @@ class ModelAPIHandler(BaseHandler):
         self.write(r)
 
     @web.authenticated
-    async def post(self):
-        checkUserOrRaise(self)
-        db = _db(self.settings)
-        self.set_header('Content-Type', 'application/json')
-        data = json.loads(self.request.body)
-        model_json = db.insert_model(data)
-        self.write(model_json)
-
-    @web.authenticated
-    async def put(self):
+    async def put(self, model_id):
         checkUserOrRaise(self)
         db = _db(self.settings)
         self.set_header('Content-Type', 'application/json')
         data = json.loads(self.request.body)
         model_json = db.update_model(data)
         self.write(model_json)
+
+    @web.authenticated
+    async def delete(self, model_id):
+        checkUserOrRaise(self)
+        db = _db(self.settings)
+        self.set_header('Content-Type', 'application/json')
+        model_json = db.delete_model(model_id)
+        self.write(model_json)
+
 
 

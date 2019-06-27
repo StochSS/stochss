@@ -9,7 +9,10 @@ module.exports = State.extend({
       type: 'number',
       default: 1
     },
-    algorithm: 'string'
+    algorithm: {
+      type: 'string',
+      default: "SSA"
+    }
   },
   children: {
     ssaSettings: SSASettings,
