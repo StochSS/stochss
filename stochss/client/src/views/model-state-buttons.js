@@ -18,10 +18,10 @@ module.exports = View.extend({
   },
   clickRunHandler: function (e) {
     el = this.parent.parent.queryByHook('model-run-container');
-    //this.saveModel(this.runModel);
-    this.runModel(this.model);
+    this.saveModel(this.runModel.bind(this));
   },
-  runModel: function (model) {
+  runModel: function () {
+    var model = this.parent.parent.model
     var endpoint = path.join(app.config.routePrefix, 'api/models/run/', String(model.id), String(this.model.version));
     var self = this;
     xhr(
@@ -50,7 +50,7 @@ module.exports = View.extend({
   },
   saveModel: function (cb) {
     // this.model is a ModelVersion, the parent of the collection is Model
-    var model = this.model.collection.parent;
+    var model = this.parent.parent.model;
     if (cb) {
       model.save(model.attributes, {
         success: cb,

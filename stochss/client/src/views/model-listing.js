@@ -49,14 +49,7 @@ module.exports = View.extend({
   removeModel: function () {
     var model = this.model;
     if (!model.isNew()){
-      model.destroy({
-        success: function () {
-          alert("The model was successfully deleted.");
-        },
-        error: function () {
-          alert("Oops, something went wrong.");
-        },
-      });
+      model.destroy();
     }
   }
 });

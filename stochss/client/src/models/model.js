@@ -4,7 +4,6 @@ var ModelVersions = require('./model-versions');
 var config = require('../config.js')(process.env.NODE_ENV);
 
 module.exports = Model.extend({
-  url: path.join(config.routePrefix, config.apiUrl, '/model'),
   props: {
     id: 'number',
     latest_version: {

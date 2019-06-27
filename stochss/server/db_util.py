@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, select, Table, Column, MetaData, ForeignKe
 import sys
 from orm import Model, ModelVersion, Specie, Parameter, Reaction, Reactant, Product, SimSettings
 
-import logging as log
+import logging
 
 Session = sessionmaker()
 
@@ -58,6 +58,19 @@ class DatabaseManager():
 
     def _filter_data_by_has_id(self, iterable):
         return list(filter(lambda d: 'id' in d, iterable))
+
+
+    def delete_model(self, model_id):
+        #model_id = data['id']
+        with self._session_scope() as session:
+            model = session.query(Model).filter_by(id=model_id).one()
+            log = logging.getLogger()
+            log.info(model)
+            if not model:
+                raise
+            session.delete(model)
+            session.commit()
+            return "deleted"
 
 
     def get_models_by_user(self, username='popensesame'):
