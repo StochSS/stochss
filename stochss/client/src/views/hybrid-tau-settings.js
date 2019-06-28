@@ -5,6 +5,7 @@ var View = require('ampersand-view');
 var InputView = require('./input');
 var SelectView = require('ampersand-select-view');
 var EditSpecieModeView = require('./edit-specie-mode');
+var RateRulesView = require('./rate-rules-editor');
 
 var template = require('../templates/includes/hybridTauSettings.pug');
 
@@ -92,6 +93,17 @@ module.exports = View.extend({
           modelKey: 'switchingTolerance',
           valueType: 'number',
           value: this.model.switchingTolerance
+        });
+      }
+    },
+    rateRules: {
+      selector: '[data-hook=rate-rules-container]',
+      waitFor: 'model',
+      prepareView: function (el) {
+        return new RateRulesView({
+          parent: this,
+          collection: this.model.parent.parent.parent.rateRules,
+          species: this.model.parent.parent.parent.species
         });
       }
     }
