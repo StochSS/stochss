@@ -41,6 +41,17 @@ notebook_image: pull singleuser/Dockerfile
 		singleuser
 
 build: check-files network
-	docker-compose build
+	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
+
+run: check-files network
+	docker run -it \
+		-p 443:443 \
+		--env-file .env \
+		--env-file ./secrets/oauth.env \
+		-v $(PWD):/srv/jupyterhub \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		--network $(DOCKER_NETWORK_NAME) \
+		-h $(DOCKER_STOCHSS_CONTAINER_NAME) \
+		$(DOCKER_STOCHSS_IMAGE):latest
 
 .PHONY: network volumes check-files pull notebook_image build

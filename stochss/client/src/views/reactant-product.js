@@ -104,17 +104,14 @@ module.exports = View.extend({
   addSelectedSpecie: function () {
     var specieName = this.specieName ? this.specieName : 'Pick a species';
     if(this.validateAddSpecie()) {
-      var specieValue = this.species.filter(function (specie) {
+      var specie = this.species.filter(function (specie) {
         return specie.name === specieName;
+      })[0];
+      var stoichSpecie = new StoichSpecie({
+        ratio: 1
       });
-      specieValue = parseInt(specieValue);
-      this.collection.add({
-        ratio: 1,
-        specie: {
-          name: specieName,
-          value: specieValue
-        },
-      });
+      stoichSpecie.specie = specie;
+      this.collection.add(stoichSpecie);
       this.toggleAddSpecieButton();
     }
   }

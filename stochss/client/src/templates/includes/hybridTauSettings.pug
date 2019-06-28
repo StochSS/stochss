@@ -3,28 +3,30 @@ div#hybrid-tau-settings.card.card-body
   table.table
     thread
       tr
-        th(scope="col") Seed
+        th(scope="col", colspan="2") Seed
 
       tr
-        td: div(data-hook="seed-container")
-
-    thread
-      tr
-        th(scope="col") Tau Tolerance
-
-      tr
-        td: div(data-hook="tau-tolerance-container")
+        td(colspan="2"): div(data-hook="seed-container")
 
     thread
       tr
-        th(scope="col") Switching Tolerance
+        th(scope="col", colspan="2") Tau Tolerance
 
       tr
-        td: div(data-hook="switching-tolerance-container")
+        td(colspan="2"): div(data-hook="tau-tolerance-container")
+
+    thread
+      tr
+        th(scope="col", colspan="2") Switching Tolerance
+
+      tr
+        td(colspan="2"): div(data-hook="switching-tolerance-container")
 
     thread
       tr
         th(scope="col") Species Mode
+        th(scope="col") Rate Rules
 
       tr
         td: div(data-hook="specie-mode-container")
+        td: div(data-hook="rate-rules-container")

@@ -23,6 +23,7 @@ class Model(Base):
     species = relationship("Specie", back_populates="model")
     reactants = relationship("Reactant", back_populates="model")
     products = relationship("Product", back_populates="model")
+    rateRules = relationship("RateRule", back_populates="model")
 
     def __repr__(self):
         return json.dumps({
@@ -58,16 +59,18 @@ class ModelVersion(Base):
     species = relationship("Specie", back_populates="version", cascade='all, delete, delete-orphan')
     reactants = relationship("Reactant", back_populates="version", cascade='all, delete, delete-orphan')
     products = relationship("Product", back_populates="version", cascade='all, delete, delete-orphan')
+    rateRules = relationship("RateRule", back_populates="version", cascade='all, delete, delete-orphan')
 
     def __repr__(self):
         return json.dumps({
             'id': self.id,
             'name': self.model.name,
             'version': self.version,
+            'simSettings': json.loads(str(self.simSettings)),
             'species': json.loads(str(self.species)),
             'parameters': json.loads(str(self.parameters)),
             'reactions': json.loads(str(self.reactions)),
-            'simSettings': json.loads(str(self.simSettings))
+            'rateRules': json.loads(str(self.rateRules))
         }, default=str)
 
 
@@ -216,6 +219,7 @@ class Specie(Base):
     # Relationships (one-to-many)
     reactants = relationship("Reactant", back_populates="specie")
     products = relationship("Product", back_populates="specie")
+    rateRules = relationship("RateRule", back_populates="specie")
 
     def __repr__(self):
         return json.dumps({
@@ -229,6 +233,30 @@ class Specie(Base):
               'value': self.value,
               'mode': self.mode
             }
+        })
+
+
+class RateRule(Base):
+    __tablename__ = 'rateRule'
+
+    id = Column(Integer, primary_key=True)
+    rule = Column(String)
+
+    # Foreign Keys
+    model_id = Column(Integer, ForeignKey("model.id"), nullable=False)
+    version_id = Column(Integer, ForeignKey("model_version.id"), nullable=False)
+    specie_id = Column(Integer, ForeignKey("specie.id"), nullable=False)
+
+    # Relationships (many-to-one)
+    model = relationship("Model", back_populates="rateRules")
+    version = relationship("ModelVersion", back_populates="rateRules")
+    specie = relationship("Specie", back_populates="rateRules")
+
+    def __repr__(self):
+        return json.dumps({
+            'id': self.id,
+            'rule': self.rule,
+            'specie': json.loads(str(self.specie))
         })
 
 

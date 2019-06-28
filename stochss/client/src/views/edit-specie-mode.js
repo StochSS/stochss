@@ -19,7 +19,15 @@ module.exports = SelectView.extend({
     this.value = this.model.nonspatialSpecies.mode || 'dynamic';
   },
   selectChangeHandler: function (e) {
-    var mode = e.target.selectedOptions.item(0).text;
-    this.model.nonspatialSpecies.mode = mode;
+    var previousMode = this.model.nonspatialSpecies.mode
+    var currentMode = e.target.selectedOptions.item(0).text;
+    this.model.nonspatialSpecies.mode = currentMode;
+    this.updateRateRules(previousMode, currentMode);
+  },
+  updateRateRules: function (previous, current) {
+    if(current === 'continuous')
+      this.parent.parent.rateRules.addRateRule(this.label.value);
+    else if(previous === 'continuous')
+      this.parent.parent.rateRules.removeRateRule(this.label.value);
   }
 });
