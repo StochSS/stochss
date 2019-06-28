@@ -29,6 +29,21 @@ module.exports = View.extend({
           value: this.model.rule
         })
       }
+    },
+    inputName: {
+      hook: 'rate-rule-name',
+      prepareView: function (el) {
+        return new InputView ({
+          parent: this,
+          required: true,
+          name: 'rate-rule-name',
+          label: '',
+          tests: tests.nameTests,
+          modelKey: 'name',
+          valueType: 'string',
+          value: this.model.name
+        });
+      }
     }
   }
-})
+});
