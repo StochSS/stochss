@@ -75,9 +75,8 @@ make notebook_image
 ```bash
 make
 ```
-- Run stochss-jupyterhub
+- Run the container
 ```bash
-# Use -d to run in the background
-docker-compose up
+make run
 ```
 - Navigate to `https://localhost/hub` for JupyterHub or `https://localhost/hub/stochss` for StochSS.
