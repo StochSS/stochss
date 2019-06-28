@@ -1,5 +1,6 @@
 var app = require('ampersand-app');
 var tests = require('./tests');
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input')
@@ -10,7 +11,8 @@ module.exports = View.extend({
   template: template,
   render: function () {
     this.renderWithTemplate();
-    this.model
+    var inputField = this.queryByHook('rate-rule').children[0].children[1];
+    $(inputField).attr("placeholder", "---No Rate Rule Entered---");
   },
   subviews: {
     inputRateRule: {
