@@ -240,6 +240,7 @@ class RateRule(Base):
     __tablename__ = 'rateRule'
 
     id = Column(Integer, primary_key=True)
+    name = Column(String)
     rule = Column(String)
 
     # Foreign Keys
@@ -255,6 +256,7 @@ class RateRule(Base):
     def __repr__(self):
         return json.dumps({
             'id': self.id,
+            'name': self.name,
             'rule': self.rule,
             'specie': json.loads(str(self.specie))
         })
