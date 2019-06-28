@@ -14,6 +14,8 @@ module.exports = View.extend({
     var inputField = this.queryByHook('rate-rule').children[0].children[1];
     $(inputField).attr("placeholder", "---No Rate Rule Entered---");
   },
+  update: function (e) {
+  },
   subviews: {
     inputRateRule: {
       hook: 'rate-rule',
@@ -23,7 +25,7 @@ module.exports = View.extend({
           required: false,
           name: 'rate-rule',
           label: this.model.specie.name,
-          tests: tests.nameTests,
+          tests: '',
           modelKey: 'rule',
           valueType: 'string',
           value: this.model.rule
