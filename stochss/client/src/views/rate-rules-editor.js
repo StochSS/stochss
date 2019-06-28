@@ -36,8 +36,10 @@ module.exports = View.extend({
     })[0];
   },
   addRateRule: function (specieName) {
+    var defaultName = "RR" + (this.collection.length + 1);
     var specie = this.getSpecie(specieName);
     var rateRule = new RateRule({
+      name: defaultName,
       rule: ''
     });
     rateRule.specie = specie
