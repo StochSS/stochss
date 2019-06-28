@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, select, Table, Column, MetaData, ForeignKey, Boolean, Integer, String, DateTime, Float
 
 import sys
-from orm import Model, ModelVersion, Specie, Parameter, Reaction, Reactant, Product, SimSettings
+from orm import Model, ModelVersion, Specie, Parameter, Reaction, Reactant, Product, SimSettings, RateRule
 
 import logging
 
@@ -156,6 +156,24 @@ class DatabaseManager():
         )
         version.reactions.extend(new_reactions)
 
+        for rateRule in version.rateRules:
+            rr_data = self._get_data_by_id(data['rateRules'], rateRule.id)
+            self.update_rateRule(
+                    rateRule,
+                    rr_data,
+                    version.species,
+                    session
+            )
+        
+        new_rateRule_data = self._filter_data_by_no_id(data['rateRules'])
+        new_rateRules = self.new_rateRules_list(
+                new_rateRule_data,
+                version.species,
+                version.model,
+                version
+            )
+        version.rateRules.extend(new_rateRules)
+
         self.update_simSettings(version.simSettings, data['simSettings'], session)
 
 
@@ -176,6 +194,15 @@ class DatabaseManager():
     def update_reaction_rate(self, reaction, r_data, parameters):
         param = list(filter(lambda p: p.name == r_data['name'], parameters))[0]
         reaction.rate = param
+
+
+    def update_rateRule(self, rateRule, data, species, session):
+        if data:
+            rateRule.rule = data['rule']
+            specie = list(filter(lambda s: s.name == data['specie']['name'], species))[0]
+            rateRule.specie = specie
+        else:
+            session.delete(rateRule)
 
 
     def update_stoich_species(self, stoich_species, data, species, stoich_type, version, session):
@@ -273,10 +300,12 @@ class DatabaseManager():
         species = self.new_species_list(version_data['species'], model)
         parameters = self.new_parameter_list(version_data['parameters'], model)
         reactions = self.new_reaction_list(version_data['reactions'], species, model, parameters, version)
+        rateRules = self.new_rateRules_list(version_data['rateRules'], species, model, version)
+        simSettings = self.new_simSettings(version_data['simSettings'], model, version)
         version.species = species
         version.parameters = parameters
         version.reactions = reactions
-        simSettings = self.new_simSettings(version_data['simSettings'], model, version)
+        version.rateRules = rateRules
         version.simSettings = simSettings
         return version
 
@@ -306,6 +335,23 @@ class DatabaseManager():
         reaction.reactants = reactants
         reaction.products = products
         return reaction
+
+
+    def new_rateRules_list(self, rateRules_data, species, model, version):
+        rateRules = []
+        for rateRule_data in rateRules_data:
+            rateRule = self.new_rateRule(rateRule_data, species, model, version)
+            rateRules.append(rateRule)
+        return rateRules
+
+
+    def new_rateRule(self, rateRule_data, species, model, version):
+        rateRule = RateRule(rule=rateRule_data['rule'])
+        specie = list(filter(lambda s: s.name == rateRule_data['specie']['name'], species))[0]
+        rateRule.specie = specie
+        rateRule.model = model
+        rateRule.version = version
+        return rateRule
 
 
     def new_stoich_species_list(self, stoich_species_data, stoich_type, species, model, version):
