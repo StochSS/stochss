@@ -198,6 +198,7 @@ class DatabaseManager():
 
     def update_rateRule(self, rateRule, data, species, session):
         if data:
+            rateRule.name = data['name']
             rateRule.rule = data['rule']
             specie = list(filter(lambda s: s.name == data['specie']['name'], species))[0]
             rateRule.specie = specie
@@ -346,7 +347,7 @@ class DatabaseManager():
 
 
     def new_rateRule(self, rateRule_data, species, model, version):
-        rateRule = RateRule(rule=rateRule_data['rule'])
+        rateRule = RateRule(name=rateRule_data['name'], rule=rateRule_data['rule'])
         specie = list(filter(lambda s: s.name == rateRule_data['specie']['name'], species))[0]
         rateRule.specie = specie
         rateRule.model = model
