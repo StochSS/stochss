@@ -125,7 +125,7 @@ with open(os.path.join(pwd, 'userlist')) as f:
 #    - simple: jupyterhub.spawner.SimpleLocalProcessSpawner
 c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
 
-c.DockerSpawner.container_image = os.environ['DOCKER_NOTEBOOK_IMAGE']
+c.DockerSpawner.container_image = os.environ['LOCAL_NOTEBOOK_IMAGE']
 # JupyterHub requires a single-user instance of the Notebook server, so we
 # default to using the `start-singleuser.sh` script included in the
 # jupyter/docker-stacks *-notebook images as the Docker run command when
@@ -164,7 +164,7 @@ c.DockerSpawner.debug = True
 #  
 #  See `hub_connect_ip` for cases where the bind and connect address should
 #  differ, or `hub_bind_url` for setting the full bind URL.
-c.JupyterHub.hub_ip = os.environ['DOCKER_STOCHSS_CONTAINER_NAME']
+c.JupyterHub.hub_ip =  'jupyterhub'
 
 ## The internal port for the Hub process.
 #  
