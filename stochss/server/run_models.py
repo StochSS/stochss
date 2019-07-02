@@ -105,35 +105,44 @@ class RunModelAPIHandler(BaseHandler):
 
     def ssaSolver(self, model, data):
         solver = get_best_ssa_solver()
+        seed = data['stochasticSettings']['ssaSettings']['seed']
+        if(seed == -1):
+            seed = None
         return solver.run(
             model = model,
             t = data['endSim'],
             number_of_trajectories = data['stochasticSettings']['realizations'],
             increment = data['timeStep'],
-            seed = data['stochasticSettings']['ssaSettings']['seed']
+            seed = seed
         )
 
 
     def basicTauLeapingSolver(self, model, data):
         solver = BasicTauLeapingSolver()
+        seed = data['stochasticSettings']['tauLeapingSettings']['seed']
+        if(seed == -1):
+            seed = None
         return solver.run(
             model = model,
             t = data['endSim'],
             number_of_trajectories = data['stochasticSettings']['realizations'],
             increment = data['timeStep'],
-            seed = data['stochasticSettings']['tauLeapingSettings']['seed'],
+            seed = seed,
             tau_tol = data['stochasticSettings']['tauLeapingSettings']['tauTolerance']
         )
 
 
     def basicTauHybridSolver(self, model, data):
         solver = BasicTauHybridSolver()
+        seed = data['stochasticSettings']['hybridTauSettings']['seed']
+        if(seed == -1):
+            seed = None
         return solver.run(
             model = model,
             t = data['endSim'],
             number_of_trajectories = data['stochasticSettings']['realizations'],
             increment = data['timeStep'],
-            seed = data['stochasticSettings']['hybridTauSettings']['seed'],
+            seed = seed,
             hybrid_tol = data['stochasticSettings']['hybridTauSettings']['switchingTolerance'],
             tau_tol = data['stochasticSettings']['hybridTauSettings']['tauTolerance']
         )
