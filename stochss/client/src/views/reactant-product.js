@@ -37,8 +37,7 @@ module.exports = View.extend({
         // Set idAttribute to name. Models may not be saved yet so id is unreliable (so is cid).
         // Use name since it *should be* unique.
         idAttribute: 'name',
-        options: self.species,
-        unselectedText: self.unselectedText
+        options: self.species
       }
     };
     var type = self.reactionType;
