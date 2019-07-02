@@ -34,20 +34,32 @@ class _Model(Model):
 
 class ModelFactory():
 
+    log = logging.getLogger()
+    log.setLevel(10)
+
     def __init__(self, data):
         name = data['name']
         timeStep = (data['simSettings']['timeStep'])
         endSim = data['simSettings']['endSim']
+        self.log.debug("Species: ")
         self.species = list(map(lambda s: self.build_specie(s), data['species']))
+        self.log.debug("Parameters: ")
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
         self.model = _Model(name, self.species, self.parameters, self.reactions, endSim, timeStep)
 
     def build_specie(self, args):
-        return Species(name=args['name'], initial_value=int(args['nonspatialSpecies']['value']), mode=args['nonspatialSpecies']['mode'])
+        name = args['name']
+        value = args['nonspatialSpecies']['value']
+        mode = args['nonspatialSpecies']['mode']
+        self.log.debug("name: {0}, value: {1}, mode: {2}".format(name, value, mode))
+        return Species(name=name, initial_value=value, mode=mode)
 
     def build_parameter(self, args):
-        return Parameter(name=args['name'], expression=args['value'])
+        name = args['name']
+        value = args['value']
+        self.log.debug("name: {0}, expression: {1}".format(name, value))
+        return Parameter(name=name, expression=value)
 
     def build_reaction(self, args, parameters):
         R = Reaction(
