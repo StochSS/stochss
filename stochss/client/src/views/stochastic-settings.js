@@ -46,8 +46,10 @@ module.exports = View.extend({
       el: this.algorithmSettingsContainer,
     });
     this.setStochasticAlgorithm(this.model.algorithm);
-    if(this.model.isAdvancedSettingsOpen)
+    if(this.model.isAdvancedSettingsOpen){
       $(this.queryByHook('advanced-settings')).collapse();
+      $(this.queryByHook('advanced-settings-button')).text('-');
+    }
   },
   subviews: {
     inputRealizations: {
@@ -86,7 +88,13 @@ module.exports = View.extend({
     }
   },
   toggleAdvancedSettings: function (e) {
-    this.model.isAdvancedSettingsOpen ? this.openCloseAdvancedSettings(false) : this.openCloseAdvancedSettings(false);
+    if(this.model.isAdvancedSettingsOpen) {
+      this.openCloseAdvancedSettings(false)
+      $(this.queryByHook('advanced-settings-button')).text('+');
+    } else {
+      this.openCloseAdvancedSettings(true);
+      $(this.queryByHook('advanced-settings-button')).text('-');
+    }
   },
   openCloseAdvancedSettings: function (value) {
     this.model.isAdvancedSettingsOpen = value;
