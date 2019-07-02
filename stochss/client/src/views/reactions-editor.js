@@ -112,7 +112,7 @@ module.exports = View.extend({
     this.detailsViewSwitcher.set(reaction.detailsView);
   },
   getDefaultReactionName: function () {
-    return 'R' + this.collection.length;
+    return 'R' + (this.collection.length + 1);
   },
   getStoichArgsForReactionType: function(type) {
     var args = ReactionTypes[type];
