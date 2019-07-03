@@ -1,0 +1,16 @@
+section.page
+
+  h2 Model Editor
+
+  div(data-hook="name-container")
+
+  label(for="model-editor-select-version")
+    | Edit Version:
+
+  select(id="model-editor-select-version", data-hook="version-select")
+    each version_tag in this.model.version_tags
+      option(value=version_tag)= version_tag
+
+  div(data-hook="model-version-editor-container")
+
+  div(data-hook="model-run-container")
