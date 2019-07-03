@@ -1,9 +1,7 @@
-stochss/server/static/
 node_modules/
 *.swp
 *.swo
 package-lock.json
-dev-db.json
 .DS_Store
 *.lock
 *.sqlite
@@ -11,3 +9,4 @@ jupyterhub_cookie_secret
 jupyterhub-proxy.pid
 __pycache__
 userlist
+dist/*

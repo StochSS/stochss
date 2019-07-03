@@ -51,15 +51,15 @@ webpack:
 watch:
 	npm run watch
 
-install:
+deps:
 	pip install -U pip pipenv
 	npm install
 	pipenv install
 
-build: check-files network
+hub_image: check-files network
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
 
-build_all: check-files network notebook_image build database webpack userlist cert
+build: check-files deps network notebook_image hub_image database webpack userlist cert
 
 run: check-files network
 	docker run -it --rm \

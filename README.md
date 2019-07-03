@@ -8,11 +8,6 @@ Stochastic Simulation as a Service
 
 - Install [pip](https://pip.pypa.io/en/stable/installing/) for python
 
-- Install dependencies (npm packages and python packages)
-```bash
-make install
-```
-
 - Register a new [GitHub OAuth Application](https://github.com/settings/applications/new) to use for your personal development environment.
   - Set 'Application name' to `initials-stochss-dev` where `initials` is the initials of your name. Or set the application name to whatever you want.
   - Set 'Homepage URL' to `https://localhost/hub`
@@ -33,9 +28,9 @@ Example `userlist` file:
 mygithubuser admin
 ```
 
-- Build the jupyterhub docker image, single-user notebook server docker image, database file, self-signed certificate, and app bundle.
+- Setup the environment: install dependencies, build the jupyterhub docker image and singleuser image, database file, self-signed certificate, and app bundle.
 ```bash
-make build_all
+make
 ```
 
 This is equivalent to:
