@@ -13,8 +13,6 @@ Stochastic Simulation as a Service
 make install
 ```
 
-- Make a subdirectory called `secrets`
-
 - Register a new [GitHub OAuth Application](https://github.com/settings/applications/new) to use for your personal development environment.
   - Set 'Application name' to `initials-stochss-dev` where `initials` is the initials of your name. Or set the application name to whatever you want.
   - Set 'Homepage URL' to `https://localhost/hub`
