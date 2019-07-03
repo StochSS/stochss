@@ -5,7 +5,7 @@ node_modules/
 package-lock.json
 dev-db.json
 .DS_Store
-secrets/
+secrets/*
 *.lock
 *.sqlite
 jupyterhub_cookie_secret
