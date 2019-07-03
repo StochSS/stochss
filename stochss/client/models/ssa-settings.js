@@ -1,0 +1,10 @@
+var State = require('ampersand-state');
+
+module.exports = State.extend({
+  props: {
+    seed: {
+      type: 'number',
+      default: -1
+    }
+  }
+});

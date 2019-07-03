@@ -1,0 +1,23 @@
+tr
+  td: a.btn.btn-outline-primary(data-hook="edit-link")
+    | Edit
+  td(data-hook="name")
+  td
+    select(data-hook="version-select")
+      each version_tag in this.model.get("version_tags")
+        option(value=version_tag)= version_tag
+  td(data-hook="public")
+  td
+    a.btn.btn-outline-secondary(data-toggle='modal', href='#delete-modal', data-hook='confirm-delete') X
+
+#delete-modal(class='modal fade')
+  div(class='modal-dialog')
+    div(class='modal-content')
+      div(class='modal-header')
+        h4(class='modal-title') header
+        button(class='close', data-dismiss='modal') X
+      div(class='modal-body')
+        h4 body
+      div(class='modal-footer')
+        button
+          btn.btn-danger(data-dismiss='modal') No
