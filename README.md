@@ -4,51 +4,17 @@ Stochastic Simulation as a Service
 
 ## Local Development Setup
 
-- Install python 3, nodejs, npm, openssl
+- Install python 3, nodejs, npm, and openssl
+
 - Install [pip](https://pip.pypa.io/en/stable/installing/) for python
-- Install this proxy to global npm packages (requires root)
 
+- Install dependencies (npm packages and python packages)
 ```bash
-npm install -g configurable-http-proxy
+make install
 ```
-- Install pipenv with pip
-```bash
-pip install pipenv 
-```
-### Set up the client
-- Install npm packages
-```bash
-cd stochss/client
-npm install
-```
-- Generate a new app bundle
 
-For local development, run webpack in watch mode to generate new bundles on changes to /src
-```bash
-npm run watch
-```
-...or do a one-time build...
-```bash
-npm run webpack
-```
-...both of which emit a bundle file to `stochss/server/static/`
+- Make a subdirectory called `secrets`
 
-### Set up the server
-
-- Install python packages to a pipenv environment
-```bash
-cd stochss/server
-pipenv install
-```
-- Create a db file to work with
-```bash
-pipenv run db
-```
-- Make a directory called `secrets` in the `server` folder
-- Generate a self-signed certificate for local development
-```bash
-pipenv run certs
-```
 - Register a new [GitHub OAuth Application](https://github.com/settings/applications/new) to use for your personal development environment.
   - Set 'Application name' to `initials-stochss-dev` where `initials` is the initials of your name. Or set the application name to whatever you want.
   - Set 'Homepage URL' to `https://localhost/hub`
@@ -61,22 +27,36 @@ GITHUB_CLIENT_ID=<GITHUB CLIENT ID>
 GITHUB_CLIENT_SECRET=<GITHUB CLIENT SECRET>
 OAUTH_CALLBACK_URL=https://localhost/hub/oauth_callback
 ```
-- Make a new text file in `stochss/server` called `userlist`. This file contains a list of GitHub usernames that are able to use the OAuth credentials you just generated. By putting `admin` after a username, the user will have JupyterHub admin powers in the stochss app.
 
-Example `userlist` file contents:
+- Make a new text file called `userlist`. This file contains a list of GitHub usernames that are able to use the OAuth credentials you just generated. By putting `admin` after a username, the user will have JupyterHub admin powers in the stochss app.
+
+Example `userlist` file:
 ```bash
 mygithubuser admin
 ```
-- Build the docker container for user servers
+
+- Build the jupyterhub docker image, single-user notebook server docker image, database file, self-signed certificate, and app bundle.
 ```bash
+make build_all
+```
+
+This is equivalent to:
+```bash
+make build
 make notebook_image
+make database
+make cert
+make webpack
 ```
-- Build the stochss-jupyterhub docker container
-```bash
-make
-```
+
 - Run the container
 ```bash
 make run
 ```
+
+- In another terminal, you can run webpack in watch mode to automatically update the app bundle on client source changes.
+```bash
+make watch
+```
+
 - Navigate to `https://localhost/hub` for JupyterHub or `https://localhost/hub/stochss` for StochSS.

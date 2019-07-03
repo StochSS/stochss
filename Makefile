@@ -51,6 +51,11 @@ webpack:
 watch:
 	npm run watch
 
+install:
+	pip install -U pip pipenv
+	npm install
+	pipenv install
+
 build: check-files network
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
 
