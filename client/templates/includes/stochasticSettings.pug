@@ -7,9 +7,11 @@ div#stochastic-settings.card.card-body
       tr
         td: div(data-hook="realizations-container")
 
-  h5
-    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button')
-      |Advanced Settings
+  div.row
+
+    h6 Advanced Settings
+    
+    button.btn.btn-outline-collapse(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button') +
 
   div(id='advanced-settings', class='collapse', data-hook='advanced-settings')
     table.table

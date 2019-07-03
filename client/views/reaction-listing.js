@@ -33,6 +33,7 @@ module.exports = View.extend({
   },
   removeReaction: function (e) {
     this.model.collection.remove(this.model);
+    this.parent.collection.trigger("change");
   }
 
 });

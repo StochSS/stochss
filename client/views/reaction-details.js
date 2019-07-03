@@ -56,7 +56,6 @@ module.exports = View.extend({
       idAttribute: 'cid',
       textAttribute: 'name',
       eagerValidate: true,
-      unselectedText: 'Pick a parameter',
       options: this.model.collection.parent.parameters,
       // For new reactions (with no rate.name) just use the first parameter in the Parameters collection
       // Else fetch the right Parameter from Parameters based on existing rate

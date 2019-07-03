@@ -24,8 +24,10 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this);
-    if(this.model.isAdvancedSettingsOpen)
+    if(this.model.isAdvancedSettingsOpen) {
       $(this.queryByHook('advanced-settings')).collapse();
+      $(this.queryByHook('advanced-settings-button')).text('-');
+    }
   },
   update: function (e) {
   },
@@ -62,7 +64,13 @@ module.exports = View.extend({
     }
   },
   toggleAdvancedSettings: function (e) {
-    this.model.isAdvancedSettingsOpen ? this.setIsAdvancedSettingsOpen(false) : this.setIsAdvancedSettingsOpen(true);
+    if(this.model.isAdvancedSettingsOpen) {
+      this.setIsAdvancedSettingsOpen(false)
+      $(this.queryByHook('advanced-settings-button')).text('+');
+    } else {
+      this.setIsAdvancedSettingsOpen(true);
+      $(this.queryByHook('advanced-settings-button')).text('-');
+    }
   },
   setIsAdvancedSettingsOpen: function (value) {
     this.model.isAdvancedSettingsOpen = value;

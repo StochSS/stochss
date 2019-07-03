@@ -1,8 +1,10 @@
 div#deterministic-settings.card.card-body
 
-  h5
-    button.btn.btn-link(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button')
-      |Advanced Settings
+  div.row
+
+    h5 Advanced Settings
+  
+    button.btn.btn-outline-collapse(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button') +
 
   div(id='advanced-settings', class='collapse', data-hook='advanced-settings')
     table.table
@@ -19,3 +21,5 @@ div#deterministic-settings.card.card-body
 
         tr
           td(colspan="2"): div(data-hook="absolute-tolerance-container")
+
+    p.text-danger Currently the relative tolerance and the absolute tolerance are not being used by the Basic ODE solver.  This is a work in progress by the GillesPy2 team.

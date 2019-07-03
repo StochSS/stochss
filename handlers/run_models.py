@@ -34,20 +34,32 @@ class _Model(Model):
 
 class ModelFactory():
 
+    log = logging.getLogger()
+    log.setLevel(10)
+
     def __init__(self, data):
         name = data['name']
         timeStep = (data['simSettings']['timeStep'])
         endSim = data['simSettings']['endSim']
+        self.log.debug("Species: ")
         self.species = list(map(lambda s: self.build_specie(s), data['species']))
+        self.log.debug("Parameters: ")
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
         self.model = _Model(name, self.species, self.parameters, self.reactions, endSim, timeStep)
 
     def build_specie(self, args):
-        return Species(name=args['name'], initial_value=int(args['nonspatialSpecies']['value']), mode=args['nonspatialSpecies']['mode'])
+        name = args['name']
+        value = args['nonspatialSpecies']['value']
+        mode = args['nonspatialSpecies']['mode']
+        self.log.debug("name: {0}, value: {1}, mode: {2}".format(name, value, mode))
+        return Species(name=name, initial_value=value, mode=mode)
 
     def build_parameter(self, args):
-        return Parameter(name=args['name'], expression=args['value'])
+        name = args['name']
+        value = args['value']
+        self.log.debug("name: {0}, expression: {1}".format(name, value))
+        return Parameter(name=name, expression=value)
 
     def build_reaction(self, args, parameters):
         R = Reaction(
@@ -93,35 +105,44 @@ class RunModelAPIHandler(BaseHandler):
 
     def ssaSolver(self, model, data):
         solver = get_best_ssa_solver()
+        seed = data['stochasticSettings']['ssaSettings']['seed']
+        if(seed == -1):
+            seed = None
         return solver.run(
             model = model,
             t = data['endSim'],
             number_of_trajectories = data['stochasticSettings']['realizations'],
             increment = data['timeStep'],
-            seed = data['stochasticSettings']['ssaSettings']['seed']
+            seed = seed
         )
 
 
     def basicTauLeapingSolver(self, model, data):
         solver = BasicTauLeapingSolver()
+        seed = data['stochasticSettings']['tauLeapingSettings']['seed']
+        if(seed == -1):
+            seed = None
         return solver.run(
             model = model,
             t = data['endSim'],
             number_of_trajectories = data['stochasticSettings']['realizations'],
             increment = data['timeStep'],
-            seed = data['stochasticSettings']['tauLeapingSettings']['seed'],
+            seed = seed,
             tau_tol = data['stochasticSettings']['tauLeapingSettings']['tauTolerance']
         )
 
 
     def basicTauHybridSolver(self, model, data):
         solver = BasicTauHybridSolver()
+        seed = data['stochasticSettings']['hybridTauSettings']['seed']
+        if(seed == -1):
+            seed = None
         return solver.run(
             model = model,
             t = data['endSim'],
             number_of_trajectories = data['stochasticSettings']['realizations'],
             increment = data['timeStep'],
-            seed = data['stochasticSettings']['hybridTauSettings']['seed'],
+            seed = seed,
             hybrid_tol = data['stochasticSettings']['hybridTauSettings']['switchingTolerance'],
             tau_tol = data['stochasticSettings']['hybridTauSettings']['tauTolerance']
         )

@@ -80,7 +80,7 @@ class SimSettings(Base):
     id = Column(Integer, primary_key=True)
     is_stochastic = Column(Boolean)
     endSim = Column(Integer)
-    timeStep = Column(Integer)
+    timeStep = Column(Float)
     realizations = Column(Integer)
     algorithm = Column(String)
     ssaSeed = Column(Integer)
@@ -203,7 +203,7 @@ class Specie(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    value = Column(Float)
+    value = Column(Integer)
     mode = Column(String)
     diffusionCoeff = Column(Float)
     subdomains = Column(String)

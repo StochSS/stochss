@@ -10,11 +10,11 @@ module.exports = State.extend({
     },
     endSim: {
       type: 'number',
-      default: 100
+      default: 20
     },
     timeStep: {
       type: 'number',
-      default: 1.0
+      default: 0.05
     },
   },
   children: {

@@ -19,7 +19,7 @@ module.exports = View.extend({
     this.renderCollection(this.collection, EditParameterView, this.queryByHook('parameter-list'));
   },
   addParameter: function () {
-    var defaultName = 'k' + this.collection.length;
+    var defaultName = 'K' + (this.collection.length + 1);
     this.collection.add({
       name: defaultName,
       value: 0
