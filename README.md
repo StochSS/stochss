@@ -35,14 +35,14 @@ make
 
 This is equivalent to:
 ```bash
-make build
+make hub_image
 make notebook_image
 make database
 make cert
 make webpack
 ```
 
-- Run the container
+- Run the server container
 ```bash
 make run
 ```
