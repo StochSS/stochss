@@ -51,7 +51,7 @@ class ModelVersion(Base):
     model = relationship("Model", back_populates="versions")
 
     # Relationships (one-to-one)
-    simSettings = relationship("SimSettings", uselist=False, back_populates="version", cascade='all, delete')
+    simSettings = relationship("SimSettings", uselist=False, back_populates="version", cascade='all, delete, delete-orphan')
 
     # Relationships (one-to-many)
     reactions = relationship("Reaction", back_populates="version", cascade='all, delete, delete-orphan')
