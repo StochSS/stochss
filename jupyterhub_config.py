@@ -32,7 +32,7 @@ c.JupyterHub.log_level = 'DEBUG'
 from handlers.main import MainHandler
 
 # API handlers
-from handlers.models import ModelAPIGetAllOrPostHandlers, ModelAPIHandler
+from handlers.models import ModelAPIGetAllOrPostHandlers, ModelAPIHandler, ModelFileAPIHandler
 from handlers.username import UsernameHandler
 from handlers.run_models import RunModelAPIHandler
 
@@ -47,6 +47,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/api/user", UsernameHandler),
         (r"/stochss/api/models/(\w+)", ModelAPIGetAllOrPostHandlers),
         (r"/stochss/api/models/\w+/(\d+)", ModelAPIHandler),
+        (r"/stochss/api/model-data/(\w+)", ModelFileAPIHandler),
         # /run/(model_id)/(version_number)
         (r"/stochss/api/models/run/(\d+)/(\d+)", RunModelAPIHandler),
         # Default

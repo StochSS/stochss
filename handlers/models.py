@@ -5,6 +5,8 @@ from jupyterhub.handlers.base import BaseHandler
 
 from tornado import web
 import json
+import docker
+client = docker.from_env()
 
 from handlers.db_util import _db, checkUserOrRaise
 
@@ -61,4 +63,17 @@ class ModelAPIHandler(BaseHandler):
         self.write(model_json)
 
 
+class ModelFileAPIHandler(BaseHandler):
 
+    @web.authenticated
+    async def get(self, modelName):
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        log.debug('jupyter-{0}'.format(user))
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        filePath = "/srv/jupyterhub/templates/nonspatialTemplate.json"
+        with open(filePath, 'r') as jsonFile:
+            data = jsonFile.read()
+            jsonData = json.loads(str(data))
+            container.exec_run(cmd="echo {0} > {1}.json".format(jsonData, modelName))
+            self.write(jsonData)
