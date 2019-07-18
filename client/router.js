@@ -4,6 +4,7 @@ var Router = require('ampersand-router');
 var HomePage = require('./pages/home');
 var ModelBrowser = require('./pages/model-browser');
 var ModelEditor = require('./pages/model-editor');
+var ModelEditorV2 = require('./pagesV2/model-editor');
 var config = require('./config.js')(process.env.NODE_ENV);
 
 const homePath = path.join(config.routePrefix, '()');
@@ -14,7 +15,8 @@ module.exports = Router.extend({
   routes: {
     '()': 'home',
     'models(/)': 'modelBrowser',
-    'models/edit/(:id)': 'modelEditor'
+    'models/edit/(:id)': 'modelEditor',
+    'models/edit-model/(:name)' : 'modelEditorV2',
   },
 
   home: function () {
@@ -31,6 +33,12 @@ module.exports = Router.extend({
     app.trigger('page', new ModelEditor({
       id: id
     }));
-  }
+  },
+
+  modelEditorV2: function (name) {
+    app.trigger('page', new ModelEditorV2({
+      name: name,
+    }));
+  },
 
 });
