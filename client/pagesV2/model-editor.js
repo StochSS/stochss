@@ -5,7 +5,7 @@ var $ = require('jquery');
 var PageView = require('../pages/base');
 // var MeshEditorView = require('../viewsV2/mesh-editor');
 var SpeciesEditorView = require('../viewsV2/species-editor');
-// var ParametersEditorView = require('../viewV2/parameters-editor');
+var ParametersEditorView = require('../viewsV2/parameters-editor');
 // var ReactionsEditorView = require('../viewsV2/reactions-editor');
 // var SimSettingsView = require('../viewsV2/simulation-settings');
 // var ModelStateButtonsView = require('../veiwsV2/model-state-buttons');
@@ -23,7 +23,7 @@ module.exports = PageView.extend({
       name: name,
     });
     this.model.fetch();
-    this.model.is_spatial = true;
+    //this.model.is_spatial = true;
   },
   render: function () {
     PageView.prototype.render.apply(this, arguments);
@@ -53,15 +53,15 @@ module.exports = PageView.extend({
         });
       },
     },
-    // parametersEditor: {
-    //   selector: '[data-hook=parameters-editor-container]',
-    //   waitFor: 'model.parameters',
-    //   prepareView: function (el) {
-    //     return new ParametersEditorView({
-    //       collection: this.model.parameters
-    //     });
-    //   }, 
-    // },
+    parametersEditor: {
+      selector: '[data-hook=parameters-editor-container]',
+      waitFor: 'model.parameters',
+      prepareView: function (el) {
+        return new ParametersEditorView({
+          collection: this.model.parameters
+        });
+      }, 
+    },
     // reactionsEditor: {
     //   selector: '[data-hook=reactions-editor-container]',
     //   waitFor: 'model.reactions',

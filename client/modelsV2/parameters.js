@@ -7,7 +7,7 @@ var Collection = require('ampersand-collection');
 module.exports = Collection.extend({
   model: Parameter,
   addParameter: function () {
-    var name = getDefaultName();
+    var name = this.getDefaultName();
     var parameter = this.add({
       name: name,
       value: 0.0

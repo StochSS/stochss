@@ -10,6 +10,12 @@ module.exports = AmpersandInputView.extend({
   events: {
     'change input' : 'changeInputHandler',
   },
+  initialize: function (attrs, options) {
+    AmpersandInputView.prototype.initialize.apply(this, arguments);
+  },
+  render: function () {
+    AmpersandInputView.prototype.render.apply(this, arguments);
+  },
   changeInputHandler: function (e) {
     if(this.valid){
       var value = this.valueType === 'number' ? Number(e.target.value) : e.target.value;
