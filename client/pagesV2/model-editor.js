@@ -6,7 +6,7 @@ var PageView = require('../pages/base');
 // var MeshEditorView = require('../viewsV2/mesh-editor');
 var SpeciesEditorView = require('../viewsV2/species-editor');
 var ParametersEditorView = require('../viewsV2/parameters-editor');
-// var ReactionsEditorView = require('../viewsV2/reactions-editor');
+var ReactionsEditorView = require('../viewsV2/reactions-editor');
 // var SimSettingsView = require('../viewsV2/simulation-settings');
 // var ModelStateButtonsView = require('../veiwsV2/model-state-buttons');
 //models
@@ -24,6 +24,10 @@ module.exports = PageView.extend({
     });
     this.model.fetch();
     //this.model.is_spatial = true;
+    this.model.reactions.on("change", function (reactions) {
+      this.updateSpeciesInUse();
+      this.updateParametersInUse();
+    }, this);
   },
   render: function () {
     PageView.prototype.render.apply(this, arguments);
@@ -33,6 +37,36 @@ module.exports = PageView.extend({
   update: function () {
   },
   updateValid: function () {
+  },
+  updateSpeciesInUse: function () {
+    // TODO is there a more efficient/elegant way to update inUse?
+    var species = this.model.species;
+    var reactions = this.model.reactions;
+    species.forEach(function (specie) { specie.inUse = false; });
+    var updateInUse = function (stoichSpecie) {
+      _.where(species.models, { name: stoichSpecie.specie.name })
+       .forEach(function (specie) {
+          specie.inUse = true;
+        });
+    }
+    reactions.forEach(function (reaction) {
+      reaction.products.forEach(updateInUse);
+      reaction.reactants.forEach(updateInUse);
+    });
+  },
+  updateParametersInUse: function () {
+    var parameters = this.model.parameters;
+    var reactions = this.model.reactions;
+    parameters.forEach(function (param) { param.inUse = false; });
+    var updateInUse = function (param) {
+      _.where(parameters.models, { name: param.name })
+       .forEach(function (param) {
+         param.inUse = true;
+       });
+    }
+    reactions.forEach(function (reaction) {
+      updateInUse(reaction.rate);
+    });
   },
   subviews: {
     // meshEditor: {
@@ -62,15 +96,15 @@ module.exports = PageView.extend({
         });
       }, 
     },
-    // reactionsEditor: {
-    //   selector: '[data-hook=reactions-editor-container]',
-    //   waitFor: 'model.reactions',
-    //   prepareView: function (el) {
-    //     return new ReactionsEditorView({
-    //       collection: this.model.reactions
-    //     });
-    //   },
-    // },
+    reactionsEditor: {
+      selector: '[data-hook=reactions-editor-container]',
+      waitFor: 'model.reactions',
+      prepareView: function (el) {
+        return new ReactionsEditorView({
+          collection: this.model.reactions
+        });
+      },
+    },
     // simSettings: {
     //   selector: '[data-hook=sim-settings-container]',
     //   waitFor: 'model',

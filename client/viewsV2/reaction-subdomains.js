@@ -1,0 +1,33 @@
+//views
+var View = require('ampersand-view');
+var SubdomainsView = require('./subdomain');
+//templates
+var template = require('../templatesV2/includes/reactionSubdomains.pug');
+
+module.exports = View.extend({
+  template: template,
+  initialize: function (args) {
+    View.prototype.initialize.apply(this, arguments);
+    this.isReaction = args.isReaction;
+    this.baseModel = this.parent.parent.collection.parent;
+    this.baseModel.on('mesh-update', this.renderSubdomains, this);
+  },
+  render: function () {
+    View.prototype.render.apply(this, arguments);
+    this.renderSubdomains();
+  },
+  renderSubdomains: function () {
+    this.baseModel = this.parent.model.collection.parent;
+    if(this.subdomainsView)
+      this.subdomainsView.remove();
+    var subdomains = this.baseModel.meshSettings.uniqueSubdomains;
+    this.subdomainsView = this.renderCollection(
+      subdomains,
+      SubdomainsView,
+      this.queryByHook('reaction-subdomains')
+    );
+  },
+  updateSubdomains: function (element) {
+    this.parent.updateSubdomains(element);
+  },
+});

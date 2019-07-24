@@ -1,24 +1,17 @@
 var _ = require('underscore');
+var Events = require('ampersand-events');
 //models
 var Reaction = require('./reaction');
 //collections
 var Collection = require('ampersand-collection');
 
-module.exports = Collection.extend({
+Reactions = Collection.extend({
   model: Reaction,
   initialize: function (attrs, options) {
     Collection.prototype.initialize.apply(this, arguments);
-    this.on('add remove', _.bind(this.triggerChange, this));
-  },
-  triggerChange: function () {
-    this.baseModel = this.parent;
-
-    this.baseModel.species.trigger('stoich-specie-change');
-    this.baseModel.parameters.trigger('reaction-rate-change');
-    this.trigger('change');
   },
   addReaction: function (reactionType, annotation, stoichArgs, subdomains) {
-    var name = getDefaultName();
+    var name = this.getDefaultName();
     var massaction = reactionType === 'custom-massaction';
     var reaction = new Reaction({
       name: name,
@@ -32,11 +25,14 @@ module.exports = Collection.extend({
     });
     this.setDefaultSpecieForStoichSpecies(reaction.reactants);
     this.setDefaultSpecieForStoichSpecies(reaction.products);
-    reaction.rate = getDefaultRate();
+    if(reactionType !== 'custom-propensity')
+      reaction.rate = this.getDefaultRate();
+    this.add(reaction);
+    return reaction;
   },
   getDefaultName: function () {
     var i = this.length + 1;
-    var name = 'r' + 1;
+    var name = 'r' + i;
     var names = this.map(function (reaction) {return reaction.name; });
     while(_.contains(names, name)){
       i += 1;
@@ -61,3 +57,7 @@ module.exports = Collection.extend({
     this.remove(reaction);
   },
 });
+
+Events.createEmitter(Reactions);
+
+module.exports = Reactions;

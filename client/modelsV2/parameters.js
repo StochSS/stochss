@@ -24,7 +24,6 @@ module.exports = Collection.extend({
     return name;
   },
   removeParameter: function (parameter) {
-    parameter.stopListening();
     this.remove(parameter);
   },
 });

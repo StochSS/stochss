@@ -27,7 +27,6 @@ module.exports = Collection.extend({
     return name;
   },
   removeSpecie: function (specie) {
-    specie.stopListening();
     this.remove(specie);
   },
 })
