@@ -9,6 +9,13 @@ var template = require('../templatesV2/includes/editSpatialSpecie.pug');
 
 module.exports = View.extend({
   template: template,
+  bindings: {
+    'model.inUse': {
+      hook: 'remove',
+      type: 'booleanAttribute',
+      name: 'disabled',
+    },
+  },
   events: {
     'click [data-hook=remove]' : 'removeSpecie',
   },

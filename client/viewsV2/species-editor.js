@@ -8,7 +8,6 @@ var nonspatialSpecieTemplate = require('../templatesV2/includes/speciesEditor.pu
 var spatialSpecieTemplate = require('../templatesV2/includes/spatialSpeciesEditor.pug');
 
 module.exports = View.extend({
-  template: nonspatialSpecieTemplate,
   events: {
     'click [data-hook=add-species]' : 'addSpecies',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
@@ -18,8 +17,7 @@ module.exports = View.extend({
     this.baseModel = this.collection.parent;
   },
   render: function () {
-    if(this.collection.parent.is_spatial)
-      this.template = spatialSpecieTemplate;
+    this.template = this.parent.model.is_spatial ? spatialSpecieTemplate : nonspatialSpecieTemplate;
     View.prototype.render.apply(this, arguments);
     var editSpecieView = !this.collection.parent.is_spatial ? EditNonspatialSpecieView : EditSpatialSpecieView;
     this.renderCollection(this.collection, editSpecieView, this.queryByHook('specie-list'));

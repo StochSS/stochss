@@ -7,8 +7,8 @@ var Collection = require('ampersand-collection');
 module.exports = Collection.extend({
   model: RateRule,
   addRateRule: function (specieName) {
-    var name = getDefaultName();
-    var specie = getSpecie(specieName);
+    var name = this.getDefaultName();
+    var specie = this.getSpecie(specieName);
     var rateRule = new RateRule({
       name: name,
       rule: '',
@@ -17,7 +17,7 @@ module.exports = Collection.extend({
     this.add(rateRule);
   },
   removeRateRule: function (specieName) {
-    var rateRule = getRateRule(specieName);
+    var rateRule = this.getRateRule(specieName);
     this.remove(rateRule);
   },
   getDefaultName: function () {
