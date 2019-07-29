@@ -3,12 +3,12 @@ var _ = require('underscore');
 var $ = require('jquery');
 //views
 var PageView = require('../pages/base');
-// var MeshEditorView = require('../viewsV2/mesh-editor');
+var MeshEditorView = require('../viewsV2/mesh-editor');
 var SpeciesEditorView = require('../viewsV2/species-editor');
 var ParametersEditorView = require('../viewsV2/parameters-editor');
 var ReactionsEditorView = require('../viewsV2/reactions-editor');
 var SimSettingsView = require('../viewsV2/simulation-settings');
-// var ModelStateButtonsView = require('../veiwsV2/model-state-buttons');
+var ModelStateButtonsView = require('../viewsV2/model-state-buttons');
 //models
 var Model = require('../modelsV2/model');
 //templates
@@ -25,7 +25,10 @@ module.exports = PageView.extend({
     });
     this.model.fetch({
       success: function (model, response, options) {
+        //model.is_spatial = true;
         self.renderSubviews();
+        if(self.model.is_spatial)
+          $(self.queryByHook('mesh-editor-container')).collapse();
       }
     });
     this.model.reactions.on("change", function (reactions) {
@@ -35,8 +38,6 @@ module.exports = PageView.extend({
   },
   render: function () {
     PageView.prototype.render.apply(this, arguments);
-    if(this.model.is_spatial)
-      $(this.queryByHook('mesh-editor-container')).collapse();
   },
   update: function () {
   },
@@ -73,6 +74,9 @@ module.exports = PageView.extend({
     });
   },
   renderSubviews: function () {
+    var meshEditor = new MeshEditorView({
+      model: this.model.meshSettings
+    });
     var speciesEditor = new SpeciesEditorView({
       collection: this.model.species
     });
@@ -87,33 +91,20 @@ module.exports = PageView.extend({
       model: this.model.simulationSettings,
       species: this.model.species
     });
+    var modelStateButtons = new ModelStateButtonsView({
+      model: this.model
+    });
+    this.registerRenderSubview(meshEditor, 'mesh-editor-container');
     this.registerRenderSubview(speciesEditor, 'species-editor-container');
     this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
     this.registerRenderSubview(simSettings, 'sim-settings-container');
+    this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
   subviews: {
-    // meshEditor: {
-    //   selector: '[data-hook=mesh-editor-container]',
-    //   waitFor: 'model',
-    //   prepareView: function (el) {
-    //     return new MeshEditorView({
-    //       model: this.model.meshSettings
-    //     });
-    //   },
-    // },
-    // modelStateButtons: {
-    //   selector: '[data-hook=model-state-buttons-container]',
-    //   waitFor: 'model',
-    //   prepareView: function (el) {
-    //     return new ModelStateButtonsView({
-    //       model: this.model
-    //     });
-    //   },
-    // },
   },
 });

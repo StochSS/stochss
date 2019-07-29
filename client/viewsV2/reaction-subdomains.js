@@ -10,10 +10,14 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.isReaction = args.isReaction;
     this.baseModel = this.parent.parent.collection.parent;
-    this.baseModel.on('mesh-update', this.renderSubdomains, this);
+    this.baseModel.on('mesh-update', this.updateDefaultSubdomains, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    this.renderSubdomains();
+  },
+  updateDefaultSubdomains: function () {
+    this.parent.model.subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
     this.renderSubdomains();
   },
   renderSubdomains: function () {

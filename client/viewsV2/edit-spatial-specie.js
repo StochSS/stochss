@@ -22,7 +22,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.model.collection.parent;
-    this.baseModel.on('mesh-update', this.renderSubdomains, this);
+    this.baseModel.on('mesh-update', this.updateDefaultSubdomains, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -35,6 +35,10 @@ module.exports = View.extend({
   removeSpecie: function () {
     this.remove();
     this.collection.removeSpecie(this.model);
+  },
+  updateDefaultSubdomains: function () {
+    this.model.subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
+    this.renderSubdomains();
   },
   renderSubdomains: function () {
     if(this.subdomainsView)
