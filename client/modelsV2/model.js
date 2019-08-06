@@ -1,5 +1,6 @@
 var app = require('ampersand-app');
 var path = require('path');
+var xhr = require('xhr');
 //models
 var Model = require('ampersand-model');
 var SimulationSettings = require('./simulation-settings');
@@ -45,5 +46,14 @@ module.exports = Model.extend({
   //called when save button is clicked
   saveModel: function () {
     this.save();
+    // xhr({ 
+    //   method: 'post',
+    //   body: this.toJSON(),
+    //   uri: this.url() },
+    //   function (err, response, body) {
+    //   },
+    // );
   },
+  // toJSON: function () {
+  // },
 });

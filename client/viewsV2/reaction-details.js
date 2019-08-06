@@ -36,10 +36,12 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     var options = [];
-    if(this.model.collection.parent.parameters.length <= 0)
+    if(this.model.collection.parent.parameters.length <= 0){
       options = ["Custom propensity"];
-    else
+    }
+    else{
       options = this.getReactionTypeLabels();
+    }
     var self = this;
     var reactionTypeSelectView = new SelectView({
       label: 'Reaction type',

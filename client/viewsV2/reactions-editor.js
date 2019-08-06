@@ -27,7 +27,7 @@ module.exports = View.extend({
     'click [data-hook=custom-propensity]'      : 'handleAddReactionClick',
     'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
-  initialize: function () {
+  initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.collection.on("select", function (reaction) {
       this.setSelectedReaction(reaction);
@@ -49,6 +49,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    //this.renderWithTemplate();
     this.renderCollection(
       this.collection,
       ReactionListingView,
@@ -64,10 +65,12 @@ module.exports = View.extend({
     }
     this.collection.trigger("change");
     this.toggleAddReactionButton();
-    if(this.collection.parent.parameters.length > 0)
-      $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
-    else
+    if(this.collection.parent.parameters.length > 0){
+       $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
+    }
+    else{
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
+    }
   },
   update: function () {
   },

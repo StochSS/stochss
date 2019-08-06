@@ -1,7 +1,7 @@
 var app = require('ampersand-app');
 var xhr = require('xhr');
 var path = require('path');
-var plotly = require('../lib/plotly');
+var Plotly = require('../lib/plotly');
 //views
 var View = require('ampersand-view');
 //templates
@@ -15,7 +15,6 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.model;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -25,6 +24,7 @@ module.exports = View.extend({
   },
   clickRunHandler: function (e) {
     this.saveModel(this.runModel.bind(this));
+    //this.runModel();
   },
   saveModel: function (cb) {
     // this.model is a ModelVersion, the parent of the collection is Model
@@ -38,12 +38,12 @@ module.exports = View.extend({
         },
       });
     } else {
-      model.save();
+      model.saveModel();
     }
   },
   runModel: function () {
     var model = this.model
-    var endpoint = path.join(app.config.routePrefix, 'api/models/run/', String(model.id), String(this.model.version));
+    var endpoint = path.join(app.config.routePrefix, 'api/models/run/', model.name);
     var self = this;
     xhr(
       { uri: endpoint },

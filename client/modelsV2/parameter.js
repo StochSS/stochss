@@ -13,7 +13,7 @@ module.exports = State.extend({
       default: false,
     },
   },
-  initialize: function () {
+  initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
 });

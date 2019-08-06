@@ -34,7 +34,7 @@ from handlers.main import MainHandler
 # API handlers
 from handlers.models import ModelAPIGetAllOrPostHandlers, ModelAPIHandler, ModelFileAPIHandler
 from handlers.username import UsernameHandler
-from handlers.run_models import RunModelAPIHandler
+from handlers.run_models import RunModelAPIHandler, RunModelAPIHandler2
 
 from dotenv import load_dotenv
 
@@ -50,6 +50,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/api/model-data/(\w+)", ModelFileAPIHandler),
         # /run/(model_id)/(version_number)
         (r"/stochss/api/models/run/(\d+)/(\d+)", RunModelAPIHandler),
+        (r"/stochss/api/models/run/(\w+)", RunModelAPIHandler2),
         # Default
         (r"/stochss.*", MainHandler)
 ]
