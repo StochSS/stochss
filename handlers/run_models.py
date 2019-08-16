@@ -232,9 +232,9 @@ class RunModelAPIHandler(BaseHandler):
         return solver.run(
             model = model,
             t = data['endSim'],
-            increment = data['timeStep']
+            increment = data['timeStep'],
+            integrator_options = {'atol' : data['deterministicSettings']['absoluteTolerance'], 'rtol' : data['deterministicSettings']['relativeTolerance']}
         )
-        #integrator_options = Dict
 
 
     def run_solver(self, model, data):
@@ -341,7 +341,8 @@ class RunModelAPIHandler2(BaseHandler):
         return solver.run(
             model = model,
             t = data['endSim'],
-            increment = data['timeStep']
+            increment = data['timeStep'],
+            integrator_options = { 'atol' : data['deterministicSettings']['absoluteTol'], 'rtol' : data['deterministicSettings']['relativeTol']}
         )
 
 
