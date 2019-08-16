@@ -16,7 +16,7 @@ from handlers.db_util import DatabaseManager, _db, checkUserOrRaise
 import sys, os
 import logging
 
-from gillespy2 import Species, Parameter, Reaction, Model
+from gillespy2 import Species, Parameter, Reaction, RateRule, Model
 import numpy
 import gillespy2.core.gillespySolver
 from gillespy2.core.gillespyError import SolverError, DirectoryError, BuildError, ExecutionError
@@ -28,11 +28,12 @@ from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver
 
 class _Model(Model):
 
-    def __init__(self, name, species, parameters, reactions, endSim, timeStep):
+    def __init__(self, name, species, parameters, reactions, rate_rules, endSim, timeStep):
         Model.__init__(self, name=name)
         self.add_parameter(parameters)
         self.add_species(species)
         self.add_reaction(reactions)
+        self.add_rate_rule(rate_rules)
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
 
@@ -51,7 +52,14 @@ class ModelFactory():
         self.log.debug("Parameters: ")
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
-        self.model = _Model(name, self.species, self.parameters, self.reactions, endSim, timeStep)
+        indecies = []
+        for rr in data['rateRules']:
+            if rr['rule'] == "":
+                indecies.append(data['rateRules'].index(rr))
+        for i in range(len(indecies)):
+            data['rateRules'].pop(indecies[i] - i)
+        self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), data['rateRules']))
+        self.model = _Model(name, self.species, self.parameters, self.reactions, self.rate_rules, endSim, timeStep)
 
     def build_specie(self, args):
         name = args['name']
@@ -74,6 +82,12 @@ class ModelFactory():
             rate=list(filter(lambda p: p.name == args['rate']['name'], parameters))[0]
         )
         return R
+
+    def build_rate_rules(self, args):
+        name = args['name']
+        species = self.build_specie(args['specie'])
+        expression = args['rule']
+        return RateRule(name=name, species=species, expression=expression)
 
     def build_stoich_species_dict(self, args):
         d = {}
@@ -98,7 +112,14 @@ class ModelFactory2():
         self.log.debug("Parameters: ")
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
-        self.model = _Model(name, self.species, self.parameters, self.reactions, endSim, timeStep)
+        indecies = []
+        for rr in data['rateRules']:
+            if rr['rule'] == "":
+                indecies.append(data['rateRules'].index(rr))
+        for i in range(len(indecies)):
+            data['rateRules'].pop(indecies[i] - i)
+        self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), data['rateRules']))
+        self.model = _Model(name, self.species, self.parameters, self.reactions, self.rate_rules, endSim, timeStep)
 
     def build_specie(self, args):
         name = args['name']
@@ -121,6 +142,12 @@ class ModelFactory2():
             rate=list(filter(lambda p: p.name == args['rate']['name'], parameters))[0]
         )
         return R
+
+    def build_rate_rules(self, args):
+        name = args['name']
+        species = self.build_specie(args['specie'])
+        expression = args['rule']
+        return RateRule(name=name, species=species, expression=expression)
 
     def build_stoich_species_dict(self, args):
         d = {}
