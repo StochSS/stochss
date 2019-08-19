@@ -9,7 +9,7 @@ module.exports = PageView.extend({
   },
   render: function () {
     this.renderWithTemplate();
-    this.renderCollection(this.collection, ModelListingView, this.queryByHook('model-list'));
-    if (!this.collection.length) { this.collection.fetch(); }
+    //this.renderCollection(this.collection, ModelListingView, this.queryByHook('model-list'));
+    //if (!this.collection.length) { this.collection.fetch(); }
   }
 });
