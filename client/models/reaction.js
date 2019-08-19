@@ -1,22 +1,21 @@
+var _ = require('underscore');
+//models
 var State = require('ampersand-state');
-var Species = require('./species');
-var StoichSpecies = require('./stoich-species');
 var Parameter = require('./parameter');
-var Parameters = require('./parameters');
+//collections
+var StoichSpecies = require('./stoich-species');
 
 module.exports = State.extend({
   props: {
-    id: 'number',
-    name:  'string',
+    name: 'string',
+    reactionType: 'string',
     annotation: 'string',
-    // True indicates a custom mass action equation
     massaction: 'boolean',
-    reaction_type: 'string',
     propensity: 'string',
     subdomains: {
       type: 'object',
-      default: function () { return []; }
-    }
+      default: function () {return []; },
+    },
   },
   children: {
     rate: Parameter,
@@ -28,8 +27,10 @@ module.exports = State.extend({
   session: {
     selected: {
       type: 'boolean',
-      default: true
+      default: true,
     },
   },
-
+  initialize: function (attrs, options) {
+    State.prototype.initialize.apply(this, arguments);
+  },
 });

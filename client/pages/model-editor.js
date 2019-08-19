@@ -1,100 +1,110 @@
 var app = require('ampersand-app');
 var _ = require('underscore');
-var ViewSwitcher = require('ampersand-view-switcher');
-// Models
+var $ = require('jquery');
+//views
+var PageView = require('../pages/base');
+var MeshEditorView = require('../views/mesh-editor');
+var SpeciesEditorView = require('../views/species-editor');
+var ParametersEditorView = require('../views/parameters-editor');
+var ReactionsEditorView = require('../views/reactions-editor');
+var SimSettingsView = require('../views/simulation-settings');
+var ModelStateButtonsView = require('../views/model-state-buttons');
+//models
 var Model = require('../models/model');
-var ModelVersion = require('../models/model-version');
-// Views
-var PageView = require('./base');
-var ModelVersionEditorView = require('../views/model-version-editor');
-var InputView = require('../views/input');
-
+//templates
 var template = require('../templates/pages/modelEditor.pug');
 
 module.exports = PageView.extend({
   template: template,
-  events: {
-    "change [data-hook='version-select']": "versionSelectChange"
-  },
-  bindings: {
-    'model.version_open_tag': {
-      type: function (el, value, previousValue) {
-        el.value = String(value);
-        var options = this.queryAll('option');
-        options.forEach(function(option) {
-          option.selected = parseInt(option.value) === value;
-        });
-      },
-      hook: 'version-select'
-    },
-    'model.name': {
-      type: 'text',
-      hook: 'name'
-    }
-  },
-  initialize: function (attrs) {
+  initialize: function (attrs, options) {
+    PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    // TODO just get the model we need, not everything
-    //app.models.fetch()
-    var id = attrs.id
-    if (!id) {
-      // No id passed to the page, so we're making a new model
-      // TODO: abstract this block
-      var m = new Model({
-        public: false,
-        is_stochastic: false,
-        is_spatial: false,
-        username: app.me.name
-      });
-      m.version_open_tag = m.latest_version;
-      m.versions.add({ version: m.latest_version });
-      this.model = m;
-      app.models.add(this.model);
-    } else {
-      var m = app.models.find(function (m) { return m.id == id });
-      this.model = m;
-    }
-
-    this.versionEditorViews = this.model.versions.map(function (m) {
-      m.view = m.view || new ModelVersionEditorView({
-        parent: self,
-        model: m
-      })
-      return m.view;
+    var name = document.URL.split('/').pop();
+    this.model = new Model({
+      name: name,
     });
+    this.model.fetch({
+      success: function (model, response, options) {
+        //model.is_spatial = true;
+        self.renderSubviews();
+        if(self.model.is_spatial)
+          $(self.queryByHook('mesh-editor-container')).collapse();
+      }
+    });
+    this.model.reactions.on("change", function (reactions) {
+      this.updateSpeciesInUse();
+      this.updateParametersInUse();
+    }, this);
   },
   render: function () {
-    this.renderWithTemplate();
-    this.versionEditorContainer = this.queryByHook('model-version-editor-container');
-    this.versionEditorSwitcher = new ViewSwitcher({
-      el: this.versionEditorContainer,
-    });
-    this.setSelectedView();
-  },
-  versionSelectChange: function (e) {
-    this.model.version_open_tag = parseInt(e.target.value);
-    this.setSelectedView();
-  },
-  setSelectedView: function (e) {
-    this.versionEditorSwitcher.set(this.model.version_open.view);
+    PageView.prototype.render.apply(this, arguments);
   },
   update: function () {
-    // Must be defined for the input view to function
+  },
+  updateValid: function () {
+  },
+  updateSpeciesInUse: function () {
+    // TODO is there a more efficient/elegant way to update inUse?
+    var species = this.model.species;
+    var reactions = this.model.reactions;
+    species.forEach(function (specie) { specie.inUse = false; });
+    var updateInUse = function (stoichSpecie) {
+      _.where(species.models, { name: stoichSpecie.specie.name })
+       .forEach(function (specie) {
+          specie.inUse = true;
+        });
+    }
+    reactions.forEach(function (reaction) {
+      reaction.products.forEach(updateInUse);
+      reaction.reactants.forEach(updateInUse);
+    });
+  },
+  updateParametersInUse: function () {
+    var parameters = this.model.parameters;
+    var reactions = this.model.reactions;
+    parameters.forEach(function (param) { param.inUse = false; });
+    var updateInUse = function (param) {
+      _.where(parameters.models, { name: param.name })
+       .forEach(function (param) {
+         param.inUse = true;
+       });
+    }
+    reactions.forEach(function (reaction) {
+      updateInUse(reaction.rate);
+    });
+  },
+  renderSubviews: function () {
+    var meshEditor = new MeshEditorView({
+      model: this.model.meshSettings
+    });
+    var speciesEditor = new SpeciesEditorView({
+      collection: this.model.species
+    });
+    var parametersEditor = new ParametersEditorView({
+      collection: this.model.parameters
+    });
+    var reactionsEditor = new ReactionsEditorView({
+      collection: this.model.reactions
+    });
+    var simSettings = new SimSettingsView({
+      parent: this,
+      model: this.model.simulationSettings,
+      species: this.model.species
+    });
+    var modelStateButtons = new ModelStateButtonsView({
+      model: this.model
+    });
+    this.registerRenderSubview(meshEditor, 'mesh-editor-container');
+    this.registerRenderSubview(speciesEditor, 'species-editor-container');
+    this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
+    this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
+    this.registerRenderSubview(simSettings, 'sim-settings-container');
+    this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
+  },
+  registerRenderSubview: function (view, hook) {
+    this.registerSubview(view);
+    this.renderSubview(view, this.queryByHook(hook));
   },
   subviews: {
-    inputModelName: {
-      hook: 'name-container',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'name',
-          label: 'Name:',
-          modelKey: 'name',
-          value: this.model.name || ''
-        });
-      }
-    }
-  }
-
+  },
 });

@@ -1,28 +1,35 @@
-var View = require('ampersand-view');
-var AmpersandInputView = require('ampersand-input-view');
 var tests = require('./tests');
+//views
+var View = require('ampersand-view');
 var InputView = require('./input');
-
+//templates
 var template = require('../templates/includes/editReactionVar.pug');
 
-// Base view for species and parameters
 module.exports = View.extend({
   template: template,
   bindings: {
-    'model.inUse' : {
+    'model.inUse': {
       hook: 'remove',
       type: 'booleanAttribute',
-      name: 'disabled'
-    }
+      name: 'disabled',
+    },
   },
   events: {
-    'click [data-hook=remove]' : 'removeReactionVar',
+    'click [data-hook=remove]' : 'removeParameter',
   },
-  update: function (e) {
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
   },
-  removeReactionVar: function (e) {
+  render: function () {
+    View.prototype.render.apply(this, arguments);
+  },
+  update: function () {
+  },
+  updateValid: function () {
+  },
+  removeParameter: function () {
     this.remove();
-    this.model.collection.remove(this.model);
+    this.collection.removeParameter(this.model);
   },
   subviews: {
     inputName: {
@@ -36,7 +43,7 @@ module.exports = View.extend({
           tests: tests.nameTests,
           modelKey: 'name',
           valueType: 'string',
-          value: this.model.name
+          value: this.model.name,
         });
       },
     },
@@ -46,14 +53,14 @@ module.exports = View.extend({
         return new InputView({
           parent: this,
           required: true,
-          name: 'val',
+          name: 'value',
           label: '',
           tests: tests.valueTests,
           modelKey: 'value',
           valueType: 'number',
-          value: this.model.value
+          value: this.model.value,
         });
-      }
-    }
-  }
+      },
+    },
+  },
 });

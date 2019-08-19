@@ -1,14 +1,13 @@
-var app = require('ampersand-app');
-var tests = require('./tests');
 var ViewSwitcher = require('ampersand-view-switcher');
 var $ = require('jquery');
-//Views
+var tests = require('./tests');
+//views
 var View = require('ampersand-view');
 var InputView = require('./input');
 var SSASettingsView = require('./ssa-settings');
-var TauSettingsView = require('./tau-leaping-settings');
-var HybridSettingsView = require('./hybrid-tau-settings');
-
+var TauSettingsView = require('./tau-settings');
+var HybridSettingsView = require('./hybrid-settings');
+//templates
 var template = require('../templates/includes/stochasticSettings.pug');
 
 module.exports = View.extend({
@@ -17,7 +16,7 @@ module.exports = View.extend({
     'model.realizations': {
       type: 'value',
       hook: 'realizations-container'
-    }
+    },
   },
   events: {
     'change [data-hook=ssa-select]' : 'getStochasticAlgorithm',
@@ -26,18 +25,17 @@ module.exports = View.extend({
     'click [data-hook=advanced-settings-button]' : 'toggleAdvancedSettings'
   },
   initialize: function () {
+    View.prototype.initialize.apply(this, arguments);
     this.ssaSettingsView = new SSASettingsView ({
-      model: this.model.ssaSettings
+      model: this.model.ssaSettings,
     });
     this.tauSettingsView = new TauSettingsView ({
-      model: this.model.tauLeapingSettings
+      model: this.model.tauSettings,
     });
     this.hybridSettingsView = new HybridSettingsView ({
       parent: this,
-      model: this.model.hybridTauSettings
+      model: this.model.hybridSettings,
     });
-  },
-  update: function (e) {
   },
   render: function () {
     View.prototype.render.apply(this);
@@ -51,22 +49,9 @@ module.exports = View.extend({
       $(this.queryByHook('advanced-settings-button')).text('-');
     }
   },
-  subviews: {
-    inputRealizations: {
-      hook: 'realizations-container',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'realizations',
-          label: 'Number of realizations in this ensemble:  ',
-          tests: tests.valueTests,
-          modelKey: 'realizations',
-          valueType: 'number',
-          value: this.model.realizations
-        });
-      }
-    }
+  update: function (e) {
+  },
+  updateValid: function () {
   },
   getStochasticAlgorithm: function (e) {
     var algorithm = e.target.dataset.name;
@@ -99,5 +84,22 @@ module.exports = View.extend({
   openCloseAdvancedSettings: function (value) {
     this.model.isAdvancedSettingsOpen = value;
     this.parent.model.deterministicSettings.isAdvancedSettingsOpen = value;
-  }
+  },
+  subviews: {
+    inputRealizations: {
+      hook: 'realizations-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'realizations',
+          label: 'Number of realizations in this ensemble:  ',
+          tests: tests.valueTests,
+          modelKey: 'realizations',
+          valueType: 'number',
+          value: this.model.realizations
+        });
+      },
+    },
+  },
 });

@@ -1,43 +1,59 @@
+var app = require('ampersand-app');
 var path = require('path');
+var xhr = require('xhr');
+//models
 var Model = require('ampersand-model');
-var ModelVersions = require('./model-versions');
-var config = require('../config.js')(process.env.NODE_ENV);
+var SimulationSettings = require('./simulation-settings');
+var MeshSettings = require('./mesh-settings');
+//collections
+var Species = require('./species');
+var Parameters = require('./parameters');
+var Reactions = require('./reactions');
+var RateRules = require('./rate-rules');
 
 module.exports = Model.extend({
+  url: function () {
+    return path.join(
+      String(app.config.routePrefix),
+      String(app.config.apiUrl),
+      "model-data",
+      String(this.name)
+    );
+  },
   props: {
-    id: 'number',
-    latest_version: {
-      type: 'number',
-      default: 1
-    },
-    username: 'string',
-    name: 'string',
-    public: 'boolean',
-    is_spatial: 'boolean',
+    is_spatial: 'boolean'
   },
   collections: {
-    versions: ModelVersions
+    species: Species,
+    parameters: Parameters,
+    reactions: Reactions,
+    rateRules: RateRules
   },
-  derived: {
-    version_tags: {
-      deps: ['versions'],
-      fn: function () {
-        return this.versions.pluck('version').sort().map(function (t) { return String(t) });
-      }
-    },
-    version_open: {
-      deps: ['version_open_tag'],
-      fn: function () {
-        var self = this;
-        return this.versions.find(function (v) {
-          return v.version === self.version_open_tag
-        });
-      }
-    }
+  children: {
+    simulationSettings: SimulationSettings,
+    meshSettings: MeshSettings
   },
   session: {
-    version_open_tag: {
-      type: 'number'
-    }
-  }
+    name: 'string',
+    selectedReaction: 'object'
+  },
+  initialize: function (attrs, options){
+    Model.prototype.initialize.apply(this, arguments);
+  },
+  autoSave: function () {
+    //TODO: implement auto save
+  },
+  //called when save button is clicked
+  saveModel: function () {
+    this.save();
+    // xhr({ 
+    //   method: 'post',
+    //   body: this.toJSON(),
+    //   uri: this.url() },
+    //   function (err, response, body) {
+    //   },
+    // );
+  },
+  // toJSON: function () {
+  // },
 });

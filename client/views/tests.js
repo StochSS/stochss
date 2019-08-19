@@ -1,4 +1,3 @@
-
 module.exports = {
   nameTests: [
     function (text) {
@@ -12,12 +11,12 @@ module.exports = {
       }
     },
     function (text) {
-      var isDuplicate = this.parent.model.collection.some(function (m) { return m[self.modelKey] === text && this.parent.model !== m;
+      var isDuplicate = this.parent.model.collection.some(function (m) { return m.name === text && this.parent.model !== m;
       }, this);
       if (isDuplicate) {
         return "No duplicate entries."
       }
-    }
+    },
   ],
   valueTests: [
     function (value) {
@@ -29,6 +28,6 @@ module.exports = {
       if (Number(value) < 0) {
         return "Must be non-negative."
       }
-    }
+    },
   ],
 }

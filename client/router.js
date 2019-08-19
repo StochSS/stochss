@@ -3,6 +3,7 @@ var app = require('ampersand-app');
 var Router = require('ampersand-router');
 var HomePage = require('./pages/home');
 var ModelBrowser = require('./pages/model-browser');
+// var ModelEditor = require('./pages/model-editor');
 var ModelEditor = require('./pages/model-editor');
 var config = require('./config.js')(process.env.NODE_ENV);
 
@@ -14,7 +15,8 @@ module.exports = Router.extend({
   routes: {
     '()': 'home',
     'models(/)': 'modelBrowser',
-    'models/edit/(:id)': 'modelEditor'
+    // 'models/edit/(:id)': 'modelEditor',
+    'models/edit-model/(:name)' : 'modelEditor',
   },
 
   home: function () {
@@ -27,10 +29,10 @@ module.exports = Router.extend({
     }));
   },
 
-  modelEditor: function (id) {
+  modelEditor: function (name) {
     app.trigger('page', new ModelEditor({
-      id: id
+      name: name,
     }));
-  }
+  },
 
 });

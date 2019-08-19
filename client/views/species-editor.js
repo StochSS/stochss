@@ -1,43 +1,37 @@
-var app = require('ampersand-app');
 var $ = require('jquery');
-// Views
+//views
 var View = require('ampersand-view');
-var EditNonspatialSpeciesView = require('./edit-specie');
-var EditSpatialSpeciesView = require('./edit-spatial-specie');
-
-var template = require('../templates/includes/speciesEditor.pug');
-var spatialTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
+var EditNonspatialSpecieView = require('./edit-specie');
+var EditSpatialSpecieView = require('./edit-spatial-specie');
+//templates
+var nonspatialSpecieTemplate = require('../templates/includes/speciesEditor.pug');
+var spatialSpecieTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
 
 module.exports = View.extend({
-  template: template,
-  bindings: {
-  },
   events: {
     'click [data-hook=add-species]' : 'addSpecies',
-    'click [data-hook=collapse]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+  },
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
+    this.baseModel = this.collection.parent;
   },
   render: function () {
-    if(this.parent.parent.model.is_spatial)
-      this.template = spatialTemplate;
-    this.renderWithTemplate();
-    var EditSpeciesView = !this.parent.parent.model.is_spatial ? EditNonspatialSpeciesView : EditSpatialSpeciesView;
-    this.renderCollection(this.collection, EditSpeciesView, this.queryByHook('specie-list'));
+    this.template = this.parent.model.is_spatial ? spatialSpecieTemplate : nonspatialSpecieTemplate;
+    View.prototype.render.apply(this, arguments);
+    var editSpecieView = !this.collection.parent.is_spatial ? EditNonspatialSpecieView : EditSpatialSpecieView;
+    this.renderCollection(this.collection, editSpecieView, this.queryByHook('specie-list'));
+  },
+  update: function () {
+  },
+  updateValid: function () {
   },
   addSpecies: function () {
-    var defaultName = 'S' + (this.collection.length + 1);
-    this.collection.add({
-      name: defaultName,
-      nonspatialSpecies: {
-        value: 0
-      },
-      spatialSpecies: {
-        diffusionCoeff: 0,
-        subdomains: this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
-      }
-    });
+    var subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
+    this.collection.addSpecie(subdomains);
   },
-  changeCollapseButtonText: function (e) {
+  changeCollapseButtonText: function () {
     var text = $(this.queryByHook('collapse')).text();
-    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
-  }
+    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+');
+  },
 });

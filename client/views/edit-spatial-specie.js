@@ -1,41 +1,64 @@
-var app = require('ampersand-app');
-var $ = require('jquery');
-var _ = require('underscore');
 var tests = require('./tests');
+var _ = require('underscore');
 //views
 var View = require('ampersand-view');
-var AmpersandInputView = require('ampersand-input-view');
 var InputView = require('./input');
-var SubdomainsView = require('./subdomains');
-
-var template = require('../templates/includes/editSpacialSpecie.pug');
+var SubdomainsView = require('./subdomain');
+//templates
+var template = require('../templates/includes/editSpatialSpecie.pug');
 
 module.exports = View.extend({
   template: template,
   bindings: {
-    'model.inUse' : {
+    'model.inUse': {
       hook: 'remove',
       type: 'booleanAttribute',
-      name: 'disabled'
-    }
+      name: 'disabled',
+    },
   },
   events: {
-    'click [data-hook=remove]' : 'removeReactionVar',
-    'change [data-hook=input-diffusion-coeff-container]' : 'setDiffusionCoeff'
+    'click [data-hook=remove]' : 'removeSpecie',
   },
-  initialize: function () {
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.model.collection.parent;
-    app.on('mesh-update', this.renderSubdomains, this);
+    this.baseModel.on('mesh-update', this.updateDefaultSubdomains, this);
   },
   render: function () {
-    this.renderWithTemplate();
+    View.prototype.render.apply(this, arguments);
     this.renderSubdomains();
   },
   update: function () {
   },
-  removeReactionVar: function (e) {
+  updateValid: function () {
+  },
+  removeSpecie: function () {
     this.remove();
-    this.model.collection.remove(this.model);
+    this.collection.removeSpecie(this.model);
+  },
+  updateDefaultSubdomains: function () {
+    this.model.subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
+    this.renderSubdomains();
+  },
+  renderSubdomains: function () {
+    if(this.subdomainsView)
+      this.subdomainsView.remove();
+    var subdomains = this.baseModel.meshSettings.uniqueSubdomains;
+    this.subdomainsView = this.renderCollection(
+      subdomains,
+      SubdomainsView,
+      this.queryByHook('subdomains')
+    );
+  },
+  updateSubdomains: function (element) {
+    if(element.name == 'subdomain') {
+      var subdomain = element.value.model;
+      var checked = element.value.checked;
+      if(checked)
+        this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+      else
+        this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+    }
   },
   subviews: {
     inputName: {
@@ -49,7 +72,7 @@ module.exports = View.extend({
           tests: tests.nameTests,
           modelKey: 'name',
           valueType: 'string',
-          value: this.model.name
+          value: this.model.name,
         });
       },
     },
@@ -59,40 +82,14 @@ module.exports = View.extend({
         return new InputView({
           parent: this,
           required: true,
-          name: 'val',
+          name: 'diffusion coeff',
           label: '',
           tests: tests.valueTests,
-          modelKey: '',
+          modelKey: 'diffusionCoeff',
           valueType: 'number',
-          value: this.model.spatialSpecies.diffusionCoeff
+          value: this.model.diffusionCoeff,
         });
-      }
-    }
+      },
+    },
   },
-  setDiffusionCoeff: function (e) {
-    this.model.spatialSpecies.diffusionCoeff = parseFloat(e.target.value);
-  },
-  renderSubdomains: function () {
-    if(this.subdomainsView){
-      this.subdomainsView.remove();
-    }
-    var subdomains = this.baseModel.meshSettings.uniqueSubdomains;
-    this.subdomainsView = this.renderCollection(
-      subdomains,
-      SubdomainsView,
-      this.queryByHook('subdomains')
-    );
-  },
-  updateSubdomains: function (element) {
-    if(element.name == 'subdomain'){
-      var subdomain = element.value.model;
-      var checked = element.value.checked;
-
-      if(checked){
-        this.model.spatialSpecies.subdomains = _.union(this.model.spatialSpecies.subdomains, [subdomain.name]);
-      }else{
-        this.model.spatialSpecies.subdomains = _.difference(this.model.spatialSpecies.subdomains, [subdomain.name]);
-      }
-    }
-  }
 });

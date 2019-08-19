@@ -1,15 +1,19 @@
+var _ = require('underscore');
+//models
 var State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
-    id: 'number',
     name: 'string',
-    value: 'number'
+    value: 'number',
   },
   session: {
     inUse: {
       type: 'boolean',
-      default: false
-    }
-  }
+      default: false,
+    },
+  },
+  initialize: function (attrs, options) {
+    State.prototype.initialize.apply(this, arguments);
+  },
 });

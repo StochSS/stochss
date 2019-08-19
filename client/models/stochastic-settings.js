@@ -1,28 +1,32 @@
+//models
 var State = require('ampersand-state');
 var SSASettings = require('./ssa-settings');
-var TauLeapingSettings = require('./tau-leaping-settings');
-var HybridTauSettings = require('./hybrid-tau-settings');
+var TauSettings = require('./tau-settings');
+var HybridSettings = require('./hybrid-settings');
 
 module.exports = State.extend({
-  props:{
+  props: {
     realizations: {
       type: 'number',
-      default: 1
+      default: 1,
     },
     algorithm: {
       type: 'string',
-      default: "SSA"
-    }
+      default: 'SSA',
+    },
   },
   children: {
     ssaSettings: SSASettings,
-    tauLeapingSettings: TauLeapingSettings,
-    hybridTauSettings: HybridTauSettings
+    tauSettings: TauSettings,
+    hybridSettings: HybridSettings,
   },
   session: {
-    isAdvancedSettingsOpen: {
+    isAdvancedOpen: {
       type: 'boolean',
-      default: false
-    }
-  }
+      default: false,
+    },
+  },
+  initialize: function (attrs, options) {
+    State.prototype.initialize.apply(this, arguments);
+  },
 });
