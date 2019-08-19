@@ -108,9 +108,10 @@ class ModelFileAPIHandler(BaseHandler):
             f.write(data)
         f.seek(0)
         tarData = tarfile.TarFile(fileobj=f)
-        tarData.extractall("/srv/jupyterhub/templates/")
+        d = tempfile.TemporaryDirectory()
+        tarData.extractall(d.name)
         f.close()
-        filePath = "/srv/jupyterhub/templates/{0}.json".format(modelName)
+        filePath = "{0}/{1}.json".format(d.name, modelName)
         with open(filePath, 'r') as jsonFile:
             data = jsonFile.read()
             log.debug(data)
