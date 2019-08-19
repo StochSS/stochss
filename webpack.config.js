@@ -1,23 +1,37 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './client/app.js',
+  entry: {
+    home: './client/pages/home.js',
+    browser: './client/pages/model-browser.js'
+  },
   output: {
-    filename: 'app.bundle.js',
-    // Beware! EVERYTHING in the following directory will be 
-    // DESTROYED to make way for the bundle's awesome power!
-    path: path.resolve(__dirname, "./dist")
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, "dist")
   },
   devtool: 'inline-source-map',
   plugins: [
-    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      title: 'StochSS [DEV]'
+      title: 'StochSS [DEV]',
+      filename: 'stochss-home.html',
+      template: 'handlers/page_template.pug',
+      name: 'home',
+      inject: false
     })
   ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          name: 'common',
+          chunks: 'initial',
+          minChunks: 2
+        }
+      }
+    }
+  },
   module: {
     rules: [
       {
