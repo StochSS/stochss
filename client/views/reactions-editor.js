@@ -1,18 +1,16 @@
-var app = require('ampersand-app');
 var ViewSwitcher = require('ampersand-view-switcher');
 var katex = require('katex');
 var _ = require('underscore');
 var $ = require('jquery');
-// Config
+//config
 var ReactionTypes = require('../reaction-types');
-// Models
-var Reaction = require('../models/reaction.js')
-var StoichSpeciesCollection = require('../models/stoich-species.js');
-// Views
+//models
+var StoichSpeciesCollection = require('../models/stoich-species');
+//views
 var View = require('ampersand-view');
 var ReactionListingView = require('./reaction-listing');
 var ReactionDetailsView = require('./reaction-details');
-
+//templates
 var template = require('../templates/includes/reactionsEditor.pug');
 
 module.exports = View.extend({
@@ -29,7 +27,8 @@ module.exports = View.extend({
     'click [data-hook=custom-propensity]'      : 'handleAddReactionClick',
     'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
-  initialize: function () {
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
     this.collection.on("select", function (reaction) {
       this.setSelectedReaction(reaction);
       this.setDetailsView(reaction);
@@ -37,16 +36,20 @@ module.exports = View.extend({
     this.collection.on("remove", function (reaction) {
       // Select the last reaction by default
       // But only if there are other reactions other than the one we're removing
-      if (reaction.detailsView) reaction.detailsView.remove();
-      this.collection.remove(reaction);
+      if (reaction.detailsView)
+        reaction.detailsView.remove();
+      this.collection.removeReaction(reaction);
       if (this.collection.length) {
         var selected = this.collection.at(this.collection.length-1);
         this.collection.trigger("select", selected);
       }
     }, this);
+    this.collection.parent.species.on('add remove', this.toggleAddReactionButton, this);
+    this.collection.parent.parameters.on('add remove', this.toggleReactionTypes, this);
   },
   render: function () {
-    this.renderWithTemplate();
+    View.prototype.render.apply(this, arguments);
+    //this.renderWithTemplate();
     this.renderCollection(
       this.collection,
       ReactionListingView,
@@ -60,75 +63,65 @@ module.exports = View.extend({
       this.setSelectedReaction(this.collection.at(0));
       this.collection.trigger("select", this.selectedReaction);
     }
-    // Trigger a change event to update species, params inUse value
     this.collection.trigger("change");
+    this.toggleAddReactionButton();
+    if(this.collection.parent.parameters.length > 0){
+       $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
+    }
+    else{
+      $(this.queryByHook('add-reaction-full')).prop('hidden', true);
+    }
+  },
+  update: function () {
+  },
+  updateValid: function () {
+  },
+  toggleAddReactionButton: function () {
+    $(this.queryByHook('add-reaction-full')).prop('disabled', (this.collection.parent.species.length <= 0));
+    $(this.queryByHook('add-reaction-partial')).prop('disabled', (this.collection.parent.species.length <= 0));
+  },
+  toggleReactionTypes: function (e, prev, curr) {
+    if(curr.add && this.collection.parent.parameters.length === 1){
+      $(this.queryByHook('add-reaction-full')).prop('hidden', false);
+      $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
+    }else if(!curr.add && this.collection.parent.parameters.length === 0){
+      $(this.queryByHook('add-reaction-full')).prop('hidden', true);
+      $(this.queryByHook('add-reaction-partial')).prop('hidden', false);
+    }
   },
   setSelectedReaction: function (reaction) {
     this.collection.each(function (m) { m.selected = false; });
     reaction.selected = true;
     this.selectedReaction = reaction;
   },
+  setDetailsView: function (reaction) {
+    reaction.detailsView = reaction.detailsView || this.newDetailsView(reaction);
+    this.detailsViewSwitcher.set(reaction.detailsView);
+  },
   handleAddReactionClick: function (e) {
-    var reactionType = e.target.dataset.hook
+    var reactionType = e.target.dataset.hook;
+    var annotation = '';
     var stoichArgs = this.getStoichArgsForReactionType(reactionType);
-    var modelArgs = {
-      reaction_type: reactionType,
-      annotation: '',
-      massaction: false,
-      reactants: stoichArgs.reactants,
-      products: stoichArgs.products,
-      propensity: '',
-      subdomains: this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
-
-    };
-    var reaction = this.newReaction(modelArgs);
+    var subdomains = this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
+    var reaction = this.collection.addReaction(reactionType, annotation, stoichArgs, subdomains);
+    reaction.detailsView = this.newDetailsView(reaction);
     this.collection.trigger("select", reaction);
   },
-  addReactionListing: function (reaction) {
-    var reactionListingView = new ReactionListingView({ model: reaction });
-    this.collection.add(reaction);
-  },
-  newReaction: function (args) {
-    args.name = args.name || this.getDefaultReactionName();
-    var reaction = new Reaction(args);
-    reaction.detailsView = this.newDetailsView(reaction);
-    reaction.species = this.collection.parent.species;
-    reaction.rate = this.getDefaultReactionRate() || reaction.rate;
-    this.setDefaultSpeciesOnStoichSpecies(reaction.products);
-    this.setDefaultSpeciesOnStoichSpecies(reaction.reactants);
-    this.collection.add(reaction);
-    return reaction;
-  },
-  getDefaultReactionRate: function () {
-    return this.collection.parent.parameters.at(0);
+  getStoichArgsForReactionType: function(type) {
+    var args = ReactionTypes[type];
+    return args;
   },
   newDetailsView: function (reaction) {
     var detailsView = new ReactionDetailsView({ model: reaction });
     detailsView.parent = this;
     return detailsView
   },
-  setDetailsView: function (reaction) {
-    reaction.detailsView = reaction.detailsView || this.newDetailsView(reaction);
-    this.detailsViewSwitcher.set(reaction.detailsView);
-  },
-  getDefaultReactionName: function () {
-    return 'R' + (this.collection.length + 1);
-  },
-  getStoichArgsForReactionType: function(type) {
-    var args = ReactionTypes[type];
-    return args;
-  },
-  setDefaultSpeciesOnStoichSpecies: function (stoichSpecies) {
-    stoichSpecies.forEach(function (stoichSpecie) {
-      stoichSpecie.specie = this.getDefaultSpecie(); 
-    }, this);
+  changeCollapseButtonText: function (e) {
+    var text = $(this.queryByHook('collapse')).text();
+    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
   },
   getDefaultSpecie: function () {
     var value = this.collection.parent.species.models[0];
     return value;
   },
-  changeCollapseButtonText: function (e) {
-    var text = $(this.queryByHook('collapse')).text();
-    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
-  }
 });

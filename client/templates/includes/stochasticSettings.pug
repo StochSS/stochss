@@ -1,33 +1,31 @@
 div#stochastic-settings.card.card-body
 
   table.table
-    thread
+    thead
       tr
         th(scope="col") Realizations
+    tbody
       tr
         td: div(data-hook="realizations-container")
 
   div.row
 
     h6 Advanced Settings
-    
     button.btn.btn-outline-collapse(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button') +
 
   div(id='advanced-settings', class='collapse', data-hook='advanced-settings')
     table.table
-      thread
+      thead
         tr
           th(scope="col", colspan="3") Algorithm
-
+      tbody
         tr
           td
             input(type="radio", name="algorithm", data-hook="ssa-select", data-name="SSA", checked) 
             |  SSA
-
           td
             input(type="radio", name="algorithm", data-hook="tau-leaping-select", data-name="Tau-Leaping")
             |  Tau-leaping
-
           td
             input(type="radio", name="algorithm", data-hook="hybrid-tau-leaping-select", data-name="Hybrid-Tau-Leaping")
             |  Hybrid Tau-Leaping

@@ -1,9 +1,8 @@
-var app = require('ampersand-app');
 var tests = require('./tests');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
-
+//templates
 var template = require('../templates/includes/ssaSettings.pug');
 
 module.exports = View.extend({
@@ -12,9 +11,17 @@ module.exports = View.extend({
     'model.seed': {
       type: 'value',
       hook: 'seed-container'
-    }
+    },
   },
-  update: function (e) {
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
+  },
+  render: function () {
+    View.prototype.render.apply(this, arguments);
+  },
+  update: function () {
+  },
+  updateValid: function () {
   },
   subviews: {
     inputSeed: {
@@ -29,8 +36,8 @@ module.exports = View.extend({
           modelKey: 'seed',
           valueType: 'number',
           value: this.model.seed
-        })
-      }
-    }
-  }
+        });
+      },
+    },
+  },
 });

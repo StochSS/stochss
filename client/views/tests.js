@@ -1,4 +1,3 @@
-
 module.exports = {
   nameTests: [
     function (text) {
@@ -17,7 +16,7 @@ module.exports = {
       if (isDuplicate) {
         return "No duplicate entries."
       }
-    }
+    },
   ],
   valueTests: [
     function (value) {
@@ -29,6 +28,6 @@ module.exports = {
       if (Number(value) < 0) {
         return "Must be non-negative."
       }
-    }
+    },
   ],
 }

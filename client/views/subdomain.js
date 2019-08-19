@@ -3,8 +3,8 @@ var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 //templates
-var specieSubdomainTemplate = require('../templatesV2/includes/subdomain.pug');
-var reactionSubdomainTemplate = require('../templatesV2/includes/reactionSubdomain.pug');
+var specieSubdomainTemplate = require('../templates/includes/subdomain.pug');
+var reactionSubdomainTemplate = require('../templates/includes/reactionSubdomain.pug');
 
 module.exports = View.extend({
   template: specieSubdomainTemplate,

@@ -1,6 +1,7 @@
-var SelectView = require('ampersand-select-view');
 var $ = require('jquery');
-
+//views
+var SelectView = require('ampersand-select-view');
+//templates
 var template = require('../templates/includes/editCustomStoichSpecie.pug');
 
 module.exports = SelectView.extend({
@@ -44,20 +45,30 @@ module.exports = SelectView.extend({
     })[0];
     this.model.specie = specie;
     this.value = specie;
-    // Trigger change on reactions to update inUse
     reactions.trigger("change");
+  },
+  getSpeciesCollection: function () {
+    return this.model.collection.parent.collection.parent.species;
   },
   getReactionsCollection: function () {
     return this.model.collection.parent.collection;
   },
-  getSpeciesCollection: function () {
-    // TODO there are a growing number of gnarly upward refs like this one;
-    // there's probably a better way get this this via events, functions on parents, etc
-    // Originally we had set reaction.species as a convenience reference,
-    // perhaps that is the solution to return to.
-    //
-    //     this.(StoichSpecie).(StoichSpecies).(Reaction).(Reactions).(Version).species
-    return this.model.collection.parent.collection.parent.species;
+  handleIncrement: function () {
+    if(this.validateRatioIncrement()){
+      this.model.ratio++;
+      this.toggleIncrementButton();
+      this.parent.parent.toggleAddSpecieButton();
+    }
+    this.toggleDecrementButton();
+  },
+  validateRatioIncrement: function () {
+    if(this.stoichSpecies.length < 2 && this.model.ratio < 2)
+      return true;
+    if(this.reactionType !== 'custom-massaction')
+      return true;
+    if(!this.isReactants)
+      return true;
+    return false;
   },
   toggleIncrementButton: function () {
     if(!this.validateRatioIncrement()){
@@ -72,23 +83,6 @@ module.exports = SelectView.extend({
     else
       $(this.queryByHook('decrement')).prop('disabled', false);
   },
-  validateRatioIncrement: function () {
-    if(this.stoichSpecies.length < 2 && this.model.ratio < 2)
-      return true;
-    if(this.reactionType !== 'custom-massaction')
-      return true;
-    if(!this.isReactants)
-      return true;
-    return false;
-  },
-  handleIncrement: function () {
-    if(this.validateRatioIncrement()){
-      this.model.ratio++;
-      this.toggleIncrementButton();
-      this.parent.parent.toggleAddSpecieButton();
-    }
-    this.toggleDecrementButton();
-  },
   handleDecrement: function () {
     this.model.ratio--;
     this.toggleDecrementButton();
@@ -98,8 +92,7 @@ module.exports = SelectView.extend({
     }
   },
   deleteSpecie: function () {
-    this.model.collection.remove(this.model);
+    this.collection.removeStoichSpecie(this.model);
     this.parent.parent.toggleAddSpecieButton();
-  }
+  },
 });
-

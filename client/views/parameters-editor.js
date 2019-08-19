@@ -1,33 +1,36 @@
-var app = require('ampersand-app');
 var $ = require('jquery');
-// Views
+//views
 var View = require('ampersand-view');
 var EditParameterView = require('./edit-parameter');
-
+//templates
 var template = require('../templates/includes/parametersEditor.pug');
 
 module.exports = View.extend({
   template: template,
-  bindings: {
-  },
   events: {
     'click [data-hook=add-parameter]' : 'addParameter',
-    'click [data-hook=collapse]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+  },
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
   },
   render: function () {
-    this.renderWithTemplate();
-    this.renderCollection(this.collection, EditParameterView, this.queryByHook('parameter-list'));
+    View.prototype.render.apply(this, arguments);
+    this.renderCollection(
+      this.collection,
+      EditParameterView,
+      this.queryByHook('parameter-list')
+    );
+  },
+  update: function () {
+  },
+  updateValid: function () {
   },
   addParameter: function () {
-    var defaultName = 'K' + (this.collection.length + 1);
-    this.collection.add({
-      name: defaultName,
-      value: 0
-    });
-    this.render();
+    this.collection.addParameter();
   },
   changeCollapseButtonText: function (e) {
     var text = $(this.queryByHook('collapse')).text();
-    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
-  }
+    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+');
+  },
 });

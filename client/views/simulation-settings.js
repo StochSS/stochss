@@ -7,7 +7,7 @@ var InputView = require('./input');
 var DeterministicSettingsView = require('./deterministic-settings');
 var StochasticSettingsView = require('./stochastic-settings');
 //templates
-var template = require('../templatesV2/includes/simulationSettings.pug');
+var template = require('../templates/includes/simulationSettings.pug');
 
 module.exports = View.extend({
   template: template,

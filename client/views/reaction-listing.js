@@ -1,7 +1,6 @@
-var app = require('ampersand-app');
+//views
 var View = require('ampersand-view');
-var _ = require('underscore');
-
+//templates
 var template = require('../templates/includes/reactionListing.pug');
 
 module.exports = View.extend({
@@ -32,8 +31,7 @@ module.exports = View.extend({
     this.model.collection.trigger("select", this.model);
   },
   removeReaction: function (e) {
-    this.model.collection.remove(this.model);
+    this.collection.removeReaction(this.model);
     this.parent.collection.trigger("change");
-  }
-
+  },
 });

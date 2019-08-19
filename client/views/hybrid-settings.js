@@ -6,7 +6,7 @@ var SelectView = require('ampersand-select-view');
 var EditSpecieModeView = require('./edit-specie-mode');
 var RateRulesView = require('./rate-rules-editor');
 //templates
-var template = require('../templatesV2/includes/hybridSettings.pug');
+var template = require('../templates/includes/hybridSettings.pug');
 
 module.exports = View.extend({
   template: template,

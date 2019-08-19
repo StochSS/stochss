@@ -3,7 +3,6 @@ div#reactions-editor.card.card-body
   div.row
 
     h3 Reactions
-
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-reaction", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-reaction")
@@ -28,7 +27,7 @@ div#reactions-editor.card.card-body
     div.dropdown
 
       button.btn.btn-outline-primary.dropdown-toggle#addReactionBtn(
-        data-hook="add-reaction",
+        data-hook="add-reaction-full",
         data-toggle="dropdown",
         aria-haspopup="true",
         aria-expanded="false",
@@ -47,3 +46,15 @@ div#reactions-editor.card.card-body
         li.dropdown-item(data-hook="custom-massaction") Custom mass action
         li.dropdown-item(data-hook="custom-propensity") Custom propensity
 
+    div.dropdown
+
+      button.btn.btn-outline-primary.dropdown-toggle#addReactionBtn(
+        data-hook="add-reaction-partial",
+        data-toggle="dropdown",
+        aria-haspopup="true",
+        aria-expanded="false",
+        type="button"
+      ) Add Reaction <span class="caret"></span>
+
+      ul.dropdown-menu(aria-labelledby="addReactionBtn")
+        li.dropdown-item(data-hook="custom-propensity") Custom propensity

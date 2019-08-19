@@ -2,7 +2,7 @@
 var View = require('ampersand-view');
 var SubdomainsView = require('./subdomain');
 //templates
-var template = require('../templatesV2/includes/reactionSubdomains.pug');
+var template = require('../templates/includes/reactionSubdomains.pug');
 
 module.exports = View.extend({
   template: template,

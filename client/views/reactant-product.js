@@ -1,13 +1,12 @@
-var View = require('ampersand-view');
-var SelectView = require('ampersand-select-view');
 var $ = require('jquery');
 //models
 var StoichSpecie = require('../models/stoich-specie');
-var StoichSpecies = require('../models/stoich-species');
 //views
+var View = require('ampersand-view');
+var SelectView = require('ampersand-select-view');
 var EditStoichSpecieView = require('./edit-stoich-specie');
 var EditCustomStoichSpecieView = require('./edit-custom-stoich-specie');
-
+//templates
 var template = require('../templates/includes/reactantProduct.pug');
 
 module.exports = View.extend({
@@ -17,6 +16,7 @@ module.exports = View.extend({
     'click [data-hook=add-selected-specie]' : 'addSelectedSpecie'
   },
   initialize: function (args) {
+    View.prototype.initialize.apply(this, arguments);
     this.collection = args.collection;
     this.species = args.species;
     this.reactionType = args.reactionType;
@@ -26,7 +26,7 @@ module.exports = View.extend({
   },
   render: function () {
     var self = this;
-    this.renderWithTemplate();
+    View.prototype.render.apply(this, arguments);
     var args = {
       viewOptions: {
         name: 'stoich-specie',
@@ -53,25 +53,6 @@ module.exports = View.extend({
     }
     this.toggleAddSpecieButton();
   },
-  subviews: {
-    selectSpecies: {
-      hook: 'select-specie',
-      prepareView: function (el) {
-        return new SelectView({
-          name: 'stoich-specie',
-          label: '',
-          required: false,
-          textAttribute: 'name',
-          eagerValidate: false,
-          // Set idAttribute to name. Models may not be saved yet so id is unreliable (so is cid).
-          // Use name since it *should be* unique.
-          idAttribute: 'name',
-          options: this.species,
-          unselectedText: this.unselectedText,
-        });
-      }
-    }
-  },
   selectSpecie: function (e) {
     if(this.unselectedText === e.target.selectedOptions.item(0).text){
       this.hasSelectedSpecie = false;
@@ -80,6 +61,13 @@ module.exports = View.extend({
       this.specieName = e.target.selectedOptions.item(0).text;
     }
     this.toggleAddSpecieButton();
+  },
+  addSelectedSpecie: function () {
+    var specieName = this.specieName ? this.specieName : 'Pick a species';
+    if(this.validateAddSpecie()) {
+      this.collection.addStoichSpecie(specieName);
+      this.toggleAddSpecieButton();
+    }
   },
   toggleAddSpecieButton: function () {
     if(!this.validateAddSpecie())
@@ -100,18 +88,23 @@ module.exports = View.extend({
     }
     return false;
   },
-  addSelectedSpecie: function () {
-    var specieName = this.specieName ? this.specieName : 'Pick a species';
-    if(this.validateAddSpecie()) {
-      var specie = this.species.filter(function (specie) {
-        return specie.name === specieName;
-      })[0];
-      var stoichSpecie = new StoichSpecie({
-        ratio: 1
-      });
-      stoichSpecie.specie = specie;
-      this.collection.add(stoichSpecie);
-      this.toggleAddSpecieButton();
+  subviews: {
+    selectSpecies: {
+      hook: 'select-specie',
+      prepareView: function (el) {
+        return new SelectView({
+          name: 'stoich-specie',
+          label: '',
+          required: false,
+          textAttribute: 'name',
+          eagerValidate: false,
+          // Set idAttribute to name. Models may not be saved yet so id is unreliable (so is cid).
+          // Use name since it *should be* unique.
+          idAttribute: 'name',
+          options: this.species,
+          unselectedText: this.unselectedText,
+        });
+      }
     }
-  }
+  },
 });

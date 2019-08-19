@@ -1,20 +1,24 @@
-var app = require('ampersand-app');
-var tests = require('./tests');
 var $ = require('jquery');
+var tests = require('./tests');
 //views
 var View = require('ampersand-view');
-var InputView = require('./input')
-
+var InputView = require('./input');
+//templates
 var template = require('../templates/includes/editRateRule.pug');
 
 module.exports = View.extend({
   template: template,
+  initiailize: function (attrs, options) {
+    View.prototype.initiailize.apply(this, arguments);
+  },
   render: function () {
     this.renderWithTemplate();
     var inputField = this.queryByHook('rate-rule').children[0].children[1];
     $(inputField).attr("placeholder", "---No Rate Rule Entered---");
   },
   update: function (e) {
+  },
+  updateValid: function () {
   },
   subviews: {
     inputRateRule: {
@@ -29,8 +33,8 @@ module.exports = View.extend({
           modelKey: 'rule',
           valueType: 'string',
           value: this.model.rule
-        })
-      }
+        });
+      },
     },
     inputName: {
       hook: 'rate-rule-name',
@@ -45,7 +49,7 @@ module.exports = View.extend({
           valueType: 'string',
           value: this.model.name
         });
-      }
-    }
-  }
+      },
+    },
+  },
 });

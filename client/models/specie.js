@@ -1,20 +1,29 @@
+var _ = require('underscore');
+//models
 var State = require('ampersand-state');
-var SpatialSpecie = require('./spatial-specie');
-var NonspatialSpecie = require('./non-spatial-specie');
+//var InitialCondition = require('./initial-condition');
 
 module.exports = State.extend({
   props: {
-    id: 'number',
     name: 'string',
+    value: 'number',
+    mode: 'string',
+    diffusionCoeff: 'number',
+    subdomains: {
+      type: 'object',
+      default: function() {return []; }
+    },
   },
   children: {
-    spatialSpecies: SpatialSpecie,
-    nonspatialSpecies: NonspatialSpecie
+    //initialCondition: InitialCondition
   },
   session: {
     inUse: {
       type: 'boolean',
-      default: false
-    }
-  }
+      default: false,
+    },
+  },
+  initialize: function (attrs, options) {
+    State.prototype.initialize.apply(this, arguments);
+  },
 });
