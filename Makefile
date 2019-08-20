@@ -39,7 +39,7 @@ database:
 	echo "Removing old database file..."
 	rm -f stochssdb.sqlite
 	echo "Creating new database file..."
-	pipenv run python create_db.py
+	python3 -m pipenv run python create_db.py
 	echo "New database file created!"
 
 cert:
@@ -52,9 +52,9 @@ watch:
 	npm run watch
 
 deps:
-	pip install -U pip pipenv
+	python3 -m pip install -U pip pipenv
 	npm install
-	pipenv install
+	python3 -m pipenv install
 
 hub_image: check-files network
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
