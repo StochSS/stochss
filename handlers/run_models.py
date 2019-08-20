@@ -48,9 +48,7 @@ class ModelFactory():
         name = data['name']
         timeStep = (data['simulationSettings']['timeStep'])
         endSim = data['simulationSettings']['endSim']
-        self.log.debug("Species: ")
         self.species = list(map(lambda s: self.build_specie(s), data['species']))
-        self.log.debug("Parameters: ")
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), data['rateRules']))
@@ -60,21 +58,26 @@ class ModelFactory():
         name = args['name']
         value = args['value']
         mode = args['mode']
-        self.log.debug("name: {0}, value: {1}, mode: {2}".format(name, value, mode))
         return Species(name=name, initial_value=value, mode=mode)
 
     def build_parameter(self, args):
         name = args['name']
         value = args['value']
-        self.log.debug("name: {0}, expression: {1}".format(name, value))
         return Parameter(name=name, expression=value)
 
     def build_reaction(self, args, parameters):
+        if not args['rate'] == {}:
+            rate = list(filter(lambda p: p.name == args['rate']['name'], parameters))[0]
+            propensity = None
+        else:
+            rate = None
+            propensity = args['propensity']
         R = Reaction(
             name=args['name'],
             reactants=self.build_stoich_species_dict(args['reactants']),
             products=self.build_stoich_species_dict(args['products']),
-            rate=list(filter(lambda p: p.name == args['rate']['name'], parameters))[0]
+            rate=rate,
+            propensity_function=propensity
         )
         return R
 
@@ -100,7 +103,6 @@ class RunModelAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         log = logging.getLogger()
         user = self.current_user.name
-        log.debug('jupyter-{0}'.format(user))
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         bits, stat = container.get_archive("/home/jovyan/work/{0}.json".format(modelName))
         _data = self.getModelData(bits, modelName)
