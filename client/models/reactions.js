@@ -28,7 +28,6 @@ Reactions = Collection.extend({
     if(reactionType !== 'custom-propensity')
       reaction.rate = this.getDefaultRate();
     this.add(reaction);
-    console.log(this.parent.parameters.length);
     return reaction;
   },
   getDefaultName: function () {
