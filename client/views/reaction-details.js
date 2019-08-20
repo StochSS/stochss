@@ -109,10 +109,12 @@ module.exports = View.extend({
     this.render();
   },
   selectRateParam: function (e) {
-    var val = e.target.selectedOptions.item(0).text;
-    var param = this.getRateFromParameters(val);
-    this.model.rate = param || this.model.rate;
-    this.model.collection.trigger("change");
+    if(this.model.reactionType !== 'custom-propensity') {
+      var val = e.target.selectedOptions.item(0).text;
+      var param = this.getRateFromParameters(val);
+      this.model.rate = param || this.model.rate;
+      this.model.collection.trigger("change");
+    }
   },
   getRateFromParameters: function (name) {
     // Seems like model.rate is not actually part of the Parameters collection
