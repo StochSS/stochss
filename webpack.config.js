@@ -14,10 +14,24 @@ module.exports = {
   devtool: 'inline-source-map',
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'StochSS [DEV]',
+      title: 'StochSS | Home',
       filename: 'stochss-home.html',
       template: 'handlers/page_template.pug',
       name: 'home',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Model Browser',
+      filename: 'stochss-model-browser.html',
+      template: 'handlers/page_template.pug',
+      name: 'browser',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Model Editor',
+      filename: 'stochss-model-editor.html',
+      template: 'handlers/page_template.pug',
+      name: 'editor',
       inject: false
     })
   ],

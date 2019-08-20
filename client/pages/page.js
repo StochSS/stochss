@@ -4,12 +4,13 @@ let MainView = require('../views/main');
 let template = require('../templates/pages/home.pug');
 let domReady = require('domready');
 
+let $ = require('jquery');
+let bootstrap = require('bootstrap');
+
+let app = require('../app');
+
 import styles from '../styles/styles.css';
 import bootstrapStyles from '../styles/bootstrap.css';
-
-let mainView = new MainView({
-  el: document.body 
-});
 
 export default function initPage (page) {
   domReady(() => {
@@ -17,7 +18,8 @@ export default function initPage (page) {
       el: document.body
     });
     let p = new page({
-      el: '[data-hook="page-container"]'
+      el: document.querySelector('[data-hook="page-container"]'),
     });
+    p.render()
   })
 }

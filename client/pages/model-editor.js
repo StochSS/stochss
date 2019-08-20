@@ -1,4 +1,4 @@
-var app = require('ampersand-app');
+var app = require('../app');
 var _ = require('underscore');
 var $ = require('jquery');
 //views
@@ -14,7 +14,9 @@ var Model = require('../models/model');
 //templates
 var template = require('../templates/pages/modelEditor.pug');
 
-module.exports = PageView.extend({
+import initPage from './page.js';
+
+let ModelEditor = PageView.extend({
   template: template,
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -36,15 +38,11 @@ module.exports = PageView.extend({
       this.updateParametersInUse();
     }, this);
   },
-  render: function () {
-    PageView.prototype.render.apply(this, arguments);
-  },
   update: function () {
   },
   updateValid: function () {
   },
   updateSpeciesInUse: function () {
-    // TODO is there a more efficient/elegant way to update inUse?
     var species = this.model.species;
     var reactions = this.model.reactions;
     species.forEach(function (specie) { specie.inUse = false; });
@@ -108,3 +106,5 @@ module.exports = PageView.extend({
   subviews: {
   },
 });
+
+initPage(ModelEditor);

@@ -53,7 +53,12 @@ module.exports = View.extend({
 
     if (localPath) {
       e.preventDefault();
-      app.navigate(localPath);
+      this.navigate(localPath);
     }
+  },
+
+  navigate: function (page) {
+    var url = (page.charAt(0) == '/') ? page.slice(1) : page;
+    window.location = url;
   }
 });
