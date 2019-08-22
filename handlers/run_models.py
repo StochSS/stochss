@@ -28,14 +28,16 @@ from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver
 
 class _Model(Model):
 
-    def __init__(self, name, species, parameters, reactions, rate_rules, endSim, timeStep):
-        Model.__init__(self, name=name)
+    def __init__(self, name, species, parameters, reactions, rate_rules, endSim, timeStep, volume):
+        Model.__init__(self, name=name, volume=volume)
         self.add_parameter(parameters)
         self.add_species(species)
         self.add_reaction(reactions)
         self.add_rate_rule(rate_rules)
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
+        log = logging.getLogger()
+        log.debug("the volume of the model is: {0}".format(self.volume))
 
 
 
@@ -48,11 +50,12 @@ class ModelFactory():
         name = data['name']
         timeStep = (data['simulationSettings']['timeStep'])
         endSim = data['simulationSettings']['endSim']
+        volume = data['simulationSettings']['volume']
         self.species = list(map(lambda s: self.build_specie(s), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), data['rateRules']))
-        self.model = _Model(name, self.species, self.parameters, self.reactions, self.rate_rules, endSim, timeStep)
+        self.model = _Model(name, self.species, self.parameters, self.reactions, self.rate_rules, endSim, timeStep, volume)
 
     def build_specie(self, args):
         name = args['name']

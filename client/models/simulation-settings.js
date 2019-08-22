@@ -17,6 +17,10 @@ module.exports = State.extend({
       type: 'number',
       default: 0.05,
     },
+    volume: {
+      type: 'number',
+      default: 1,
+    },
   },
   children: {
     stochasticSettings: StochasticSettings,
