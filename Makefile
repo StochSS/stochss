@@ -45,9 +45,9 @@ watch:
 	npm run watch
 
 deps:
-	pip install -U pip pipenv
+	python3 -m pip install -U pip pipenv
 	npm install
-	pipenv install
+	python3 -m pipenv install
 
 hub_image: check-files network
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
