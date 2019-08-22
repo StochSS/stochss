@@ -1,9 +1,10 @@
 {
     "is_spatial": false,
     "simulationSettings": {
-        "is_stochastic": false,
+        "is_stochastic": true,
         "endSim": 200,
         "timeStep": 1,
+        "volume": 1,
         "stochasticSettings": {
             "realizations": 1,
             "algorithm": "SSA",
