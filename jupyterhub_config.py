@@ -50,7 +50,7 @@ c.JupyterHub.extra_handlers = [
         # Default
         (r"/stochss\/?", HomeHandler),
         (r"/stochss/models", ModelBrowserHandler),
-        (r"/stochss/models/edit", ModelEditorHandler)
+        (r"/stochss/models/edit-edit-model/(\w+)", ModelEditorHandler)
         #(r"/stochss.*", MainHandler)
 ]
 
