@@ -45,10 +45,16 @@ module.exports = View.extend({
     var model = this.model
     var endpoint = path.join(app.config.routePrefix, 'api/models/run/', model.name);
     var self = this;
-    xhr(
-      { uri: endpoint },
-      function (err, response, body) {
-        self.plotResults(JSON.parse(body));
+    xhr({ 
+      uri: endpoint,
+      timeout: 3000,
+      }, function (err, response, body) {
+        if(body){
+          self.plotResults(JSON.parse(body));
+        }
+        if(err && err.message === "XMLHttpRequest timeout"){
+          console.log("The model took longer than three seconds and timed out")
+        }
       },
     );
   },
