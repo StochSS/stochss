@@ -1,4 +1,4 @@
-var app = require('ampersand-app');
+var app = require('../app');
 var path = require('path');
 var xhr = require('xhr');
 //models

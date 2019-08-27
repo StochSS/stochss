@@ -30,7 +30,7 @@ class ModelFileAPIHandler(BaseHandler):
         try:
             bits, stat = container.get_archive("/home/jovyan/work/{0}.json".format(modelName))
         except:
-            filePath = "/srv/jupyterhub/templates/nonspatialTemplate.json"
+            filePath = "/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json"
             with open(filePath, 'r') as jsonFile:
                 data = jsonFile.read()
                 jsonData = json.loads(str(data))

@@ -22,8 +22,7 @@ class ModelBrowserHandler(BaseHandler):
 
 class ModelEditorHandler(BaseHandler):
   @web.authenticated
-  async def get(self):
-    html = self.render_template("stochss-model-browser.html")
+  async def get(self, model_name):
+    html = self.render_template("stochss-model-editor.html")
     self.finish(html)
-
 

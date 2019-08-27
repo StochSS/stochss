@@ -1,0 +1,75 @@
+{
+	"is_spatial": false,
+	"simulationSettings": {
+		"is_stochastic": true,
+		"endSim": 20,
+		"timeStep": 0.05,
+		"stochasticSettings": {
+			"realizations": 1,
+			"algorithm": "SSA",
+			"ssaSettings": {
+				"seed": -1
+			},
+			"tauSettings": {
+				"seed": -1,
+				"tauTol": 0.03
+			},
+			"hybridSettings": {
+				"seed": -1,
+				"tauTol": 0.03,
+				"switchTol": 0.03
+			}
+		},
+		"deterministicSettings": {
+			"relativeTol": 0.03,
+			"absoluteTol": 0.03
+		}
+	},
+	"meshSettings": {
+		"count": 2
+	},
+	"species": [{
+		"name": "s1",
+		"value": 0,
+		"mode": "dynamic",
+		"diffusionCoeff": 0,
+		"subdomains": ["subdomain 1: ", "subdomain 2: "]
+	}, {
+		"name": "s2",
+		"value": 0,
+		"mode": "dynamic",
+		"diffusionCoeff": 0,
+		"subdomains": ["subdomain 1: ", "subdomain 2: "]
+	}],
+	"parameters": [{
+		"name": "k1",
+		"value": 0
+	}, {
+		"name": "k2",
+		"value": 0
+	}],
+	"reactions": [{
+		"name": "r1",
+		"reactionType": "creation",
+		"annotation": "",
+		"massaction": false,
+		"propensity": "",
+		"subdomains": ["subdomain 1: ", "subdomain 2: "],
+		"rate": {
+			"name": "k1",
+			"value": 0
+		},
+		"reactants": [],
+		"products": [{
+			"ratio": 1,
+			"specie": {
+				"name": "s1",
+				"value": 0,
+				"mode": "dynamic",
+				"diffusionCoeff": 0,
+				"subdomains": ["subdomain 1: ", "subdomain 2: "]
+			}
+		}]
+	}],
+	"rateRules": []
+}

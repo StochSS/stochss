@@ -42,15 +42,16 @@ from dotenv import load_dotenv
 c.StochSS.db_url = os.getenv('STOCHSS_DB_CONNECT')
 
 # StochSS request handlers
+# Trailing slash is optional
 c.JupyterHub.extra_handlers = [
         # API handlers
-        (r"/stochss/api/user", UsernameHandler),
-        (r"/stochss/api/model-data/(\w+)", ModelFileAPIHandler),
-        (r"/stochss/api/models/run/(\w+)", RunModelAPIHandler),
-        # Default
+        (r"/stochss/api/user\/?", UsernameHandler),
+        (r"/stochss/api/model-data/(\w+)\/?", ModelFileAPIHandler),
+        (r"/stochss/api/models/run/(\w+)\/?", RunModelAPIHandler),
+        # Pages
         (r"/stochss\/?", HomeHandler),
-        (r"/stochss/models", ModelBrowserHandler),
-        (r"/stochss/models/edit-edit-model/(\w+)", ModelEditorHandler)
+        (r"/stochss/models\/?$", ModelBrowserHandler),
+        (r"/stochss/models/edit\/?(\w+)?\/?", ModelEditorHandler)
         #(r"/stochss.*", MainHandler)
 ]
 
