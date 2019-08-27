@@ -35,13 +35,6 @@ notebook_image: pull singleuser/Dockerfile
 		--build-arg DOCKER_NOTEBOOK_IMAGE=$(DOCKER_NOTEBOOK_IMAGE) \
 		singleuser
 
-database:
-	echo "Removing old database file..."
-	rm -f stochssdb.sqlite
-	echo "Creating new database file..."
-	python3 -m pipenv run python create_db.py
-	echo "New database file created!"
-
 cert:
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
 
@@ -59,7 +52,7 @@ deps:
 hub_image: check-files network
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
 
-build: check-files deps network notebook_image hub_image database webpack userlist cert
+build: check-files deps network notebook_image hub_image webpack userlist cert
 
 run: check-files network
 	docker run -it --rm \

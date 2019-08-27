@@ -29,7 +29,8 @@ c = get_config()
 c.JupyterHub.log_level = 'DEBUG'
 
 # Page handlers
-from handlers.main import MainHandler
+#from handlers.main import MainHandler
+from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler
 
 # API handlers
 from handlers.models import ModelFileAPIHandler
@@ -40,15 +41,23 @@ from dotenv import load_dotenv
 
 c.StochSS.db_url = os.getenv('STOCHSS_DB_CONNECT')
 
-
 # StochSS request handlers
+# Trailing slash is optional
 c.JupyterHub.extra_handlers = [
         # API handlers
-        (r"/stochss/api/user", UsernameHandler),
-        (r"/stochss/api/model-data/(\w+)", ModelFileAPIHandler),
-        (r"/stochss/api/models/run/(\w+)", RunModelAPIHandler),
-        # Default
-        (r"/stochss.*", MainHandler)
+        (r"/stochss/api/user\/?", UsernameHandler),
+        (r"/stochss/api/model-data/(\w+)\/?", ModelFileAPIHandler),
+        (r"/stochss/api/models/run/(\w+)\/?", RunModelAPIHandler),
+        # Pages
+        (r"/stochss\/?", HomeHandler),
+        (r"/stochss/models\/?$", ModelBrowserHandler),
+        (r"/stochss/models/edit\/?(\w+)?\/?", ModelEditorHandler)
+        #(r"/stochss.*", MainHandler)
+]
+
+## Paths to search for jinja templates, before using the default templates.
+c.JupyterHub.template_paths = [
+  "/opt/conda/share/jupyterhub/static/stochss/"
 ]
 
 ## Path to SSL certificate file for the public facing interface of the proxy
@@ -541,9 +550,6 @@ c.JupyterHub.hub_port = 8080
 #  
 #  When using SSL (i.e. always) this also requires a wildcard SSL certificate.
 #c.JupyterHub.subdomain_host = ''
-
-## Paths to search for jinja templates, before using the default templates.
-#c.JupyterHub.template_paths = []
 
 ## Extra variables to be passed into jinja templates
 #c.JupyterHub.template_vars = {}

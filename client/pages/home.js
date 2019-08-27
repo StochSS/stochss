@@ -1,8 +1,11 @@
-var PageView = require('./base');
-//var templates = require('../templates');
-var template = require('../templates/pages/home.pug');
+let PageView = require('./base');
+let template = require('../templates/pages/home.pug');
 
-module.exports = PageView.extend({
-  pageTitle: 'StochSS',
-  template: template
+import initPage from './page.js';
+
+let HomePage = PageView.extend({
+    pageTitle: 'StochSS | Home',
+    template: template
 });
+
+initPage(HomePage)

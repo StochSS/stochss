@@ -1,0 +1,9 @@
+- var name = htmlWebpackPlugin.options.name
+- var bundleUrl = "/static/stochss/" + name + ".bundle.js"
+- var commonBundleUrl = "/static/stochss/common.bundle.js"
+html
+  head
+    meta(charset="UTF-8")
+  body
+    script(type="text/javascript", src=bundleUrl)
+    script(type="text/javascript", src=commonBundleUrl)

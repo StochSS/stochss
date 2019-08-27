@@ -19,7 +19,7 @@ module.exports = View.extend({
       this.listenTo(app, 'page', this.handleNewPage);
   },
   events: {
-    'click a[href]': 'handleLinkClick'
+    //'click a[href]': 'handleLinkClick'
   },
   render: function () {
 
@@ -49,11 +49,14 @@ module.exports = View.extend({
 
   handleLinkClick: function (e) {
     var localPath = localLinks.pathname(e);
-    var localPath = localPath.replace('/hub/stochss/', '');
 
     if (localPath) {
       e.preventDefault();
-      app.navigate(localPath);
+      this.navigate(localPath);
     }
+  },
+
+  navigate: function (page) {
+    window.location = url;
   }
 });
