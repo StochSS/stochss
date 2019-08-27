@@ -39,8 +39,6 @@ from handlers.run_models import RunModelAPIHandler
 
 from dotenv import load_dotenv
 
-c.StochSS.db_url = os.getenv('STOCHSS_DB_CONNECT')
-
 # StochSS request handlers
 # Trailing slash is optional
 c.JupyterHub.extra_handlers = [

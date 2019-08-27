@@ -10,20 +10,19 @@ from io import BytesIO, StringIO
 import tarfile
 import tempfile
 import time
-client = docker.from_env()
 
-from handlers.db_util import _db, checkUserOrRaise
+from handlers.db_util import checkUserOrRaise
 
 import logging
 log = logging.getLogger()
  
-
 
 class ModelFileAPIHandler(BaseHandler):
 
     @web.authenticated
     async def get(self, modelName):
         checkUserOrRaise(self)
+        client = docker.from_env()
         user = self.current_user.name
         log.debug('jupyter-{0}'.format(user))
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
@@ -44,6 +43,7 @@ class ModelFileAPIHandler(BaseHandler):
     @web.authenticated
     async def post(self, modelName):
         checkUserOrRaise(self)
+        client = docker.from_env()   
         user = self.current_user.name
         log.debug('jupyter-{0}'.format(user))
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
