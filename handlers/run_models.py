@@ -11,7 +11,7 @@ client = docker.from_env()
 import tempfile
 import tarfile
 
-from handlers.db_util import DatabaseManager, _db, checkUserOrRaise
+from handlers.db_util import checkUserOrRaise
 
 import sys, os
 import logging
