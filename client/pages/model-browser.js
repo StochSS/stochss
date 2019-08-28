@@ -27,6 +27,17 @@ let treeData = [
         'type' : 'job'
       }
     ]
+  },
+]
+
+let ajaxData = [
+  {
+    "url" : "//www.jstree.com/fiddle/?lazy",
+    'type' : 'get',
+    'dataType' : 'json',
+    "data" : function (node) {
+      return { 'id' : node.id}
+    }
   }
 ]
 
@@ -35,7 +46,8 @@ let treeSettings = {
     'types',
     'wholerow',
     'changed',
-    'contextmenu'
+    'contextmenu',
+    'json_data'
   ],
   'core': {
     'animation': 0,
@@ -43,13 +55,22 @@ let treeSettings = {
       'stripes': true,
       'variant': 'large'
     },
-    'data': treeData
+    //'data': treeData,
+    'data' : ajaxData,
   },
   'types' : {
     'folder' : {
     },
-    'model' : {
-    }
+    'spatial' : {
+    },
+    'nonspatial' : {
+    },
+    'job' : {
+    },
+    'notebook' : {
+    },
+    'mesh' : {
+    },
   }
 
 }
@@ -59,6 +80,7 @@ let ModelBrowser = PageView.extend({
   template: template,
   render: function () {
     this.renderWithTemplate();
+    console.log('Setting up the jsTree');
     this.setupJstree()
   },
   setupJstree: function () {
