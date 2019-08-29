@@ -22,11 +22,12 @@ class ModelFileAPIHandler(BaseHandler):
     @web.authenticated
     async def get(self, modelPath):
         checkUserOrRaise(self)
+        log.debug(modelPath)
         client = docker.from_env()
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         try:
-            bits, stat = container.get_archive("/home/jovyan/{0}.nsmdl".format(modelPath))
+            bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
         except:
             filePath = "/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json"
             with open(filePath, 'r') as jsonFile:
@@ -45,14 +46,15 @@ class ModelFileAPIHandler(BaseHandler):
         client = docker.from_env()   
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        tarData = self.convertToTarData(self.request.body, modelName)
+        tarData = self.convertToTarData(self.request.body, modelPath)
         container.put_archive("/home/jovyan/", tarData)
-        bits, stat = container.get_archive("/home/jovyan/{0}.nsmdl".format(modelPath))
+        bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
         jsonData = self.getModelData(bits, modelPath)
         #self.write(jsonData)
 
 
     def getModelData(self, bits, modelPath):
+        modelName = modelPath.split('/').pop()
         f = tempfile.TemporaryFile()
         for data in bits:
             f.write(data)
@@ -61,7 +63,7 @@ class ModelFileAPIHandler(BaseHandler):
         d = tempfile.TemporaryDirectory()
         tarData.extractall(d.name)
         f.close()
-        filePath = "{0}/{1}.nsmdl".format(d.name, modelPath)
+        filePath = "{0}/{1}".format(d.name, modelName)
         with open(filePath, 'r') as jsonFile:
             data = jsonFile.read()
             log.debug(data)
@@ -72,7 +74,7 @@ class ModelFileAPIHandler(BaseHandler):
     def convertToTarData(self, data, modelPath):
         tarData = BytesIO()
         tar_file = tarfile.TarFile(fileobj=tarData, mode='w')
-        tar_info = tarfile.TarInfo(name='{0}.nsmdl'.format(modelPath))
+        tar_info = tarfile.TarInfo(name='{0}'.format(modelPath))
         tar_info.size = len(data)
         tar_info.mtime = time.time()
         tar_info.tobuf()
@@ -94,20 +96,23 @@ class ModelBrowserFileList(BaseHandler):
         fcode, _fslist = container.exec_run(cmd='ls {0}'.format(file_path))
         _children = _fslist.decode().rstrip().split("\n")
         children = []
-        for child in _children:
-            if self.checkExtension(child, ".job"):
-                children.append(self.buildChild(text=child, ftype="job", ppath=path))
-            elif self.checkExtension(child, ".nsmdl"):
-                children.append(self.buildChild(text=child, ftype="nonspatial", ppath=path))
-            elif self.checkExtension(child, ".smdl"):
-                children.append(self.buildChild(text=child, ftype="spatial", ppath=path))
-            elif self.checkExtension(child, ".mesh"):
-                children.append(self.buildChild(text=child, ftype="mesh", ppath=path))
-            elif self.checkExtension(child, ".ipynb"):
-                children.append(self.buildChild(text=child, ftype="notebook", ppath=path))
-            else:
-                children.append(self.buildChild(text=child, isDir=True, ppath=path))
-        self.write(json.dumps(children))
+        if not _children[0] == '':
+            for child in _children:
+                if self.checkExtension(child, ".job"):
+                    children.append(self.buildChild(text=child, ftype="job", ppath=path))
+                elif self.checkExtension(child, ".nsmdl"):
+                    children.append(self.buildChild(text=child, ftype="nonspatial", ppath=path))
+                elif self.checkExtension(child, ".smdl"):
+                    children.append(self.buildChild(text=child, ftype="spatial", ppath=path))
+                elif self.checkExtension(child, ".mesh"):
+                    children.append(self.buildChild(text=child, ftype="mesh", ppath=path))
+                elif self.checkExtension(child, ".ipynb"):
+                    children.append(self.buildChild(text=child, ftype="notebook", ppath=path))
+                else:
+                    children.append(self.buildChild(text=child, isDir=True, ppath=path))
+            self.write(json.dumps(children))
+        else:
+            self.write(json.dumps(children))
 
 
     def checkExtension(self, data, target):
