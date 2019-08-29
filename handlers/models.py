@@ -20,41 +20,39 @@ log = logging.getLogger()
 class ModelFileAPIHandler(BaseHandler):
 
     @web.authenticated
-    async def get(self, modelName):
+    async def get(self, modelPath):
         checkUserOrRaise(self)
         client = docker.from_env()
         user = self.current_user.name
-        log.debug('jupyter-{0}'.format(user))
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         try:
-            bits, stat = container.get_archive("/home/jovyan/work/{0}.json".format(modelName))
+            bits, stat = container.get_archive("/home/jovyan/{0}.nsmdl".format(modelPath))
         except:
             filePath = "/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json"
             with open(filePath, 'r') as jsonFile:
                 data = jsonFile.read()
                 jsonData = json.loads(str(data))
-                tarData = self.convertToTarData(data.encode('utf-8'), modelName)
-                container.put_archive("/home/jovyan/work/", tarData)
+                tarData = self.convertToTarData(data.encode('utf-8'), modelPath)
+                container.put_archive("/home/jovyan/", tarData)
                 self.write(jsonData)
         else:
-            jsonData = self.getModelData(bits, modelName)
+            jsonData = self.getModelData(bits, modelPath)
             self.write(jsonData)
 
     @web.authenticated
-    async def post(self, modelName):
+    async def post(self, modelPath):
         checkUserOrRaise(self)
         client = docker.from_env()   
         user = self.current_user.name
-        log.debug('jupyter-{0}'.format(user))
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         tarData = self.convertToTarData(self.request.body, modelName)
-        container.put_archive("/home/jovyan/work/", tarData)
-        bits, stat = container.get_archive("/home/jovyan/work/{0}.json".format(modelName))
-        jsonData = self.getModelData(bits, modelName)
+        container.put_archive("/home/jovyan/", tarData)
+        bits, stat = container.get_archive("/home/jovyan/{0}.nsmdl".format(modelPath))
+        jsonData = self.getModelData(bits, modelPath)
         #self.write(jsonData)
 
 
-    def getModelData(self, bits, modelName):
+    def getModelData(self, bits, modelPath):
         f = tempfile.TemporaryFile()
         for data in bits:
             f.write(data)
@@ -63,7 +61,7 @@ class ModelFileAPIHandler(BaseHandler):
         d = tempfile.TemporaryDirectory()
         tarData.extractall(d.name)
         f.close()
-        filePath = "{0}/{1}.json".format(d.name, modelName)
+        filePath = "{0}/{1}.nsmdl".format(d.name, modelPath)
         with open(filePath, 'r') as jsonFile:
             data = jsonFile.read()
             log.debug(data)
@@ -71,10 +69,10 @@ class ModelFileAPIHandler(BaseHandler):
             return jsonData
         
 
-    def convertToTarData(self, data, modelName):
+    def convertToTarData(self, data, modelPath):
         tarData = BytesIO()
         tar_file = tarfile.TarFile(fileobj=tarData, mode='w')
-        tar_info = tarfile.TarInfo(name='{0}.json'.format(modelName))
+        tar_info = tarfile.TarInfo(name='{0}.nsmdl'.format(modelPath))
         tar_info.size = len(data)
         tar_info.mtime = time.time()
         tar_info.tobuf()
@@ -82,3 +80,47 @@ class ModelFileAPIHandler(BaseHandler):
         tar_file.close()
         tarData.seek(0)
         return tarData    
+
+
+class ModelBrowserFileList(BaseHandler):
+
+    @web.authenticated
+    async def get(self, path):
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        file_path = '/home/jovyan{0}'.format(path)
+        fcode, _fslist = container.exec_run(cmd='ls {0}'.format(file_path))
+        _children = _fslist.decode().rstrip().split("\n")
+        children = []
+        for child in _children:
+            if self.checkExtension(child, ".job"):
+                children.append(self.buildChild(text=child, ftype="job", ppath=path))
+            elif self.checkExtension(child, ".nsmdl"):
+                children.append(self.buildChild(text=child, ftype="nonspatial", ppath=path))
+            elif self.checkExtension(child, ".smdl"):
+                children.append(self.buildChild(text=child, ftype="spatial", ppath=path))
+            elif self.checkExtension(child, ".mesh"):
+                children.append(self.buildChild(text=child, ftype="mesh", ppath=path))
+            elif self.checkExtension(child, ".ipynb"):
+                children.append(self.buildChild(text=child, ftype="notebook", ppath=path))
+            else:
+                children.append(self.buildChild(text=child, isDir=True, ppath=path))
+        self.write(json.dumps(children))
+
+
+    def checkExtension(self, data, target):
+        if data.endswith(target):
+            return True
+        else:
+            return False
+
+
+    def buildChild(self, text, ppath, ftype="folder", isDir=False):
+        if ppath == "/":
+            ppath = ""
+        child = {'text':text, 'type':ftype, '_path':'{0}/{1}'.format(ppath, text)}
+        child['children'] = isDir
+        return child
+

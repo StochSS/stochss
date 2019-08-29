@@ -30,24 +30,25 @@ let treeData = [
   },
 ]
 
-let ajaxData = [
-  {
-    "url" : "//www.jstree.com/fiddle/?lazy",
-    'type' : 'get',
-    'dataType' : 'json',
-    "data" : function (node) {
-      return { 'id' : node.id}
+let ajaxData = {
+  "url" : function (node) {
+    if(node.parent === null){
+      return "/stochss/models/browser-list/"
     }
+    return "/stochss/models/browser-list" + node.original._path
+  },
+  "dataType" : "json",
+  "data" : function (node) {
+    return { 'id' : node.id}
   }
-]
+}
 
 let treeSettings = {
   'plugins': [
     'types',
     'wholerow',
     'changed',
-    'contextmenu',
-    'json_data'
+    'contextmenu'
   ],
   'core': {
     'animation': 0,
@@ -55,8 +56,7 @@ let treeSettings = {
       'stripes': true,
       'variant': 'large'
     },
-    //'data': treeData,
-    'data' : ajaxData,
+    'data': ajaxData,
   },
   'types' : {
     'folder' : {
@@ -80,12 +80,10 @@ let ModelBrowser = PageView.extend({
   template: template,
   render: function () {
     this.renderWithTemplate();
-    console.log('Setting up the jsTree');
     this.setupJstree()
   },
   setupJstree: function () {
     $.jstree.defaults.contextmenu.items = (o, cb) => {
-      console.log(o.type);
       if (o.type ===  'folder') {
         return {
           "create_model" : {
@@ -120,7 +118,14 @@ let ModelBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Convert to Spatial",
             "action" : function (data) {
-              
+              // var endpoint = path.join("/models/edit", o.original._path);
+              // var self = this;
+              // xhr(
+              //   { uri: endpoint },
+              //   function (err, response, body) {
+              //     self.plotResults(JSON.parse(body));
+              //   },
+              // );
             }
           }
         }
