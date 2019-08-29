@@ -1,4 +1,4 @@
-var katex = require('katex');
+//var katex = require('katex');
 
 module.exports = {
   creation: {
@@ -24,7 +24,7 @@ module.exports = {
   merge: {
     reactants: [ { ratio: 1 }, { ratio: 1 } ],
     products: [ { ratio: 1 } ],
-    latex: katex.renderToString('A + B \rightarrow C'),
+    //latex: katex.renderToString('A + B \rightarrow C'),
     label: 'A + B -> C'
   },
   split: {

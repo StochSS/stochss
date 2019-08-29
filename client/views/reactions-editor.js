@@ -1,5 +1,5 @@
 var ViewSwitcher = require('ampersand-view-switcher');
-var katex = require('katex');
+//var katex = require('katex');
 var _ = require('underscore');
 var $ = require('jquery');
 //config
