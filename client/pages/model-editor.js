@@ -21,13 +21,17 @@ let ModelEditor = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    var name = document.URL.split('/').pop();
+    var directory = document.URL.split('/models/edit').pop();
+    var modelFile = directory.split('/').pop();
+    var name = modelFile.split('.')[0];
+    var isSpatial = modelFile.split('.').pop().startsWith('s');
     this.model = new Model({
       name: name,
+      directory: directory,
+      is_spatial: isSpatial
     });
     this.model.fetch({
       success: function (model, response, options) {
-        //model.is_spatial = true;
         self.renderSubviews();
         if(self.model.is_spatial)
           $(self.queryByHook('mesh-editor-container')).collapse();
