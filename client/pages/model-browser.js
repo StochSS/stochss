@@ -4,6 +4,7 @@ let xhr = require('xhr');
 let PageView = require('./base');
 let template = require('../templates/pages/modelBrowser.pug');
 let $ = require('jquery');
+//let bootstrap = require('bootstrap');
 
 import initPage from './page.js';
 
@@ -77,6 +78,33 @@ let treeSettings = {
 
 }
 
+// Using a bootstrap modal to input model names for now
+let renderCreateModalHtml = (isSpatial) => {
+  let modelTypeText = isSpatial ? 'Spatial' : 'Non-Spatial';
+  return `
+    <div id="newModalModel" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">New ${modelTypeText} Model</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <label for="modelNameInput">Name:</label>
+            <input type="text" id="modelNameInput" name="modelNameInput" size="30">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary save-model-btn">Save</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
 let ModelBrowser = PageView.extend({
   pageTitle: 'StochSS | Model Browser',
   template: template,
@@ -89,12 +117,36 @@ let ModelBrowser = PageView.extend({
       if (o.type ===  'folder') {
         return {
           "create_model" : {
+            "label" : "Create Model",
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Create Model",
-            "action" : function (data) {
-              
+            "submenu" : {
+              "spatial" : {
+                "label" : "Spatial",
+                "_disabled" : true,
+                "separator_before" : false,
+                "separator_after" : false
+              },
+              "nonspatial" : { 
+                "label" : "Non-Spatial",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  let modal = $(renderCreateModalHtml(false)).modal();
+                  let saveBtn = document.querySelector('#newModalModel .save-model-btn');
+                  let input = document.querySelector('#newModalModel #modelNameInput');
+                  let modelName;
+                  saveBtn.addEventListener('click', (e) => {
+                    if (Boolean(input.value)) {
+                      let modelName = input.value + '.nsmdl';
+                      let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName)
+                      window.location.href = modelPath;
+                    }
+                  })
+                }
+              } 
             }
           }
         }
