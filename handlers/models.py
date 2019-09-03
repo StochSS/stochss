@@ -26,6 +26,7 @@ class ModelFileAPIHandler(BaseHandler):
         client = docker.from_env()
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        #modelPath = self.getModelPath(_modelPath)
         try:
             bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
         except:
@@ -33,6 +34,7 @@ class ModelFileAPIHandler(BaseHandler):
             with open(filePath, 'r') as jsonFile:
                 data = jsonFile.read()
                 jsonData = json.loads(str(data))
+                #verPath = self.getVerPath(modelPath)
                 tarData = self.convertToTarData(data.encode('utf-8'), modelPath)
                 container.put_archive("/home/jovyan/", tarData)
                 self.write(jsonData)
@@ -51,6 +53,21 @@ class ModelFileAPIHandler(BaseHandler):
         bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
         jsonData = self.getModelData(bits, modelPath)
         #self.write(jsonData)
+
+
+    def getModelPath(self, _modelPath):
+        dir_el = _modelPath.split('/')
+        file = dir_el.pop()
+        dirPath = '/'.join(dir_el)
+        return "{0}/{1}/{1}".format(dirPath, file)
+
+    def getVerPath(self, modelPath):
+        dir_el = modelPath.split('/')
+        file_el = dir_el.pop().split('.')
+        dirPath = '/'.join(dir_el)
+        ver_tag = "_v1."
+        file = ver_tag.join(file_el)
+        return "{0}/.version/{1}".format(dirPath, file)
 
 
     def getModelData(self, bits, modelPath):

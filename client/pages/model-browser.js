@@ -172,7 +172,7 @@ let ModelBrowser = PageView.extend({
           "convert" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : false,
+            "_disabled" : true,
             "label" : "Convert to Non Spatial",
             "action" : function (data) {
 
@@ -201,7 +201,7 @@ let ModelBrowser = PageView.extend({
           "convert" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : false,
+            "_disabled" : true,
             "label" : "Convert to Spatial",
             "action" : function (data) {
               
@@ -214,7 +214,7 @@ let ModelBrowser = PageView.extend({
           "kill" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : false,
+            "_disabled" : true,
             "label" : "Kill",
             "action" : function (data) {
               
