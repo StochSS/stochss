@@ -112,28 +112,6 @@ class ModelBrowserFileList(BaseHandler):
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         file_path = '/home/jovyan{0}'.format(path)
-        for i in range(0,1):
-            fcode, _fslist = container.exec_run(cmd='python3 /home/ls.py {0} {1}'.format(file_path, path))
-            fslist = _fslist.decode()
-            if fslist.startswith("python3:"):
-                file = "/srv/jupyterhub/ls.py"
-                with open(file, 'r') as jsonFile:
-                    data = jsonFile.read()
-                    tarData = self.convertToTarData(data.encode('utf-8'), "ls.py")
-                    container.put_archive("/home/", tarData)
-            else:
-                self.write(fslist)
-                break
-
-
-    def convertToTarData(self, data, modelPath):
-        tarData = BytesIO()
-        tar_file = tarfile.TarFile(fileobj=tarData, mode='w')
-        tar_info = tarfile.TarInfo(name='{0}'.format(modelPath))
-        tar_info.size = len(data)
-        tar_info.mtime = time.time()
-        tar_info.tobuf()
-        tar_file.addfile(tar_info, BytesIO(data))
-        tar_file.close()
-        tarData.seek(0)
-        return tarData
+        fcode, _fslist = container.exec_run(cmd='python3 /home/ls.py {0} {1}'.format(file_path, path))
+        fslist = _fslist.decode()
+        self.write(fslist)
