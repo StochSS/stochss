@@ -11,7 +11,7 @@ def getFileSystemData(dirPath, ppath):
             children.append(buildChild(text=child, isDir=True, ppath=ppath))
         elif checkExtension(child, ".job"):
             children.append(buildChild(text=child, ftype="job", ppath=ppath))
-        elif checkExtension(child, ".nsmdl"):
+        elif checkExtension(child, ".mdl"):
             children.append(buildChild(text=child, ftype="nonspatial", ppath=ppath))
         elif checkExtension(child, ".smdl"):
             children.append(buildChild(text=child, ftype="spatial", ppath=ppath))

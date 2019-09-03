@@ -8,31 +8,6 @@ let $ = require('jquery');
 
 import initPage from './page.js';
 
-let treeData = [
-  {
-    'text' : 'My Models',
-    'type' : 'folder',
-    'state' : {
-      'opened' : true,
-      'selected' : false
-    },
-    'children' : [
-      {
-        'text' : 'MySpatialModel.smdl',
-        'type' : 'spatial',
-      },
-      {
-        'text' : 'MyNonspatialModel.nsmdl',
-        'type' : 'nonspatial'
-      },
-      {
-        'text' : 'MyJob.job',
-        'type' : 'job'
-      }
-    ]
-  },
-]
-
 let ajaxData = {
   "url" : function (node) {
     if(node.parent === null){
@@ -140,7 +115,7 @@ let ModelBrowser = PageView.extend({
                   let modelName;
                   saveBtn.addEventListener('click', (e) => {
                     if (Boolean(input.value)) {
-                      let modelName = input.value + '.nsmdl';
+                      let modelName = input.value + '.mdl';
                       let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName)
                       window.location.href = modelPath;
                     }

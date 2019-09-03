@@ -122,10 +122,6 @@ class ModelBrowserFileList(BaseHandler):
                     tarData = self.convertToTarData(data.encode('utf-8'), "ls.py")
                     container.put_archive("/home/", tarData)
             else:
-                # _children = fslist.split('---')
-                # children = []
-                # for child 
-                log.debug(fslist)
                 self.write(fslist)
                 break
 
