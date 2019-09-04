@@ -161,14 +161,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Edit Model",
             "action" : function (data) {
-              var endpoint = path.join("/hub/stochss/models/edit", o.original._path);
-              var self = this;
-              xhr(
-                { uri: endpoint },
-                function (err, response, body) {
-                  window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
-                },
-              );
+              window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
             }
           },
           "convert" : {
@@ -190,14 +183,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Edit Model",
             "action" : function (data) {
-              var endpoint = path.join("/hub/stochss/models/edit", o.original._path);
-              var self = this;
-              xhr(
-                { uri: endpoint },
-                function (err, response, body) {
-                  window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
-                },
-              );
+              window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
             }
           },
           "convert" : {
@@ -220,6 +206,27 @@ let FileBrowser = PageView.extend({
             "label" : "Kill",
             "action" : function (data) {
               
+            }
+          }
+        }
+      }
+      else if (o.type === 'notebook') {
+        return {
+          "kill" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Open Notebook",
+            "action" : function (data) {
+              var filePath = o.original._path
+              var endpoint = path.join('/stochss/api/user/');
+              xhr(
+                { uri: endpoint },
+                function (err, response, body) {
+                  var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
+                  window.location.href = notebookPath
+                },
+              );
             }
           }
         }
