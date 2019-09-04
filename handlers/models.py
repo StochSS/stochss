@@ -26,6 +26,7 @@ class ModelFileAPIHandler(BaseHandler):
         client = docker.from_env()
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        #modelPath = self.getModelPath(_modelPath)
         try:
             bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
         except:
@@ -33,8 +34,11 @@ class ModelFileAPIHandler(BaseHandler):
             with open(filePath, 'r') as jsonFile:
                 data = jsonFile.read()
                 jsonData = json.loads(str(data))
+                #verPath = self.getVerPath(modelPath)
+                #container.exec_run(cmd="mkdir -p {0}/.versions/".format(_modelPath))
                 tarData = self.convertToTarData(data.encode('utf-8'), modelPath)
                 container.put_archive("/home/jovyan/", tarData)
+                #container.exec_run(cmd="ln -s {0} {1}".format(verPath, modelPath))
                 self.write(jsonData)
         else:
             jsonData = self.getModelData(bits, modelPath)
@@ -51,6 +55,21 @@ class ModelFileAPIHandler(BaseHandler):
         bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
         jsonData = self.getModelData(bits, modelPath)
         #self.write(jsonData)
+
+
+    def getModelPath(self, _modelPath):
+        dir_el = _modelPath.split('/')
+        file = dir_el.pop()
+        dirPath = '/'.join(dir_el)
+        return "{0}/{1}/{1}".format(dirPath, file)
+
+    def getVerPath(self, modelPath):
+        dir_el = modelPath.split('/')
+        file_el = dir_el.pop().split('.')
+        dirPath = '/'.join(dir_el)
+        ver_tag = "_v1."
+        file = ver_tag.join(file_el)
+        return "{0}/.version/{1}".format(dirPath, file)
 
 
     def getModelData(self, bits, modelPath):
@@ -81,7 +100,7 @@ class ModelFileAPIHandler(BaseHandler):
         tar_file.addfile(tar_info, BytesIO(data))
         tar_file.close()
         tarData.seek(0)
-        return tarData    
+        return tarData
 
 
 class ModelBrowserFileList(BaseHandler):
@@ -93,39 +112,6 @@ class ModelBrowserFileList(BaseHandler):
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         file_path = '/home/jovyan{0}'.format(path)
-        fcode, _fslist = container.exec_run(cmd='ls {0}'.format(file_path))
-        _children = _fslist.decode().rstrip().split("\n")
-        children = []
-        if not _children[0] == '':
-            for child in _children:
-                if self.checkExtension(child, ".job"):
-                    children.append(self.buildChild(text=child, ftype="job", ppath=path))
-                elif self.checkExtension(child, ".nsmdl"):
-                    children.append(self.buildChild(text=child, ftype="nonspatial", ppath=path))
-                elif self.checkExtension(child, ".smdl"):
-                    children.append(self.buildChild(text=child, ftype="spatial", ppath=path))
-                elif self.checkExtension(child, ".mesh"):
-                    children.append(self.buildChild(text=child, ftype="mesh", ppath=path))
-                elif self.checkExtension(child, ".ipynb"):
-                    children.append(self.buildChild(text=child, ftype="notebook", ppath=path))
-                else:
-                    children.append(self.buildChild(text=child, isDir=True, ppath=path))
-            self.write(json.dumps(children))
-        else:
-            self.write(json.dumps(children))
-
-
-    def checkExtension(self, data, target):
-        if data.endswith(target):
-            return True
-        else:
-            return False
-
-
-    def buildChild(self, text, ppath, ftype="folder", isDir=False):
-        if ppath == "/":
-            ppath = ""
-        child = {'text':text, 'type':ftype, '_path':'{0}/{1}'.format(ppath, text)}
-        child['children'] = isDir
-        return child
-
+        fcode, _fslist = container.exec_run(cmd='python3 /home/ls.py {0} {1}'.format(file_path, path))
+        fslist = _fslist.decode()
+        self.write(fslist)
