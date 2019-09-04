@@ -4,8 +4,11 @@ section.page.col-md-10
 
   div#models-jstree
 
-  button.btn.btn-outline-primary(data-hook="new-model", type="button")
-      | New Model
-
   button.btn.btn-outline-primary(data-hook="refresh-jstree", type="button")
       | Refresh
+
+  button.btn.btn-outline-primary(data-hook="new-model", type="button", data-modeltype="Spatial")
+      | New Model
+
+  button.btn.btn-outline-primary(data-hook="new-spatial-model", type="button", data-modeltype="Non-Spatial", disabled)
+      | New Spatial Model
