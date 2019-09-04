@@ -38,16 +38,22 @@ let treeSettings = {
   },
   'types' : {
     'folder' : {
+      "icon": "jstree-icon jstree-folder"
     },
     'spatial' : {
+      "icon": "jstree-icon jstree-file"
     },
     'nonspatial' : {
+      "icon": "jstree-icon jstree-file"
     },
     'job' : {
+      "icon": "jstree-icon jstree-file"
     },
     'notebook' : {
+      "icon": "jstree-icon jstree-file"
     },
     'mesh' : {
+      "icon": "jstree-icon jstree-file"
     },
   }
 
