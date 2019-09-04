@@ -28,48 +28,8 @@
 	"meshSettings": {
 		"count": 2
 	},
-	"species": [{
-		"name": "s1",
-		"value": 0,
-		"mode": "dynamic",
-		"diffusionCoeff": 0,
-		"subdomains": ["subdomain 1: ", "subdomain 2: "]
-	}, {
-		"name": "s2",
-		"value": 0,
-		"mode": "dynamic",
-		"diffusionCoeff": 0,
-		"subdomains": ["subdomain 1: ", "subdomain 2: "]
-	}],
-	"parameters": [{
-		"name": "k1",
-		"value": 0
-	}, {
-		"name": "k2",
-		"value": 0
-	}],
-	"reactions": [{
-		"name": "r1",
-		"reactionType": "creation",
-		"annotation": "",
-		"massaction": false,
-		"propensity": "",
-		"subdomains": ["subdomain 1: ", "subdomain 2: "],
-		"rate": {
-			"name": "k1",
-			"value": 0
-		},
-		"reactants": [],
-		"products": [{
-			"ratio": 1,
-			"specie": {
-				"name": "s1",
-				"value": 0,
-				"mode": "dynamic",
-				"diffusionCoeff": 0,
-				"subdomains": ["subdomain 1: ", "subdomain 2: "]
-			}
-		}]
-	}],
+	"species": [],
+	"parameters": [],
+	"reactions": [],
 	"rateRules": []
 }

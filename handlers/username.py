@@ -15,8 +15,6 @@ class UsernameHandler(BaseHandler):
             if user is None:
                 raise web.HTTPError(403)
         self.set_header('Content-Type', 'application/json')
-        self.write({
-            'name': user.name
-        })
+        self.write(user.name)
 
 

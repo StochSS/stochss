@@ -33,25 +33,24 @@ c.JupyterHub.log_level = 'DEBUG'
 from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler
 
 # API handlers
-from handlers.models import ModelFileAPIHandler
+from handlers.models import ModelFileAPIHandler, ModelBrowserFileList
 from handlers.username import UsernameHandler
 from handlers.run_models import RunModelAPIHandler
 
 from dotenv import load_dotenv
-
-c.StochSS.db_url = os.getenv('STOCHSS_DB_CONNECT')
 
 # StochSS request handlers
 # Trailing slash is optional
 c.JupyterHub.extra_handlers = [
         # API handlers
         (r"/stochss/api/user\/?", UsernameHandler),
-        (r"/stochss/api/model-data/(\w+)\/?", ModelFileAPIHandler),
-        (r"/stochss/api/models/run/(\w+)\/?", RunModelAPIHandler),
+        (r"/stochss/api/model-data/(.+)\/?", ModelFileAPIHandler),
+        (r"/stochss/api/models/run/(.+)\/?", RunModelAPIHandler),
         # Pages
         (r"/stochss\/?", HomeHandler),
         (r"/stochss/models\/?$", ModelBrowserHandler),
-        (r"/stochss/models/edit\/?(\w+)?\/?", ModelEditorHandler)
+        (r"/stochss/models/browser-list(.+)\/?", ModelBrowserFileList),
+        (r"/stochss/models/edit\/?(.+)?\/?", ModelEditorHandler)
         #(r"/stochss.*", MainHandler)
 ]
 

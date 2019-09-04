@@ -1,20 +1,14 @@
-section.page
+section.page.col-md-10
 
-  h2 Model Browser
+  h2 File Browser
 
-  p Here are your models! 
+  div#models-jstree
 
-  .panel.panel-default
-    .panel-heading Model Browser
+  button.btn.btn-outline-primary(data-hook="refresh-jstree", type="button")
+      | Refresh
 
-    table.table
-      thead
-        tr
-          th(scope="col") Edit
-          th(scope="col") Name
-          th(scope="col") Version
-          th(scope="col") Public
+  button.btn.btn-outline-primary(data-hook="new-model", type="button", data-modeltype="Spatial")
+      | New Model
 
-      tbody(data-hook="model-list")
-
-  a.btn.btn-outline-primary(href="/stochss/models/edit") New
+  button.btn.btn-outline-primary(data-hook="new-spatial-model", type="button", data-modeltype="Non-Spatial", disabled)
+      | New Spatial Model

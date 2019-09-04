@@ -17,7 +17,7 @@ module.exports = Model.extend({
       String(app.config.routePrefix),
       String(app.config.apiUrl),
       "model-data",
-      String(this.name)
+      String(this.directory)
     );
   },
   props: {
@@ -35,7 +35,8 @@ module.exports = Model.extend({
   },
   session: {
     name: 'string',
-    selectedReaction: 'object'
+    selectedReaction: 'object',
+    directory: 'string',
   },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);

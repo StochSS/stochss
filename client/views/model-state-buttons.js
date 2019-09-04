@@ -43,7 +43,7 @@ module.exports = View.extend({
   },
   runModel: function () {
     var model = this.model
-    var endpoint = path.join(app.config.routePrefix, 'api/models/run/', model.name);
+    var endpoint = path.join('/stochss/api/models/run/', model.directory);
     var self = this;
     xhr(
       { uri: endpoint },

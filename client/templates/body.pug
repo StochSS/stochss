@@ -18,6 +18,8 @@ body
 
     div#navbar.collapse.navbar-collapse.justify-content-end
       ul.navbar-nav.float-right
+        li.nav-item: a.nav-link(href="/admin")
+          | Manage Users
         li.nav-item: a.nav-link(href="/account_settings")
           | Settings
         li.nav-item: a.nav-link(href="/logout")
@@ -27,30 +29,20 @@ body
     div.row
       div.col-md-2: div.card.card-body.bg-light
         ul.nav.flex-column
-          li.nav-item: i.icon-flask Modeling
+          li.nav-item: i.icon-flask Tools
 
           li.nav-item: a.nav-link(href="/stochss/models", title="Create/Import models")
-            | Model Browser
+            | File Browser
 
-          li.nav-item: i.icon-play Simulation
+          button.btn.btn-outline-tool(data-toggle="collapse", data-target="#collapse-description", data-hook="collapse")
+            | Model Editor
 
-          li.nav-item: a.nav-link(href="/simulate", title="Configure and submit simulations")
-            | Simulation Manager
+          div.collapse(id="collapse-description")
+            | In the File Browser: click the New button to make a new model or 
+            | right-click a folder to make a new model in the folder.  Right-click
+            | on model entries to bring up a menu for editing and conversion.
 
-          li.nav-item: a.nav-link(href="/status", title="Monitor the progress of a simulation")
-            | Job Status
-
-          li.nav-item: a.nav-link(href="/import", title="Manage backup archives")
-            | Backup
-
-          li.nav-item: i.icon-cog Admin
-
-          li.nav-item: a.nav-link(href="/admin") Manage Users
-          
-          li.nav-item: a.nav-link(href="/emailsetup")
-            | Configure Email
-          
-          li.nav-item: a.nav-link(href="/credentials", title="Configure Compute Resources")
-            | Compute Resources
+          li.nav-item: a.nav-link(href="/", title="File System")
+            | Jupyter Hub
 
       div.container-fluid.col-md-10(data-hook="page-container")

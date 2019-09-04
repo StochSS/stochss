@@ -11,7 +11,7 @@ client = docker.from_env()
 import tempfile
 import tarfile
 
-from handlers.db_util import DatabaseManager, _db, checkUserOrRaise
+from handlers.db_util import checkUserOrRaise
 
 import sys, os
 import logging
@@ -102,17 +102,17 @@ class ModelFactory():
 
 class RunModelAPIHandler(BaseHandler):
 
-    async def get(self, modelName):
+    async def get(self, modelPath):
         checkUserOrRaise(self)
         log = logging.getLogger()
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        bits, stat = container.get_archive("/home/jovyan/work/{0}.json".format(modelName))
-        _data = self.getModelData(bits, modelName)
+        bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
+        _data = self.getModelData(bits, modelPath)
         if not _data:
             raise web.HTTPError(404)
         data = _data
-        data['name'] = modelName
+        data['name'] = modelPath.split('/').pop().split('.')[0]
         self.set_header('Content-Type', 'application/json')
         _model = ModelFactory(data)
         _results = self.run_solver(_model.model, data['simulationSettings'])
@@ -140,7 +140,8 @@ class RunModelAPIHandler(BaseHandler):
         )
 
     
-    def getModelData(self, bits, modelName):
+    def getModelData(self, bits, modelPath):
+        modelName = modelPath.split('/').pop()
         f = tempfile.TemporaryFile()
         for data in bits:
             f.write(data)
@@ -149,7 +150,7 @@ class RunModelAPIHandler(BaseHandler):
         d = tempfile.TemporaryDirectory()
         tarData.extractall(d.name)
         f.close()
-        filePath = "{0}/{1}.json".format(d.name, modelName)
+        filePath = "{0}/{1}".format(d.name, modelName)
         with open(filePath, 'r') as jsonFile:
             data = jsonFile.read()
             jsonData = json.loads(str(data))
