@@ -34,7 +34,15 @@ body
           li.nav-item: a.nav-link(href="/stochss/models", title="Create/Import models")
             | File Browser
 
-          li.nav-item: a.nav-link(title="Edit models")
+          button.btn.btn-outline-tool(data-toggle="collapse", data-target="#collapse-description", data-hook="collapse")
             | Model Editor
+
+          div.collapse(id="collapse-description")
+            | In the File Browser: click the New button to make a new model or 
+            | right-click a folder to make a new model in the folder.  Right-click
+            | on model entries to bring up a menu for editing and conversion.
+
+          li.nav-item: a.nav-link(href="/", title="File System")
+            | Jupyter Hub
 
       div.container-fluid.col-md-10(data-hook="page-container")

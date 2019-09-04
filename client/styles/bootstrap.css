@@ -3018,6 +3018,21 @@ fieldset:disabled a.btn {
   margin-top: 0.5rem;
 }
 
+.btn-outline-tool {
+  color: #007bff;
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+
+.btn-outline-tool:hover {
+  color: #0056b3;
+}
+
+#collapse-description {
+  padding: 0rem 2rem;
+  font-size: 12px;
+}
+
 input[type="submit"].btn-block,
 input[type="reset"].btn-block,
 input[type="button"].btn-block {

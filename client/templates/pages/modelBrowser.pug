@@ -2,7 +2,10 @@ section.page.col-md-10
 
   h2 File Browser
 
-  p Right-click a folder to make a new model in the folder. Right-click on model entries to bring up a menu for editing and conversion.
-
   div#models-jstree
 
+  button.btn.btn-outline-primary(data-hook="new-model", type="button")
+      | New Model
+
+  button.btn.btn-outline-primary(data-hook="refresh-jstree", type="button")
+      | Refresh
