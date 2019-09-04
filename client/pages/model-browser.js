@@ -38,16 +38,22 @@ let treeSettings = {
   },
   'types' : {
     'folder' : {
+      "icon": "jstree-icon jstree-folder"
     },
     'spatial' : {
+      "icon": "jstree-icon jstree-file"
     },
     'nonspatial' : {
+      "icon": "jstree-icon jstree-file"
     },
     'job' : {
+      "icon": "jstree-icon jstree-file"
     },
     'notebook' : {
+      "icon": "jstree-icon jstree-file"
     },
     'mesh' : {
+      "icon": "jstree-icon jstree-file"
     },
   }
 
@@ -71,7 +77,7 @@ let renderCreateModalHtml = (isSpatial) => {
             <input type="text" id="modelNameInput" name="modelNameInput" size="30">
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary save-model-btn">Save</button>
+            <button type="button" class="btn btn-primary ok-model-btn">OK</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
         </div>
@@ -80,12 +86,39 @@ let renderCreateModalHtml = (isSpatial) => {
   `
 }
 
-let ModelBrowser = PageView.extend({
-  pageTitle: 'StochSS | Model Browser',
+let FileBrowser = PageView.extend({
+  pageTitle: 'StochSS | File Browser',
   template: template,
+  events: {
+    'click [data-hook=refresh-jstree]' : 'refreshJSTree',
+    'click [data-hook=new-model]' : 'newModel',
+    'click [data-hook=new-spatial-model]' : 'newSpatialModel',
+  },
   render: function () {
     this.renderWithTemplate();
     this.setupJstree()
+  },
+  refreshJSTree: function () {
+    window.location.reload()
+  },
+  newModel: function (e) {
+    let isSpatial = e.srcElement.dataset.modeltype === "spatial"
+    let modal = $(renderCreateModalHtml(isSpatial)).modal();
+    let okBtn = document.querySelector('#newModalModel .ok-model-btn');
+    let input = document.querySelector('#newModalModel #modelNameInput');
+    let modelName;
+    okBtn.addEventListener('click', (e) => {
+      if (Boolean(input.value)) {
+        var modelName = ""
+        if (isSpatial){
+          modelName = input.value + '.smdl';
+        }else{
+          modelName = input.value + '.mdl';  
+        }
+        let modelPath = path.join("/hub/stochss/models/edit/", modelName)
+        window.location.href = modelPath;
+      }
+    })
   },
   setupJstree: function () {
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -110,10 +143,10 @@ let ModelBrowser = PageView.extend({
                 "separator_after" : false,
                 "action" : function (data) {
                   let modal = $(renderCreateModalHtml(false)).modal();
-                  let saveBtn = document.querySelector('#newModalModel .save-model-btn');
+                  let okBtn = document.querySelector('#newModalModel .ok-model-btn');
                   let input = document.querySelector('#newModalModel #modelNameInput');
                   let modelName;
-                  saveBtn.addEventListener('click', (e) => {
+                  okBtn.addEventListener('click', (e) => {
                     if (Boolean(input.value)) {
                       let modelName = input.value + '.mdl';
                       let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName)
@@ -134,14 +167,7 @@ let ModelBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Edit Model",
             "action" : function (data) {
-              var endpoint = path.join("/hub/stochss/models/edit", o.original._path);
-              var self = this;
-              xhr(
-                { uri: endpoint },
-                function (err, response, body) {
-                  window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
-                },
-              );
+              window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
             }
           },
           "convert" : {
@@ -163,14 +189,7 @@ let ModelBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Edit Model",
             "action" : function (data) {
-              var endpoint = path.join("/hub/stochss/models/edit", o.original._path);
-              var self = this;
-              xhr(
-                { uri: endpoint },
-                function (err, response, body) {
-                  window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
-                },
-              );
+              window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
             }
           },
           "convert" : {
@@ -197,9 +216,30 @@ let ModelBrowser = PageView.extend({
           }
         }
       }
+      else if (o.type === 'notebook') {
+        return {
+          "kill" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Open Notebook",
+            "action" : function (data) {
+              var filePath = o.original._path
+              var endpoint = path.join('/stochss/api/user/');
+              xhr(
+                { uri: endpoint },
+                function (err, response, body) {
+                  var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
+                  window.location.href = notebookPath
+                },
+              );
+            }
+          }
+        }
+      }
     }
     $('#models-jstree').jstree(treeSettings)
   }
 });
 
-initPage(ModelBrowser);
+initPage(FileBrowser);
