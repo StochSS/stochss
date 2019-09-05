@@ -200,7 +200,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : true,
             "label" : "Start Job",
             "action" : function (data) {
-              
+
             }
           }
         }
@@ -313,7 +313,7 @@ let FileBrowser = PageView.extend({
       }
       else if (o.type === 'notebook') {
         return {
-          "kill" : {
+          "Open Notebook" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
@@ -328,6 +328,15 @@ let FileBrowser = PageView.extend({
                   window.location.href = notebookPath
                 },
               );
+            }
+          },
+          "Convert" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Convert to Model",
+            "action" : function (data) {
+              
             }
           }
         }
