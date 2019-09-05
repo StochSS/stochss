@@ -185,11 +185,20 @@ let FileBrowser = PageView.extend({
 
             }
           },
-          "convert" : {
+          "Convert to Non Spatial" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : true,
             "label" : "Convert to Non Spatial",
+            "action" : function (data) {
+
+            }
+          },
+          "Convert to Notebook" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Convert to Notebook",
             "action" : function (data) {
 
             }
@@ -328,15 +337,6 @@ let FileBrowser = PageView.extend({
                   window.location.href = notebookPath
                 },
               );
-            }
-          },
-          "Convert" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "Convert to Model",
-            "action" : function (data) {
-              
             }
           }
         }
