@@ -1,0 +1,84 @@
+{
+    "is_spatial": false,
+    "simulationSettings": {
+        "is_stochastic": true,
+        "endSim": 100,
+        "timeStep": 1,
+        "volume": 1,
+        "stochasticSettings": {
+            "realizations": 1,
+            "algorithm": "SSA",
+            "ssaSettings": {
+                "seed": -1
+            },
+            "tauSettings": {
+                "seed": -1,
+                "tauTol": 0.03
+            },
+            "hybridSettings": {
+                "seed": -1,
+                "tauTol": 0.03,
+                "switchTol": 0.03
+            }
+        },
+        "deterministicSettings": {
+            "relativeTol": 0.03,
+            "absoluteTol": 0.03
+        }
+    },
+    "meshSettings": {
+        "count": 2
+    },
+    "species": [
+        {
+            "name": "protein",
+            "value": 50,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        }
+    ],
+    "parameters": [
+        {
+            "name": "decayrate",
+            "value": 0.05
+        }
+    ],
+    "reactions": [
+        {
+            "name": "reaction",
+            "reactionType": "destruction",
+            "annotation": "",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "decayrate",
+                "value": 0.05
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "protein",
+                        "value": 50,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": []
+        }
+    ],
+    "rateRules": []
+}

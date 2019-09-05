@@ -1,0 +1,263 @@
+{
+    "is_spatial": false,
+    "simulationSettings": {
+        "is_stochastic": true,
+        "endSim": 100,
+        "timeStep": 1,
+        "volume": 300,
+        "stochasticSettings": {
+            "realizations": 1,
+            "algorithm": "SSA",
+            "ssaSettings": {
+                "seed": -1
+            },
+            "tauSettings": {
+                "seed": -1,
+                "tauTol": 0.03
+            },
+            "hybridSettings": {
+                "seed": -1,
+                "tauTol": 0.03,
+                "switchTol": 0.03
+            }
+        },
+        "deterministicSettings": {
+            "relativeTol": 0.03,
+            "absoluteTol": 0.03
+        }
+    },
+    "meshSettings": {
+        "count": 2
+    },
+    "species": [
+        {
+            "name": "X",
+            "value": 197,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "Y",
+            "value": 255,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        }
+    ],
+    "parameters": [
+        {
+            "name": "P",
+            "value": 2
+        },
+        {
+            "name": "kt",
+            "value": 10
+        },
+        {
+            "name": "kd",
+            "value": 1
+        },
+        {
+            "name": "a0",
+            "value": 0.005
+        },
+        {
+            "name": "a1",
+            "value": 0.05
+        },
+        {
+            "name": "a2",
+            "value": 0.1
+        },
+        {
+            "name": "kdx",
+            "value": 1
+        }
+    ],
+    "reactions": [
+        {
+            "name": "rxn1",
+            "reactionType": "custom-propensity",
+            "annotation": "",
+            "massaction": false,
+            "propensity": "vol*1/(1+(Y*Y/((vol*vol))))",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {},
+            "reactants": [],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "X",
+                        "value": 197,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "rxn2",
+            "reactionType": "destruction",
+            "annotation": "",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "kdx",
+                "value": 1
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "X",
+                        "value": 197,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": []
+        },
+        {
+            "name": "rxn3",
+            "reactionType": "split",
+            "annotation": "",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "kt",
+                "value": 10
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "X",
+                        "value": 197,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "X",
+                        "value": 197,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Y",
+                        "value": 255,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "rxn4",
+            "reactionType": "destruction",
+            "annotation": "",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "kd",
+                "value": 1
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Y",
+                        "value": 255,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": []
+        },
+        {
+            "name": "rxn5",
+            "reactionType": "custom-propensity",
+            "annotation": "",
+            "massaction": false,
+            "propensity": "Y/(a0 + a1*(Y/vol)+a2*Y*Y/(vol*vol))",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {},
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Y",
+                        "value": 255,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": []
+        }
+    ],
+    "rateRules": []
+}
