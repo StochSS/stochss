@@ -176,6 +176,15 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
             }
           },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Duplicate",
+            "action" : function (data) {
+
+            }
+          },
           "convert" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -183,6 +192,15 @@ let FileBrowser = PageView.extend({
             "label" : "Convert to Non Spatial",
             "action" : function (data) {
 
+            }
+          },
+          "Start Job" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Start Job",
+            "action" : function (data) {
+              
             }
           }
         }
@@ -231,7 +249,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : true,
             "label" : "Start Job",
             "action" : function (data) {
-              
+
             }
           }
         }
