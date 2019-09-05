@@ -55,6 +55,9 @@ let treeSettings = {
     'mesh' : {
       "icon": "jstree-icon jstree-file"
     },
+    'other' : {
+      "icon": "jstree-icon jstree-file"
+    },
   }
 
 }

@@ -8,3 +8,4 @@ RUN python3 -m pip install --no-cache \
 RUN mv work Models && mkdir -p Jobs/ && mkdir -p Notebooks/ && mkdir -p Meshes
 
 COPY ls.py /home/ls.py
+COPY run_model.py /home/run_model.py
