@@ -137,7 +137,10 @@ let FileBrowser = PageView.extend({
                 "label" : "Spatial",
                 "_disabled" : true,
                 "separator_before" : false,
-                "separator_after" : false
+                "separator_after" : false,
+                "action" : function (data) {
+
+                }
               },
               "nonspatial" : { 
                 "label" : "Non-Spatial",
@@ -173,11 +176,38 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
             }
           },
-          "convert" : {
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Duplicate",
+            "action" : function (data) {
+
+            }
+          },
+          "Convert to Non Spatial" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : true,
             "label" : "Convert to Non Spatial",
+            "action" : function (data) {
+
+            }
+          },
+          "Convert to Notebook" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Convert to Notebook",
+            "action" : function (data) {
+
+            }
+          },
+          "Start Job" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Start Job",
             "action" : function (data) {
 
             }
@@ -195,7 +225,16 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
             }
           },
-          "convert" : {
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Duplicate",
+            "action" : function (data) {
+
+            }
+          },
+          "Convert to Spatial" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : true,
@@ -203,25 +242,87 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
               
             }
+          },
+          "Convert to Notebook" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Convert to Notebook",
+            "action" : function (data) {
+
+            }
+          },
+          "Start Job" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Start Job",
+            "action" : function (data) {
+
+            }
           }
         }
       }
       else if (o.type === 'job') {
         return {
-          "kill" : {
+          "View Results" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : true,
-            "label" : "Kill",
+            "label" : "View Results",
             "action" : function (data) {
               
+            }
+          },
+          "Stop Job" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Stop Job",
+            "action" : function (data) {
+
+            }
+          },
+          "Start/Restart Job" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Start/Restart Job",
+            "action" : function (data) {
+
+            }
+          },
+          "Model" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "label" : "Model",
+            "_disabled" : false,
+            "submenu" : {
+              "Edit" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : true,
+                "label" : " Edit",
+                "action" : function (data) {
+
+                }
+              },
+              "Duplicate" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : true,
+                "label" : "Duplicate",
+                "action" : function (data) {
+
+                }
+              }
             }
           }
         }
       }
       else if (o.type === 'notebook') {
         return {
-          "kill" : {
+          "Open Notebook" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
