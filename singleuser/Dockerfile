@@ -5,7 +5,14 @@ RUN python3 -m pip install --no-cache \
   jupyterhub==$JUPYTERHUB_VERSION \
   gillespy2
 
-RUN mv work Models && mkdir -p Jobs/ && mkdir -p Notebooks/ && mkdir -p Meshes
+WORKDIR /home/jovyan
 
-COPY ls.py /home/ls.py
-COPY run_model.py /home/run_model.py
+RUN rmdir work && mkdir -p Models Notebooks Jobs Models/Examples
+
+COPY --chown=jovyan:users public_models/* Models/Examples/
+
+# Overwrite the default page template for the jupyter notebook
+COPY --chown=jovyan:users page.html /opt/conda/lib/python3.7/site-packages/notebook/templates/
+
+# Copy helper scripts
+COPY scripts/* /usr/local/bin/

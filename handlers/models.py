@@ -112,6 +112,6 @@ class ModelBrowserFileList(BaseHandler):
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         file_path = '/home/jovyan{0}'.format(path)
-        fcode, _fslist = container.exec_run(cmd='python3 /home/ls.py {0} {1}'.format(file_path, path))
+        fcode, _fslist = container.exec_run(cmd='ls.py {0} {1}'.format(file_path, path))
         fslist = _fslist.decode()
         self.write(fslist)
