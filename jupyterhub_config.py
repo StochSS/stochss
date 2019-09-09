@@ -56,6 +56,7 @@ c.JupyterHub.extra_handlers = [
 
 ## Paths to search for jinja templates, before using the default templates.
 c.JupyterHub.template_paths = [
+  "/srv/jupyterhub/jupyterhub_templates/",
   "/opt/conda/share/jupyterhub/static/stochss/"
 ]
 

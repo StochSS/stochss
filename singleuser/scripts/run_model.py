@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys, json
 
 from gillespy2 import Species, Parameter, Reaction, RateRule, Model
