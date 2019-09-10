@@ -38,13 +38,13 @@ class ModelFactory():
         self.model = _Model(name, self.species, self.parameters, self.reactions, self.rate_rules, endSim, timeStep, volume)
 
     def build_specie(self, args):
-        name = args['name']
+        name = args['name'].strip()
         value = args['value']
         mode = args['mode']
         return Species(name=name, initial_value=value, mode=mode)
 
     def build_parameter(self, args):
-        name = args['name']
+        name = args['name'].strip()
         value = args['value']
         return Parameter(name=name, expression=value)
 
