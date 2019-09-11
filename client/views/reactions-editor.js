@@ -1,5 +1,5 @@
 var ViewSwitcher = require('ampersand-view-switcher');
-//var katex = require('katex');
+var katex = require('katex');
 var _ = require('underscore');
 var $ = require('jquery');
 //config
@@ -71,6 +71,7 @@ module.exports = View.extend({
     else{
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
     }
+    this.renderReactionTypes();
   },
   update: function () {
   },
@@ -99,7 +100,7 @@ module.exports = View.extend({
     this.detailsViewSwitcher.set(reaction.detailsView);
   },
   handleAddReactionClick: function (e) {
-    var reactionType = e.target.dataset.hook;
+    var reactionType = e.delegateTarget.dataset.hook;
     var annotation = reactionType.startsWith("Custom") ? " " : this.getAnnotation(reactionType);
     var stoichArgs = this.getStoichArgsForReactionType(reactionType);
     var subdomains = this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
@@ -125,6 +126,19 @@ module.exports = View.extend({
     return value;
   },
   getAnnotation: function (type) {
-    return ReactionTypes[type].latex ? ReactionTypes[type].latex : ReactionTypes[type].label
+    return ReactionTypes[type].label
   },
+  renderReactionTypes: function () {
+    var options = {
+      displayMode: false,
+      output: 'mathml',
+    }
+    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation'), options);
+    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction'), options);
+    katex.render(ReactionTypes['change'].label, this.queryByHook('change'), options);
+    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization'), options);
+    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge'), options);
+    katex.render(ReactionTypes['split'].label, this.queryByHook('split'), options);
+    katex.render(ReactionTypes['four'].label, this.queryByHook('four'), options);
+  }
 });

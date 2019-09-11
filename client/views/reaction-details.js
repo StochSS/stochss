@@ -102,6 +102,7 @@ module.exports = View.extend({
       isReactants: false
     });
     this.registerRenderSubview(reactionTypeSelectView, 'select-reaction-type');
+    this.renderReactionTypes();
     (this.model.reactionType === 'custom-propensity') ? this.registerRenderSubview(propensityView, 'select-rate-parameter') :
      this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
     this.registerRenderSubview(subdomainsView, 'subdomains-editor');
@@ -110,6 +111,7 @@ module.exports = View.extend({
     this.totalRatio = this.getTotalReactantRatio();
     if(this.parent.collection.parent.is_spatial)
       $(this.queryByHook('subdomains-editor')).collapse();
+    this.listenTo(this.model, 'change', _.bind(this.buildAnnotation, this));
   },
   update: function () {
   },
@@ -181,5 +183,20 @@ module.exports = View.extend({
       this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
     else
       this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+  },
+  renderReactionTypes: function () {
+    var options = {
+      displayMode: true,
+      output: 'html'
+    }
+    katex.render(ReactionTypes['creation'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['0'], options);
+    katex.render(ReactionTypes['destruction'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['1'], options);
+    katex.render(ReactionTypes['change'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['2'], options);
+    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['3'], options);
+    katex.render(ReactionTypes['merge'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['4'], options);
+    katex.render(ReactionTypes['split'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['5'], options);
+    katex.render(ReactionTypes['four'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['6'], options);
+  },
+  buildAnnotation: function () {
   },
 });
