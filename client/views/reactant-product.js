@@ -21,7 +21,7 @@ module.exports = View.extend({
     this.species = args.species;
     this.reactionType = args.reactionType;
     this.isReactants = args.isReactants
-    this.unselectedText = 'Pick a specie';
+    this.unselectedText = 'Pick a species';
     this.fieldTitle = args.fieldTitle;
   },
   render: function () {
