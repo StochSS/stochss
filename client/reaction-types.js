@@ -1,14 +1,14 @@
-//var katex = require('katex');
-
 module.exports = {
   creation: {
     reactants: [],
     products: [ { ratio: 1 } ],
+    latex: '\\emptyset \\rightarrow A',
     label: 'O -> A'
   },
   destruction: {
     reactants: [ { ratio: 1 } ],
     products: [],
+    latex: 'A -> \\emptyset',
     label: 'A -> O'
   },
   change: {
@@ -24,7 +24,6 @@ module.exports = {
   merge: {
     reactants: [ { ratio: 1 }, { ratio: 1 } ],
     products: [ { ratio: 1 } ],
-    //latex: katex.renderToString('A + B \rightarrow C'),
     label: 'A + B -> C'
   },
   split: {

@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var $ = require('jquery');
+var katex = require('katex');
 //config
 var ReactionTypes = require('../reaction-types');
 //models
@@ -19,7 +20,16 @@ module.exports = View.extend({
     'model.propensity': {
       type: 'value',
       hook: 'select-rate-parameter'
-    }
+    },
+    'model.annotation' : {
+      type: function (el, value, previousValue) {
+        katex.render(this.model.annotation, this.queryByHook('summary-container'), {
+          displayMode: true,
+          output: 'mathml'
+        });
+      },
+      hook: 'summary-container',
+    },
   },
   events: {
     'change [data-hook=select-rate-parameter]' : 'selectRateParam',
@@ -130,6 +140,7 @@ module.exports = View.extend({
     var label = e.target.selectedOptions.item(0).value;
     var type = _.findKey(ReactionTypes, function (o) { return o.label === label; });
     this.model.reactionType = type;
+    this.model.annotation = label
     this.updateStoichSpeciesForReactionType(type);
     this.model.collection.trigger("change");
     this.render();

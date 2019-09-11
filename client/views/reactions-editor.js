@@ -100,7 +100,7 @@ module.exports = View.extend({
   },
   handleAddReactionClick: function (e) {
     var reactionType = e.target.dataset.hook;
-    var annotation = '';
+    var annotation = reactionType.startsWith("Custom") ? " " : this.getAnnotation(reactionType);
     var stoichArgs = this.getStoichArgsForReactionType(reactionType);
     var subdomains = this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
     var reaction = this.collection.addReaction(reactionType, annotation, stoichArgs, subdomains);
@@ -123,5 +123,8 @@ module.exports = View.extend({
   getDefaultSpecie: function () {
     var value = this.collection.parent.species.models[0];
     return value;
+  },
+  getAnnotation: function (type) {
+    return ReactionTypes[type].latex ? ReactionTypes[type].latex : ReactionTypes[type].label
   },
 });

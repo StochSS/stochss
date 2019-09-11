@@ -42,6 +42,8 @@ module.exports = View.extend({
     }
   },
   runModel: function () {
+    var el = this.parent.queryByHook('model-run-container')
+    console.log(el.text)
     var model = this.model
     var endpoint = path.join('/stochss/api/models/run/', model.directory);
     var self = this;
