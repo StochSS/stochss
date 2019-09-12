@@ -78,6 +78,10 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5rem;
 }
 
+h3.editor-header {
+  display: inline-block;
+}
+
 p {
   margin-top: 0;
   margin-bottom: 1rem;
@@ -623,6 +627,13 @@ pre code {
   width: 100%;
   padding-right: 15px;
   padding-left: 15px;
+}
+
+.reaction-summary {
+  padding-left: 22px;
+  padding-right: 5px;
+  padding-bottom: 10px;
+  display: inline-block;
 }
 
 .col {
