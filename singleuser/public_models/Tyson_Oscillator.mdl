@@ -85,7 +85,7 @@
         {
             "name": "rxn1",
             "reactionType": "custom-propensity",
-            "annotation": "",
+            "annotation": "\\emptyset \\rightarrow X",
             "massaction": false,
             "propensity": "vol*1/(1+(Y*Y/((vol*vol))))",
             "subdomains": [
@@ -113,7 +113,7 @@
         {
             "name": "rxn2",
             "reactionType": "destruction",
-            "annotation": "",
+            "annotation": "X \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -144,7 +144,7 @@
         {
             "name": "rxn3",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "X \\rightarrow X+Y",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -202,7 +202,7 @@
         {
             "name": "rxn4",
             "reactionType": "destruction",
-            "annotation": "",
+            "annotation": "Y \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -233,7 +233,7 @@
         {
             "name": "rxn5",
             "reactionType": "custom-propensity",
-            "annotation": "",
+            "annotation": "Y \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "Y/(a0 + a1*(Y/vol)+a2*Y*Y/(vol*vol))",
             "subdomains": [

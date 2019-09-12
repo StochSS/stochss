@@ -187,7 +187,7 @@
         {
             "name": "r1",
             "reactionType": "change",
-            "annotation": "",
+            "annotation": "Da\\_prime \\rightarrow Da",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -232,7 +232,7 @@
         {
             "name": "r2",
             "reactionType": "merge",
-            "annotation": "",
+            "annotation": "Da+A \\rightarrow Da\\_prime",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -290,7 +290,7 @@
         {
             "name": "r3",
             "reactionType": "change",
-            "annotation": "",
+            "annotation": "Dr\\_prime \\rightarrow Dr",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -335,7 +335,7 @@
         {
             "name": "r4",
             "reactionType": "merge",
-            "annotation": "",
+            "annotation": "Dr+A \\rightarrow Dr\\_prime",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -393,7 +393,7 @@
         {
             "name": "r5",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "Da\\_prime \\rightarrow Da\\_prime+Ma",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -451,7 +451,7 @@
         {
             "name": "r6",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "Da \\rightarrow Da+Ma",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -509,7 +509,7 @@
         {
             "name": "r7",
             "reactionType": "destruction",
-            "annotation": "",
+            "annotation": "Ma \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -540,7 +540,7 @@
         {
             "name": "r8",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "Ma \\rightarrow A+Ma",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -598,7 +598,7 @@
         {
             "name": "r9",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "Da\\_prime \\rightarrow Da\\_prime+A",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -656,7 +656,7 @@
         {
             "name": "r10",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "Dr\\_prime \\rightarrow Dr\\_prime+A",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -714,7 +714,7 @@
         {
             "name": "r11",
             "reactionType": "destruction",
-            "annotation": "",
+            "annotation": "A \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -745,7 +745,7 @@
         {
             "name": "r12",
             "reactionType": "merge",
-            "annotation": "",
+            "annotation": "A+R \\rightarrow C",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -803,7 +803,7 @@
         {
             "name": "r13",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "Dr\\_prime \\rightarrow Dr\\_prime+Mr",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -861,7 +861,7 @@
         {
             "name": "r14",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "Dr \\rightarrow Dr+Mr",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -919,7 +919,7 @@
         {
             "name": "r15",
             "reactionType": "destruction",
-            "annotation": "",
+            "annotation": "Mr \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -950,7 +950,7 @@
         {
             "name": "r16",
             "reactionType": "split",
-            "annotation": "",
+            "annotation": "Mr \\rightarrow Mr+R",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -1008,7 +1008,7 @@
         {
             "name": "r17",
             "reactionType": "destruction",
-            "annotation": "",
+            "annotation": "R \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
             "subdomains": [
@@ -1039,7 +1039,7 @@
         {
             "name": "r18",
             "reactionType": "change",
-            "annotation": "",
+            "annotation": "C \\rightarrow R",
             "massaction": false,
             "propensity": "",
             "subdomains": [
