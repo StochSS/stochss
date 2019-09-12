@@ -26,6 +26,7 @@ Reactions = Collection.extend({
     this.setDefaultSpecieForStoichSpecies(reaction.products);
     if(reactionType !== 'custom-propensity')
       reaction.rate = this.getDefaultRate();
+    reaction.buildAnnotation()
     this.add(reaction);
     return reaction;
   },

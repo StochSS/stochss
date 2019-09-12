@@ -76,6 +76,8 @@ module.exports = State.extend({
       }
     }
     
+    annotation = annotation.replace(/_/g, '\\_');
+
     this.annotation = annotation
   },
 });
