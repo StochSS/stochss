@@ -67,7 +67,7 @@ module.exports = View.extend({
     if(this.validateAddSpecie()) {
       this.collection.addStoichSpecie(specieName);
       this.toggleAddSpecieButton();
-      this.collection.parent.trigger('change')
+      this.collection.parent.trigger('change-reaction')
     }
   },
   toggleAddSpecieButton: function () {

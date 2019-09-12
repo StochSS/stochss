@@ -21,15 +21,15 @@ module.exports = View.extend({
       type: 'value',
       hook: 'select-rate-parameter'
     },
-    // 'model.annotation' : {
-    //   type: function (el, value, previousValue) {
-    //     katex.render(this.model.annotation, this.queryByHook('summary-container'), {
-    //       displayMode: true,
-    //       output: 'mathml'
-    //     });
-    //   },
-    //   hook: 'summary-container',
-    // },
+    'model.annotation' : {
+      type: function (el, value, previousValue) {
+        katex.render(this.model.annotation, this.queryByHook('summary-container'), {
+          displayMode: true,
+          output: 'mathml'
+        });
+      },
+      hook: 'summary-container',
+    },
   },
   events: {
     'change [data-hook=select-rate-parameter]' : 'selectRateParam',
@@ -144,6 +144,7 @@ module.exports = View.extend({
     this.model.annotation = label
     this.updateStoichSpeciesForReactionType(type);
     this.model.collection.trigger("change");
+    this.model.trigger('change-reaction')
     this.render();
   },
   updateStoichSpeciesForReactionType: function (type) {
