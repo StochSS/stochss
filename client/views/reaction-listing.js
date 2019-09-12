@@ -13,15 +13,15 @@ module.exports = View.extend({
       type: 'value',
       hook: 'input-name-container'
     },
-    'model.annotation' : {
-      type: function (el, value, previousValue) {
-        katex.render(this.model.annotation, this.queryByHook('summary'), {
-          displayMode: true,
-          output: 'mathml'
-        });
-      },
-      hook: 'summary',
-    },
+    // 'model.annotation' : {
+    //   type: function (el, value, previousValue) {
+    //     katex.render(this.model.annotation, this.queryByHook('summary'), {
+    //       displayMode: true,
+    //       output: 'mathml'
+    //     });
+    //   },
+    //   hook: 'summary',
+    // },
     'model.selected' : {
       type: function (el, value, previousValue) {
         el.checked = value;

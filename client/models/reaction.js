@@ -32,5 +32,9 @@ module.exports = State.extend({
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
+    this.on('change', this.buildAnnotation, this)
+  },
+  buildAnnotation: function () {
+    console.log('you changed the reaction')
   },
 });

@@ -10,13 +10,12 @@ Reactions = Collection.extend({
   initialize: function (attrs, options) {
     Collection.prototype.initialize.apply(this, arguments);
   },
-  addReaction: function (reactionType, annotation, stoichArgs, subdomains) {
+  addReaction: function (reactionType, stoichArgs, subdomains) {
     var name = this.getDefaultName();
     var massaction = reactionType === 'custom-massaction';
     var reaction = new Reaction({
       name: name,
       reactionType: reactionType,
-      annotation: annotation,
       massaction: massaction,
       propensity: '',
       subdomains: subdomains,

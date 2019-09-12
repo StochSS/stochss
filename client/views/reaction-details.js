@@ -21,15 +21,15 @@ module.exports = View.extend({
       type: 'value',
       hook: 'select-rate-parameter'
     },
-    'model.annotation' : {
-      type: function (el, value, previousValue) {
-        katex.render(this.model.annotation, this.queryByHook('summary-container'), {
-          displayMode: true,
-          output: 'mathml'
-        });
-      },
-      hook: 'summary-container',
-    },
+    // 'model.annotation' : {
+    //   type: function (el, value, previousValue) {
+    //     katex.render(this.model.annotation, this.queryByHook('summary-container'), {
+    //       displayMode: true,
+    //       output: 'mathml'
+    //     });
+    //   },
+    //   hook: 'summary-container',
+    // },
   },
   events: {
     'change [data-hook=select-rate-parameter]' : 'selectRateParam',
@@ -111,7 +111,6 @@ module.exports = View.extend({
     this.totalRatio = this.getTotalReactantRatio();
     if(this.parent.collection.parent.is_spatial)
       $(this.queryByHook('subdomains-editor')).collapse();
-    this.listenTo(this.model, 'change', _.bind(this.buildAnnotation, this));
   },
   update: function () {
   },
@@ -196,7 +195,5 @@ module.exports = View.extend({
     katex.render(ReactionTypes['merge'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['4'], options);
     katex.render(ReactionTypes['split'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['5'], options);
     katex.render(ReactionTypes['four'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['6'], options);
-  },
-  buildAnnotation: function () {
   },
 });

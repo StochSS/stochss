@@ -32,6 +32,7 @@ module.exports = SelectView.extend({
     this.model.specie = specie;
     this.value = specie;
     reactions.trigger("change");
+    this.model.collection.parent.trigger('change')
   },
   getReactionsCollection: function () {
     return this.model.collection.parent.collection;

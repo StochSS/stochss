@@ -101,10 +101,9 @@ module.exports = View.extend({
   },
   handleAddReactionClick: function (e) {
     var reactionType = e.delegateTarget.dataset.hook;
-    var annotation = reactionType.startsWith("Custom") ? " " : this.getAnnotation(reactionType);
     var stoichArgs = this.getStoichArgsForReactionType(reactionType);
     var subdomains = this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
-    var reaction = this.collection.addReaction(reactionType, annotation, stoichArgs, subdomains);
+    var reaction = this.collection.addReaction(reactionType, stoichArgs, subdomains);
     reaction.detailsView = this.newDetailsView(reaction);
     this.collection.trigger("select", reaction);
   },

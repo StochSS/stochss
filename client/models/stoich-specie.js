@@ -12,10 +12,5 @@ module.exports = State.extend({
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
-    this.on('change:specie', _.bind(this.triggerChange, this));
-  },
-  triggerChange: function () {
-    if(this.specie)
-      this.specie.collection.trigger('stoich-specie-change');
   },
 });
