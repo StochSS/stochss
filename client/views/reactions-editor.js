@@ -1,5 +1,5 @@
 var ViewSwitcher = require('ampersand-view-switcher');
-//var katex = require('katex');
+var katex = require('katex');
 var _ = require('underscore');
 var $ = require('jquery');
 //config
@@ -71,6 +71,7 @@ module.exports = View.extend({
     else{
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
     }
+    this.renderReactionTypes();
   },
   update: function () {
   },
@@ -99,11 +100,10 @@ module.exports = View.extend({
     this.detailsViewSwitcher.set(reaction.detailsView);
   },
   handleAddReactionClick: function (e) {
-    var reactionType = e.target.dataset.hook;
-    var annotation = '';
+    var reactionType = e.delegateTarget.dataset.hook;
     var stoichArgs = this.getStoichArgsForReactionType(reactionType);
     var subdomains = this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
-    var reaction = this.collection.addReaction(reactionType, annotation, stoichArgs, subdomains);
+    var reaction = this.collection.addReaction(reactionType, stoichArgs, subdomains);
     reaction.detailsView = this.newDetailsView(reaction);
     this.collection.trigger("select", reaction);
   },
@@ -124,4 +124,20 @@ module.exports = View.extend({
     var value = this.collection.parent.species.models[0];
     return value;
   },
+  getAnnotation: function (type) {
+    return ReactionTypes[type].label
+  },
+  renderReactionTypes: function () {
+    var options = {
+      displayMode: false,
+      output: 'mathml',
+    }
+    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation'), options);
+    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction'), options);
+    katex.render(ReactionTypes['change'].label, this.queryByHook('change'), options);
+    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization'), options);
+    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge'), options);
+    katex.render(ReactionTypes['split'].label, this.queryByHook('split'), options);
+    katex.render(ReactionTypes['four'].label, this.queryByHook('four'), options);
+  }
 });

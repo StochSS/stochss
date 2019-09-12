@@ -85,7 +85,7 @@
         {
             "name": "r1",
             "reactionType": "custom-massaction",
-            "annotation": "",
+            "annotation": "s1+s4 \\rightarrow 2s4",
             "massaction": true,
             "propensity": "",
             "subdomains": [
@@ -143,7 +143,7 @@
         {
             "name": "r2",
             "reactionType": "merge",
-            "annotation": "",
+            "annotation": "s2+s4 \\rightarrow s3",
             "massaction": false,
             "propensity": "",
             "subdomains": [

@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var $ = require('jquery');
+var katex = require('katex');
 //config
 var ReactionTypes = require('../reaction-types');
 //models
@@ -19,7 +20,16 @@ module.exports = View.extend({
     'model.propensity': {
       type: 'value',
       hook: 'select-rate-parameter'
-    }
+    },
+    'model.annotation' : {
+      type: function (el, value, previousValue) {
+        katex.render(this.model.annotation, this.queryByHook('summary-container'), {
+          displayMode: true,
+          output: 'mathml'
+        });
+      },
+      hook: 'summary-container',
+    },
   },
   events: {
     'change [data-hook=select-rate-parameter]' : 'selectRateParam',
@@ -92,6 +102,7 @@ module.exports = View.extend({
       isReactants: false
     });
     this.registerRenderSubview(reactionTypeSelectView, 'select-reaction-type');
+    this.renderReactionTypes();
     (this.model.reactionType === 'custom-propensity') ? this.registerRenderSubview(propensityView, 'select-rate-parameter') :
      this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
     this.registerRenderSubview(subdomainsView, 'subdomains-editor');
@@ -130,8 +141,10 @@ module.exports = View.extend({
     var label = e.target.selectedOptions.item(0).value;
     var type = _.findKey(ReactionTypes, function (o) { return o.label === label; });
     this.model.reactionType = type;
+    this.model.annotation = label
     this.updateStoichSpeciesForReactionType(type);
     this.model.collection.trigger("change");
+    this.model.trigger('change-reaction')
     this.render();
   },
   updateStoichSpeciesForReactionType: function (type) {
@@ -170,5 +183,18 @@ module.exports = View.extend({
       this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
     else
       this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+  },
+  renderReactionTypes: function () {
+    var options = {
+      displayMode: true,
+      output: 'html'
+    }
+    katex.render(ReactionTypes['creation'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['0'], options);
+    katex.render(ReactionTypes['destruction'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['1'], options);
+    katex.render(ReactionTypes['change'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['2'], options);
+    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['3'], options);
+    katex.render(ReactionTypes['merge'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['4'], options);
+    katex.render(ReactionTypes['split'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['5'], options);
+    katex.render(ReactionTypes['four'].label, this.queryByHook('select-reaction-type').firstChild.children[1]['6'], options);
   },
 });

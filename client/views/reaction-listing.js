@@ -1,4 +1,5 @@
 var tests = require('./tests');
+var katex = require('katex');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -12,9 +13,12 @@ module.exports = View.extend({
       type: 'value',
       hook: 'input-name-container'
     },
-    'model.summary' : {
+    'model.annotation' : {
       type: function (el, value, previousValue) {
-        el.innerHTML = value;
+        katex.render(this.model.annotation, this.queryByHook('summary'), {
+          displayMode: true,
+          output: 'mathml'
+        });
       },
       hook: 'summary',
     },

@@ -46,6 +46,7 @@ module.exports = SelectView.extend({
     this.model.specie = specie;
     this.value = specie;
     reactions.trigger("change");
+    this.model.collection.parent.trigger('change-reaction')
   },
   getSpeciesCollection: function () {
     return this.model.collection.parent.collection.parent.species;
@@ -58,6 +59,7 @@ module.exports = SelectView.extend({
       this.model.ratio++;
       this.toggleIncrementButton();
       this.parent.parent.toggleAddSpecieButton();
+      this.model.collection.parent.trigger('change-reaction')
     }
     this.toggleDecrementButton();
   },
@@ -85,6 +87,7 @@ module.exports = SelectView.extend({
   },
   handleDecrement: function () {
     this.model.ratio--;
+    this.model.collection.parent.trigger('change-reaction')
     this.toggleDecrementButton();
     if(this.validateRatioIncrement()){
       this.toggleIncrementButton();
@@ -92,6 +95,7 @@ module.exports = SelectView.extend({
     }
   },
   deleteSpecie: function () {
+    this.model.collection.parent.trigger('change-reaction')
     this.collection.removeStoichSpecie(this.model);
     this.parent.parent.toggleAddSpecieButton();
   },
