@@ -59,8 +59,9 @@ let treeSettings = {
       "icon": "jstree-icon jstree-file"
     },
   }
-
 }
+
+
 
 // Using a bootstrap modal to input model names for now
 let renderCreateModalHtml = (isSpatial) => {
@@ -343,6 +344,22 @@ let FileBrowser = PageView.extend({
       }
     }
     $('#models-jstree').jstree(treeSettings)
+    $('#models-jstree').on('dblclick.jstree', function(e, data) {
+      var file = e.target.text
+      var _path = $('#models-jstree').jstree().get_node(e.target).original._path;
+      if(file.endsWith('.mdl') || file.endsWith('.smdl')){
+        window.location.href = path.join("/hub/stochss/models/edit", _path);
+      }else if(file.endsWith('.ipynb')){
+        var endpoint = path.join('/stochss/api/user/');
+        xhr(
+          { uri: endpoint },
+          function (err, response, body) {
+            var notebookPath = path.join("/user/", body, "/notebooks/", _path)
+            window.open(notebookPath, '_blank')
+          },
+        );
+      }
+    });
   }
 });
 
