@@ -59,8 +59,9 @@ let treeSettings = {
       "icon": "jstree-icon jstree-file"
     },
   }
-
 }
+
+
 
 // Using a bootstrap modal to input model names for now
 let renderCreateModalHtml = (isSpatial) => {
@@ -167,15 +168,6 @@ let FileBrowser = PageView.extend({
       }
       else if (o.type === 'spatial') {
         return {
-          "edit" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Edit Model",
-            "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
-            }
-          },
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -216,15 +208,6 @@ let FileBrowser = PageView.extend({
       }
       else if (o.type === 'nonspatial') {
          return {
-          "edit" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Edit Model",
-            "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/models/edit", o.original._path)
-            }
-          },
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -320,29 +303,45 @@ let FileBrowser = PageView.extend({
           }
         }
       }
-      else if (o.type === 'notebook') {
-        return {
-          "Open Notebook" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Open Notebook",
-            "action" : function (data) {
-              var filePath = o.original._path
-              var endpoint = path.join('/stochss/api/user/');
-              xhr(
-                { uri: endpoint },
-                function (err, response, body) {
-                  var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
-                  window.location.href = notebookPath
-                },
-              );
-            }
-          }
-        }
-      }
+      // else if (o.type === 'notebook') {
+      //   return {
+      //     "Open Notebook" : {
+      //       "separator_before" : false,
+      //       "separator_after" : false,
+      //       "_disabled" : false,
+      //       "label" : "Open Notebook",
+      //       "action" : function (data) {
+      //         var filePath = o.original._path
+      //         var endpoint = path.join('/stochss/api/user/');
+      //         xhr(
+      //           { uri: endpoint },
+      //           function (err, response, body) {
+      //             var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
+      //             window.location.href = notebookPath
+      //           },
+      //         );
+      //       }
+      //     }
+      //   }
+      // }
     }
     $('#models-jstree').jstree(treeSettings)
+    $('#models-jstree').on('dblclick.jstree', function(e, data) {
+      var file = e.target.text
+      var _path = $('#models-jstree').jstree().get_node(e.target).original._path;
+      if(file.endsWith('.mdl') || file.endsWith('.smdl')){
+        window.location.href = path.join("/hub/stochss/models/edit", _path);
+      }else if(file.endsWith('.ipynb')){
+        var endpoint = path.join('/stochss/api/user/');
+        xhr(
+          { uri: endpoint },
+          function (err, response, body) {
+            var notebookPath = path.join("/user/", body, "/notebooks/", _path)
+            window.open(notebookPath, '_blank')
+          },
+        );
+      }
+    });
   }
 });
 
