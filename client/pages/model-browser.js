@@ -326,7 +326,16 @@ let FileBrowser = PageView.extend({
       // }
     }
     $('#models-jstree').jstree(treeSettings)
-    $('#models-jstree').on('dblclick.jstree', function(e, data) {
+    $('#models-jstree').on('click.jstree', function(e) {
+      var parent = e.target.parentElement
+      var _node = parent.children[parent.children.length - 1]
+      var node = $('#models-jstree').jstree().get_node(_node)
+      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node)){
+        $('#models-jstree').jstree().refresh_node(node)
+      }
+    });
+    $('#models-jstree').on('dblclick.jstree', function(e) {
+      console.log('double click', e.target)
       var file = e.target.text
       var node = $('#models-jstree').jstree().get_node(e.target)
       var _path = node.original._path;
