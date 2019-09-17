@@ -328,7 +328,8 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').jstree(treeSettings)
     $('#models-jstree').on('dblclick.jstree', function(e, data) {
       var file = e.target.text
-      var _path = $('#models-jstree').jstree().get_node(e.target).original._path;
+      var node = $('#models-jstree').jstree().get_node(e.target)
+      var _path = node.original._path;
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
         window.location.href = path.join("/hub/stochss/models/edit", _path);
       }else if(file.endsWith('.ipynb')){
@@ -340,6 +341,8 @@ let FileBrowser = PageView.extend({
             window.open(notebookPath, '_blank')
           },
         );
+      }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
+        $('#models-jstree').jstree().refresh_node(node)
       }
     });
   }
