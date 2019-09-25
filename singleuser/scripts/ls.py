@@ -8,9 +8,7 @@ def getFileSystemData(dirPath, ppath):
         return _children
     children = []
     for child in filter(lambda x: not x.startswith('.'), _children):
-        if os.path.isdir(os.path.join(dirPath, child)):
-            children.append(buildChild(text=child, ftype="folder", ppath=ppath))
-        elif checkExtension(child, ".job"):
+        if checkExtension(child, ".job"):
             children.append(buildChild(text=child, ftype="job", ppath=ppath))
         elif checkExtension(child, ".mdl"):
             children.append(buildChild(text=child, ftype="nonspatial", ppath=ppath))
@@ -20,6 +18,8 @@ def getFileSystemData(dirPath, ppath):
             children.append(buildChild(text=child, ftype="mesh", ppath=ppath))
         elif checkExtension(child, ".ipynb"):
             children.append(buildChild(text=child, ftype="notebook", ppath=ppath))
+        elif os.path.isdir(os.path.join(dirPath, child)):
+            children.append(buildChild(text=child, ftype="folder", ppath=ppath))
         else:
             children.append(buildChild(text=child, ftype="other", ppath=ppath))
     return children
