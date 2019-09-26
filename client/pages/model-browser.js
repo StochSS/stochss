@@ -103,7 +103,7 @@ let FileBrowser = PageView.extend({
     this.setupJstree()
   },
   refreshJSTree: function () {
-    window.location.reload()
+    $('#models-jstree').jstree().refresh()
   },
   newModel: function (e) {
     let isSpatial = e.srcElement.dataset.modeltype === "spatial"
@@ -128,6 +128,16 @@ let FileBrowser = PageView.extend({
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       if (o.type ===  'folder') {
         return {
+          "Refresh" : {
+            "label" : "Refresh",
+            "_disabled" : false,
+            "_class" : "font-weight-bold",
+            "separator_before" : false,
+            "separator_after" : true,
+            "action" : function (data) {
+              $('#models-jstree').jstree().refresh_node(o);
+            }
+          },
           "create_model" : {
             "label" : "Create Model",
             "separator_before" : false,
@@ -163,7 +173,7 @@ let FileBrowser = PageView.extend({
                 }
               } 
             }
-          }
+          },
         }
       }
       else if (o.type === 'spatial') {
