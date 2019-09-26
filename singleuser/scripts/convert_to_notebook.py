@@ -102,14 +102,12 @@ def generate_model_cell(json_data, name):
 
 
 def generate_run_cell(json_data):
-    print('generating run cell...')
     run_cell = ''
     if json_data['is_spatial']:
         # Spatial
         raise Exception('Spatial not yet implemented.')
     else:
         # Non-Spatial
-        print('non-spatial detected')
         run_cell += 'results = model.run('
         if json_data['simulationSettings']['is_stochastic']:
             settings = json_data['simulationSettings']['stochasticSettings']
@@ -153,7 +151,6 @@ def convertToNotebook(_model_path):
     dest_path = model_path.split(name)[0]
 
     # Collect .mdl Data
-    print(model_path)
     try:
         with open(model_path, 'r') as json_file:
             json_data = json.loads(json_file.read())
@@ -183,6 +180,8 @@ def convertToNotebook(_model_path):
     with open(dest_file, 'w') as f:
         nbformat.write(nb, f, version=4)
     f.close()
+
+    print('{0} successfully created'.format(dest_file))
 
     return dest_file
 
