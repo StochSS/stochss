@@ -13,7 +13,7 @@ def generate_imports_cell(json_data):
     else:
         # Non-Spatial
         imports += 'import gillespy2\n'
-        imports += 'from gillespy2.core import Model, Species, Reaction, Parameter\n'
+        imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule\n'
         if json_data['simulationSettings']['is_stochastic']:
             # Stochastic, use specified stochastic solver
             algorithm = json_data['simulationSettings']['stochasticSettings']['algorithm']
@@ -45,26 +45,47 @@ def create_species_strings(json_data, padding):
                 species['value'], 
                 species['mode'])
     return species_string
+
 def create_reaction_strings(json_data, padding):
     reaction_string = '\n' + padding + '# Reactions\n'
     for reaction in json_data['reactions']:
         reactants = {}
         products = {}
+        # Parse Reactants/Products
         for reactant in reaction['reactants']:
             reactants[reactant['specie']['name']] = reactant['ratio']
         for product in reaction['products']:
             products[product['specie']['name']] = product['ratio']
-        reaction_string += padding + 'self.add_reaction(Reaction(name="{0}", reactants={1}, products={2}, rate=self.listOfParameters["{3}"]))\n'.format(
-                reaction['name'],
-                str(reactants),
-                str(products),
-                reaction['rate']['name'])
+
+        #If custom propensity given
+        if reaction['reactionType'] == 'custom-propensity':
+            reaction_string += padding + 'self.add_reaction(Reaction(name="{0}", reactants={1}, products={2}, propensity_function="{3}"))\n'.format(
+                    reaction['name'],
+                    str(reactants),
+                    str(products),
+                    reaction['propensity'])
+        # If propensity rate given
+        else:
+            reaction_string += padding + 'self.add_reaction(Reaction(name="{0}", reactants={1}, products={2}, rate=self.listOfParameters["{3}"]))\n'.format(
+                    reaction['name'],
+                    str(reactants),
+                    str(products),
+                    reaction['rate']['name'])
 
     return reaction_string
+
 def create_rate_rule_strings(json_data, padding):
-    rate_rules_string = '\n' + padding + '# Rate Rules\n'
-    # TODO
-    return rate_rules_string
+    rr_string = ''
+    is_stochastic = json_data['simulationSettings']['is_stochastic']
+    algorithm = json_data['simulationSettings']['stochasticSettings']['algorithm']
+    if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
+        rr_string += '\n' + padding + '# Rate Rules\n'
+        for rr in json_data['rateRules']:
+            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", expression="{1}", species=self.listOfSpecies["{2}"]))\n'.format(
+                    rr['name'], 
+                    rr['rule'], 
+                    rr['specie']['name'])
+    return rr_string
 
 def generate_model_cell(json_data, name):
         
@@ -85,16 +106,13 @@ def generate_model_cell(json_data, name):
         model_cell += create_parameter_strings(json_data, padding)
         model_cell += create_species_strings(json_data, padding)
         model_cell += create_reaction_strings(json_data, padding)
-        #Create Rate Rules for Hybrid only
-        if json_data['simulationSettings']['is_stochastic']:
-            if json_data['simulationSettings']['stochasticSettings']['algorithm'] == 'Hybrid-Tau-Leaping':
-                model_cell += create_rate_rule_strings(json_data, padding)
+        model_cell += create_rate_rule_strings(json_data, padding)
 
         model_cell += '\n' + padding + '# Timespan\n'
         duration = json_data['simulationSettings']['endSim']
         model_cell += padding + 'self.timespan(np.linspace(0, {0}, {1}))'.format(
                 duration,
-                round(duration/json_data['simulationSettings']['timeStep']))
+                round(duration/json_data['simulationSettings']['timeStep'] + 1))
             
         # Create strings from Reactions
 
@@ -130,13 +148,31 @@ def generate_run_cell(json_data):
                     }
             if settings[settings_map[algorithm]]['seed'] == -1:
                 settings[settings_map[algorithm]]['seed'] = None
+
+            # GillesPy requires snake case, remap camelCase from json data to
+            # snake case for notebook
+            remap_keys = {'tauTol': 'tau_tol', 
+                    'switchTol': 'switch_tol'}
+            for key in list(settings[settings_map[algorithm]].keys()):
+                if key in remap_keys:
+                    settings[settings_map[algorithm]][remap_keys[key]] = settings[settings_map[algorithm]].pop(key) 
+            
+            #Parse settings for algorithm
             algorithm_settings =  [', {0}={1}'.format(key, val) for key, val in settings[settings_map[algorithm]].items()]
             for item in algorithm_settings:
                 run_cell += item
 
         else:
             # Deterministic
+            run_cell += 'solver=BasicODESolver'
             settings = json_data['simulationSettings']['deterministicSettings']
+            remap_keys = {'relativeTol': 'rtol', 
+                    'absoluteTol': 'atol'}
+            integrator_options = {}
+            for key in list(settings.keys()):
+                if key in remap_keys:
+                    integrator_options[remap_keys[key]] = settings.pop(key)
+            settings['integrator_options'] = str(integrator_options)
             algorithm_settings =  [', {0}={1}'.format(key, val) for key, val in settings.items()]
             for item in algorithm_settings:
                 run_cell += item
@@ -170,7 +206,7 @@ def convertToNotebook(_model_path):
     # Model Run Cell
     cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
     # Plotting Cell
-    cells.append(nbf.new_code_cell('results.plot()'))
+    cells.append(nbf.new_code_cell('results.plotplotly()'))
 
     # Append cells to worksheet
     nb = nbf.new_notebook(cells=cells)
