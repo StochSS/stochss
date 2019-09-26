@@ -235,6 +235,8 @@ let FileBrowser = PageView.extend({
 		var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
 		xhr({ uri: endpoint },
           function (err, response, body) {
+		  var node = $('#models-jstree').jstree().get_node(o.parent)
+    	$('#models-jstree').jstree().refresh_node(node);
 	  })
             }
           },
