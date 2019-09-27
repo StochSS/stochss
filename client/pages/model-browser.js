@@ -168,6 +168,16 @@ let FileBrowser = PageView.extend({
       }
       else if (o.type === 'spatial') {
         return {
+          "Edit" : {
+            "separator_before" : false,
+            "separator_after" : true,
+            "_disabled" : true,
+            "_class" : "font-weight-bolder",
+            "label" : "Edit",
+            "action" : function (data) {
+              window.location.href = path.join("/hub/stochss/models/edit", _path);
+            }
+          },
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -208,6 +218,16 @@ let FileBrowser = PageView.extend({
       }
       else if (o.type === 'nonspatial') {
          return {
+          "Edit" : {
+            "separator_before" : false,
+            "separator_after" : true,
+            "_disabled" : false,
+            "_class" : "font-weight-bolder",
+            "label" : "Edit",
+            "action" : function (data) {
+              window.location.href = path.join("/hub/stochss/models/edit", _path);
+            }
+          },
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -303,27 +323,37 @@ let FileBrowser = PageView.extend({
           }
         }
       }
-      // else if (o.type === 'notebook') {
-      //   return {
-      //     "Open Notebook" : {
-      //       "separator_before" : false,
-      //       "separator_after" : false,
-      //       "_disabled" : false,
-      //       "label" : "Open Notebook",
-      //       "action" : function (data) {
-      //         var filePath = o.original._path
-      //         var endpoint = path.join('/stochss/api/user/');
-      //         xhr(
-      //           { uri: endpoint },
-      //           function (err, response, body) {
-      //             var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
-      //             window.location.href = notebookPath
-      //           },
-      //         );
-      //       }
-      //     }
-      //   }
-      // }
+      else if (o.type === 'notebook') {
+        return {
+          "Open Notebook" : {
+            "separator_before" : false,
+            "separator_after" : true,
+            "_disabled" : false,
+            "_class" : "font-weight-bolder",
+            "label" : "Open Notebook",
+            "action" : function (data) {
+              var filePath = o.original._path
+              var endpoint = path.join('/stochss/api/user/');
+              xhr(
+                { uri: endpoint },
+                function (err, response, body) {
+                  var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
+                  window.location.href = notebookPath
+                },
+              );
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Duplicate",
+            "action" : function (data) {
+
+            }
+          }
+        }
+      }
     }
     $('#models-jstree').jstree(treeSettings)
     $('#models-jstree').on('dblclick.jstree', function(e, data) {
