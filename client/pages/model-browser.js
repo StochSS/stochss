@@ -185,7 +185,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/models/edit", _path);
+              window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
             }
           },
           "Duplicate" : {
@@ -235,7 +235,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/models/edit", _path);
+              window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
             }
           },
           "Duplicate" : {
