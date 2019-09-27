@@ -210,9 +210,12 @@ svg {
 }
 
 span {
+  font-size: 1rem;
+}
+
+span.custom {
   padding-right: 0.25rem;
   padding-left: 0.25rem;
-  font-size: 1rem;
 }
 
 table {
