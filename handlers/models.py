@@ -115,3 +115,18 @@ class ModelBrowserFileList(BaseHandler):
         fcode, _fslist = container.exec_run(cmd='ls.py {0} {1}'.format(file_path, path))
         fslist = _fslist.decode()
         self.write(fslist)
+
+
+class DuplicateModelHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, path):
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        file_path = '/home/jovyan{0}'.format(path)
+        new_path = '-copy.'.join(file_path.split('.'))
+        fcode, _results = container.exec_run(cmd='cp {0} {1}'.format(file_path, new_path))
+        results = _results.decode()
+        self.write(results)
