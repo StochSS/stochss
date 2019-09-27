@@ -130,7 +130,7 @@ module.exports = View.extend({
   renderReactionTypes: function () {
     var options = {
       displayMode: false,
-      output: 'mathml',
+      output: 'html',
     }
     katex.render(ReactionTypes['creation'].label, this.queryByHook('creation'), options);
     katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction'), options);

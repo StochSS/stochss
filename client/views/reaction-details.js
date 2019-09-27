@@ -25,7 +25,7 @@ module.exports = View.extend({
       type: function (el, value, previousValue) {
         katex.render(this.model.annotation, this.queryByHook('summary-container'), {
           displayMode: true,
-          output: 'mathml'
+          output: 'html'
         });
       },
       hook: 'summary-container',
