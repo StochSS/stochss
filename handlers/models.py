@@ -102,6 +102,18 @@ class ModelFileAPIHandler(BaseHandler):
         tarData.seek(0)
         return tarData
 
+class ModelToNotebookHandler(BaseHandler):
+    @web.authenticated
+    async def get(self, path):
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        file_path = '/home/jovyan{0}'.format(path)
+        fcode, _fslist = container.exec_run(cmd='convert_to_notebook.py {0}'.format(path))
+        fslist = _fslist.decode()
+        self.write(fslist)
+
 
 class ModelBrowserFileList(BaseHandler):
 

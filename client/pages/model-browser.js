@@ -259,10 +259,15 @@ let FileBrowser = PageView.extend({
           "Convert to Notebook" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Convert to Notebook",
             "action" : function (data) {
-
+		var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
+		xhr({ uri: endpoint },
+          function (err, response, body) {
+		  var node = $('#models-jstree').jstree().get_node(o.parent)
+    	$('#models-jstree').jstree().refresh_node(node);
+	  })
             }
           },
           "Start Job" : {
@@ -274,7 +279,7 @@ let FileBrowser = PageView.extend({
 
             }
           }
-        }
+	}
       }
       else if (o.type === 'job') {
         return {
