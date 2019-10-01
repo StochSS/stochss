@@ -5,7 +5,7 @@ from jupyterhub.handlers.base import BaseHandler
 
 from tornado import web
 import json
-import docker
+#import docker
 from io import BytesIO, StringIO
 import tarfile
 import tempfile
@@ -23,9 +23,9 @@ class ModelFileAPIHandler(BaseHandler):
     async def get(self, modelPath):
         checkUserOrRaise(self)
         log.debug(modelPath)
-        client = docker.from_env()
+        #client = docker.from_env()
         user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         #modelPath = self.getModelPath(_modelPath)
         try:
             bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
@@ -33,13 +33,13 @@ class ModelFileAPIHandler(BaseHandler):
             filePath = "/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json"
             with open(filePath, 'r') as jsonFile:
                 data = jsonFile.read()
-                jsonData = json.loads(str(data))
+                #jsonData = json.loads(str(data))
                 #verPath = self.getVerPath(modelPath)
                 #container.exec_run(cmd="mkdir -p {0}/.versions/".format(_modelPath))
-                tarData = self.convertToTarData(data.encode('utf-8'), modelPath)
-                container.put_archive("/home/jovyan/", tarData)
+                #tarData = self.convertToTarData(data.encode('utf-8'), modelPath)
+                #container.put_archive("/home/jovyan/", tarData)
                 #container.exec_run(cmd="ln -s {0} {1}".format(verPath, modelPath))
-                self.write(jsonData)
+                #self.write(jsonData)
         else:
             jsonData = self.getModelData(bits, modelPath)
             self.write(jsonData)
@@ -47,13 +47,13 @@ class ModelFileAPIHandler(BaseHandler):
     @web.authenticated
     async def post(self, modelPath):
         checkUserOrRaise(self)
-        client = docker.from_env()   
+        #client = docker.from_env()   
         user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        tarData = self.convertToTarData(self.request.body, modelPath)
-        container.put_archive("/home/jovyan/", tarData)
-        bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
-        jsonData = self.getModelData(bits, modelPath)
+        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        #tarData = self.convertToTarData(self.request.body, modelPath)
+        #container.put_archive("/home/jovyan/", tarData)
+        #bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
+        #jsonData = self.getModelData(bits, modelPath)
         #self.write(jsonData)
 
 
@@ -106,13 +106,13 @@ class ModelToNotebookHandler(BaseHandler):
     @web.authenticated
     async def get(self, path):
         checkUserOrRaise(self)
-        client = docker.from_env()
+        #client = docker.from_env()
         user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        file_path = '/home/jovyan{0}'.format(path)
-        fcode, _fslist = container.exec_run(cmd='convert_to_notebook.py {0}'.format(path))
-        fslist = _fslist.decode()
-        self.write(fslist)
+        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        #file_path = '/home/jovyan{0}'.format(path)
+        #fcode, _fslist = container.exec_run(cmd='convert_to_notebook.py {0}'.format(path))
+        #fslist = _fslist.decode()
+        #self.write(fslist)
 
 
 class ModelBrowserFileList(BaseHandler):
@@ -120,10 +120,10 @@ class ModelBrowserFileList(BaseHandler):
     @web.authenticated
     async def get(self, path):
         checkUserOrRaise(self)
-        client = docker.from_env()
+        #client = docker.from_env()
         user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        file_path = '/home/jovyan{0}'.format(path)
-        fcode, _fslist = container.exec_run(cmd='ls.py {0} {1}'.format(file_path, path))
-        fslist = _fslist.decode()
-        self.write(fslist)
+        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        #file_path = '/home/jovyan{0}'.format(path)
+        #fcode, _fslist = container.exec_run(cmd='ls.py {0} {1}'.format(file_path, path))
+        #fslist = _fslist.decode()
+        #self.write(fslist)

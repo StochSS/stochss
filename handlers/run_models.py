@@ -18,12 +18,12 @@ class RunModelAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         log = logging.getLogger()
         user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         self.set_header('Content-Type', 'application/json')
-        code, _results = container.exec_run(cmd="run_model.py {0}".format(modelPath))
-        results = _results.decode()
-        log.warn(str(results))
-        self.write(results)
+        #code, _results = container.exec_run(cmd="run_model.py {0}".format(modelPath))
+        #results = _results.decode()
+        #log.warn(str(results))
+        #self.write(results)
 
 
 class OpenModeNotebookAPIHandler(BaseHandler):
