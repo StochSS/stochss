@@ -3,7 +3,7 @@
 # requests without a referrer field
 from jupyterhub.handlers.base import BaseHandler
 
-import docker
+#import docker
 client = docker.from_env()
 
 from handlers.db_util import checkUserOrRaise
