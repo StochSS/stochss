@@ -232,12 +232,21 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Convert to Notebook",
             "action" : function (data) {
-		var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
-		xhr({ uri: endpoint },
-          function (err, response, body) {
-		  var node = $('#models-jstree').jstree().get_node(o.parent)
-    	$('#models-jstree').jstree().refresh_node(node);
-	  })
+              var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
+              xhr({ uri: endpoint },
+                    function (err, response, body) {
+                var node = $('#models-jstree').jstree().get_node(o.parent)
+                $('#models-jstree').jstree().refresh_node(node);
+                var _path = body.split(' ')[0].split('/home/jovyan/').pop()
+                var endpoint = path.join('/stochss/api/user/');
+                xhr(
+                  { uri: endpoint },
+                  function (err, response, body) {
+                    var notebookPath = path.join("/user/", body, "/notebooks/", _path)
+                    window.open(notebookPath, '_blank')
+                  },
+                );
+              });
             }
           },
           "Start Job" : {
@@ -249,7 +258,7 @@ let FileBrowser = PageView.extend({
 
             }
           }
-	}
+  }
       }
       else if (o.type === 'job') {
         return {
