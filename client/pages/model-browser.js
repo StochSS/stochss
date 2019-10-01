@@ -234,6 +234,15 @@ let FileBrowser = PageView.extend({
 
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
           "Convert to Notebook" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -403,7 +412,16 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
 
             }
-          }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
         }
       }
     }
