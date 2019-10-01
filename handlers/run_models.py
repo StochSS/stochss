@@ -4,7 +4,7 @@
 from jupyterhub.handlers.base import BaseHandler
 
 #import docker
-client = docker.from_env()
+#client = docker.from_env()
 
 from handlers.db_util import checkUserOrRaise
 
