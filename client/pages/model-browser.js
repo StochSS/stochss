@@ -29,6 +29,7 @@ let treeSettings = {
     'contextmenu'
   ],
   'core': {
+    'multiple' : false,
     'animation': 0,
     'check_callback' : true,
     'themes': {
@@ -125,7 +126,33 @@ let FileBrowser = PageView.extend({
       }
     })
   },
+  renameNode: function (o) {
+    var text = o.text;
+    var parent = $('#models-jstree').jstree().get_node(o.parent)
+    var extensionWarning = $(this.queryByHook('extension-warning'));
+    var nameWarning = $(this.queryByHook('rename-warning'));
+    extensionWarning.collapse('show')
+    $('#models-jstree').jstree().edit(o, null, function(node, status) {
+      if(text != node.text){
+        var endpoint = path.join("/stochss/api/file/rename", o.original._path, "<--change-->", node.text)
+        xhr({uri: endpoint}, function (err, response, body){
+          console.log(body)
+          if(!body.startsWith('Success!')) {
+            nameWarning.collapse('show');
+            node.text = text;
+            $('#models-jstree').jstree().refresh_node(parent)
+          }else{
+            node.original._path = body.split('<-_path->').pop()
+            $('#models-jstree').jstree().refresh_node(parent)
+          }
+        })
+      }
+      extensionWarning.collapse('hide');
+      nameWarning.collapse('hide');
+    });
+  },
   setupJstree: function () {
+    var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       if (o.type ===  'folder') {
         return {
@@ -263,8 +290,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Rename",
             "action" : function (data) {
-              //$('#models-jstree').jstree().edit(o)
-              console.log($('#models-jstree').jstree().get_node('Michaelis_Menten.mdl'))
+              self.renameNode(o);
             }
           },
           "Convert to Notebook" : {
