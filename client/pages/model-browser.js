@@ -30,6 +30,7 @@ let treeSettings = {
   ],
   'core': {
     'animation': 0,
+    'check_callback' : true,
     'themes': {
       'stripes': true,
       'variant': 'large'
@@ -254,6 +255,16 @@ let FileBrowser = PageView.extend({
             "label" : "Convert to Spatial",
             "action" : function (data) {
               
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              //$('#models-jstree').jstree().edit(o)
+              console.log($('#models-jstree').jstree().get_node('Michaelis_Menten.mdl'))
             }
           },
           "Convert to Notebook" : {
