@@ -126,10 +126,9 @@ class DuplicateModelHandler(BaseHandler):
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         file_path = '/home/jovyan{0}'.format(path)
-        new_path = '-copy.'.join(file_path.split('.'))
-        fcode, _results = container.exec_run(cmd='cp {0} {1}'.format(file_path, new_path))
+        fcode, _results = container.exec_run(cmd='duplicate.py {0}'.format(file_path))
         results = _results.decode()
-        if not len(results):
-            self.write("The model {0} has been successfully copied as {1}".format(file_path, new_path))
-        else:
-            self.write(results)
+        self.write(results)
+
+
+        

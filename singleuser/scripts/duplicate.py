@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+import os, sys
+from shutil import copyfile
+
+
+def duplicate(_path, dir_path):
+    i = 2
+    if len(_path.split('-copy.')) < 2 and len(_path.split('-copy(')) < 2:
+        split_str = "."
+        copy_path = '-copy.'.join(_path.split(split_str))
+        file_path = _path
+    elif len(_path.split('-copy.')) == 2:
+        split_str = "-copy."
+        copy_path = '-copy({0}).'.format(i).join(_path.split(split_str))
+        file_path = _path
+        i += 1
+    else:
+        split_str = "-copy."
+        _file_path = _path.split('-copy(')[0]
+        ext = _path.split('.').pop()
+        file_path = "{0}-copy.{1}".format(_file_path, ext)
+        copy_path = '-copy({0}).'.format(i).join(file_path.split(split_str))
+        i += 1
+    file = copy_path.split('/').pop()
+    exists = check_for_file(file, dir_path)
+    while exists:
+        copy_path = '-copy({0}).'.format(i).join(file_path.split(split_str))
+        file = copy_path.split('/').pop()
+        exists = check_for_file(file, dir_path)
+        i += 1
+    copyfile(_path, copy_path)
+    return "The model {0} has been successfully copied as {1}".format(_path, copy_path)
+
+
+def check_for_file(file, dir_path):
+    if file in os.listdir(path=dir_path):
+        return True
+    return False
+
+
+if __name__ == "__main__":
+    file_path = sys.argv[1]
+    _dir_path = file_path.split('/')
+    _dir_path.pop()
+    dir_path = '/'.join(_dir_path)
+    message = duplicate(file_path, dir_path)
+    print(message)
