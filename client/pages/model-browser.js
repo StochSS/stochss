@@ -206,7 +206,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : true,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Convert to Non Spatial" : {
@@ -371,7 +371,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : true,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           }
         }
