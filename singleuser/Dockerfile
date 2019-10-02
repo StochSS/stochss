@@ -3,7 +3,11 @@ FROM $DOCKER_NOTEBOOK_IMAGE
 ARG JUPYTERHUB_VERSION
 RUN python3 -m pip install --no-cache \
   jupyterhub==$JUPYTERHUB_VERSION \
-  gillespy2
+  gillespy2 \
+  vtk \
+  https://github.com/spatialpy/SpatialPy/tarball/develop \
+  pygmsh==5.0.2 \
+  meshio==2.3.10 
 
 WORKDIR /home/jovyan
 

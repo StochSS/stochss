@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -y update && \
     apt-get -y upgrade && \
     apt-get -y install wget git bzip2 && \
+    apt-get -y install libvtk6-dev vtk6 python-vtk6 && \
     apt-get purge && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -20,13 +21,17 @@ RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.s
 RUN /opt/conda/bin/pip install --upgrade \
       pip \
       gillespy2 \
+      vtk \
+      https://github.com/spatialpy/SpatialPy/tarball/develop \
+      pygmsh==5.0.2 \
+      meshio==2.3.1 \
       oauthenticator \
       dockerspawner \
       notebook \
       python-dotenv \
       # for cli tools
       click && \
-    rm /tmp/miniconda.sh
+      rm /tmp/miniconda.sh
 
 WORKDIR /srv/jupyterhub
 
