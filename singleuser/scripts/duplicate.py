@@ -20,7 +20,12 @@ def duplicate(_path, dir_path):
         _file_path = _path.split('-copy(')[0]
         ext = _path.split('.').pop()
         file_path = "{0}-copy.{1}".format(_file_path, ext)
-        copy_path = '-copy({0}).'.format(i).join(file_path.split(split_str))
+        _file = file_path.split('/').pop()
+        _exists = check_for_file(_file, dir_path)
+        if not _exists:
+            copy_path = file_path
+        else:
+            copy_path = '-copy({0}).'.format(i).join(file_path.split(split_str))
         i += 1
     file = copy_path.split('/').pop()
     exists = check_for_file(file, dir_path)
