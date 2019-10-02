@@ -105,6 +105,17 @@ let FileBrowser = PageView.extend({
   refreshJSTree: function () {
     $('#models-jstree').jstree().refresh()
   },
+  duplicateFile: function(o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/duplicate", o.original._path);
+    xhr({uri: endpoint}, 
+      function (err, response, body) {
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        $('#models-jstree').jstree().refresh_node(node);
+      }
+    );
+  },
   newModel: function (e) {
     let isSpatial = e.srcElement.dataset.modeltype === "spatial"
     let modal = $(renderCreateModalHtml(isSpatial)).modal();
@@ -125,6 +136,7 @@ let FileBrowser = PageView.extend({
     })
   },
   setupJstree: function () {
+    var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       if (o.type ===  'folder') {
         return {
@@ -244,13 +256,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              var endpoint = path.join("/stochss/api/model/duplicate", o.original._path)
-              xhr({uri: endpoint}, 
-                function (err, response, body) {
-                  var node = $('#models-jstree').jstree().get_node(o.parent);
-                  $('#models-jstree').jstree().refresh_node(node);
-                }
-              );
+              self.duplicateFile(o)
             }
           },
           "Convert to Spatial" : {
