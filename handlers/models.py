@@ -127,3 +127,20 @@ class ModelBrowserFileList(BaseHandler):
         fcode, _fslist = container.exec_run(cmd='ls.py {0} {1}'.format(file_path, path))
         fslist = _fslist.decode()
         self.write(fslist)
+
+
+class DeleteFileAPIHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, path):
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        file_path = '/home/jovyan{0}'.format(path)
+        fcode, _message = container.exec_run(cmd='rm -R "{0}"'.format(file_path))
+        message = _message.decode()
+        if len(message):
+            self.write(message)
+        else:
+            self.write("{0} was successfully deleted.".format(path.split('/').pop()))
