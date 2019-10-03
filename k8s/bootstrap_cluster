@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# This script bootstraps a local kubernetes cluster using minikube
+#
+# Exit codes:
+#   158: Failed to create minikube cluster
+
+# Bootstrap a local kubernetes cluster with 5GB of memory and 2 cpus.
+minikube --memory 5000 --cpus 2 --kubernetes-version v1.11.1 start
+
+# Setup a ServiceAccount to be used by tiller.
+echo
+echo "Setting up ServiceAccount for tiller..."
+kubectl --namespace kube-system create serviceaccount tiller
+
+# Make the tiller sa an admin of the cluster
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+
+# Initialize helm and tiller
+echo
+echo "Initializing helm..."
+helm init --service-account tiller --wait --history-max 200
+
+eval $(minikube docker-env)
+
+

@@ -1,18 +1,36 @@
 
 # Run BinderHub locally with minikube
 
-### Requirements
-
-1. Linux machine (macOS might work too, but has not been tested).
-2. Two available cpus to devote to the minikube VM
-3. At least 5GB of available RAM to dedicate to the minikube cluster.
-4. [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
-5. [Docker Hub](https://hub.docker.com) account is setup
-
 ### Setup
 
-1. `./install_minikube` to install [minikube](https://github.com/kubernetes/minikube) and [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/)
-2. `./bootstrap_cluster` to bootstrap a new minikube cluster and install [Helm](https://helm.sh/)
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows and macOS, or Docker Engine for Linux.
+
+Install [minikube](https://github.com/kubernetes/minikube) 
+
+Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.1. This is the version of kubernetes used by the Jetstream OpenStack Magnum API.
+
+Install [helm](https://github.com/helm/helm).
+
+Start up the cluster
+
+```minikube --kubernetes-version v1.11.1 start```
+
+Setup a service account for helm
+
+```kubectl --namespace kube-system create serviceaccount tiller```
+
+Setup service account as a cluster admin
+
+```kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller```
+
+Initialize helm
+
+```helm init --service-account tiller --wait --history-max 200```
+
+Setup minikube to use docker
+
+eval $(minikube docker-env)
+
 3. `./setup_binderhub` to install BinderHub on the minikube cluster.
 4. Run `minikube tunnel` in a separate terminal (see [here](https://github.com/kubernetes/minikube/blob/master/docs/tunnel.md)).
 5. Store the IP address of the JupyterHub proxy:
