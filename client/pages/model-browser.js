@@ -105,6 +105,21 @@ let FileBrowser = PageView.extend({
   refreshJSTree: function () {
     $('#models-jstree').jstree().refresh()
   },
+  deleteFile: function (o) {
+    var fileType = o.type
+    if(fileType === "nonspatial")
+      fileType = "model";
+    else if(fileType === "spatial")
+      fileType = "spatial model"
+    var answer = confirm("Click 'ok' to confirm that you wish to delete this " + fileType)
+    if(answer){
+      var endpoint = path.join("/stochss/api/file/delete", o.original._path)
+      xhr({uri: endpoint}, function(err, response, body) {
+        var node = $('#models-jstree').jstree().get_node(o.parent);
+        $('#models-jstree').jstree().refresh_node(node);
+      })
+    }
+  },
   newModel: function (e) {
     let isSpatial = e.srcElement.dataset.modeltype === "spatial"
     let modal = $(renderCreateModalHtml(isSpatial)).modal();
@@ -125,6 +140,7 @@ let FileBrowser = PageView.extend({
     })
   },
   setupJstree: function () {
+    var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       if (o.type ===  'folder') {
         return {
@@ -172,6 +188,15 @@ let FileBrowser = PageView.extend({
                   })
                 }
               } 
+            }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
             }
           },
         }
@@ -223,7 +248,16 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
 
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
       else if (o.type === 'nonspatial') {
@@ -278,7 +312,16 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
 
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
 	}
       }
       else if (o.type === 'job') {
@@ -335,7 +378,16 @@ let FileBrowser = PageView.extend({
                 }
               }
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
       else if (o.type === 'notebook') {
@@ -366,7 +418,16 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
 
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
     }
