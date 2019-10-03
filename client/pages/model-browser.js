@@ -111,8 +111,12 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join("/stochss/api/model/duplicate", o.original._path);
     xhr({uri: endpoint}, 
       function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        $('#models-jstree').jstree().refresh_node(node);
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
       }
     );
   },
@@ -203,7 +207,7 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
               self.duplicateFile(o)
@@ -368,7 +372,7 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
               self.duplicateFile(o)

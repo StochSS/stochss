@@ -126,7 +126,7 @@ class DuplicateModelHandler(BaseHandler):
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         file_path = '/home/jovyan{0}'.format(path)
-        fcode, _results = container.exec_run(cmd='duplicate.py {0}'.format(file_path))
+        fcode, _results = container.exec_run(cmd='duplicate.py "{0}"'.format(file_path))
         results = _results.decode()
         self.write(results)
 
