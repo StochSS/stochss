@@ -142,6 +142,6 @@ class MoveRenameAPIHandler(BaseHandler):
         dir_path.pop()
         dir_path.append(new_name)
         new_path = '/'.join(dir_path)
-        fcode, _message = container.exec_run(cmd='rename.py {0} {1}'.format(old_path, new_path))
+        fcode, _message = container.exec_run(cmd='rename.py "{0}" "{1}"'.format(old_path, new_path))
         message = _message.decode()
         self.write("{0}<-_path->{1}".format(message, new_path))
