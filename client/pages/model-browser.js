@@ -234,15 +234,6 @@ let FileBrowser = PageView.extend({
 
             }
           },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
           "Convert to Notebook" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -250,6 +241,15 @@ let FileBrowser = PageView.extend({
             "label" : "Convert to Notebook",
             "action" : function (data) {
 
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Start Job" : {
@@ -293,15 +293,6 @@ let FileBrowser = PageView.extend({
               
             }
           },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
           "Convert to Notebook" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -314,6 +305,15 @@ let FileBrowser = PageView.extend({
 		  var node = $('#models-jstree').jstree().get_node(o.parent)
     	$('#models-jstree').jstree().refresh_node(node);
 	  })
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Start Job" : {
@@ -336,6 +336,15 @@ let FileBrowser = PageView.extend({
             "label" : "View Results",
             "action" : function (data) {
               
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Stop Job" : {
