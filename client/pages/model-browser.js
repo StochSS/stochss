@@ -18,7 +18,7 @@ let ajaxData = {
   "dataType" : "json",
   "data" : function (node) {
     return { 'id' : node.id}
-  }
+  },
 }
 
 let treeSettings = {
@@ -26,10 +26,38 @@ let treeSettings = {
     'types',
     'wholerow',
     'changed',
-    'contextmenu'
+    'contextmenu',
+    'dnd',
   ],
   'core': {
     'animation': 0,
+    'check_callback': function (op, node, par, pos, more) {
+      if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type != 'folder'){
+        return false
+      }
+      if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
+        if(!more.ref.state.loaded){
+          return false
+        }
+        var exists = false
+        var BreakException = {}
+        try{
+          more.ref.children.forEach(function (child) {
+            var child_node = $('#models-jstree').jstree().get_node(child)
+            exists = child_node.text === node.text
+            if(exists){
+              throw BreakException;
+            }
+          })
+        }catch{
+          return false;
+        }
+      }
+      if(op === 'move_node' && pos != 0){
+        return false
+      }
+      return true
+    },
     'themes': {
       'stripes': true,
       'variant': 'large'
@@ -58,7 +86,7 @@ let treeSettings = {
     'other' : {
       "icon": "jstree-icon jstree-file"
     },
-  }
+  },  
 }
 
 
@@ -370,6 +398,14 @@ let FileBrowser = PageView.extend({
         }
       }
     }
+    $(document).on('dnd_stop.vakata', function (data, element, helper, event) {
+      var dst = $('#models-jstree').jstree().get_node(element.event.target)
+      var src = $('#models-jstree').jstree().get_node(element.element)
+      //console.log(src, dst);
+    });
+    $(document).on('dnd_start.vakata', function (data, element, helper, event) {
+      $('#models-jstree').jstree().load_all()
+    });
     $('#models-jstree').jstree(treeSettings)
     $('#models-jstree').on('click.jstree', function(e) {
       var parent = e.target.parentElement
