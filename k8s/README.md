@@ -1,65 +1,85 @@
 
-# Run BinderHub locally with minikube
+This is a work in progress!
 
-### Setup
+# Local development with minikube
 
-Install [Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows and macOS, or Docker Engine for Linux.
+Install [VirtualBox](https://www.virtualbox.org/)
+
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows or macOS, or Docker Engine for Linux.
 
 Install [minikube](https://github.com/kubernetes/minikube) 
 
-Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.1. This is the version of kubernetes used by the Jetstream OpenStack Magnum API.
+Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.1. (This is the version of kubernetes used by the Jetstream OpenStack Magnum API.)
 
-Install [helm](https://github.com/helm/helm).
+Install [helm](https://github.com/helm/helm), the package manager for kubernetes.
 
-Start up the cluster
+Start up the cluster. We're using kubernetes v1.11.1. Change the memory/cpu requirement if you need to. Make sure VirtualBox is installed!
 
-```minikube --kubernetes-version v1.11.1 start```
+```minikube --kubernetes-version v1.11.1 --memory 5000 --cpus 2 start```
 
-Setup a service account for helm
+Minikube will create a new `kubectl` context called 'minikube' and set your current context it. See `kubectl config` for more on this.
 
-```kubectl --namespace kube-system create serviceaccount tiller```
+Mount this repository into the minikube VM. The easiest thing to do is put the stochss repository under a folder that is mounted into minikube by default. TAKE NOTE: the host directories are mounted to different directories in the VM! See [this page](https://minikube.sigs.k8s.io/docs/tasks/mount/) for more on this.
 
-Setup service account as a cluster admin
+The default mounts for VirtualBox are: 
 
-```kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller```
+- Linux: `/home` mounts to `/hosthome`
+- macOS: `/Users` mounts to `/Users`
+- Windows: `C://Users` mounts to  `/c/Users`
+
+Okay, once you've done that, you just need to set the path to this repository (in the minikube VM) in the jupyterhub config file.
+
+Open `config-minikube.yaml.template` and save as `config.minikube.yaml`. In the new file, replace `{{STOCHSS_HOSTPATH}}` with the path to this repository (in the minikube VM!). You can double-check this by running `minikube ssh` and then finding the directory.
+
+Setup a k8s service account for helm.
+```
+# From k8s directory
+kubectl create -f tiller-sa.yaml
+```
 
 Initialize helm
-
 ```helm init --service-account tiller --wait --history-max 200```
 
-Setup minikube to use docker
-
-eval $(minikube docker-env)
-
-3. `./setup_binderhub` to install BinderHub on the minikube cluster.
-4. Run `minikube tunnel` in a separate terminal (see [here](https://github.com/kubernetes/minikube/blob/master/docs/tunnel.md)).
-5. Store the IP address of the JupyterHub proxy:
-```bash
-HUB_PROXY_IP=$(kubectl get svc --namespace binder proxy-public -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-# Make sure we stored an actual IP address in case something went wrong with the tunnel
-echo $HUB_PROXY_IP
+Setup the jupyterhub helm repository.
 ```
-6. Add the proxy IP address to our config file:
-```bash
-sed -i "s/HUBPROXYIP/$HUB_PROXY_IP/g" config.yaml
+helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/
+helm repo update
 ```
-7. Update the BinderHub application:
-```bash
-helm upgrade binder jupyterhub/binderhub --version=0.2.0-10ac4d8 -f secret.yaml -f config.yaml
+
+Then setup your environment to use the docker daemon inside of minikube. **IMPORTANT**: You'll need to run this command in any new terminal that you want to rebuild images into minikube with!
+```eval $(minikube docker-env)```
+
+Build the jupyterhub image.
 ```
-8. Get the IP address of the BinderHub:
-```bash
-echo http://$(kubectl get svc --namespace binder binder -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+# From the base of the stochss repository
+docker build -t stochss-hub:dev .
 ```
-9. Copy the output from the previous command and go to the address in a web browser.
-10. Try out your local BinderHub instance!
 
+Build the notebook user image.
+```
+# From the singleuser directory
+docker build -t stochss-singleuser:dev .
+```
 
-### Notes
+Install jupyterhub.
+```
+# From the k8s directory
+helm upgrade --install jhub jupyterhub/jupyterhub \
+      --namespace jhub \
+      --version 0.8.2 \
+      --values config-minikube.yaml --values secrets-minikube.yaml
+```
 
-If the output of \`minikube tunnel\` is reporting routing errors, try running \`minikube tunnel --cleanup\`. If the cleanup command complains, you'll have to delete the kernel route manually, [which is actually pretty easy](https://serverfault.com/questions/181094/how-do-i-delete-a-route-from-linux-routing-table). There should be two routes with `Iface` set to `vboxnet1` or something similar in the output to `route -n`. Delete the route that does NOT have Gateway set to `0.0.0.0`. Then try `minikube tunnel` again.
+Get the IP address of your minikube VM.
+```minikube ip```
+
+The URL for your local stochss instance is IP:31212.
+
+TODO:
+
+- Replace docker exec commands with k8s exec commands in stochss API handlers (currently broken)
+
 
 ### References
-
-- [BinderHub docs](https://binderhub.readthedocs.io/en/latest/index.html)
+- [Minikube docs](https://minikube.sigs.k8s.io/docs/)
 - [Zero to Jupyterhub Guide](https://zero-to-jupyterhub.readthedocs.io/en/latest/index.html)
