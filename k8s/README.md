@@ -15,13 +15,13 @@ Install [helm](https://github.com/helm/helm), the package manager for kubernetes
 
 Start up the cluster. We're using kubernetes v1.11.1. Change the memory/cpu requirement if you need to. Make sure VirtualBox is installed!
 
-```minikube --kubernetes-version v1.11.1 --memory 5000 --cpus 2 start```
+```minikube --kubernetes-version v1.11.1 --memory 5000 --cpus 2 --vm-driver=virtualbox start```
 
 Minikube will create a new `kubectl` context called 'minikube' and set your current context it. See `kubectl config` for more on this.
 
 Mount this repository into the minikube VM. The easiest thing to do is put the stochss repository under a folder that is mounted into minikube by default. TAKE NOTE: the host directories are mounted to different directories in the VM! See [this page](https://minikube.sigs.k8s.io/docs/tasks/mount/) for more on this.
 
-The default mounts for VirtualBox are: 
+The default mounts for the VirtualBox driver are: 
 
 - Linux: `/home` mounts to `/hosthome`
 - macOS: `/Users` mounts to `/Users`
@@ -29,7 +29,7 @@ The default mounts for VirtualBox are:
 
 Okay, once you've done that, you just need to set the path to this repository (in the minikube VM) in the jupyterhub config file.
 
-Open `config-minikube.yaml.template` and save as `config.minikube.yaml`. In the new file, replace `{{STOCHSS_HOSTPATH}}` with the path to this repository (in the minikube VM!). You can double-check this by running `minikube ssh` and then finding the directory.
+Open `config-minikube.yaml.template` and save as `config.minikube.yaml`. In the new file, replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM. You can double-check this by running `minikube ssh` and then finding the directory within the VM.
 
 Setup a k8s service account for helm.
 ```
@@ -46,7 +46,7 @@ helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/
 helm repo update
 ```
 
-Then setup your environment to use the docker daemon inside of minikube. **IMPORTANT**: You'll need to run this command in any new terminal that you want to rebuild images into minikube with!
+Then set up your environment to use the docker daemon inside of the minikube VM. **IMPORTANT**: You'll need to run this command in any new terminal that you want to rebuild images into minikube with!
 ```eval $(minikube docker-env)```
 
 Build the jupyterhub image.
@@ -61,7 +61,7 @@ Build the notebook user image.
 docker build -t stochss-singleuser:dev .
 ```
 
-Install jupyterhub.
+Install jupyterhub inside the minikube VM.
 ```
 # From the k8s directory
 helm upgrade --install jhub jupyterhub/jupyterhub \
