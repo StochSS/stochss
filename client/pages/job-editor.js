@@ -16,7 +16,7 @@ let JobEditor = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    var directory = document.URL.split('/models/edit').pop();
+    var directory = document.URL.split('/jobs/edit').pop();
     var modelFile = directory.split('/').pop();
     var name = modelFile.split('.')[0];
     var isSpatial = modelFile.split('.').pop().startsWith('s');
