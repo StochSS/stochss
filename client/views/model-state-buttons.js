@@ -11,7 +11,8 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
-    'click [data-hook=run]'  : 'clickRunHandler'
+    'click [data-hook=run]'  : 'clickRunHandler',
+    'click [data-hook=start-job]' : 'clickStartJobHandler',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -24,7 +25,9 @@ module.exports = View.extend({
   },
   clickRunHandler: function (e) {
     this.saveModel(this.runModel.bind(this));
-    //this.runModel();
+  },
+  clickStartJobHandler: function (e) {
+    window.location.href = path.join("/hub/stochss/jobs/edit", this.model.directory);
   },
   saveModel: function (cb) {
     // this.model is a ModelVersion, the parent of the collection is Model
