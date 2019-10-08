@@ -56,6 +56,18 @@ let treeSettings = {
       if(op === 'move_node' && pos != 0){
         return false
       }
+      if(op === 'move_node' && more && more.core) {
+        var newDir = par.original._path
+        var file = node.original._path.split('/').pop()
+        var oldPath = node.original._path
+        var endpoint = path.join("/stochss/api/file/move", oldPath, '<--MoveTo-->', newDir, file)
+        xhr({uri: endpoint}, function(err, response, body) {
+          if(body.startsWith("Success!")) {
+            node.original._path = path.join(newDir, file)
+            console.log(node.original._path)
+          }
+        });
+      }
       return true
     },
     'themes': {
@@ -398,11 +410,6 @@ let FileBrowser = PageView.extend({
         }
       }
     }
-    $(document).on('dnd_stop.vakata', function (data, element, helper, event) {
-      var dst = $('#models-jstree').jstree().get_node(element.event.target)
-      var src = $('#models-jstree').jstree().get_node(element.element)
-      //console.log(src, dst);
-    });
     $(document).on('dnd_start.vakata', function (data, element, helper, event) {
       $('#models-jstree').jstree().load_all()
     });
