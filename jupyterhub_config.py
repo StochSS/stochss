@@ -30,7 +30,7 @@ c.JupyterHub.log_level = 'DEBUG'
 
 # Page handlers
 #from handlers.main import MainHandler
-from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler
+from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler, JobEditorHandler
 
 # API handlers
 from handlers.models import ModelFileAPIHandler, ModelBrowserFileList, ModelToNotebookHandler
@@ -51,7 +51,8 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
         (r"/stochss/models\/?$", ModelBrowserHandler),
         (r"/stochss/models/browser-list(.+)\/?", ModelBrowserFileList),
-        (r"/stochss/models/edit\/?(.+)?\/?", ModelEditorHandler)
+        (r"/stochss/models/edit\/?(.+)?\/?", ModelEditorHandler),
+        (r"/stochss/jobs/edit\/?(.+)?\/?", JobEditorHandler),
         #(r"/stochss.*", MainHandler)
 ]
 
