@@ -4,6 +4,7 @@ var $ = require('jquery');
 //views
 var PageView = require('../pages/base');
 var SimSettingsView = require('../views/simulation-settings');
+var JobStateButtonsView = require('../views/job-state-buttons');
 //models
 var Model = require('../models/model');
 //templates
@@ -43,7 +44,11 @@ let JobEditor = PageView.extend({
       model: this.model.simulationSettings,
       species: this.model.species
     });
+    var jobStateButtons = new JobStateButtonsView({
+      model: this.model
+    });
     this.registerRenderSubview(simSettings, 'sim-settings-container');
+    this.registerRenderSubview(jobStateButtons, 'job-state-buttons-container');
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
