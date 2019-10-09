@@ -1,10 +1,12 @@
 var app = require('../app');
 var _ = require('underscore');
 var $ = require('jquery');
+var tests = require('../views/tests');
 //views
 var PageView = require('../pages/base');
 var SimSettingsView = require('../views/simulation-settings');
 var JobStateButtonsView = require('../views/job-state-buttons');
+var InputView = require('../views/input');
 //models
 var Model = require('../models/model');
 //templates
@@ -14,6 +16,9 @@ import initPage from './page.js';
 
 let JobEditor = PageView.extend({
   template: template,
+  events: {
+    'change [data-hook=job-name' : 'setJobName'
+  },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
@@ -33,6 +38,7 @@ let JobEditor = PageView.extend({
           $(self.queryByHook('mesh-editor-container')).collapse();
       }
     });
+    this.jobName = name + "-job";
   },
   update: function () {
   },
@@ -54,6 +60,26 @@ let JobEditor = PageView.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
+  setJobName: function(e) {
+    this.jobName = e.target.value
+  },
+  subviews: {
+    inputName: {
+      hook: 'job-name',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'name',
+          label: 'Job Name',
+          tests: '',
+          modelKey: '',
+          valueType: 'string',
+          value: this.jobName,
+        });
+      },
+    },
+  }
 });
 
 initPage(JobEditor);
