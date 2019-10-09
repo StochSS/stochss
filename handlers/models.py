@@ -128,14 +128,42 @@ class ModelBrowserFileList(BaseHandler):
         fslist = _fslist.decode()
         self.write(fslist)
 
-<<<<<<< HEAD
 
 class DeleteFileAPIHandler(BaseHandler):
 
     @web.authenticated
     async def get(self, path):
-=======
-        
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        file_path = '/home/jovyan{0}'.format(path)
+        fcode, _message = container.exec_run(cmd='rm -R "{0}"'.format(file_path))
+        message = _message.decode()
+        if len(message):
+            self.write(message)
+        else:
+            self.write("{0} was successfully deleted.".format(path.split('/').pop()))
+
+
+class MoveFileAPIHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, data):
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        old_path = "/home/jovyan{0}".format(data.split('/<--MoveTo-->')[0])
+        new_path = "/home/jovyan{0}".format(data.split('/<--MoveTo-->').pop())
+        code, _message = container.exec_run(cmd='mv {0} {1}'.format(old_path, new_path))
+        if not len(_message):
+            self.write("Success! {0} was moved to {1}.")
+        else:
+            message = _message.decode()
+            self.write(message)     
+
+ 
 class DuplicateModelHandler(BaseHandler):
 
     @web.authenticated

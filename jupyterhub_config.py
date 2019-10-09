@@ -33,7 +33,7 @@ c.JupyterHub.log_level = 'DEBUG'
 from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler
 
 # API handlers
-from handlers.models import ModelFileAPIHandler, ModelBrowserFileList, ModelToNotebookHandler, DuplicateModelHandler MoveRenameAPIHandler, DeleteFileAPIHandler
+from handlers.models import ModelFileAPIHandler, ModelBrowserFileList, ModelToNotebookHandler, DuplicateModelHandler MoveRenameAPIHandler, DeleteFileAPIHandler, MoveFileAPIHandler
 from handlers.username import UsernameHandler
 from handlers.run_models import RunModelAPIHandler
 
@@ -48,6 +48,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/api/models/run/(.+)\/?", RunModelAPIHandler),
         (r"/stochss/api/model/duplicate(.+)\/?", DuplicateModelHandler),
         (r"/stochss/api/models/to-notebook(.+)\/?", ModelToNotebookHandler),
+        (r"/stochss/api/file/move(.+)\/?", MoveFileAPIHandler),
         (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
         (r"/stochss/api/file/rename(.+)\/?", MoveRenameAPIHandler),
         # Pages
