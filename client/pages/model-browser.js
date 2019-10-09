@@ -107,6 +107,21 @@ let FileBrowser = PageView.extend({
   refreshJSTree: function () {
     $('#models-jstree').jstree().refresh()
   },
+  duplicateFile: function(o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/duplicate", o.original._path);
+    xhr({uri: endpoint}, 
+      function (err, response, body) {
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+      }
+    );
+  },
   newModel: function (e) {
     let isSpatial = e.srcElement.dataset.modeltype === "spatial"
     let modal = $(renderCreateModalHtml(isSpatial)).modal();
@@ -219,10 +234,10 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Convert to Non Spatial" : {
@@ -278,10 +293,10 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Convert to Spatial" : {
@@ -425,10 +440,10 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Rename" : {
@@ -448,7 +463,7 @@ let FileBrowser = PageView.extend({
       var parent = e.target.parentElement
       var _node = parent.children[parent.children.length - 1]
       var node = $('#models-jstree').jstree().get_node(_node)
-      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node)){
+      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node) && node.type === "folder"){
         $('#models-jstree').jstree().refresh_node(node)
       }
     });

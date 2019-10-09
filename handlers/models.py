@@ -128,7 +128,17 @@ class ModelBrowserFileList(BaseHandler):
         fslist = _fslist.decode()
         self.write(fslist)
 
+        
+class DuplicateModelHandler(BaseHandler):
 
+    @web.authenticated
+    async def get(self, path):
+        file_path = '/home/jovyan{0}'.format(path)
+        fcode, _results = container.exec_run(cmd='duplicate.py "{0}"'.format(file_path))
+        results = _results.decode()
+        self.write(results)
+
+        
 class MoveRenameAPIHandler(BaseHandler):
 
     @web.authenticated
