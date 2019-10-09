@@ -29,7 +29,9 @@ let treeSettings = {
     'contextmenu'
   ],
   'core': {
+    'multiple' : false,
     'animation': 0,
+    'check_callback' : true,
     'themes': {
       'stripes': true,
       'variant': 'large'
@@ -119,6 +121,20 @@ let FileBrowser = PageView.extend({
         $('#models-jstree').jstree().refresh_node(node);
       })
     }
+  duplicateFile: function(o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/duplicate", o.original._path);
+    xhr({uri: endpoint}, 
+      function (err, response, body) {
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+      }
+    );
   },
   newModel: function (e) {
     let isSpatial = e.srcElement.dataset.modeltype === "spatial"
@@ -138,6 +154,31 @@ let FileBrowser = PageView.extend({
         window.location.href = modelPath;
       }
     })
+  },
+  renameNode: function (o) {
+    var text = o.text;
+    var parent = $('#models-jstree').jstree().get_node(o.parent)
+    var extensionWarning = $(this.queryByHook('extension-warning'));
+    var nameWarning = $(this.queryByHook('rename-warning'));
+    extensionWarning.collapse('show')
+    $('#models-jstree').jstree().edit(o, null, function(node, status) {
+      if(text != node.text){
+        var endpoint = path.join("/stochss/api/file/rename", o.original._path, "<--change-->", node.text)
+        xhr({uri: endpoint}, function (err, response, body){
+          console.log(body)
+          if(!body.startsWith('Success!')) {
+            nameWarning.collapse('show');
+            node.text = text;
+            $('#models-jstree').jstree().refresh_node(parent)
+          }else{
+            node.original._path = body.split('<-_path->').pop()
+            $('#models-jstree').jstree().refresh_node(parent)
+          }
+        })
+      }
+      extensionWarning.collapse('hide');
+      nameWarning.collapse('hide');
+    });
   },
   setupJstree: function () {
     var self = this;
@@ -216,10 +257,10 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Convert to Non Spatial" : {
@@ -238,6 +279,15 @@ let FileBrowser = PageView.extend({
             "label" : "Convert to Notebook",
             "action" : function (data) {
 
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Start Job" : {
@@ -275,10 +325,10 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Convert to Spatial" : {
@@ -296,12 +346,30 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Convert to Notebook",
             "action" : function (data) {
-		var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
-		xhr({ uri: endpoint },
-          function (err, response, body) {
-		  var node = $('#models-jstree').jstree().get_node(o.parent)
-    	$('#models-jstree').jstree().refresh_node(node);
-	  })
+              var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
+              xhr({ uri: endpoint },
+                    function (err, response, body) {
+                var node = $('#models-jstree').jstree().get_node(o.parent)
+                $('#models-jstree').jstree().refresh_node(node);
+                var _path = body.split(' ')[0].split('/home/jovyan/').pop()
+                var endpoint = path.join('/stochss/api/user/');
+                xhr(
+                  { uri: endpoint },
+                  function (err, response, body) {
+                    var notebookPath = path.join("/user/", body, "/notebooks/", _path)
+                    window.open(notebookPath, '_blank')
+                  },
+                );
+              });
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Start Job" : {
@@ -322,7 +390,7 @@ let FileBrowser = PageView.extend({
               self.deleteFile(o);
             }
           },
-	}
+	      }
       }
       else if (o.type === 'job') {
         return {
@@ -333,6 +401,15 @@ let FileBrowser = PageView.extend({
             "label" : "View Results",
             "action" : function (data) {
               
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Stop Job" : {
@@ -413,10 +490,10 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Delete" : {
@@ -426,6 +503,13 @@ let FileBrowser = PageView.extend({
             "separator_after" : false,
             "action" : function (data) {
               self.deleteFile(o);
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
         }
@@ -436,7 +520,7 @@ let FileBrowser = PageView.extend({
       var parent = e.target.parentElement
       var _node = parent.children[parent.children.length - 1]
       var node = $('#models-jstree').jstree().get_node(_node)
-      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node)){
+      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node) && node.type === "folder"){
         $('#models-jstree').jstree().refresh_node(node)
       }
     });

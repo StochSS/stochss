@@ -128,19 +128,37 @@ class ModelBrowserFileList(BaseHandler):
         fslist = _fslist.decode()
         self.write(fslist)
 
+<<<<<<< HEAD
 
 class DeleteFileAPIHandler(BaseHandler):
 
     @web.authenticated
     async def get(self, path):
+=======
+        
+class DuplicateModelHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, path):
+        file_path = '/home/jovyan{0}'.format(path)
+        fcode, _results = container.exec_run(cmd='duplicate.py "{0}"'.format(file_path))
+        results = _results.decode()
+        self.write(results)
+
+        
+class MoveRenameAPIHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, _path):
         checkUserOrRaise(self)
         client = docker.from_env()
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        file_path = '/home/jovyan{0}'.format(path)
-        fcode, _message = container.exec_run(cmd='rm -R "{0}"'.format(file_path))
+        old_path, new_name = _path.split('/<--change-->/')
+        dir_path = old_path.split('/')
+        dir_path.pop()
+        dir_path.append(new_name)
+        new_path = '/'.join(dir_path)
+        fcode, _message = container.exec_run(cmd='rename.py "{0}" "{1}"'.format(old_path, new_path))
         message = _message.decode()
-        if len(message):
-            self.write(message)
-        else:
-            self.write("{0} was successfully deleted.".format(path.split('/').pop()))
+        self.write("{0}<-_path->{1}".format(message, new_path))
