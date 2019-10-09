@@ -107,6 +107,20 @@ let FileBrowser = PageView.extend({
   refreshJSTree: function () {
     $('#models-jstree').jstree().refresh()
   },
+  deleteFile: function (o) {
+    var fileType = o.type
+    if(fileType === "nonspatial")
+      fileType = "model";
+    else if(fileType === "spatial")
+      fileType = "spatial model"
+    var answer = confirm("Click 'ok' to confirm that you wish to delete this " + fileType)
+    if(answer){
+      var endpoint = path.join("/stochss/api/file/delete", o.original._path)
+      xhr({uri: endpoint}, function(err, response, body) {
+        var node = $('#models-jstree').jstree().get_node(o.parent);
+        $('#models-jstree').jstree().refresh_node(node);
+      })
+    }
   duplicateFile: function(o) {
     var self = this;
     var parentID = o.parent;
@@ -217,6 +231,15 @@ let FileBrowser = PageView.extend({
               } 
             }
           },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
       else if (o.type === 'spatial') {
@@ -275,7 +298,16 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
 
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
       else if (o.type === 'nonspatial') {
@@ -348,8 +380,17 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
 
             }
-          }
-  }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
+	      }
       }
       else if (o.type === 'job') {
         return {
@@ -414,7 +455,16 @@ let FileBrowser = PageView.extend({
                 }
               }
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
       else if (o.type === 'notebook') {
@@ -446,6 +496,13 @@ let FileBrowser = PageView.extend({
               self.duplicateFile(o)
             }
           },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
           "Rename" : {
             "separator_before" : false,
             "separator_after" : false,

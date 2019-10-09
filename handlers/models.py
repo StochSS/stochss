@@ -128,6 +128,13 @@ class ModelBrowserFileList(BaseHandler):
         fslist = _fslist.decode()
         self.write(fslist)
 
+<<<<<<< HEAD
+
+class DeleteFileAPIHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, path):
+=======
         
 class DuplicateModelHandler(BaseHandler):
 
