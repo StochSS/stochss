@@ -23,8 +23,7 @@ module.exports = View.extend({
     this.saveModel();
   },
   clickStartJobHandler: function (e) {
-    this.saveModel();
-    //this.saveModel(this.runModel.bind(this));
+    this.saveModel(this.runJob.bind(this));
   },
   clickEditModelHandler: function (e) {
     this.saveModel(window.location.href = path.join("/hub/stochss/models/edit", this.model.directory))
@@ -43,5 +42,12 @@ module.exports = View.extend({
     } else {
       model.saveModel();
     }
+  },
+  runJob: function () {
+    var model = this.model
+    var endpoint = path.join('/stochss/api/jobs/run-job/', model.directory, "<--GillesPy2Job-->", this.parent.jobName);
+    var self = this;
+    xhr({ uri: endpoint },function (err, response, body) {
+    });
   },
 });

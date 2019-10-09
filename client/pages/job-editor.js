@@ -17,7 +17,7 @@ import initPage from './page.js';
 let JobEditor = PageView.extend({
   template: template,
   events: {
-    'change [data-hook=job-name' : 'setJobName'
+    'change [data-hook=job-name]' : 'setJobName'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
