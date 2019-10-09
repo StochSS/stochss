@@ -10,3 +10,5 @@ jupyterhub-proxy.pid
 __pycache__
 userlist
 dist/*
+secrets-minikube.yaml
+config-minikube.yaml

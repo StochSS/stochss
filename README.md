@@ -33,9 +33,10 @@ Once you've done that, you just need to put the path to this repository within t
 
 Open `config-minikube.yaml.template` and save a copy as `config-minikube.yaml`. In the new file, replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM. You can double-check this by running `minikube ssh` and then finding the directory within the VM.
 
-Sweet! Now setup a k8s service account for helm. Make sure you're in the `k8s` directory!
+Now open `secrets-minikube.yaml.template` and save a copy as `config-secrets.yaml`. Run the command `openssl rand -hex 32` twice (or use an (https://www.browserling.com/tools/random-hex)[online generator for random hex]) and then replace `{{COOKIE_SECRET}}` and `{{SECRET_TOKEN}}` with the two different random 32-bit hex strings.
+
+Sweet! Now setup a k8s service account for helm.
 ```
-# From k8s directory
 kubectl create -f tiller-sa.yaml
 ```
 
@@ -56,9 +57,8 @@ eval $(minikube docker-env)
 
 **SUPER IMPORTANT**: You will need to run the previous command in any new terminal that you want to rebuild images into the minikube VM with!
 
-Now, from the base of the repository, build the 'hub' image.
+Now build the jupyterhub image.
 ```
-# From the base of the stochss repository
 docker build -t stochss-hub:dev .
 ```
 
@@ -68,9 +68,8 @@ Then build the notebook server image. You'll want to be in the `singleuser` dire
 docker build -t stochss-singleuser:dev .
 ```
 
-Now it's time to install jupyterhub inside the minikube VM! Yay!
+Now it's time to install stochss via jupyterhub inside the minikube VM! Yay!
 ```
-# From the k8s directory
 helm upgrade --install jhub jupyterhub/jupyterhub \
       --namespace jhub \
       --version 0.8.2 \
