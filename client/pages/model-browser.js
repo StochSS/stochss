@@ -347,6 +347,7 @@ let FileBrowser = PageView.extend({
             "label" : "Convert to Notebook",
             "action" : function (data) {
               var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
+<<<<<<< Updated upstream
               xhr({ uri: endpoint },
                     function (err, response, body) {
                 var node = $('#models-jstree').jstree().get_node(o.parent)
@@ -361,6 +362,16 @@ let FileBrowser = PageView.extend({
                   },
                 );
               });
+=======
+              xhr({ uri: endpoint }, function (err, response, body) {
+                if(o.parent === "#") {
+                  $('#models-jstree').jstree().refresh()
+                }else{
+                  var node = $('#models-jstree').jstree().get_node(o.parent)
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              })
+>>>>>>> Stashed changes
             }
           },
           "Rename" : {
