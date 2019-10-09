@@ -18,7 +18,7 @@ let ajaxData = {
   "dataType" : "json",
   "data" : function (node) {
     return { 'id' : node.id}
-  }
+  },
 }
 
 let treeSettings = {
@@ -26,10 +26,51 @@ let treeSettings = {
     'types',
     'wholerow',
     'changed',
-    'contextmenu'
+    'contextmenu',
+    'dnd',
   ],
   'core': {
+    'multiple' : false,
     'animation': 0,
+    'check_callback': function (op, node, par, pos, more) {
+      if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type != 'folder'){
+        return false
+      }
+      if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
+        if(!more.ref.state.loaded){
+          return false
+        }
+        var exists = false
+        var BreakException = {}
+        try{
+          more.ref.children.forEach(function (child) {
+            var child_node = $('#models-jstree').jstree().get_node(child)
+            exists = child_node.text === node.text
+            if(exists){
+              throw BreakException;
+            }
+          })
+        }catch{
+          return false;
+        }
+      }
+      if(op === 'move_node' && pos != 0){
+        return false
+      }
+      if(op === 'move_node' && more && more.core) {
+        var newDir = par.original._path
+        var file = node.original._path.split('/').pop()
+        var oldPath = node.original._path
+        var endpoint = path.join("/stochss/api/file/move", oldPath, '<--MoveTo-->', newDir, file)
+        xhr({uri: endpoint}, function(err, response, body) {
+          if(body.startsWith("Success!")) {
+            node.original._path = path.join(newDir, file)
+            console.log(node.original._path)
+          }
+        });
+      }
+      return true
+    },
     'themes': {
       'stripes': true,
       'variant': 'large'
@@ -58,7 +99,7 @@ let treeSettings = {
     'other' : {
       "icon": "jstree-icon jstree-file"
     },
-  }
+  },  
 }
 
 
@@ -105,6 +146,35 @@ let FileBrowser = PageView.extend({
   refreshJSTree: function () {
     $('#models-jstree').jstree().refresh()
   },
+  deleteFile: function (o) {
+    var fileType = o.type
+    if(fileType === "nonspatial")
+      fileType = "model";
+    else if(fileType === "spatial")
+      fileType = "spatial model"
+    var answer = confirm("Click 'ok' to confirm that you wish to delete this " + fileType)
+    if(answer){
+      var endpoint = path.join("/stochss/api/file/delete", o.original._path)
+      xhr({uri: endpoint}, function(err, response, body) {
+        var node = $('#models-jstree').jstree().get_node(o.parent);
+        $('#models-jstree').jstree().refresh_node(node);
+      })
+    }
+  duplicateFile: function(o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/duplicate", o.original._path);
+    xhr({uri: endpoint}, 
+      function (err, response, body) {
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+      }
+    );
+  },
   newModel: function (e) {
     let isSpatial = e.srcElement.dataset.modeltype === "spatial"
     let modal = $(renderCreateModalHtml(isSpatial)).modal();
@@ -124,7 +194,33 @@ let FileBrowser = PageView.extend({
       }
     })
   },
+  renameNode: function (o) {
+    var text = o.text;
+    var parent = $('#models-jstree').jstree().get_node(o.parent)
+    var extensionWarning = $(this.queryByHook('extension-warning'));
+    var nameWarning = $(this.queryByHook('rename-warning'));
+    extensionWarning.collapse('show')
+    $('#models-jstree').jstree().edit(o, null, function(node, status) {
+      if(text != node.text){
+        var endpoint = path.join("/stochss/api/file/rename", o.original._path, "<--change-->", node.text)
+        xhr({uri: endpoint}, function (err, response, body){
+          console.log(body)
+          if(!body.startsWith('Success!')) {
+            nameWarning.collapse('show');
+            node.text = text;
+            $('#models-jstree').jstree().refresh_node(parent)
+          }else{
+            node.original._path = body.split('<-_path->').pop()
+            $('#models-jstree').jstree().refresh_node(parent)
+          }
+        })
+      }
+      extensionWarning.collapse('hide');
+      nameWarning.collapse('hide');
+    });
+  },
   setupJstree: function () {
+    var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       if (o.type ===  'folder') {
         return {
@@ -174,6 +270,15 @@ let FileBrowser = PageView.extend({
               } 
             }
           },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
       else if (o.type === 'spatial') {
@@ -191,10 +296,10 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Convert to Non Spatial" : {
@@ -215,6 +320,15 @@ let FileBrowser = PageView.extend({
 
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
           "Start Job" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -223,7 +337,16 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
       else if (o.type === 'nonspatial') {
@@ -241,10 +364,10 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
           },
           "Convert to Spatial" : {
@@ -279,6 +402,15 @@ let FileBrowser = PageView.extend({
               });
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
           "Start Job" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -287,8 +419,17 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
-          }
-        }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
+	      }
       }
       else if (o.type === 'job') {
         return {
@@ -299,6 +440,15 @@ let FileBrowser = PageView.extend({
             "label" : "View Results",
             "action" : function (data) {
               
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Stop Job" : {
@@ -344,7 +494,16 @@ let FileBrowser = PageView.extend({
                 }
               }
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
         }
       }
       else if (o.type === 'notebook') {
@@ -370,21 +529,40 @@ let FileBrowser = PageView.extend({
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-
+              self.duplicateFile(o)
             }
-          }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
         }
       }
     }
+    $(document).on('dnd_start.vakata', function (data, element, helper, event) {
+      $('#models-jstree').jstree().load_all()
+    });
     $('#models-jstree').jstree(treeSettings)
     $('#models-jstree').on('click.jstree', function(e) {
       var parent = e.target.parentElement
       var _node = parent.children[parent.children.length - 1]
       var node = $('#models-jstree').jstree().get_node(_node)
-      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node)){
+      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node) && node.type === "folder"){
         $('#models-jstree').jstree().refresh_node(node)
       }
     });
