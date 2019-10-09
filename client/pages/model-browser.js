@@ -54,7 +54,7 @@ let treeSettings = {
           return false;
         }
       }
-      if(op === 'move_node' && pos != 0){
+      if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
         return false
       }
       if(op === 'move_node' && more && more.core) {
@@ -65,7 +65,6 @@ let treeSettings = {
         xhr({uri: endpoint}, function(err, response, body) {
           if(body.startsWith("Success!")) {
             node.original._path = path.join(newDir, file)
-            console.log(node.original._path)
           }
         });
       }
@@ -160,6 +159,7 @@ let FileBrowser = PageView.extend({
         $('#models-jstree').jstree().refresh_node(node);
       })
     }
+  },
   duplicateFile: function(o) {
     var self = this;
     var parentID = o.parent;
@@ -542,6 +542,8 @@ let FileBrowser = PageView.extend({
             "separator_after" : false,
             "action" : function (data) {
               self.deleteFile(o);
+            }
+          },
           "Rename" : {
             "separator_before" : false,
             "separator_after" : false,
