@@ -29,7 +29,7 @@ Time to start up the minikube VM with a kubernetes cluster. We're using kubernet
 
 Minikube will create a new `kubectl` context called 'minikube' and set your current context to it. See `kubectl config` for more on this.
 
-Once you've done that, you just need to set the path to this repository *in the minikube VM* in the jupyterhub config file.
+Once you've done that, you just need to put the path to this repository within the minikube VM into the jupyterhub config file.
 
 Open `config-minikube.yaml.template` and save a copy as `config-minikube.yaml`. In the new file, replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM. You can double-check this by running `minikube ssh` and then finding the directory within the VM.
 
