@@ -31,10 +31,17 @@ Okay, once you've done that, you just need to set the path to this repository (i
 
 Open `config-minikube.yaml.template` and save as `config.minikube.yaml`. In the new file, replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM. You can double-check this by running `minikube ssh` and then finding the directory within the VM.
 
+
+Configure Roles:
 Setup a k8s service account for helm.
 ```
 # From k8s directory
 kubectl create -f tiller-sa.yaml
+```
+Setup access to pods from jhub namespace.
+```
+# From k8s directory
+kubectl apply -f pods-list-sa.yaml
 ```
 
 Initialize helm
