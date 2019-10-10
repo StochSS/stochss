@@ -23,17 +23,36 @@ The default mounts for the VirtualBox driver are:
 
 Did you put the repo under the default mount folder for your OS? Good.
 
-Time to start up the minikube VM with a kubernetes cluster. We're using kubernetes v1.11.1. Change the memory/cpu requirement if you need to, and make sure VirtualBox is installed!
+Time to start up the minikube VM with a kubernetes cluster. 
+  
+### Configure Minikube
+  
+- **Create Config File**  
+  - Open `config-minikube.yaml.template` and save a copy as `config-minikube.yaml`. 
+- **Generate Secure Tokens**
+  - Run the command `openssl rand -hex 32` twice (or use an [online generator for random hex](https://www.browserling.com/tools/random-hex)).  
+- **In the new file:**  
+  - replace `{{COOKIE_SECRET}}` and `{{SECRET_TOKEN}}` with the two different random 32-bit hex strings
+  - replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM.  
+    *(You can double-check this by running `minikube ssh` and then finding the directory within the VM)*.
+  
+### Start New Minikube Instance
+***FOR LINUX AND MAC:***  
+Simple installation can be performed using minikube_startup.sh.  
+```
+minikube_startup.sh
+```
+  
+  
+**Alternatively, you can utilize the following steps:**
+  
+We're using kubernetes v1.11.1. Change the memory/cpu requirement if you need to, and make sure VirtualBox is installed!
 
 ```minikube --kubernetes-version v1.11.1 --memory 5000 --cpus 2 --vm-driver=virtualbox start```
 
 Minikube will create a new `kubectl` context called 'minikube' and set your current context to it. See `kubectl config` for more on this.
 
 Once you've done that, you just need to put the path to this repository within the minikube VM into the jupyterhub config file.
-
-Open `config-minikube.yaml.template` and save a copy as `config-minikube.yaml`. In the new file, replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM. You can double-check this by running `minikube ssh` and then finding the directory within the VM.
-
-Now open `secrets-minikube.yaml.template` and save a copy as `config-secrets.yaml`. Run the command `openssl rand -hex 32` twice (or use an (https://www.browserling.com/tools/random-hex)[online generator for random hex]) and then replace `{{COOKIE_SECRET}}` and `{{SECRET_TOKEN}}` with the two different random 32-bit hex strings.
 
 Sweet! Now setup a k8s service account for helm.
 ```
