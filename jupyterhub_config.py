@@ -30,10 +30,10 @@ c.JupyterHub.log_level = 'DEBUG'
 
 # Page handlers
 #from handlers.main import MainHandler
-from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler
+from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler, JobEditorHandler
 
 # API handlers
-from handlers.models import ModelFileAPIHandler, ModelBrowserFileList, ModelToNotebookHandler, DuplicateModelHandler, MoveRenameAPIHandler, DeleteFileAPIHandler, MoveFileAPIHandler
+from handlers.models import ModelFileAPIHandler, ModelBrowserFileList, ModelToNotebookHandler, DuplicateModelHandler MoveRenameAPIHandler, DeleteFileAPIHandler, MoveFileAPIHandler, RunJobAPIHandler
 from handlers.username import UsernameHandler
 from handlers.run_models import RunModelAPIHandler
 
@@ -48,6 +48,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/api/models/run/(.+)\/?", RunModelAPIHandler),
         (r"/stochss/api/model/duplicate(.+)\/?", DuplicateModelHandler),
         (r"/stochss/api/models/to-notebook(.+)\/?", ModelToNotebookHandler),
+        (r"/stochss/api/jobs/run-job(.+)\/?", RunJobAPIHandler),
         (r"/stochss/api/file/move(.+)\/?", MoveFileAPIHandler),
         (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
         (r"/stochss/api/file/rename(.+)\/?", MoveRenameAPIHandler),
@@ -55,7 +56,8 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
         (r"/stochss/models\/?$", ModelBrowserHandler),
         (r"/stochss/models/browser-list(.+)\/?", ModelBrowserFileList),
-        (r"/stochss/models/edit\/?(.+)?\/?", ModelEditorHandler)
+        (r"/stochss/models/edit\/?(.+)?\/?", ModelEditorHandler),
+        (r"/stochss/jobs/edit\/?(.+)?\/?", JobEditorHandler),
         #(r"/stochss.*", MainHandler)
 ]
 

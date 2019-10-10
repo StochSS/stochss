@@ -332,10 +332,10 @@ let FileBrowser = PageView.extend({
           "Start Job" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Start Job",
             "action" : function (data) {
-
+              window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
           },
           "Delete" : {
@@ -414,10 +414,10 @@ let FileBrowser = PageView.extend({
           "Start Job" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Start Job",
             "action" : function (data) {
-
+              window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
           },
           "Delete" : {

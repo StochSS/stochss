@@ -26,3 +26,9 @@ class ModelEditorHandler(BaseHandler):
     html = self.render_template("stochss-model-editor.html")
     self.finish(html)
 
+
+class JobEditorHandler(BaseHandler):
+  @web.authenticated
+  async def get(self, model_name):
+    html = self.render_template("stochss-job-editor.html")
+    self.finish(html)

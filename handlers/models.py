@@ -129,6 +129,20 @@ class ModelBrowserFileList(BaseHandler):
         self.write(fslist)
 
 
+class RunJobAPIHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, data):
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        model_path, job_name = data.split('/<--GillesPy2Job-->/')
+        code, _message = container.exec_run(cmd='run_job.py "/home/jovyan{0}" "{1}"'.format(model_path, job_name))
+        message = _message.decode()
+        self.write(message)
+        
+  
 class DeleteFileAPIHandler(BaseHandler):
 
     @web.authenticated
