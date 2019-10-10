@@ -11,12 +11,12 @@ docker build -t stochss-hub:dev .
 cd singleuser
 docker build -t stochss-singleuser:dev .
 
+cd ..
 helm upgrade --install jhub jupyterhub/jupyterhub \
       --namespace jhub \
       --version 0.8.2 \
-      --values config-minikube.yaml --values config-secrets.yaml
+      --values config-minikube.yaml
 
-cd ..
 kubectl apply -f pods-list-sa.yaml
 
 IP=$(minikube ip)

@@ -19,6 +19,8 @@ hub:
     - mountPath: /stochss
       name: stochss
 
+  cookieSecret: "{{COOKIE_SECRET}}"
+
   extraConfig: 
     stochss: |
       import sys
@@ -82,4 +84,11 @@ scheduling:
   userScheduler:
     enabled: true
 
+proxy:
+  secretToken: "{{SECRET_TOKEN}}"
+  service:
+    type: NodePort
+    nodePorts:
+      http: 31212
+    
 
