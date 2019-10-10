@@ -40,7 +40,7 @@ Time to start up the minikube VM with a kubernetes cluster.
 ***FOR LINUX AND MAC:***  
 Simple installation can be performed using minikube_startup.sh.  
 ```
-minikube_startup.sh
+./minikube_startup.sh
 ```
   
   
