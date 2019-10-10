@@ -1,55 +1,92 @@
-# StochSS 2
 
-Stochastic Simulation as a Service
+This is a work in progress!
 
-## Local Development Setup
+# Local development with minikube
 
-- Install python 3, nodejs, npm, and openssl
+Install [VirtualBox](https://www.virtualbox.org/)
 
-- Install [pip](https://pip.pypa.io/en/stable/installing/) for python
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows or macOS, or Docker Engine for Linux.
 
-- Register a new [GitHub OAuth Application](https://github.com/settings/applications/new) to use for your personal development environment.
-  - Set 'Application name' to `initials-stochss-dev` where `initials` is the initials of your name. Or set the application name to whatever you want.
-  - Set 'Homepage URL' to `https://localhost/hub`
-  - Set 'Authorization callback URL' `https://localhost/hub/oauth_callback`
-  - Click the "Register application" button and keep the confirmation page open for the next step
+Install [minikube](https://github.com/kubernetes/minikube) 
 
-- After you've registered your oauth app, make a new file in the `secrets` folder called `oauth.env` and make it look like so (replacing `<GITHUB_CLIENT_ID>` and `<GITHUB_CLIENT_SECRET>` with values from the OAuth app confirmation page from above:
-```bash
-GITHUB_CLIENT_ID=<GITHUB CLIENT ID>
-GITHUB_CLIENT_SECRET=<GITHUB CLIENT SECRET>
-OAUTH_CALLBACK_URL=https://localhost/hub/oauth_callback
+Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.1. (This is the version of kubernetes used by the Jetstream OpenStack Magnum API.)
+
+Install [helm](https://github.com/helm/helm), the package manager for kubernetes.
+
+Start up the cluster. We're using kubernetes v1.11.1. Change the memory/cpu requirement if you need to. Make sure VirtualBox is installed!
+
+```minikube --kubernetes-version v1.11.1 --memory 5000 --cpus 2 --vm-driver=virtualbox start```
+
+Minikube will create a new `kubectl` context called 'minikube' and set your current context it. See `kubectl config` for more on this.
+
+Mount this repository into the minikube VM. The easiest thing to do is put the stochss repository under a folder that is mounted into minikube by default. TAKE NOTE: the host directories are mounted to different directories in the VM! See [this page](https://minikube.sigs.k8s.io/docs/tasks/mount/) for more on this.
+
+The default mounts for the VirtualBox driver are: 
+
+- Linux: `/home` mounts to `/hosthome`
+- macOS: `/Users` mounts to `/Users`
+- Windows: `C://Users` mounts to  `/c/Users`
+
+Okay, once you've done that, you just need to set the path to this repository (in the minikube VM) in the jupyterhub config file.
+
+Open `config-minikube.yaml.template` and save as `config.minikube.yaml`. In the new file, replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM. You can double-check this by running `minikube ssh` and then finding the directory within the VM.
+
+
+Configure Roles:
+Setup a k8s service account for helm.
+```
+# From k8s directory
+kubectl create -f tiller-sa.yaml
+```
+Setup access to pods from jhub namespace.
+```
+# From k8s directory
+kubectl apply -f pods-list-sa.yaml
 ```
 
-- Make a new text file called `userlist`. This file contains a list of GitHub usernames that are able to use the OAuth credentials you just generated. By putting `admin` after a username, the user will have JupyterHub admin powers in the stochss app.
+Initialize helm
+```helm init --service-account tiller --wait --history-max 200```
 
-Example `userlist` file:
-```bash
-mygithubuser admin
+Setup the jupyterhub helm repository.
+```
+helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/
+helm repo update
 ```
 
-- Setup the environment: install dependencies, build the jupyterhub docker image and singleuser image, database file, self-signed certificate, and app bundle.
-```bash
-make
+Then set up your environment to use the docker daemon inside of the minikube VM. **IMPORTANT**: You'll need to run this command in any new terminal that you want to rebuild images into minikube with!
+```eval $(minikube docker-env)```
+
+Build the jupyterhub image.
+```
+# From the base of the stochss repository
+docker build -t stochss-hub:dev .
 ```
 
-This is equivalent to:
-```bash
-make hub_image
-make notebook_image
-make database
-make cert
-make webpack
+Build the notebook user image.
+```
+# From the singleuser directory
+docker build -t stochss-singleuser:dev .
 ```
 
-- Run the server container
-```bash
-make run
+Install jupyterhub inside the minikube VM.
+```
+# From the k8s directory
+helm upgrade --install jhub jupyterhub/jupyterhub \
+      --namespace jhub \
+      --version 0.8.2 \
+      --values config-minikube.yaml --values secrets-minikube.yaml
 ```
 
-- In another terminal, you can run webpack in watch mode to automatically update the app bundle on client source changes.
-```bash
-make watch
-```
+Get the IP address of your minikube VM.
+```minikube ip```
 
-- Navigate to `https://localhost/hub` for JupyterHub or `https://localhost/hub/stochss` for StochSS.
+The URL for your local stochss instance is IP:31212.
+
+TODO:
+
+- Replace docker exec commands with k8s exec commands in stochss API handlers (currently broken)
+
+
+### References
+- [Minikube docs](https://minikube.sigs.k8s.io/docs/)
+- [Zero to Jupyterhub Guide](https://zero-to-jupyterhub.readthedocs.io/en/latest/index.html)
