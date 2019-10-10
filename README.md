@@ -76,6 +76,12 @@ helm upgrade --install jhub jupyterhub/jupyterhub \
       --values config-minikube.yaml --values secrets-minikube.yaml
 ```
 
+Give role access to access in-cluster pods from jhub namespace
+```
+# From stochss directory
+kubectl apply -f pods-list-sa.yaml
+```
+
 At this point you can do `kubectl get pods -n jhub` and you should get a list of pods that are either running or being created. If they're not all in the `Running` state, run the same `get pods` command again until you see that they're all running. If they're in an `Error` state or `CrashLoopBackOff` state, something went wrong!
 
 Get the IP address of your minikube VM.
