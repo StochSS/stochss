@@ -33,7 +33,7 @@ c.JupyterHub.log_level = 'DEBUG'
 from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler, JobEditorHandler
 
 # API handlers
-from handlers.models import ModelFileAPIHandler, ModelBrowserFileList, ModelToNotebookHandler, DuplicateModelHandler MoveRenameAPIHandler, DeleteFileAPIHandler, MoveFileAPIHandler, RunJobAPIHandler
+from handlers.models import ModelFileAPIHandler, ModelBrowserFileList, ModelToNotebookHandler, DuplicateModelHandler, MoveRenameAPIHandler, DeleteFileAPIHandler, MoveFileAPIHandler, RunJobAPIHandler
 from handlers.username import UsernameHandler
 from handlers.run_models import RunModelAPIHandler
 
