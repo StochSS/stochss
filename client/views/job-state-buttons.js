@@ -1,4 +1,5 @@
 var app = require('ampersand-app');
+var $ = require('jquery');
 var xhr = require('xhr');
 var path = require('path');
 //views
@@ -20,6 +21,8 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
   },
   clickSaveHandler: function (e) {
+    this.parent.parent.isCreated = true;
+    this.parent.parent.disableJobNameInput()
     this.saveModel();
   },
   clickStartJobHandler: function (e) {
@@ -45,7 +48,7 @@ module.exports = View.extend({
   },
   runJob: function () {
     var model = this.model
-    var endpoint = path.join('/stochss/api/jobs/run-job/', model.directory, "<--GillesPy2Job-->", this.parent.jobName);
+    var endpoint = path.join('/stochss/api/jobs/run-job/', model.directory, "<--GillesPy2Job-->", this.parent.parent.jobName);
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
     });

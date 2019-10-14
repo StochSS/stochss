@@ -1,11 +1,9 @@
-section.page.col-md-10
+div#job-editor.card.card-body
 
   h2 Job Editor
-
-  div(data-hook="job-name")
 
   div: h5="Model: " + this.model.name
 
   div(data-hook="sim-settings-container")
 
-  div(data-hook="job-state-buttons-container")
+  div.col-md-12(data-hook="job-state-buttons-container")
