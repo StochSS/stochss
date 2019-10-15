@@ -110,6 +110,11 @@ minikube ip
 
 The URL for your local stochss instance is IP:31212.
 
+**IMPORTANT**
+- If you need to start your minikube VM again, you MUST use the `--kubernetes-version v1.11.10` flag or else minikube will automatically upgrade your kubernetes version!
+- You MUST run `eval $(minikube docker-env)` in a new shell before building any of the docker containers so that the containers get built inside the minikube VM!
+
+
 TODO:
 
 - Replace docker exec commands with k8s exec commands in stochss API handlers (currently broken)

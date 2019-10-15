@@ -1,7 +1,19 @@
 FROM jupyterhub/k8s-singleuser-sample:0.8.2
 
+USER root
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && apt-get install -y libvtk6-dev vtk6
+
 RUN python3 -m pip install --no-cache \
-  gillespy2
+  gillespy2 \
+  vtk \
+  https://github.com/spatialpy/SpatialPy/tarball/develop \
+  pygmsh==5.0.2 \
+  meshio==2.3.10 
+
+USER jovyan
 
 WORKDIR /home/jovyan
 
