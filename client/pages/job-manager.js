@@ -1,6 +1,8 @@
 var _ = require('underscore');
 var $ = require('jquery');
 var tests = require('../views/tests');
+var path = require('path');
+var xhr = require('xhr');
 //views
 var PageView = require('./base');
 var JobEditorView = require('../views/job-editor');
@@ -27,22 +29,21 @@ let JobManager = PageView.extend({
       this.jobName = name + jobDate;
       this.isCreated = false
     }else{
-      var endpoint = path.join("", directory, "/info.json")
-      xhr({uri: endpoint}, function (err, response, boby){
-        this.modelDirectory = JSON.parse(body.model.split('/home/jovyan').pop())
-        var jobDir = this.directory.split('/').pop()
-        this.jobName = jobDir.split('.')[0]
-        this.isCreated = true;
+      var endpoint = path.join("/stochss/api/jobs/job-info", this.directory, "/info.json")
+      xhr({uri: endpoint}, function (err, response, body){
+        self.modelDirectory = JSON.parse(body).model.split('/home/jovyan').pop()
+        var jobDir = self.directory.split('/').pop()
+        self.jobName = jobDir.split('.')[0]
+        self.isCreated = true;
+        self.renderSubviews();
       })
     }
   },
   render: function () {
     PageView.prototype.render.apply(this, arguments);
-    $(this.queryByHook("job-name")).find('input').width(500)
-    if(this.directory.endsWith('.job')||this.isCreated){
-      this.disableJobNameInput();
+    if(this.modelDirectory){
+      this.renderSubviews()
     }
-    this.renderSubviews();
   },
   update: function () {
   },
@@ -52,7 +53,22 @@ let JobManager = PageView.extend({
     var jobEditor = new JobEditorView({
       directory: this.modelDirectory,
     });
-    this.registerRenderSubview(jobEditor, 'job-editor-container')
+    var inputName = new InputView({
+      parent: this,
+      required: true,
+      name: 'name',
+      label: 'Job Name',
+      tests: tests.nameTests,
+      modelKey: '',
+      valueType: 'string',
+      value: this.jobName,
+    });
+    this.registerRenderSubview(jobEditor, 'job-editor-container');
+    this.registerRenderSubview(inputName, 'job-name');
+    $(this.queryByHook("job-name")).find('input').width(500)
+    if(this.directory.endsWith('.job')||this.isCreated){
+      this.disableJobNameInput();
+    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -74,23 +90,6 @@ let JobManager = PageView.extend({
   disableJobNameInput: function() {
     $(this.queryByHook("job-name")).find('input').prop('disabled', true);
   },
-  subviews: {
-    inputName: {
-      hook: 'job-name',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'name',
-          label: 'Job Name',
-          tests: tests.nameTests,
-          modelKey: '',
-          valueType: 'string',
-          value: this.jobName,
-        });
-      },
-    },
-  }
 });
 
 initPage(JobManager);

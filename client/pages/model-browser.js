@@ -436,10 +436,10 @@ let FileBrowser = PageView.extend({
           "View Results" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "View Results",
             "action" : function (data) {
-              
+              window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
           },
           "Rename" : {
