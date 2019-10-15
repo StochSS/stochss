@@ -1,6 +1,6 @@
 #! /bin/bash
 
-minikube --kubernetes-version v1.11.1 --memory 5000 --cpus 2 --vm-driver=virtualbox start
+minikube --kubernetes-version v1.11.10 --memory 5000 --cpus 2 --vm-driver=virtualbox start
 kubectl create -f tiller-sa.yaml
 helm init --service-account tiller --wait --history-max 200
 helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/

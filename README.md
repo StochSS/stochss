@@ -9,7 +9,7 @@ Install [Docker Desktop](https://www.docker.com/products/docker-desktop) for Win
 
 Install [minikube](https://github.com/kubernetes/minikube) 
 
-Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.1. (This is the version of kubernetes used by the Jetstream OpenStack Magnum API.)
+Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.10. (This is the version of kubernetes used by the Jetstream OpenStack Magnum API.)
 
 Install [helm](https://github.com/helm/helm), the package manager for kubernetes.
 
@@ -48,7 +48,7 @@ Simple installation can be performed using minikube_startup.sh.
   
 We're using kubernetes v1.11.1. Change the memory/cpu requirement if you need to, and make sure VirtualBox is installed!
 
-```minikube --kubernetes-version v1.11.1 --memory 5000 --cpus 2 --vm-driver=virtualbox start```
+```minikube --kubernetes-version v1.11.10 --memory 5000 --cpus 2 --vm-driver=virtualbox start```
 
 Minikube will create a new `kubectl` context called 'minikube' and set your current context to it. See `kubectl config` for more on this.
 
