@@ -58,15 +58,9 @@ module.exports = View.extend({
     this.registerRenderSubview(simSettings, 'sim-settings-container');
     this.registerRenderSubview(jobStateButtons, 'job-state-buttons-container');
     $(this.queryByHook("model-name-container")).find('input').width(1350)
-    if(this.parent.isCreated){
-      this.disableModelPathInput();
-    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
-  },
-  disableModelPathInput: function () {
-    $(this.queryByHook("model-name-container")).find('input').prop('disabled', true);
   },
 });

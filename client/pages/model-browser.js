@@ -329,11 +329,11 @@ let FileBrowser = PageView.extend({
               self.renameNode(o);
             }
           },
-          "Start Job" : {
+          "Create New Job" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Start Job",
+            "label" : "Create New Job",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
@@ -411,11 +411,11 @@ let FileBrowser = PageView.extend({
               self.renameNode(o);
             }
           },
-          "Start Job" : {
+          "Create New Job" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Start Job",
+            "label" : "Create New Job",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
@@ -433,11 +433,12 @@ let FileBrowser = PageView.extend({
       }
       else if (o.type === 'job') {
         return {
-          "View Results" : {
+          "View Job" : {
             "separator_before" : false,
-            "separator_after" : false,
+            "separator_after" : true,
             "_disabled" : false,
-            "label" : "View Results",
+            "_class" : "font-weight-bolder",
+            "label" : "View Job",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
