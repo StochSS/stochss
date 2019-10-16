@@ -25,9 +25,8 @@ let JobManager = PageView.extend({
       var modelFile = this.directory.split('/').pop();
       var name = modelFile.split('.')[0];
       this.modelDirectory = this.directory
-      var jobDate = this.getCurrentDate();
-      this.jobName = name + jobDate;
-      this.isCreated = false
+      this.jobDate = this.getCurrentDate();
+      this.jobName = name + this.jobDate;
     }else{
       var endpoint = path.join("/stochss/api/jobs/job-info", this.directory, "/info.json")
       xhr({uri: endpoint}, function (err, response, body){
@@ -57,16 +56,16 @@ let JobManager = PageView.extend({
       parent: this,
       required: true,
       name: 'name',
-      label: 'Job Name',
+      label: 'Job Name: ',
       tests: tests.nameTests,
-      modelKey: '',
+      modelKey: null,
       valueType: 'string',
       value: this.jobName,
     });
     this.registerRenderSubview(jobEditor, 'job-editor-container');
     this.registerRenderSubview(inputName, 'job-name');
-    $(this.queryByHook("job-name")).find('input').width(500)
-    if(this.directory.endsWith('.job')||this.isCreated){
+    $(this.queryByHook("job-name")).find('input').width(1350)
+    if(this.isCreated){
       this.disableJobNameInput();
     }
   },
@@ -75,7 +74,13 @@ let JobManager = PageView.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   setJobName: function(e) {
-    this.jobName = e.target.value
+    var newJobName = e.target.value;
+    if(newJobName.endsWith(this.jobDate)){
+      this.jobName = newJobName
+    }else{
+      this.jobName = newJobName + this.jobDate
+      e.target.value = this.jobName
+    }
   },
   getCurrentDate: function () {
     var date = new Date();

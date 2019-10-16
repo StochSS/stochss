@@ -21,15 +21,19 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
   },
   clickSaveHandler: function (e) {
-    this.parent.parent.isCreated = true;
-    this.parent.parent.disableJobNameInput()
-    this.saveModel();
+    var self = this;
+    this.saveModel(function () {
+      if(document.URL.endsWith('.mdl')){
+        var dirname = path.dirname(document.URL).split('localhost/hub').pop()
+        //window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+      }
+    });
   },
   clickStartJobHandler: function (e) {
     this.saveModel(this.runJob.bind(this));
   },
   clickEditModelHandler: function (e) {
-    this.saveModel(window.location.href = path.join("/hub/stochss/models/edit", this.model.directory))
+    this.saveModel(window.location.href = path.join("/hub/stochss/models/edit", this.model.directory));
   },
   saveModel: function (cb) {
     // this.model is a ModelVersion, the parent of the collection is Model
@@ -47,10 +51,14 @@ module.exports = View.extend({
     }
   },
   runJob: function () {
-    var model = this.model
-    var endpoint = path.join('/stochss/api/jobs/run-job/', model.directory, "<--GillesPy2Job-->", this.parent.parent.jobName);
+    var model = this.model;
+    var endpoint = path.join('/stochss/api/jobs/run-job/', model.directory, "<--RunGillesPy2Job-->", this.parent.parent.jobName);
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
+      if(document.URL.endsWith('.mdl')){
+        var dirname = path.dirname(document.URL).split('localhost/hub').pop()
+        //window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+      }
     });
   },
 });

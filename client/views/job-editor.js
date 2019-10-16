@@ -3,6 +3,7 @@ var $ = require('jquery');
 var tests = require('../views/tests');
 //views
 var View = require('ampersand-view');
+var InputView = require('./input');
 var SimSettingsView = require('../views/simulation-settings');
 var JobStateButtonsView = require('../views/job-state-buttons');
 //models
@@ -30,7 +31,21 @@ module.exports = View.extend({
       }
     });
   },
+  update: function (e) {
+  },
+  updateValid: function (e) {
+  },
   renderSubviews: function() {
+    var inputName = new InputView({
+      parent: this,
+      required: true,
+      name: 'name',
+      label: 'Model Path: ',
+      tests: tests.nameTests,
+      modelKey: 'directory',
+      valueType: 'string',
+      value: this.model.directory,
+    });
     var simSettings = new SimSettingsView({
       parent: this,
       model: this.model.simulationSettings,
@@ -39,11 +54,19 @@ module.exports = View.extend({
     var jobStateButtons = new JobStateButtonsView({
       model: this.model
     });
+    this.registerRenderSubview(inputName, "model-name-container");
     this.registerRenderSubview(simSettings, 'sim-settings-container');
     this.registerRenderSubview(jobStateButtons, 'job-state-buttons-container');
+    $(this.queryByHook("model-name-container")).find('input').width(1350)
+    if(this.parent.isCreated){
+      this.disableModelPathInput();
+    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
+  },
+  disableModelPathInput: function () {
+    $(this.queryByHook("model-name-container")).find('input').prop('disabled', true);
   },
 });
