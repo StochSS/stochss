@@ -22,6 +22,7 @@ module.exports = View.extend({
   },
   clickSaveHandler: function (e) {
     var self = this;
+    var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
     this.saveModel(function () {
       if(document.URL.endsWith('.mdl')){
         var dirname = path.dirname(document.URL).split('localhost/hub').pop()
@@ -52,12 +53,13 @@ module.exports = View.extend({
   },
   runJob: function () {
     var model = this.model;
-    var endpoint = path.join('/stochss/api/jobs/run-job/', model.directory, "<--RunGillesPy2Job-->", this.parent.parent.jobName);
+    var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
+    var endpoint = path.join('/stochss/api/jobs/run-job/', optType, model.directory, "<--GillesPy2Job-->", this.parent.parent.jobName);
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
       if(document.URL.endsWith('.mdl')){
         var dirname = path.dirname(document.URL).split('localhost/hub').pop()
-        //window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+        window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
       }
     });
   },

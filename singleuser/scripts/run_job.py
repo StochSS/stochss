@@ -6,6 +6,45 @@ from shutil import copyfile
 from run_model import *
 
 
+def save_new_job(job_path, model_path, job_model, **kwargs):
+    results_path = kwargs['results_path']
+    os.mkdir(job_path)
+    os.mkdir(results_path)
+    copyfile(model_path, job_model)
+    model_info = {"model":"{0}".format(model_path), "job_model":"{0}".format(job_model), }
+    info_path = "{0}/info.json".format(job_path)
+    with open(info_path, "w") as info_file:
+        info_file.write(json.dumps(model_info))
+    return model_info
+
+
+def save_existing_job(job_path, model_path, job_model, **kwargs):
+    info_path = "{0}/info.json".format(job_path)
+    with open(info_path, "r") as info_file:
+        _data = info_file.read()
+        data = json.loads(_data)
+        old_model_path = "{0}/{1}".format(data.job_model)
+        os.remove(old_model_path)
+    copyfile(model_path, job_model)
+    model_info = {"model":"{0}".format(model_file), "job_model":"{0}".format(job_model), }
+    with open(info_path, "w") as info_file:
+        info_file.write(json.dumps(model_info))
+    return model_info
+
+
+def run_new_job(job_path, model_path, job_model, **kwargs):
+    results_path = kwargs['results_path']
+    model_file = kwargs['model_file']
+    save_new_job(job_path, model_path, job_model, results_path=results_path)
+    return run_job(job_model, model_file)
+
+
+def run_existing_job(job_path, model_path, job_model, **kwargs):
+    model_file = kwargs['model_file']
+    save_existing_job(job_path, model_path, job_model)
+    return run_job(job_model, model_file)
+
+
 def run_job(job_model, model_file):
     with open(job_model, 'r') as json_file:
         _data = json_file.read()
@@ -22,19 +61,11 @@ def run_job(job_model, model_file):
         open("{0}/COMPLETE".format(job_path), 'w').close()
         return results
 
-def set_up_job(job_path, model_path, job_model, results_path):
-    os.mkdir(job_path)
-    os.mkdir(results_path)
-    copyfile(model_path, job_model)
-    model_info = { "model":"{0}".format(job_model), }
-    info_path = "{0}/info.json".format(job_path)
-    with open(info_path, 'w') as info_file:
-        info_file.write(json.dumps(model_info))
-
 
 if __name__ == "__main__":
     model_path = sys.argv[1]
     job_name = sys.argv[2]
+    opt_type = sys.argv[3]
     _dir_path = model_path.split('/')
     model_file = _dir_path.pop()
     dir_path = '/'.join(_dir_path)
@@ -51,8 +82,12 @@ if __name__ == "__main__":
         job_path = "{0}/{1}".format(dir_path, _job_dir)
     results_path = "{0}/results".format(job_path)
     job_model = "{0}/{1}".format(job_path, model_file)
-    set_up_job(job_path, model_path, job_model, results_path)
-    results = run_job(job_model, model_file)
-    with open("{0}/results.p".format(results_path), 'wb') as results_file:
-        results_file.write(pickle.dumps(results))
-    print(json.dumps(results))
+
+    opts = { "sn":save_new_job, "rn":run_new_job, "se":save_existing_job, "re":run_existing_job, }
+
+    data = opts[opt_type](job_path, model_path, job_model, results_path=results_path, model_file=model_file)
+
+    if "r" in opt_type:    
+        with open("{0}/results.p".format(results_path), 'wb') as results_file:
+            results_file.write(pickle.dumps(data))
+    print(json.dumps(data))
