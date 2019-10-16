@@ -52,8 +52,8 @@ class RunJobAPIHandler(BaseHandler):
         client = docker.from_env()
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        model_path, job_name = data.split('/<--GillesPy2Job-->/')
-        code, _message = container.exec_run(cmd='run_job.py "/home/jovyan/{0}" "{1}" "{2}"'.format(model_path, job_name, opt_type))
+        model_path, job = data.split('/<--GillesPy2Job-->/')
+        code, _message = container.exec_run(cmd='run_job.py "/home/jovyan/{0}" "{1}" "{2}"'.format(model_path, job, opt_type))
         message = _message.decode()
         self.write(message)
 
@@ -61,13 +61,13 @@ class RunJobAPIHandler(BaseHandler):
 class SaveJobAPIHandler(BaseHandler):
 
     @web.authenticated
-    async def get(self, _opt_type, data):
+    async def get(self, opt_type, data):
         checkUserOrRaise(self)
         client = docker.from_env()
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        model_path, job_name = data.split('/<--GillesPy2Job-->/')
-        code, _message = container.exec_run(cmd='run_job.py "/home/jovyan/{0}" "{1}" "{2}"'.format(model_path, job_name, opt_type))
+        model_path, job = data.split('/<--GillesPy2Job-->/')
+        code, _message = container.exec_run(cmd='run_job.py "/home/jovyan/{0}" "{1}" "{2}"'.format(model_path, job, opt_type))
         message = _message.decode()
         self.write(message)
 

@@ -22,19 +22,27 @@ module.exports = View.extend({
   },
   clickSaveHandler: function (e) {
     var self = this;
+    var model = this.model
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
+    var job = document.URL.endsWith(".mdl") ? this.parent.parent.jobName : this.parent.parent.directory
     this.saveModel(function () {
-      if(document.URL.endsWith('.mdl')){
-        var dirname = path.dirname(document.URL).split('localhost/hub').pop()
-        //window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
-      }
+      var endpoint = path.join('/stochss/api/jobs/save-job/', optType, model.directory, "<--GillesPy2Job-->", job);
+      xhr({uri: endpoint}, function (err, response, body) {
+        if(document.URL.endsWith('.mdl')){
+          var dirname = path.dirname(document.URL).split('localhost/hub').pop()
+          window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+        }
+      });
     });
   },
   clickStartJobHandler: function (e) {
     this.saveModel(this.runJob.bind(this));
   },
   clickEditModelHandler: function (e) {
-    this.saveModel(window.location.href = path.join("/hub/stochss/models/edit", this.model.directory));
+    var self = this
+    this.saveModel(function () {
+      window.location.href = path.join("/hub/stochss/models/edit", self.model.directory);
+    });
   },
   saveModel: function (cb) {
     // this.model is a ModelVersion, the parent of the collection is Model
@@ -54,7 +62,8 @@ module.exports = View.extend({
   runJob: function () {
     var model = this.model;
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
-    var endpoint = path.join('/stochss/api/jobs/run-job/', optType, model.directory, "<--GillesPy2Job-->", this.parent.parent.jobName);
+    var job = document.URL.endsWith(".mdl") ? this.parent.parent.jobName : this.parent.parent.directory
+    var endpoint = path.join('/stochss/api/jobs/run-job/', optType, model.directory, "<--GillesPy2Job-->", job);
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
       if(document.URL.endsWith('.mdl')){

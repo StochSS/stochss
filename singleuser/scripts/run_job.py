@@ -11,7 +11,7 @@ def save_new_job(job_path, model_path, job_model, **kwargs):
     os.mkdir(job_path)
     os.mkdir(results_path)
     copyfile(model_path, job_model)
-    model_info = {"model":"{0}".format(model_path), "job_model":"{0}".format(job_model), }
+    model_info = {"model":"{0}".format(model_path), }
     info_path = "{0}/info.json".format(job_path)
     with open(info_path, "w") as info_file:
         info_file.write(json.dumps(model_info))
@@ -19,14 +19,15 @@ def save_new_job(job_path, model_path, job_model, **kwargs):
 
 
 def save_existing_job(job_path, model_path, job_model, **kwargs):
+    model_file = kwargs['model_file']
     info_path = "{0}/info.json".format(job_path)
     with open(info_path, "r") as info_file:
         _data = info_file.read()
         data = json.loads(_data)
-        old_model_path = "{0}/{1}".format(data.job_model)
+        old_model_path = "{0}/{1}".format(job_path, model_file)
         os.remove(old_model_path)
     copyfile(model_path, job_model)
-    model_info = {"model":"{0}".format(model_file), "job_model":"{0}".format(job_model), }
+    model_info = {"model":"{0}".format(model_path), }
     with open(info_path, "w") as info_file:
         info_file.write(json.dumps(model_info))
     return model_info
@@ -41,7 +42,7 @@ def run_new_job(job_path, model_path, job_model, **kwargs):
 
 def run_existing_job(job_path, model_path, job_model, **kwargs):
     model_file = kwargs['model_file']
-    save_existing_job(job_path, model_path, job_model)
+    save_existing_job(job_path, model_path, job_model, model_file=model_file)
     return run_job(job_model, model_file)
 
 
@@ -64,22 +65,27 @@ def run_job(job_model, model_file):
 
 if __name__ == "__main__":
     model_path = sys.argv[1]
-    job_name = sys.argv[2]
     opt_type = sys.argv[3]
-    _dir_path = model_path.split('/')
-    model_file = _dir_path.pop()
-    dir_path = '/'.join(_dir_path)
-    _job_dir = "{0}.job".format(job_name)
-    i = 2
-    exists = _job_dir in os.listdir(path=dir_path)
-    while exists:
-        job_dir = '({0}).'.format(i).join(_job_dir.split('.'))
-        exists = job_dir in os.listdir(path=dir_path)
-        i += 1
-    try:
-        job_path = "{0}/{1}".format(dir_path, job_dir)
-    except:
-        job_path = "{0}/{1}".format(dir_path, _job_dir)
+    if "n" in opt_type:
+        job_name = sys.argv[2]
+        _job_dir = "{0}.job".format(job_name)
+        _dir_path = model_path.split('/')
+        model_file = _dir_path.pop()
+        dir_path = '/'.join(_dir_path)
+        i = 2
+        exists = _job_dir in os.listdir(path=dir_path)
+        while exists:
+            job_dir = '({0}).'.format(i).join(_job_dir.split('.'))
+            exists = job_dir in os.listdir(path=dir_path)
+            i += 1
+        try:
+            job_path = "{0}/{1}".format(dir_path, job_dir)
+        except:
+            job_path = "{0}/{1}".format(dir_path, _job_dir)
+    else:
+        job_path = sys.argv[2]
+        model_file = model_path.split('/').pop()
+    
     results_path = "{0}/results".format(job_path)
     job_model = "{0}/{1}".format(job_path, model_file)
 
