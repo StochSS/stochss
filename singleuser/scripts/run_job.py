@@ -4,6 +4,7 @@
 import os, sys, json, pickle
 from shutil import copyfile
 from run_model import *
+from datetime import datetime, timezone, timedelta
 
 
 def save_new_job(job_path, model_path, job_model, **kwargs):
@@ -21,11 +22,8 @@ def save_new_job(job_path, model_path, job_model, **kwargs):
 def save_existing_job(job_path, model_path, job_model, **kwargs):
     model_file = kwargs['model_file']
     info_path = "{0}/info.json".format(job_path)
-    with open(info_path, "r") as info_file:
-        _data = info_file.read()
-        data = json.loads(_data)
-        old_model_path = "{0}/{1}".format(job_path, model_file)
-        os.remove(old_model_path)
+    old_model_path = "{0}/{1}".format(job_path, model_file)
+    os.remove(old_model_path)
     copyfile(model_path, job_model)
     model_info = {"model":"{0}".format(model_path), }
     with open(info_path, "w") as info_file:
@@ -36,26 +34,42 @@ def save_existing_job(job_path, model_path, job_model, **kwargs):
 def run_new_job(job_path, model_path, job_model, **kwargs):
     results_path = kwargs['results_path']
     model_file = kwargs['model_file']
+    info_path = "{0}/info.json".format(job_path)
     save_new_job(job_path, model_path, job_model, results_path=results_path)
-    return run_job(job_model, model_file)
+    return run_job(job_model, model_file, info_path)
 
 
 def run_existing_job(job_path, model_path, job_model, **kwargs):
     model_file = kwargs['model_file']
+    info_path = "{0}/info.json".format(job_path)
     save_existing_job(job_path, model_path, job_model, model_file=model_file)
-    return run_job(job_model, model_file)
+    return run_job(job_model, model_file, info_path)
 
 
-def run_job(job_model, model_file):
+def run_job(job_model, model_file, info_path):
+    # Get the model data from the file and create the model object
     with open(job_model, 'r') as json_file:
         _data = json_file.read()
         data = json.loads(str(_data))
         data['name'] = model_file.split('.')[0]
         _model = ModelFactory(data)
+        # Add the start time to the job info file
+        with open(info_path, 'r') as info_file:
+            _info_data = info_file.read()
+            info_data = json.loads(_info_data)
+        eastern = timezone(timedelta(hours=-4))
+        today = datetime.now(tz=eastern)
+        str_datetime = today.strftime("%b. %d, %Y  %I:%M %p")
+        info_data['start_time'] = str_datetime
+        with open(info_path, "w") as info_file:
+            info_file.write(json.dumps(info_data))
+        # Update job status to running
         open("{0}/RUNNING".format(job_path), 'w').close()
+        # run the job
         try:
             results = run_solver(_model.model, data['simulationSettings'])
         except:
+            # update job status to error if GillesPy2 throws an exception
             open("{0}/ERROR".format(job_path), 'w').close()
         else:
             for result in results:
@@ -63,6 +77,7 @@ def run_job(job_model, model_file):
                     if not isinstance(result[key], list):
                         # Assume it's an ndarray, use tolist()
                         result[key] = result[key].tolist()
+            # update job status to complete
             open("{0}/COMPLETE".format(job_path), 'w').close()
             return results
 
