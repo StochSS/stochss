@@ -522,7 +522,7 @@ let FileBrowser = PageView.extend({
                 { uri: endpoint },
                 function (err, response, body) {
                   var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
-                  window.location.href = notebookPath
+                  window.open(notebookPath, '_blank')
                 },
               );
             }

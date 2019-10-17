@@ -53,14 +53,18 @@ def run_job(job_model, model_file):
         data['name'] = model_file.split('.')[0]
         _model = ModelFactory(data)
         open("{0}/RUNNING".format(job_path), 'w').close()
-        results = run_solver(_model.model, data['simulationSettings'])
-        for result in results:
-            for key in result.keys():
-                if not isinstance(result[key], list):
-                    # Assume it's an ndarray, use tolist()
-                    result[key] = result[key].tolist()
-        open("{0}/COMPLETE".format(job_path), 'w').close()
-        return results
+        try:
+            results = run_solver(_model.model, data['simulationSettings'])
+        except:
+            open("{0}/ERROR".format(job_path), 'w').close()
+        else:
+            for result in results:
+                for key in result.keys():
+                    if not isinstance(result[key], list):
+                        # Assume it's an ndarray, use tolist()
+                        result[key] = result[key].tolist()
+            open("{0}/COMPLETE".format(job_path), 'w').close()
+            return results
 
 
 if __name__ == "__main__":
