@@ -34,7 +34,7 @@ from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler,
 
 # API handlers
 from handlers.models import ModelFileAPIHandler, ModelBrowserFileList, ModelToNotebookHandler, DuplicateModelHandler, MoveRenameAPIHandler, DeleteFileAPIHandler, MoveFileAPIHandler
-from handlers.jobs import SaveJobAPIHandler, RunJobAPIHandler, JobInfoAPIHandler
+from handlers.jobs import SaveJobAPIHandler, RunJobAPIHandler, JobInfoAPIHandler, JobStatusAPIHandler
 from handlers.username import UsernameHandler
 from handlers.run_models import RunModelAPIHandler
 
@@ -52,6 +52,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/api/jobs/save-job/(\w+)\/?(.+)\/?", SaveJobAPIHandler),
         (r"/stochss/api/jobs/run-job/(\w+)\/?(.+)\/?", RunJobAPIHandler),
         (r"/stochss/api/jobs/job-info(.+)\/?", JobInfoAPIHandler),
+        (r"/stochss/api/jobs/job_status(.+)\/?", JobStatusAPIHandler),
         (r"/stochss/api/file/move(.+)\/?", MoveFileAPIHandler),
         (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
         (r"/stochss/api/file/rename(.+)\/?", MoveRenameAPIHandler),

@@ -71,3 +71,16 @@ class SaveJobAPIHandler(BaseHandler):
         message = _message.decode()
         self.write(message)
 
+
+class JobStatusAPIHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, data):
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        code, _status = container.exec_run(cmd='job_status.py /home/jovyan{0}'.format(data))
+        status = _status.decode()
+        self.write(status.strip())
+
