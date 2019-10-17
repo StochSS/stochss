@@ -33,9 +33,12 @@ let JobManager = PageView.extend({
         self.modelDirectory = JSON.parse(body).model.split('/home/jovyan').pop()
         var jobDir = self.directory.split('/').pop()
         self.jobName = jobDir.split('.')[0]
-        self.isCreated = true;
-        self.renderSubviews();
-      })
+        var statusEndpoint = path.join("/stochss/api/jobs/job_status", self.directory)
+        xhr({uri: statusEndpoint}, function (err, response, body) {
+          self.status = String(body);
+          self.renderSubviews();
+        });
+      });
     }
   },
   render: function () {
@@ -65,8 +68,11 @@ let JobManager = PageView.extend({
     this.registerRenderSubview(jobEditor, 'job-editor-container');
     this.registerRenderSubview(inputName, 'job-name');
     $(this.queryByHook("job-name")).find('input').width(1350)
-    if(this.isCreated){
+    if(this.status){
       this.disableJobNameInput();
+    }
+    if(this.status && this.status !== 'ready'){
+      jobEditor.collapseContainer();
     }
   },
   registerRenderSubview: function (view, hook) {

@@ -63,4 +63,7 @@ module.exports = View.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
+  collapseContainer: function () {
+    $(this.queryByHook("job-editor-container")).collapse();
+  },
 });

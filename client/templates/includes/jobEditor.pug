@@ -2,8 +2,10 @@ div#job-editor.card.card-body
 
   h2 Job Editor
 
-  div.col-md-12(data-hook="model-name-container")
+  div.collapse(class="show", data-hook="job-editor-container")
 
-  div(data-hook="sim-settings-container")
+    div.col-md-12(data-hook="model-name-container")
 
-  div.col-md-12(data-hook="job-state-buttons-container")
+    div(data-hook="sim-settings-container")
+
+    div.col-md-12(data-hook="job-state-buttons-container")
