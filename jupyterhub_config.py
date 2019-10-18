@@ -46,7 +46,7 @@ c.JupyterHub.extra_handlers = [
         # API handlers
         (r"/stochss/api/user\/?", UsernameHandler),
         (r"/stochss/api/model-data/(.+)\/?", ModelFileAPIHandler),
-        (r"/stochss/api/models/run/(.+)\/?", RunModelAPIHandler),
+        (r"/stochss/api/models/run/(\w+)/(\w+)?\/?(.+)\/?", RunModelAPIHandler),
         (r"/stochss/api/model/duplicate(.+)\/?", DuplicateModelHandler),
         (r"/stochss/api/models/to-notebook(.+)\/?", ModelToNotebookHandler),
         (r"/stochss/api/jobs/save-job/(\w+)\/?(.+)\/?", SaveJobAPIHandler),

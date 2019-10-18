@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, json
+import os, sys, json
 
 from gillespy2 import Species, Parameter, Reaction, RateRule, Model
 import numpy
@@ -166,6 +166,20 @@ def basicTauHybridSolver(model, data):
 
 if __name__ == "__main__":
     modelPath = sys.argv[1]
-    results = run_model(modelPath)
-    print(json.dumps(results))
+    outfile = sys.argv[2]
+    cmd = sys.argv[3]
+    if 'start' in cmd:
+        results = run_model(modelPath)
+        with open(outfile, "w") as fd:
+            json.dump(results, fd)
+        open(outfile + ".done", "w").close()
+    else:
+        if os.path.exists(outfile + ".done"):
+            with open(outfile, "r") as fd:
+                print(fd.read())
+            os.remove(outfile)
+            os.remove(outfile + ".done")
+        else:
+            print("running")
+
 
