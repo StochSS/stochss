@@ -78,7 +78,7 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5rem;
 }
 
-h3.editor-header {
+h3, h5.editor-header {
   display: inline-block;
 }
 
