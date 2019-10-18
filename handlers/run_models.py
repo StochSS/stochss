@@ -26,7 +26,8 @@ class RunModelAPIHandler(BaseHandler):
             outfile = "{0}".format(outfile_uuid)
             outfile = outfile.replace("-", "_")
         log.warn(str(outfile))
-        code, _results = container.exec_run(cmd="bash -c 'run_model.py {0} {1} {2} &'".format(modelPath, "/home/jovyan/." + outfile + ".tmp", run_cmd))
+        args = "{0} /home/jovyan/.{1}.tmp {2}".format(modelPath, outfile, run_cmd)
+        code, _results = container.exec_run(cmd="bash -c 'run_model.py {0} &'".format(args))
         results = _results.decode()
         log.warn(str(results))
         if results == '' or results == 'running':
