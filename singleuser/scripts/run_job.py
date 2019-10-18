@@ -115,4 +115,4 @@ if __name__ == "__main__":
     if "r" in opt_type:    
         with open("{0}/results.p".format(results_path), 'wb') as results_file:
             results_file.write(pickle.dumps(data))
-    print(json.dumps(data))
+    

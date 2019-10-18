@@ -29,8 +29,10 @@ module.exports = View.extend({
       var endpoint = path.join('/stochss/api/jobs/save-job/', optType, model.directory, "<--GillesPy2Job-->", job);
       xhr({uri: endpoint}, function (err, response, body) {
         if(document.URL.endsWith('.mdl')){
-          var dirname = path.dirname(document.URL).split('localhost/hub').pop()
-          window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+          setTimeout(function () {
+            var dirname = path.dirname(document.URL).split('localhost/hub').pop()
+            window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+          }, 2000); 
         }
       });
     });
@@ -65,11 +67,14 @@ module.exports = View.extend({
     var job = document.URL.endsWith(".mdl") ? this.parent.parent.jobName : this.parent.parent.directory
     var endpoint = path.join('/stochss/api/jobs/run-job/', optType, model.directory, "<--GillesPy2Job-->", job);
     var self = this;
-    xhr({ uri: endpoint, timeout: 1000 },function (err, response, body) {
+    xhr({ uri: endpoint },function (err, response, body) {
       self.parent.collapseContainer();
+      self.parent.parent.updateJobStatus();
       if(document.URL.endsWith('.mdl')){
-        var dirname = path.dirname(document.URL).split('localhost/hub').pop()
-        window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+        setTimeout(function () {
+          var dirname = path.dirname(document.URL).split('localhost/hub').pop()
+          window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+        }, 2000);        
       }
     });
   },

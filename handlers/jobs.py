@@ -53,9 +53,12 @@ class RunJobAPIHandler(BaseHandler):
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         model_path, job = data.split('/<--GillesPy2Job-->/')
-        code, _message = container.exec_run(cmd='run_job.py "/home/jovyan/{0}" "{1}" "{2}"'.format(model_path, job, opt_type))
-        message = _message.decode()
-        self.write(message)
+        args = "/home/jovyan/{0} {1} {2}".format(model_path, job, opt_type)
+        code, _message = container.exec_run(cmd='bash -c "run_job.py {0} &"'.format(args), stream=True)
+        if code == 0:
+            self.write("Success! the job has started running.")
+        else:
+            self.write("Oops! something went wrong.")
 
 
 class SaveJobAPIHandler(BaseHandler):
@@ -67,9 +70,13 @@ class SaveJobAPIHandler(BaseHandler):
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         model_path, job = data.split('/<--GillesPy2Job-->/')
-        code, _message = container.exec_run(cmd='run_job.py "/home/jovyan/{0}" "{1}" "{2}"'.format(model_path, job, opt_type))
-        message = _message.decode()
-        self.write(message)
+        args = "/home/jovyan/{0} {1} {2}".format(model_path, job, opt_type)
+        log.warn(args)
+        code, _message = container.exec_run(cmd='bash -c "run_job.py {0} &"'.format(args), stream=True)
+        if code == 0:
+            self.write("Success! the job has been saved.")
+        else:
+            self.write("Oops! something went wrong.")
 
 
 class JobStatusAPIHandler(BaseHandler):
