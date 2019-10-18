@@ -6,6 +6,7 @@ var xhr = require('xhr');
 //views
 var PageView = require('./base');
 var JobEditorView = require('../views/job-editor');
+var JobStatusView = require('../views/job-status');
 var InputView = require('../views/input');
 //templates
 var template = require('../templates/pages/JobManager.pug');
@@ -24,18 +25,20 @@ let JobManager = PageView.extend({
     if(this.directory.endsWith('.mdl')){
       var modelFile = this.directory.split('/').pop();
       var name = modelFile.split('.')[0];
-      this.modelDirectory = this.directory
+      this.modelDirectory = this.directory;
       this.jobDate = this.getCurrentDate();
       this.jobName = name + this.jobDate;
+      this.status = 'new';
     }else{
-      var endpoint = path.join("/stochss/api/jobs/job-info", this.directory, "/info.json")
+      var endpoint = path.join("/stochss/api/jobs/job-info", this.directory, "/info.json");
       xhr({uri: endpoint}, function (err, response, body){
-        self.modelDirectory = JSON.parse(body).model.split('/home/jovyan').pop()
-        var jobDir = self.directory.split('/').pop()
-        self.jobName = jobDir.split('.')[0]
-        var statusEndpoint = path.join("/stochss/api/jobs/job_status", self.directory)
+        self.modelDirectory = JSON.parse(body).model.split('/home/jovyan').pop();
+        self.startTime = JSON.parse(body).start_time;
+        var jobDir = self.directory.split('/').pop();
+        self.jobName = jobDir.split('.')[0];
+        var statusEndpoint = path.join("/stochss/api/jobs/job_status", self.directory);
         xhr({uri: statusEndpoint}, function (err, response, body) {
-          self.status = String(body);
+          self.status = body;
           self.renderSubviews();
         });
       });
@@ -67,17 +70,18 @@ let JobManager = PageView.extend({
     });
     this.registerRenderSubview(jobEditor, 'job-editor-container');
     this.registerRenderSubview(inputName, 'job-name');
+    this.renderJobStatusView();
     $(this.queryByHook("job-name")).find('input').width(1350)
-    if(this.status){
+    if(this.status !== 'new'){
       this.disableJobNameInput();
     }
-    if(this.status && this.status !== 'ready'){
+    if(this.status !== 'new' && this.status !== 'ready'){
       jobEditor.collapseContainer();
     }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
+    return this.renderSubview(view, this.queryByHook(hook));
   },
   setJobName: function(e) {
     var newJobName = e.target.value;
@@ -96,10 +100,51 @@ let JobManager = PageView.extend({
     var hours = date.getHours();
     var minutes = date.getMinutes();
     var seconds = date.getSeconds();
-    return "_" + month + day + year + "_" + hours + minutes + seconds
+    return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
   disableJobNameInput: function() {
     $(this.queryByHook("job-name")).find('input').prop('disabled', true);
+  },
+  renderJobStatusView: function () {
+    if(this.jobStatusView){
+      this.jobStatusView.remove();
+    }
+    var statusView = new JobStatusView({
+      startTime: this.startTime,
+      status: this.status,
+    });
+    this.jobStatusView = this.registerRenderSubview(statusView, 'job-status-container');
+  },
+  getJobInfo: function (cb) {
+    var self = this;
+    var endpoint = path.join("/stochss/api/jobs/job-info", this.directory, "/info.json");
+    console.log("getting start time");
+    xhr({uri: endpoint}, function (err, response, body){
+      self.startTime = JSON.parse(body).start_time;
+      console.log("got start time");
+      cb();
+    });
+  },
+  getJobStatus: function () {
+    var self = this;
+    var statusEndpoint = path.join("/stochss/api/jobs/job_status", this.directory);
+    xhr({uri: statusEndpoint}, function (err, response, body) {
+      if(self.status !== body ){
+        self.status = body;
+        self.renderJobStatusView();
+      }
+      if(self.status !== 'error' && self.status !== 'complete'){
+        setTimeout(_.bind(self.getJobStatus, self), 1000);
+      }
+    });
+  },
+  updateJobStatus: function () {
+    var self = this;
+    setTimeout(function () {  
+      self.getJobInfo(function () {
+        self.getJobStatus();
+      });
+    }, 2000);
   },
 });
 
