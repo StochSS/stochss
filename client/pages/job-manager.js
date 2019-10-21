@@ -148,7 +148,7 @@ let JobManager = PageView.extend({
       self.getJobInfo(function () {
         self.getJobStatus();
       });
-    }, 2000);
+    }, 3000);
   },
   renderResultsView: function () {
     if(this.jobResultsView){

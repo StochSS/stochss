@@ -32,7 +32,7 @@ module.exports = View.extend({
           setTimeout(function () {
             var dirname = path.dirname(document.URL).split('localhost/hub').pop()
             window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
-          }, 2000); 
+          }, 3000); 
         }
       });
     });
@@ -74,7 +74,7 @@ module.exports = View.extend({
         setTimeout(function () {
           var dirname = path.dirname(document.URL).split('localhost/hub').pop()
           window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
-        }, 2000);        
+        }, 3000);        
       }
     });
   },
