@@ -37,7 +37,7 @@ let JobManager = PageView.extend({
         self.startTime = JSON.parse(body).start_time;
         var jobDir = self.directory.split('/').pop();
         self.jobName = jobDir.split('.')[0];
-        var statusEndpoint = path.join("/stochss/api/jobs/job_status", self.directory);
+        var statusEndpoint = path.join("/stochss/api/jobs/job-status", self.directory);
         xhr({uri: statusEndpoint}, function (err, response, body) {
           self.status = body;
           self.renderSubviews();
@@ -129,7 +129,7 @@ let JobManager = PageView.extend({
   },
   getJobStatus: function () {
     var self = this;
-    var statusEndpoint = path.join("/stochss/api/jobs/job_status", this.directory);
+    var statusEndpoint = path.join("/stochss/api/jobs/job-status", this.directory);
     xhr({uri: statusEndpoint}, function (err, response, body) {
       if(self.status !== body ){
         self.status = body;

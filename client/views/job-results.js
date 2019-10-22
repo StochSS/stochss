@@ -1,4 +1,7 @@
 var $ = require('jquery');
+var path = require('path');
+var xhr = require('xhr');
+var Plotly = require('../lib/plotly');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -26,6 +29,18 @@ module.exports = View.extend({
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
+    'click [data-hook=plot-stddevrange]' : function () {
+      this.getPlot("stddevran");
+    },
+    'click [data-hook=plot-trajectories]' : function () {
+      this.getPlot("trajectories");
+    },
+    'click [data-hook=plot-stddev]' : function () {
+      this.getPlot("stddev");
+    },
+    'click [data-hook=plot-trajmean]' : function () {
+      this.getPlot("avg");
+    },
   },
   update: function () {
   },
@@ -37,13 +52,38 @@ module.exports = View.extend({
   },
   setTitle: function (e) {
     this.title = e.target.value;
-    console.log(this.title)
   },
   setYAxis: function (e) {
     this.yaxis = e.target.value;
   },
   setXAxis: function (e) {
     this.xaxis = e.target.value;
+  },
+  getPlot: function (type) {
+    var self = this;
+    var data = {"plt_type": type}
+    if(!this.title && !this.xaxis && !this.yaxis){
+      data['plt_data'] = "None";
+    }else{
+      data['plt_data'] = {};
+    }
+    if(this.title){
+      data['plt_data']['title'] = this.title;
+    }
+    if(this.xaxis){
+      data['plt_data']['xaxis_label'] = this.xaxis;
+    }
+    if(this.yaxis){
+      data['plt_data']['yaxis_label'] = this.yaxis;
+    }
+    var endpoint = path.join("/stochss/api/jobs/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
+    console.log(endpoint)
+    xhr({url: endpoint}, function (err, response, body){
+      self.plotFigure(body);
+    });
+  },
+  plotFigure: function (figure) {
+    console.log(figure);
   },
   subviews: {
     inputTitle: {

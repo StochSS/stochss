@@ -67,16 +67,16 @@ def run_job(job_model, model_file, info_path):
         open("{0}/RUNNING".format(job_path), 'w').close()
         # run the job
         try:
-            results = run_solver(_model.model, data['simulationSettings'])
+            results, solver_name = run_solver(_model.model, data['simulationSettings'])
         except:
             # update job status to error if GillesPy2 throws an exception
             open("{0}/ERROR".format(job_path), 'w').close()
         else:
-            for result in results:
-                for key in result.keys():
-                    if not isinstance(result[key], list):
-                        # Assume it's an ndarray, use tolist()
-                        result[key] = result[key].tolist()
+            # for result in results:
+            #     for key in result.keys():
+            #         if not isinstance(result[key], list):
+            #             # Assume it's an ndarray, use tolist()
+            #             result[key] = result[key].tolist()
             # update job status to complete
             open("{0}/COMPLETE".format(job_path), 'w').close()
             return results
@@ -114,5 +114,7 @@ if __name__ == "__main__":
 
     if "r" in opt_type:    
         with open("{0}/results.p".format(results_path), 'wb') as results_file:
-            results_file.write(pickle.dumps(data))
+            pickle.dump(data, results_file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    print(data)
     

@@ -86,7 +86,7 @@ def run_model(modelPath):
         jsonData = json.loads(str(data))
         jsonData['name'] = modelPath.split('/').pop().split('.')[0]
         _model = ModelFactory(jsonData)
-        _results = run_solver(_model.model, jsonData['simulationSettings'])
+        _results, solver_name = run_solver(_model.model, jsonData['simulationSettings'])
         results = _results[0]
         for key in results.keys():
             if not isinstance(results[key], list):
@@ -98,14 +98,14 @@ def run_model(modelPath):
 
 def run_solver(model, data):
     if(data['is_stochastic'] == False):
-        return basicODESolver(model, data)
+        return basicODESolver(model, data), BasicODESolver.name
     algorithm = data['stochasticSettings']['algorithm']
     if(algorithm == "SSA"):
         return ssaSolver(model, data)
     if(algorithm == "Tau-Leaping"):
-        return basicTauLeapingSolver(model, data)
+        return basicTauLeapingSolver(model, data), BasicTauLeapingSolver.name
     if(algorithm == "Hybrid-Tau-Leaping"):
-        return basicTauHybridSolver(model, data)
+        return basicTauHybridSolver(model, data), BasicTauHybridSolver.name
 
 
 def basicODESolver(model, data):
@@ -129,7 +129,7 @@ def ssaSolver(model, data):
         number_of_trajectories = data['stochasticSettings']['realizations'],
         increment = data['timeStep'],
         seed = seed
-    )
+    ), solver.name
 
 
 def basicTauLeapingSolver(model, data):

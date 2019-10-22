@@ -54,7 +54,11 @@ class RunJobAPIHandler(BaseHandler):
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         model_path, job = data.split('/<--GillesPy2Job-->/')
         args = "/home/jovyan/{0} {1} {2}".format(model_path, job, opt_type)
-        code, _message = container.exec_run(cmd='bash -c "run_job.py {0} &"'.format(args), stream=True)
+        log.warn('starting the job')
+        code, _message = container.exec_run(cmd='bash -c "run_job.py {0} &"'.format(args))#, detach=True)
+        log.warn('sent the job')
+        message = _message.decode()
+        log.warn(message)
         if code == 0:
             self.write("Success! the job has started running.")
         else:
@@ -72,7 +76,7 @@ class SaveJobAPIHandler(BaseHandler):
         model_path, job = data.split('/<--GillesPy2Job-->/')
         args = "/home/jovyan/{0} {1} {2}".format(model_path, job, opt_type)
         log.warn(args)
-        code, _message = container.exec_run(cmd='bash -c "run_job.py {0} &"'.format(args), stream=True)
+        code, _message = container.exec_run(cmd='bash -c "run_job.py {0} &"'.format(args))
         if code == 0:
             self.write("Success! the job has been saved.")
         else:
@@ -87,7 +91,29 @@ class JobStatusAPIHandler(BaseHandler):
         client = docker.from_env()
         user = self.current_user.name
         container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        log.warn('getting the status of the job')
         code, _status = container.exec_run(cmd='job_status.py /home/jovyan{0}'.format(data))
+        log.warn(code)
         status = _status.decode()
+        log.warn('the status of the job is: ' + status)
         self.write(status.strip())
+
+
+class PlotJobResultsAPIHandler(BaseHandler):
+
+    @web.authenticated
+    async def get(self, path):
+        body = json.loads(self.get_query_argument(name='data'))
+        checkUserOrRaise(self)
+        client = docker.from_env()
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        results_path = "/home/jovyan{0}/results/results.p".format(path)
+        log.warn(self.request.body)
+        plt_type = body['plt_type']
+        plt_data = json.dumps(body['plt_data'])
+        args = "{0} {1} {2}".format(results_path, plt_type, plt_data)
+        code, _plt_fig = container.exec_run(cmd="plot_results.py {0}".format(args))
+        plot_fig = _plt_fig.decode()
+        self.write(plot_fig)
 
