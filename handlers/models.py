@@ -15,7 +15,33 @@ from handlers.db_util import checkUserOrRaise
 
 import logging
 log = logging.getLogger()
- 
+
+# Imports for interacting with kubernetes cluster
+from kubernetes import config
+from kubernetes.client.apis import core_v1_api
+from kubernetes.client.rest import ApiException
+from kubernetes.stream import stream
+
+
+def load_kube_client(user):
+    '''
+    This function loads kubernetes configuration and returns a reference
+    to the Kubernetes API client, used for interacting within the cluster.
+    '''
+
+    config.load_incluster_config()
+    user_pod = 'jupyter-{0}'.format(user)
+    return core_v1_api.CoreV1Api(), user_pod
+
+def write_tar_to_container(client, pod, data):
+    client.connect_get_namespaced_pod_exec(pod, 'jhub',
+        command=['tar', 'cvf', data], tty=False)
+
+def read_tar_from_container(client, pod, file_name):
+    data = client.connect_get_namespaced_pod_exec(pod, 'jhub',
+        command=['tar', 'cvf', data], tty=False)
+
+    
 
 class ModelFileAPIHandler(BaseHandler):
 
@@ -25,8 +51,7 @@ class ModelFileAPIHandler(BaseHandler):
         log.debug(modelPath)
         #client = docker.from_env()
         user = self.current_user.name
-        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        #modelPath = self.getModelPath(_modelPath)
+        client, user_pod = load_kube_client(user)
         try:
             bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
         except:
@@ -34,11 +59,8 @@ class ModelFileAPIHandler(BaseHandler):
             with open(filePath, 'r') as jsonFile:
                 data = jsonFile.read()
                 #jsonData = json.loads(str(data))
-                #verPath = self.getVerPath(modelPath)
-                #container.exec_run(cmd="mkdir -p {0}/.versions/".format(_modelPath))
                 #tarData = self.convertToTarData(data.encode('utf-8'), modelPath)
                 #container.put_archive("/home/jovyan/", tarData)
-                #container.exec_run(cmd="ln -s {0} {1}".format(verPath, modelPath))
                 #self.write(jsonData)
         else:
             jsonData = self.getModelData(bits, modelPath)
@@ -49,12 +71,13 @@ class ModelFileAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         #client = docker.from_env()   
         user = self.current_user.name
+        #client, user_pod = load_kube_client(user)
+
         #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         #tarData = self.convertToTarData(self.request.body, modelPath)
         #container.put_archive("/home/jovyan/", tarData)
         #bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
         #jsonData = self.getModelData(bits, modelPath)
-        #self.write(jsonData)
 
 
     def getModelPath(self, _modelPath):
@@ -116,14 +139,36 @@ class ModelToNotebookHandler(BaseHandler):
 
 
 class ModelBrowserFileList(BaseHandler):
+    '''
+    Handler for interacting with the Model File Browser list with File System data 
+    from remote user pod.
+    '''
 
     @web.authenticated
     async def get(self, path):
-        checkUserOrRaise(self)
-        #client = docker.from_env()
-        user = self.current_user.name
-        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        #file_path = '/home/jovyan{0}'.format(path)
-        #fcode, _fslist = container.exec_run(cmd='ls.py {0} {1}'.format(file_path, path))
-        #fslist = _fslist.decode()
-        #self.write(fslist)
+        '''
+        ########################################################################
+        Send Get request for fetching file system data in user container.  This
+        method utilizes the kubernetes python api to invoke the ls.py module of
+        the user container (stored in [UserPod]:/usr/local/bin).  The response 
+        is used to populate the Model File Browser js-tree.
+        ########################################################################
+
+        Attributes
+        ----------
+        path : str
+            Path to user directory within user pod container.
+
+        '''
+
+        checkUserOrRaise(self) # Authenticate User
+        user = self.current_user.name # Get User Name
+        client, user_pod = load_kube_client(user) # Get Kubernetes API+UserPod
+        file_path = '/home/jovyan{0}'.format(path) # User file system path
+        exec_cmd = ['ls.py', file_path, path] # /usr/local/bin/ls.py in UserPod
+
+        # Utilize Kubernetes API to execute exec_cmd on user pod and return
+        # response to variable to populate the js-tree
+        resp = stream(client.connect_get_namespaced_pod_exec, user_pod, 'jhub',
+                                command=exec_cmd, stderr=True, stdin=False, stdout=True, tty=False)
+        self.write(resp)
