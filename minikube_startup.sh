@@ -17,7 +17,7 @@ helm upgrade --install jhub jupyterhub/jupyterhub \
       --version 0.8.2 \
       --values config-minikube.yaml
 
-kubectl apply -f pods-list-sa.yaml
+kubectl apply -f jhub-rb.yaml
 
 IP=$(minikube ip)
 PORT=31212
