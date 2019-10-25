@@ -26,7 +26,7 @@ RUN /opt/conda/bin/pip install --upgrade \
       python-dotenv \
       # for cli tools
       click && \
-    rm /tmp/miniconda.sh
+      rm /tmp/miniconda.sh
 
 WORKDIR /srv/jupyterhub
 
