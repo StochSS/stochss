@@ -2,7 +2,7 @@
 # the base API handler has some logic that prevents
 # requests without a referrer field
 from jupyterhub.handlers.base import BaseHandler
-
+import ast
 from tornado import web
 import json
 #import docker
@@ -170,5 +170,13 @@ class ModelBrowserFileList(BaseHandler):
         # Utilize Kubernetes API to execute exec_cmd on user pod and return
         # response to variable to populate the js-tree
         resp = stream(client.connect_get_namespaced_pod_exec, user_pod, 'jhub',
-                                command=exec_cmd, stderr=True, stdin=False, stdout=True, tty=False)
-        self.write(resp)
+                                command=exec_cmd, stderr=True, 
+                                stdin=False, stdout=True, tty=False)
+        # The Kubernetes library will convert this to a string representation
+        # of a Python dictionary.  This is incompatible with json.loads.
+
+        # Use AST library to perform literal eval of response
+        resp = ast.literal_eval(resp)
+
+        # Then dump to JSON and write out
+        self.write(json.dumps(resp))
