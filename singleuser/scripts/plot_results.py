@@ -11,11 +11,16 @@ from gillespy2.core.results import EnsembleResults, Results
 
 def get_results(path):
     with open(path, 'rb') as fd:
-        _results = pickle.load(fd)
-        print(_results)
-        results =  EnsembleResults(_results)
-        print(results)
-        return results
+        _data = pickle.load(fd)
+        data = _data['results']
+        model = _data['model']
+        solver_name = _data['solver_name']
+        results = []
+        for _result in data:
+            result = Results(_result, model, solver_name)
+            results.append(result)
+        return EnsembleResults(results)
+        
 
 
 def get_plt_args(plt_data):
@@ -52,6 +57,9 @@ if __name__ == "__main__":
 
     opts = {"stddevran":plot_std_dev_range,"trajectories":plot,"stddev":plot_std_dev,"avg":plot_average}
 
+    print(results[0].model)
+    print(results)
     plt_fig = opts[plt_type](results, plt_args)
+    print(plt_fig)
     print(json.dumps(plt_fig, cls=plotly.utils.PlotlyJSONEncoder))
     

@@ -55,10 +55,10 @@ class RunJobAPIHandler(BaseHandler):
         model_path, job = data.split('/<--GillesPy2Job-->/')
         args = "/home/jovyan/{0} {1} {2}".format(model_path, job, opt_type)
         log.warn('starting the job')
-        code, _message = container.exec_run(cmd='bash -c "run_job.py {0} &"'.format(args))#, detach=True)
+        code, _message = container.exec_run(cmd='bash -c "run_job.py {0} &"'.format(args), detach=True)
         log.warn('sent the job')
-        message = _message.decode()
-        log.warn(message)
+        # message = _message.decode()
+        # log.warn(message)
         if code == 0:
             self.write("Success! the job has started running.")
         else:
@@ -115,5 +115,6 @@ class PlotJobResultsAPIHandler(BaseHandler):
         args = "{0} {1} {2}".format(results_path, plt_type, plt_data)
         code, _plt_fig = container.exec_run(cmd="plot_results.py {0}".format(args))
         plot_fig = _plt_fig.decode()
+        log.warn(plot_fig)
         self.write(plot_fig)
 

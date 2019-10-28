@@ -79,7 +79,11 @@ def run_job(job_model, model_file, info_path):
             #             result[key] = result[key].tolist()
             # update job status to complete
             open("{0}/COMPLETE".format(job_path), 'w').close()
-            return results
+            results_dict = {}
+            results_dict['results'] = results
+            results_dict['model'] = _model.model
+            results_dict['solver_name'] = solver_name
+            return results_dict
 
 
 if __name__ == "__main__":

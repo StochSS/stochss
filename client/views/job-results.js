@@ -79,11 +79,13 @@ module.exports = View.extend({
     var endpoint = path.join("/stochss/api/jobs/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
     console.log(endpoint)
     xhr({url: endpoint}, function (err, response, body){
-      self.plotFigure(body);
+      self.plotFigure(body.split('\n')[2]);
     });
   },
   plotFigure: function (figure) {
-    console.log(figure);
+    console.log(figure)
+    var el = this.queryByHook('stddevrange')
+    Plotly.newPlot(el, figure)
   },
   subviews: {
     inputTitle: {
