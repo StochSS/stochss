@@ -8,107 +8,13 @@ from jupyterhub.handlers.base import BaseHandler
 from tornado import web # handle authentication
 from handlers.db_util import checkUserOrRaise
 
+from kubernetes.stream import stream
 import ast # for eval_literal to use with kube response
 import json
 
 import logging
 log = logging.getLogger()
-
-# Imports for interacting with kubernetes cluster
-from kubernetes import config
-from kubernetes.client.apis import core_v1_api
-from kubernetes.client.rest import ApiException
-from kubernetes.stream import stream
-
-
-def load_kube_client(user):
-    '''
-    This function loads kubernetes configuration and returns a reference
-    to the Kubernetes API client, used for interacting within the cluster.
-
-    Attributes
-    ----------
-    user : str
-        string representation of user name for setting target user pod
-    '''
-
-    config.load_incluster_config()
-    user_pod = 'jupyter-{0}'.format(user)
-    return core_v1_api.CoreV1Api(), user_pod
-
-
-def read_file_from_container(client, pod, file_path):
-    '''
-    This function uses kubernetes API to read target file with cat. This
-    is a helper function for use with data get/pull requests.
-
-    Attributes
-    ----------
-    client : CoreV1Api
-        Kubernetes API client to handle read.
-    pod : str
-        name of target user pod to read from.
-    file_path : str
-        top level path to target file to read.
-    '''
-
-    exec_cmd = ['cat', file_path]
-    resp = stream(client.connect_get_namespaced_pod_exec, pod, 'jhub',
-                            command=exec_cmd, stderr=True, 
-                            stdin=False, stdout=True, tty=False)
-    resp = ast.literal_eval(resp)
-    return json.dumps(resp)
-
-    
-def write_file_to_container(client, pod, file_path, to_write):
-    '''
-    This function uses kubernetes API to write target file with echo. This
-    is a helper function for use with data get/pull requests.
-
-    Attributes
-    ----------
-    client : CoreV1Api
-        Kubernetes API client to handle write.
-    pod : str
-        name of target user pod to write from.
-    file_path : str
-        top level path to target file to write.
-    to_write : str
-        data to be written to target file
-    '''
-
-    # Open shell
-    exec_cmd = ['bash']
-    # Pipe everything, set preload to false for use with interactive shell
-    resp = stream(client.connect_get_namespaced_pod_exec, pod, 'jhub',
-                            command=exec_cmd, stderr=True, 
-                            stdin=True, stdout=True, 
-                            tty=False, _preload_content=False)
-
-    # List of commands to pass to remote pod shell
-    # Uses cat to write to_write data to file_path
-    commands = ["cat <<'EOF' >" + file_path + "\n"]
-    commands.append(to_write)
-
-    # While shell is running, update and check stdout/stderr
-    while resp.is_open():
-        resp.update(timeout=1)
-        if resp.peek_stdout():
-            print("STDOUT: %s" % resp.read_stdout())
-        if resp.peek_stderr():
-            print("STDERR: %s" % resp.read_stderr())
-    
-    # Feed all commands to remote pod shell
-        if commands:
-            c = commands.pop(0)
-            resp.write_stdin(str(c))
-        else:
-            break
-
-    # End connection to pod
-    resp.close()
-
-    
+from handlers import stochss_kubernetes
 
 class ModelFileAPIHandler(BaseHandler):
     '''
@@ -132,17 +38,17 @@ class ModelFileAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User Validation
         log.debug(modelPath)
         user = self.current_user.name # Get Username
-        client, user_pod = load_kube_client(user) # Load kube client
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         full_path = '/home/jovyan/{0}'.format(modelPath) #full path to model
         try:
-            json_data = read_file_from_container(client, 
+            json_data = stochss_kubernetes.read_from_pod(client, 
                 user_pod, full_path) # Use cat to read json file
         except:
             new_path ='/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json'
             with open(new_path, 'r') as json_file:
                 data = json_file.read()
                 json_data = json.loads(str(data))
-                write_file_to_container(client,
+                stochss_kubernetes.write_to_pod(client,
                     user_pod, full_path, to_write)
 
         self.write(json_data) # Send data to client
@@ -161,8 +67,8 @@ class ModelFileAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User validation
         user = self.current_user.name # Get User Name
         full_path = '/home/jovyan/{0}'.format(modelPath) #full path to model
-        client, user_pod = load_kube_client(user) # Load Kube client
-        write_file_to_container(client,
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
+        stochss_kubernetes.write_to_pod(client,
             user_pod, full_path, self.request.body.decode())
 
 
@@ -210,7 +116,7 @@ class ModelBrowserFileList(BaseHandler):
 
         checkUserOrRaise(self) # Authenticate User
         user = self.current_user.name # Get User Name
-        client, user_pod = load_kube_client(user) # Get Kubernetes API+UserPod
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Get Kubernetes API+UserPod
         file_path = '/home/jovyan{0}'.format(path) # User file system path
         exec_cmd = ['ls.py', file_path, path] # /usr/local/bin/ls.py in UserPod
 
