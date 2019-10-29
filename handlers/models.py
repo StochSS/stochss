@@ -1,17 +1,15 @@
-# Use BaseHandler for page requests since
-# the base API handler has some logic that prevents
-# requests without a referrer field
-from jupyterhub.handlers.base import BaseHandler
-import ast
-from tornado import web
-import json
-#import docker
-from io import BytesIO, StringIO
-import tarfile
-import tempfile
-import time
+'''
+Use BaseHandler for page requests since
+the base API handler has some logic that prevents
+requests without a referrer field
+'''
 
+from jupyterhub.handlers.base import BaseHandler
+from tornado import web # handle authentication
 from handlers.db_util import checkUserOrRaise
+
+import ast # for eval_literal to use with kube response
+import json
 
 import logging
 log = logging.getLogger()
@@ -27,105 +25,155 @@ def load_kube_client(user):
     '''
     This function loads kubernetes configuration and returns a reference
     to the Kubernetes API client, used for interacting within the cluster.
+
+    Attributes
+    ----------
+    user : str
+        string representation of user name for setting target user pod
     '''
 
     config.load_incluster_config()
     user_pod = 'jupyter-{0}'.format(user)
     return core_v1_api.CoreV1Api(), user_pod
 
-def write_tar_to_container(client, pod, data):
-    client.connect_get_namespaced_pod_exec(pod, 'jhub',
-        command=['tar', 'cvf', data], tty=False)
 
-def read_tar_from_container(client, pod, file_name):
-    data = client.connect_get_namespaced_pod_exec(pod, 'jhub',
-        command=['tar', 'cvf', data], tty=False)
+def read_file_from_container(client, pod, file_path):
+    '''
+    This function uses kubernetes API to read target file with cat. This
+    is a helper function for use with data get/pull requests.
+
+    Attributes
+    ----------
+    client : CoreV1Api
+        Kubernetes API client to handle read.
+    pod : str
+        name of target user pod to read from.
+    file_path : str
+        top level path to target file to read.
+    '''
+
+    exec_cmd = ['cat', file_path]
+    resp = stream(client.connect_get_namespaced_pod_exec, pod, 'jhub',
+                            command=exec_cmd, stderr=True, 
+                            stdin=False, stdout=True, tty=False)
+    resp = ast.literal_eval(resp)
+    return json.dumps(resp)
+
+    
+def write_file_to_container(client, pod, file_path, to_write):
+    '''
+    This function uses kubernetes API to write target file with echo. This
+    is a helper function for use with data get/pull requests.
+
+    Attributes
+    ----------
+    client : CoreV1Api
+        Kubernetes API client to handle write.
+    pod : str
+        name of target user pod to write from.
+    file_path : str
+        top level path to target file to write.
+    to_write : str
+        data to be written to target file
+    '''
+
+    # Open shell
+    exec_cmd = ['bash']
+    # Pipe everything, set preload to false for use with interactive shell
+    resp = stream(client.connect_get_namespaced_pod_exec, pod, 'jhub',
+                            command=exec_cmd, stderr=True, 
+                            stdin=True, stdout=True, 
+                            tty=False, _preload_content=False)
+
+    # List of commands to pass to remote pod shell
+    # Uses cat to write to_write data to file_path
+    commands = ["cat <<'EOF' >" + file_path + "\n"]
+    commands.append(to_write)
+
+    # While shell is running, update and check stdout/stderr
+    while resp.is_open():
+        resp.update(timeout=1)
+        if resp.peek_stdout():
+            print("STDOUT: %s" % resp.read_stdout())
+        if resp.peek_stderr():
+            print("STDERR: %s" % resp.read_stderr())
+    
+    # Feed all commands to remote pod shell
+        if commands:
+            c = commands.pop(0)
+            resp.write_stdin(str(c))
+        else:
+            break
+
+    # End connection to pod
+    resp.close()
 
     
 
 class ModelFileAPIHandler(BaseHandler):
+    '''
+    ########################################################################
+    Base Handler for interacting with Model file Get/Post Requests.
+    ########################################################################
+    '''
 
     @web.authenticated
     async def get(self, modelPath):
-        checkUserOrRaise(self)
+        '''
+        Retrieve model data from user container. Data is transferred to hub
+        container as JSON string.
+
+        Attributes
+        ----------
+        modelPath : str
+            Path to selected model within user pod container.
+        '''
+        
+        checkUserOrRaise(self) # User Validation
         log.debug(modelPath)
-        #client = docker.from_env()
-        user = self.current_user.name
-        client, user_pod = load_kube_client(user)
+        user = self.current_user.name # Get Username
+        client, user_pod = load_kube_client(user) # Load kube client
+        full_path = '/home/jovyan/{0}'.format(modelPath) #full path to model
         try:
-            bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
+            json_data = read_file_from_container(client, 
+                user_pod, full_path) # Use cat to read json file
         except:
-            filePath = "/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json"
-            with open(filePath, 'r') as jsonFile:
-                data = jsonFile.read()
-                #jsonData = json.loads(str(data))
-                #tarData = self.convertToTarData(data.encode('utf-8'), modelPath)
-                #container.put_archive("/home/jovyan/", tarData)
-                #self.write(jsonData)
-        else:
-            jsonData = self.getModelData(bits, modelPath)
-            self.write(jsonData)
+            new_path ='/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json'
+            with open(new_path, 'r') as json_file:
+                data = json_file.read()
+                json_data = json.loads(str(data))
+                write_file_to_container(client,
+                    user_pod, full_path, to_write)
+
+        self.write(json_data) # Send data to client
+                
 
     @web.authenticated
     async def post(self, modelPath):
-        checkUserOrRaise(self)
-        #client = docker.from_env()   
-        user = self.current_user.name
-        #client, user_pod = load_kube_client(user)
+        '''
+        Send/Save model data to user container.
 
-        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        #tarData = self.convertToTarData(self.request.body, modelPath)
-        #container.put_archive("/home/jovyan/", tarData)
-        #bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
-        #jsonData = self.getModelData(bits, modelPath)
-
-
-    def getModelPath(self, _modelPath):
-        dir_el = _modelPath.split('/')
-        file = dir_el.pop()
-        dirPath = '/'.join(dir_el)
-        return "{0}/{1}/{1}".format(dirPath, file)
-
-    def getVerPath(self, modelPath):
-        dir_el = modelPath.split('/')
-        file_el = dir_el.pop().split('.')
-        dirPath = '/'.join(dir_el)
-        ver_tag = "_v1."
-        file = ver_tag.join(file_el)
-        return "{0}/.version/{1}".format(dirPath, file)
+        Attributes
+        ----------
+        modelPath : str
+            Path to target  model within user pod container.
+        '''
+        checkUserOrRaise(self) # User validation
+        user = self.current_user.name # Get User Name
+        full_path = '/home/jovyan/{0}'.format(modelPath) #full path to model
+        client, user_pod = load_kube_client(user) # Load Kube client
+        write_file_to_container(client,
+            user_pod, full_path, self.request.body.decode())
 
 
-    def getModelData(self, bits, modelPath):
-        modelName = modelPath.split('/').pop()
-        f = tempfile.TemporaryFile()
-        for data in bits:
-            f.write(data)
-        f.seek(0)
-        tarData = tarfile.TarFile(fileobj=f)
-        d = tempfile.TemporaryDirectory()
-        tarData.extractall(d.name)
-        f.close()
-        filePath = "{0}/{1}".format(d.name, modelName)
-        with open(filePath, 'r') as jsonFile:
-            data = jsonFile.read()
-            log.debug(data)
-            jsonData = json.loads(str(data))
-            return jsonData
-        
-
-    def convertToTarData(self, data, modelPath):
-        tarData = BytesIO()
-        tar_file = tarfile.TarFile(fileobj=tarData, mode='w')
-        tar_info = tarfile.TarInfo(name='{0}'.format(modelPath))
-        tar_info.size = len(data)
-        tar_info.mtime = time.time()
-        tar_info.tobuf()
-        tar_file.addfile(tar_info, BytesIO(data))
-        tar_file.close()
-        tarData.seek(0)
-        return tarData
 
 class ModelToNotebookHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for handling conversions from model (.mdl) file to Jupyter Notebook
+    (.ipynb) file.
+    ##############################################################################
+    '''
     @web.authenticated
     async def get(self, path):
         checkUserOrRaise(self)
@@ -140,19 +188,18 @@ class ModelToNotebookHandler(BaseHandler):
 
 class ModelBrowserFileList(BaseHandler):
     '''
+    ##############################################################################
     Handler for interacting with the Model File Browser list with File System data 
     from remote user pod.
+    ##############################################################################
     '''
-
     @web.authenticated
     async def get(self, path):
         '''
-        ########################################################################
         Send Get request for fetching file system data in user container.  This
         method utilizes the kubernetes python api to invoke the ls.py module of
         the user container (stored in [UserPod]:/usr/local/bin).  The response 
         is used to populate the Model File Browser js-tree.
-        ########################################################################
 
         Attributes
         ----------
