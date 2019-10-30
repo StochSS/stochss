@@ -6,7 +6,8 @@ module.exports = {
   entry: {
     home: './client/pages/home.js',
     browser: './client/pages/model-browser.js',
-    editor: './client/pages/model-editor.js'
+    editor: './client/pages/model-editor.js',
+    jobEditor: './client/pages/job-editor.js',
   },
   output: {
     filename: '[name].bundle.js',
@@ -34,7 +35,14 @@ module.exports = {
       template: 'handlers/page_templates/page_template.pug',
       name: 'editor',
       inject: false
-    })
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Job Editor',
+      filename: 'stochss-job-editor.html',
+      template: 'handlers/page_templates/page_template.pug',
+      name: 'jobEditor',
+      inject: false
+    }),
   ],
   optimization: {
     splitChunks: {
