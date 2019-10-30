@@ -125,6 +125,9 @@ def run_script(exec_cmd, client, pod):
     # of a Python dictionary.  This is incompatible with json.loads.
 
     # Use AST library to perform literal eval of response
-    resp = ast.literal_eval(resp)
+    try:
+        resp = ast.literal_eval(resp)
+    except:
+        pass
 
     return resp

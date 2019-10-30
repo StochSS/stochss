@@ -82,14 +82,21 @@ class ModelToNotebookHandler(BaseHandler):
     '''
     @web.authenticated
     async def get(self, path):
-        checkUserOrRaise(self)
-        #client = docker.from_env()
-        user = self.current_user.name
-        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        #file_path = '/home/jovyan{0}'.format(path)
-        #fcode, _fslist = container.exec_run(cmd='convert_to_notebook.py {0}'.format(path))
-        #fslist = _fslist.decode()
-        #self.write(fslist)
+        '''
+        Sends request to server to run convert_to_notebook.py on target mdl
+        file.
+
+        Attributes
+        ----------
+        path : str
+            Path to target model within user pod container.
+        '''
+        checkUserOrRaise(self) # Validate User
+        user = self.current_user.name # Get User Name
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Kube API
+        exec_cmd = ['convert_to_notebook.py', path] # Script commands
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write(resp)
 
 
 class ModelBrowserFileList(BaseHandler):
