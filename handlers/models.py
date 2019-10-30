@@ -122,14 +122,7 @@ class ModelBrowserFileList(BaseHandler):
 
         # Utilize Kubernetes API to execute exec_cmd on user pod and return
         # response to variable to populate the js-tree
-        resp = stream(client.connect_get_namespaced_pod_exec, user_pod, 'jhub',
-                                command=exec_cmd, stderr=True, 
-                                stdin=False, stdout=True, tty=False)
-        # The Kubernetes library will convert this to a string representation
-        # of a Python dictionary.  This is incompatible with json.loads.
-
-        # Use AST library to perform literal eval of response
-        resp = ast.literal_eval(resp)
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
 
         # Then dump to JSON and write out
         self.write(json.dumps(resp))

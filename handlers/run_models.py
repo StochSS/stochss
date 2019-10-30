@@ -1,3 +1,8 @@
+'''
+This file contains API Handlers and methods for executing
+model simulations.
+'''
+
 # Use BaseHandler for page requests since
 # the base API handler has some logic that prevents
 # requests without a referrer field
@@ -10,20 +15,27 @@ from handlers.db_util import checkUserOrRaise
 
 import sys
 import logging
+import json
+
+from handlers import stochss_kubernetes
 
 
 class RunModelAPIHandler(BaseHandler):
+    '''
+    Handler class for running model simulations.
+    '''
 
-    async def get(self, modelPath):
-        checkUserOrRaise(self)
-        log = logging.getLogger()
-        user = self.current_user.name
-        #container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+    async def get(self, model_path):
+        checkUserOrRaise(self) # Validate user
+        log = logging.getLogger() # Create logger
+        user = self.current_user.name # Get User Name
+        #Load Kube API
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        exec_cmd = ['run_model.py', model_path] # command to be sent
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        log.warn(str(resp))
         self.set_header('Content-Type', 'application/json')
-        #code, _results = container.exec_run(cmd="run_model.py {0}".format(modelPath))
-        #results = _results.decode()
-        #log.warn(str(results))
-        #self.write(results)
+        self.write(json.dumps(resp)) # Send resp as json string
 
 
 class OpenModeNotebookAPIHandler(BaseHandler):

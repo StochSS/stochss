@@ -18,6 +18,7 @@ def load_kube_client(user):
     ----------
     user : str
         string representation of user name for setting target user pod
+    :return: A tuple containing (obj:kube api client ref, str:user pod)
     '''
 
     config.load_incluster_config()
@@ -38,6 +39,8 @@ def read_from_pod(client, pod, file_path):
         name of target user pod to read from.
     file_path : str
         top level path to target file to read.
+
+    :return: a string json representation of server response.
     '''
 
     exec_cmd = ['cat', file_path]
@@ -50,7 +53,7 @@ def read_from_pod(client, pod, file_path):
     
 def write_to_pod(client, pod, file_path, to_write):
     '''
-    This function uses kubernetes API to write target file with echo. This
+    This function uses kubernetes API to write target file with cat. This
     is a helper function for use with data get/pull requests.
 
     Attributes
@@ -97,4 +100,31 @@ def write_to_pod(client, pod, file_path, to_write):
     resp.close()
 
     
+def run_script(exec_cmd, client, pod):
+    '''
+    This function uses kubernetes API to read target file with cat. This
+    is a helper function for use with data get/pull requests.
 
+    Attributes
+    ----------
+    exec_cmd : list
+        List representation of command and arguments to run
+    client : CoreV1Api
+        Kubernetes API client to handle read.
+    pod : str
+        name of target user pod to read from.
+
+    :return: Server response evaluated from string to Python representation.
+    '''
+    # Utilize Kubernetes API to execute exec_cmd on user pod and return
+    # response to variable to populate the js-tree
+    resp = stream(client.connect_get_namespaced_pod_exec, pod, 'jhub',
+                            command=exec_cmd, stderr=True, 
+                            stdin=False, stdout=True, tty=False)
+    # The Kubernetes library will convert this to a string representation
+    # of a Python dictionary.  This is incompatible with json.loads.
+
+    # Use AST library to perform literal eval of response
+    resp = ast.literal_eval(resp)
+
+    return resp
