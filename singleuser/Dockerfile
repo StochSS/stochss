@@ -16,3 +16,5 @@ COPY --chown=jovyan:users page.html /opt/conda/lib/python3.7/site-packages/noteb
 
 # Copy helper scripts
 COPY scripts/* /usr/local/bin/
+
+COPY molns_cloudpickle.py /home/jovyan

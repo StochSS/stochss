@@ -57,9 +57,11 @@ def run_job(job_model, model_file, info_path):
         with open(info_path, 'r') as info_file:
             _info_data = info_file.read()
             info_data = json.loads(_info_data)
-        eastern = timezone(timedelta(hours=-4))
-        today = datetime.now(tz=eastern)
-        str_datetime = today.strftime("%b. %d, %Y  %I:%M %p")
+        today = datetime.now()
+        if today.strftime("%Z"):
+            str_datetime = today.strftime("%b. %d, %Y  %I:%M%p %Z")
+        else:
+            str_datetime = today.strftime("%b. %d, %Y  %I:%M%p UTC")
         info_data['start_time'] = str_datetime
         with open(info_path, "w") as info_file:
             info_file.write(json.dumps(info_data))
