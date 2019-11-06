@@ -6,7 +6,6 @@ log = logging.getLogger()
 
 class HomeHandler(BaseHandler):
 
-  @web.authenticated
   async def get(self):
     html = self.render_template("stochss-home.html")
     self.finish(html)
