@@ -2,6 +2,7 @@
 
 
 import os, sys, json, pickle
+import plotly
 from shutil import copyfile
 from run_model import *
 from datetime import datetime, timezone, timedelta
@@ -69,7 +70,7 @@ def run_job(job_model, model_file, info_path):
         open("{0}/RUNNING".format(job_path), 'w').close()
         # run the job
         try:
-            results, solver_name = run_solver(_model.model, data['simulationSettings'])
+            results = run_solver(_model.model, data['simulationSettings'])
         except:
             # update job status to error if GillesPy2 throws an exception
             open("{0}/ERROR".format(job_path), 'w').close()
@@ -81,11 +82,24 @@ def run_job(job_model, model_file, info_path):
             #             result[key] = result[key].tolist()
             # update job status to complete
             open("{0}/COMPLETE".format(job_path), 'w').close()
-            results_dict = {}
-            results_dict['results'] = results
-            results_dict['model'] = _model.model
-            results_dict['solver_name'] = solver_name
-            return results_dict
+            plt_fig = results.plotplotly(return_plotly_figure=True)
+            return results, data['simulationSettings']['stochasticSettings']['realizations']
+
+
+def plot_results(results, results_path, trajectories):
+    if trajectories > 1:
+        stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
+        with open("{0}/std_dev_range_plot.json".format(results_path), 'w') as json_file:
+            json.dump(stddevrange_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+        stddev_plot = results.stddev_ensemble().plotplotly(return_plotly_figure=True)
+        with open("{0}/stddev_ensemble_plot.json".format(results_path), 'w') as json_file:
+            json.dump(stddev_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+        avg_plot = results.average_ensemble().plotplotly(return_plotly_figure=True)
+        with open("{0}/ensemble_average_plot.json".format(results_path), 'w') as json_file:
+            json.dump(avg_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+    plot = results.plotplotly(return_plotly_figure=True)
+    with open("{0}/plotplotly_plot.json".format(results_path), 'w') as json_file:
+            json.dump(plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
 
 
 if __name__ == "__main__":
@@ -116,11 +130,12 @@ if __name__ == "__main__":
 
     opts = { "sn":save_new_job, "rn":run_new_job, "se":save_existing_job, "re":run_existing_job, }
 
-    data = opts[opt_type](job_path, model_path, job_model, results_path=results_path, model_file=model_file)
-
-    if "r" in opt_type:    
+    data, trajectories = opts[opt_type](job_path, model_path, job_model, results_path=results_path, model_file=model_file)
+    
+    if "r" in opt_type:
         with open("{0}/results.p".format(results_path), 'wb') as results_file:
             pickle.dump(data, results_file, protocol=pickle.HIGHEST_PROTOCOL)
-
+        plot_results(data, results_path, trajectories)
+        
     print(data)
     

@@ -80,6 +80,9 @@ let JobManager = PageView.extend({
     if(this.status !== 'new' && this.status !== 'ready'){
       jobEditor.collapseContainer();
     }
+    if(this.status === 'running'){
+      this.getJobStatus()
+    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -135,6 +138,7 @@ let JobManager = PageView.extend({
         self.status = body;
         self.renderJobStatusView();
       }
+      console.log(body)
       if(self.status !== 'error' && self.status !== 'complete'){
         setTimeout(_.bind(self.getJobStatus, self), 1000);
       }else if(self.status === 'complete') {
