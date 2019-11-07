@@ -86,7 +86,7 @@ def run_model(modelPath):
         jsonData = json.loads(str(data))
         jsonData['name'] = modelPath.split('/').pop().split('.')[0]
         _model = ModelFactory(jsonData)
-        _results, solver_name = run_solver(_model.model, jsonData['simulationSettings'])
+        _results = run_solver(_model.model, jsonData['simulationSettings'])
         results = _results[0]
         for key in results.keys():
             if not isinstance(results[key], list):
@@ -98,22 +98,20 @@ def run_model(modelPath):
 
 def run_solver(model, data):
     if(data['is_stochastic'] == False):
-        return basicODESolver(model, data), BasicODESolver.name
+        return basicODESolver(model, data)
     algorithm = data['stochasticSettings']['algorithm']
     if(algorithm == "SSA"):
         return ssaSolver(model, data)
     if(algorithm == "Tau-Leaping"):
-        return basicTauLeapingSolver(model, data), BasicTauLeapingSolver.name
+        return basicTauLeapingSolver(model, data)
     if(algorithm == "Hybrid-Tau-Leaping"):
-        return basicTauHybridSolver(model, data), BasicTauHybridSolver.name
+        return basicTauHybridSolver(model, data)
 
 
 def basicODESolver(model, data):
     solver = BasicODESolver()
     return solver.run(
-        model = model,
-        t = data['endSim'],
-        increment = data['timeStep'],
+        solver = solver,
         integrator_options = { 'atol' : data['deterministicSettings']['absoluteTol'], 'rtol' : data['deterministicSettings']['relativeTol']}
     )
 
@@ -123,13 +121,11 @@ def ssaSolver(model, data):
     seed = data['stochasticSettings']['ssaSettings']['seed']
     if(seed == -1):
         seed = None
-    return solver.run(
-        model = model,
-        t = data['endSim'],
+    return model.run(
+        solver = solver,
         number_of_trajectories = data['stochasticSettings']['realizations'],
-        increment = data['timeStep'],
         seed = seed
-    ), solver.name
+    )
 
 
 def basicTauLeapingSolver(model, data):
@@ -137,26 +133,21 @@ def basicTauLeapingSolver(model, data):
     seed = data['stochasticSettings']['tauSettings']['seed']
     if(seed == -1):
         seed = None
-    return solver.run(
-        model = model,
-        t = data['endSim'],
+    return model.run(
+        solver = solver,
         number_of_trajectories = data['stochasticSettings']['realizations'],
-        increment = data['timeStep'],
         seed = seed,
         tau_tol = data['stochasticSettings']['tauSettings']['tauTol']
     )
 
 
 def basicTauHybridSolver(model, data):
-    solver = BasicTauHybridSolver()
     seed = data['stochasticSettings']['hybridSettings']['seed']
     if(seed == -1):
         seed = None
-    return solver.run(
-        model = model,
-        t = data['endSim'],
+    return model.run(
+        solver = BasicTauHybridSolver,
         number_of_trajectories = data['stochasticSettings']['realizations'],
-        increment = data['timeStep'],
         seed = seed,
         switch_tol = data['stochasticSettings']['hybridSettings']['switchTol'],
         tau_tol = data['stochasticSettings']['hybridSettings']['tauTol']
