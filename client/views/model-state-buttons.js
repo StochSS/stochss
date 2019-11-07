@@ -48,14 +48,19 @@ module.exports = View.extend({
     var el = this.parent.queryByHook('model-run-container')
     console.log(el.text)
     var model = this.model
-    var endpoint = path.join('/stochss/api/models/run/', model.directory);
+    var endpoint = path.join('/stochss/api/models/run/', 'start', 'none', model.directory);
     var self = this;
-    xhr(
-      { uri: endpoint },
-      function (err, response, body) {
-        self.plotResults(JSON.parse(body));
-      },
-    );
+    xhr({ uri: endpoint }, function (err, response, body) {
+      setTimeout(function () {
+        var outfile = body.split("->").pop()
+        endpoint = path.join('/stochss/api/models/run/', 'read', outfile, model.directory);
+        xhr({ uri: endpoint }, function (err, response, body) {
+          if(!body.startsWith('running')){
+            self.plotResults(JSON.parse(body));
+          }
+        });
+      }, 3000);
+    });
   },
   plotResults: function (data) {
     // TODO abstract this into an event probably

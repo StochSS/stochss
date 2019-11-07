@@ -1,28 +1,22 @@
-var app = require('../app');
 var _ = require('underscore');
 var $ = require('jquery');
 var tests = require('../views/tests');
 //views
-var PageView = require('../pages/base');
+var View = require('ampersand-view');
+var InputView = require('./input');
 var SimSettingsView = require('../views/simulation-settings');
 var JobStateButtonsView = require('../views/job-state-buttons');
-var InputView = require('../views/input');
 //models
 var Model = require('../models/model');
 //templates
-var template = require('../templates/pages/jobEditor.pug');
+var template = require('../templates/includes/jobEditor.pug');
 
-import initPage from './page.js';
-
-let JobEditor = PageView.extend({
+module.exports = View.extend({
   template: template,
-  events: {
-    'change [data-hook=job-name]' : 'setJobName'
-  },
   initialize: function (attrs, options) {
-    PageView.prototype.initialize.apply(this, arguments);
+    View.prototype.initialize.apply(this, arguments);
     var self = this;
-    var directory = document.URL.split('/jobs/edit').pop();
+    var directory = attrs.directory
     var modelFile = directory.split('/').pop();
     var name = modelFile.split('.')[0];
     var isSpatial = modelFile.split('.').pop().startsWith('s');
@@ -34,17 +28,24 @@ let JobEditor = PageView.extend({
     this.model.fetch({
       success: function (model, response, options) {
         self.renderSubviews();
-        if(self.model.is_spatial)
-          $(self.queryByHook('mesh-editor-container')).collapse();
       }
     });
-    this.jobName = name + "-job";
   },
-  update: function () {
+  update: function (e) {
   },
-  updateValid: function () {
+  updateValid: function (e) {
   },
-  renderSubviews: function () {
+  renderSubviews: function() {
+    var inputName = new InputView({
+      parent: this,
+      required: true,
+      name: 'name',
+      label: 'Model Path: ',
+      tests: tests.nameTests,
+      modelKey: 'directory',
+      valueType: 'string',
+      value: this.model.directory,
+    });
     var simSettings = new SimSettingsView({
       parent: this,
       model: this.model.simulationSettings,
@@ -53,33 +54,16 @@ let JobEditor = PageView.extend({
     var jobStateButtons = new JobStateButtonsView({
       model: this.model
     });
+    this.registerRenderSubview(inputName, "model-name-container");
     this.registerRenderSubview(simSettings, 'sim-settings-container');
     this.registerRenderSubview(jobStateButtons, 'job-state-buttons-container');
+    $(this.queryByHook("model-name-container")).find('input').width(1350)
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
-  setJobName: function(e) {
-    this.jobName = e.target.value
+  collapseContainer: function () {
+    $(this.queryByHook("job-editor-container")).collapse();
   },
-  subviews: {
-    inputName: {
-      hook: 'job-name',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'name',
-          label: 'Job Name',
-          tests: '',
-          modelKey: '',
-          valueType: 'string',
-          value: this.jobName,
-        });
-      },
-    },
-  }
 });
-
-initPage(JobEditor);

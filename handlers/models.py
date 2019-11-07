@@ -136,43 +136,7 @@ class ModelBrowserFileList(BaseHandler):
         # Then dump to JSON and write out
         self.write(json.dumps(resp))
 
-
-class RunJobAPIHandler(BaseHandler):
-    '''
-    ##############################################################################
-    Handler for starting a simulation job.
-    ##############################################################################
-    '''
-
-    @web.authenticated
-    async def get(self, data):
-        '''
-        Send Get request for initiating job on target model.  This
-        method utilizes the kubernetes python api to invoke the run_job.py module 
-        of the user container (stored in [UserPod]:/usr/local/bin).
-
-        Attributes
-        ----------
-        data : str
-            data string containing job information.
-
-        '''
-        checkUserOrRaise(self)
-        user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        model_path, job_name = data.split('/<--GillesPy2Job-->/')
-        file_path = os.path.join('/home/jovyan', model_path)
-        exec_cmd = [
-          'run_job.py',
-            '--model_path "{}"'.format(file_path),
-            '--job_name {}'.format(job_name),
-            '>/dev/null',
-            '2>&1'
-        ]
-        stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write('STARTED')
- 
- 
+  
 class DeleteFileAPIHandler(BaseHandler):
     '''
     ##############################################################################

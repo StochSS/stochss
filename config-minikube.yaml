@@ -32,21 +32,39 @@ hub:
       from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler, JobEditorHandler
 
       # API handlers
-      from handlers.models import ModelFileAPIHandler, \
-        ModelBrowserFileList, ModelToNotebookHandler, \
-        DuplicateModelHandler, MoveRenameAPIHandler, \
-        DeleteFileAPIHandler, MoveFileAPIHandler, \
-        RunJobAPIHandler
+      from handlers.models import \
+        ModelFileAPIHandler, \
+        ModelBrowserFileList, \
+        ModelToNotebookHandler, \
+        DuplicateModelHandler, \
+        MoveRenameAPIHandler, \
+        DeleteFileAPIHandler, \
+        MoveFileAPIHandler
+
+      from handlers.jobs import \
+        SaveJobAPIHandler, \
+        RunJobAPIHandler, \
+        JobInfoAPIHandler, \
+        JobStatusAPIHandler, \
+        PlotJobResultsAPIHandler
+
       from handlers.username import UsernameHandler
+
+      from handlers.run_models import RunModelAPIHandler
 
       # StochSS request handlers
       c.JupyterHub.extra_handlers = [
           # API handlers
           (r"/stochss/api/user\/?", UsernameHandler),
           (r"/stochss/api/model-data/(.+)\/?", ModelFileAPIHandler),
+          (r"/stochss/api/models/run/(\w+)/(\w+)?\/?(.+)\/?", RunModelAPIHandler),
           (r"/stochss/api/model/duplicate(.+)\/?", DuplicateModelHandler),
           (r"/stochss/api/models/to-notebook(.+)\/?", ModelToNotebookHandler),
-          (r"/stochss/api/jobs/run-job(.+)\/?", RunJobAPIHandler),
+          (r"/stochss/api/jobs/save-job/(\w+)\/?(.+)\/?", SaveJobAPIHandler),
+          (r"/stochss/api/jobs/run-job/(\w+)\/?(.+)\/?", RunJobAPIHandler),
+          (r"/stochss/api/jobs/job-info(.+)\/?", JobInfoAPIHandler),
+          (r"/stochss/api/jobs/job-status(.+)\/?", JobStatusAPIHandler),
+          (r"/stochss/api/jobs/plot-results(.+)\/?", PlotJobResultsAPIHandler),
           (r"/stochss/api/file/move(.+)\/?", MoveFileAPIHandler),
           (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
           (r"/stochss/api/file/rename(.+)\/?", MoveRenameAPIHandler),
@@ -55,7 +73,8 @@ hub:
           (r"/stochss/models\/?$", ModelBrowserHandler),
           (r"/stochss/models/browser-list(.+)\/?", ModelBrowserFileList),
           (r"/stochss/models/edit\/?(.+)?\/?", ModelEditorHandler),
-          (r"/stochss/jobs/edit\/?(.+)?\/?", JobEditorHandler),      
+          (r"/stochss/jobs/edit\/?(.+)?\/?", JobEditorHandler),
+          #(r"/stochss.*", MainHandler)
       ]
 
       ## Paths to search for jinja templates, before using the default templates.
