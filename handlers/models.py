@@ -4,6 +4,8 @@ the base API handler has some logic that prevents
 requests without a referrer field
 '''
 
+import os.path
+
 from jupyterhub.handlers.base import BaseHandler
 from tornado import web # handle authentication
 from handlers.db_util import checkUserOrRaise
@@ -138,8 +140,7 @@ class ModelBrowserFileList(BaseHandler):
 class RunJobAPIHandler(BaseHandler):
     '''
     ##############################################################################
-    Handler for interacting with the Model File Browser list with File System data 
-    from remote user pod.
+    Handler for starting a simulation job.
     ##############################################################################
     '''
 
@@ -159,13 +160,19 @@ class RunJobAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
-        file_path = '"/home/jovyan{0}"'.format(model_path)
         model_path, job_name = data.split('/<--GillesPy2Job-->/')
-        exec_cmd = ['run_job.py', file_path, job_name]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(resp)
-        
-  
+        file_path = os.path.join('/home/jovyan', model_path)
+        exec_cmd = [
+          'run_job.py',
+            '--model_path "{}"'.format(file_path),
+            '--job_name {}'.format(job_name),
+            '>/dev/null',
+            '2>&1'
+        ]
+        stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write('STARTED')
+ 
+ 
 class DeleteFileAPIHandler(BaseHandler):
     '''
     ##############################################################################

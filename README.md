@@ -24,28 +24,24 @@ The default mounts for the VirtualBox driver are:
 Did you put the repo under the default mount folder for your OS? Good.
 
 Time to start up the minikube VM with a kubernetes cluster. 
-  
-### Configure Minikube
-  
-- **Create Config File**  
-  - Open `config-minikube.yaml.template` and save a copy as `config-minikube.yaml`. 
+
+### Start New Minikube VM
+
+***FOR LINUX AND MAC:***  
+
+```
+./bootstrap_minikube.sh
+```
+
+**ALTERNATIVELY, you can utilize the following steps:**
+ 
 - **Generate Secure Tokens**
   - Run the command `openssl rand -hex 32` twice (or use an [online generator for random hex](https://www.browserling.com/tools/random-hex)).  
-- **In the new file:**  
+- **In config-minikube.yaml**
   - replace `{{COOKIE_SECRET}}` and `{{SECRET_TOKEN}}` with the two different random 32-bit hex strings
   - replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM.  
     *(You can double-check this by running `minikube ssh` and then finding the directory within the VM)*.
-  
-### Start New Minikube Instance
-***FOR LINUX AND MAC:***  
-Simple installation can be performed using minikube_startup.sh.  
-```
-./minikube_startup.sh
-```
-  
-  
-**Alternatively, you can utilize the following steps:**
-  
+ 
 We're using kubernetes v1.11.1. Change the memory/cpu requirement if you need to, and make sure VirtualBox is installed!
 
 ```minikube --kubernetes-version v1.11.10 --memory 5000 --cpus 2 --vm-driver=virtualbox start```
@@ -113,11 +109,6 @@ The URL for your local stochss instance is IP:31212.
 **IMPORTANT**
 - If you need to start your minikube VM again, you MUST use the `--kubernetes-version v1.11.10` flag or else minikube will automatically upgrade your kubernetes version!
 - You MUST run `eval $(minikube docker-env)` in a new shell before building any of the docker containers so that the containers get built inside the minikube VM!
-
-
-TODO:
-
-- Replace docker exec commands with k8s exec commands in stochss API handlers (currently broken)
 
 
 ### References
