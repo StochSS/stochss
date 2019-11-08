@@ -120,46 +120,62 @@ def run_solver(model, data):
 
 
 def basicODESolver(model, data):
-    return model.run(
+    logging.disable(logging.WARNING) # Disable warning for timeout arg
+    results = model.run(
         solver = BasicODESolver,
+        timeout = 5,
         integrator_options = { 'atol' : data['deterministicSettings']['absoluteTol'], 'rtol' : data['deterministicSettings']['relativeTol']}
     )
+    logging.disable(logging.NOTSET) # Re-Enable warnings
+    return results
 
 
 def ssaSolver(model, data):
     seed = data['stochasticSettings']['ssaSettings']['seed']
     if(seed == -1):
         seed = None
-    return model.run(
+    logging.disable(logging.WARNING) # Disable warning for timeout arg
+    results = model.run(
         solver = get_best_ssa_solver(),
+        timeout = 5,
         number_of_trajectories = data['stochasticSettings']['realizations'],
         seed = seed
     )
+    logging.disable(logging.NOTSET) # Re-Enable warnings
+    return results
 
 
 def basicTauLeapingSolver(model, data):
     seed = data['stochasticSettings']['tauSettings']['seed']
     if(seed == -1):
         seed = None
-    return model.run(
+    logging.disable(logging.WARNING) # Disable warning for timeout arg
+    results = model.run(
         solver = BasicTauLeapingSolver,
+        timeout = 5,
         number_of_trajectories = data['stochasticSettings']['realizations'],
         seed = seed,
         tau_tol = data['stochasticSettings']['tauSettings']['tauTol']
     )
+    logging.disable(logging.NOTSET) # Re-Enable warnings
+    return results
 
 
 def basicTauHybridSolver(model, data):
     seed = data['stochasticSettings']['hybridSettings']['seed']
     if(seed == -1):
         seed = None
-    return model.run(
+    logging.disable(logging.WARNING) # Disable warning for timeout arg
+    results = model.run(
         solver = BasicTauHybridSolver,
+        timeout = 5,
         number_of_trajectories = data['stochasticSettings']['realizations'],
         seed = seed,
         switch_tol = data['stochasticSettings']['hybridSettings']['switchTol'],
         tau_tol = data['stochasticSettings']['hybridSettings']['tauTol']
     )
+    logging.disable(logging.NOTSET) # Re-Enable warnings
+    return results
 
 
 
