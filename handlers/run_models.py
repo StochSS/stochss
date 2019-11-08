@@ -4,6 +4,7 @@
 from jupyterhub.handlers.base import BaseHandler
 
 from handlers.db_util import checkUserOrRaise
+from handlers import stochss_kubernetes
 
 import uuid
 import sys
@@ -23,8 +24,7 @@ class RunModelAPIHandler(BaseHandler):
             outfile = "{0}".format(outfile_uuid)
             outfile = outfile.replace("-", "_")
         log.warn(str(outfile))
-        args = "{0} /home/jovyan/.{1}.tmp {2}".format(modelPath, outfile, run_cmd)
-        exec_cmd = 'bash -c "run_model.py {0} &"'.format(args)
+        exec_cmd = ['run_model.py', modelPath, '/home/jovyan/.{}.tmp'.format(outfile), run_cmd]
         results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(str(results))
         if results == '' or results == 'running':

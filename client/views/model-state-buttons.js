@@ -59,7 +59,7 @@ module.exports = View.extend({
             self.plotResults(JSON.parse(body));
           }
         });
-      }, 3000);
+      }, 5000);
     });
   },
   plotResults: function (data) {
