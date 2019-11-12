@@ -26,5 +26,3 @@ COPY --chown=jovyan:users public_models/* Models/Examples/
 
 # Copy helper scripts
 COPY scripts/* /usr/local/bin/
-
-COPY molns_cloudpickle.py /home/jovyan
