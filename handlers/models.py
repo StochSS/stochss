@@ -13,10 +13,12 @@ from handlers.db_util import checkUserOrRaise
 from kubernetes.stream import stream
 import ast # for eval_literal to use with kube response
 import json
+import uuid
 
 import logging
 log = logging.getLogger()
 from handlers import stochss_kubernetes
+
 
 class ModelFileAPIHandler(BaseHandler):
     '''
@@ -26,22 +28,22 @@ class ModelFileAPIHandler(BaseHandler):
     '''
 
     @web.authenticated
-    async def get(self, modelPath):
+    async def get(self, model_path):
         '''
         Retrieve model data from user container. Data is transferred to hub
         container as JSON string.
 
         Attributes
         ----------
-        modelPath : str
+        model_path : str
             Path to selected model within user pod container.
         '''
         
         checkUserOrRaise(self) # User Validation
-        log.debug(modelPath)
+        log.debug(model_path)
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        full_path = '/home/jovyan/{0}'.format(modelPath) #full path to model
+        full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
         try:
             json_data = stochss_kubernetes.read_from_pod(client, 
                 user_pod, full_path) # Use cat to read json file
@@ -57,209 +59,65 @@ class ModelFileAPIHandler(BaseHandler):
                 
 
     @web.authenticated
-    async def post(self, modelPath):
+    async def post(self, model_path):
         '''
         Send/Save model data to user container.
 
         Attributes
         ----------
-        modelPath : str
+        model_path : str
             Path to target  model within user pod container.
         '''
         checkUserOrRaise(self) # User validation
         user = self.current_user.name # Get User Name
-        full_path = '/home/jovyan/{0}'.format(modelPath) #full path to model
+        full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
         stochss_kubernetes.write_to_pod(client,
             user_pod, full_path, self.request.body.decode())
 
 
 
-class ModelToNotebookHandler(BaseHandler):
+class RunModelAPIHandler(BaseHandler):
     '''
-    ##############################################################################
-    Handler for handling conversions from model (.mdl) file to Jupyter Notebook
-    (.ipynb) file.
-    ##############################################################################
+    ########################################################################
+    Handler for running a model from the model editor.
+    ########################################################################
     '''
+
     @web.authenticated
-    async def get(self, path):
+    async def get(self, run_cmd, outfile, model_path):
         '''
-        Sends request to server to run convert_to_notebook.py on target mdl
-        file.
+        Run the model with a 5 second timeout.  Only the data from the first
+        trajectory is transferred to the hub container.  Data is transferred
+        to hub container as JSON string.
 
         Attributes
         ----------
-        path : str
+        run_cmd : str
+            command to be executed by the run model script (start) for running
+            a model, (read) for reading the results of a model run.
+        outfile : str
+            The temporary file for the results
+        model_path : str
             Path to target model within user pod container.
         '''
-        checkUserOrRaise(self) # Validate User
+        checkUserOrRaise(self) # User validation
         user = self.current_user.name # Get User Name
-        client, user_pod = stochss_kubernetes.load_kube_client(user) # Kube API
-        exec_cmd = ['convert_to_notebook.py', path] # Script commands
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(resp)
-
-
-class ModelBrowserFileList(BaseHandler):
-    '''
-    ##############################################################################
-    Handler for interacting with the Model File Browser list with File System data 
-    from remote user pod.
-    ##############################################################################
-    '''
-    @web.authenticated
-    async def get(self, path):
-        '''
-        Send Get request for fetching file system data in user container.  This
-        method utilizes the kubernetes python api to invoke the ls.py module of
-        the user container (stored in [UserPod]:/usr/local/bin).  The response 
-        is used to populate the Model File Browser js-tree.
-
-        Attributes
-        ----------
-        path : str
-            Path to user directory within user pod container.
-
-        '''
-
-        checkUserOrRaise(self) # Authenticate User
-        user = self.current_user.name # Get User Name
-        client, user_pod = stochss_kubernetes.load_kube_client(user) # Get Kubernetes API+UserPod
-        file_path = '/home/jovyan{0}'.format(path) # User file system path
-        exec_cmd = ['ls.py', file_path, path] # /usr/local/bin/ls.py in UserPod
-
-        # Utilize Kubernetes API to execute exec_cmd on user pod and return
-        # response to variable to populate the js-tree
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-
-        # Then dump to JSON and write out
-        self.write(json.dumps(resp))
-
-  
-class DeleteFileAPIHandler(BaseHandler):
-    '''
-    ##############################################################################
-    Handler for removing files from remote user pod.
-    ##############################################################################
-    '''
-
-    @web.authenticated
-    async def get(self, path):
-        '''
-        Send Get request for removing file from user file system.  This
-        method utilizes the kubernetes python api to invoke rm -R on target
-        file in remote user pod.
-
-        Attributes
-        ----------
-        path : str
-            Path to removal target.
-
-        '''
-        checkUserOrRaise(self)
-        user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        file_path = '/home/jovyan{0}'.format(path)
-        exec_cmd = ['rm', '-R', file_path]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        if len(resp):
-            self.write(json.dumps(resp))
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
+        self.set_header('Content-Type', 'application/json')
+        # Create temporary results file it doesn't already exist
+        if outfile == 'none':
+            outfile_uuid = uuid.uuid4()
+            outfile = "{0}".format(outfile_uuid)
+            outfile = outfile.replace("-", "_")
+        log.warn(str(outfile))
+        exec_cmd = ['run_model.py', model_path, '/home/jovyan/.{}.tmp'.format(outfile), run_cmd] # Script commands
+        results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        log.warn(str(results))
+        # Send data back to client
+        if results == '' or results == 'running':
+            self.write("running->" + outfile)
         else:
-            self.write("{0} was successfully deleted.".format(path.split('/').pop()))
+            self.write(results)
 
 
-class MoveFileAPIHandler(BaseHandler):
-    '''
-    ##############################################################################
-    Handler moving file locations in remote user pod.
-    ##############################################################################
-    '''
-
-    @web.authenticated
-    async def get(self, data):
-        '''
-        Send Get request to change location of target file in remote user file
-        system.  This method utilizes the kubernetes python api to invoke mv on
-        target file in remote user pod.
-
-        Attributes
-        ----------
-        data : str
-            Data string containing old and new locations of target file.
-
-        '''
-        checkUserOrRaise(self)
-        user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        old_path = "/home/jovyan{0}".format(data.split('/<--MoveTo-->')[0])
-        new_path = "/home/jovyan{0}".format(data.split('/<--MoveTo-->').pop())
-        exec_cmd = ['mv', old_path, new_path]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        if not len(resp):
-            self.write("Success! {0} was moved to {1}.")
-        else:
-            message = resp
-            self.write(message)     
-
- 
-class DuplicateModelHandler(BaseHandler):
-    '''
-    ##############################################################################
-    Handler for creating model duplicates in user pod.
-    ##############################################################################
-    '''
-
-    @web.authenticated
-    async def get(self, path):
-        '''
-        Send Get request for duplicating target file in user pod.  This method 
-        utilizes the kubernetes python api to invoke the duplicate.py module of
-        the user container (stored in [UserPod]:/usr/local/bin).
-
-        Attributes
-        ----------
-        path : str
-            Path to target model within user pod container.
-
-        '''
-        checkUserOrRaise(self)
-        user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        file_path = '/home/jovyan{0}'.format(path)
-        exec_cmd = ['duplicate.py', file_path]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(json.dumps(resp))
-
-        
-class MoveRenameAPIHandler(BaseHandler):
-    '''
-    ##############################################################################
-    Handler for renaming model files.
-    ##############################################################################
-    '''
-
-    @web.authenticated
-    async def get(self, _path):
-        '''
-        Send Get request to rename target file in user pod.  This method
-        utilizes the kubernetes python api to invoke the rename.py module of
-        the user container (stored in [UserPod]:/usr/local/bin).
-
-        Attributes
-        ----------
-        _path : str
-            string of data containing rename information.
-
-        '''
-        checkUserOrRaise(self)
-        user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        old_path, new_name = _path.split('/<--change-->/')
-        dir_path = old_path.split('/')
-        dir_path.pop()
-        dir_path.append(new_name)
-        new_path = '/'.join(dir_path)
-        exec_cmd = ['rename.py', old_path, new_path]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write("{0}<-_path->{1}".format(resp, new_path))
