@@ -30,7 +30,9 @@ module.exports = View.extend({
       xhr({uri: endpoint}, function (err, response, body) {
         if(document.URL.endsWith('.mdl')){
           setTimeout(function () {
-            var dirname = path.dirname(document.URL).split('localhost/hub').pop()
+            var dirname = path.dirname(document.URL).split('hub')
+            dirname.shift()
+            dirname = dirname.join('hub')
             window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
           }, 3000); 
         }
@@ -72,7 +74,9 @@ module.exports = View.extend({
       self.parent.parent.updateJobStatus();
       if(document.URL.endsWith('.mdl')){
         setTimeout(function () {
-          var dirname = path.dirname(document.URL).split('localhost/hub').pop()
+          var dirname = path.dirname(document.URL).split('hub')
+          dirname.shift()
+          dirname = dirname.join('hub')
           window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
         }, 3000);        
       }
