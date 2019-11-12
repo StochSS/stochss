@@ -31,9 +31,10 @@ class RunJobAPIHandler(BaseHandler):
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
         model_path, job_name = data.split('/<--GillesPy2Job-->/')
-        args = "/home/jovyan/{0} {1} {2}".format(model_path, job_name, opt_type)
+        # args = "/home/jovyan/{0} {1} {2}".format(model_path, job_name, opt_type)
         log.warn('starting the job')
-        exec_cmd = [ 'bash', '-c', '"run_job.py {0}"'.format(args) ]
+        # exec_cmd = [ 'bash', '-c', '"run_job.py {0}"'.format(args) ]
+        exec_cmd = ["run_job.py", "/home/jovyan/{0}".format(model_path), job_name, opt_type]
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('sent the job')
 
