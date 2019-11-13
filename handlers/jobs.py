@@ -170,12 +170,14 @@ class PlotJobResultsAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        results_path = "/home/jovyan{0}/results/results.p".format(job_path) # Path to the results file
+        if not job_path.endswith('/'):
+            job_path = job_path + '/' # add a trailing forward slash if needed
+        results_path = "/home/jovyan{0}results/results.p".format(job_path) # Path to the results file
         log.warn(self.request.body)
         plt_type = body['plt_type'] # type of plot to be retrieved 
         plt_data = json.dumps(body['plt_data']) # plot title and axes lables
         exec_cmd = [ 'plot_results.py', results_path, plt_type, plt_data ] # Script commands
         plt_fig = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        log.warn(plot_fig)
-        self.write(plot_fig) # Send data to client
+        log.warn(plt_fig)
+        self.write(plt_fig) # Send data to client
 

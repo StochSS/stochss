@@ -6,10 +6,10 @@ var Plotly = require('../lib/plotly');
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
+var resultsTemplate = require('../templates/includes/jobResults.pug');
 var resultsEnsembleTemplate = require('../templates/includes/jobResultsEnsemble.pug');
 
 module.exports = View.extend({
-  template: resultsEnsembleTemplate,
   events: {
     'click [data-hook=collapse-stddevrange]' : function () {
       this.changeCollapseButtonText("collapse-stddevrange");
@@ -42,6 +42,22 @@ module.exports = View.extend({
       this.getPlot("avg");
     },
   },
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
+    this.trajectories = attrs.trajectories;
+    this.status = attrs.status;
+  },
+  render: function () {
+    if(this.trajectories > 1){
+      this.template = resultsEnsembleTemplate
+    }else{
+      this.template = resultsTemplate
+    }
+    View.prototype.render.apply(this, arguments);
+    if(this.status !== 'ready' && this.status !== 'new'){
+      this.expandContainer()
+    }
+  },
   update: function () {
   },
   updateValid: function () {
@@ -71,21 +87,27 @@ module.exports = View.extend({
       data['plt_data']['title'] = this.title;
     }
     if(this.xaxis){
-      data['plt_data']['xaxis_label'] = this.xaxis;
+      data['plt_data']['xaxis'] = this.xaxis;
     }
     if(this.yaxis){
-      data['plt_data']['yaxis_label'] = this.yaxis;
+      data['plt_data']['yaxis'] = this.yaxis;
     }
     var endpoint = path.join("/stochss/api/jobs/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
     console.log(endpoint)
     xhr({url: endpoint}, function (err, response, body){
-      self.plotFigure(body.split('\n')[2]);
+      self.plotFigure(JSON.parse(body), type);
     });
   },
-  plotFigure: function (figure) {
+  plotFigure: function (figure, hook) {
     console.log(figure)
-    var el = this.queryByHook('stddevrange')
+    var el = this.queryByHook(hook)
     Plotly.newPlot(el, figure)
+  },
+  expandContainer: function () {
+    $(this.queryByHook('job-results')).collapse('show');
+    $(this.queryByHook('collapse')).prop('disabled', false);
+    this.changeCollapseButtonText("collapse")
+    this.trajectories > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
   },
   subviews: {
     inputTitle: {

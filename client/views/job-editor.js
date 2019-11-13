@@ -58,6 +58,7 @@ module.exports = View.extend({
     this.registerRenderSubview(simSettings, 'sim-settings-container');
     this.registerRenderSubview(jobStateButtons, 'job-state-buttons-container');
     $(this.queryByHook("model-name-container")).find('input').width(1350)
+    this.parent.trajectories = this.model.simulationSettings.stochasticSettings.realizations
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

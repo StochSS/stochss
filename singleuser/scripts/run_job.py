@@ -64,6 +64,7 @@ def run_job(job_model, model_file, info_path):
         else:
             str_datetime = today.strftime("%b. %d, %Y  %I:%M%p UTC")
         info_data['start_time'] = str_datetime
+        info_data['model'] = job_model
         with open(info_path, "w") as info_file:
             info_file.write(json.dumps(info_data))
         # Update job status to running
@@ -83,11 +84,11 @@ def run_job(job_model, model_file, info_path):
             # update job status to complete
             open("{0}/COMPLETE".format(job_path), 'w').close()
             plt_fig = results.plotplotly(return_plotly_figure=True)
-            return results, data['simulationSettings']['stochasticSettings']['realizations']
+            return results, data['simulationSettings']['stochasticSettings']['realizations'], data['simulationSettings']['is_stochastic']
 
 
-def plot_results(results, results_path, trajectories):
-    if trajectories > 1:
+def plot_results(results, results_path, trajectories, is_stochastic):
+    if is_stochastic and trajectories > 1:
         stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
         with open("{0}/std_dev_range_plot.json".format(results_path), 'w') as json_file:
             json.dump(stddevrange_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
@@ -130,12 +131,12 @@ if __name__ == "__main__":
 
     opts = { "sn":save_new_job, "rn":run_new_job, "se":save_existing_job, "re":run_existing_job, }
 
-    data, trajectories = opts[opt_type](job_path, model_path, job_model, results_path=results_path, model_file=model_file)
+    data, trajectories, is_stochastic = opts[opt_type](job_path, model_path, job_model, results_path=results_path, model_file=model_file)
     
     if "r" in opt_type:
         with open("{0}/results.p".format(results_path), 'wb') as results_file:
             pickle.dump(data, results_file, protocol=pickle.HIGHEST_PROTOCOL)
-        plot_results(data, results_path, trajectories)
+        plot_results(data, results_path, trajectories, is_stochastic)
         
     print(data)
     

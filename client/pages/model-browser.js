@@ -585,6 +585,8 @@ let FileBrowser = PageView.extend({
             window.open(notebookPath, '_blank')
           },
         );
+      }else if(file.endsWith('.job')){
+        window.location.href = path.join("/hub/stochss/jobs/edit", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }

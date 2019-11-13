@@ -3,7 +3,7 @@ div#job-results.card.card-body
   div
 
     h3.editor-header Results
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", data-hook="collapse") +
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", data-hook="collapse", disabled) +
 
   div.collapse(id="collapse-results", data-hook="job-results")
 
@@ -27,7 +27,7 @@ div#job-results.card.card-body
 
     div.collapse(class="show", id="collapse-stddevrange")
 
-      div(data-hook="stddevrange")
+      div(data-hook="stddevran")
       button.btn.btn-primary(data-hook="plot-stddevrange") Plot
 
     div
@@ -39,7 +39,7 @@ div#job-results.card.card-body
 
       div(data-hook="trajectories")
       button.btn.btn-primary(data-hook="plot-trajectories") Plot
-      button.btn.btn-primary(data-hook="plot-multiple") Multiple Plots
+      button.btn.btn-primary(data-hook="plot-multiple", disabled) Multiple Plots
 
     div
 
@@ -58,5 +58,5 @@ div#job-results.card.card-body
 
     div.collapse(id="collapse-trajmean")
 
-      div(data-hook="trajmean")
+      div(data-hook="avg")
       button.btn.btn-primary(data-hook="plot-trajmean") Plot
