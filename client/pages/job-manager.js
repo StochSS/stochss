@@ -72,7 +72,8 @@ let JobManager = PageView.extend({
     this.jobEditorView = this.registerRenderSubview(jobEditor, 'job-editor-container');
     this.registerRenderSubview(inputName, 'job-name');
     this.renderJobStatusView();
-    this.renderResultsView();
+    this.updateTrajectories();
+    // this.renderResultsView();
     $(this.queryByHook("job-name")).find('input').width(1350)
     if(this.status !== 'new'){
       this.disableJobNameInput();
@@ -154,11 +155,23 @@ let JobManager = PageView.extend({
     if(this.jobResultsView){
       this.jobResultsView.remove();
     }
-    var trajectories = this.jobEditorView.model.simulationSettings.is_stochastic ? this.jobEditorView.model.simulationSettings.stochasticSettings.realizations : 1
     var resultsView = new JobResultsView({
-      trajectories: trajectories
+      trajectories: this.trajectories,
+      status: this.status
     });
     this.jobResultsView = this.registerRenderSubview(resultsView, 'job-results-container');
+  },
+  updateTrajectories: function () {
+    var self = this
+    if(this.trajectories === undefined){
+      setTimeout(function () {
+        self.updateTrajectories()
+      }, 1000);
+    }
+    else{
+      this.trajectories = this.jobEditorView.model.simulationSettings.is_stochastic ? this.trajectories : 1
+      this.renderResultsView()
+    }
   },
 });
 
