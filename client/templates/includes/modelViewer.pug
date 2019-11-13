@@ -1,0 +1,20 @@
+div#model-viewer.card.card-body
+
+  div
+
+    h3.editor-header Model
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-model", data-hook="collapse-model") +
+
+  div.collapse(id="collapse-model")
+
+    div: h5=this.model.name
+
+    div(data-hook="species-viewer-container")
+
+    div(data-hook="parameters-viewer-container")
+
+    div(data-hook="reactions-viewer-container")
+
+    div.collapse(data-hook="rate-rules-viewer-container")
+
+    div(data-hook="settings-viewer-container")
