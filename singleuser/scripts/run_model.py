@@ -93,7 +93,7 @@ def run_model(modelPath):
         jsonData = json.loads(str(data))
         jsonData['name'] = modelPath.split('/').pop().split('.')[0]
         _model = ModelFactory(jsonData)
-        _results = run_solver(_model.model, jsonData['simulationSettings'])
+        _results = run_solver(_model.model, jsonData['simulationSettings'], 5)
         results = _results[0]
         res_dict = dict(results)
         for k, v in res_dict.items():
@@ -107,37 +107,37 @@ def run_model(modelPath):
         return results
 
 
-def run_solver(model, data):
+def run_solver(model, data, run_timeout):
     if(data['is_stochastic'] == False):
-        return basicODESolver(model, data)
+        return basicODESolver(model, data, run_timeout)
     algorithm = data['stochasticSettings']['algorithm']
     if(algorithm == "SSA"):
-        return ssaSolver(model, data)
+        return ssaSolver(model, data, run_timeout)
     if(algorithm == "Tau-Leaping"):
-        return basicTauLeapingSolver(model, data)
+        return basicTauLeapingSolver(model, data, run_timeout)
     if(algorithm == "Hybrid-Tau-Leaping"):
-        return basicTauHybridSolver(model, data)
+        return basicTauHybridSolver(model, data, run_timeout)
 
 
-def basicODESolver(model, data):
+def basicODESolver(model, data, run_timeout):
     logging.disable(logging.WARNING) # Disable warning for timeout arg
     results = model.run(
         solver = BasicODESolver,
-        timeout = 5,
+        timeout = run_timeout,
         integrator_options = { 'atol' : data['deterministicSettings']['absoluteTol'], 'rtol' : data['deterministicSettings']['relativeTol']}
     )
     logging.disable(logging.NOTSET) # Re-Enable warnings
     return results
 
 
-def ssaSolver(model, data):
+def ssaSolver(model, data, run_timeout):
     seed = data['stochasticSettings']['ssaSettings']['seed']
     if(seed == -1):
         seed = None
     logging.disable(logging.WARNING) # Disable warning for timeout arg
     results = model.run(
         solver = get_best_ssa_solver(),
-        timeout = 5,
+        timeout = run_timeout,
         number_of_trajectories = data['stochasticSettings']['realizations'],
         seed = seed
     )
@@ -145,14 +145,14 @@ def ssaSolver(model, data):
     return results
 
 
-def basicTauLeapingSolver(model, data):
+def basicTauLeapingSolver(model, data, run_timeout):
     seed = data['stochasticSettings']['tauSettings']['seed']
     if(seed == -1):
         seed = None
     logging.disable(logging.WARNING) # Disable warning for timeout arg
     results = model.run(
         solver = BasicTauLeapingSolver,
-        timeout = 5,
+        timeout = run_timeout,
         number_of_trajectories = data['stochasticSettings']['realizations'],
         seed = seed,
         tau_tol = data['stochasticSettings']['tauSettings']['tauTol']
@@ -161,14 +161,14 @@ def basicTauLeapingSolver(model, data):
     return results
 
 
-def basicTauHybridSolver(model, data):
+def basicTauHybridSolver(model, data, run_timeout):
     seed = data['stochasticSettings']['hybridSettings']['seed']
     if(seed == -1):
         seed = None
     logging.disable(logging.WARNING) # Disable warning for timeout arg
     results = model.run(
         solver = BasicTauHybridSolver,
-        timeout = 5,
+        timeout = run_timeout,
         number_of_trajectories = data['stochasticSettings']['realizations'],
         seed = seed,
         switch_tol = data['stochasticSettings']['hybridSettings']['switchTol'],

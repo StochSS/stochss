@@ -4,7 +4,7 @@
 import os, sys, json, pickle
 import plotly
 from shutil import copyfile
-from run_model import *
+from run_model import ModelFactory, run_solver
 from datetime import datetime, timezone, timedelta
 
 
@@ -51,37 +51,39 @@ def run_job(job_model, model_file, info_path):
     # Get the model data from the file and create the model object
     with open(job_model, 'r') as json_file:
         _data = json_file.read()
-        data = json.loads(str(_data))
-        data['name'] = model_file.split('.')[0]
-        _model = ModelFactory(data)
-        # Add the start time to the job info file
-        with open(info_path, 'r') as info_file:
-            _info_data = info_file.read()
-            info_data = json.loads(_info_data)
-        today = datetime.now()
-        str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC")
-        info_data['start_time'] = str_datetime
-        info_data['model'] = job_model
-        with open(info_path, "w") as info_file:
-            info_file.write(json.dumps(info_data))
-        # Update job status to running
-        open("{0}/RUNNING".format(job_path), 'w').close()
-        # run the job
-        try:
-            results = run_solver(_model.model, data['simulationSettings'])
-        except:
-            # update job status to error if GillesPy2 throws an exception
-            open("{0}/ERROR".format(job_path), 'w').close()
-        else:
-            # for result in results:
-            #     for key in result.keys():
-            #         if not isinstance(result[key], list):
-            #             # Assume it's an ndarray, use tolist()
-            #             result[key] = result[key].tolist()
-            # update job status to complete
-            open("{0}/COMPLETE".format(job_path), 'w').close()
-            plt_fig = results.plotplotly(return_plotly_figure=True)
-            return results, data['simulationSettings']['stochasticSettings']['realizations'], data['simulationSettings']['is_stochastic']
+    data = json.loads(str(_data))
+    data['name'] = model_file.split('.')[0]
+    _model = ModelFactory(data)
+    # Add the start time to the job info file
+    with open(info_path, 'r') as info_file:
+        _info_data = info_file.read()
+        info_data = json.loads(_info_data)
+    today = datetime.now()
+    str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC")
+    info_data['start_time'] = str_datetime
+    # Update the location of the model
+    info_data['model'] = job_model
+    # Update the job info file
+    with open(info_path, "w") as info_file:
+        info_file.write(json.dumps(info_data))
+    # Update job status to running
+    open("{0}/RUNNING".format(job_path), 'w').close()
+    # run the job
+    try:
+        results = run_solver(_model.model, data['simulationSettings'], 0)
+    except:
+        # update job status to error if GillesPy2 throws an exception
+        open("{0}/ERROR".format(job_path), 'w').close()
+    else:
+        # for result in results:
+        #     for key in result.keys():
+        #         if not isinstance(result[key], list):
+        #             # Assume it's an ndarray, use tolist()
+        #             result[key] = result[key].tolist()
+        # update job status to complete
+        open("{0}/COMPLETE".format(job_path), 'w').close()
+        plt_fig = results.plotplotly(return_plotly_figure=True)
+        return results, data['simulationSettings']['stochasticSettings']['realizations'], data['simulationSettings']['is_stochastic']
 
 
 def plot_results(results, results_path, trajectories, is_stochastic):

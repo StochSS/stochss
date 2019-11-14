@@ -13,6 +13,8 @@ RUN python3 -m pip install --no-cache \
   pygmsh==5.0.2 \
   meshio==2.3.10 
 
+RUN apt-get update && apt-get install -y screen vim
+
 USER jovyan
 
 WORKDIR /home/jovyan

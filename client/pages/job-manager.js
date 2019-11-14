@@ -8,6 +8,7 @@ var PageView = require('./base');
 var JobEditorView = require('../views/job-editor');
 var JobStatusView = require('../views/job-status');
 var JobResultsView = require('../views/job-results');
+var ModelViewer = require('../views/model-viewer');
 var InputView = require('../views/input');
 //templates
 var template = require('../templates/pages/JobManager.pug');
@@ -73,7 +74,10 @@ let JobManager = PageView.extend({
     this.registerRenderSubview(inputName, 'job-name');
     this.renderJobStatusView();
     this.updateTrajectories();
-    // this.renderResultsView();
+    var modelViewer = new ModelViewer({
+      directory: this.modelDirectory,
+    });
+    this.registerRenderSubview(modelViewer, 'model-viewer-container')
     $(this.queryByHook("job-name")).find('input').width(1350)
     if(this.status !== 'new'){
       this.disableJobNameInput();
