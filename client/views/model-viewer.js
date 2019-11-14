@@ -6,7 +6,7 @@ var SpeciesViewer = require('./species-viewer');
 var ParametersViewer = require('./parameters-viewer');
 var ReactionsViewer = require('./reactions-viewer');
 var RateRulesViewer = require('./rate-rules-viewer');
-// var SettingsViewwer = require('./settings-viewer');
+var SettingsViewwer = require('./settings-viewer');
 //models
 var Model = require('../models/model');
 //templates
@@ -48,14 +48,14 @@ module.exports = View.extend({
     var rateRulesViewer = new RateRulesViewer({
       collection: this.model.rateRules,
     });
-    // var settingsViewer = new SettingsViewwer({
-    //   model: this.model.simulationSettings,
-    // });
+    var settingsViewer = new SettingsViewwer({
+      model: this.model.simulationSettings,
+    });
     this.registerRenderSubview(speciesViewer, "species-viewer-container");
     this.registerRenderSubview(parametersViewer, "parameters-viewer-container");
     this.registerRenderSubview(reactionsViewer, "reactions-viewer-container");
     this.registerRenderSubview(rateRulesViewer, "rate-rules-viewer-container");
-    // this.registerRenderSubview(settingsViewer, "settings-viewer-container");
+    this.registerRenderSubview(settingsViewer, "settings-viewer-container");
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
