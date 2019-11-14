@@ -73,7 +73,7 @@ def run_job(job_model, model_file, info_path):
     open("{0}/RUNNING".format(job_path), 'w').close()
     # run the job
     try:
-        results = run_solver(_model.model, data['simulationSettings'])
+        results = run_solver(_model.model, data['simulationSettings'], 0)
     except:
         # update job status to error if GillesPy2 throws an exception
         open("{0}/ERROR".format(job_path), 'w').close()
