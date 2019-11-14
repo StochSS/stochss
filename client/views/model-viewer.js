@@ -2,8 +2,8 @@ var path = require('path');
 var $ = require('jquery');
 //views
 var View = require('ampersand-view');
-// var SpeciesViewer = require('./species-viewer');
-// var ParametersViewer = require('./parameters-viewer');
+var SpeciesViewer = require('./species-viewer');
+var ParametersViewer = require('./parameters-viewer');
 // var ReactionsViewer = require('./reactions-viewer');
 // var RateRulesViewer = require('./rate-rules-viewer');
 // var SettingsViewwer = require('./settings-viewer');
@@ -36,12 +36,12 @@ module.exports = View.extend({
     });
   },
   renderSubviews: function () {
-    // var speciesViewer = new SpeciesViewer({
-    //   collection: this.model.species,
-    // });
-    // var parametersViewer = new ParametersViewer({
-    //   collection: this.model.parameters,
-    // });
+    var speciesViewer = new SpeciesViewer({
+      collection: this.model.species,
+    });
+    var parametersViewer = new ParametersViewer({
+      collection: this.model.parameters,
+    });
     // var reactionsViewer = new ReactionsViewer({
     //   collection: this.model.reactions,
     // });
@@ -53,8 +53,8 @@ module.exports = View.extend({
     // var settingsViewer = new SettingsViewwer({
     //   model: this.model.simulationSettings,
     // });
-    // this.registerRenderSubview(speciesViewer, "species-viewer-container");
-    // this.registerRenderSubview(parametersViewer, "parameters-viewer-container");
+    this.registerRenderSubview(speciesViewer, "species-viewer-container");
+    this.registerRenderSubview(parametersViewer, "parameters-viewer-container");
     // this.registerRenderSubview(reactionsViewer, "reactions-viewer-container");
     // this.registerRenderSubview(rateRulesViewer, "rate-rules-viewer-container");
     // this.registerRenderSubview(settingsViewer, "settings-viewer-container");
