@@ -59,10 +59,7 @@ def run_job(job_model, model_file, info_path):
             _info_data = info_file.read()
             info_data = json.loads(_info_data)
         today = datetime.now()
-        if today.strftime("%Z"):
-            str_datetime = today.strftime("%b. %d, %Y  %I:%M%p %Z")
-        else:
-            str_datetime = today.strftime("%b. %d, %Y  %I:%M%p UTC")
+        str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC")
         info_data['start_time'] = str_datetime
         info_data['model'] = job_model
         with open(info_path, "w") as info_file:
