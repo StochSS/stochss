@@ -77,7 +77,7 @@ class RunJobAPIHandler(BaseHandler):
         # args = "/home/jovyan/{0} {1} {2}".format(model_path, job_name, opt_type)
         log.warn('starting the job')
         # exec_cmd = [ 'bash', '-c', '"run_job.py {0}"'.format(args) ]
-        exec_cmd = ["run_job.py", full_path, job_name, opt_type] # Script commands
+        exec_cmd = "screen -d -m run_job.py {} {} {}".format(full_path, job_name, opt_type).split(" ") # Script commands
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('sent the job')
 
