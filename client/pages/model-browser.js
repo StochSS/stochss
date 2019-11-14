@@ -139,11 +139,25 @@ let FileBrowser = PageView.extend({
     'click [data-hook=new-spatial-model]' : 'newSpatialModel',
   },
   render: function () {
+    var self = this;
     this.renderWithTemplate();
-    this.setupJstree()
+    this.setupJstree();
+    setTimeout(function () {
+      self.refreshInitialJSTree();
+    }, 3000);
   },
   refreshJSTree: function () {
     $('#models-jstree').jstree().refresh()
+  },
+  refreshInitialJSTree: function () {
+    var self = this;
+    var count = $('#models-jstree').jstree()._model.data['#'].children.length;
+    if(count == 0) {
+      self.refreshJSTree();
+      setTimeout(function () {
+        self.refreshInitialJSTree();
+      }, 3000);
+    }
   },
   deleteFile: function (o) {
     var fileType = o.type
