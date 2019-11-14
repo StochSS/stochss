@@ -4,7 +4,7 @@ var $ = require('jquery');
 var View = require('ampersand-view');
 var SpeciesViewer = require('./species-viewer');
 var ParametersViewer = require('./parameters-viewer');
-// var ReactionsViewer = require('./reactions-viewer');
+var ReactionsViewer = require('./reactions-viewer');
 // var RateRulesViewer = require('./rate-rules-viewer');
 // var SettingsViewwer = require('./settings-viewer');
 //models
@@ -42,9 +42,9 @@ module.exports = View.extend({
     var parametersViewer = new ParametersViewer({
       collection: this.model.parameters,
     });
-    // var reactionsViewer = new ReactionsViewer({
-    //   collection: this.model.reactions,
-    // });
+    var reactionsViewer = new ReactionsViewer({
+      collection: this.model.reactions,
+    });
     // if(this.model.rateRules.length > 0)
     //   $(this.queryByHook('rate-rules-viewer-container')).collapse()
     // var rateRulesViewer = new RateRulesViewer({
@@ -55,7 +55,7 @@ module.exports = View.extend({
     // });
     this.registerRenderSubview(speciesViewer, "species-viewer-container");
     this.registerRenderSubview(parametersViewer, "parameters-viewer-container");
-    // this.registerRenderSubview(reactionsViewer, "reactions-viewer-container");
+    this.registerRenderSubview(reactionsViewer, "reactions-viewer-container");
     // this.registerRenderSubview(rateRulesViewer, "rate-rules-viewer-container");
     // this.registerRenderSubview(settingsViewer, "settings-viewer-container");
   },
