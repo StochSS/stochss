@@ -111,7 +111,7 @@ class RunModelAPIHandler(BaseHandler):
             outfile = "{0}".format(outfile_uuid)
             outfile = outfile.replace("-", "_")
         log.warn(str(outfile))
-        exec_cmd = ['run_model.py', model_path, '/home/jovyan/.{}.tmp'.format(outfile), run_cmd] # Script commands
+        exec_cmd = ['screen', '-d', '-m', 'run_model.py', model_path, '/home/jovyan/.{}.tmp'.format(outfile), run_cmd] # Script commands
         results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(str(results))
         # Send data back to client
