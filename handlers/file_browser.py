@@ -166,8 +166,7 @@ class DuplicateModelHandler(BaseHandler):
         checkUserOrRaise(self)
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
-        file_path = '/home/jovyan{0}'.format(path)
-        exec_cmd = ['duplicate.py', file_path]
+        exec_cmd = ['duplicate.py', path]
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write(json.dumps(resp))
 
