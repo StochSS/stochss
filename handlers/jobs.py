@@ -138,8 +138,8 @@ class JobStatusAPIHandler(BaseHandler):
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         log.warn('getting the status of the job')
-        full_path = "/home/jovyan/{0}".format(job_path) # full path to job
-        exec_cmd = [ 'job_status.py', full_path ]
+        # full_path = "/home/jovyan/{0}".format(job_path) # full path to job
+        exec_cmd = [ 'job_status.py', job_path ]
         status = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('the status of the job is: ' + status)
         self.write(status.strip()) # Send data to client
