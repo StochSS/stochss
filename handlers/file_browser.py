@@ -193,12 +193,12 @@ class RenameAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
-        old_path, new_name = _path.split('/<--change-->/')
-        dir_path = old_path.split('/')
-        dir_path.pop()
-        dir_path.append(new_name)
-        new_path = '/'.join(dir_path)
-        exec_cmd = ['rename.py', old_path, new_path]
+        path, new_name = _path.split('/<--change-->/')
+        # dir_path = old_path.split('/')
+        # dir_path.pop()
+        # dir_path.append(new_name)
+        # new_path = '/'.join(dir_path)
+        exec_cmd = ['rename.py', path, new_name]
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write("{0}<-_path->{1}".format(resp, new_path))
 
