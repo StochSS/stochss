@@ -40,8 +40,7 @@ class ModelBrowserFileList(BaseHandler):
         checkUserOrRaise(self) # Authenticate User
         user = self.current_user.name # Get User Name
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Get Kubernetes API+UserPod
-        file_path = '/home/jovyan{0}'.format(path) # User file system path
-        exec_cmd = ['ls.py', file_path, path] # /usr/local/bin/ls.py in UserPod
+        exec_cmd = ['ls.py', path] # /usr/local/bin/ls.py in UserPod
 
         # Utilize Kubernetes API to execute exec_cmd on user pod and return
         # response to variable to populate the js-tree
