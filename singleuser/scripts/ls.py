@@ -7,7 +7,7 @@ import argparse
 from os import path
 
 
-USER_DIR = '/home/jovyan'
+user_dir = '/home/jovyan'
 
 
 def getFileSystemData(dir_path, p_path):
@@ -34,9 +34,7 @@ def getFileSystemData(dir_path, p_path):
 
 
 def buildChild(text, f_type, p_path):
-    if p_path == "/":
-        p_path = ""
-    child = { 'text' : text, 'type' : f_type, '_path' : '{0}/{1}'.format(p_path, text) }
+    child = { 'text' : text, 'type' : f_type, '_path' : path.join(p_path, text) }
     child['children'] = f_type == "folder"
     return child
 
@@ -48,11 +46,18 @@ def checkExtension(data, target):
         return False
 
 
-if __name__ == "__main__":
+def get_parsed_args():
     parser = argparse.ArgumentParser(description="Get the content of a directory and create JSTree nodes for item that are not hidden.")
     parser.add_argument('path', help="The path from the user directory to the target directory.")
-    args = parser.parse_args()
+    return parser.parse_args()
+    
+
+if __name__ == "__main__":    
+    args = get_parsed_args()
     p_path = args.path
-    dir_path = path.join(USER_DIR, p_path)
+    if p_path == "/":
+        p_path = ""
+    dir_path = path.join(user_dir, p_path)
     data = getFileSystemData(dir_path, p_path)
     print(json.dumps(data))
+    

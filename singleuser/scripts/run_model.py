@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 
-import os, sys, json
-
+import os
+import sys
+import json
+import argparse
 import logging
-logging.disable(logging.WARNING) # Disable warnings for Cython SSA Solver
+# logging.disable(logging.WARNING) # Disable warnings for Cython SSA Solver
+
+from gillespy2.core.__init__ import log as gpy2_log
+gpy2_log.propagate = False
 
 from gillespy2 import Species, Parameter, Reaction, RateRule, Model
 import numpy
@@ -14,7 +19,7 @@ from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolv
 from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
 from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver
 
-logging.disable(logging.NOTSET) # Re-Enable warnings
+# logging.disable(logging.NOTSET) # Re-Enable warnings
 import warnings
 warnings.simplefilter("ignore")
 
@@ -86,12 +91,12 @@ class ModelFactory():
         return d
 
 
-def run_model(modelPath):
-    filePath = "/home/jovyan/{0}".format(modelPath)
+def run_model(model_path):
+    filePath = "/home/jovyan/{0}".format(model_path)
     with open(filePath, "r") as jsonFile:
         data = jsonFile.read()
         jsonData = json.loads(str(data))
-        jsonData['name'] = modelPath.split('/').pop().split('.')[0]
+        jsonData['name'] = model_path.split('/').pop().split('.')[0]
         _model = ModelFactory(jsonData)
         _results = run_solver(_model.model, jsonData['simulationSettings'], 5)
         results = _results[0]
@@ -180,11 +185,15 @@ def basicTauHybridSolver(model, data, run_timeout):
 
 
 if __name__ == "__main__":
-    modelPath = sys.argv[1]
-    outfile = sys.argv[2]
-    cmd = sys.argv[3]
-    if 'start' in cmd:
-        results = run_model(modelPath)
+    parser = argparse(description="Run a preview of a model. Prints the results of the first trajectory after 5s.")
+    parser.add_argument('model_path', help="The path from the user directory to the model")
+    parser.add_argument('outfile', help="The temp file used to hold the results")
+    parser.add_argument('-r', '--read', action="store_ture", help="Check for results")
+    args = parser.parse_args()
+    model_path = args.model_path
+    outfile = args.outfile
+    if not args.read:
+        results = run_model(model_path)
         # print(results)
         with open(outfile, "w") as fd:
             json.dump(results, fd)
