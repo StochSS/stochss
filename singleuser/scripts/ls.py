@@ -7,7 +7,7 @@ import argparse
 from os import path
 
 
-user_dir = '/home/jovyan'
+user_dir = '/home/jovyan/'
 
 
 def getFileSystemData(dir_path, p_path):
@@ -34,7 +34,11 @@ def getFileSystemData(dir_path, p_path):
 
 
 def buildChild(text, f_type, p_path):
-    child = { 'text' : text, 'type' : f_type, '_path' : path.join(p_path, text) }
+    if p_path == "/":
+        _path = text
+    else:
+        _path = path.join(p_path, text)
+    child = { 'text' : text, 'type' : f_type, '_path' : _path }
     child['children'] = f_type == "folder"
     return child
 
@@ -56,8 +60,9 @@ if __name__ == "__main__":
     args = get_parsed_args()
     p_path = args.path
     if p_path == "/":
-        p_path = ""
-    dir_path = path.join(user_dir, p_path)
+        dir_path = user_dir
+    else:
+        dir_path = path.join(user_dir, p_path)
     data = getFileSystemData(dir_path, p_path)
     print(json.dumps(data))
     

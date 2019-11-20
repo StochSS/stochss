@@ -98,8 +98,7 @@ class ModelFactory():
 
 
 def run_model(model_path):
-    filePath = "/home/jovyan/{0}".format(model_path)
-    with open(filePath, "r") as jsonFile:
+    with open(model_path, "r") as jsonFile:
         data = jsonFile.read()
         jsonData = json.loads(str(data))
         jsonData['name'] = model_path.split('/').pop().split('.')[0]
@@ -188,8 +187,8 @@ if __name__ == "__main__":
     parser.add_argument('outfile', help="The temp file used to hold the results")
     parser.add_argument('-r', '--read', action="store_true", help="Check for results")
     args = parser.parse_args()
-    model_path = os.path(user_dir, args.model_path)
-    outfile = os.path(user_dir, ".{0}".format(args.outfile))
+    model_path = os.path.join(user_dir, args.model_path)
+    outfile = os.path.join(user_dir, ".{0}".format(args.outfile))
     if not args.read:
         results = run_model(model_path)
         resp = {"timeout":False, "results":results}
