@@ -5,10 +5,14 @@ import sys
 import json
 import argparse
 import logging
-# logging.disable(logging.WARNING) # Disable warnings for Cython SSA Solver
 
-from gillespy2.core.__init__ import log as gpy2_log
-gpy2_log.propagate = False
+from io import StringIO
+from gillespy2.core import log
+log_stream = StringIO()
+for handler in log.handlers:
+    if type(handler) is logging.StreamHandler:
+        handler.stream = log_stream
+
 
 from gillespy2 import Species, Parameter, Reaction, RateRule, Model
 import numpy
@@ -19,9 +23,11 @@ from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolv
 from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
 from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver
 
-# logging.disable(logging.NOTSET) # Re-Enable warnings
 import warnings
 warnings.simplefilter("ignore")
+
+
+user_dir = '/home/jovyan'
 
 
 class _Model(Model):
@@ -125,13 +131,11 @@ def run_solver(model, data, run_timeout):
 
 
 def basicODESolver(model, data, run_timeout):
-    logging.disable(logging.WARNING) # Disable warning for timeout arg
     results = model.run(
         solver = BasicODESolver,
         timeout = run_timeout,
         integrator_options = { 'atol' : data['deterministicSettings']['absoluteTol'], 'rtol' : data['deterministicSettings']['relativeTol']}
     )
-    logging.disable(logging.NOTSET) # Re-Enable warnings
     return results
 
 
@@ -139,14 +143,12 @@ def ssaSolver(model, data, run_timeout):
     seed = data['stochasticSettings']['ssaSettings']['seed']
     if(seed == -1):
         seed = None
-    logging.disable(logging.WARNING) # Disable warning for timeout arg
     results = model.run(
         solver = get_best_ssa_solver(),
         timeout = run_timeout,
         number_of_trajectories = data['stochasticSettings']['realizations'],
         seed = seed
     )
-    logging.disable(logging.NOTSET) # Re-Enable warnings
     return results
 
 
@@ -154,7 +156,6 @@ def basicTauLeapingSolver(model, data, run_timeout):
     seed = data['stochasticSettings']['tauSettings']['seed']
     if(seed == -1):
         seed = None
-    logging.disable(logging.WARNING) # Disable warning for timeout arg
     results = model.run(
         solver = BasicTauLeapingSolver,
         timeout = run_timeout,
@@ -162,7 +163,6 @@ def basicTauLeapingSolver(model, data, run_timeout):
         seed = seed,
         tau_tol = data['stochasticSettings']['tauSettings']['tauTol']
     )
-    logging.disable(logging.NOTSET) # Re-Enable warnings
     return results
 
 
@@ -170,7 +170,6 @@ def basicTauHybridSolver(model, data, run_timeout):
     seed = data['stochasticSettings']['hybridSettings']['seed']
     if(seed == -1):
         seed = None
-    logging.disable(logging.WARNING) # Disable warning for timeout arg
     results = model.run(
         solver = BasicTauHybridSolver,
         timeout = run_timeout,
@@ -179,24 +178,26 @@ def basicTauHybridSolver(model, data, run_timeout):
         switch_tol = data['stochasticSettings']['hybridSettings']['switchTol'],
         tau_tol = data['stochasticSettings']['hybridSettings']['tauTol']
     )
-    logging.disable(logging.NOTSET) # Re-Enable warnings
     return results
 
 
 
 if __name__ == "__main__":
-    parser = argparse(description="Run a preview of a model. Prints the results of the first trajectory after 5s.")
+    parser = argparse.ArgumentParser(description="Run a preview of a model. Prints the results of the first trajectory after 5s.")
     parser.add_argument('model_path', help="The path from the user directory to the model")
     parser.add_argument('outfile', help="The temp file used to hold the results")
-    parser.add_argument('-r', '--read', action="store_ture", help="Check for results")
+    parser.add_argument('-r', '--read', action="store_true", help="Check for results")
     args = parser.parse_args()
-    model_path = args.model_path
-    outfile = args.outfile
+    model_path = os.path(user_dir, args.model_path)
+    outfile = os.path(user_dir, ".{0}".format(args.outfile))
     if not args.read:
         results = run_model(model_path)
-        # print(results)
+        resp = {"timeout":False, "results":results}
+        logs = log_stream.getvalue()
+        if 'GillesPy2 simulation exceeded timeout.' in logs:
+            resp['timeout'] = True
         with open(outfile, "w") as fd:
-            json.dump(results, fd)
+            json.dump(resp, fd)
         open(outfile + ".done", "w").close()
     else:
         if os.path.exists(outfile + ".done"):
@@ -206,5 +207,6 @@ if __name__ == "__main__":
             os.remove(outfile + ".done")
         else:
             print("running")
+    log_stream.close()
 
 
