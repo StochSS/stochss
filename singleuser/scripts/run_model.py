@@ -180,13 +180,20 @@ def basicTauHybridSolver(model, data, run_timeout):
     return results
 
 
+def get_parsed_args():
+    parser = argparse.ArgumentParser(description="Run a preview of a model. Prints the results of the first trajectory after 5s.")
+    parser.add_argument('model_path', help="The path from the user directory to the model.")
+    parser.add_argument('outfile', help="The temp file used to hold the results.")
+    parser.add_argument('-s', '--start', action="store_true", help="Start a model preview run.")
+    parser.add_argument('-r', '--read', action="store_true", help="Check for model preview results.")
+    args = parser.parse_args()
+    if not (args.start or args.read):
+        parser.error("No action requested, please add -s (start) or -r (read).")
+    return args
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run a preview of a model. Prints the results of the first trajectory after 5s.")
-    parser.add_argument('model_path', help="The path from the user directory to the model")
-    parser.add_argument('outfile', help="The temp file used to hold the results")
-    parser.add_argument('-r', '--read', action="store_true", help="Check for results")
-    args = parser.parse_args()
+    args = get_parsed_args()
     model_path = os.path.join(user_dir, args.model_path)
     outfile = os.path.join(user_dir, ".{0}".format(args.outfile))
     if not args.read:
