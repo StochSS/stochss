@@ -73,11 +73,10 @@ class RunJobAPIHandler(BaseHandler):
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         model_path, job_name = data.split('/<--GillesPy2Job-->/') # get model path and job name from data
-        full_path = "/home/jovyan/{0}".format(model_path) # full path to model
-        # args = "/home/jovyan/{0} {1} {2}".format(model_path, job_name, opt_type)
+        opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         log.warn('starting the job')
-        # exec_cmd = [ 'bash', '-c', '"run_job.py {0}"'.format(args) ]
-        exec_cmd = "screen -d -m run_job.py {} {} {}".format(full_path, job_name, opt_type).split(" ") # Script commands
+        exec_cmd = "screen -d -m run_job.py {} {} {}".format(model_path, job_name).split(" ") # Script commands
+        exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('sent the job')
 
@@ -108,8 +107,9 @@ class SaveJobAPIHandler(BaseHandler):
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         model_path, job_name = data.split('/<--GillesPy2Job-->/') # get model path and job name from data
-        full_path = "/home/jovyan/{0}".format(model_path) # full path to model
-        exec_cmd = [ "run_job.py", full_path, job_name, opt_type ] # Script commands
+        opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
+        exec_cmd = [ "run_job.py", model_path, job_name ] # Script commands
+        exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.warn(exec_cmd)
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
 
