@@ -5,8 +5,13 @@ import json
 import pickle
 import sys
 import plotly
+import argparse
 
+from os import path
 from gillespy2.core.results import EnsembleResults, Results
+
+
+user_dir = "/home/jovyan"
 
 
 def get_results(path):
@@ -22,7 +27,7 @@ def get_results(path):
 
 
 def get_plt_args(plt_data):
-    if "None" in plt_data:
+    if not plt_data:
         return {}
     else:
         return json.loads(plt_data)
@@ -30,11 +35,8 @@ def get_plt_args(plt_data):
 
 def plot_std_dev_range(results, kwargs):
     # For reading plot files
-    results_path = results.split('/')
-    results_path.pop()
-    results_path.append('std_dev_range_plot.json')
-    results_path = '/'.join(results_path)
-    return get_results(results_path)
+    plot_path = results.replace('results.p', 'std_dev_range_plot.json')
+    return get_results(plot_path)
 
     # For using pickled results
     # return results.plotplotly_std_dev_range(**kwargs)
@@ -42,11 +44,8 @@ def plot_std_dev_range(results, kwargs):
 
 def plot(results, kwargs):
     # For reading plot files
-    results_path = results.split('/')
-    results_path.pop()
-    results_path.append('plotplotly_plot.json')
-    results_path = '/'.join(results_path)
-    return get_results(results_path)
+    plot_path = results.replace('results.p', 'plotplotly_plot.json')
+    return get_results(plot_path)
 
     # For using pickled results
     # return results.plotplotly(**kwargs)
@@ -54,11 +53,8 @@ def plot(results, kwargs):
 
 def plot_std_dev(results, kwargs):
     # For reading plot files
-    results_path = results.split('/')
-    results_path.pop()
-    results_path.append('stddev_ensemble_plot.json')
-    results_path = '/'.join(results_path)
-    return get_results(results_path)
+    plot_path = results.replace('results.p', 'stddev_ensemble_plot.json')
+    return get_results(plot_path)
 
     # For using pickled results
     # return results.stddev_ensemble().plotplotly(**kwargs)
@@ -66,20 +62,33 @@ def plot_std_dev(results, kwargs):
 
 def plot_average(results, kwargs):
     # For reading plot files
-    results_path = results.split('/')
-    results_path.pop()
-    results_path.append('ensemble_average_plot.json')
-    results_path = '/'.join(results_path)
-    return get_results(results_path)
+    plot_path = results.replace('results.p', 'ensemble_average_plot.json')
+    return get_results(plot_path)
 
     # For using pickled results
     # return results.average_ensemble().plotplotly(**kwargs)
 
 
+def get_parsed_args():
+    # For using picked results
+    # description = "Plot the job results based on the plot type with the plot data."
+
+    # For reading plot files
+    description = "Get the job plot based on the plot type and modify it with the plot data."
+
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('results_path', help="The path from the user directory to the results file (pickled file).")
+    parser.add_argument('plt_type', help="The type of plot to get")
+    parser.add_argument('--plt_data', help="The title and axis labels as a json string to be aplied to the plot.")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    results_path = sys.argv[1]
-    plt_type = sys.argv[2]
-    plt_data = sys.argv[3]
+    args = get_parsed_args()
+    results_path = path.join(user_dir, args.results_path)
+    plt_type = args.plt_type
+    plt_data = args.plt_data
 
     plt_args = get_plt_args(plt_data)
     # For using pickled results

@@ -5,6 +5,7 @@ requests without a referrer field
 '''
 
 import json
+import os
 
 from jupyterhub.handlers.base import BaseHandler
 from tornado import web # handle authentication
@@ -170,13 +171,13 @@ class PlotJobResultsAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        if not job_path.endswith('/'):
-            job_path = job_path + '/' # add a trailing forward slash if needed
-        results_path = "/home/jovyan{0}results/results.p".format(job_path) # Path to the results file
+        results_path = os.path.join(job_path, 'results/results.p') # Path to the results file
         log.warn(self.request.body)
         plt_type = body['plt_type'] # type of plot to be retrieved 
         plt_data = json.dumps(body['plt_data']) # plot title and axes lables
-        exec_cmd = [ 'plot_results.py', results_path, plt_type, plt_data ] # Script commands
+        exec_cmd = [ 'plot_results.py', results_path, plt_type] # Script commands
+        if not "None" in plt_data:
+            exec_cmd.append(plt_data) # Add plot data to the exec cmd if its not "None"
         plt_fig = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(plt_fig)
         self.write(plt_fig) # Send data to client
