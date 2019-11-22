@@ -106,10 +106,6 @@ singleuser:
 debug:
   enabled: true
 
-scheduling:
-  userScheduler:
-    enabled: true
-
 proxy:
   secretToken: "SECRET"
   service:
