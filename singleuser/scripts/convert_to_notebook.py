@@ -7,7 +7,7 @@ from nbformat import v4 as nbf
 from os import path
 
 
-USER_DIR = '/home/jovyan'
+user_dir = '/home/jovyan'
 
 
 def generate_imports_cell(json_data):
@@ -188,7 +188,7 @@ def generate_run_cell(json_data):
 
 def convertToNotebook(_model_path):
 
-    model_path = path.join(USER_DIR,_model_path)
+    model_path = path.join(user_dir,_model_path)
     name = model_path.split('/').pop().split('.')[0]
     dest_path = model_path.split(name)[0]
 
@@ -228,11 +228,15 @@ def convertToNotebook(_model_path):
     return dest_file
 
 
+def get_parsed_args():
+    parser = argparse.ArgumentParser(description="Convert a GillesPy2 model into a Jupyter Notebook.")
+    parser.add_argument('model_path', help='The path from the user directory to the model being converted.')
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
 
-        parser = argparse.ArgumentParser(description="Convert a GillesPy2 model into a Jupyter Notebook.")
-        parser.add_argument('model_path', help='The path from the user directory to the model being converted.')
-        args = parser.parse_args()
+        args = get_parsed_args()
         model_path = args.model_path
         convertToNotebook(model_path)
         

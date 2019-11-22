@@ -6,7 +6,7 @@ import argparse
 from os import path
 
 
-USER_DIR = '/home/jovyan'
+user_dir = '/home/jovyan'
 
 
 def get_status(job_path):
@@ -21,10 +21,14 @@ def get_status(job_path):
         return "ready"
 
 
-if __name__ == "__main__":
+def get_parsed_args():
     parser = argparse.ArgumentParser(description="Check the status of a job.")
     parser.add_argument('job_path', help="The path from the user directory to the job.")
-    args = parser.parse_args()
-    job_path = path.join(USER_DIR, args.job_path)
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = get_parsed_args()
+    job_path = path.join(user_dir, args.job_path)
     status = get_status(job_path)
     print(status)

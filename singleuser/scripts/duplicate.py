@@ -7,7 +7,7 @@ from os import path
 from shutil import copyfile
 
 
-USER_DIR = '/home/jovyan'
+user_dir = '/home/jovyan'
 
 
 def duplicate(_path, dir_path):
@@ -50,11 +50,15 @@ def check_for_file(file, dir_path):
     return False
 
 
-if __name__ == "__main__":
+def get_parsed_args():
     parser = argparse.ArgumentParser(description="Copy the file with a '-copy' added before the file extension.")
     parser.add_argument('file_path', help="The path from the user directory to the file being duplicated.")
-    args = parser.parse_args()
-    file_path = path.join(USER_DIR, args.file_path)
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = get_parsed_args()
+    file_path = path.join(user_dir, args.file_path)
     _dir_path = file_path.split('/')
     _dir_path.pop()
     dir_path = '/'.join(_dir_path)

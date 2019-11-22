@@ -209,6 +209,7 @@ let FileBrowser = PageView.extend({
     })
   },
   renameNode: function (o) {
+    var self = this
     var text = o.text;
     var parent = $('#models-jstree').jstree().get_node(o.parent)
     var extensionWarning = $(this.queryByHook('extension-warning'));
@@ -218,15 +219,19 @@ let FileBrowser = PageView.extend({
       if(text != node.text){
         var endpoint = path.join("/stochss/api/file/rename", o.original._path, "<--change-->", node.text)
         xhr({uri: endpoint}, function (err, response, body){
-          console.log(body)
-          if(!body.startsWith('Success!')) {
+          var resp = JSON.parse(body)
+          console.log(resp)
+          if(!resp.message.startsWith('Success!')) {
+            nameWarning.html(resp.message)
+            console.log(nameWarning.text())
             nameWarning.collapse('show');
-            node.text = text;
+            node.original._path = resp._path
             $('#models-jstree').jstree().refresh_node(parent)
           }else{
-            node.original._path = body.split('<-_path->').pop()
+            node.original._path = resp._path
             $('#models-jstree').jstree().refresh_node(parent)
           }
+          console.log("Node path: " + node.original._path)
         })
       }
       extensionWarning.collapse('hide');
