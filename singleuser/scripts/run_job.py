@@ -20,59 +20,152 @@ user_dir = "/home/jovyan"
 
 
 def save_new_job(job_path, model_path, job_model, **kwargs):
+    '''
+    Create and save a new job in the same directory as the model 
+    used for it.
+
+    Attributes
+    ----------
+    job_path : str
+        Path to the job directory.
+    model_path : str
+        Path to the model file.
+    job_model : str
+        Path to the model file in the job directory.
+    kwargs : {
+        results_path : str
+            Path to the job's results directory.
+    }
+    '''
     results_path = kwargs['results_path']
-    os.mkdir(job_path)
-    os.mkdir(results_path)
-    copyfile(model_path, job_model)
-    model_info = {"model":"{0}".format(model_path), }
-    info_path = os.path.join(job_path, 'info.json')
+    os.mkdir(job_path) # make the job directory
+    os.mkdir(results_path) # make the job's result directory
+    try:
+        copyfile(model_path, job_model) # copy the model into the job directory
+    except FileNotFoundError as error:
+        log.error("Failed to copy the model into the directory: {0}".format(error))
+    model_info = {"model":"{0}".format(model_path), } # job info
+    info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
     with open(info_path, "w") as info_file:
-        info_file.write(json.dumps(model_info))
+        info_file.write(json.dumps(model_info)) # write the job info file
     return model_info, None
 
 
 def save_existing_job(job_path, model_path, job_model, **kwargs):
+    '''
+    Save an existing job.
+
+    Attributes
+    ----------
+    job_path : str
+        Path to the job directory.
+    model_path : str
+        Path to the model file.
+    job_model : str
+        Path to the model file in the job directory.
+    kwargs : {
+        model_file : str
+            Name of the model file.
+    }
+    '''
     model_file = kwargs['model_file']
-    info_path = os.path.join(job_path, 'info.json')
-    old_model_path = "{0}/{1}".format(job_path, model_file)
-    os.remove(old_model_path)
-    copyfile(model_path, job_model)
-    model_info = {"model":"{0}".format(model_path), }
+    info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
+    old_model_path = os.path.join(job_path, model_file) # path to the old model
+    os.remove(old_model_path) # remove the old model
+    try:
+        copyfile(model_path, job_model) # copy the new model into the job directory
+    except FileNotFoundError as error:
+        log.error("Failed to copy the model into the directory: {0}".format(error))
+    model_info = {"model":"{0}".format(model_path), } # updated job info
     with open(info_path, "w") as info_file:
-        info_file.write(json.dumps(model_info))
+        info_file.write(json.dumps(model_info)) # update the job info file
     return model_info, None
 
 
 def run_new_job(job_path, model_path, job_model, **kwargs):
+    '''
+    Save and run a new job.
+
+    Attributes
+    ----------
+    job_path : str
+        Path to the job directory.
+    model_path : str
+        Path to the model file.
+    job_model : str
+        Path to the model file in the job directory.
+    kwargs : {
+        results_path ; str
+            Path to the job's results directory.
+        model_file : str
+            Name of the model file.
+    }
+    '''
     results_path = kwargs['results_path']
     model_file = kwargs['model_file']
-    info_path = os.path.join(job_path, 'info.json')
-    save_new_job(job_path, model_path, job_model, results_path=results_path)
+    info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
+    save_new_job(job_path, model_path, job_model, results_path=results_path) # save the job
     return run_job(job_model, model_file, info_path, job_path)
 
 
 def run_existing_job(job_path, model_path, job_model, **kwargs):
+    '''
+    Save and run an existing job.
+
+    Attributes
+    ----------
+    job_path : str
+        Path to the job directory.
+    model_path : str
+        Path to the model file.
+    job_model : str
+        Path to the model file in the job directory.
+    kwargs : {
+        model_file : str
+            Name of the model file.
+    }
+    '''
     model_file = kwargs['model_file']
-    info_path = os.path.join(job_path, 'info.json')
-    save_existing_job(job_path, model_path, job_model, model_file=model_file)
+    info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
+    save_existing_job(job_path, model_path, job_model, model_file=model_file) # save the job
     return run_job(job_model, model_file, info_path, job_path)
 
 
 def run_job(job_model, model_file, info_path, job_path):
-    setup_logger(job_path)
+    '''
+    Run the job and return the results, number of trajectories, and is_stochastic.
+    Records when the job was start and updates the model path in the job info file.
+    Updates status with status files and logs warnings and errors in the log file.
+    Errors are logged to the console.
+
+    Attributes
+    ----------
+    job_model : str
+        Path to the model file in the job directory.
+    model_file : str
+        Name of the model file.
+    info_path : str
+        Path to the jobs info file.
+    job_path : str
+        Path to the job directory.
+    '''
     # Get the model data from the file and create the model object
-    with open(job_model, 'r') as json_file:
-        _data = json_file.read()
+    try:
+        with open(job_model, 'r') as json_file:
+            _data = json_file.read()
+    except FileNotFoundError as error:
+        log.critical("Failed to copy the model into the directory: {0}".format(error))
+        open(os.path.join(job_path, 'ERROR'), 'w').close() # update status to error
     data = json.loads(str(_data))
     data['name'] = model_file.split('.')[0]
-    _model = ModelFactory(data)
+    _model = ModelFactory(data) # build GillesPy2 model
     # Add the start time to the job info file
     with open(info_path, 'r') as info_file:
         _info_data = info_file.read()
         info_data = json.loads(_info_data)
-    today = datetime.now()
-    str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC")
-    info_data['start_time'] = str_datetime
+    today = datetime.now() # job run start time
+    str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC") # format timestamp
+    info_data['start_time'] = str_datetime # add start time to job info
     # Update the location of the model
     info_data['model'] = job_model
     # Update the job info file
@@ -87,11 +180,25 @@ def run_job(job_model, model_file, info_path, job_path):
         # update job status to error if GillesPy2 throws an exception
         open(os.path.join(job_path, 'ERROR'), 'w').close()
     else:
-        open(os.path.join(job_path, 'COMPLETE'), 'w').close()
+        open(os.path.join(job_path, 'COMPLETE'), 'w').close() # update status to complete
         return results, data['simulationSettings']['stochasticSettings']['realizations'], data['simulationSettings']['is_stochastic']
 
 
 def plot_results(results, results_path, trajectories, is_stochastic):
+    '''
+    Create the set of result plots and write them to file in the results directory.
+
+    Attributes
+    ----------
+    results : GillesPy2 ResultsEnsemble or GillesPy2 Results
+        Results of a job run.
+    results_path : str
+        Path to the results directory.
+    trajectories : int
+        Number of trajectories for the job.
+    is_stochastic : bool
+        Was the job a stochastic simulation?.
+    '''
     if is_stochastic and trajectories > 1:
         stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
         with open(os.path.join(results_path, 'std_dev_range_plot.json'), 'w') as json_file:
@@ -108,6 +215,16 @@ def plot_results(results, results_path, trajectories, is_stochastic):
 
 
 def setup_logger(job_path):
+    '''
+    Changer the GillesPy2 logger to record only error level logs and higher
+    to the console and to log warning level logs and higher to a log file in
+    the job directory.
+
+    Attributes
+    ----------
+    job_path : str
+        Path to the job directory
+    '''
     formatter = log.handlers[0].formatter # gillespy2 log formatter
     fh_is_needed = True
     for handler in log.handlers:
@@ -125,6 +242,14 @@ def setup_logger(job_path):
 
 
 def get_parsed_args():
+    '''
+    Initializes an argpaser to document this script and returns a dict of
+    the arguments that were passed to the script from the command line.
+
+    Attributes
+    ----------
+
+    '''
     description = "Run and/or Save (-r or -s) a new or existing (-n or -e) job.\n Creates a job directory with a model, info, logs, and status files and a directory for results."
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('model_path', help="The path from the user directory to the  model.")
@@ -175,11 +300,15 @@ if __name__ == "__main__":
     results_path = os.path.join(job_path, 'results')
     job_model = os.path.join(job_path, model_file)
 
+    setup_logger(job_path)
+
     opts = { "sn":save_new_job, "rn":run_new_job, "se":save_existing_job, "re":run_existing_job, }
 
     data, trajectories, is_stochastic = opts[opt_type](job_path, model_path, job_model, results_path=results_path, model_file=model_file)
     
     if args.run:
+        if not 'results' in os.listdir(path=job_path):
+            os.mkdir(results_path)
         with open("{0}/results.p".format(results_path), 'wb') as results_file:
             pickle.dump(data, results_file, protocol=pickle.HIGHEST_PROTOCOL)
         plot_results(data, results_path, trajectories, is_stochastic)
