@@ -139,11 +139,25 @@ let FileBrowser = PageView.extend({
     'click [data-hook=new-spatial-model]' : 'newSpatialModel',
   },
   render: function () {
+    var self = this;
     this.renderWithTemplate();
-    this.setupJstree()
+    this.setupJstree();
+    setTimeout(function () {
+      self.refreshInitialJSTree();
+    }, 3000);
   },
   refreshJSTree: function () {
     $('#models-jstree').jstree().refresh()
+  },
+  refreshInitialJSTree: function () {
+    var self = this;
+    var count = $('#models-jstree').jstree()._model.data['#'].children.length;
+    if(count == 0) {
+      self.refreshJSTree();
+      setTimeout(function () {
+        self.refreshInitialJSTree();
+      }, 3000);
+    }
   },
   deleteFile: function (o) {
     var fileType = o.type
@@ -329,11 +343,11 @@ let FileBrowser = PageView.extend({
               self.renameNode(o);
             }
           },
-          "Start Job" : {
+          "Create New Job" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Start Job",
+            "label" : "Create New Job",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
@@ -411,11 +425,11 @@ let FileBrowser = PageView.extend({
               self.renameNode(o);
             }
           },
-          "Start Job" : {
+          "Create New Job" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Start Job",
+            "label" : "Create New Job",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
@@ -433,13 +447,14 @@ let FileBrowser = PageView.extend({
       }
       else if (o.type === 'job') {
         return {
-          "View Results" : {
+          "View Job" : {
             "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "View Results",
+            "separator_after" : true,
+            "_disabled" : false,
+            "_class" : "font-weight-bolder",
+            "label" : "View Job",
             "action" : function (data) {
-              
+              window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
             }
           },
           "Rename" : {
@@ -521,7 +536,7 @@ let FileBrowser = PageView.extend({
                 { uri: endpoint },
                 function (err, response, body) {
                   var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
-                  window.location.href = notebookPath
+                  window.open(notebookPath, '_blank')
                 },
               );
             }
@@ -584,6 +599,8 @@ let FileBrowser = PageView.extend({
             window.open(notebookPath, '_blank')
           },
         );
+      }else if(file.endsWith('.job')){
+        window.location.href = path.join("/hub/stochss/jobs/edit", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }

@@ -11,10 +11,12 @@ module.exports = {
       }
     },
     function (text) {
-      var isDuplicate = this.parent.model.collection.some(function (m) { return m.name === text && this.parent.model !== m;
-      }, this);
-      if (isDuplicate) {
-        return "No duplicate entries."
+      if(this.parent.model && this.parent.model.collection){
+        var isDuplicate = this.parent.model.collection.some(function (m) { return m.name === text && this.parent.model !== m;
+        }, this);
+        if (isDuplicate) {
+          return "No duplicate entries."
+        }
       }
     },
   ],

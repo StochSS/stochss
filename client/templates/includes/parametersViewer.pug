@@ -1,0 +1,16 @@
+div#parameters-viewer.card.card-body
+
+  div
+
+    h3.editor-header Parameters
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-parameters", data-hook="collapse") -
+
+  div.collapse(class="show", id="collapse-parameters")
+
+    table.table
+      thead
+        tr
+          th.col-md-3-view(scope="col") Name
+          th.col-md-9-view(scope="col") Value
+        
+      tbody(data-hook="parameter-list")

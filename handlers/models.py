@@ -1,210 +1,125 @@
-# Use BaseHandler for page requests since
-# the base API handler has some logic that prevents
-# requests without a referrer field
+'''
+Use BaseHandler for page requests since
+the base API handler has some logic that prevents
+requests without a referrer field
+'''
+
+import os.path
+
 from jupyterhub.handlers.base import BaseHandler
-
-from tornado import web
-import json
-import docker
-from io import BytesIO, StringIO
-import tarfile
-import tempfile
-import time
-
+from tornado import web # handle authentication
 from handlers.db_util import checkUserOrRaise
+
+from kubernetes.stream import stream
+import ast # for eval_literal to use with kube response
+import json
+import uuid
 
 import logging
 log = logging.getLogger()
- 
+from handlers import stochss_kubernetes
+
 
 class ModelFileAPIHandler(BaseHandler):
+    '''
+    ########################################################################
+    Base Handler for interacting with Model file Get/Post Requests.
+    ########################################################################
+    '''
 
     @web.authenticated
-    async def get(self, modelPath):
-        checkUserOrRaise(self)
-        log.debug(modelPath)
-        client = docker.from_env()
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        #modelPath = self.getModelPath(_modelPath)
+    async def get(self, model_path):
+        '''
+        Retrieve model data from user container. Data is transferred to hub
+        container as JSON string.
+
+        Attributes
+        ----------
+        model_path : str
+            Path to selected model within user pod container.
+        '''
+        
+        checkUserOrRaise(self) # User Validation
+        log.debug(model_path)
+        user = self.current_user.name # Get Username
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
+        full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
         try:
-            bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
+            json_data = stochss_kubernetes.read_from_pod(client, 
+                user_pod, full_path) # Use cat to read json file
         except:
-            filePath = "/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json"
-            with open(filePath, 'r') as jsonFile:
-                data = jsonFile.read()
-                jsonData = json.loads(str(data))
-                #verPath = self.getVerPath(modelPath)
-                #container.exec_run(cmd="mkdir -p {0}/.versions/".format(_modelPath))
-                tarData = self.convertToTarData(data.encode('utf-8'), modelPath)
-                container.put_archive("/home/jovyan/", tarData)
-                #container.exec_run(cmd="ln -s {0} {1}".format(verPath, modelPath))
-                self.write(jsonData)
+            new_path ='/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json'
+            with open(new_path, 'r') as json_file:
+                data = json_file.read()
+                json_data = json.loads(str(data))
+                stochss_kubernetes.write_to_pod(client,
+                    user_pod, full_path, to_write)
+
+        self.write(json_data) # Send data to client
+                
+
+    @web.authenticated
+    async def post(self, model_path):
+        '''
+        Send/Save model data to user container.
+
+        Attributes
+        ----------
+        model_path : str
+            Path to target  model within user pod container.
+        '''
+        checkUserOrRaise(self) # User validation
+        user = self.current_user.name # Get User Name
+        full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
+        stochss_kubernetes.write_to_pod(client,
+            user_pod, full_path, self.request.body.decode())
+
+
+
+class RunModelAPIHandler(BaseHandler):
+    '''
+    ########################################################################
+    Handler for running a model from the model editor.
+    ########################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, run_cmd, outfile, model_path):
+        '''
+        Run the model with a 5 second timeout.  Only the data from the first
+        trajectory is transferred to the hub container.  Data is transferred
+        to hub container as JSON string.
+
+        Attributes
+        ----------
+        run_cmd : str
+            command to be executed by the run model script (start) for running
+            a model, (read) for reading the results of a model run.
+        outfile : str
+            The temporary file for the results
+        model_path : str
+            Path to target model within user pod container.
+        '''
+        checkUserOrRaise(self) # User validation
+        user = self.current_user.name # Get User Name
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
+        self.set_header('Content-Type', 'application/json')
+        # Create temporary results file it doesn't already exist
+        if outfile == 'none':
+            outfile_uuid = uuid.uuid4()
+            outfile = "{0}".format(outfile_uuid)
+            outfile = outfile.replace("-", "_")
+        log.warn(str(outfile))
+        exec_cmd = ['run_model.py', model_path, '/home/jovyan/.{}.tmp'.format(outfile), run_cmd] # Script commands for read run_cmd
+        if run_cmd == 'start':
+            exec_cmd = ['screen', '-d', '-m'] + exec_cmd # Add screen cmd to Script commands for start run_cmd
+        results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        log.warn(str(results))
+        # Send data back to client
+        if results == '' or results == 'running':
+            self.write("running->" + outfile)
         else:
-            jsonData = self.getModelData(bits, modelPath)
-            self.write(jsonData)
-
-    @web.authenticated
-    async def post(self, modelPath):
-        checkUserOrRaise(self)
-        client = docker.from_env()   
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        tarData = self.convertToTarData(self.request.body, modelPath)
-        container.put_archive("/home/jovyan/", tarData)
-        bits, stat = container.get_archive("/home/jovyan/{0}".format(modelPath))
-        jsonData = self.getModelData(bits, modelPath)
-        #self.write(jsonData)
+            self.write(results)
 
 
-    def getModelPath(self, _modelPath):
-        dir_el = _modelPath.split('/')
-        file = dir_el.pop()
-        dirPath = '/'.join(dir_el)
-        return "{0}/{1}/{1}".format(dirPath, file)
-
-    def getVerPath(self, modelPath):
-        dir_el = modelPath.split('/')
-        file_el = dir_el.pop().split('.')
-        dirPath = '/'.join(dir_el)
-        ver_tag = "_v1."
-        file = ver_tag.join(file_el)
-        return "{0}/.version/{1}".format(dirPath, file)
-
-
-    def getModelData(self, bits, modelPath):
-        modelName = modelPath.split('/').pop()
-        f = tempfile.TemporaryFile()
-        for data in bits:
-            f.write(data)
-        f.seek(0)
-        tarData = tarfile.TarFile(fileobj=f)
-        d = tempfile.TemporaryDirectory()
-        tarData.extractall(d.name)
-        f.close()
-        filePath = "{0}/{1}".format(d.name, modelName)
-        with open(filePath, 'r') as jsonFile:
-            data = jsonFile.read()
-            log.debug(data)
-            jsonData = json.loads(str(data))
-            return jsonData
-        
-
-    def convertToTarData(self, data, modelPath):
-        tarData = BytesIO()
-        tar_file = tarfile.TarFile(fileobj=tarData, mode='w')
-        tar_info = tarfile.TarInfo(name='{0}'.format(modelPath))
-        tar_info.size = len(data)
-        tar_info.mtime = time.time()
-        tar_info.tobuf()
-        tar_file.addfile(tar_info, BytesIO(data))
-        tar_file.close()
-        tarData.seek(0)
-        return tarData
-
-class ModelToNotebookHandler(BaseHandler):
-    @web.authenticated
-    async def get(self, path):
-        checkUserOrRaise(self)
-        client = docker.from_env()
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        file_path = '/home/jovyan{0}'.format(path)
-        fcode, _fslist = container.exec_run(cmd='convert_to_notebook.py "{0}"'.format(path))
-        fslist = _fslist.decode()
-        self.write(fslist)
-
-
-class ModelBrowserFileList(BaseHandler):
-
-    @web.authenticated
-    async def get(self, path):
-        checkUserOrRaise(self)
-        client = docker.from_env()
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        file_path = '/home/jovyan{0}'.format(path)
-        fcode, _fslist = container.exec_run(cmd='ls.py {0} {1}'.format(file_path, path))
-        fslist = _fslist.decode()
-        self.write(fslist)
-
-
-class RunJobAPIHandler(BaseHandler):
-
-    @web.authenticated
-    async def get(self, data):
-        checkUserOrRaise(self)
-        client = docker.from_env()
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        model_path, job_name = data.split('/<--GillesPy2Job-->/')
-        code, _message = container.exec_run(cmd='run_job.py "/home/jovyan{0}" "{1}"'.format(model_path, job_name))
-        message = _message.decode()
-        self.write(message)
-        
-  
-class DeleteFileAPIHandler(BaseHandler):
-
-    @web.authenticated
-    async def get(self, path):
-        checkUserOrRaise(self)
-        client = docker.from_env()
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        file_path = '/home/jovyan{0}'.format(path)
-        fcode, _message = container.exec_run(cmd='rm -R "{0}"'.format(file_path))
-        message = _message.decode()
-        if len(message):
-            self.write(message)
-        else:
-            self.write("{0} was successfully deleted.".format(path.split('/').pop()))
-
-
-class MoveFileAPIHandler(BaseHandler):
-
-    @web.authenticated
-    async def get(self, data):
-        checkUserOrRaise(self)
-        client = docker.from_env()
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        old_path = "/home/jovyan{0}".format(data.split('/<--MoveTo-->')[0])
-        new_path = "/home/jovyan{0}".format(data.split('/<--MoveTo-->').pop())
-        code, _message = container.exec_run(cmd='mv {0} {1}'.format(old_path, new_path))
-        if not len(_message):
-            self.write("Success! {0} was moved to {1}.")
-        else:
-            message = _message.decode()
-            self.write(message)     
-
- 
-class DuplicateModelHandler(BaseHandler):
-
-    @web.authenticated
-    async def get(self, path):
-        checkUserOrRaise(self)
-        client = docker.from_env()
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        file_path = '/home/jovyan{0}'.format(path)
-        fcode, _results = container.exec_run(cmd='duplicate.py "{0}"'.format(file_path))
-        results = _results.decode()
-        self.write(results)
-
-        
-class MoveRenameAPIHandler(BaseHandler):
-
-    @web.authenticated
-    async def get(self, _path):
-        checkUserOrRaise(self)
-        client = docker.from_env()
-        user = self.current_user.name
-        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
-        old_path, new_name = _path.split('/<--change-->/')
-        dir_path = old_path.split('/')
-        dir_path.pop()
-        dir_path.append(new_name)
-        new_path = '/'.join(dir_path)
-        fcode, _message = container.exec_run(cmd='rename.py "{0}" "{1}"'.format(old_path, new_path))
-        message = _message.decode()
-        self.write("{0}<-_path->{1}".format(message, new_path))

@@ -1,20 +1,19 @@
-ARG DOCKER_NOTEBOOK_IMAGE
-FROM $DOCKER_NOTEBOOK_IMAGE
-ARG JUPYTERHUB_VERSION
+FROM jupyterhub/k8s-singleuser-sample:0.8.2
 
 USER root
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get -y update && apt-get -y install libvtk6-dev vtk6
+RUN apt-get update && apt-get install -y vtk6
 
 RUN python3 -m pip install --no-cache \
-  jupyterhub==$JUPYTERHUB_VERSION \
   gillespy2 \
   vtk \
   https://github.com/spatialpy/SpatialPy/tarball/develop \
   pygmsh==5.0.2 \
   meshio==2.3.10 
+
+RUN apt-get update && apt-get install -y screen vim
 
 USER jovyan
 
@@ -25,7 +24,7 @@ RUN rmdir work && mkdir -p Models Notebooks Jobs Models/Examples
 COPY --chown=jovyan:users public_models/* Models/Examples/
 
 # Overwrite the default page template for the jupyter notebook
-COPY --chown=jovyan:users page.html /opt/conda/lib/python3.7/site-packages/notebook/templates/
+COPY --chown=jovyan:users page.html /opt/conda/lib/python3.6/site-packages/notebook/templates/
 
 # Copy helper scripts
 COPY scripts/* /usr/local/bin/

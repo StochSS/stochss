@@ -1,0 +1,17 @@
+div#rate-rules-viewer.card.card-body
+
+  div
+
+    h3.editor-header Rate Rules
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-rate-rules", data-hook="collapse") -
+
+  div.collapse(class="show", id="collapse-rate-rules")
+
+    table.table
+      thead
+        tr
+          th.col-md-3-view(scope="col") Name
+          th.col-md-3-view(scope="col") Rule
+          th.col-md-6-view(scope="col") Species
+        
+      tbody(data-hook="rate-rules-list")

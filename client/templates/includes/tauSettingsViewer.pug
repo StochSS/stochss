@@ -1,0 +1,43 @@
+div#settings-viewer.card.card-body
+
+  div
+
+    h3.editor-header Simulation Settings
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings", data-hook="collapse") -
+
+  div.collapse(class="show", id="collapse-settings")
+
+    table.table
+      thead
+        tr
+          th.col-md-3-view(scope="col") Simulation Type
+          th.col-md-3-view(scope="col") Time Span
+          th.col-md-3-view(scope="col") Increment
+          th.col-md-3-view(scope="col") Volume
+
+      tbody
+        tr
+          td Stochastic
+          td="0 to " + this.model.endSim
+          td=this.model.timeStep
+          td=this.model.volume
+
+    p="Realizations: " + this.model.stochasticSettings.realizations
+
+    div
+
+      h6.editor-header Advanced Settings
+      button.btn.btn-outline-collapse(data-toggle='collapse', data-target='#advanced-settings', data-hook='advanced-settings-button') +
+
+    div(id='advanced-settings', class='collapse', data-hook='advanced-settings')
+
+      table.table
+        thead
+          tr
+            th.col-md-3-view(scope="col") Seed
+            th.col-md-9-view(scope="col") Tau Tolerance
+
+        tbody
+          tr
+            td=this.model.stochasticSettings.tauSettings.seed
+            td=this.model.stochasticSettings.tauSettings.tauTol

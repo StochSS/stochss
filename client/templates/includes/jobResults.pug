@@ -1,0 +1,32 @@
+div#job-results.card.card-body
+
+  div
+
+    h3.editor-header Results
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", data-hook="collapse", disabled) +
+
+  div.collapse(id="collapse-results", data-hook="job-results")
+
+    table.table
+      thead
+        tr
+          th(scope="col") Title
+          th(scope="col") X-axis Label
+          th(scope="col") Y-axis Label
+
+      tbody
+        tr
+          td: div(data-hook="title")
+          td: div(data-hook="xaxis")
+          td: div(data-hook="yaxis")
+
+    div
+
+      h5.editor-header Plot Trajectories
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") +
+
+    div.collapse(class="show", id="collapse-trajectories")
+
+      div(data-hook="trajectories")
+      button.btn.btn-primary(data-hook="plot-trajectories") Plot
+      
