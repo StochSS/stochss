@@ -4,4 +4,5 @@
 
 source .env
 
+eval $(minikube docker-env)
 docker build -t $DOCKER_NOTEBOOK_IMAGE:dev ./singleuser
