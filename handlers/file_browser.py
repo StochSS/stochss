@@ -33,7 +33,7 @@ class ModelBrowserFileList(BaseHandler):
         Attributes
         ----------
         path : str
-            Path to user directory within user pod container.
+            Path to target directory within user pod container.
 
         '''
 

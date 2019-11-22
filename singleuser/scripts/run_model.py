@@ -31,8 +31,36 @@ user_dir = '/home/jovyan'
 
 
 class _Model(Model):
-
+    '''
+    ##############################################################################
+    Build a GillesPy2 model.
+    ##############################################################################
+    '''
     def __init__(self, name, species, parameters, reactions, rate_rules, endSim, timeStep, volume):
+        '''
+        Initialize and empty model and add its components.
+
+        Attributes
+        ----------
+        name : str
+            Name of the model.
+        species : list
+            List of GillesPy2 species to be added to the model.
+        parameters : list
+            List of GillesPy2 parameters to be added to the model.
+        reactions : list
+            List of GillesPy2 reactions to be added to the model.
+        rate_rules : list
+            List of GillesPy2 rate rules to be added to the model.
+        endSim : int
+            Simulation duration of the model.
+        timeStep : int
+            Time unit until next sample.
+        volume : int
+            The volume of the system matters when converting to from population to
+            concentration form. This will also set a parameter "vol" for use in
+            custom (i.e. non-mass-action) propensity functions.
+        '''
         Model.__init__(self, name=name, volume=volume)
         self.add_parameter(parameters)
         self.add_species(species)
@@ -43,8 +71,20 @@ class _Model(Model):
 
 
 class ModelFactory():
-
+    '''
+    ##############################################################################
+    Build the individual components of a model.
+    ##############################################################################
+    '''
     def __init__(self, data):
+        '''
+        Initialize and build a GillesPy2 model.
+
+        Attributes
+        ----------
+        data : dict
+            A json representation of a model.
+        '''
         name = data['name']
         timeStep = (data['simulationSettings']['timeStep'])
         endSim = data['simulationSettings']['endSim']
@@ -56,17 +96,43 @@ class ModelFactory():
         self.model = _Model(name, self.species, self.parameters, self.reactions, self.rate_rules, endSim, timeStep, volume)
 
     def build_specie(self, args):
+        '''
+        Build a GillesPy2 species.
+
+        Atrributes
+        ----------
+        args : dict
+            A json representation of a species.
+        '''
         name = args['name'].strip()
         value = args['value']
         mode = args['mode']
         return Species(name=name, initial_value=value, mode=mode)
 
     def build_parameter(self, args):
+        '''
+        Build a GillesPy2 parameter.
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of a parameter.
+        '''
         name = args['name'].strip()
         value = args['value']
         return Parameter(name=name, expression=value)
 
     def build_reaction(self, args, parameters):
+        '''
+        Build a GillesPy2 reaction.
+
+        Attribites
+        ----------
+        args : dict
+            A json representation of a reaction.
+        parameters : list
+            List of GillesPy2 parameters.
+        '''
         if not args['rate'] == {}:
             rate = list(filter(lambda p: p.name == args['rate']['name'], parameters))[0]
             propensity = None
@@ -83,12 +149,28 @@ class ModelFactory():
         return R
 
     def build_rate_rules(self, args):
+        '''
+        Build a GillesPy2 rate rule.
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of a rate rule.
+        '''
         name = args['name']
         species = self.build_specie(args['specie'])
         expression = args['rule']
         return RateRule(name=name, species=species, expression=expression)
 
     def build_stoich_species_dict(self, args):
+        '''
+        Build a dictionary of GillesPy2 stoich species
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of a stoich species
+        '''
         d = {}
         for stoich_specie in args:
             key = stoich_specie['specie']['name']
@@ -98,26 +180,48 @@ class ModelFactory():
 
 
 def run_model(model_path):
+    '''
+    Run the model and return a preview of the results from the first trajectory.
+    Model runs will timeout after 5 seconds if the model hasn't completed.
+    Logs are logged to a stream object.
+
+    Attributes
+    ----------
+    model_path : str
+        Path to the model file.
+    '''
     with open(model_path, "r") as jsonFile:
         data = jsonFile.read()
-        jsonData = json.loads(str(data))
-        jsonData['name'] = model_path.split('/').pop().split('.')[0]
-        _model = ModelFactory(jsonData)
-        _results = run_solver(_model.model, jsonData['simulationSettings'], 5)
-        results = _results[0]
-        res_dict = dict(results)
-        for k, v in res_dict.items():
-            res_dict[k] = list(v)
-        results = res_dict
-        for key in results.keys():
-            if not isinstance(results[key], list):
-                # Assume it's an ndarray, use tolist()
-                results[key] = results[key].tolist()
-        results['data'] = jsonData
-        return results
+    jsonData = json.loads(str(data))
+    jsonData['name'] = model_path.split('/').pop().split('.')[0]
+    _model = ModelFactory(jsonData)
+    _results = run_solver(_model.model, jsonData['simulationSettings'], 5)
+    results = _results[0]
+    res_dict = dict(results)
+    for k, v in res_dict.items():
+        res_dict[k] = list(v)
+    results = res_dict
+    for key in results.keys():
+        if not isinstance(results[key], list):
+            # Assume it's an ndarray, use tolist()
+            results[key] = results[key].tolist()
+    results['data'] = jsonData
+    return results
 
 
 def run_solver(model, data, run_timeout):
+    '''
+    Choose the solver based on the algorithm and is_stochastic.
+
+    Attributes
+    ----------
+    model : GillesPy2 Model
+        Model to be run.
+    data : dict
+        Simulation settings to use for the run.
+    run_timeout : int
+        Number of seconds until the simulation times out.
+    '''
     if(data['is_stochastic'] == False):
         return basicODESolver(model, data, run_timeout)
     algorithm = data['stochasticSettings']['algorithm']
@@ -130,6 +234,18 @@ def run_solver(model, data, run_timeout):
 
 
 def basicODESolver(model, data, run_timeout):
+    '''
+    Run the model with the GillesPy2 BasicODESolver.
+
+    Attributes
+    ----------
+    model : GillesPy2 Model
+        Model to be run.
+    data : dict
+        Simulation settings to use for the run.
+    run_timeout : int
+        Number of seconds until the simulation times out.
+    '''
     results = model.run(
         solver = BasicODESolver,
         timeout = run_timeout,
@@ -139,6 +255,18 @@ def basicODESolver(model, data, run_timeout):
 
 
 def ssaSolver(model, data, run_timeout):
+    '''
+    Run the model with the best GillesPy2 SSASolver.
+
+    Attributes
+    ----------
+    model : GillesPy2 Model
+        Model to be run.
+    data : dict
+        Simulation settings to use for the run.
+    run_timeout : int
+        Number of seconds until the simulation times out.
+    '''
     seed = data['stochasticSettings']['ssaSettings']['seed']
     if(seed == -1):
         seed = None
@@ -152,6 +280,18 @@ def ssaSolver(model, data, run_timeout):
 
 
 def basicTauLeapingSolver(model, data, run_timeout):
+    '''
+    Run the model with the GillesPy2 BasicTauLeapingSolver.
+    
+    Attributes
+    ----------
+    model : GillesPy2 Model
+        Model to be run.
+    data : dict
+        Simulation settings to use for the run.
+    run_timeout : int
+        Number of seconds until the simulation times out.
+    '''
     seed = data['stochasticSettings']['tauSettings']['seed']
     if(seed == -1):
         seed = None
@@ -166,6 +306,18 @@ def basicTauLeapingSolver(model, data, run_timeout):
 
 
 def basicTauHybridSolver(model, data, run_timeout):
+    '''
+    Run the model with the GillesPy2 BasicTauHybridSolver.
+    
+    Attributes
+    ----------
+    model : GillesPy2 Model
+        Model to be run.
+    data : dict
+        Simulation settings to use for the run.
+    run_timeout : int
+        Number of seconds until the simulation times out.
+    '''
     seed = data['stochasticSettings']['hybridSettings']['seed']
     if(seed == -1):
         seed = None
@@ -181,6 +333,14 @@ def basicTauHybridSolver(model, data, run_timeout):
 
 
 def get_parsed_args():
+    '''
+    Initializes an argpaser to document this script and returns a dict of
+    the arguments that were passed to the script from the command line.
+
+    Attributes
+    ----------
+
+    '''
     parser = argparse.ArgumentParser(description="Run a preview of a model. Prints the results of the first trajectory after 5s.")
     parser.add_argument('model_path', help="The path from the user directory to the model.")
     parser.add_argument('outfile', help="The temp file used to hold the results.")
