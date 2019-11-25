@@ -93,7 +93,6 @@ module.exports = View.extend({
       data['plt_data']['yaxis'] = this.yaxis;
     }
     var endpoint = path.join("/stochss/api/jobs/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
-    console.log(endpoint)
     xhr({url: endpoint}, function (err, response, body){
       if(body.startsWith("ERROR!")){
         $(self.queryByHook(type)).html(body)
@@ -103,7 +102,6 @@ module.exports = View.extend({
     });
   },
   plotFigure: function (figure, hook) {
-    console.log(figure)
     var el = this.queryByHook(hook)
     Plotly.newPlot(el, figure)
   },
