@@ -38,7 +38,6 @@ def save_new_job(job_path, model_path, job_model, **kwargs):
     }
     '''
     results_path = kwargs['results_path']
-    os.mkdir(job_path) # make the job directory
     os.mkdir(results_path) # make the job's result directory
     try:
         copyfile(model_path, job_model) # copy the model into the job directory
@@ -48,7 +47,7 @@ def save_new_job(job_path, model_path, job_model, **kwargs):
     info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
     with open(info_path, "w") as info_file:
         info_file.write(json.dumps(model_info)) # write the job info file
-    return model_info, None
+    return model_info, None, None
 
 
 def save_existing_job(job_path, model_path, job_model, **kwargs):
@@ -79,7 +78,7 @@ def save_existing_job(job_path, model_path, job_model, **kwargs):
     model_info = {"model":"{0}".format(model_path), } # updated job info
     with open(info_path, "w") as info_file:
         info_file.write(json.dumps(model_info)) # update the job info file
-    return model_info, None
+    return model_info, None, None
 
 
 def run_new_job(job_path, model_path, job_model, **kwargs):
@@ -295,11 +294,15 @@ if __name__ == "__main__":
             job_path = os.path.join(dir_path, _job_dir)
     else:
         job_path = os.path.join(user_dir, args.job)
+        job_name = job_path.split('/').pop()
+        dir_path = job_path.split(job_name)[0]
         model_file = model_path.split('/').pop()
     
     results_path = os.path.join(job_path, 'results')
     job_model = os.path.join(job_path, model_file)
 
+    if not job_name in os.listdir(path=dir_path):
+        os.mkdir(job_path) # make the job directory
     setup_logger(job_path)
 
     opts = { "sn":save_new_job, "rn":run_new_job, "se":save_existing_job, "re":run_existing_job, }

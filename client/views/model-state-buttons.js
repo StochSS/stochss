@@ -55,6 +55,7 @@ module.exports = View.extend({
   },
   getResults: function (body) {
     var self = this;
+    var model = this.model;
     setTimeout(function () {
       var outfile = body.split("->").pop()
       endpoint = path.join('/stochss/api/models/run/', 'read', outfile, model.directory);

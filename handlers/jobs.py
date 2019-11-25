@@ -76,7 +76,7 @@ class RunJobAPIHandler(BaseHandler):
         model_path, job_name = data.split('/<--GillesPy2Job-->/') # get model path and job name from data
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         log.warn('starting the job')
-        exec_cmd = "screen -d -m run_job.py {} {} {}".format(model_path, job_name).split(" ") # Script commands
+        exec_cmd = "screen -d -m run_job.py {} {}".format(model_path, job_name).split(" ") # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('sent the job')
