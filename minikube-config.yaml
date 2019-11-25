@@ -28,6 +28,8 @@ hub:
 
       c.JupyterHub.log_level = 'DEBUG'
 
+      c.JupyterHub.default_url = '/stochss'
+
       # Page handlers
       from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler, JobEditorHandler
 
