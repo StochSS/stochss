@@ -8,7 +8,9 @@ This command deletes any existing minikube VM and creates a new VirtualBox VM wi
 ```
 
 ### Boot up an existing VM
-```make run```
+```bash
+make run
+```
 or
 ```bash
 minikube --kubernetes-version v1.11.10 --vm-driver=virtualbox start
@@ -24,7 +26,7 @@ Rebuild the hub image & re-launch the hub pod. Deletes the hub pod and rebuilds 
 1. First we need to shutdown any running user servers. From the jupyterhub interface, click the "Quit" button in the top-right corner. This will delete the user pod.
 2. Run `./minikube_rebuild_singleuser.sh`. This command rebuilds the notebook server image. After this you can go to /hub/spawn to reboot a new container with the updated image!
 
-### Install jupyterhub/stochss:
+### Install jupyterhub/stochss
 Use this command if you make any changes to minikube-config.yaml. It re-deploys the jupyterhub helm package with the updated configuration.
 ```bash
 ./minikube_install_jhub_minikube.sh
@@ -34,8 +36,14 @@ Use this command if you make any changes to minikube-config.yaml. It re-deploys 
 Run one of these commands to make new bundle files for the front-end: `make webpack` or `npm run webpack`.
 
 ### Watch for changes to client files
-Run one of these commands to start a terminal process that watches for changes to client files and builds new bundle files following any changes: `make watch` or `npm run watch`
-
+Run one of these commands to start a terminal process that watches for changes to client files and builds new bundle files following any changes.
+```bash
+make watch
+```
+or
+```bash
+npm run watch
+```
 
 ## Other Commands
 
