@@ -48,14 +48,14 @@ class ModelFileAPIHandler(BaseHandler):
             json_data = stochss_kubernetes.read_from_pod(client, 
                 user_pod, full_path) # Use cat to read json file
         except:
-            new_path ='/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json'
+            new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
             with open(new_path, 'r') as json_file:
                 data = json_file.read()
-                json_data = json.loads(str(data))
+                to_write = json.loads(str(data))
                 stochss_kubernetes.write_to_pod(client,
                     user_pod, full_path, to_write)
 
-        self.write(json_data) # Send data to client
+        self.write(to_write) # Send data to client
                 
 
     @web.authenticated
