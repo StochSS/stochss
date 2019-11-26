@@ -7,7 +7,7 @@
 
 Install [VirtualBox](https://www.virtualbox.org/)
 
-Install [Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows or macOS, or Docker Engine for Linux.
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop) for macOS, or Docker Engine for Linux.
 
 Install [minikube](https://github.com/kubernetes/minikube) 
 
