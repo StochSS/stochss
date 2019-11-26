@@ -1,3 +1,4 @@
+.oauth.beta.env
 node_modules/
 *.swp
 *.swo
