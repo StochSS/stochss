@@ -5,6 +5,7 @@ requests without a referrer field
 '''
 
 import json
+import os
 
 from jupyterhub.handlers.base import BaseHandler
 from tornado import web # handle authentication
@@ -73,11 +74,10 @@ class RunJobAPIHandler(BaseHandler):
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         model_path, job_name = data.split('/<--GillesPy2Job-->/') # get model path and job name from data
-        full_path = "/home/jovyan/{0}".format(model_path) # full path to model
-        # args = "/home/jovyan/{0} {1} {2}".format(model_path, job_name, opt_type)
+        opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         log.warn('starting the job')
-        # exec_cmd = [ 'bash', '-c', '"run_job.py {0}"'.format(args) ]
-        exec_cmd = "screen -d -m run_job.py {} {} {}".format(full_path, job_name, opt_type).split(" ") # Script commands
+        exec_cmd = "screen -d -m run_job.py {} {}".format(model_path, job_name).split(" ") # Script commands
+        exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('sent the job')
 
@@ -108,8 +108,9 @@ class SaveJobAPIHandler(BaseHandler):
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         model_path, job_name = data.split('/<--GillesPy2Job-->/') # get model path and job name from data
-        full_path = "/home/jovyan/{0}".format(model_path) # full path to model
-        exec_cmd = [ "run_job.py", full_path, job_name, opt_type ] # Script commands
+        opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
+        exec_cmd = [ "run_job.py", model_path, job_name ] # Script commands
+        exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.warn(exec_cmd)
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
 
@@ -138,8 +139,8 @@ class JobStatusAPIHandler(BaseHandler):
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         log.warn('getting the status of the job')
-        full_path = "/home/jovyan/{0}".format(job_path) # full path to job
-        exec_cmd = [ 'job_status.py', full_path ]
+        # full_path = "/home/jovyan/{0}".format(job_path) # full path to job
+        exec_cmd = [ 'job_status.py', job_path ]
         status = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('the status of the job is: ' + status)
         self.write(status.strip()) # Send data to client
@@ -170,13 +171,13 @@ class PlotJobResultsAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        if not job_path.endswith('/'):
-            job_path = job_path + '/' # add a trailing forward slash if needed
-        results_path = "/home/jovyan{0}results/results.p".format(job_path) # Path to the results file
+        results_path = os.path.join(job_path, 'results/results.p') # Path to the results file
         log.warn(self.request.body)
         plt_type = body['plt_type'] # type of plot to be retrieved 
         plt_data = json.dumps(body['plt_data']) # plot title and axes lables
-        exec_cmd = [ 'plot_results.py', results_path, plt_type, plt_data ] # Script commands
+        exec_cmd = [ 'plot_results.py', results_path, plt_type] # Script commands
+        if not "None" in plt_data:
+            exec_cmd.append(plt_data) # Add plot data to the exec cmd if its not "None"
         plt_fig = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(plt_fig)
         self.write(plt_fig) # Send data to client
