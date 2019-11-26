@@ -41,6 +41,9 @@ let JobManager = PageView.extend({
         var statusEndpoint = path.join("/stochss/api/jobs/job-status", self.directory);
         xhr({uri: statusEndpoint}, function (err, response, body) {
           self.status = body;
+          if(self.status === 'complete' || self.status === 'error'){
+            self.modelDirectory = path.join(self.directory, self.modelDirectory.split('/').pop());
+          }
           self.renderSubviews();
         });
       });
