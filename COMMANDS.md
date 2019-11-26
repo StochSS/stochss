@@ -2,16 +2,23 @@
 
 ### Bootstrap a local development environment
 This command deletes any existing minikube VM and creates a new VirtualBox VM with a new kubernetes cluster running jupyterhub/stochss. You shouldn't need to use this unless you don't have a VM already or you did some serious tinkering with the k8s cluster or VM that is causing issues.
-```./minikube_bootstrap.sh```
+
+```bash
+./minikube_bootstrap.sh
+```
 
 ### Boot up an existing VM
 ```make run```
 or
-```minikube --kubernetes-version v1.11.10 --vm-driver=virtualbox start```
+```bash
+minikube --kubernetes-version v1.11.10 --vm-driver=virtualbox start
+```
 
 ### Rebuild the hub docker image
 Rebuild the hub image & re-launch the hub pod. Deletes the hub pod and rebuilds the hub image. Use this if you modify any of the handler files.
-```./minikube_rebuild_hub.sh```
+```bash
+./minikube_rebuild_hub.sh
+```
 
 ### Rebuild the notebook image
 1. First we need to shutdown any running user servers. From the jupyterhub interface, click the "Quit" button in the top-right corner. This will delete the user pod.
@@ -19,7 +26,9 @@ Rebuild the hub image & re-launch the hub pod. Deletes the hub pod and rebuilds 
 
 ### Install jupyterhub/stochss:
 Use this command if you make any changes to minikube-config.yaml. It re-deploys the jupyterhub helm package with the updated configuration.
-```./minikube_install_jhub_minikube.sh```
+```bash
+./minikube_install_jhub_minikube.sh
+```
 
 ### Build front-end bundles
 Run one of these commands to make new bundle files for the front-end: `make webpack` or `npm run webpack`.
