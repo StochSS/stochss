@@ -1,7 +1,9 @@
 
-This is a work in progress!
+**NOTE: ONLY MACOS AND LINUX ARE SUPPORTED DEVELOPMENT ENVIRONMENTS!**
 
 # Local development with minikube
+
+### Install tools
 
 Install [VirtualBox](https://www.virtualbox.org/)
 
@@ -26,8 +28,6 @@ The default mounts for the VirtualBox driver are:
 Clone this repository in a subfolder that lives under one of the default mounted directories. It doesn't need to be a direct subfolder. As long as the repo lives somewhere under the default mount location, you're good to go.
 
 ### Start New Minikube VM
-
-**NOTE: ONLY MACOS AND LINUX ARE SUPPORTED DEVELOPMENT ENVIRONMENTS!**
 
 Let's boot up a VM with minikube!
 ```
