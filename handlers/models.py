@@ -45,7 +45,7 @@ class ModelFileAPIHandler(BaseHandler):
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
         try:
-            json_data = stochss_kubernetes.read_from_pod(client, 
+            to_write = stochss_kubernetes.read_from_pod(client, 
                 user_pod, full_path) # Use cat to read json file
         except:
             new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
