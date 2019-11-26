@@ -1,0 +1,438 @@
+{
+    "is_spatial": false,
+    "simulationSettings": {
+        "is_stochastic": false,
+        "endSim": 5,
+        "timeStep": 0.1,
+        "volume": 1,
+        "stochasticSettings": {
+            "realizations": 1,
+            "algorithm": "SSA",
+            "ssaSettings": {
+                "seed": -1
+            },
+            "tauSettings": {
+                "seed": -1,
+                "tauTol": 0.03
+            },
+            "hybridSettings": {
+                "seed": -1,
+                "tauTol": 0.03,
+                "switchTol": 0.03
+            }
+        },
+        "deterministicSettings": {
+            "relativeTol": 0.03,
+            "absoluteTol": 0.03
+        }
+    },
+    "meshSettings": {
+        "count": 2
+    },
+    "species": [
+        {
+            "name": "F",
+            "value": 2,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "A",
+            "value": 250,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "B",
+            "value": 500,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "C",
+            "value": 1000,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "P",
+            "value": 0,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        }
+    ],
+    "parameters": [
+        {
+            "name": "k1",
+            "value": 2
+        },
+        {
+            "name": "k2",
+            "value": 0.1
+        },
+        {
+            "name": "k3",
+            "value": 104
+        },
+        {
+            "name": "k4",
+            "value": 4e-7
+        },
+        {
+            "name": "k5",
+            "value": 26
+        }
+    ],
+    "reactions": [
+        {
+            "name": "reaction1",
+            "reactionType": "four",
+            "annotation": "B+F \\rightarrow A+F",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "k1",
+                "value": 2
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "B",
+                        "value": 500,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "F",
+                        "value": 2,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "A",
+                        "value": 250,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "F",
+                        "value": 2,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "reaction2",
+            "reactionType": "merge",
+            "annotation": "A+B \\rightarrow P",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "k2",
+                "value": 0.1
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "A",
+                        "value": 250,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "B",
+                        "value": 500,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "P",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "reaction3",
+            "reactionType": "custom-massaction",
+            "annotation": "A+F \\rightarrow 2A+C+F",
+            "massaction": true,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "k3",
+                "value": 104
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "A",
+                        "value": 250,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "F",
+                        "value": 2,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 2,
+                    "specie": {
+                        "name": "A",
+                        "value": 250,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "C",
+                        "value": 1000,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "F",
+                        "value": 2,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "reaction4",
+            "reactionType": "dimerization",
+            "annotation": "2A \\rightarrow P",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "k4",
+                "value": 4e-7
+            },
+            "reactants": [
+                {
+                    "ratio": 2,
+                    "specie": {
+                        "name": "A",
+                        "value": 250,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "P",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "reaction5",
+            "reactionType": "four",
+            "annotation": "C+F \\rightarrow B+F",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "k5",
+                "value": 26
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "C",
+                        "value": 1000,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "F",
+                        "value": 2,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "B",
+                        "value": 500,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "F",
+                        "value": 2,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "rateRules": []
+}

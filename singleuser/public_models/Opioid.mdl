@@ -1,0 +1,731 @@
+{
+    "is_spatial": false,
+    "simulationSettings": {
+        "is_stochastic": true,
+        "endSim": 200,
+        "timeStep": 1,
+        "volume": 1,
+        "stochasticSettings": {
+            "realizations": 1,
+            "algorithm": "Tau-Leaping",
+            "ssaSettings": {
+                "seed": -1
+            },
+            "tauSettings": {
+                "seed": -1,
+                "tauTol": 0.03
+            },
+            "hybridSettings": {
+                "seed": -1,
+                "tauTol": 0.03,
+                "switchTol": 0.03
+            }
+        },
+        "deterministicSettings": {
+            "relativeTol": 0.03,
+            "absoluteTol": 0.03
+        }
+    },
+    "meshSettings": {
+        "count": 2
+    },
+    "species": [
+        {
+            "name": "Susceptible",
+            "value": 200,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "Prescribed_User",
+            "value": 0,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "Addicted",
+            "value": 0,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "Rehab",
+            "value": 0,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "Natural_Deaths",
+            "value": 0,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        },
+        {
+            "name": "Addicted_Deaths",
+            "value": 0,
+            "mode": "dynamic",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        }
+    ],
+    "parameters": [
+        {
+            "name": "alpha",
+            "value": 0.15
+        },
+        {
+            "name": "epsilon",
+            "value": 0.8
+        },
+        {
+            "name": "beta_p",
+            "value": 0.00266
+        },
+        {
+            "name": "beta_a",
+            "value": 0.00094
+        },
+        {
+            "name": "gamma",
+            "value": 0.00744
+        },
+        {
+            "name": "zeta",
+            "value": 0.2
+        },
+        {
+            "name": "delta",
+            "value": 0.1
+        },
+        {
+            "name": "sigma",
+            "value": 0.9
+        },
+        {
+            "name": "mu",
+            "value": 0.00729
+        },
+        {
+            "name": "mu_prime",
+            "value": 0.01159
+        }
+    ],
+    "reactions": [
+        {
+            "name": "SP",
+            "reactionType": "change",
+            "annotation": "Susceptible \\rightarrow Prescribed\\_User",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "alpha",
+                "value": 0.15
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Prescribed_User",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SA_a",
+            "reactionType": "change",
+            "annotation": "Susceptible \\rightarrow Addicted",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "beta_a",
+                "value": 0.00094
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Addicted",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SA_p",
+            "reactionType": "change",
+            "annotation": "Susceptibl \\rightarrow Addicted",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "beta_p",
+                "value": 0.00266
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Addicted",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "PA",
+            "reactionType": "change",
+            "annotation": "Prescribed\\_User \\rightarrow Addicted",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "gamma",
+                "value": 0.00744
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Prescribed_User",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Addicted",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "PS",
+            "reactionType": "change",
+            "annotation": "Prescribed\\_User \\rightarrow Susceptible",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "epsilon",
+                "value": 0.8
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Prescribed_User",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AR",
+            "reactionType": "change",
+            "annotation": "Addicted \\rightarrow Rehab",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "zeta",
+                "value": 0.2
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Addicted",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Rehab",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "RA",
+            "reactionType": "change",
+            "annotation": "Rehab \\rightarrow Addicted",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "delta",
+                "value": 0.1
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Rehab",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Addicted",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "RS",
+            "reactionType": "change",
+            "annotation": "Rehab \\rightarrow Susceptible",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "sigma",
+                "value": 0.9
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Rehab",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "mu_S",
+            "reactionType": "split",
+            "annotation": "Susceptible \\rightarrow Susceptible+Natural\\_Deaths",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "mu",
+                "value": 0.00729
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Natural_Deaths",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "mu_P",
+            "reactionType": "split",
+            "annotation": "Prescribed\\_User \\rightarrow Susceptible+Natural\\_Deaths",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "mu",
+                "value": 0.00729
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Prescribed_User",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Natural_Deaths",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "mu_R",
+            "reactionType": "split",
+            "annotation": "Rehab \\rightarrow Susceptible+Natural\\_Deaths",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "mu",
+                "value": 0.00729
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Rehab",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Natural_Deaths",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "mu_prime_A",
+            "reactionType": "split",
+            "annotation": "Addicted \\rightarrow Susceptible+Addicted\\_Deaths",
+            "massaction": false,
+            "propensity": "",
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ],
+            "rate": {
+                "name": "mu_prime",
+                "value": 0.01159
+            },
+            "reactants": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Addicted",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ],
+            "products": [
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Susceptible",
+                        "value": 200,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                },
+                {
+                    "ratio": 1,
+                    "specie": {
+                        "name": "Addicted_Deaths",
+                        "value": 0,
+                        "mode": "dynamic",
+                        "diffusionCoeff": 0,
+                        "subdomains": [
+                            "subdomain 1: ",
+                            "subdomain 2: "
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "rateRules": []
+}
