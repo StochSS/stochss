@@ -2,7 +2,13 @@
 import sys
 import json
 import nbformat
+import argparse
 from nbformat import v4 as nbf
+from os import path
+
+
+user_dir = '/home/jovyan'
+
 
 def generate_imports_cell(json_data):
     # Imports cell
@@ -182,7 +188,7 @@ def generate_run_cell(json_data):
 
 def convertToNotebook(_model_path):
 
-    model_path = '/home/jovyan/{0}'.format(_model_path)
+    model_path = path.join(user_dir,_model_path)
     name = model_path.split('/').pop().split('.')[0]
     dest_path = model_path.split(name)[0]
 
@@ -212,7 +218,7 @@ def convertToNotebook(_model_path):
     nb = nbf.new_notebook(cells=cells)
 
     # Open and write to file
-    dest_file = '{0}{1}.ipynb'.format(dest_path, name)
+    dest_file = path.join(dest_path, '{}.ipynb'.format(name))
     with open(dest_file, 'w') as f:
         nbformat.write(nb, f, version=4)
     f.close()
@@ -222,8 +228,15 @@ def convertToNotebook(_model_path):
     return dest_file
 
 
+def get_parsed_args():
+    parser = argparse.ArgumentParser(description="Convert a GillesPy2 model into a Jupyter Notebook.")
+    parser.add_argument('model_path', help='The path from the user directory to the model being converted.')
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
 
-        model_path = sys.argv[1]
+        args = get_parsed_args()
+        model_path = args.model_path
         convertToNotebook(model_path)
         

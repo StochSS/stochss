@@ -28,7 +28,7 @@ eval $(minikube docker-env)
 docker build -t $DOCKER_HUB_IMAGE:dev .
 docker build -t $DOCKER_NOTEBOOK_IMAGE:dev ./singleuser
 
-./install_jhub_minikube.sh $PWD
+./minikube_install_jhub.sh
 
 kubectl apply -f jhub-rb.yaml
 

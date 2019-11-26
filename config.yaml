@@ -7,7 +7,6 @@ hub:
     name: "HUB_IMAGE_NAME"
     tag: dev
   db:
-    # use in-memory for minikube
     type: sqlite-memory
   # volume mount for stochss files (PVC must already be available)
   extraVolumes:
@@ -27,6 +26,8 @@ hub:
       sys.path.insert(1, '/stochss')
 
       c.JupyterHub.log_level = 'DEBUG'
+
+      c.JupyterHub.default_url = '/stochss'
 
       # Page handlers
       from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler, JobEditorHandler
@@ -97,7 +98,6 @@ singleuser:
 #  cpu:
 #    limit: 1
   storage:
-    # no storage for minikube
     type: none
 #    capacity: 1Gi
 #    dynamic:
@@ -105,10 +105,6 @@ singleuser:
 
 debug:
   enabled: true
-
-scheduling:
-  userScheduler:
-    enabled: true
 
 proxy:
   secretToken: "SECRET"

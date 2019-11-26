@@ -33,15 +33,14 @@ class ModelBrowserFileList(BaseHandler):
         Attributes
         ----------
         path : str
-            Path to user directory within user pod container.
+            Path to target directory within user pod container.
 
         '''
 
         checkUserOrRaise(self) # Authenticate User
         user = self.current_user.name # Get User Name
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Get Kubernetes API+UserPod
-        file_path = '/home/jovyan{0}'.format(path) # User file system path
-        exec_cmd = ['ls.py', file_path, path] # /usr/local/bin/ls.py in UserPod
+        exec_cmd = ['ls.py', path] # /usr/local/bin/ls.py in UserPod
 
         # Utilize Kubernetes API to execute exec_cmd on user pod and return
         # response to variable to populate the js-tree
@@ -73,6 +72,7 @@ class ModelToNotebookHandler(BaseHandler):
         user = self.current_user.name # Get User Name
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Kube API
         exec_cmd = ['convert_to_notebook.py', path] # Script commands
+        log.warning(path)
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write(resp)
 
@@ -132,8 +132,8 @@ class MoveFileAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
-        old_path = "/home/jovyan{0}".format(data.split('/<--MoveTo-->')[0])
-        new_path = "/home/jovyan{0}".format(data.split('/<--MoveTo-->').pop())
+        old_path = "/home/jovyan/{0}".format(data.split('/<--MoveTo-->')[0])
+        new_path = "/home/jovyan/{0}".format(data.split('/<--MoveTo-->').pop())
         exec_cmd = ['mv', old_path, new_path]
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         if not len(resp):
@@ -166,8 +166,7 @@ class DuplicateModelHandler(BaseHandler):
         checkUserOrRaise(self)
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
-        file_path = '/home/jovyan{0}'.format(path)
-        exec_cmd = ['duplicate.py', file_path]
+        exec_cmd = ['duplicate.py', path]
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write(json.dumps(resp))
 
@@ -195,13 +194,9 @@ class RenameAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
-        old_path, new_name = _path.split('/<--change-->/')
-        dir_path = old_path.split('/')
-        dir_path.pop()
-        dir_path.append(new_name)
-        new_path = '/'.join(dir_path)
-        exec_cmd = ['rename.py', old_path, new_path]
+        path, new_name = _path.split('/<--change-->/')
+        exec_cmd = ['rename.py', path, new_name]
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write("{0}<-_path->{1}".format(resp, new_path))
+        self.write(resp)
 
 

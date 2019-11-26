@@ -11,7 +11,7 @@ var JobResultsView = require('../views/job-results');
 var ModelViewer = require('../views/model-viewer');
 var InputView = require('../views/input');
 //templates
-var template = require('../templates/pages/JobManager.pug');
+var template = require('../templates/pages/jobManager.pug');
 
 import initPage from './page.js';
 
@@ -125,10 +125,8 @@ let JobManager = PageView.extend({
   getJobInfo: function (cb) {
     var self = this;
     var endpoint = path.join("/stochss/api/jobs/job-info", this.directory, "/info.json");
-    console.log("getting start time");
     xhr({uri: endpoint}, function (err, response, body){
       self.startTime = JSON.parse(body).start_time;
-      console.log("got start time");
       cb();
     });
   },

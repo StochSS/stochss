@@ -48,14 +48,14 @@ class ModelFileAPIHandler(BaseHandler):
             json_data = stochss_kubernetes.read_from_pod(client, 
                 user_pod, full_path) # Use cat to read json file
         except:
-            new_path ='/srv/jupyterhub/model_templates/nonSpatialModelTemplate.json'
+            new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
             with open(new_path, 'r') as json_file:
                 data = json_file.read()
-                json_data = json.loads(str(data))
+                to_write = json.loads(str(data))
                 stochss_kubernetes.write_to_pod(client,
                     user_pod, full_path, to_write)
 
-        self.write(json_data) # Send data to client
+        self.write(to_write) # Send data to client
                 
 
     @web.authenticated
@@ -111,9 +111,11 @@ class RunModelAPIHandler(BaseHandler):
             outfile = "{0}".format(outfile_uuid)
             outfile = outfile.replace("-", "_")
         log.warn(str(outfile))
-        exec_cmd = ['run_model.py', model_path, '/home/jovyan/.{}.tmp'.format(outfile), run_cmd] # Script commands for read run_cmd
+        exec_cmd = ['run_model.py', model_path, '{}.tmp'.format(outfile)] # Script commands for read run_cmd
+        exec_cmd.append(''.join(['--', run_cmd]))
         if run_cmd == 'start':
             exec_cmd = ['screen', '-d', '-m'] + exec_cmd # Add screen cmd to Script commands for start run_cmd
+        log.warning(exec_cmd)
         results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(str(results))
         # Send data back to client
