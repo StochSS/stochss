@@ -49,32 +49,40 @@ npm run watch
 
 Get the IP address of the minikube VM: 
 ```bash
-minikube ip```
+minikube ip
+```
 
 Open a secure shell into the minikube VM: 
 ```bash
-minikube ssh```
+minikube ssh
+```
 
 Get the status of a minikube VM: 
 ```bash
-minikube status```
+minikube status
+```
 
 Power down the minikube VM: 
 ```bash
-minikube stop```
+minikube stop
+```
 
 Get a list of pods in the jupyterhub namespace (use `-w` to stream updates as pod states change):
 ```bash
-kubectl get pods -n jhub```
+kubectl get pods -n jhub
+```
 
 Get logs from the jupyterhub deployment (use `-f` to stream): 
 ```bash
-kubectl logs -n jhub deployment/hub```
+kubectl logs -n jhub deployment/hub
+```
 
 Get a shell into a user notebook server pod: 
 ```bash
-kubectl exec -it -n jhub jupyter-username /bin/bash```
+kubectl exec -it -n jhub jupyter-username /bin/bash
+```
 
 Set docker daemon to minikube VM's docker instance: 
 ```bash
-eval $(minikube docker-env)```
+eval $(minikube docker-env)
+```
