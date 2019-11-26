@@ -11,7 +11,7 @@ var JobResultsView = require('../views/job-results');
 var ModelViewer = require('../views/model-viewer');
 var InputView = require('../views/input');
 //templates
-var template = require('../templates/pages/JobManager.pug');
+var template = require('../templates/pages/jobManager.pug');
 
 import initPage from './page.js';
 
