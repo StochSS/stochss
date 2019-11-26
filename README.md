@@ -13,7 +13,9 @@ Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.
 
 Install [helm](https://github.com/helm/helm), the package manager for kubernetes.
 
-Now, we want this repository to be mounted into our minikube VM so edits to the source will show up in real time. The easiest way to make this happen is to put the stochss repository under a folder that is mounted into minikube by default. NOTE: the host directories are mounted to different directories in the VM! See [this page](https://minikube.sigs.k8s.io/docs/tasks/mount/) for more on this.
+Install [nodejs](https://nodejs.org/) and [npm](https://www.npmjs.com/), the package manager for nodejs.
+
+We want this repository to be mounted into our minikube VM so edits to the source will show up in real time. The easiest way to make this happen is to put the stochss repository in a subfolder that is mounted into minikube by default. NOTE: the host directories are mounted to different directories in the VM! See [this page](https://minikube.sigs.k8s.io/docs/tasks/mount/) for more on this.
 
 The default mounts for the VirtualBox driver are: 
 
@@ -21,94 +23,37 @@ The default mounts for the VirtualBox driver are:
 - macOS: `/Users` mounts to `/Users`
 - Windows: `C://Users` mounts to  `/c/Users`
 
-Did you put the repo under the default mount folder for your OS? Good.
-
-Time to start up the minikube VM with a kubernetes cluster. 
+Clone this repository in a subfolder that lives under one of the default mounted directories. It doesn't need to be a direct subfolder. As long as the repo lives somewhere under the default mount location, you're good to go.
 
 ### Start New Minikube VM
 
-***FOR LINUX AND MAC:***  
+**NOTE: ONLY MACOS AND LINUX ARE SUPPORTED DEVELOPMENT ENVIRONMENTS!**
 
+Let's boot up a VM with minikube!
 ```
-./bootstrap_minikube.sh
-```
-
-**ALTERNATIVELY, you can utilize the following steps:**
- 
-- **Generate Secure Tokens**
-  - Run the command `openssl rand -hex 32` twice (or use an [online generator for random hex](https://www.browserling.com/tools/random-hex)).  
-- **In config-minikube.yaml**
-  - replace `{{COOKIE_SECRET}}` and `{{SECRET_TOKEN}}` with the two different random 32-bit hex strings
-  - replace `{{STOCHSS_HOSTPATH}}` with the path to this repository in the minikube VM.  
-    *(You can double-check this by running `minikube ssh` and then finding the directory within the VM)*.
- 
-We're using kubernetes v1.11.1. Change the memory/cpu requirement if you need to, and make sure VirtualBox is installed!
-
-```minikube --kubernetes-version v1.11.10 --memory 5000 --cpus 2 --vm-driver=virtualbox start```
-
-Minikube will create a new `kubectl` context called 'minikube' and set your current context to it. See `kubectl config` for more on this.
-
-Once you've done that, you just need to put the path to this repository within the minikube VM into the jupyterhub config file.
-
-Sweet! Now setup a k8s service account for helm.
-```
-kubectl create -f tiller-sa.yaml
+./minikube_bootstrap.sh
 ```
 
-Then initialize helm.
-```helm init --service-account tiller --wait --history-max 200```
+Minikube will create a new kubectl context called 'minikube' and set your current context to it. See `kubectl config` for more on this.
 
+At this point you run `kubectl get pods -n jhub` in a terminal and you see a list of pods returned that are either running or being created. If they're not all in the `Running` state, run the same `get pods` command again until you see that they're all running. If they're in an `Error` state or `CrashLoopBackOff` state, something went wrong!
 
-Then set up the jupyterhub helm repository...
-```
-helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/
-helm repo update
-```
+**IMPORTANT:** If you need to start up your minikube VM from a "stopped" state, you MUST use the `--kubernetes-version v1.11.10` flag or else minikube will automatically upgrade your kubernetes version! 
 
-Now it's time to set up your terminal environment to use the docker daemon inside of the minikube VM. Our kubernetes cluster is going to look for local docker images from which to create containers, and this way we can build images inside the VM from your host machine!
+### Reflecting changes
+
+Docker images used by our kubernetes cluster need to be built within the minikube VM itself. Luckily we can use use a handy minikube command to point our local docker command to the minikube VM's docker daemon:
 ```
 eval $(minikube docker-env)
 ```
 
-**SUPER IMPORTANT**: You will need to run the previous command in any new terminal that you want to rebuild images into the minikube VM with!
+You'll notice this command is used in the utility scripts to rebuild the docker images, `minikube_rebuild_hub.sh` and `minikube_rebuild_singleuser.sh`. You can use these when you make changes to handler files, singleuser scripts, etc to see changes reflected in the application.
 
-Now build the jupyterhub image.
-```
-docker build -t stochss-hub:dev .
-```
+Changes to `minikube-config.yaml` are reflected a little differently. You can use the script `minikube_install_jhub.sh` to reinstall jupyterhub using the new configuration. Make sure your kubectl context is set to minikube!
 
-Then build the notebook server image. You'll want to be in the `singleuser` directory for this.
-```
-# From the singleuser directory
-docker build -t stochss-singleuser:dev .
-```
+### More help
 
-Now it's time to install stochss via jupyterhub inside the minikube VM! Yay!
-```
-helm upgrade --install jhub jupyterhub/jupyterhub \
-      --namespace jhub \
-      --version 0.8.2 \
-      --values config-minikube.yaml --values secrets-minikube.yaml
-```
-
-Give role access to access in-cluster pods from jhub namespace
-```
-# From stochss directory
-kubectl apply -f pods-list-sa.yaml
-```
-
-At this point you can do `kubectl get pods -n jhub` and you should get a list of pods that are either running or being created. If they're not all in the `Running` state, run the same `get pods` command again until you see that they're all running. If they're in an `Error` state or `CrashLoopBackOff` state, something went wrong!
-
-Get the IP address of your minikube VM.
-```
-minikube ip
-```
-
-The URL for your local stochss instance is IP:31212.
-
-**IMPORTANT**
-- If you need to start your minikube VM again, you MUST use the `--kubernetes-version v1.11.10` flag or else minikube will automatically upgrade your kubernetes version!
-- You MUST run `eval $(minikube docker-env)` in a new shell before building any of the docker containers so that the containers get built inside the minikube VM!
+You can find a list of useful commands in the document [COMMANDS.md](./COMMANDS.md).
 
 
 ### References
