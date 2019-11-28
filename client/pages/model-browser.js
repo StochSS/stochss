@@ -130,6 +130,45 @@ let renderCreateModalHtml = (isSpatial) => {
   `
 }
 
+
+let operationInfoModalHtml = (infoMessageKey) => {
+  let fileSystemMessage = "File System Messgae";
+  let createModelMessage = "Create Model Message";
+  let editModelMessage = "Edit Model Message";
+  let createJobMeeage = "Create Job Message";
+  let editJobMessage = "Edit Job Message";
+  let jhubMessage = "Jupyter Hub Message";
+
+  let infoMessages = {'File System': fileSystemMessage,
+                      'Create A Model': createModelMessage,
+                      'Edit A Model': editModelMessage,
+                      'Create A Job': createJobMeeage,
+                      'Edit A Job': editJobMessage,
+                      'Jupyter Hub': jhubMessage};
+
+  return `
+    <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"> ${infoMessageKey} Information</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${infoMessages[infoMessageKey]} </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ` 
+}
+
+
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
   template: template,
@@ -137,6 +176,24 @@ let FileBrowser = PageView.extend({
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
     'click [data-hook=new-model]' : 'newModel',
     'click [data-hook=new-spatial-model]' : 'newSpatialModel',
+    'click [data-hook=file-system-information]' : function () {
+      let modal = $(operationInfoModalHtml('File System')).modal();
+    },
+    'click [data-hook=create-model-information]' : function () {
+      let modal = $(operationInfoModalHtml('Create A Model')).modal();
+    },
+    'click [data-hook=edit-model-information]' : function () {
+      let modal = $(operationInfoModalHtml('Edit A Model')).modal();
+    },
+    'click [data-hook=create-job-information]' : function () {
+      let modal = $(operationInfoModalHtml('Create A Job')).modal();
+    },
+    'click [data-hook=edit-job-information]' : function () {
+      let modal = $(operationInfoModalHtml('Edit A Job')).modal();
+    },
+    'click [data-hook=jupyter-hub-information]' : function () {
+      let modal = $(operationInfoModalHtml('Jupyter Hub')).modal();
+    },
   },
   render: function () {
     var self = this;
