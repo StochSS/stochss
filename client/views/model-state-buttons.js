@@ -2,6 +2,7 @@ var app = require('ampersand-app');
 var xhr = require('xhr');
 var path = require('path');
 var Plotly = require('../lib/plotly');
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 //templates
@@ -24,6 +25,8 @@ module.exports = View.extend({
     this.saveModel()
   },
   clickRunHandler: function (e) {
+    var el = this.parent.queryByHook('model-run-container')
+    Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
   clickStartJobHandler: function (e) {
