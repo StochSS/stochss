@@ -5,6 +5,32 @@ body {
   background-attachment: fixed;
 }
 
+h3, h5, h6.editor-header {
+  display: inline-block;
+}
+
+span {
+  font-size: 1rem;
+}
+
+select {
+  margin-left: 10px;
+}
+
+label {
+  padding-right: 0.25rem;
+  padding-left: 0.25rem;
+}
+
+span.custom {
+  padding-right: 0.25rem;
+  padding-left: 0.25rem;
+}
+
+.form-input {
+  margin-left: 10px;
+}
+
 .sidebar-nav {
   padding: 9px 0;
   font-size: 14px;
@@ -17,3 +43,60 @@ body {
 .plot-preview {
   margin: 10px;
 }
+
+.reaction-summary {
+  padding-left: 22px;
+  padding-right: 5px;
+  padding-bottom: 10px;
+  display: inline-block;
+}
+
+.information-btn {
+  color: #007bff;
+  border-color: #ffffff;
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+
+.information-btn:hover {
+  color: #0056b3;
+}
+
+.btn-outline-collapse {
+  color: #000;
+  padding: 0px 10px;
+  font-size: 20px;
+}
+
+.btn-outline-collapse:hover {
+  color: #007bff;
+}
+
+.reaction-subdomain {
+  padding: 0px 0px 0px 20px;
+  border: 0;
+}
+
+.reaction-details-subdomain {
+  padding: 0px 0px 0px 5px;
+}
+
+.btn-outline-tool {
+  color: #007bff;
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+
+.btn-outline-tool:hover {
+  color: #0056b3;
+}
+
+#collapse-description {
+  padding: 0rem 2rem;
+  font-size: 12px;
+}
+
+.modal-content.info {
+  width: 150%;
+}
+
