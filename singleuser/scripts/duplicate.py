@@ -112,6 +112,6 @@ if __name__ == "__main__":
     full_path = path.join(user_dir, args.file_path)
     file = full_path.split('/').pop()
     dir_path = full_path.split(file)[0]
-    unique_file_name = get_unqiue_file_name(_path, dir_path)
+    unique_file_name = get_unqiue_file_name(full_path, dir_path)
     message = duplicate(full_path, unique_file_name)
     print(message)

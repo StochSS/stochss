@@ -60,7 +60,7 @@ let JobManager = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    this.directory = document.URL.split('/jobs/edit').pop();
+    this.directory = decodeURI(document.URL.split('/jobs/edit').pop());
     if(this.directory.endsWith('.mdl')){
       var modelFile = this.directory.split('/').pop();
       var name = modelFile.split('.')[0];
