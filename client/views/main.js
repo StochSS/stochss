@@ -70,7 +70,21 @@ let operationInfoModalHtml = (infoMessageKey) => {
     <b>Open A Notebook</b>: Double click on the Notebook or right click on the Notebook and click Open Notebook.<br>
     <b>Note</b>: Notebooks will open in a new tab so you may want to turn off the pop-up blocker.
   `;
-  let jhubMessage = "Jupyter Hub Message";
+  let jhubMessage = `
+    You can access Jupyter Hub by clicking on the Jupyter Hub link under tools.<br>
+    <b>Open A File or Directory</b>: Click on the file or directory.<br>
+    <b>File or Directory Options</b>: Check the box to the left of the file or directory and the options will show above the file browser.  
+    Checking multiple boxes will display options that are common to all checked items.
+    To delete a directory you must first make sure its empty.<br>
+    <b>New Directory</b>: Click on the new button then select Folder.  
+    To name the directory use the directory options.<br>
+    <b>New File</b>: Click on the new button then select Text File.  
+    To name the file click on 'untitled.txt' and enter the new name.<br>
+    <b>Upload A File</b>: Click on the Upload button and select the file you wish to upload.  
+    You can rename the file by clicking on the file name and entering the new name.
+    You can move the file into a directory by navigating to the location before finishing the upload.  
+    To finish the upload click on the Upload button to the right of the file.
+  `;
 
   let infoMessages = {'File System': fileSystemMessage,
                       'Create A Model': createModelMessage,
