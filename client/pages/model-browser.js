@@ -118,7 +118,7 @@ let renderCreateModalHtml = (isSpatial) => {
           </div>
           <div class="modal-body">
             <label for="modelNameInput">Name:</label>
-            <input type="text" id="modelNameInput" name="modelNameInput" size="30">
+            <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary ok-model-btn">OK</button>
@@ -274,11 +274,19 @@ let FileBrowser = PageView.extend({
                   let modal = $(renderCreateModalHtml(false)).modal();
                   let okBtn = document.querySelector('#newModalModel .ok-model-btn');
                   let input = document.querySelector('#newModalModel #modelNameInput');
+                  input.addEventListener("keyup", function (event) {
+                    if(event.keyCode === 13){
+                      event.preventDefault();
+                      okBtn.click();
+                    }
+                  });
                   let modelName;
                   okBtn.addEventListener('click', (e) => {
+                    console.log(" Ok button clicked")
                     if (Boolean(input.value)) {
                       let modelName = input.value + '.mdl';
                       let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName)
+                      modal.off()
                       window.location.href = modelPath;
                     }
                   })
@@ -573,6 +581,12 @@ let FileBrowser = PageView.extend({
         }
       }
     }
+    $(document).on('shown.bs.modal', function (e) {
+      $('[autofocus]', e.target).focus();
+    });
+    $(document).on('hidden.bs.modal', '.modal', function () {
+      $(this).removeData('bs.modal');
+    });
     $(document).on('dnd_start.vakata', function (data, element, helper, event) {
       $('#models-jstree').jstree().load_all()
     });
