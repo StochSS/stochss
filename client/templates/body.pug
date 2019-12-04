@@ -24,7 +24,7 @@ body
           | Sign Out
 
   div.container-fluid
-    div.row
+    div.row.flex-nowrap
       div.col-md-2: div.card.card-body.bg-light
         ul.nav.flex-column
           li.nav-item: i.icon-flask Tools
@@ -35,4 +35,4 @@ body
           li.nav-item: a.nav-link(target="_blank", href="/hub/spawn", title="File System")
             | Jupyter Hub
 
-      div.container-fluid.col-md-10(data-hook="page-container")
+      div.col-md-10: div.container-fluid(data-hook="page-container")
