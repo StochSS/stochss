@@ -271,6 +271,14 @@ let FileBrowser = PageView.extend({
                 "separator_before" : false,
                 "separator_after" : false,
                 "action" : function (data) {
+                  let okbtnExists = Boolean(document.querySelector('#newModalModel .ok-model-btn'))
+                  let inputExists = Boolean(document.querySelector('#newModalModel #modelNameInput'))
+                  if(okbtnExists){
+                    document.querySelector('#newModalModel .ok-model-btn').remove()
+                  }
+                  if(inputExists){
+                    document.querySelector('#newModalModel #modelNameInput').remove()
+                  }
                   let modal = $(renderCreateModalHtml(false)).modal();
                   let okBtn = document.querySelector('#newModalModel .ok-model-btn');
                   let input = document.querySelector('#newModalModel #modelNameInput');
@@ -281,15 +289,14 @@ let FileBrowser = PageView.extend({
                     }
                   });
                   let modelName;
-                  okBtn.addEventListener('click', (e) => {
-                    console.log(" Ok button clicked")
+                  okBtn.addEventListener('click', function (e) {
+                    console.log("Ok button clicked")
                     if (Boolean(input.value)) {
                       let modelName = input.value + '.mdl';
                       let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName)
-                      modal.off()
                       window.location.href = modelPath;
                     }
-                  })
+                  });
                 }
               } 
             }
@@ -583,9 +590,6 @@ let FileBrowser = PageView.extend({
     }
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
-    });
-    $(document).on('hidden.bs.modal', '.modal', function () {
-      $(this).removeData('bs.modal');
     });
     $(document).on('dnd_start.vakata', function (data, element, helper, event) {
       $('#models-jstree').jstree().load_all()
