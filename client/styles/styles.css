@@ -24,3 +24,21 @@ body {
   border: 12px solid rgba(0, 0, 0, 0.125);
   border-right-color: #007bff;
 }
+
+.mdl-edit-btn {
+  display: inline-block;
+}
+
+.saving-status, .saved-status {
+  display: none;
+  margin: 15px;
+  vertical-align: middle;
+}
+
+.saving-status {
+  color: #117a8b;
+}
+
+.saved-status {
+  color: #1e7e34;
+}
