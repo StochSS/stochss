@@ -271,13 +271,8 @@ let FileBrowser = PageView.extend({
                 "separator_before" : false,
                 "separator_after" : false,
                 "action" : function (data) {
-                  let okbtnExists = Boolean(document.querySelector('#newModalModel .ok-model-btn'))
-                  let inputExists = Boolean(document.querySelector('#newModalModel #modelNameInput'))
-                  if(okbtnExists){
-                    document.querySelector('#newModalModel .ok-model-btn').remove()
-                  }
-                  if(inputExists){
-                    document.querySelector('#newModalModel #modelNameInput').remove()
+                  if(document.querySelector('#newModalModel')) {
+                    document.querySelector('#newModalModel').remove()
                   }
                   let modal = $(renderCreateModalHtml(false)).modal();
                   let okBtn = document.querySelector('#newModalModel .ok-model-btn');
