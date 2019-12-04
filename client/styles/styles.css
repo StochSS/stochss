@@ -14,3 +14,13 @@ body {
   font-size: 16px;
 }
 
+.spinner-border {
+  display: none;
+  position: relative;
+  margin: 15px;
+  left: 40%;
+  width: 90px;
+  height: 90px;
+  border: 12px solid rgba(0, 0, 0, 0.125);
+  border-right-color: #007bff;
+}
