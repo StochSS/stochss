@@ -25,7 +25,10 @@ module.exports = View.extend({
     this.saveModel()
   },
   clickRunHandler: function (e) {
-    var el = this.parent.queryByHook('model-run-container')
+    var el = this.parent.queryByHook('model-run-container');
+    var loader = this.parent.queryByHook('plot-loader');
+    el.style.display = "none"
+    loader.style.display = "block"
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
@@ -78,6 +81,9 @@ module.exports = View.extend({
   plotResults: function (data) {
     // TODO abstract this into an event probably
     el = this.parent.queryByHook('model-run-container');
+    loader = this.parent.queryByHook('plot-loader');
+    loader.style.display = "none";
+    el.style.display = "block";
     time = data.time
     y_labels = Object.keys(data).filter(function (key) {
       return key !== 'data' && key !== 'time'
@@ -91,5 +97,6 @@ module.exports = View.extend({
       }
     })
     Plotly.newPlot(el, traces, { margin: { t: 0 } });
+    window.scrollTo(0, document.body.scrollHeight)
   },
 });
