@@ -74,6 +74,7 @@ module.exports = View.extend({
   },
   plotResults: function (data) {
     // TODO abstract this into an event probably
+    var title = this.model.name + " Model Preview"
     el = this.parent.queryByHook('model-run-container');
     time = data.time
     y_labels = Object.keys(data).filter(function (key) {
@@ -86,7 +87,20 @@ module.exports = View.extend({
         mode: 'lines',
         name: specie
       }
-    })
-    Plotly.newPlot(el, traces, { margin: { t: 0 } });
+    });
+    layout = { 
+      showlegend: true,
+      legend: {
+        x: 1,
+        y: 0.9
+      },
+      margin: { 
+        t: 0 
+      } 
+    }
+    config = {
+      responsive: true,
+    }
+    Plotly.newPlot(el, traces, layout, config);
   },
 });
