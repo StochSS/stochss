@@ -28,5 +28,6 @@ div#job-results.card.card-body
     div.collapse(class="show", id="collapse-trajectories")
 
       div(data-hook="trajectories")
-      button.btn.btn-primary(data-hook="plot-trajectories") Plot
+      button.btn.btn-primary(id="trajectories" data-hook="plot") Plot
+      button.btn.btn-primary(id="trajectories" data-hook="download-png-custom") Download PNG
       

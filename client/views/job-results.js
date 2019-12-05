@@ -29,23 +29,22 @@ module.exports = View.extend({
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
-    'click [data-hook=plot-stddevrange]' : function () {
-      this.getPlot("stddevran");
+    'click [data-hook=plot]' : function (e) {
+      var type = e.target.id
+      this.getPlot(type);
     },
-    'click [data-hook=plot-trajectories]' : function () {
-      this.getPlot("trajectories");
-    },
-    'click [data-hook=plot-stddev]' : function () {
-      this.getPlot("stddev");
-    },
-    'click [data-hook=plot-trajmean]' : function () {
-      this.getPlot("avg");
+    'click [data-hook=download-png-custom]' : function (e) {
+      var type = e.target.id;
+      if($(this.queryByHook(type)).hasClass("js-plotly-plot")){
+        this.clickDownloadPNGButton(type)
+      }
     },
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.trajectories = attrs.trajectories;
     this.status = attrs.status;
+    this.plots = {}
   },
   render: function () {
     if(this.trajectories > 1){
@@ -97,13 +96,19 @@ module.exports = View.extend({
       if(body.startsWith("ERROR!")){
         $(self.queryByHook(type)).html(body)
       }else{
-        self.plotFigure(JSON.parse(body), type);
+        var fig = JSON.parse(body)
+        self.plots[type] = fig
+        self.plotFigure(fig, type);
       }
     });
   },
   plotFigure: function (figure, hook) {
     var el = this.queryByHook(hook)
     Plotly.newPlot(el, figure)
+  },
+  clickDownloadPNGButton: function (type) {
+    var pngButton = $('div[data-hook*='+type+'] a[data-title*="Download plot as a png"]')[0]
+    pngButton.click()
   },
   expandContainer: function () {
     $(this.queryByHook('job-results')).collapse('show');
