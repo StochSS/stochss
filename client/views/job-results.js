@@ -35,10 +35,12 @@ module.exports = View.extend({
     },
     'click [data-hook=download-png-custom]' : function (e) {
       var type = e.target.id;
-      if($(this.queryByHook(type)).hasClass("js-plotly-plot")){
-        this.clickDownloadPNGButton(type)
-      }
+      this.clickDownloadPNGButton(type)
     },
+    'click [data-hook=download-json]' : function (e) {
+      var type = e.target.id;
+      this.exportToJsonFile(this.plots[type], type)
+    }
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -102,13 +104,30 @@ module.exports = View.extend({
       }
     });
   },
-  plotFigure: function (figure, hook) {
+  plotFigure: function (figure, type) {
+    var self = this;
+    var hook = type;
     var el = this.queryByHook(hook)
     Plotly.newPlot(el, figure)
+    this.queryAll("#" + type).forEach(function (el) {
+      if(el.disabled){
+        el.disabled = false;
+      }
+    });
   },
   clickDownloadPNGButton: function (type) {
     var pngButton = $('div[data-hook*='+type+'] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
+  },
+  exportToJsonFile: function (jsonData, plotType) {
+    let dataStr = JSON.stringify(jsonData);
+    let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    let exportFileDefaultName = plotType + '-plot.json';
+
+    let linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataURI);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
   },
   expandContainer: function () {
     $(this.queryByHook('job-results')).collapse('show');

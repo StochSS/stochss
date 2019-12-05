@@ -29,7 +29,8 @@ div#job-results.card.card-body
 
       div(data-hook="stddevran")
       button.btn.btn-primary(id="stddevran" data-hook="plot") Plot
-      button.btn.btn-primary(id="stddevran" data-hook="download-png-custom") Download PNG
+      button.btn.btn-primary(id="stddevran" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary(id="stddevran" data-hook="download-json" disabled) Download JSON
 
     div
 
@@ -41,7 +42,8 @@ div#job-results.card.card-body
       div(data-hook="trajectories")
       button.btn.btn-primary(id="trajectories" data-hook="plot") Plot
       button.btn.btn-primary(data-hook="plot-multiple", disabled) Multiple Plots
-      button.btn.btn-primary(id="trajectories" data-hook="download-png-custom") Download PNG
+      button.btn.btn-primary(id="trajectories" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary(id="trajectories" data-hook="download-json" disabled) Download JSON
 
     div
 
@@ -52,7 +54,8 @@ div#job-results.card.card-body
 
       div(data-hook="stddev")
       button.btn.btn-primary(id="stddev" data-hook="plot") Plot
-      button.btn.btn-primary(id="stddev" data-hook="download-png-custom") Download PNG
+      button.btn.btn-primary(id="stddev" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary(id="stddev" data-hook="download-json" disabled) Download JSON
 
     div
 
@@ -63,4 +66,5 @@ div#job-results.card.card-body
 
       div(data-hook="avg")
       button.btn.btn-primary(id="avg" data-hook="plot") Plot
-      button.btn.btn-primary(id="avg" data-hook="download-png-custom") Download PNG
+      button.btn.btn-primary(id="avg" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary(id="avg" data-hook="download-json" disabled) Download JSON
