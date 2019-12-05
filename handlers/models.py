@@ -20,7 +20,7 @@ log = logging.getLogger()
 from handlers import stochss_kubernetes
 
 
-class ModelFileAPIHandler(BaseHandler):
+class JsonFileAPIHandler(BaseHandler):
     '''
     ########################################################################
     Base Handler for interacting with Model file Get/Post Requests.

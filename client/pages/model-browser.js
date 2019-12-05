@@ -235,9 +235,9 @@ let FileBrowser = PageView.extend({
       nameWarning.collapse('hide');
     });
   },
-  getModelForExport: function (o) {
+  getJsonFileForExport: function (o) {
     var self = this;
-    var endpoint = path.join("/stochss/api/model-data", o.original._path);
+    var endpoint = path.join("/stochss/api/json-data", o.original._path);
     xhr({uri: endpoint}, function (err, response, body) {
       var resp = JSON.parse(body);
       self.exportToJsonFile(resp, o.original.text);
@@ -460,7 +460,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Export",
             "action" : function (data) {
-              self.getModelForExport(o);
+              self.getJsonFileForExport(o);
             }
           },
           "Delete" : {
@@ -595,6 +595,15 @@ let FileBrowser = PageView.extend({
             "label" : "Rename",
             "action" : function (data) {
               self.renameNode(o);
+            }
+          },
+          "Export" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Export",
+            "action" : function (data) {
+              self.getJsonFileForExport(o);
             }
           },
         }
