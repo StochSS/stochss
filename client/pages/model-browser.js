@@ -235,6 +235,24 @@ let FileBrowser = PageView.extend({
       nameWarning.collapse('hide');
     });
   },
+  getModelForExport: function (o) {
+    var self = this;
+    var endpoint = path.join("/stochss/api/model-data", o.original._path);
+    xhr({uri: endpoint}, function (err, response, body) {
+      var resp = JSON.parse(body);
+      self.exportToJsonFile(resp, o.original.text);
+    });
+  },
+  exportToJsonFile: function (fileData, fileName) {
+    let dataStr = JSON.stringify(fileData);
+    let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    let exportFileDefaultName = fileName
+
+    let linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataURI);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  },
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -434,6 +452,15 @@ let FileBrowser = PageView.extend({
             "label" : "Create New Job",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
+            }
+          },
+          "Export" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Export",
+            "action" : function (data) {
+              self.getModelForExport(o);
             }
           },
           "Delete" : {
