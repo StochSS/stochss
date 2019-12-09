@@ -51,6 +51,7 @@
             ]
         }
     ],
+    "initialConditions": [],
     "parameters": [
         {
             "name": "alpha1",

@@ -29,6 +29,7 @@
 		"count": 2
 	},
 	"species": [],
+    "initialConditions": [],
 	"parameters": [],
 	"reactions": [],
 	"rateRules": []
