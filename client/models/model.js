@@ -7,7 +7,7 @@ var SimulationSettings = require('./simulation-settings');
 var MeshSettings = require('./mesh-settings');
 //collections
 var Species = require('./species');
-// var InitialConditions = require('./initial-conditions');
+var InitialConditions = require('./initial-conditions');
 var Parameters = require('./parameters');
 var Reactions = require('./reactions');
 var RateRules = require('./rate-rules');
@@ -26,7 +26,7 @@ module.exports = Model.extend({
   },
   collections: {
     species: Species,
-    // initialCondition: InitialConditions,
+    initialCondition: InitialConditions,
     parameters: Parameters,
     reactions: Reactions,
     rateRules: RateRules

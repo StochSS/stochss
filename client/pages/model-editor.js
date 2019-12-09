@@ -5,7 +5,7 @@ var $ = require('jquery');
 var PageView = require('../pages/base');
 var MeshEditorView = require('../views/mesh-editor');
 var SpeciesEditorView = require('../views/species-editor');
-// var InitialConditionsEditorView = require('../views/initial-conditions-editor');
+var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
 var ReactionsEditorView = require('../views/reactions-editor');
 var SimSettingsView = require('../views/simulation-settings');
@@ -85,9 +85,9 @@ let ModelEditor = PageView.extend({
     var speciesEditor = new SpeciesEditorView({
       collection: this.model.species
     });
-    // var initialConditionsEditor = new InitialConditionsEditorView({
-    //   collection: this.model.initialConditions
-    // });
+    var initialConditionsEditor = new InitialConditionsEditorView({
+      collection: this.model.initialConditions
+    });
     var parametersEditor = new ParametersEditorView({
       collection: this.model.parameters
     });
@@ -104,7 +104,7 @@ let ModelEditor = PageView.extend({
     });
     this.registerRenderSubview(meshEditor, 'mesh-editor-container');
     this.registerRenderSubview(speciesEditor, 'species-editor-container');
-    // this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
+    this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
     this.registerRenderSubview(simSettings, 'sim-settings-container');
