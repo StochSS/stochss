@@ -1,7 +1,7 @@
 var $ = require('jquery');
 //views
 var View = require('ampersand-view');
-// var EditInitialCondition = require('./edit-initial-condition');
+var EditInitialCondition = require('./edit-initial-condition');
 //templates
 var template = require('../templates/includes/initialConditionsEditor.pug');
 
@@ -18,11 +18,11 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    // this.renderCollection(
-    //   this.collection,
-    //   EditInitialCondition,
-    //   this.queryByHook('initial-condition-collection')
-    // );
+    this.renderCollection(
+      this.collection,
+      EditInitialCondition,
+      this.queryByHook('initial-conditions-collection')
+    );
   },
   update: function () {
   },
