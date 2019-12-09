@@ -29,7 +29,7 @@ module.exports = View.extend({
   updateValid: function () {
   },
   addInitialCondition: function (e) {
-    var initialConditionType = e.delegateTarget.text;
+    var initialConditionType = e.target.textContent;
     this.collection.addInitialCondition(initialConditionType);
   },
   changeCollapseButtonText: function () {

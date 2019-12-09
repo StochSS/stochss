@@ -4,12 +4,12 @@ var Specie = require('./specie');
 
 module.exports = State.extend({
   props: {
-    type: String,
-    count: Number,
-    subdomain: String,
-    x: Number,
-    y: Number,
-    z: Number,
+    type: 'string',
+    count: 'number',
+    subdomain: 'string',
+    x: 'number',
+    y: 'number',
+    z: 'number',
   },
   children: {
     specie: Specie,

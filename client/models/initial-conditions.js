@@ -6,7 +6,7 @@ var InitialCondition = require('./initial-condition');
 module.exports = Collection.extend({
   model: InitialCondition,
   addInitialCondition: function (initialConditionType) {
-    var subdomain = getDefaultSubdomain();
+    var subdomain = this.getDefaultSubdomain();
     var initialCondition = this.add({
       type: initialConditionType,
       subdomain: subdomain,
@@ -15,14 +15,14 @@ module.exports = Collection.extend({
       y: 0,
       z: 0,
     });
-    initialCondition.species = getDefaultSpecies();
+    initialCondition.specie = this.getDefaultSpecies();
   },
   getDefaultSpecies: function () {
-    var specie = this.parent.parent.at(0);
+    var specie = this.parent.species.at(0);
     return specie;
   },
   getDefaultSubdomain: function () {
-    var subdomain = this.parent.parent.parent.subdomains.at(0);
+    var subdomain = this.parent.meshSettings.uniqueSubdomains.at(0);
     return subdomain.name;
   },
   removeInitialCondition: function (initialCondition) {

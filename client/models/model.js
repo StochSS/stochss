@@ -26,7 +26,7 @@ module.exports = Model.extend({
   },
   collections: {
     species: Species,
-    initialCondition: InitialConditions,
+    initialConditions: InitialConditions,
     parameters: Parameters,
     reactions: Reactions,
     rateRules: RateRules
