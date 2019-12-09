@@ -4,9 +4,11 @@ section.page.col-md-10
 
   div: h5=this.model.name
 
-  div.collapse(id="mesh-editor-container", data-hook="mesh-editor-container")
+  div(data-hook="mesh-editor-container")
 
   div(data-hook="species-editor-container")
+
+  div(data-hook="initial-conditions-editor-container")
 
   div(data-hook="parameters-editor-container")
 

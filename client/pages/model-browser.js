@@ -302,7 +302,7 @@ let FileBrowser = PageView.extend({
           "Edit" : {
             "separator_before" : false,
             "separator_after" : true,
-            "_disabled" : true,
+            "_disabled" : false,
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
