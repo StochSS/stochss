@@ -2,7 +2,7 @@
 var View = require('ampersand-view');
 var SelectView = require('ampersand-select-view');
 var ScatterDetails = require('./edit-scatter-details');
-// var PlaceDetails = require('./edit-place-details');
+var PlaceDetails = require('./edit-place-details');
 //templates
 var template = require('../templates/includes/editInitialCondition.pug');
 
