@@ -1,7 +1,7 @@
 //views
 var View = require('ampersand-view');
 var SelectView = require('ampersand-select-view');
-// var ScatterDetails = require('./edit-scatter-details');
+var ScatterDetails = require('./edit-scatter-details');
 // var PlaceDetails = require('./edit-place-details');
 //templates
 var template = require('../templates/includes/editInitialCondition.pug');
@@ -56,12 +56,12 @@ module.exports = View.extend({
     if(this.detailsView) {
       this.detailsView.remove();
     }
-    // var InitialConditionDetails = this.model.type === 'Place' ? PlaceDetails : ScatterDetails
-    // this.detailsView = new InitialConditionDetails({
-    //   collection: this.collection,
-    //   model: this.model,
-    // });
-    // registerRenderSubview(this.detailsView, 'initial-condition-details');
+    var InitialConditionDetails = this.model.type === 'Place' ? PlaceDetails : ScatterDetails
+    this.detailsView = new InitialConditionDetails({
+      collection: this.collection,
+      model: this.model,
+    });
+    this.registerRenderSubview(this.detailsView, 'initial-condition-details');
   },
   getSpecieFromSpecies: function (name) {
     var species = this.model.collection.parent.species.filter(function (specie) {

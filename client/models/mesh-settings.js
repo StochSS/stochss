@@ -15,7 +15,7 @@ module.exports = State.extend({
       fn: function () {
         var uniqueSubdomains = new Subdomains();
         for(var i = 1; i <= this.count; i++){
-          uniqueSubdomains.addSubdomain('subdomain ' + i + ': ');
+          uniqueSubdomains.addSubdomain('subdomain ' + i + ':');
         }
         return uniqueSubdomains;
       },
