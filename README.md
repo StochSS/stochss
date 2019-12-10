@@ -36,6 +36,9 @@ Let's boot up a VM with minikube!
 
 Minikube will create a new kubectl context called 'minikube' and set your current context to it. See `kubectl config` for more on this.
 
+
+**IMPORTANT FOR LINUX USERS:** The Default mount for VirtualBox on Linux is /hosthome, so you will need to run `./minikube_install_jhub /hosthome/path-to-stochss` 
+
 At this point you run `kubectl get pods -n jhub` in a terminal and you see a list of pods returned that are either running or being created. If they're not all in the `Running` state, run the same `get pods` command again until you see that they're all running. If they're in an `Error` state or `CrashLoopBackOff` state, something went wrong!
 
 **IMPORTANT:** If you need to start up your minikube VM from a "stopped" state, you MUST use the `--kubernetes-version v1.11.10` flag or else minikube will automatically upgrade your kubernetes version! 
