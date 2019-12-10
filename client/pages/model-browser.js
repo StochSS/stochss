@@ -189,6 +189,36 @@ let FileBrowser = PageView.extend({
       }
     );
   },
+  toSpatial: function (o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/to-spatial", o.original._path);
+    xhr({uri: endpoint}, 
+      function (err, response, body) {
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+      }
+    );
+  },
+  toModel: function (o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/to-model", o.original._path);
+    xhr({uri: endpoint}, 
+      function (err, response, body) {
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+      }
+    );
+  },
   newModel: function (e) {
     let isSpatial = e.srcElement.dataset.modeltype === "spatial"
     let modal = $(renderCreateModalHtml(isSpatial)).modal();
@@ -321,10 +351,10 @@ let FileBrowser = PageView.extend({
           "Convert to Non Spatial" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Convert to Non Spatial",
             "action" : function (data) {
-
+              self.toModel(o);
             }
           },
           "Convert to Notebook" : {
@@ -389,10 +419,10 @@ let FileBrowser = PageView.extend({
           "Convert to Spatial" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Convert to Spatial",
             "action" : function (data) {
-              
+              self.toSpatial(o)
             }
           },
           "Convert to Notebook" : {
