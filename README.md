@@ -13,7 +13,7 @@ Install [minikube](https://github.com/kubernetes/minikube)
 
 Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.10. (This is the version of kubernetes used by the Jetstream OpenStack Magnum API.)
 
-Install [helm](https://github.com/helm/helm), the package manager for kubernetes.
+Install [Helm v2.16.1](https://github.com/helm/helm/releases/tag/v2.16.1),  the package manager for kubernetes.
 
 Install [nodejs](https://nodejs.org/) and [npm](https://www.npmjs.com/), the package manager for nodejs.
 
