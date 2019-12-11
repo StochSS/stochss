@@ -224,7 +224,7 @@ class ConvertToSpatialAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
-        exec_cmd = ['convert_to_smdl_mdl', path, 'spatial']
+        exec_cmd = ['convert_to_smdl_mdl.py', path, 'spatial']
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write(resp)
 
@@ -253,8 +253,7 @@ class ConvertToModelAPIHandler(BaseHandler):
         checkUserOrRaise(self)
         user = self.current_user.name
         client, user_pod = stochss_kubernetes.load_kube_client(user)
-        exec_cmd = ['convert_to_smdl_mdl', path, 'model']
+        exec_cmd = ['convert_to_smdl_mdl.py', path, 'model']
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write(resp)
 
-        

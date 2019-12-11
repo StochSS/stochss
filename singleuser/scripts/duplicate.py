@@ -10,7 +10,7 @@ from shutil import copyfile
 user_dir = '/home/jovyan'
 
 
-def get_unqiue_file_name(_path, dir_path):
+def get_unqiue_file_name(_path):
     '''
     Gets a unique name for a file to be copied.  Accounts for a copy
     as the target file.
@@ -19,45 +19,34 @@ def get_unqiue_file_name(_path, dir_path):
     ----------
     _path : str
         Path to the file being copied.
-    dir_path : str
-        Path to the parent directory of the file being copied.
     '''
-    i = 2
-    # Case 1: copying an original file
-    if len(_path.split('-copy.')) < 2 and len(_path.split('-copy(')) < 2:
-        split_str = "."
-        copy_path = '-copy.'.join(_path.split(split_str))
-        file_path = _path
-    # Case 2: copying a copy of a file with '-copy' in the name
-    elif len(_path.split('-copy.')) == 2:
-        split_str = "-copy."
-        copy_path = '-copy({0}).'.format(i).join(_path.split(split_str))
-        file_path = _path
-        i += 1
-    # Case 3: copying a copy of a file with '-cpoy("x")' in the name
+    file = _path.split('/').pop()
+    dir_path = _path.split(file)[0]
+    ext = '.' + file.split('.').pop()
+    if '-copy' in file:
+        name = file.split('-copy')[0]
     else:
-        split_str = "-copy."
-        _file_path = _path.split('-copy(')[0]
-        ext = _path.split('.').pop()
-        file_path = "{0}-copy.{1}".format(_file_path, ext)
-        _file = file_path.split('/').pop()
-        # Check if a copy already exists with '-copy' in the name
-        _exists = check_for_file(_file, dir_path)
-        if not _exists:
-            copy_path = file_path
-        else:
-            copy_path = '-copy({0}).'.format(i).join(file_path.split(split_str))
-        i += 1
-    file = copy_path.split('/').pop()
-    # Check in the name for the copy is unique
-    exists = check_for_file(file, dir_path)
-    # If the name is not unique increment the name until a unique name is found
+        name = file.split(ext)[0]
+
+    # Check if the file is an original of at least the second copy
+    if not '-copy' in file or '-copy(' in file:
+        copy_file = ''.join([name, '-copy', ext])
+        # Check a copy exist with '-copy' in the name
+        if not check_for_file(copy_file, dir_path):
+            return _path.replace(file, copy_file)
+
+    i = 2
+    copy_file = ''.join([name, '-copy({0})'.format(i), ext])
+    # Check if a copy exists with '-copy(2)' in the name
+    exists = check_for_file(copy_file, dir_path)
+
+    # If copy_file is still not unique iterate i until a unique name is found
     while exists:
-        copy_path = '-copy({0}).'.format(i).join(file_path.split(split_str))
-        file = copy_path.split('/').pop()
-        exists = check_for_file(file, dir_path)
         i += 1
-    return copy_path
+        copy_file = ''.join([name, '-copy({0})'.format(i), ext])
+        exists = check_for_file(copy_file, dir_path)
+
+    return _path.replace(file, copy_file)
 
 
 def duplicate(_path, unique_file_name):
@@ -110,8 +99,6 @@ def get_parsed_args():
 if __name__ == "__main__":
     args = get_parsed_args()
     full_path = path.join(user_dir, args.file_path)
-    file = full_path.split('/').pop()
-    dir_path = full_path.split(file)[0]
-    unique_file_name = get_unqiue_file_name(_path, dir_path)
-    message = duplicate(full_path, unique_file_name)
+    unique_file_path = get_unqiue_file_name(full_path)
+    message = duplicate(full_path, unique_file_path)
     print(message)
