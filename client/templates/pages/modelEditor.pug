@@ -1,6 +1,10 @@
 section.page.col-md-10
 
-  h2 Model Editor
+  div.row
+
+    h2 Model Editor
+
+    button.btn.information-btn.help(data-hook="edit-model-help") &#63
 
   div: h5=this.model.name
 
@@ -23,3 +27,4 @@ section.page.col-md-10
   div.spinner-border(data-hook="plot-loader")
 
   div(data-hook="model-state-buttons-container")
+

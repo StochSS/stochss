@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import ast
 import json
 import nbformat
 import argparse
@@ -191,13 +192,13 @@ def convertToNotebook(_model_path):
     model_path = path.join(user_dir,_model_path)
     name = model_path.split('/').pop().split('.')[0]
     dest_path = model_path.split(name)[0]
-
+    
     # Collect .mdl Data
     try:
         with open(model_path, 'r') as json_file:
-            json_data = json.loads(json_file.read())
-    except:
-        print('File Not Found')
+            json_data = ast.literal_eval(json_file.read())
+    except Exception as e:
+        print('Could not read file: ' + e)
 
     # Create new notebook
     cells = []
