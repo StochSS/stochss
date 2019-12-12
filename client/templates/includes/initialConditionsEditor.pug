@@ -1,0 +1,40 @@
+div#initial-conditions.card.card-body
+
+  div
+
+    h5 Initial Conditions
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#initial-condition" data-hook="initial-condition-button") -
+
+  div.collapse(class="show" id="initial-condition" data-hook="initial-conditions")
+
+    table.table
+
+      thead
+    
+        tr
+    
+          th(scope="col") Type
+    
+          th(scope="col") Species
+    
+          th(scope="col") Details
+    
+          th(scope="col") Remove
+
+      tbody(data-hook="initial-conditions-collection")
+
+    div.dropdown
+
+      button.btn.btn-outline-primary.dropdown-toggle#addInitialConditionBtn(
+        data-hook='add-initial-condition',
+        data-toggle='dropdown',
+        aria-haspopup='true',
+        aria-expanded='false',
+        type='button'
+      ) Add Initial Condition <span class="caret"></span>
+
+      ul.dropdown-menu(aria-labelledby='addInitialConditionBtn')
+        li.dropdown-item(data-hook='scatter') Scatter
+        li.dropdown-item(data-hook='place') Place
+        li.dropdown-item(data-hook='distribute-uniformly') Distribute Uniformly per Voxel

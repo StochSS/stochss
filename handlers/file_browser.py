@@ -201,3 +201,60 @@ class RenameAPIHandler(BaseHandler):
         self.write(resp)
 
 
+class ConvertToSpatialAPIHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for converting a model to a spatial model.
+    ##############################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, path):
+        '''
+        Send Get request to convert a target model to a spatial model in user pod.  
+        This method utilizes the kubernetes python api to invoke the 
+        convert_to_smdl_mdl.py module of the user container (stored in 
+        [UserPod]:/usr/local/bin).
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the model.
+
+        '''
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        exec_cmd = ['convert_to_smdl_mdl.py', path, 'spatial']
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write(resp)
+
+
+class ConvertToModelAPIHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for converting a spatial model to a model.
+    ##############################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, path):
+        '''
+        Send Get request to convert a target spatial model to a model in user pod.  
+        This method utilizes the kubernetes python api to invoke the 
+        convert_to_smdl_mdl.py module of the user container (stored in 
+        [UserPod]:/usr/local/bin).
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the model.
+
+        '''
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        exec_cmd = ['convert_to_smdl_mdl.py', path, 'model']
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write(resp)
+

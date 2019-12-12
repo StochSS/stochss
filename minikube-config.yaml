@@ -40,7 +40,9 @@ hub:
         DeleteFileAPIHandler, \
         MoveFileAPIHandler, \
         DuplicateModelHandler, \
-        RenameAPIHandler
+        RenameAPIHandler, \
+        ConvertToSpatialAPIHandler, \
+        ConvertToModelAPIHandler
         
       # Model API handlers
       from handlers.models import \
@@ -66,6 +68,8 @@ hub:
           (r"/stochss/api/models/run/(\w+)/(\w+)?\/?(.+)\/?", RunModelAPIHandler),
           (r"/stochss/api/model/duplicate/(.+)\/?", DuplicateModelHandler),
           (r"/stochss/api/models/to-notebook/(.+)\/?", ModelToNotebookHandler),
+          (r"/stochss/api/model/to-spatial/(.+)\/?", ConvertToSpatialAPIHandler),
+          (r"/stochss/api/model/to-model/(.+)\/?", ConvertToModelAPIHandler),
           (r"/stochss/api/jobs/save-job/(\w+)\/?(.+)\/?", SaveJobAPIHandler),
           (r"/stochss/api/jobs/run-job/(\w+)\/?(.+)\/?", RunJobAPIHandler),
           (r"/stochss/api/jobs/job-info(.+)\/?", JobInfoAPIHandler),

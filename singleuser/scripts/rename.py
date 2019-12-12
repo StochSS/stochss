@@ -22,17 +22,30 @@ def get_unique_file_name(new_name, dir_path):
         Path to the parent directory of the target file.
     '''
     exists = new_name in os.listdir(path=dir_path)
+
     i = 1
+    if exists:
+        ext = "." + new_name.split('.').pop()
+        name = new_name.split(ext)[0]
+        if "(" in name and ")" in name:
+            _i = name.split('(').pop().split(')')[0]
+            if _i.isdigit():
+                name = name.replace("({0})".format(_i), "")
+                if int(_i) == 1:
+                    i = 2
+
     while exists:
-        if '.' in new_name: # assume file has an extension
-            ext = "." + new_name.split('.').pop()
-            name = new_name.split(ext)[0]
-            new_name = ''.join([name, "({0})".format(i), ext])
-        else: # file has no extension
-            new_name += "({0})".format(i)
-        exists = new_name in os.listdir(path=dir_path)
+        if '.' in new_name:
+            proposed_name = ''.join([name, "({0})".format(i), ext])
+        else:
+            proposed_name = name + "({0})".format(i)
+        exists = proposed_name in os.listdir(path=dir_path)
         i += 1
-    changed = i > 1 # did the file change
+
+    changed = i > 1 # did the name change
+    if changed:
+        new_name = proposed_name
+
     return os.path.join(dir_path, new_name), changed
 
 
