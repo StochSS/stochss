@@ -250,6 +250,15 @@ let FileBrowser = PageView.extend({
               $('#models-jstree').jstree().refresh_node(o);
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
           "create_model" : {
             "label" : "Create Model",
             "separator_before" : false,
@@ -319,6 +328,15 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -344,15 +362,6 @@ let FileBrowser = PageView.extend({
             "label" : "Convert to Notebook",
             "action" : function (data) {
 
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
             }
           },
           "Create New Job" : {
@@ -385,6 +394,15 @@ let FileBrowser = PageView.extend({
             "label" : "Edit",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Duplicate" : {
@@ -426,15 +444,6 @@ let FileBrowser = PageView.extend({
                   },
                 );
               });
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
             }
           },
           "Create New Job" : {
@@ -562,6 +571,15 @@ let FileBrowser = PageView.extend({
               self.duplicateFile(o)
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
           "Delete" : {
             "label" : "Delete",
             "_disabled" : false,
@@ -571,6 +589,19 @@ let FileBrowser = PageView.extend({
               self.deleteFile(o);
             }
           },
+        }
+      }
+      else {
+        return {
+          "Open File" : {
+            "separator_before" : false,
+            "separator_after" : true,
+            "_disabled" : false,
+            "_class" : "font-weight-bolder",
+            "label" : "Open File",
+            "action" : function (data) {
+            }
+          },
           "Rename" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -578,6 +609,24 @@ let FileBrowser = PageView.extend({
             "label" : "Rename",
             "action" : function (data) {
               self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate",
+            "action" : function (data) {
+              self.duplicateFile(o)
+            }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
             }
           },
         }
