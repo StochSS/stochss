@@ -5,6 +5,7 @@ var $ = require('jquery');
 var PageView = require('../pages/base');
 var MeshEditorView = require('../views/mesh-editor');
 var SpeciesEditorView = require('../views/species-editor');
+var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
 var ReactionsEditorView = require('../views/reactions-editor');
 var SimSettingsView = require('../views/simulation-settings');
@@ -16,14 +17,52 @@ var template = require('../templates/pages/modelEditor.pug');
 
 import initPage from './page.js';
 
+let operationInfoModalHtml = () => {
+  let editModelMessage = `
+    <b>Add a Species or Parameter</b>: From the Model Editor page click on the Add Species or Add Parameter buttons.<br>
+    <b>Add a Reaction</b>: From the Model Editor page click on the Add Reaction button then select the type of reaction.  
+    To add a reaction you must have at least one Species.<br>
+    <b>Edit a Reaction</b>: Select the reaction you wish to edit, and make changes to the right or the reaction list.<br>
+    <b>Species Mode</b>: Select the Hybrid Tua-Leaping algorithm in the advanced settings.<br>
+    <b>Set Rate Rules</b>: Set the mode of the species to continuous, then add the rate rule to the right of the species mode.<br>
+    <b>Results</b>: The plot shown are a preview of the full results.  To get the full results, create and run a job.
+  `;
+
+  return `
+    <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Model Editor Help </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${editModelMessage} </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ` 
+}
+
 let ModelEditor = PageView.extend({
   template: template,
+  events: {
+    'click [data-hook=edit-model-help]' : function () {
+      let modal = $(operationInfoModalHtml()).modal();
+    },
+  },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
     var directory = document.URL.split('/models/edit').pop();
     var modelFile = directory.split('/').pop();
-    var name = modelFile.split('.')[0];
+    var name = decodeURI(modelFile.split('.')[0]);
     var isSpatial = modelFile.split('.').pop().startsWith('s');
     this.model = new Model({
       name: name,
@@ -33,8 +72,10 @@ let ModelEditor = PageView.extend({
     this.model.fetch({
       success: function (model, response, options) {
         self.renderSubviews();
-        if(self.model.is_spatial)
-          $(self.queryByHook('mesh-editor-container')).collapse();
+        if(!self.model.is_spatial){
+          self.queryByHook('mesh-editor-container').style.display = "none";
+          self.queryByHook('initial-conditions-editor-container').style.display = "none";
+        }
       }
     });
     this.model.reactions.on("change", function (reactions) {
@@ -82,6 +123,9 @@ let ModelEditor = PageView.extend({
     var speciesEditor = new SpeciesEditorView({
       collection: this.model.species
     });
+    var initialConditionsEditor = new InitialConditionsEditorView({
+      collection: this.model.initialConditions
+    });
     var parametersEditor = new ParametersEditorView({
       collection: this.model.parameters
     });
@@ -98,6 +142,7 @@ let ModelEditor = PageView.extend({
     });
     this.registerRenderSubview(meshEditor, 'mesh-editor-container');
     this.registerRenderSubview(speciesEditor, 'species-editor-container');
+    this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
     this.registerRenderSubview(simSettings, 'sim-settings-container');

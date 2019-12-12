@@ -41,6 +41,7 @@
             ]
         }
     ],
+    "initialConditions": [],
     "parameters": [
         {
             "name": "decayrate",

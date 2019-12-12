@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import shutil
 import sys
 import json
 import argparse
@@ -21,17 +22,30 @@ def get_unique_file_name(new_name, dir_path):
         Path to the parent directory of the target file.
     '''
     exists = new_name in os.listdir(path=dir_path)
+
     i = 1
+    if exists:
+        ext = "." + new_name.split('.').pop()
+        name = new_name.split(ext)[0]
+        if "(" in name and ")" in name:
+            _i = name.split('(').pop().split(')')[0]
+            if _i.isdigit():
+                name = name.replace("({0})".format(_i), "")
+                if int(_i) == 1:
+                    i = 2
+
     while exists:
-        if '.' in new_name: # assume file has an extension
-            ext = "." + new_name.split('.').pop()
-            name = new_name.split(ext)[0]
-            new_name = ''.join([name, "({0})".format(i), ext])
-        else: # file has no extension
-            new_name += "({0})".format(i)
-        exists = new_name in os.listdir(path=dir_path)
+        if '.' in new_name:
+            proposed_name = ''.join([name, "({0})".format(i), ext])
+        else:
+            proposed_name = name + "({0})".format(i)
+        exists = proposed_name in os.listdir(path=dir_path)
         i += 1
-    changed = i > 1 # did the file change
+
+    changed = i > 1 # did the name change
+    if changed:
+        new_name = proposed_name
+
     return os.path.join(dir_path, new_name), changed
 
 
@@ -49,7 +63,7 @@ def rename(old_path, new_name, dir_path):
         Path to the parent directory of the target file.
     '''
     new_path, changed = get_unique_file_name(new_name, dir_path)
-    os.rename(old_path, new_path)
+    shutil.move(old_path, new_path)
     
     if changed:
         message = "A file already exists with that name, {0} was renamed to {1} in order to prevent a file from being overwriten.".format(old_path.split('/').pop(), new_name)
@@ -78,8 +92,12 @@ def get_parsed_args():
 if __name__ == "__main__":
     args = get_parsed_args()
     old_path = os.path.join(user_dir, args.path)
-    old_name = old_path.split('/').pop()
-    dir_path = old_path.split(old_name)[0]
     new_name = args.new_name
+    old_name = old_path.split('/').pop()
+    if os.path.isdir(old_path):
+        old_path += "/"
+        new_name += "/"
+        old_name += "/"
+    dir_path = old_path.split(old_name)[0]
     resp = rename(old_path, new_name, dir_path)
     print(resp)

@@ -23,10 +23,12 @@ div#job-results.card.card-body
     div
 
       h5.editor-header Plot Trajectories
-      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") +
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") -
 
     div.collapse(class="show", id="collapse-trajectories")
 
       div(data-hook="trajectories")
-      button.btn.btn-primary(data-hook="plot-trajectories") Plot
+      button.btn.btn-primary(id="trajectories" data-hook="plot") Plot
+      button.btn.btn-primary(id="trajectories" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary(id="trajectories" data-hook="download-json" disabled) Download JSON
       

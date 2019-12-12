@@ -71,6 +71,7 @@
             ]
         }
     ],
+    "initialConditions": [],
     "parameters": [
         {
             "name": "rate1",

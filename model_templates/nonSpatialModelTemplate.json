@@ -4,6 +4,7 @@
 		"is_stochastic": true,
 		"endSim": 20,
 		"timeStep": 0.05,
+		"volume": 1,
 		"stochasticSettings": {
 			"realizations": 1,
 			"algorithm": "SSA",
@@ -29,6 +30,7 @@
 		"count": 2
 	},
 	"species": [],
+    "initialConditions": [],
 	"parameters": [],
 	"reactions": [],
 	"rateRules": []

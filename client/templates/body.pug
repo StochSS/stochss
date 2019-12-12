@@ -24,7 +24,7 @@ body
           | Sign Out
 
   div.container-fluid
-    div.row
+    div.row.flex-nowrap
       div.col-md-2: div.card.card-body.bg-light
         ul.nav.flex-column
           li.nav-item: i.icon-flask Tools
@@ -34,5 +34,17 @@ body
 
           li.nav-item: a.nav-link(target="_blank", href="/hub/spawn", title="File System")
             | Jupyter Hub
+          
+          li.nav-item: i.icon-flask Information
 
-      div.container-fluid.col-md-10(data-hook="page-container")
+          button.btn.information-btn(data-hook="file-system-information-main") File System<sup>&#8505</sup>
+
+          button.btn.information-btn(data-hook="create-model-information-main") Create/Edit Model<sup>&#8505</sup>
+
+          button.btn.information-btn(data-hook="create-job-information-main") Create/View/Edit Job<sup>&#8505</sup>
+
+          button.btn.information-btn(data-hook="notebook-information-main") Jupyter Notebooks<sup>&#8505</sup>
+
+          button.btn.information-btn(data-hook="jupyter-hub-information-main") Jupyer Hub<sup>&#8505</sup>
+
+      div.col-md-10: div.container-fluid(data-hook="page-container")

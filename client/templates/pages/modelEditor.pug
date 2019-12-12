@@ -1,12 +1,18 @@
 section.page.col-md-10
 
-  h2 Model Editor
+  div.row
+
+    h2 Model Editor
+
+    button.btn.information-btn.help(data-hook="edit-model-help") &#63
 
   div: h5=this.model.name
 
-  div.collapse(id="mesh-editor-container", data-hook="mesh-editor-container")
+  div(data-hook="mesh-editor-container")
 
   div(data-hook="species-editor-container")
+
+  div(data-hook="initial-conditions-editor-container")
 
   div(data-hook="parameters-editor-container")
 
@@ -14,10 +20,13 @@ section.page.col-md-10
 
   div(data-hook="sim-settings-container")
 
-  div(data-hook="model-state-buttons-container")
-
   div.collapse(data-hook="model-timeout-message")
 
     p.text-warning The model took longer than 5 seconds to run and timed out!
 
   div(data-hook="model-run-container")
+
+  div.spinner-border(data-hook="plot-loader")
+
+  div(data-hook="model-state-buttons-container")
+

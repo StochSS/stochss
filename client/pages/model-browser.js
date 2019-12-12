@@ -118,7 +118,7 @@ let renderCreateModalHtml = (isSpatial) => {
           </div>
           <div class="modal-body">
             <label for="modelNameInput">Name:</label>
-            <input type="text" id="modelNameInput" name="modelNameInput" size="30">
+            <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary ok-model-btn">OK</button>
@@ -189,6 +189,36 @@ let FileBrowser = PageView.extend({
       }
     );
   },
+  toSpatial: function (o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/to-spatial", o.original._path);
+    xhr({uri: endpoint}, 
+      function (err, response, body) {
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+      }
+    );
+  },
+  toModel: function (o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/to-model", o.original._path);
+    xhr({uri: endpoint}, 
+      function (err, response, body) {
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+      }
+    );
+  },
   newModel: function (e) {
     let isSpatial = e.srcElement.dataset.modeltype === "spatial"
     let modal = $(renderCreateModalHtml(isSpatial)).modal();
@@ -235,6 +265,24 @@ let FileBrowser = PageView.extend({
       nameWarning.collapse('hide');
     });
   },
+  getJsonFileForExport: function (o) {
+    var self = this;
+    var endpoint = path.join("/stochss/api/json-data", o.original._path);
+    xhr({uri: endpoint}, function (err, response, body) {
+      var resp = JSON.parse(body);
+      self.exportToJsonFile(resp, o.original.text);
+    });
+  },
+  exportToJsonFile: function (fileData, fileName) {
+    let dataStr = JSON.stringify(fileData);
+    let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    let exportFileDefaultName = fileName
+
+    let linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataURI);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  },
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -248,6 +296,15 @@ let FileBrowser = PageView.extend({
             "separator_after" : true,
             "action" : function (data) {
               $('#models-jstree').jstree().refresh_node(o);
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "create_model" : {
@@ -271,17 +328,27 @@ let FileBrowser = PageView.extend({
                 "separator_before" : false,
                 "separator_after" : false,
                 "action" : function (data) {
+                  if(document.querySelector('#newModalModel')) {
+                    document.querySelector('#newModalModel').remove()
+                  }
                   let modal = $(renderCreateModalHtml(false)).modal();
                   let okBtn = document.querySelector('#newModalModel .ok-model-btn');
                   let input = document.querySelector('#newModalModel #modelNameInput');
+                  input.addEventListener("keyup", function (event) {
+                    if(event.keyCode === 13){
+                      event.preventDefault();
+                      okBtn.click();
+                    }
+                  });
                   let modelName;
-                  okBtn.addEventListener('click', (e) => {
+                  okBtn.addEventListener('click', function (e) {
+                    console.log("Ok button clicked")
                     if (Boolean(input.value)) {
                       let modelName = input.value + '.mdl';
                       let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName)
                       window.location.href = modelPath;
                     }
-                  })
+                  });
                 }
               } 
             }
@@ -302,11 +369,20 @@ let FileBrowser = PageView.extend({
           "Edit" : {
             "separator_before" : false,
             "separator_after" : true,
-            "_disabled" : true,
+            "_disabled" : false,
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
             }
           },
           "Duplicate" : {
@@ -321,10 +397,10 @@ let FileBrowser = PageView.extend({
           "Convert to Non Spatial" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Convert to Non Spatial",
             "action" : function (data) {
-
+              self.toModel(o);
             }
           },
           "Convert to Notebook" : {
@@ -334,15 +410,6 @@ let FileBrowser = PageView.extend({
             "label" : "Convert to Notebook",
             "action" : function (data) {
 
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
             }
           },
           "Create New Job" : {
@@ -377,6 +444,15 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -389,10 +465,10 @@ let FileBrowser = PageView.extend({
           "Convert to Spatial" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Convert to Spatial",
             "action" : function (data) {
-              
+              self.toSpatial(o)
             }
           },
           "Convert to Notebook" : {
@@ -418,15 +494,6 @@ let FileBrowser = PageView.extend({
               });
             }
           },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
           "Create New Job" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -434,6 +501,15 @@ let FileBrowser = PageView.extend({
             "label" : "Create New Job",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
+            }
+          },
+          "Export" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Export",
+            "action" : function (data) {
+              self.getJsonFileForExport(o);
             }
           },
           "Delete" : {
@@ -543,6 +619,64 @@ let FileBrowser = PageView.extend({
               );
             }
           },
+          "Export" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Export",
+            "action" : function (data) {
+              self.getJsonFileForExport(o);
+	    }
+	  },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate",
+            "action" : function (data) {
+              self.duplicateFile(o)
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
+        }
+      }
+      else {
+        return {
+          "Open File" : {
+            "separator_before" : false,
+            "separator_after" : true,
+            "_disabled" : false,
+            "_class" : "font-weight-bolder",
+            "label" : "Open File",
+            "action" : function (data) {
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -561,18 +695,12 @@ let FileBrowser = PageView.extend({
               self.deleteFile(o);
             }
           },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
         }
       }
     }
+    $(document).on('shown.bs.modal', function (e) {
+      $('[autofocus]', e.target).focus();
+    });
     $(document).on('dnd_start.vakata', function (data, element, helper, event) {
       $('#models-jstree').jstree().load_all()
     });
