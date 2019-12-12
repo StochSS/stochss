@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import shutil
 import sys
 import json
 import argparse
@@ -49,7 +50,7 @@ def rename(old_path, new_name, dir_path):
         Path to the parent directory of the target file.
     '''
     new_path, changed = get_unique_file_name(new_name, dir_path)
-    os.rename(old_path, new_path)
+    shutil.move(old_path, new_path)
     
     if changed:
         message = "A file already exists with that name, {0} was renamed to {1} in order to prevent a file from being overwriten.".format(old_path.split('/').pop(), new_name)
@@ -78,8 +79,12 @@ def get_parsed_args():
 if __name__ == "__main__":
     args = get_parsed_args()
     old_path = os.path.join(user_dir, args.path)
-    old_name = old_path.split('/').pop()
-    dir_path = old_path.split(old_name)[0]
     new_name = args.new_name
+    old_name = old_path.split('/').pop()
+    if os.path.isdir(old_path):
+        old_path += "/"
+        new_name += "/"
+        old_name += "/"
+    dir_path = old_path.split(old_name)[0]
     resp = rename(old_path, new_name, dir_path)
     print(resp)

@@ -9,8 +9,8 @@ let bootstrap = require('bootstrap');
 
 let app = require('../app');
 
-import styles from '../styles/styles.css';
 import bootstrapStyles from '../styles/bootstrap.css';
+import styles from '../styles/styles.css';
 
 export default function initPage (page) {
   domReady(() => {
