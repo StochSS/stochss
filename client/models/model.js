@@ -16,7 +16,7 @@ module.exports = Model.extend({
     return path.join(
       String(app.config.routePrefix),
       String(app.config.apiUrl),
-      "model-data",
+      "json-data",
       String(this.directory)
     );
   },

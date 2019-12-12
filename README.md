@@ -13,7 +13,7 @@ Install [minikube](https://github.com/kubernetes/minikube)
 
 Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.10. (This is the version of kubernetes used by the Jetstream OpenStack Magnum API.)
 
-Install [helm](https://github.com/helm/helm), the package manager for kubernetes.
+Install [Helm v2.16.1](https://github.com/helm/helm/releases/tag/v2.16.1),  the package manager for kubernetes.
 
 Install [nodejs](https://nodejs.org/) and [npm](https://www.npmjs.com/), the package manager for nodejs.
 
@@ -35,6 +35,9 @@ Let's boot up a VM with minikube!
 ```
 
 Minikube will create a new kubectl context called 'minikube' and set your current context to it. See `kubectl config` for more on this.
+
+
+**IMPORTANT FOR LINUX USERS:** The Default mount for VirtualBox on Linux is /hosthome, so you will need to run `./minikube_install_jhub /hosthome/path-to-stochss` 
 
 At this point you run `kubectl get pods -n jhub` in a terminal and you see a list of pods returned that are either running or being created. If they're not all in the `Running` state, run the same `get pods` command again until you see that they're all running. If they're in an `Error` state or `CrashLoopBackOff` state, something went wrong!
 
