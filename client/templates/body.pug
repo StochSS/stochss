@@ -24,7 +24,7 @@ body
           | Sign Out
 
   div.container-fluid
-    div.row
+    div.row.flex-nowrap
       div.col-md-2: div.card.card-body.bg-light
         ul.nav.flex-column
           li.nav-item: i.icon-flask Tools
@@ -51,4 +51,4 @@ body
 
           button.btn.information-btn(data-hook="jupyter-hub-information-main") Jupyer Hub<sup>&#8505</sup>
 
-      div.container-fluid.col-md-10(data-hook="page-container")
+      div.col-md-10: div.container-fluid(data-hook="page-container")
