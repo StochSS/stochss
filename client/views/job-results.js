@@ -29,23 +29,24 @@ module.exports = View.extend({
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
-    'click [data-hook=plot-stddevrange]' : function () {
-      this.getPlot("stddevran");
+    'click [data-hook=plot]' : function (e) {
+      var type = e.target.id
+      this.getPlot(type);
     },
-    'click [data-hook=plot-trajectories]' : function () {
-      this.getPlot("trajectories");
+    'click [data-hook=download-png-custom]' : function (e) {
+      var type = e.target.id;
+      this.clickDownloadPNGButton(type)
     },
-    'click [data-hook=plot-stddev]' : function () {
-      this.getPlot("stddev");
-    },
-    'click [data-hook=plot-trajmean]' : function () {
-      this.getPlot("avg");
-    },
+    'click [data-hook=download-json]' : function (e) {
+      var type = e.target.id;
+      this.exportToJsonFile(this.plots[type], type)
+    }
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.trajectories = attrs.trajectories;
     this.status = attrs.status;
+    this.plots = {}
   },
   render: function () {
     if(this.trajectories > 1){
@@ -99,12 +100,36 @@ module.exports = View.extend({
       if(body.startsWith("ERROR!")){
         $(self.queryByHook(type)).html(body)
       }else{
-        self.plotFigure(JSON.parse(body), el);
+        var fig = JSON.parse(body)
+        self.plots[type] = fig
+        self.plotFigure(fig, type);
       }
     });
   },
-  plotFigure: function (figure, el) {
+  plotFigure: function (figure, type) {
+    var self = this;
+    var hook = type;
+    var el = this.queryByHook(hook)
     Plotly.newPlot(el, figure)
+    this.queryAll("#" + type).forEach(function (el) {
+      if(el.disabled){
+        el.disabled = false;
+      }
+    });
+  },
+  clickDownloadPNGButton: function (type) {
+    var pngButton = $('div[data-hook*='+type+'] a[data-title*="Download plot as a png"]')[0]
+    pngButton.click()
+  },
+  exportToJsonFile: function (jsonData, plotType) {
+    let dataStr = JSON.stringify(jsonData);
+    let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    let exportFileDefaultName = plotType + '-plot.json';
+
+    let linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataURI);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
   },
   expandContainer: function () {
     $(this.queryByHook('job-results')).collapse('show');
