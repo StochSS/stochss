@@ -200,15 +200,19 @@ def plot_results(results, results_path, trajectories, is_stochastic):
     '''
     if is_stochastic and trajectories > 1:
         stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
+        stddevrange_plot["config"] = {"responsive": True,}
         with open(os.path.join(results_path, 'std_dev_range_plot.json'), 'w') as json_file:
             json.dump(stddevrange_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
         stddev_plot = results.stddev_ensemble().plotplotly(return_plotly_figure=True)
+        stddev_plot["config"] = {"responsive": True,}
         with open(os.path.join(results_path, 'stddev_ensemble_plot.json'), 'w') as json_file:
             json.dump(stddev_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
         avg_plot = results.average_ensemble().plotplotly(return_plotly_figure=True)
+        avg_plot["config"] = {"responsive": True,}
         with open(os.path.join(results_path, 'ensemble_average_plot.json'), 'w') as json_file:
             json.dump(avg_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
     plot = results.plotplotly(return_plotly_figure=True)
+    plot["config"] = {"responsive": True,}
     with open(os.path.join(results_path, 'plotplotly_plot.json'), 'w') as json_file:
             json.dump(plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
 
