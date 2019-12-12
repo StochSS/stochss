@@ -121,6 +121,7 @@
             ]
         }
     ],
+    "initialConditions": [],
     "parameters": [
         {
             "name": "alpha_a",

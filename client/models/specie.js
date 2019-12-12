@@ -1,7 +1,6 @@
 var _ = require('underscore');
 //models
 var State = require('ampersand-state');
-//var InitialCondition = require('./initial-condition');
 
 module.exports = State.extend({
   props: {
@@ -13,9 +12,6 @@ module.exports = State.extend({
       type: 'object',
       default: function() {return []; }
     },
-  },
-  children: {
-    //initialCondition: InitialCondition
   },
   session: {
     inUse: {
