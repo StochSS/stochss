@@ -15,15 +15,52 @@ var template = require('../templates/pages/jobManager.pug');
 
 import initPage from './page.js';
 
+let operationInfoModalHtml = () => {
+  let editJobMessage = `
+    <b>Job Name</b>: On the Job Manager page you may edit the name of job as long as the job as not been saved.  
+    Job Names always end with a time stamp.<br>
+    <b>Model Path</b>: If you move or rename the model make sure to update this path.<br>
+    <b>Job Editor</b>: This is where you can customize the settings for your job.  
+    If you need to edit other part of you model click on the edit model button.  
+    The Job Editor is only available for models that have not been run.<br>
+    <b>Plot Results</b>: You may change the title, x-axis label, and y-axis label by entering the name in the correct field, then click plot.<br>
+    <b>Model Viewer</b>: You can view the model that will be used when you run your job in the Model section.
+  `;
+
+  return `
+    <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Job Manager Help </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${editJobMessage} </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ` 
+}
+
 let JobManager = PageView.extend({
   template: template,
   events: {
-    'change [data-hook=job-name]' : 'setJobName'
+    'change [data-hook=job-name]' : 'setJobName',
+    'click [data-hook=edit-job-help]' : function () {
+      let modal = $(operationInfoModalHtml()).modal();
+    },
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    this.directory = document.URL.split('/jobs/edit').pop();
+    this.directory = decodeURI(document.URL.split('/jobs/edit').pop());
     if(this.directory.endsWith('.mdl')){
       var modelFile = this.directory.split('/').pop();
       var name = modelFile.split('.')[0];

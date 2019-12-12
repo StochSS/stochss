@@ -43,6 +43,7 @@ class JsonFileAPIHandler(BaseHandler):
         log.debug(model_path)
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
+        model_path = model_path.replace(" ", "\ ")
         full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
         try:
             to_write = stochss_kubernetes.read_from_pod(client, 
@@ -70,6 +71,7 @@ class JsonFileAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self) # User validation
         user = self.current_user.name # Get User Name
+        model_path = model_path.replace(" ", "\ ")
         full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
         stochss_kubernetes.write_to_pod(client,
@@ -101,9 +103,11 @@ class RunModelAPIHandler(BaseHandler):
         model_path : str
             Path to target model within user pod container.
         '''
+
         checkUserOrRaise(self) # User validation
         user = self.current_user.name # Get User Name
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
+        model_path = model_path.replace(" ", "\ ")
         self.set_header('Content-Type', 'application/json')
         # Create temporary results file it doesn't already exist
         if outfile == 'none':

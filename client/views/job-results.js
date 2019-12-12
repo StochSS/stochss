@@ -78,6 +78,8 @@ module.exports = View.extend({
   },
   getPlot: function (type) {
     var self = this;
+    var el = this.queryByHook(type)
+    Plotly.purge(el)
     var data = {"plt_type": type}
     if(!this.title && !this.xaxis && !this.yaxis){
       data['plt_data'] = "None";
