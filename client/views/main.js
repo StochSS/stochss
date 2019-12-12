@@ -22,19 +22,15 @@ let operationInfoModalHtml = (infoMessageKey) => {
     <b>Duplicate A File</b>: Right click on a file and click Duplicate.<br>
     <b>Delete File or Directory</b>: Right click on a file or directory and click Delete, then confirm the delete.
   `;
-  let createModelMessage = `
-    <b>GillesPy2 Model</b>: Right click on a directory, click create model, then click Non-Spatial.
-    Enter a name for the model and click OK.
+  let createEditModelMessage = `
+    <b>Create GillesPy2 Model</b>: Right click on a directory, click create model, then click Non-Spatial.
+    Enter a name for the model and click OK.<br>
+    <b>Edit GillesPy2 Model</b>: Double click on a model or right click on a model and click Edit Model.
   `;
-  let editModelMessage = `
-    <b>Open Model</b>: Double click on a model or right click on a model and click Edit Model.
-  `;
-  let createJobMeeage = `
+  let createEditJobMeeage = `
     <b>Create Job</b>: From the File Browser page right click on a model and click Create Job.  
     From the Model Editor page click on the Create Job button at the bottum of the page.<br>
-  `;
-  let editJobMessage = `
-    <b>Open Job</b>: Double click on the Job or right click on the job and click View Job.<br>
+    <b>View/Edit Job</b>: Double click on the Job or right click on the job and click View Job.<br>
   `;
   let notebookMessage = `
     <b>Create New Notebook</b>: Right click on a model and click Convert to Notebook, 
@@ -59,10 +55,8 @@ let operationInfoModalHtml = (infoMessageKey) => {
   `;
 
   let infoMessages = {'File System': fileSystemMessage,
-                      'Create Model': createModelMessage,
-                      'Edit Model': editModelMessage,
-                      'Create Job': createJobMeeage,
-                      'Edit Job': editJobMessage,
+                      'Create/Edit Model': createEditModelMessage,
+                      'Create/View/Edit Job': createEditJobMeeage,
                       'Jupyter Notebooks' : notebookMessage,
                       'Jupyter Hub': jhubMessage};
 
@@ -99,16 +93,10 @@ module.exports = View.extend({
       let modal = $(operationInfoModalHtml('File System')).modal();
     },
     'click [data-hook=create-model-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Create Model')).modal();
-    },
-    'click [data-hook=edit-model-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Edit Model')).modal();
+      let modal = $(operationInfoModalHtml('Create/Edit Model')).modal();
     },
     'click [data-hook=create-job-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Create Job')).modal();
-    },
-    'click [data-hook=edit-job-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Edit Job')).modal();
+      let modal = $(operationInfoModalHtml('Create/View/Edit Job')).modal();
     },
     'click [data-hook=notebook-information-main]' : function () {
       let modal = $(operationInfoModalHtml('Jupyter Notebooks')).modal();
