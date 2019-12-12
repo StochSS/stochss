@@ -21,6 +21,7 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
   },
   clickSaveHandler: function (e) {
+    this.saving();
     var self = this;
     var model = this.model
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
@@ -28,6 +29,7 @@ module.exports = View.extend({
     this.saveModel(function () {
       var endpoint = path.join('/stochss/api/jobs/save-job/', optType, model.directory, "<--GillesPy2Job-->", job);
       xhr({uri: endpoint}, function (err, response, body) {
+        self.saved();
         if(document.URL.endsWith('.mdl')){
           setTimeout(function () {
             var dirname = path.dirname(document.URL).split('hub')
@@ -62,6 +64,18 @@ module.exports = View.extend({
     } else {
       model.saveModel();
     }
+  },
+  saving: function () {
+    var saving = this.queryByHook('saving-job');
+    var saved = this.queryByHook('saved-job');
+    saved.style.display = "none";
+    saving.style.display = "inline-block";
+  },
+  saved: function () {
+    var saving = this.queryByHook('saving-job');
+    var saved = this.queryByHook('saved-job');
+    saving.style.display = "none";
+    saved.style.display = "inline-block";
   },
   runJob: function () {
     var model = this.model;
