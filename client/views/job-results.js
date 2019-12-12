@@ -77,6 +77,8 @@ module.exports = View.extend({
   },
   getPlot: function (type) {
     var self = this;
+    var el = this.queryByHook(type)
+    Plotly.purge(el)
     var data = {"plt_type": type}
     if(!this.title && !this.xaxis && !this.yaxis){
       data['plt_data'] = "None";
@@ -97,12 +99,11 @@ module.exports = View.extend({
       if(body.startsWith("ERROR!")){
         $(self.queryByHook(type)).html(body)
       }else{
-        self.plotFigure(JSON.parse(body), type);
+        self.plotFigure(JSON.parse(body), el);
       }
     });
   },
-  plotFigure: function (figure, hook) {
-    var el = this.queryByHook(hook)
+  plotFigure: function (figure, el) {
     Plotly.newPlot(el, figure)
   },
   expandContainer: function () {

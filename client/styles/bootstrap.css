@@ -78,10 +78,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5rem;
 }
 
-h3, h5, h6.editor-header {
-  display: inline-block;
-}
-
 p {
   margin-top: 0;
   margin-bottom: 1rem;
@@ -209,15 +205,6 @@ svg {
   vertical-align: middle;
 }
 
-span {
-  font-size: 1rem;
-}
-
-span.custom {
-  padding-right: 0.25rem;
-  padding-left: 0.25rem;
-}
-
 table {
   border-collapse: collapse;
 }
@@ -237,8 +224,6 @@ th {
 label {
   display: inline-block;
   margin-bottom: 0.5rem;
-  padding-right: 0.25rem;
-  padding-left: 0.25rem;
 }
 
 button {
@@ -630,13 +615,6 @@ pre code {
   width: 100%;
   padding-right: 15px;
   padding-left: 15px;
-}
-
-.reaction-summary {
-  padding-left: 22px;
-  padding-right: 5px;
-  padding-bottom: 10px;
-  display: inline-block;
 }
 
 .col {
@@ -2713,25 +2691,6 @@ fieldset:disabled a.btn {
   box-shadow: 0 0 0 0.2rem rgba(82, 88, 93, 0.5);
 }
 
-.btn-outline-collapse {
-  color: #000;
-  padding: 0px 10px;
-  font-size: 20px;
-}
-
-.btn-outline-collapse:hover {
-  color: #007bff;
-}
-
-.reaction-subdomain {
-  padding: 0px 0px 0px 20px;
-  border: 0;
-}
-
-.reaction-details-subdomain {
-  padding: 0px 0px 0px 5px;
-}
-
 .btn-outline-primary {
   color: #007bff;
   border-color: #007bff;
@@ -3030,21 +2989,6 @@ fieldset:disabled a.btn {
 
 .btn-block + .btn-block {
   margin-top: 0.5rem;
-}
-
-.btn-outline-tool {
-  color: #007bff;
-  padding: 0.5rem 1rem;
-  text-align: left;
-}
-
-.btn-outline-tool:hover {
-  color: #0056b3;
-}
-
-#collapse-description {
-  padding: 0rem 2rem;
-  font-size: 12px;
 }
 
 input[type="submit"].btn-block,

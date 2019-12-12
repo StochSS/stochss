@@ -2,6 +2,7 @@ var app = require('ampersand-app');
 var xhr = require('xhr');
 var path = require('path');
 var Plotly = require('../lib/plotly');
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 //templates
@@ -21,15 +22,18 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
   },
   clickSaveHandler: function (e) {
-    this.saveModel()
+    this.saveModel(this.saved.bind(this));
   },
   clickRunHandler: function (e) {
+    var el = this.parent.queryByHook('model-run-container');
+    Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
   clickStartJobHandler: function (e) {
     window.location.href = path.join("/hub/stochss/jobs/edit", this.model.directory);
   },
   saveModel: function (cb) {
+    this.saving();
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;
     if (cb) {
@@ -44,7 +48,21 @@ module.exports = View.extend({
       model.saveModel();
     }
   },
+  saving: function () {
+    var saving = this.queryByHook('saving-mdl');
+    var saved = this.queryByHook('saved-mdl');
+    saved.style.display = "none";
+    saving.style.display = "inline-block";
+  },
+  saved: function () {
+    var saving = this.queryByHook('saving-mdl');
+    var saved = this.queryByHook('saved-mdl');
+    saving.style.display = "none";
+    saved.style.display = "inline-block";
+  },
   runModel: function () {
+    this.saved();
+    this.running();
     var el = this.parent.queryByHook('model-run-container')
     var model = this.model
     var endpoint = path.join('/stochss/api/models/run/', 'start', 'none', model.directory);
@@ -52,6 +70,18 @@ module.exports = View.extend({
     xhr({ uri: endpoint }, function (err, response, body) {
       self.getResults(body)
     });
+  },
+  running: function () {
+    var el = this.parent.queryByHook('model-run-container');
+    var loader = this.parent.queryByHook('plot-loader');
+    el.style.display = "none"
+    loader.style.display = "block"
+  },
+  ran: function () {
+    var el = this.parent.queryByHook('model-run-container');
+    var loader = this.parent.queryByHook('plot-loader');
+    loader.style.display = "none";
+    el.style.display = "block";
   },
   getResults: function (body) {
     var self = this;
@@ -75,6 +105,7 @@ module.exports = View.extend({
   plotResults: function (data) {
     // TODO abstract this into an event probably
     var title = this.model.name + " Model Preview"
+    this.ran()
     el = this.parent.queryByHook('model-run-container');
     time = data.time
     y_labels = Object.keys(data).filter(function (key) {
@@ -102,5 +133,6 @@ module.exports = View.extend({
       responsive: true,
     }
     Plotly.newPlot(el, traces, layout, config);
+    window.scrollTo(0, document.body.scrollHeight)
   },
 });

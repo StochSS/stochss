@@ -10,11 +10,11 @@ source .env
 
 MOUNT_PATH=$PWD
 
-
 if [ $# -eq 1 ]
-    then
-        MOUNT_PATH=$1
+then
+  MOUNT_PATH=$1
 fi
+
 
 helm upgrade --install jhub jupyterhub/jupyterhub \
       --namespace jhub \
