@@ -18,12 +18,13 @@ section.page.col-md-10
 
   div(data-hook="sim-settings-container")
 
-  div(data-hook="model-state-buttons-container")
-
   div.collapse(data-hook="model-timeout-message")
 
     p.text-warning The model took longer than 5 seconds to run and timed out!
 
-  div.plot-preview(data-hook="model-run-container")
+  div(data-hook="model-run-container")
+
+  div.spinner-border(data-hook="plot-loader")
 
   div(data-hook="model-state-buttons-container")
+
