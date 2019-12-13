@@ -41,7 +41,7 @@ Minikube will create a new kubectl context called 'minikube' and set your curren
 
 At this point you run `kubectl get pods -n jhub` in a terminal and you see a list of pods returned that are either running or being created. If they're not all in the `Running` state, run the same `get pods` command again until you see that they're all running. If they're in an `Error` state or `CrashLoopBackOff` state, something went wrong!
 
-**IMPORTANT:** If you need to start up your minikube VM from a "stopped" state, you MUST use the `--kubernetes-version v1.11.10` flag or else minikube will automatically upgrade your kubernetes version! 
+**IMPORTANT:** If you need to start up your minikube VM from a "stopped" state, you MUST use the `--kubernetes-version v1.11.10` flag or else minikube will automatically upgrade your kubernetes version! You can use `make run` as a shortcut.
 
 ### Reflecting changes
 
@@ -52,7 +52,7 @@ eval $(minikube docker-env)
 
 You'll notice this command is used in the utility scripts to rebuild the docker images, `minikube_rebuild_hub.sh` and `minikube_rebuild_singleuser.sh`. You can use these when you make changes to handler files, singleuser scripts, etc to see changes reflected in the application.
 
-Changes to `minikube-config.yaml` are reflected a little differently. You can use the script `minikube_install_jhub.sh` to reinstall jupyterhub using the new configuration. Make sure your kubectl context is set to minikube!
+Changes to `config.yaml` are reflected a little differently. You can use the script `minikube_install_jhub.sh` to reinstall jupyterhub using the new configuration. Make sure your kubectl context is set to minikube!
 
 ### More help
 

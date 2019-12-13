@@ -32,6 +32,8 @@ docker build -t $DOCKER_NOTEBOOK_IMAGE:dev ./singleuser
 
 kubectl apply -f jhub-rb.yaml
 
+npm run webpack
+
 IP=$(minikube ip)
 PORT=31212
 
