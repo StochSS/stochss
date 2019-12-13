@@ -24,5 +24,3 @@ helm upgrade --install jhub jupyterhub/jupyterhub \
       --set hub.image.name="$DOCKER_HUB_IMAGE" \
       --set hub.extraVolumes[0].hostPath.path="$MOUNT_PATH" \
       --set singleuser.image.name="$DOCKER_NOTEBOOK_IMAGE"
-
-
