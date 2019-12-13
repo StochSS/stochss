@@ -22,6 +22,7 @@ hub:
   cookieSecret: "SECRET"
 
   extraConfig: 
+    oauth: ""
     stochss: |
       import sys
       sys.path.insert(1, '/stochss')

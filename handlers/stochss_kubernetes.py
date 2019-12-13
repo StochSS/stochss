@@ -24,6 +24,7 @@ def load_kube_client(user):
     # With Google OAuth usernames are email addresses.
     # User pod names are basically url-encoded versions with hyphens inserted
     # where the % symbol would be.
+    # Modify the username to get the right pod name.
     user = user.replace("@", "-40")
     user = user.replace(".", "-2e")
     config.load_incluster_config()

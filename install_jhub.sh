@@ -13,13 +13,13 @@ source .oauth.beta.env
 MOUNT_PATH=/stochss
 
 OAUTH_CONFIG="
-# GitHub authentication for production
-from oauthenticator.github import GitHubOAuthenticator
-c.JupyterHub.authenticator_class = GitHubOAuthenticator
+# Google authentication for beta and production
+from oauthenticator.google import GoogleOAuthenticator
+c.JupyterHub.authenticator_class = GoogleOAuthenticator
 
-c.GitHubOAuthenticator.oauth_callback_url=\"$OAUTH_CALLBACK\"
-c.GitHubOAuthenticator.client_id=\"$CLIENT_ID\"
-c.GitHubOAuthenticator.client_secret=\"$CLIENT_SECRET\"
+c.GoogleOAuthenticator.oauth_callback_url=\"$OAUTH_CALLBACK\"
+c.GoogleOAuthenticator.client_id=\"$CLIENT_ID\"
+c.GoogleOAuthenticator.client_secret=\"$CLIENT_SECRET\"
 "
 
 helm upgrade --install jhub jupyterhub/jupyterhub \
