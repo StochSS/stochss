@@ -136,3 +136,9 @@ span.custom {
 .saved-status {
   color: #1e7e34;
 }
+
+.right-justify {
+  position: absolute !important;
+  right: 15px;
+  left: auto;
+}
