@@ -11,6 +11,7 @@ let app = require('../app');
 
 import bootstrapStyles from '../styles/bootstrap.css';
 import styles from '../styles/styles.css';
+import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min.css'
 
 export default function initPage (page) {
   domReady(() => {
