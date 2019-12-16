@@ -66,6 +66,12 @@ span.custom {
   text-align: left;
 }
 
+.help {
+  font-size: 25px;
+  padding: 0;
+  vertical-align: top;
+}
+
 .information-btn:hover {
   color: #0056b3;
 }
