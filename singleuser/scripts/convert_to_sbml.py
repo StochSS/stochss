@@ -32,6 +32,9 @@ def convert_to_sbml(model):
 
     reactions = model['reactions']
     convert_reactions(sbml_model, reactions)
+
+    rate_rules = model['rateRules']
+    convert_rate_rules(sbml_model, rate_rules)
     
     return document
 
@@ -105,6 +108,40 @@ def create_equation(sbml_reaction, reaction, reactants):
     if not reaction['propensity']:
         if len(reactants) == 0:
             equation = "{0}".format(rate['name'])
+        elif len(reactants) == 1:
+            name, ratio = reactants.items()[0]
+            equation = '{0} * {1}'.format(rate['name'], name)
+            if ratio == 2:
+                equation += " * {0}".format(name)
+        else:
+            name0, ratio0 = reactants.items()[0]
+            name1, ratio1 = reactants.items()[1]
+            equation = "{0} * {1} * {2}".format(rate['name']. name0, name1)
+    else:
+        equation = reaction['propensity']
+        equation = equation.replace("and", "&&")
+        equation = equation.replace("or", "||")
+
+    try:
+        k.setMath(libsbml.parseL3Formula(equation))
+    except Exception as error:
+        raise Exception('libsbml threw an error when parsing rate equation "{0}" for reaction "{1}"'.format(equation, reaction['name']))
+
+
+def convert_rate_rules(sbml_model, rules):
+    for rule in rules:
+        species = rule['specie']
+        r = sbml_model.createRateRule()
+        r.setId(rule['name'])
+        r.setVariable(species['name'])
+        equation = rule['rate']
+        equation = equation.replace("and", "&&")
+        equation = equation.replace("or", "||")
+
+        try:
+            r.setMath(libsbml.parseL3Formula(equation))
+        except Exception as error:
+            raise Exception('libsbml threw an error when parsing rate equation "{0}" for rate rule "{1}"'.format(equation, rule['name']))
 
 
 def write_sbml_to_file(sbml_path, sbml_doc):
