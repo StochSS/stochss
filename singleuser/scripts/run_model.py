@@ -133,7 +133,7 @@ class ModelFactory():
         parameters : list
             List of GillesPy2 parameters.
         '''
-        if not args['rate'] == {}:
+        if args['reactionType'] not in 'custom-propensity':
             rate = list(filter(lambda p: p.name == args['rate']['name'], parameters))[0]
             propensity = None
         else:

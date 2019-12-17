@@ -42,11 +42,11 @@ span.custom {
 }
 
 .tools {
-  min-width: 200px;
+  min-width: 16em !important;
 }
 
 .body {
-  min-width: 500px;
+  min-width: 500px !important;
 }
 .plot-preview {
   margin: 10px;
@@ -64,6 +64,12 @@ span.custom {
   border-color: #ffffff;
   padding: 0.5rem 1rem;
   text-align: left;
+}
+
+.help {
+  font-size: 25px;
+  padding: 0;
+  vertical-align: top;
 }
 
 .information-btn:hover {
@@ -135,4 +141,10 @@ span.custom {
 
 .saved-status {
   color: #1e7e34;
+}
+
+.right-justify {
+  position: absolute !important;
+  right: 15px;
+  left: auto;
 }

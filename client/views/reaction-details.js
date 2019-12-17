@@ -153,9 +153,7 @@ module.exports = View.extend({
     var newProducts = this.getArrayOfDefaultStoichSpecies(args.products);
     this.model.reactants.reset(newReactants);
     this.model.products.reset(newProducts);
-    if(type === 'custom-propensity')
-      this.model.rate = {};
-    else
+    if(type !== 'custom-propensity')
       this.model.rate = this.model.collection.getDefaultRate();
   },
   getArrayOfDefaultStoichSpecies: function (arr) {
