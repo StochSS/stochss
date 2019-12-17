@@ -109,14 +109,14 @@ def create_equation(sbml_reaction, reaction, reactants):
         if len(reactants) == 0:
             equation = "{0}".format(rate['name'])
         elif len(reactants) == 1:
-            name, ratio = reactants.items()[0]
+            name = list(reactants.keys())[0]
+            ratio = reactants[name]
             equation = '{0} * {1}'.format(rate['name'], name)
             if ratio == 2:
                 equation += " * {0}".format(name)
         else:
-            name0, ratio0 = reactants.items()[0]
-            name1, ratio1 = reactants.items()[1]
-            equation = "{0} * {1} * {2}".format(rate['name']. name0, name1)
+            name0, name1 = list(reactants.keys())
+            equation = "{0} * {1} * {2}".format(rate['name'], name0, name1)
     else:
         equation = reaction['propensity']
         equation = equation.replace("and", "&&")
@@ -134,7 +134,7 @@ def convert_rate_rules(sbml_model, rules):
         r = sbml_model.createRateRule()
         r.setId(rule['name'])
         r.setVariable(species['name'])
-        equation = rule['rate']
+        equation = rule['rule']
         equation = equation.replace("and", "&&")
         equation = equation.replace("or", "||")
 
