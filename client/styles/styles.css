@@ -29,7 +29,7 @@ span.custom {
 
 .form-input {
   margin-left: 10px;
-  width: 50%;
+  width: 100%;
 }
 
 .sidebar-nav {
@@ -57,6 +57,10 @@ span.custom {
   padding-right: 5px;
   padding-bottom: 10px;
   display: inline-block;
+}
+
+.reation-part {
+  max-width: none;
 }
 
 .information-btn {
