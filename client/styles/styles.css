@@ -42,11 +42,11 @@ span.custom {
 }
 
 .tools {
-  min-width: 200px;
+  min-width: 16em !important;
 }
 
 .body {
-  min-width: 500px;
+  min-width: 500px !important;
 }
 .plot-preview {
   margin: 10px;
