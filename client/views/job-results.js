@@ -31,7 +31,12 @@ module.exports = View.extend({
     'change [data-hook=yaxis]' : 'setYAxis',
     'click [data-hook=plot]' : function (e) {
       var type = e.target.id
-      this.getPlot(type);
+      if(this.plots[type]) {
+        $(this.queryByHook("edit-plot-args")).collapse("show");
+      }else{
+        this.getPlot(type);
+        e.target.innerText = "Edit Plot"
+      }
     },
     'click [data-hook=download-png-custom]' : function (e) {
       var type = e.target.id;
@@ -47,6 +52,7 @@ module.exports = View.extend({
     this.trajectories = attrs.trajectories;
     this.status = attrs.status;
     this.plots = {}
+    this.plotArgs = {}
   },
   render: function () {
     if(this.trajectories > 1){
@@ -68,33 +74,40 @@ module.exports = View.extend({
     text === '+' ? $(this.queryByHook(source)).text('-') : $(this.queryByHook(source)).text('+');
   },
   setTitle: function (e) {
-    this.title = e.target.value;
+    this.plotArgs['title'] = e.target.value
+    for (var type in this.plots) {
+      var fig = this.plots[type]
+      fig.layout.title.text = e.target.value
+      this.plotFigure(fig, type)
+    }
   },
   setYAxis: function (e) {
-    this.yaxis = e.target.value;
+    this.plotArgs['yaxis'] = e.target.value
+    for (var type in this.plots) {
+      var fig = this.plots[type]
+      fig.layout.yaxis.title.text = e.target.value
+      this.plotFigure(fig, type)
+    }
   },
   setXAxis: function (e) {
-    this.xaxis = e.target.value;
+    this.plotArgs['xaxis'] = e.target.value
+    for (var type in this.plots) {
+      var fig = this.plots[type]
+      fig.layout.xaxis.title.text = e.target.value
+      this.plotFigure(fig, type)
+    }
   },
   getPlot: function (type) {
     var self = this;
     var el = this.queryByHook(type)
     Plotly.purge(el)
     var data = {"plt_type": type}
-    if(!this.title && !this.xaxis && !this.yaxis){
-      data['plt_data'] = "None";
+    if(Object.keys(this.plotArgs).length){
+      data['plt_data'] = this.plotArgs
     }else{
-      data['plt_data'] = {};
+      data['plt_data'] = "None"
     }
-    if(this.title){
-      data['plt_data']['title'] = this.title;
-    }
-    if(this.xaxis){
-      data['plt_data']['xaxis'] = this.xaxis;
-    }
-    if(this.yaxis){
-      data['plt_data']['yaxis'] = this.yaxis;
-    }
+    console.log(data)
     var endpoint = path.join("/stochss/api/jobs/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
     xhr({url: endpoint}, function (err, response, body){
       if(body.startsWith("ERROR!")){
@@ -149,7 +162,7 @@ module.exports = View.extend({
           tests: '',
           modelKey: null,
           valueType: 'string',
-          value: this.title,
+          value: this.plotArgs.title || "",
         });
       },
     },
@@ -164,7 +177,7 @@ module.exports = View.extend({
           tests: '',
           modelKey: null,
           valueType: 'string',
-          value: this.xaxis,
+          value: this.plotArgs.xaxis || "",
         });
       },
     },
@@ -179,7 +192,7 @@ module.exports = View.extend({
           tests: '',
           modelKey: null,
           valueType: 'string',
-          value: this.yaxis,
+          value: this.plotArgs.yaxis || "",
         });
       },
     },

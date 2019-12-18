@@ -7,18 +7,20 @@ div#job-results.card.card-body
 
   div.collapse(id="collapse-results", data-hook="job-results")
 
-    table.table
-      thead
-        tr
-          th(scope="col") Title
-          th(scope="col") X-axis Label
-          th(scope="col") Y-axis Label
+    div.collapse(data-hook="edit-plot-args")
 
-      tbody
-        tr
-          td: div(data-hook="title")
-          td: div(data-hook="xaxis")
-          td: div(data-hook="yaxis")
+      table.table
+        thead
+          tr
+            th(scope="col") Title
+            th(scope="col") X-axis Label
+            th(scope="col") Y-axis Label
+
+        tbody
+          tr
+            td: div(data-hook="title")
+            td: div(data-hook="xaxis")
+            td: div(data-hook="yaxis")
 
     div
 
@@ -28,7 +30,7 @@ div#job-results.card.card-body
     div.collapse(class="show", id="collapse-stddevrange")
 
       div(data-hook="stddevran")
-      button.btn.btn-primary(id="stddevran" data-hook="plot") Plot
+      button.btn.btn-primary(id="stddevran" data-hook="plot") Edit Plot
       button.btn.btn-primary(id="stddevran" data-hook="download-png-custom" disabled) Download PNG
       button.btn.btn-primary(id="stddevran" data-hook="download-json" disabled) Download JSON
 

@@ -177,7 +177,7 @@ class PlotJobResultsAPIHandler(BaseHandler):
         plt_data = json.dumps(body['plt_data']) # plot title and axes lables
         exec_cmd = [ 'plot_results.py', results_path, plt_type] # Script commands
         if not "None" in plt_data:
-            exec_cmd.append(plt_data) # Add plot data to the exec cmd if its not "None"
+            exec_cmd.extend(["--plt_data", plt_data]) # Add plot data to the exec cmd if its not "None"
         plt_fig = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(plt_fig)
         self.write(plt_fig) # Send data to client
