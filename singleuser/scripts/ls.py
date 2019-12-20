@@ -38,6 +38,8 @@ def getFileSystemData(full_path, p_path):
             children.append(buildChild(text=child, f_type="mesh", p_path=p_path))
         elif checkExtension(child, ".ipynb"):
             children.append(buildChild(text=child, f_type="notebook", p_path=p_path))
+        elif checkExtension(child, ".sbml"):
+            children.append(buildChild(text=child, f_type="sbml-model", p_path=p_path))
         elif path.isdir(path.join(full_path, child)):
             children.append(buildChild(text=child, f_type="folder", p_path=p_path))
         else:
