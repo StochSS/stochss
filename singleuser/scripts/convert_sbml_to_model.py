@@ -88,7 +88,7 @@ def get_parameters(parameters):
         parameter = parameters[name]
 
         stochss_parameter = {"name":parameter.name,
-                             "value":parameter.expression
+                             "value":float(parameter.expression)
                             }
 
         stochss_parameters.append(stochss_parameter)
@@ -226,6 +226,7 @@ if __name__ == "__main__":
     full_path = os.path.join(user_dir, args.path)
     template = json.loads(args.model_template)
     gillespy_model, errors = convert_to_gillespy_model(full_path)
+    errors = list(map(lambda error: error[0], errors))
     msg = convert_to_stochss_model(template, gillespy_model, full_path)
     resp = {"message":msg,"errors":errors}
-    print(jason.dumps(resp))
+    print(json.dumps(resp))
