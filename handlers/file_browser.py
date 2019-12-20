@@ -258,3 +258,65 @@ class ConvertToModelAPIHandler(BaseHandler):
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write(resp)
 
+
+class ModelToSBMLAPIHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for converting a StochSS model to a SBML model.
+    ##############################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, path):
+        '''
+        Send Get request to convert a target StochSS model to a SBML model in user 
+        pod. This method utilizes the kubernetes python api to invoke the 
+        convert_to_sbml.py module of the user container (stored in 
+        [UserPod]:/usr/local/bin).
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the target model file.
+
+        '''
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        exec_cmd = ['convert_to_sbml.py', path]
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write(resp)
+
+        
+class SBMLToModelAPIHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for converting a SBML model to a StochSS model.
+    ##############################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, path):
+        '''
+        Send Get request to convert a target SBML model to a StochSS model in user 
+        pod. This method utilizes the kubernetes python api to invoke the 
+        convert_sbml_to_model.py module of the user container (stored in 
+        [UserPod]:/usr/local/bin).
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the target sbml file.
+
+        '''
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
+        with open(template_path, "r") as template_file:
+            model_template = template_file.read()
+        exec_cmd = ['convert_sbml_to_model.py', path, model_template]
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write(resp)
+
+        
