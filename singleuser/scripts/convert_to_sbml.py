@@ -42,6 +42,7 @@ def convert_to_sbml(model):
 def convert_species(sbml_model, species):
     for specie in species:
         s = sbml_model.createSpecies()
+        s.initDefaults()
         s.setCompartment('c')
         s.setId(specie['name'])
         s.setInitialAmount(specie['value'])
@@ -50,6 +51,7 @@ def convert_species(sbml_model, species):
 def convert_parameters(sbml_model, parameters):
     for parameter in parameters:
         p = sbml_model.createParameter()
+        p.initDefaults()
         p.setId(parameter['name'])
         p.setValue(float(parameter['value']))
 
@@ -57,6 +59,7 @@ def convert_parameters(sbml_model, parameters):
 def convert_reactions(sbml_model, reactions):
     for reaction in reactions:
         r = sbml_model.createReaction()
+        r.initDefaults()
         r.setId(reaction['name'])
 
         _reactants = reaction['reactants']
@@ -79,6 +82,7 @@ def convert_reactants(sbml_reaction, _reactants):
 
     for name, ratio in reactants.items():
         r = sbml_reaction.createReactant()
+        r.setConstant(True)
         r.setSpecies(name)
         r.setStoichiometry(ratio)
 
@@ -96,6 +100,7 @@ def convert_products(sbml_reaction, _products):
 
     for name, ratio in products.items():
         p = sbml_reaction.createProduct()
+        p.setConstant(True)
         p.setSpecies(name)
         p.setStoichiometry(ratio)
 
