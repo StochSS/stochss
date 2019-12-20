@@ -4,7 +4,7 @@ import argparse
 import os
 import json
 from rename import get_unique_file_name
-from run_model import ModelFactory
+# from run_model import ModelFactory
 from gillespy2.sbml.SBMLimport import convert
 import gillespy2
 
@@ -13,39 +13,41 @@ user_dir = "/home/jovyan"
 
 
 def convert_to_gillespy_model(path):
-    # gpy_model, errors = convert(path)
-    # return gpy_model, errors
-    with open(path, "r") as model_file:
-        stochss_model = json.loads(model_file.read())
-        stochss_model['name'] = path.split('/').pop().split('.')[0]
-    gillespy_model = ModelFactory(stochss_model)
-    return gillespy_model.model, []
+    gpy_model, errors = convert(path)
+    return gpy_model, errors
+    # with open(path, "r") as model_file:
+    #     stochss_model = json.loads(model_file.read())
+    #     stochss_model['name'] = path.split('/').pop().split('.')[0]
+    # gillespy_model = ModelFactory(stochss_model)
+    # return gillespy_model.model, []
 
 
 def convert_to_stochss_model(stochss_model, gillespy_model, path):
-    sbml_model_file = path.split('/').pop()
-    stochss_model_file = gillespy_model.name + '.mdl'
-    stochss_model_path = get_unique_file_name(stochss_model_file, full_path.split(sbml_model_file)[0])[0]
-
-    species = gillespy_model.get_all_species()
-    stochss_species, algorithm = get_species(species)
-    stochss_model['species'].extend(stochss_species)
-    stochss_model['simulationSettings']['stochasticSettings']['algorithm'] = algorithm
-
-    parameters = gillespy_model.get_all_parameters()
-    stochss_parameters = get_parameters(parameters)
-    stochss_model['parameters'].extend(stochss_parameters)
-
-    reactions = gillespy_model.get_all_reactions()
-    stochss_reactions = get_reactions(reactions, stochss_species)
-    stochss_model['reactions'].extend(stochss_reactions)
-
-    rate_rules = gillespy_model.listOfRateRules
-    stochss_rate_rules = get_rate_rules(rate_rules, stochss_species)
-    stochss_model['rateRules'].extend(stochss_rate_rules)
-    print(stochss_model['rateRules'])
-    
     if type(gillespy_model) is gillespy2.core.gillespy2.Model:
+        sbml_model_file = path.split('/').pop()
+        stochss_model_file = gillespy_model.name + '.mdl'
+        stochss_model_path = get_unique_file_name(stochss_model_file, full_path.split(sbml_model_file)[0])[0]
+
+        species = gillespy_model.get_all_species()
+        stochss_species, algorithm = get_species(species)
+        stochss_model['species'].extend(stochss_species)
+        stochss_model['simulationSettings']['stochasticSettings']['algorithm'] = algorithm
+
+        parameters = gillespy_model.get_all_parameters()
+        stochss_parameters = get_parameters(parameters)
+        stochss_model['parameters'].extend(stochss_parameters)
+
+        reactions = gillespy_model.get_all_reactions()
+        stochss_reactions = get_reactions(reactions, stochss_species)
+        stochss_model['reactions'].extend(stochss_reactions)
+
+        rate_rules = gillespy_model.listOfRateRules
+        stochss_rate_rules = get_rate_rules(rate_rules, stochss_species)
+        stochss_model['rateRules'].extend(stochss_rate_rules)
+        
+        with open(stochss_model_path, "w") as stochss_file:
+            json.dump(stochss_model, stochss_file)
+    
         return "The SBML Model was successfully converted to a StochSS Model."
     else:
         return "ERROR! We were unable to convert the SBML Model into a StochSS Model."
@@ -225,5 +227,5 @@ if __name__ == "__main__":
     template = json.loads(args.model_template)
     gillespy_model, errors = convert_to_gillespy_model(full_path)
     msg = convert_to_stochss_model(template, gillespy_model, full_path)
-    # resp = {"message":msg,"errors":errors}
-    # print(jason.dumps(resp))
+    resp = {"message":msg,"errors":errors}
+    print(jason.dumps(resp))
