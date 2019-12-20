@@ -95,6 +95,9 @@ let treeSettings = {
     'mesh' : {
       "icon": "jstree-icon jstree-file"
     },
+    'sbml-model' : {
+      "icon": "jstree-icon jstree-file"
+    },
     'other' : {
       "icon": "jstree-icon jstree-file"
     },
@@ -122,6 +125,37 @@ let renderCreateModalHtml = (isSpatial) => {
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary ok-model-btn">OK</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+let sbmlToModelHtml = (title, errors) => {
+  for(var i = 0; i < errors.length; i++) {
+    if(errors[i].startsWith("SBML Error") || errors[i].startsWith("Error")){
+      errors[i] = "<b>Error</b>: " + errors[i]
+    }else{
+      errors[i] = "<b>Warning</b>: " + errors[i]
+    }
+  }
+
+  return `
+    <div id="sbmlToModelModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> ${title} </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${errors.join("<br>")} </p>
+          </div>
+          <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
         </div>
@@ -204,11 +238,37 @@ let FileBrowser = PageView.extend({
       }
     );
   },
-  toModel: function (o) {
+  toModel: function (o, from) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join("/stochss/api/model/to-model", o.original._path);
+    if(from === "Spatial"){
+      var endpoint = path.join("/stochss/api/spatial/to-model", o.original._path);
+    }else{
+      var endpoint = path.join("/stochss/api/sbml/to-model", o.original._path);
+    }
     xhr({uri: endpoint}, 
+      function (err, response, body) {
+        if(parentID === "#"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+        if(from === "SBML"){
+          var title = ""
+          var resp = JSON.parse(body)
+          var msg = resp.message
+          var errors = resp.errors
+          let modal = $(sbmlToModelHtml(msg, errors)).modal();
+        }
+      }
+    );
+  },
+  toSBML: function (o) {
+    var self = this;
+    var parentID = o.parent;
+    var endpoint = path.join("/stochss/api/model/to-sbml", o.original._path);
+    xhr({uri: endpoint},
       function (err, response, body) {
         if(parentID === "#"){
           $('#models-jstree').jstree().refresh()
@@ -400,7 +460,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Convert to Non Spatial",
             "action" : function (data) {
-              self.toModel(o);
+              self.toModel(o, "Spatial");
             }
           },
           "Convert to Notebook" : {
@@ -492,6 +552,15 @@ let FileBrowser = PageView.extend({
                   },
                 );
               });
+            }
+          },
+          "Convert to SBML" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Convert to SBML",
+            "action" : function (data) {
+              self.toSBML(o)
             }
           },
           "Create New Job" : {
@@ -626,8 +695,8 @@ let FileBrowser = PageView.extend({
             "label" : "Export",
             "action" : function (data) {
               self.getJsonFileForExport(o);
-	    }
-	  },
+      	    }
+      	  },
           "Duplicate" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -657,12 +726,69 @@ let FileBrowser = PageView.extend({
           },
         }
       }
+      else if (o.type === 'sbml-model') {
+        return {
+          "Open File" : {
+            "separator_before" : false,
+            "separator_after" : true,
+            "_disabled" : true,
+            "_class" : "font-weight-bolder",
+            "label" : "Open File",
+            "action" : function (data) {
+            }
+          },
+          "Export File" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Export File",
+            "action" : function (data) {
+            }
+          },
+          "Convert to Model" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Convert to Model",
+            "action" : function (data) {
+              self.toModel(o, "SBML");
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate",
+            "action" : function (data) {
+              self.duplicateFile(o)
+            }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
+        }
+      }
       else {
         return {
           "Open File" : {
             "separator_before" : false,
             "separator_after" : true,
-            "_disabled" : false,
+            "_disabled" : true,
             "_class" : "font-weight-bolder",
             "label" : "Open File",
             "action" : function (data) {
