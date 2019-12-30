@@ -1,0 +1,36 @@
+div#events.card.card-body
+
+  div
+
+    h3.editor-header Events
+
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#events-container", data-hook="collapse") -
+
+  div.collapse(class="show", id="events-container", data-hook="events")
+
+    table.table
+
+      thead
+
+        tr
+
+          th(scope="col") Name
+
+          th(scope="col") Delay
+
+          th(scope="col") Priority
+
+          th(scope="col") Trigger
+
+          th(scope="col") Initial Value
+
+          th(scope="col") Persistent
+
+          th(scope="col") Assignments
+
+          th(scope="col") Remove
+
+      tbody(data-hook="events-collection")
+
+    button.btn.btn-outline-primary(data-hook="add-event", type="button")
+      | Add Event

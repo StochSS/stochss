@@ -31,7 +31,7 @@ module.exports = Model.extend({
     parameters: Parameters,
     reactions: Reactions,
     rateRules: RateRules,
-    events: Events,
+    eventsCollection: Events,
   },
   children: {
     simulationSettings: SimulationSettings,

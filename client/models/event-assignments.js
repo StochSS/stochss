@@ -12,11 +12,11 @@ module.exports = Collection.extend({
     });
   },
   getDefaultVariable: function () {
-    var species = this.parent.parent.parent.species
+    var species = this.parent.collection.parent.species
     if(species.length > 0){
       return species.at(0);
     }else{
-      return this.parent.parent.parent.parameters.at(0)
+      return this.parent.collection.parent.parameters.at(0)
     }
   },
   removeEventAssignment: function (eventAssignment) {
