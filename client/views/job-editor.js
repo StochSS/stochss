@@ -23,7 +23,8 @@ module.exports = View.extend({
     this.model = new Model({
       name: name,
       directory: directory,
-      is_spatial: isSpatial
+      is_spatial: isSpatial,
+      isPreview: false,
     });
     this.model.fetch({
       success: function (model, response, options) {

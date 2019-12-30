@@ -196,7 +196,8 @@ def convertToNotebook(_model_path):
     # Collect .mdl Data
     try:
         with open(model_path, 'r') as json_file:
-            json_data = ast.literal_eval(json_file.read())
+            # json_data = ast.literal_eval(json_file.read())
+            json_data = json.loads(json_file.read())
     except Exception as e:
         print('Could not read file: ' + e)
 
