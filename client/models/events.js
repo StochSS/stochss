@@ -2,7 +2,7 @@ var _ = require('underscore');
 //models
 var Event = require('./event');
 //collections
-var collections = require('ampersand-collection');
+var Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: Event,
