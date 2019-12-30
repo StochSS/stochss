@@ -1083,5 +1083,6 @@
             ]
         }
     ],
-    "rateRules": []
+    "rateRules": [],
+    "events": [],
 }

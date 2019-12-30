@@ -262,5 +262,6 @@
             ]
         }
     ],
-    "rateRules": []
+    "rateRules": [],
+    "events": [],
 }

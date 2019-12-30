@@ -345,5 +345,6 @@
             ]
         }
     ],
-    "rateRules": []
+    "rateRules": [],
+    "events": [],
 }

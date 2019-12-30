@@ -33,5 +33,6 @@
     "initialConditions": [],
 	"parameters": [],
 	"reactions": [],
-	"rateRules": []
+	"rateRules": [],
+	"events": [],
 }

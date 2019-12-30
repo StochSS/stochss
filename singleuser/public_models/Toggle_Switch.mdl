@@ -194,5 +194,6 @@
             "products": []
         }
     ],
-    "rateRules": []
+    "rateRules": [],
+    "events": [],
 }
