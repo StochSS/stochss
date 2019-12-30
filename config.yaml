@@ -5,8 +5,10 @@ singleuser:
     tag: dev
   memory:
     limit: 200M
+    guarantee: 200M
   cpu:
     limit: 1
+    guarantee: .3
   storage:
     # Dynamically allocated user storage is not supported for non-cloud environments!
     #
@@ -31,10 +33,10 @@ proxy:
     nodePorts:
       http: 31212
 
-# Automatically remove user pods that have been inactive for over an hour.
-# Check every 10 minutes by default.
+# Remove inactive user pods (set to defaults)
 cull:
-  enabled: true
+  timeout: 3600
+  every: 600
 
 rbac:
   enabled: true
