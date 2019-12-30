@@ -48,6 +48,9 @@ module.exports = View.extend({
       $(this.queryByHook('advanced-settings')).collapse();
       $(this.queryByHook('advanced-settings-button')).text('-');
     }
+    if(this.model.parent.parent.isPreview){
+      this.disableTrajectoriesInput();
+    }
   },
   update: function (e) {
   },
@@ -85,6 +88,9 @@ module.exports = View.extend({
     this.model.isAdvancedSettingsOpen = value;
     this.parent.model.deterministicSettings.isAdvancedSettingsOpen = value;
   },
+  disableTrajectoriesInput: function() {
+    $(this.queryByHook("realizations-container")).find('input').prop('disabled', true);
+  },
   subviews: {
     inputRealizations: {
       hook: 'realizations-container',
@@ -97,7 +103,7 @@ module.exports = View.extend({
           tests: tests.valueTests,
           modelKey: 'realizations',
           valueType: 'number',
-          value: this.model.realizations
+          value: this.model.parent.parent.isPreview ? 1 : this.model.realizations
         });
       },
     },

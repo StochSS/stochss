@@ -39,6 +39,7 @@ module.exports = Model.extend({
     name: 'string',
     selectedReaction: 'object',
     directory: 'string',
+    isPreview: 'boolean',
   },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
