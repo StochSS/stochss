@@ -1,6 +1,7 @@
 var $ = require('jquery');
 //views
 var View = require('ampersand-view');
+var EditEvents = require('./edit-events');
 //templates
 var template = require('../templates/includes/eventsEditor.pug');
 
@@ -15,6 +16,11 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    this.renderCollection(
+      this.collection,
+      EditEvents,
+      this.queryByHook('events-collection')
+    );
   },
   update: function () {
   },
