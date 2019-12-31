@@ -1,55 +1,44 @@
+var $ = require('jquery');
 var tests = require('./tests');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
-var template = require('../templates/includes/editEvent.pug');
+var template = require('../templates/includes/eventDetails.pug');
 
 module.exports = View.extend({
   template: template,
-  bindings: {
-  },
   events: {
-    'click [data-hook=remove]' : 'removeEvent',
+    'change [data-hook=event-trigger-init-value]' : 'setTriggerInitialValue',
+    'change [data-hook=event-trigger-persistent]' : 'setTriggerPersistent',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    $(this.queryByHook('event-trigger-init-value')).prop('checked', this.model.initialValue);
+    $(this.queryByHook('event-trigger-persistent')).prop('checked', this.model.persistent);
   },
   update: function () {
   },
   updateValid: function () {
   },
-  removeEvent: function () {
-    this.remove();
-    this.collection.removeEvent(this.model);
+  setTriggerInitialValue: function (e) {
+    this.model.initialValue = e.target.checked;
+  },
+  setTriggerPersistent: function (e) {
+    this.model.persistent = e.target.checked;
   },
   subviews: {
-    inputName: {
-      hook: 'event-name-container',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'name',
-          label: '',
-          tests: tests.nameTests,
-          modelKey: 'name',
-          valueType: 'string',
-          value: this.model.name,
-        });
-      },
-    },
     inputDelay: {
-      hook: 'event-delay-container',
+      hook: 'event-delay',
       prepareView: function (el) {
         return new InputView({
           parent: this,
           required: true,
           name: 'delay',
-          label: '',
+          label: 'Delay: ',
           tests: '',
           modelKey: 'delay',
           valueType: 'string',
@@ -58,13 +47,13 @@ module.exports = View.extend({
       },
     },
     inputPriority: {
-      hook: 'event-priority-container',
+      hook: 'event-priority',
       prepareView: function (el) {
         return new InputView({
           parent: this,
           required: true,
           name: 'priority',
-          label: '',
+          label: 'Priority: ',
           tests: '',
           modelKey: 'priority',
           valueType: 'string',
@@ -72,33 +61,18 @@ module.exports = View.extend({
         });
       },
     },
-    inputTrigger: {
-      hook: 'event-trigger-container',
+    inputTriggerExpression: {
+      hook: 'event-trigger-expression',
       prepareView: function (el) {
         return new InputView({
           parent: this,
           required: true,
-          name: 'trigger',
-          label: '',
+          name: 'trigger-expression',
+          label: 'Expression: ',
           tests: '',
           modelKey: 'triggerExpression',
           valueType: 'string',
           value: this.model.triggerExpression,
-        });
-      },
-    },
-    inputAssignment: {
-      hook: 'event-assignment-container',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'assignment',
-          label: '',
-          tests: '',
-          modelKey: '',
-          valueType: 'string',
-          value: 'Assignment Container',
         });
       },
     },

@@ -17,6 +17,7 @@ module.exports = Collection.extend({
       persistent: false,
     });
     event.eventAssignments.addEventAssignment()
+    return event
   },
   getDefaultName: function () {
     var i = this.length + 1;

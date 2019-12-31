@@ -8,29 +8,25 @@ div#events.card.card-body
 
   div.collapse(class="show", id="events-container", data-hook="events")
 
-    table.table
+    div.row
 
-      thead
+      div.col-md-4.container-part
 
-        tr
+        table.table
 
-          th(scope="col") Name
+          thead
 
-          th(scope="col") Delay
+            tr
 
-          th(scope="col") Priority
+              th(scope="col") Edit
 
-          th(scope="col") Trigger
+              th(scope="col") Name
 
-          th(scope="col") Initial Value
+              th(scope="col") Remove
 
-          th(scope="col") Persistent
+          tbody(data-hook="event-listing-container")
 
-          th(scope="col") Assignments
-
-          th(scope="col") Remove
-
-      tbody(data-hook="events-collection")
+      div.col-md-8.container-part(data-hook="event-details-container")
 
     button.btn.btn-outline-primary(data-hook="add-event", type="button")
       | Add Event

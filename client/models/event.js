@@ -15,6 +15,12 @@ module.exports = State.extend({
   collections: {
     eventAssignments: EventAssignments,
   },
+  session: {
+    selected: {
+      type: 'boolean',
+      default: true,
+    },
+  },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },

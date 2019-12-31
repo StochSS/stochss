@@ -1,0 +1,25 @@
+div.row(data-hook="event-details" style="margin-top: 2px;")
+
+  div(data-hook="event-delay")
+
+  div(data-hook="event-priority")
+
+  div
+
+    h5 Trigger
+
+    div(data-hook="event-trigger-expression")
+
+    label(for="initial-value") Initial Value:
+
+    input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value")
+
+    label(for="persistent") Persistent:
+
+    input(type="checkbox", id="persistent", data-hook="event-trigger-persistent")
+
+  div
+
+    h5 Assignment
+
+    div(data-hook="event-assignments")
