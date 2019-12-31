@@ -3,6 +3,7 @@ var tests = require('./tests');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
+var EventAssignment = require('./event-assignments-editor');
 //templates
 var template = require('../templates/includes/eventDetails.pug');
 
@@ -19,10 +20,18 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     $(this.queryByHook('event-trigger-init-value')).prop('checked', this.model.initialValue);
     $(this.queryByHook('event-trigger-persistent')).prop('checked', this.model.persistent);
+    var eventAssignment = new EventAssignment({
+      collection: this.model.eventAssignments,
+    });
+    this.registerRenderSubview(eventAssignment, 'event-assignments');
   },
   update: function () {
   },
   updateValid: function () {
+  },
+  registerRenderSubview: function (view, hook) {
+    this.registerSubview(view);
+    this.renderSubview(view, this.queryByHook(hook));
   },
   setTriggerInitialValue: function (e) {
     this.model.initialValue = e.target.checked;
@@ -38,7 +47,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'delay',
-          label: 'Delay: ',
+          label: '',
           tests: '',
           modelKey: 'delay',
           valueType: 'string',
@@ -53,7 +62,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'priority',
-          label: 'Priority: ',
+          label: '',
           tests: '',
           modelKey: 'priority',
           valueType: 'string',
@@ -68,7 +77,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'trigger-expression',
-          label: 'Expression: ',
+          label: '',
           tests: '',
           modelKey: 'triggerExpression',
           valueType: 'string',

@@ -1,0 +1,18 @@
+div
+
+  table.table
+
+    thead
+
+      tr
+
+        th(scope="col") Variable
+
+        th(scope="col") Expression
+
+        th(scope="col") Remove
+
+    tbody(data-hook="event-assignments-container")
+
+  button.btn.btn-outline-primary(data-hook="add-event-assignment", type="button")
+      | Add Assignment
