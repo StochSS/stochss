@@ -1,4 +1,4 @@
-div(data-hook="event-details" style="margin-top: 2px;")
+div(data-hook="event-details")
 
   table.table.event
 
@@ -10,33 +10,29 @@ div(data-hook="event-details" style="margin-top: 2px;")
 
         th(scope="col") Priority
 
+        th(scope="col") Trigger Expression
+
       tr
 
         td: div(data-hook="event-delay")
 
         td: div(data-hook="event-priority")
 
-  h5 Trigger
-
-  table.table.event
-
-    thead
-
-      tr
-
-        th(scope="col") Expression
-
-        th(scope="col") Initial Value
-
-        th(scope="col") Persistent
-
-      tr
-
         td: div(data-hook="event-trigger-expression")
 
-        td: input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value")
+  div.row
 
-        td: input(type="checkbox", id="persistent", data-hook="event-trigger-persistent")
+    div.col-md-4
+
+      label(for="initial-value") Initial Value:
+
+      input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value", style="padding: 0.75rem;")
+
+    div.col-md-4
+
+      label(for="persistent") Persistent: 
+
+      input(type="checkbox", id="persistent", data-hook="event-trigger-persistent", style="padding: 0.75rem;")
 
   h5 Assignments
 

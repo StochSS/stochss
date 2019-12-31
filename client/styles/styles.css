@@ -28,7 +28,7 @@ span.custom {
 }
 
 .form-input {
-  width: 75%;
+  width: 100%;
 }
 
 .sidebar-nav {
@@ -160,4 +160,8 @@ span.custom {
 
 .event {
   margin-bottom: 0px;
+}
+
+.event-th .event-td {
+  padding-left: 0px !important;
 }
