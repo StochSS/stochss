@@ -4,6 +4,7 @@ var EventAssignment = require('./event-assignment');
 var Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
+  model: EventAssignment,
   addEventAssignment: function () {
     var variable = this.getDefaultVariable();
     var eventAssignment = this.add({

@@ -1,6 +1,6 @@
 //views
 var View = require('ampersand-view');
-// var EditEventAssignment = require('./edit-event-assignment');
+var EditEventAssignment = require('./edit-event-assignment');
 //templates
 var template = require('../templates/includes/eventAssignmentsEditor.pug');
 
@@ -14,11 +14,11 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    // this.renderCollection(
-    //   this.collection,
-    //   EditEventAssignment,
-    //   this.queryByHook('event-assignments-container')
-    // );
+    this.renderCollection(
+      this.collection,
+      EditEventAssignment,
+      this.queryByHook('event-assignments-container')
+    );
   },
   update: function () {
   },
