@@ -22,17 +22,23 @@ div(data-hook="event-details")
 
   div.row
 
-    div.col-md-4
+    div.col-md-3
 
       label(for="initial-value") Initial Value:
 
       input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value", style="padding: 0.75rem;")
 
-    div.col-md-4
+    div.col-md-3
 
       label(for="persistent") Persistent: 
 
       input(type="checkbox", id="persistent", data-hook="event-trigger-persistent", style="padding: 0.75rem;")
+
+    div.col-md-6
+
+      label(for="use-values-from-trigger-time") Use Values From Trigger Time: 
+
+      input(type="checkbox", id="use-values-from-trigger-time", data-hook="use-values-from-trigger-time", style="padding: 0.75rem;")
 
   h5 Assignments
 

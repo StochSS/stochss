@@ -12,6 +12,7 @@ module.exports = View.extend({
   events: {
     'change [data-hook=event-trigger-init-value]' : 'setTriggerInitialValue',
     'change [data-hook=event-trigger-persistent]' : 'setTriggerPersistent',
+    'change [data-hook=use-values-from-trigger-time]' : 'setUseValuesFromTriggerTime',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -20,6 +21,7 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     $(this.queryByHook('event-trigger-init-value')).prop('checked', this.model.initialValue);
     $(this.queryByHook('event-trigger-persistent')).prop('checked', this.model.persistent);
+    $(this.queryByHook('use-values-from-trigger-time')).prop('checked', this.model.useValuesFromTriggerTime);
     var eventAssignment = new EventAssignment({
       collection: this.model.eventAssignments,
     });
@@ -38,6 +40,9 @@ module.exports = View.extend({
   },
   setTriggerPersistent: function (e) {
     this.model.persistent = e.target.checked;
+  },
+  setUseValuesFromTriggerTime: function (e) {
+    this.model.useValuesFromTriggerTime = e.target.checked;
   },
   subviews: {
     inputDelay: {

@@ -11,10 +11,11 @@ module.exports = Collection.extend({
     var event = this.add({
       name: name,
       delay: "",
-      priority: "",
+      priority: "0",
       triggerExpression: "",
       initialValue: false,
       persistent: false,
+      useValuesFromTriggerTime: true,
     });
     event.eventAssignments.addEventAssignment()
     return event

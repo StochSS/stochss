@@ -181,6 +181,7 @@ class ModelFactory():
         trigger_expression = args['triggerExpression']
         initial_value = args['initialValue']
         persistent = args['persistent']
+        use_values_from_trigger_time = args['useValuesFromTriggerTime']
 
         try:
             trigger = EventTrigger(expression=trigger_expression, initial_value = initial_value, persistent = persistent)
@@ -190,7 +191,7 @@ class ModelFactory():
         assignments = list(map(lambda a: self.build_event_assignment(a, self.species, self.parameters), data['eventAssignments']))
 
         try:
-            return Event(name=name, delay=delay, assignments=assignments, priority=priority, trigger=trigger, use_values_from_trigger_time=True)
+            return Event(name=name, delay=delay, assignments=assignments, priority=priority, trigger=trigger, use_values_from_trigger_time=use_values_from_trigger_time)
         except:
             log.warn("Can't create an event as events are not supported")
 
