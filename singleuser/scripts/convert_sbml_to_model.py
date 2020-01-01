@@ -213,6 +213,7 @@ def get_events(events, stochss_species, stochss_parameters):
                          "triggerExpression": event.trigger.expression,
                          "initialValue": event.trigger.value,
                          "persistent": event.trigger.persistent,
+                         "useValuesFromTriggerTime": event.use_values_from_trigger_time,
                          "eventAssignment": []
                         }
 

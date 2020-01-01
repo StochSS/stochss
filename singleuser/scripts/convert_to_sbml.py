@@ -134,10 +134,11 @@ def create_equation(sbml_reaction, reaction, reactants):
         raise Exception('libsbml threw an error when parsing rate equation "{0}" for reaction "{1}"'.format(equation, reaction['name']))
 
 
-def convert_event(sbml_model, events):
+def convert_events(sbml_model, events):
     for event in events:
         e = sbml_model.createEvent()
         e.setId(event['name'])
+        e.setUseValuesFromTriggerTime(event['useValuesFromTriggerTime'])
 
         delay = event['delay'].replace('and', '&&').replace('or', '||')
         d = e.createDelay()
@@ -166,7 +167,7 @@ def convert_event(sbml_model, events):
         convert_event_assignments(event['name'], e, assignments)
 
 
-def convert_event_assignment(event_name, sbml_event, assignments):
+def convert_event_assignments(event_name, sbml_event, assignments):
     for assignment in assignments:
         a = sbml_event.createEventAssignment()
 
