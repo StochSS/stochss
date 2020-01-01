@@ -41,6 +41,10 @@ def convert_to_stochss_model(stochss_model, gillespy_model, path):
         stochss_reactions = get_reactions(reactions, stochss_species)
         stochss_model['reactions'].extend(stochss_reactions)
 
+        events = gillespy_model.listOfEvents
+        stochss_events = get_events(events, stochss_species, stochss_parameters)
+        stochss_model['eventsCollection'].extend(stochss_events)
+
         rate_rules = gillespy_model.listOfRateRules
         stochss_rate_rules = get_rate_rules(rate_rules, stochss_species)
         stochss_model['rateRules'].extend(stochss_rate_rules)
@@ -161,6 +165,10 @@ def get_specie(stochss_species, name):
     return list(filter(lambda specie: specie['name'] == name, stochss_species))[0]
 
 
+def get_parameter(stochss_parameters, name):
+    return list(filter(lambda parameter: parameter['name'] == name, stochss_parameters))[0]
+
+
 def build_annotation(stochss_reactants, stochss_products):
     annotation = ""
 
@@ -193,6 +201,48 @@ def build_annotation_element(stoich_specie):
         return name
 
 
+def get_events(events, stochss_species, stochss_parameters):
+    stochss_events = []
+
+    for name in events.keys():
+        event = events['name']
+
+        stochss_event = {"name": event.name,
+                         "delay": event.delay,
+                         "priority": event.priority,
+                         "triggerExpression": event.trigger.expression,
+                         "initialValue": event.trigger.value,
+                         "persistent": event.trigger.persistent,
+                         "eventAssignment": []
+                        }
+
+        assignments = event.assignments
+        stochss_assignments = get_event_assignments(assignments, stochss_species, stochss_parameters)
+        stochss_event['eventAssignment'].extend(stochss_assignments)
+
+        stochss_events.append(stochss_event)
+
+    return stochss_events
+
+
+def get_event_assignment(assignments, stochss_species, stochss_parameters):
+    stochss_assignments = []
+
+    for assignment in assignments:
+        try:
+            variable = get_specie(stochss_species, assignment.variable)
+        except:
+            variable = get_parameter(stochss_parameters, assignment.variable)
+
+        stochss_assignment = {"variable": variable,
+                              "expression": assignment.expression
+                             }
+
+        stochss_assignments.append(stochss_assignment)
+
+    return stochss_assignments
+
+
 def get_rate_rules(rate_rules, stochss_species):
     stochss_rate_rules = []
 
@@ -209,9 +259,6 @@ def get_rate_rules(rate_rules, stochss_species):
         stochss_rate_rules.append(stochss_rate_rule)
 
     return stochss_rate_rules
-
-
-# def get_events():
 
 
 def get_parsed_args():
