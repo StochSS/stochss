@@ -17,6 +17,12 @@ for handler in log.handlers:
 from gillespy2 import Species, Parameter, Reaction, RateRule, Model
 import numpy
 import gillespy2.core.gillespySolver
+
+try:
+    from gillespy2.core.events import EventAssignment, EventTrigger, Event
+except:
+    log.warn("Events are not supported by gillespy2!")
+
 from gillespy2.core.gillespyError import SolverError, DirectoryError, BuildError, ExecutionError
 from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
@@ -36,7 +42,7 @@ class _Model(Model):
     Build a GillesPy2 model.
     ##############################################################################
     '''
-    def __init__(self, name, species, parameters, reactions, rate_rules, endSim, timeStep, volume):
+    def __init__(self, name, species, parameters, reactions, events, rate_rules, endSim, timeStep, volume):
         '''
         Initialize and empty model and add its components.
 
@@ -50,6 +56,8 @@ class _Model(Model):
             List of GillesPy2 parameters to be added to the model.
         reactions : list
             List of GillesPy2 reactions to be added to the model.
+        events : list
+            List of GillesPy2 events to be added to the model.
         rate_rules : list
             List of GillesPy2 rate rules to be added to the model.
         endSim : int
@@ -65,6 +73,10 @@ class _Model(Model):
         self.add_parameter(parameters)
         self.add_species(species)
         self.add_reaction(reactions)
+        try:
+            self.add_event(events)
+        except:
+            log.warn("Could not add events as events are not supported.")
         self.add_rate_rule(rate_rules)
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
@@ -92,8 +104,9 @@ class ModelFactory():
         self.species = list(map(lambda s: self.build_specie(s), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
+        self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), data['eventsCollection']))
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), data['rateRules']))
-        self.model = _Model(name, self.species, self.parameters, self.reactions, self.rate_rules, endSim, timeStep, volume)
+        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, endSim, timeStep, volume)
 
     def build_specie(self, args):
         '''
@@ -126,7 +139,7 @@ class ModelFactory():
         '''
         Build a GillesPy2 reaction.
 
-        Attribites
+        Attributes
         ----------
         args : dict
             A json representation of a reaction.
@@ -147,6 +160,64 @@ class ModelFactory():
             propensity_function=propensity
         )
         return R
+
+
+    def build_event(self, args, species, parameters):
+        '''
+        Build a GillesPy2 event.
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of an event.
+        species : list
+            List of GillesPy2 species.
+        parameter : list
+            List of GillesPy2 parameters.
+        '''
+        name = args['name']
+        delay = args['delay']
+        priority = args['priority']
+        trigger_expression = args['triggerExpression']
+        initial_value = args['initialValue']
+        persistent = args['persistent']
+
+        try:
+            trigger = EventTrigger(expression=trigger_expression, initial_value = initial_value, persistent = persistent)
+        except:
+            log.warn("Can't create an event trigger as events are not supported")
+
+        assignments = list(map(lambda a: self.build_event_assignment(a, self.species, self.parameters), data['eventAssignments']))
+
+        try:
+            return Event(name=name, delay=delay, assignments=assignments, priority=priority, trigger=trigger, use_values_from_trigger_time=True)
+        except:
+            log.warn("Can't create an event as events are not supported")
+
+
+    def build_event_assignment(self, args, species, parameters):
+        '''
+        Build a GillesPy2 event assignment.
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of an event assignment.
+        species : list
+            List of GillesPy2 species.
+        parameter : list
+            List of GillesPy2 parameters.
+        '''
+        expression = args['expression']
+        variable = list(filter(lambda s: s.name == args['variable']['name'], species))
+        if not len(variable):
+            variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
+
+        try:
+            return EventAssignment(variable=variable[0], expression=expression)
+        except:
+            log.warn("Can't create an event assignment as events are not supported")
+
 
     def build_rate_rules(self, args):
         '''
