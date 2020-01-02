@@ -7,6 +7,8 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y vtk6
 
 RUN python3 -m pip install --no-cache \
+  numpy \
+  scipy \
   https://github.com/GillesPy2/GillesPy2/tarball/develop \
   vtk \
   https://github.com/spatialpy/SpatialPy/tarball/develop \
