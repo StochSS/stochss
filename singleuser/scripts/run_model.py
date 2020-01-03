@@ -232,10 +232,11 @@ class ModelFactory():
         args : dict
             A json representation of a rate rule.
         '''
-        name = args['name']
-        species = self.build_specie(args['specie'])
-        expression = args['rule']
-        return RateRule(name=name, species=species, expression=expression)
+        if not args['rule'] == "":
+            name = args['name']
+            species = self.build_specie(args['specie'])
+            expression = args['rule']
+            return RateRule(name=name, species=species, expression=expression)
 
     def build_stoich_species_dict(self, args):
         '''
