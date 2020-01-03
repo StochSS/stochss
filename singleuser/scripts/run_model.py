@@ -97,6 +97,7 @@ class ModelFactory():
         data : dict
             A json representation of a model.
         '''
+        
         name = data['name']
         timeStep = (data['simulationSettings']['timeStep'])
         endSim = data['simulationSettings']['endSim']
@@ -105,7 +106,8 @@ class ModelFactory():
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
         self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), data['eventsCollection']))
-        self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), data['rateRules']))
+        rate_rules = list(filter(lambda rr: self.is_valid_rate_rule(rr), data['rateRules']))
+        self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), rate_rules))
         self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, endSim, timeStep, volume)
 
     def build_specie(self, args):
@@ -221,6 +223,11 @@ class ModelFactory():
             return EventAssignment(variable=variable[0], expression=expression)
         except:
             log.warn("Can't create an event assignment as events are not supported")
+
+
+    def is_valid_rate_rule(self, rr):
+        if not rr['rule'] == "":
+            return rr
 
 
     def build_rate_rules(self, args):
