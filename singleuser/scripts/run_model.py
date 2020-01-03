@@ -176,7 +176,10 @@ class ModelFactory():
             List of GillesPy2 parameters.
         '''
         name = args['name']
-        delay = args['delay']
+        if not args['delay'] == "":
+            delay = args['delay']
+        else:
+            delay = None
         priority = args['priority']
         trigger_expression = args['triggerExpression']
         initial_value = args['initialValue']
@@ -188,7 +191,7 @@ class ModelFactory():
         except:
             log.warn("Can't create an event trigger as events are not supported")
 
-        assignments = list(map(lambda a: self.build_event_assignment(a, self.species, self.parameters), data['eventAssignments']))
+        assignments = list(map(lambda a: self.build_event_assignment(a, self.species, self.parameters), args['eventAssignments']))
 
         try:
             return Event(name=name, delay=delay, assignments=assignments, priority=priority, trigger=trigger, use_values_from_trigger_time=use_values_from_trigger_time)
