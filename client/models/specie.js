@@ -9,6 +9,7 @@ module.exports = State.extend({
     mode: 'string',
     switchingVal: 'number',
     isSwitchTol: 'boolean',
+    annotation: 'string',
     diffusionCoeff: 'number',
     subdomains: {
       type: 'object',

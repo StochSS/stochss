@@ -14,6 +14,7 @@ module.exports = Collection.extend({
       mode: this.parent.defaultMode,
       switchingVal: 0.03,
       isSwitchTol: true,
+      annotation: "",
       diffusionCoeff: 0.0,
       subdomains: subdomains
     });
