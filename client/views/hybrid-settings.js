@@ -42,12 +42,12 @@ module.exports = View.extend({
         value: ''
       },
     };
-    this.renderCollection(
-      this.parent.parent.species,
-      EditSpecieModeView,
-      this.queryByHook('specie-mode-container'),
-      args
-    );
+    // this.renderCollection(
+    //   this.parent.parent.species,
+    //   EditSpecieModeView,
+    //   this.queryByHook('specie-mode-container'),
+    //   args
+    // );
   },
   update: function () {
   },

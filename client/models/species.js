@@ -29,4 +29,4 @@ module.exports = Collection.extend({
   removeSpecie: function (specie) {
     this.remove(specie);
   },
-})
+});

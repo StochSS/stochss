@@ -1,6 +1,15 @@
-div
-  label.select
-    span(data-hook="label")
-    select(data-hook="select-specie-mode")
-      span.message.message-below.message-error(data-hook="message-container")
-        p(data-hook="message-text")
+tr
+
+  td: span=this.model.name
+
+  td: div(data-hook="specie-mode")
+
+  td: div(data-hook="switching-value")
+
+  td
+    input(type="radio", name="switch-method", data-hook="switching-tol", checked) 
+    |  Is Switching Tolerance
+
+  td
+    input(type="radio", name="switch-method", data-hook="switching-max")
+    |  Is Maximum for Switching

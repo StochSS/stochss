@@ -1,37 +1,53 @@
+var tests = require('./tests');
 //views
+var View = require('ampersand-view');
 var SelectView = require('ampersand-select-view');
+var InputView = require('./input');
 //templates
 var template = require('../templates/includes/editSpecieMode.pug');
 
-module.exports = SelectView.extend({
-  template: template(),
-  bindings: {
-    'model.name': {
-      type: 'value',
-      hook: 'label'
-    },
-  },
+module.exports = View.extend({
+  template: template,
   events: {
-    'change select' : 'selectChangeHandler'
   },
   initialize: function () {
-    SelectView.prototype.initialize.apply(this, arguments);
-    this.label = this.model.name;
-    this.value = this.model.mode || 'dynamic';
+    View.prototype.initialize.apply(this, arguments);
   },
   render: function () {
-    SelectView.prototype.render.apply(this, arguments);
+    View.prototype.render.apply(this, arguments);
+    var modeSelectView = new SelectView({
+      label: '',
+      name: 'mode',
+      required: true,
+      idAttributes: 'cid',
+      options: ['continuous','discrete','dynamic'],
+      value: this.model.mode,
+    });
+    this.registerRenderSubview(modeSelectView, "specie-mode")
   },
-  selectChangeHandler: function (e) {
-    var previousMode = this.model.mode
-    var currentMode = e.target.selectedOptions.item(0).text;
-    this.model.mode = currentMode;
-    this.updateRateRules(previousMode, currentMode);
+  update: function () {
   },
-  updateRateRules: function (previous, current) {
-    if(current === 'continuous')
-      this.parent.parent.rateRules.addRateRule(this.label.value);
-    else if(previous === 'continuous')
-      this.parent.parent.rateRules.removeRateRule(this.label.value);
+  updateValid: function () {
+  },
+  registerRenderSubview: function (view, hook) {
+    this.registerSubview(view);
+    this.renderSubview(view, this.queryByHook(hook));
+  },
+  subviews: {
+    inputName: {
+      hook: 'switching-value',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'switching-value',
+          label: '',
+          tests: tests.valueTests,
+          modelKey: 'switchValue',
+          valueType: 'string',
+          value: this.model.switchValue,
+        });
+      },
+    },
   },
 });

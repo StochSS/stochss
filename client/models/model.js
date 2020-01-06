@@ -22,7 +22,11 @@ module.exports = Model.extend({
     );
   },
   props: {
-    is_spatial: 'boolean'
+    is_spatial: 'boolean',
+    defaultMode: {
+      type: 'string',
+      default: '',
+    },
   },
   collections: {
     species: Species,
