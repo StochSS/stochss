@@ -124,6 +124,10 @@ span.custom {
   width: 150%;
 }
 
+.modal-content.default-species {
+  width: 60%;
+}
+
 .spinner-border {
   display: none;
   position: relative;

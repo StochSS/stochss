@@ -4,7 +4,7 @@ var View = require('ampersand-view');
 var SelectView = require('ampersand-select-view');
 var InputView = require('./input');
 //templates
-var template = require('../templates/includes/editSpecieMode.pug');
+var template = require('../templates/includes/editAdvancedSpecie.pug');
 
 module.exports = View.extend({
   template: template,

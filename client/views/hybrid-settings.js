@@ -3,7 +3,6 @@ var tests = require('./tests');
 var View = require('ampersand-view');
 var InputView = require('./input');
 var SelectView = require('ampersand-select-view');
-var EditSpecieModeView = require('./edit-specie-mode');
 var RateRulesView = require('./rate-rules-editor');
 //templates
 var template = require('../templates/includes/hybridSettings.pug');
@@ -28,26 +27,7 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
   },
   render: function () {
-    var self = this;
     View.prototype.render.apply(this);
-    var args = {
-      viewOptions: {
-        name: 'specie-mode',
-        label: '',
-        require: true,
-        textAttribute: 'mode',
-        eagerValidate: true,
-        idAttribute: 'mode',
-        options: ['continuous', 'discrete', 'dynamic'],
-        value: ''
-      },
-    };
-    // this.renderCollection(
-    //   this.parent.parent.species,
-    //   EditSpecieModeView,
-    //   this.queryByHook('specie-mode-container'),
-    //   args
-    // );
   },
   update: function () {
   },

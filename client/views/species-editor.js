@@ -3,7 +3,7 @@ var $ = require('jquery');
 var View = require('ampersand-view');
 var EditNonspatialSpecieView = require('./edit-specie');
 var EditSpatialSpecieView = require('./edit-spatial-specie');
-var EditSpecieMode = require('./edit-specie-mode');
+var EditAdvancedSpecie = require('./edit-advanced-specie');
 //templates
 var nonspatialSpecieTemplate = require('../templates/includes/speciesEditor.pug');
 var spatialSpecieTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
@@ -12,26 +12,29 @@ let renderDefaultModeModalHtml = () => {
   return `
     <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
-        <div class="modal-content">
+        <div class="modal-content default-species">
           <div class="modal-header">
             <h5 class="modal-title">Default Species Mode</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <button type="button" class="close close-modal" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            <label for="continuous">Continuous</label>
-            <input type="radio" id="continuous" name="default-mode" data-name="continuous">
-            <label for="discrete">Discrete</label>
-            <input type="radio" id="discrete" name="default-mode" data-name="discrete">
-            <label for="dynamic">Dynamic</label>
-            <input type="radio" id="dynamic" name="default-mode" data-name="dynamic">
-            <label for="automatic">Let Us Choose For You</label>
-            <input type="radio" id="automatic" name="default-mode" data-name="automatic">
+            <div>
+              <input type="radio" id="continuous" name="default-mode" data-name="continuous"> Continuous
+            </div>
+            <div>
+              <input type="radio" id="discrete" name="default-mode" data-name="discrete"> Discrete
+            </div>
+            <div>
+              <input type="radio" id="dynamic" name="default-mode" data-name="dynamic"> Dynamic
+            </div>
+            <div>
+              <input type="radio" id="automatic" name="default-mode" data-name="automatic"> Let Us Choose For You
+            </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn">OK</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary ok-model-btn" disabled>OK</button>
           </div>
         </div>
       </div>
@@ -64,7 +67,8 @@ module.exports = View.extend({
   },
   update: function () {
   },
-  updateValid: function () {
+  updateValid: function (e) {
+    console.log("checked")
   },
   getInitialDefaultSpeciesMode: function () {
     var self = this;
@@ -73,11 +77,13 @@ module.exports = View.extend({
     }
     let modal = $(renderDefaultModeModalHtml()).modal();
     let okBtn = document.querySelector('#defaultModeModal .ok-model-btn');
-    let continuousInput = document.querySelector('#defaultModeModal #continuous');
-    let discreteInput = document.querySelector('#defaultModeModal #discrete');
-    let dynamicInput = document.querySelector('#defaultModeModal #dynamic');
-    let automaticInput = document.querySelector('#defaultModeModal #automatic');
     var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced', 'automatic':'automatic'}
+    $(document).on('change', 'input:radio[name="default-mode"]', function (event) {
+      var disabled = document.querySelector('#defaultModeModal .ok-model-btn').disabled
+      if(disabled){
+        document.querySelector('#defaultModeModal .ok-model-btn').disabled = false;
+      }
+    });
     okBtn.addEventListener('click', function (e) {
       var defaultMode = $('input[name=default-mode]:checked')[0].dataset.name
       modal.modal('hide')
@@ -105,7 +111,7 @@ module.exports = View.extend({
     if(this.speciesAdvancedView) {
       this.speciesAdvancedView.remove()
     }
-    this.speciesAdvancedView = this.renderCollection(this.collection, EditSpecieMode, this.queryByHook('edit-species-mode'));
+    this.speciesAdvancedView = this.renderCollection(this.collection, EditAdvancedSpecie, this.queryByHook('edit-species-mode'));
   },
   addSpecies: function () {
     var subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
