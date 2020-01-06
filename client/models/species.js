@@ -11,7 +11,9 @@ module.exports = Collection.extend({
     var specie = this.add({
       name: name,
       value: 0,
-      mode: 'dynamic',
+      mode: this.parent.defaultMode,
+      switchingVal: 0.03,
+      isSwitchTol: true,
       diffusionCoeff: 0.0,
       subdomains: subdomains
     });

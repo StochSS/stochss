@@ -7,9 +7,9 @@ tr
   td: div(data-hook="switching-value")
 
   td
-    input(type="radio", name="switch-method", data-hook="switching-tol", checked) 
+    input(type="radio", name=this.model.name + "-switch-method", data-hook="switching-tol") 
     |  Is Switching Tolerance
 
   td
-    input(type="radio", name="switch-method", data-hook="switching-max")
-    |  Is Maximum for Switching
+    input(type="radio", name=this.model.name + "-switch-method", data-hook="switching-min")
+    |  Is Minimum Deterministic Value for Switching

@@ -1,4 +1,5 @@
 var tests = require('./tests');
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 var SelectView = require('ampersand-select-view');
@@ -24,6 +25,11 @@ module.exports = View.extend({
       value: this.model.mode,
     });
     this.registerRenderSubview(modeSelectView, "specie-mode")
+    if(this.model.isSwitchTol){
+      $(this.queryByHook('switching-tol')).prop('checked', true);
+    }else{
+      $(this.queryByHook('switching-min')).prop('checked', true);
+    }
   },
   update: function () {
   },
@@ -43,9 +49,9 @@ module.exports = View.extend({
           name: 'switching-value',
           label: '',
           tests: tests.valueTests,
-          modelKey: 'switchValue',
+          modelKey: 'switchingVal',
           valueType: 'string',
-          value: this.model.switchValue,
+          value: this.model.switchingVal,
         });
       },
     },

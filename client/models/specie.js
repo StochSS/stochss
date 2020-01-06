@@ -7,6 +7,8 @@ module.exports = State.extend({
     name: 'string',
     value: 'number',
     mode: 'string',
+    switchingVal: 'number',
+    isSwitchTol: 'boolean',
     diffusionCoeff: 'number',
     subdomains: {
       type: 'object',
