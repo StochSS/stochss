@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/stochss/stochss#readme",
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.12.0",
     "ampersand-app": "^2.0.0",
     "ampersand-collection": "^2.0.2",
     "ampersand-events": "^2.0.2",
@@ -43,7 +44,6 @@
     "xhr": "^2.5.0"
   },
   "devDependencies": {
-    "@fortawesome/fontawesome-free": "^5.12.0",
     "clean-webpack-plugin": "^2.0.2",
     "css-loader": "^2.1.1",
     "express": "^4.17.0",

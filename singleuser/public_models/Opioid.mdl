@@ -728,5 +728,6 @@
             ]
         }
     ],
-    "rateRules": []
+    "rateRules": [],
+    "eventsCollection": []
 }

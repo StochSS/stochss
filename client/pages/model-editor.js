@@ -8,6 +8,7 @@ var SpeciesEditorView = require('../views/species-editor');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
 var ReactionsEditorView = require('../views/reactions-editor');
+var EventsEditorView = require('../views/events-editor');
 var SimSettingsView = require('../views/simulation-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 //models
@@ -67,7 +68,8 @@ let ModelEditor = PageView.extend({
     this.model = new Model({
       name: name,
       directory: directory,
-      is_spatial: isSpatial
+      is_spatial: isSpatial,
+      isPreview: true,
     });
     this.model.fetch({
       success: function (model, response, options) {
@@ -132,6 +134,9 @@ let ModelEditor = PageView.extend({
     var reactionsEditor = new ReactionsEditorView({
       collection: this.model.reactions
     });
+    var eventsEditor = new EventsEditorView({
+      collection: this.model.eventsCollection
+    });
     var simSettings = new SimSettingsView({
       parent: this,
       model: this.model.simulationSettings,
@@ -145,6 +150,7 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
+    this.registerRenderSubview(eventsEditor, 'events-editor-container');
     this.registerRenderSubview(simSettings, 'sim-settings-container');
     this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
   },

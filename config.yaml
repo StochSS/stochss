@@ -1,4 +1,43 @@
 
+singleuser:
+  image:
+    name: "SINGLEUSER_IMAGE_NAME"
+    tag: dev
+  memory:
+    limit: 200M
+    guarantee: 200M
+  cpu:
+    limit: 1
+    guarantee: .3
+  storage:
+    # Dynamically allocated user storage is not supported for non-cloud environments!
+    #
+    # Jupyterhub for k8s expects a storage class to be available that will
+    # allocate new Persistent Volumes for each user. This would be fine if we 
+    # were using a cloud-based storage class which can dynamically provision
+    # new virtual volumes for each user. However, local storage classes
+    # behave differently. A local PV is a physical hard disk attached to the node,
+    # and dynamic allocation is not supported.
+    type: none
+#    capacity: 1Gi
+#    dynamic:
+#      storageClass: standard
+
+debug:
+  enabled: true
+
+proxy:
+  secretToken: "SECRET"
+  service:
+    type: NodePort
+    nodePorts:
+      http: 31212
+
+# Remove inactive user pods (set to defaults)
+cull:
+  timeout: 3600
+  every: 600
+
 rbac:
   enabled: true
 
@@ -7,9 +46,7 @@ hub:
     name: "HUB_IMAGE_NAME"
     tag: dev
   db:
-    # use in-memory for minikube
     type: sqlite-memory
-  # volume mount for stochss files (PVC must already be available)
   extraVolumes:
     - name: stochss
       hostPath:
@@ -97,31 +134,4 @@ hub:
         "/stochss/jupyterhub_templates/",
         "/usr/local/share/jupyterhub/static/stochss/"
       ]
-
-
-singleuser:
-  image:
-    name: "SINGLEUSER_IMAGE_NAME"
-    tag: dev
-#  memory:
-#    limit: 200M
-#  cpu:
-#    limit: 1
-  storage:
-    # no storage for minikube
-    type: none
-#    capacity: 1Gi
-#    dynamic:
-#      storageClass: standard
-
-debug:
-  enabled: true
-
-proxy:
-  secretToken: "SECRET"
-  service:
-    type: NodePort
-    nodePorts:
-      http: 31212
-    
 

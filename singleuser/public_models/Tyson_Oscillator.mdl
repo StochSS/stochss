@@ -260,5 +260,6 @@
             "products": []
         }
     ],
-    "rateRules": []
+    "rateRules": [],
+    "eventsCollection": []
 }

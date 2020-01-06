@@ -28,13 +28,18 @@ span.custom {
 }
 
 .form-input {
-  margin-left: 10px;
-  width: 50%;
+  width: 100%;
 }
 
 .sidebar-nav {
   padding: 9px 0;
   font-size: 14px;
+}
+
+.get-started {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav {
@@ -57,6 +62,10 @@ span.custom {
   padding-right: 5px;
   padding-bottom: 10px;
   display: inline-block;
+}
+
+.container-part {
+  max-width: none;
 }
 
 .information-btn {
@@ -147,4 +156,12 @@ span.custom {
   position: absolute !important;
   right: 15px;
   left: auto;
+}
+
+.event {
+  margin-bottom: 0px;
+}
+
+.event-th .event-td {
+  padding-left: 0px !important;
 }

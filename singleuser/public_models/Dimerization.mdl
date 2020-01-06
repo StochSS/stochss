@@ -154,5 +154,6 @@
             ]
         }
     ],
-    "rateRules": []
+    "rateRules": [],
+    "eventsCollection": []
 }
