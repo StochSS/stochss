@@ -1,0 +1,32 @@
+div#events.card.card-body
+
+  div
+
+    h3.editor-header Events
+
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#events-container", data-hook="collapse") -
+
+  div.collapse(class="show", id="events-container", data-hook="events")
+
+    div.row
+
+      div.col-md-4.container-part
+
+        table.table
+
+          thead
+
+            tr
+
+              th(scope="col") Edit
+
+              th(scope="col") Name
+
+              th(scope="col") Remove
+
+          tbody(data-hook="event-listing-container")
+
+      div.col-md-8.container-part(data-hook="event-details-container")
+
+    button.btn.btn-outline-primary(data-hook="add-event", type="button")
+      | Add Event

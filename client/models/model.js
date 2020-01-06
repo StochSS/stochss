@@ -11,6 +11,7 @@ var InitialConditions = require('./initial-conditions');
 var Parameters = require('./parameters');
 var Reactions = require('./reactions');
 var RateRules = require('./rate-rules');
+var Events = require('./events');
 
 module.exports = Model.extend({
   url: function () {
@@ -29,7 +30,8 @@ module.exports = Model.extend({
     initialConditions: InitialConditions,
     parameters: Parameters,
     reactions: Reactions,
-    rateRules: RateRules
+    rateRules: RateRules,
+    eventsCollection: Events,
   },
   children: {
     simulationSettings: SimulationSettings,

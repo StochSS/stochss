@@ -1,0 +1,45 @@
+div(data-hook="event-details")
+
+  table.table.event
+
+    thead
+
+      tr
+
+        th(scope="col") Delay
+
+        th(scope="col") Priority
+
+        th(scope="col") Trigger Expression
+
+      tr
+
+        td: div(data-hook="event-delay")
+
+        td: div(data-hook="event-priority")
+
+        td: div(data-hook="event-trigger-expression")
+
+  div.row
+
+    div.col-md-3
+
+      label(for="initial-value") Initial Value:
+
+      input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value", style="padding: 0.75rem;")
+
+    div.col-md-3
+
+      label(for="persistent") Persistent: 
+
+      input(type="checkbox", id="persistent", data-hook="event-trigger-persistent", style="padding: 0.75rem;")
+
+    div.col-md-6
+
+      label(for="use-values-from-trigger-time") Use Values From Trigger Time: 
+
+      input(type="checkbox", id="use-values-from-trigger-time", data-hook="use-values-from-trigger-time", style="padding: 0.75rem;")
+
+  h5 Assignments
+
+  div(data-hook="event-assignments")
