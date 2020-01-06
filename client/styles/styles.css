@@ -162,3 +162,14 @@ span.custom {
   right: 15px;
   left: auto;
 }
+
+.default-mode {
+  margin: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concentration-btn, .population-btn, .hybrid-btn {
+  width: 100%;
+}

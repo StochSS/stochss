@@ -20,21 +20,17 @@ let renderDefaultModeModalHtml = () => {
             </button>
           </div>
           <div class="modal-body">
-            <div>
-              <input type="radio" id="continuous" name="default-mode" data-name="continuous"> Continuous
+            <div class="default-mode">
+              <button type="button" class="btn btn-primary concentration-btn">Concentration</button>
             </div>
-            <div>
-              <input type="radio" id="discrete" name="default-mode" data-name="discrete"> Discrete
+            <div class="default-mode">
+              <button type="button" class="btn btn-primary population-btn">Population</button>
             </div>
-            <div>
-              <input type="radio" id="dynamic" name="default-mode" data-name="dynamic"> Dynamic
-            </div>
-            <div>
-              <input type="radio" id="automatic" name="default-mode" data-name="automatic"> Let Us Choose For You
+            <div class="default-mode">
+              <button type="button" class="btn btn-primary hybrid-btn">Hybrid Concentration/Population</button>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn" disabled>OK</button>
           </div>
         </div>
       </div>
@@ -47,7 +43,6 @@ module.exports = View.extend({
     'change [data-hook=all-continuous]' : 'getDefaultSpeciesMode',
     'change [data-hook=all-discrete]' : 'getDefaultSpeciesMode',
     'change [data-hook=advanced]' : 'getDefaultSpeciesMode',
-    'change [data-hook=automatic]' : 'getDefaultSpeciesMode',
     'click [data-hook=add-species]' : 'addSpecies',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
@@ -76,20 +71,24 @@ module.exports = View.extend({
       document.querySelector('#defaultModeModal').remove()
     }
     let modal = $(renderDefaultModeModalHtml()).modal();
-    let okBtn = document.querySelector('#defaultModeModal .ok-model-btn');
-    var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced', 'automatic':'automatic'}
-    $(document).on('change', 'input:radio[name="default-mode"]', function (event) {
-      var disabled = document.querySelector('#defaultModeModal .ok-model-btn').disabled
-      if(disabled){
-        document.querySelector('#defaultModeModal .ok-model-btn').disabled = false;
-      }
+    let continuous = document.querySelector('#defaultModeModal .concentration-btn');
+    let discrete = document.querySelector('#defaultModeModal .population-btn');
+    let dynamic = document.querySelector('#defaultModeModal .hybrid-btn');
+    continuous.addEventListener('click', function (e) {
+      self.setInitialDefaultMode(modal, "continuous");
     });
-    okBtn.addEventListener('click', function (e) {
-      var defaultMode = $('input[name=default-mode]:checked')[0].dataset.name
-      modal.modal('hide')
-      $(self.queryByHook(dataHooks[defaultMode])).prop('checked', true)
-      self.setAllSpeciesModes(defaultMode)
+    discrete.addEventListener('click', function (e) {
+      self.setInitialDefaultMode(modal, "discrete");
     });
+    dynamic.addEventListener('click', function (e) {
+      self.setInitialDefaultMode(modal, "dynamic");
+    });
+  },
+  setInitialDefaultMode: function (modal, mode) {
+    var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'}
+    modal.modal('hide')
+    $(this.queryByHook(dataHooks[mode])).prop('checked', true)
+    this.setAllSpeciesModes(mode)
   },
   getDefaultSpeciesMode: function (e) {
     this.setAllSpeciesModes(e.target.dataset.name)
