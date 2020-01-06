@@ -23,7 +23,7 @@ module.exports = View.extend({
       name: 'mode',
       required: true,
       idAttributes: 'cid',
-      options: ['continuous','discrete','dynamic'],
+      options: ['consentration','population','dynamic'],
       value: this.model.mode,
     });
     this.registerRenderSubview(modeSelectView, "specie-mode")
