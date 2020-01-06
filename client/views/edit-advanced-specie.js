@@ -10,6 +10,8 @@ var template = require('../templates/includes/editAdvancedSpecie.pug');
 module.exports = View.extend({
   template: template,
   events: {
+    'change [data-hook=switching-tol]' : 'setSwitchingType',
+    'change [data-hook=switching-min]' : 'setSwitchingType',
   },
   initialize: function () {
     View.prototype.initialize.apply(this, arguments);
@@ -39,6 +41,9 @@ module.exports = View.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
+  setSwitchingType: function (e) {
+    this.model.isSwitchTol = $(this.queryByHook('switching-tol')).is(":checked")
+  },
   subviews: {
     inputName: {
       hook: 'switching-value',
@@ -50,7 +55,7 @@ module.exports = View.extend({
           label: '',
           tests: tests.valueTests,
           modelKey: 'switchingVal',
-          valueType: 'string',
+          valueType: 'number',
           value: this.model.switchingVal,
         });
       },
