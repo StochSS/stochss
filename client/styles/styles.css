@@ -165,12 +165,13 @@ span.custom {
 .default-mode {
   margin: 0.75rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: left;
+  justify-content: left;
 }
 
 .concentration-btn, .population-btn, .hybrid-btn {
-  width: 100%;
+  width: 240px;
+  margin-right: 0.75rem;
 }
 .event {
   margin-bottom: 0px;

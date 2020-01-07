@@ -49,7 +49,13 @@ module.exports = View.extend({
     this.model.mode = modeDict[value]
   },
   setSwitchingType: function (e) {
-    this.model.isSwitchTol = $(this.queryByHook('switching-tol')).is(":checked")
+    this.model.isSwitchTol = $(this.queryByHook('switching-tol')).is(":checked");
+    if(this.model.isSwitchTol){
+      this.model.switchingVal = 0.03;
+    }else{
+      this.model.switchingVal = 100;
+    }
+    this.parent.renderSpeciesAdvancedView();
   },
   subviews: {
     inputName: {

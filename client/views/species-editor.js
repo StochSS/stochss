@@ -12,7 +12,7 @@ let renderDefaultModeModalHtml = () => {
   return `
     <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
-        <div class="modal-content default-species">
+        <div class="modal-content info">
           <div class="modal-header">
             <h5 class="modal-title">Default Species Mode</h5>
             <button type="button" class="close close-modal" data-dismiss="modal" aria-label="Close">
@@ -22,12 +22,15 @@ let renderDefaultModeModalHtml = () => {
           <div class="modal-body">
             <div class="default-mode">
               <button type="button" class="btn btn-primary concentration-btn">Concentration</button>
+              <p>Description For Concentration</p>
             </div>
             <div class="default-mode">
               <button type="button" class="btn btn-primary population-btn">Population</button>
+              <p>Description For Population</p>
             </div>
             <div class="default-mode">
               <button type="button" class="btn btn-primary hybrid-btn">Hybrid Concentration/Population</button>
+              <p>Description For Hybrid Concentration/Population</p>
             </div>
           </div>
           <div class="modal-footer">
@@ -55,6 +58,9 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     if(this.collection.parent.defaultMode === ""){
       this.getInitialDefaultSpeciesMode();
+    }else{
+      var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'}
+      $(this.queryByHook(dataHooks[this.collection.parent.defaultMode])).prop('checked', true)
     }
     var editSpecieView = !this.collection.parent.is_spatial ? EditNonspatialSpecieView : EditSpatialSpecieView;
     this.renderCollection(this.collection, editSpecieView, this.queryByHook('specie-list'));
