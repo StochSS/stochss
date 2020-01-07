@@ -1,5 +1,6 @@
 {
     "is_spatial": false,
+    "defaultMode": "discrete",
     "simulationSettings": {
         "is_stochastic": true,
         "endSim": 100,
@@ -33,7 +34,10 @@
         {
             "name": "X",
             "value": 197,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -43,7 +47,10 @@
         {
             "name": "Y",
             "value": 255,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -101,7 +108,10 @@
                     "specie": {
                         "name": "X",
                         "value": 197,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -131,7 +141,10 @@
                     "specie": {
                         "name": "X",
                         "value": 197,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -162,7 +175,10 @@
                     "specie": {
                         "name": "X",
                         "value": 197,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -177,7 +193,10 @@
                     "specie": {
                         "name": "X",
                         "value": 197,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -190,7 +209,10 @@
                     "specie": {
                         "name": "Y",
                         "value": 255,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -220,7 +242,10 @@
                     "specie": {
                         "name": "Y",
                         "value": 255,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -248,7 +273,10 @@
                     "specie": {
                         "name": "Y",
                         "value": 255,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",

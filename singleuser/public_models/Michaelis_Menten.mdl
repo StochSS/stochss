@@ -1,5 +1,6 @@
 {
     "is_spatial": false,
+    "defaultMode": "discrete",
     "simulationSettings": {
         "is_stochastic": true,
         "endSim": 100,
@@ -33,7 +34,10 @@
         {
             "name": "A",
             "value": 301,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -43,7 +47,10 @@
         {
             "name": "B",
             "value": 120,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -53,7 +60,10 @@
         {
             "name": "C",
             "value": 0,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -63,7 +73,10 @@
         {
             "name": "D",
             "value": 0,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -107,7 +120,10 @@
                     "specie": {
                         "name": "A",
                         "value": 301,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -120,7 +136,10 @@
                     "specie": {
                         "name": "B",
                         "value": 120,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -135,7 +154,10 @@
                     "specie": {
                         "name": "C",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -165,7 +187,10 @@
                     "specie": {
                         "name": "C",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -180,7 +205,10 @@
                     "specie": {
                         "name": "A",
                         "value": 301,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -193,7 +221,10 @@
                     "specie": {
                         "name": "B",
                         "value": 120,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -223,7 +254,10 @@
                     "specie": {
                         "name": "C",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -238,7 +272,10 @@
                     "specie": {
                         "name": "B",
                         "value": 120,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -251,7 +288,10 @@
                     "specie": {
                         "name": "D",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",

@@ -1,5 +1,6 @@
 {
     "is_spatial": false,
+    "defaultMode": "discrete",
     "simulationSettings": {
         "is_stochastic": true,
         "endSim": 100000,
@@ -33,7 +34,10 @@
         {
             "name": "s1",
             "value": 300,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -43,7 +47,10 @@
         {
             "name": "s2",
             "value": 300,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -53,7 +60,10 @@
         {
             "name": "s3",
             "value": 300,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -63,7 +73,10 @@
         {
             "name": "s4",
             "value": 300,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -103,7 +116,10 @@
                     "specie": {
                         "name": "s1",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -116,7 +132,10 @@
                     "specie": {
                         "name": "s4",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -131,7 +150,10 @@
                     "specie": {
                         "name": "s4",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -161,7 +183,10 @@
                     "specie": {
                         "name": "s2",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -174,7 +199,10 @@
                     "specie": {
                         "name": "s4",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -189,7 +217,10 @@
                     "specie": {
                         "name": "s3",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",

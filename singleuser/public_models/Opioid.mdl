@@ -1,5 +1,6 @@
 {
     "is_spatial": false,
+    "defaultMode": "discrete",
     "simulationSettings": {
         "is_stochastic": true,
         "endSim": 200,
@@ -33,7 +34,10 @@
         {
             "name": "Susceptible",
             "value": 200,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -43,7 +47,9 @@
         {
             "name": "Prescribed_User",
             "value": 0,
-            "mode": "dynamic",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -53,7 +59,10 @@
         {
             "name": "Addicted",
             "value": 0,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -63,7 +72,10 @@
         {
             "name": "Rehab",
             "value": 0,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -73,7 +85,10 @@
         {
             "name": "Natural_Deaths",
             "value": 0,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -83,7 +98,10 @@
         {
             "name": "Addicted_Deaths",
             "value": 0,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchingVal": 0.03,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -155,7 +173,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -170,7 +191,10 @@
                     "specie": {
                         "name": "Prescribed_User",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -200,7 +224,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -215,7 +242,10 @@
                     "specie": {
                         "name": "Addicted",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -245,7 +275,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -260,7 +293,10 @@
                     "specie": {
                         "name": "Addicted",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -290,7 +326,10 @@
                     "specie": {
                         "name": "Prescribed_User",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -305,7 +344,10 @@
                     "specie": {
                         "name": "Addicted",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -335,7 +377,10 @@
                     "specie": {
                         "name": "Prescribed_User",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -350,7 +395,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -380,7 +428,10 @@
                     "specie": {
                         "name": "Addicted",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -395,7 +446,10 @@
                     "specie": {
                         "name": "Rehab",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -425,7 +479,10 @@
                     "specie": {
                         "name": "Rehab",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -440,7 +497,10 @@
                     "specie": {
                         "name": "Addicted",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -470,7 +530,10 @@
                     "specie": {
                         "name": "Rehab",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -485,7 +548,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -515,7 +581,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -530,7 +599,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -543,7 +615,10 @@
                     "specie": {
                         "name": "Natural_Deaths",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -573,7 +648,10 @@
                     "specie": {
                         "name": "Prescribed_User",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -588,7 +666,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -601,7 +682,10 @@
                     "specie": {
                         "name": "Natural_Deaths",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -631,7 +715,10 @@
                     "specie": {
                         "name": "Rehab",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -646,7 +733,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -659,7 +749,10 @@
                     "specie": {
                         "name": "Natural_Deaths",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -689,7 +782,10 @@
                     "specie": {
                         "name": "Addicted",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -704,7 +800,10 @@
                     "specie": {
                         "name": "Susceptible",
                         "value": 200,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -717,7 +816,10 @@
                     "specie": {
                         "name": "Addicted_Deaths",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchingVal": 0.03,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
