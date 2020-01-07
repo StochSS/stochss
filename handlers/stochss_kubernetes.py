@@ -32,7 +32,7 @@ def load_kube_client(user):
     return core_v1_api.CoreV1Api(), user_pod
 
 
-def read_from_pod(client, pod, file_path):
+def read_from_pod(client, pod, file_path, isJSON=True):
     '''
     This function uses kubernetes API to read target file with cat. This
     is a helper function for use with data get/pull requests.
@@ -53,8 +53,11 @@ def read_from_pod(client, pod, file_path):
     resp = stream(client.connect_get_namespaced_pod_exec, pod, 'jhub',
                             command=exec_cmd, stderr=True, 
                             stdin=False, stdout=True, tty=False)
-    resp = ast.literal_eval(resp)
-    return json.dumps(resp)
+    if isJSON:
+        resp = ast.literal_eval(resp)
+        return json.dumps(resp)
+    else:
+        return resp
 
     
 def write_to_pod(client, pod, file_path, to_write):

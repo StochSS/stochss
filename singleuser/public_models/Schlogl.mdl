@@ -200,5 +200,6 @@
             ]
         }
     ],
-    "rateRules": []
+    "rateRules": [],
+    "eventsCollection": []
 }

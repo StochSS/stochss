@@ -28,7 +28,6 @@ span.custom {
 }
 
 .form-input {
-  margin-left: 10px;
   width: 100%;
 }
 
@@ -65,7 +64,7 @@ span.custom {
   display: inline-block;
 }
 
-.reation-part {
+.container-part {
   max-width: none;
 }
 
@@ -172,4 +171,11 @@ span.custom {
 
 .concentration-btn, .population-btn, .hybrid-btn {
   width: 100%;
+}
+.event {
+  margin-bottom: 0px;
+}
+
+.event-th .event-td {
+  padding-left: 0px !important;
 }

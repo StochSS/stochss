@@ -33,6 +33,9 @@ def convert_to_sbml(model):
     reactions = model['reactions']
     convert_reactions(sbml_model, reactions)
 
+    events = model['eventsCollection']
+    convert_events(sbml_model, events)
+
     rate_rules = model['rateRules']
     convert_rate_rules(sbml_model, rate_rules)
     
@@ -42,6 +45,7 @@ def convert_to_sbml(model):
 def convert_species(sbml_model, species):
     for specie in species:
         s = sbml_model.createSpecies()
+        s.initDefaults()
         s.setCompartment('c')
         s.setId(specie['name'])
         s.setInitialAmount(specie['value'])
@@ -50,6 +54,7 @@ def convert_species(sbml_model, species):
 def convert_parameters(sbml_model, parameters):
     for parameter in parameters:
         p = sbml_model.createParameter()
+        p.initDefaults()
         p.setId(parameter['name'])
         p.setValue(float(parameter['value']))
 
@@ -57,6 +62,7 @@ def convert_parameters(sbml_model, parameters):
 def convert_reactions(sbml_model, reactions):
     for reaction in reactions:
         r = sbml_model.createReaction()
+        r.initDefaults()
         r.setId(reaction['name'])
 
         _reactants = reaction['reactants']
@@ -79,6 +85,7 @@ def convert_reactants(sbml_reaction, _reactants):
 
     for name, ratio in reactants.items():
         r = sbml_reaction.createReactant()
+        r.setConstant(True)
         r.setSpecies(name)
         r.setStoichiometry(ratio)
 
@@ -96,6 +103,7 @@ def convert_products(sbml_reaction, _products):
 
     for name, ratio in products.items():
         p = sbml_reaction.createProduct()
+        p.setConstant(True)
         p.setSpecies(name)
         p.setStoichiometry(ratio)
 
@@ -118,14 +126,59 @@ def create_equation(sbml_reaction, reaction, reactants):
             name0, name1 = list(reactants.keys())
             equation = "{0} * {1} * {2}".format(rate['name'], name0, name1)
     else:
-        equation = reaction['propensity']
-        equation = equation.replace("and", "&&")
-        equation = equation.replace("or", "||")
+        equation = reaction['propensity'].replace("and", "&&").replace("or", "||")
 
     try:
         k.setMath(libsbml.parseL3Formula(equation))
     except Exception as error:
         raise Exception('libsbml threw an error when parsing rate equation "{0}" for reaction "{1}"'.format(equation, reaction['name']))
+
+
+def convert_events(sbml_model, events):
+    for event in events:
+        e = sbml_model.createEvent()
+        e.setId(event['name'])
+        e.setUseValuesFromTriggerTime(event['useValuesFromTriggerTime'])
+
+        delay = event['delay'].replace('and', '&&').replace('or', '||')
+        d = e.createDelay()
+        try:
+            d.setMath(libsbml.parseL3Formula(delay))
+        except Exception as error:
+            raise Exception('libsbml threw an error when parsing delay equation "{0}" for event "{1}"'.format(delay, event['name']))
+
+        priority = event['priority'].replace('and', '&&').replace('or', '||')
+        p = e.createPriority()
+        try:
+            p.setMath(libsbml.parseL3Formula(priority))
+        except Exception as error:
+            raise Exception('libsbml threw an error when parsing priority equation "{0}" for event "{1}"'.format(priority, event['name']))
+
+        trigger_expression = event['triggerExpression'].replace('and','&&').replace('or','||')
+        t = e.createTrigger()
+        try:
+            t.setMath(libsbml.parseL3Formula(trigger_expression))
+        except Exception as error:
+            raise Exception('libsbml threw an error when parsing trigger equation "{0}" for event "{1}"'.format(trigger_expression, event['name']))
+        t.setInitialValue(event['initialValue'])
+        t.setPersistent(event['persistent'])
+
+        assignments = event['eventAssignments']
+        convert_event_assignments(event['name'], e, assignments)
+
+
+def convert_event_assignments(event_name, sbml_event, assignments):
+    for assignment in assignments:
+        a = sbml_event.createEventAssignment()
+
+        variable = assignment['variable']
+        a.setVariable(variable['name'])
+
+        expression = assignment['expression'].replace('and','&&').replace('or','||')
+        try:
+            a.setMath(libsbml.parseL3Formula(expression))
+        except Exception as error:
+            raise Exception('libsbml threw an error when parsing assignment equation "{0}" for event "{1}"'.format(assignment, event_name))
 
 
 def convert_rate_rules(sbml_model, rules):

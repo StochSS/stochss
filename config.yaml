@@ -80,7 +80,10 @@ hub:
         DuplicateModelHandler, \
         RenameAPIHandler, \
         ConvertToSpatialAPIHandler, \
-        ConvertToModelAPIHandler
+        ConvertToModelAPIHandler, \
+        SBMLToModelAPIHandler, \
+        ModelToSBMLAPIHandler, \
+        DownloadAPIHandler
         
       # Model API handlers
       from handlers.models import \
@@ -107,7 +110,9 @@ hub:
           (r"/stochss/api/model/duplicate/(.+)\/?", DuplicateModelHandler),
           (r"/stochss/api/models/to-notebook/(.+)\/?", ModelToNotebookHandler),
           (r"/stochss/api/model/to-spatial/(.+)\/?", ConvertToSpatialAPIHandler),
-          (r"/stochss/api/model/to-model/(.+)\/?", ConvertToModelAPIHandler),
+          (r"/stochss/api/model/to-sbml/(.+)\/?", ModelToSBMLAPIHandler),
+          (r"/stochss/api/spatial/to-model/(.+)\/?", ConvertToModelAPIHandler),
+          (r"/stochss/api/sbml/to-model/(.+)\/?", SBMLToModelAPIHandler),
           (r"/stochss/api/jobs/save-job/(\w+)\/?(.+)\/?", SaveJobAPIHandler),
           (r"/stochss/api/jobs/run-job/(\w+)\/?(.+)\/?", RunJobAPIHandler),
           (r"/stochss/api/jobs/job-info(.+)\/?", JobInfoAPIHandler),
@@ -116,6 +121,7 @@ hub:
           (r"/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
           (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
           (r"/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
+          (r"/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
           # Pages
           (r"/stochss\/?", HomeHandler),
           (r"/stochss/models\/?$", ModelBrowserHandler),
