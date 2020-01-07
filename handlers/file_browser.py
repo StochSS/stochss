@@ -171,6 +171,34 @@ class DuplicateModelHandler(BaseHandler):
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write(json.dumps(resp))
 
+
+class DuplicateDirectoryHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for creating directory duplicates in user pod.
+    ##############################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, path):
+        '''
+        Send Get request for duplicating target directory in user pod.  This method 
+        utilizes the kubernetes python api to invoke the duplicate.py module of
+        the user container (stored in [UserPod]:/usr/local/bin).
+
+        Attributes
+        ----------
+        path : str
+            Path to target directory within user pod container.
+
+        '''
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        exec_cmd = ['duplicate.py', path, '-d']
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write(json.dumps(resp))
+
         
 class RenameAPIHandler(BaseHandler):
     '''

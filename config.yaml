@@ -78,6 +78,7 @@ hub:
         DeleteFileAPIHandler, \
         MoveFileAPIHandler, \
         DuplicateModelHandler, \
+        DuplicateDirectoryHandler, \
         RenameAPIHandler, \
         ConvertToSpatialAPIHandler, \
         ConvertToModelAPIHandler, \
@@ -122,6 +123,7 @@ hub:
           (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
           (r"/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
           (r"/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
+          (r"/stochss/api/directory/duplicate/(.+)\/?", DuplicateDirectoryHandler),
           # Pages
           (r"/stochss\/?", HomeHandler),
           (r"/stochss/models\/?$", ModelBrowserHandler),

@@ -208,10 +208,14 @@ let FileBrowser = PageView.extend({
       })
     }
   },
-  duplicateFile: function(o) {
+  duplicateFileOrDirectory: function(o, isDirectory) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join("/stochss/api/model/duplicate", o.original._path);
+    if(isDirectory){
+      var endpoint = path.join("/stochss/api/directory/duplicate", o.original._path);
+    }else{
+      var endpoint = path.join("/stochss/api/model/duplicate", o.original._path);
+    }
     xhr({uri: endpoint}, 
       function (err, response, body) {
         if(parentID === "#"){
@@ -382,6 +386,15 @@ let FileBrowser = PageView.extend({
               self.renameNode(o);
             }
           },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate",
+            "action" : function (data) {
+              self.duplicateFileOrDirectory(o, true)
+            }
+          },
           "create_model" : {
             "label" : "Create Model",
             "separator_before" : false,
@@ -466,7 +479,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFile(o)
+              self.duplicateFileOrDirectory(o, false)
             }
           },
           "Convert to Non Spatial" : {
@@ -534,7 +547,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFile(o)
+              self.duplicateFileOrDirectory(o, false)
             }
           },
           "Convert to Spatial" : {
@@ -718,7 +731,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFile(o)
+              self.duplicateFileOrDirectory(o, false)
             }
           },
           "Rename" : {
@@ -791,7 +804,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFile(o)
+              self.duplicateFileOrDirectory(o, false)
             }
           },
           "Delete" : {
@@ -831,7 +844,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFile(o)
+              self.duplicateFileOrDirectory(o, false)
             }
           },
           "Delete" : {
