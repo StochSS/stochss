@@ -565,6 +565,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Convert to Notebook",
             "action" : function (data) {
+              console.log(o.original._path)
               var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
               xhr({ uri: endpoint },
                     function (err, response, body) {

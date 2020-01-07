@@ -21,9 +21,9 @@ USER jovyan
 
 WORKDIR /home/jovyan
 
-RUN rmdir work && mkdir -p Models Notebooks Jobs Models/Examples
+RUN rmdir work && mkdir -p Examples
 
-COPY --chown=jovyan:users public_models/* Models/Examples/
+COPY --chown=jovyan:users public_models Examples/
 
 # Overwrite the default page template for the jupyter notebook
 COPY --chown=jovyan:users page.html /opt/conda/lib/python3.6/site-packages/notebook/templates/

@@ -22,7 +22,7 @@ def convert_to_gillespy_model(path):
     # return gillespy_model.model, []
 
 
-def convert_to_stochss_model(stochss_model, gillespy_model, path):
+def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
     if type(gillespy_model) is gillespy2.core.gillespy2.Model:
         sbml_model_file = path.split('/').pop()
         stochss_model_file = gillespy_model.name + '.mdl'
