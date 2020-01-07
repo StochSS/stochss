@@ -4,7 +4,7 @@ USER root
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get install -y vtk6
+RUN apt-get update && apt-get install -y vtk6 g++ make
 
 RUN python3 -m pip install --no-cache \
   numpy \
