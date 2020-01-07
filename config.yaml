@@ -82,7 +82,8 @@ hub:
         ConvertToSpatialAPIHandler, \
         ConvertToModelAPIHandler, \
         SBMLToModelAPIHandler, \
-        ModelToSBMLAPIHandler
+        ModelToSBMLAPIHandler, \
+        DownloadAPIHandler
         
       # Model API handlers
       from handlers.models import \
@@ -120,6 +121,7 @@ hub:
           (r"/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
           (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
           (r"/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
+          (r"/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
           # Pages
           (r"/stochss\/?", HomeHandler),
           (r"/stochss/models\/?$", ModelBrowserHandler),

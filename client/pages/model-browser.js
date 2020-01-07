@@ -333,6 +333,13 @@ let FileBrowser = PageView.extend({
       self.exportToJsonFile(resp, o.original.text);
     });
   },
+  getFileForExport: function (o) {
+    var self = this;
+    var endpoint = path.join("/stochss/api/file/download", o.original._path);
+    xhr({uri: endpoint}, function (err, response, body) {
+      self.exportToFile(body, o.original.text);
+    });
+  },
   exportToJsonFile: function (fileData, fileName) {
     let dataStr = JSON.stringify(fileData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
@@ -341,6 +348,14 @@ let FileBrowser = PageView.extend({
     let linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataURI);
     linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  },
+  exportToFile: function (fileData, fileName) {
+    let dataURI = 'data:text/plain;charset=utf-8,' + encodeURIComponent(fileData);
+
+    let linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataURI);
+    linkElement.setAttribute('download', fileName);
     linkElement.click();
   },
   setupJstree: function () {
@@ -731,18 +746,25 @@ let FileBrowser = PageView.extend({
           "Open File" : {
             "separator_before" : false,
             "separator_after" : true,
-            "_disabled" : true,
+            "_disabled" : false,
             "_class" : "font-weight-bolder",
             "label" : "Open File",
             "action" : function (data) {
+              var filePath = o.original._path
+              var endpoint = path.join('/stochss/api/user/');
+              xhr({ uri: endpoint }, function (err, response, body) {
+                var openPath = path.join("/user/", body, "/edit/", filePath)
+                window.open(openPath, '_blank')
+              });
             }
           },
           "Export File" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : true,
+            "_disabled" : false,
             "label" : "Export File",
             "action" : function (data) {
+              self.getFileForExport(o);
             }
           },
           "Convert to Model" : {
@@ -854,6 +876,12 @@ let FileBrowser = PageView.extend({
             window.open(notebookPath, '_blank')
           },
         );
+      }else if(file.endsWith('.sbml')){
+        var endpoint = path.join('/stochss/api/user/');
+        xhr({ uri: endpoint }, function (err, response, body) {
+          var openPath = path.join("/user/", body, "/edit/", _path)
+          window.open(openPath, '_blank')
+        });
       }else if(file.endsWith('.job')){
         window.location.href = path.join("/hub/stochss/jobs/edit", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){

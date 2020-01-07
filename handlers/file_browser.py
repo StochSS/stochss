@@ -320,3 +320,27 @@ class SBMLToModelAPIHandler(BaseHandler):
         self.write(resp)
 
         
+class DownloadAPIHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for downloading plain text files to the users download directory.
+    ##############################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, path):
+        '''
+        Send Get request to get the file data in user pod for download. 
+        This method utilizes the kubernetes python api.
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the target sbml file.
+
+        '''
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        resp = stochss_kubernetes.read_from_pod(client, user_pod, path, isJSON=False)
+        self.write(resp)
