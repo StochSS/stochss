@@ -9,11 +9,14 @@ RUN apt-get update && apt-get install -y vtk6 g++ make
 RUN python3 -m pip install --no-cache \
   numpy \
   scipy \
-  https://github.com/GillesPy2/GillesPy2/tarball/develop \
+  python-libsbml \
   vtk \
   https://github.com/spatialpy/SpatialPy/tarball/develop \
   pygmsh==5.0.2 \
   meshio==2.3.10 
+
+RUN python3 -m pip install --no-cache --force-reinstall \
+  https://github.com/GillesPy2/GillesPy2/tarball/develop
 
 RUN apt-get update && apt-get install -y screen vim
 
