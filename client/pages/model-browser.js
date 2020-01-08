@@ -367,7 +367,12 @@ let FileBrowser = PageView.extend({
       if (Boolean(input.value)) {
         if(isModel) {
           let modelName = input.value + '.mdl';
-          let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName);
+          var modelPath;
+          if(modelName.includes('/')){
+            modelPath = path.join("/hub/stochss/models/edit", modelName);
+          }else{
+            modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName);
+          }
           window.location.href = modelPath;
         }else{
           let dirName = input.value;

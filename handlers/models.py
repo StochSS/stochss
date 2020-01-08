@@ -53,8 +53,12 @@ class JsonFileAPIHandler(BaseHandler):
             with open(new_path, 'r') as json_file:
                 data = json_file.read()
                 to_write = json.loads(str(data))
-                stochss_kubernetes.write_to_pod(client,
-                    user_pod, full_path, to_write)
+            
+            directories = os.path.dirname(full_path).replace("\ ", " ")
+            exec_cmd = ['mkdir', '-p', '-v', '{0}'.format(directories)]
+            stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+
+            stochss_kubernetes.write_to_pod(client, user_pod, full_path, to_write)
 
         self.write(to_write) # Send data to client
                 
