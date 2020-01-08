@@ -40,8 +40,7 @@ class ModelBrowserFileList(BaseHandler):
         checkUserOrRaise(self) # Authenticate User
         user = self.current_user.name # Get User Name
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Get Kubernetes API+UserPod
-        path = path.replace(" ", "\ ")
-        exec_cmd = ['ls.py', path] # /usr/local/bin/ls.py in UserPod
+        exec_cmd = ['ls.py', '{0}'.format(path)] # /usr/local/bin/ls.py in UserPod
 
         # Utilize Kubernetes API to execute exec_cmd on user pod and return
         # response to variable to populate the js-tree
@@ -372,3 +371,32 @@ class DownloadAPIHandler(BaseHandler):
         client, user_pod = stochss_kubernetes.load_kube_client(user)
         resp = stochss_kubernetes.read_from_pod(client, user_pod, path, isJSON=False)
         self.write(resp)
+
+
+class CreateDirectoryHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for creating a new directory or path of directories.
+    ##############################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, directories):
+        '''
+        Send Get request to get the file data in user pod for download. 
+        This method utilizes the kubernetes python api.
+
+        Attributes
+        ----------
+        directories : str
+            Directory or path of directories to be created if needed.
+
+        '''
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        exec_cmd = ['mkdir', '-p', '-v', '{0}'.format(directories)]
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write(resp)
+
+    

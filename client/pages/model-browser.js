@@ -107,14 +107,17 @@ let treeSettings = {
 
 
 // Using a bootstrap modal to input model names for now
-let renderCreateModalHtml = (isSpatial) => {
-  let modelTypeText = isSpatial ? 'Spatial' : 'Non-Spatial';
+let renderCreateModalHtml = (isModel, isSpatial) => {
+  var titleText = 'Directory';
+  if(isModel){
+    titleText = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
+  }
   return `
     <div id="newModalModel" class="modal" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">New ${modelTypeText} Model</h5>
+            <h5 class="modal-title">New ${titleText}</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -169,8 +172,7 @@ let FileBrowser = PageView.extend({
   template: template,
   events: {
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
-    'click [data-hook=new-model]' : 'newModel',
-    'click [data-hook=new-spatial-model]' : 'newSpatialModel',
+    'click [data-hook=make-directory]' : 'handlerMakeDirBtnClick',
   },
   render: function () {
     var self = this;
@@ -283,25 +285,6 @@ let FileBrowser = PageView.extend({
       }
     );
   },
-  newModel: function (e) {
-    let isSpatial = e.srcElement.dataset.modeltype === "spatial"
-    let modal = $(renderCreateModalHtml(isSpatial)).modal();
-    let okBtn = document.querySelector('#newModalModel .ok-model-btn');
-    let input = document.querySelector('#newModalModel #modelNameInput');
-    let modelName;
-    okBtn.addEventListener('click', (e) => {
-      if (Boolean(input.value)) {
-        var modelName = ""
-        if (isSpatial){
-          modelName = input.value + '.smdl';
-        }else{
-          modelName = input.value + '.mdl';  
-        }
-        let modelPath = path.join("/hub/stochss/models/edit/", modelName)
-        window.location.href = modelPath;
-      }
-    })
-  },
   renameNode: function (o) {
     var self = this
     var text = o.text;
@@ -362,6 +345,49 @@ let FileBrowser = PageView.extend({
     linkElement.setAttribute('download', fileName);
     linkElement.click();
   },
+  handlerMakeDirBtnClick: function (e) {
+    this.newModelOrDirectory(undefined, false, false);
+  },
+  newModelOrDirectory: function (o, isModel, isSpatial) {
+    var self = this
+    if(document.querySelector('#newModalModel')) {
+      document.querySelector('#newModalModel').remove()
+    }
+    let modal = $(renderCreateModalHtml(isModel, isSpatial)).modal();
+    let okBtn = document.querySelector('#newModalModel .ok-model-btn');
+    let input = document.querySelector('#newModalModel #modelNameInput');
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    let modelName;
+    okBtn.addEventListener('click', function (e) {
+      if (Boolean(input.value)) {
+        if(isModel) {
+          let modelName = input.value + '.mdl';
+          let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName);
+          window.location.href = modelPath;
+        }else{
+          let dirName = input.value;
+          var parentPath = Boolean(o) ? o.original._path : "/";
+          let endpoint = path.join("/stochss/api/directory/create", parentPath, dirName);
+          xhr({uri:endpoint}, function (err, response, body) {
+            if(Boolean(o) && o.parent !== "#"){
+              console.log(o.parent)
+              var node = $('#models-jstree').jstree().get_node(o.parent);
+              console.log(node)
+              $('#models-jstree').jstree().refresh_node(node);
+            }else{
+              self.refreshJSTree()
+            }
+          });
+          modal.modal('hide')
+        }
+      }
+    });
+  },
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -395,6 +421,15 @@ let FileBrowser = PageView.extend({
               self.duplicateFileOrDirectory(o, true)
             }
           },
+          "Create_Directory" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Create Directory",
+            "action" : function (data) {
+              self.newModelOrDirectory(o, false, false);
+            }
+          },
           "create_model" : {
             "label" : "Create Model",
             "separator_before" : false,
@@ -416,27 +451,7 @@ let FileBrowser = PageView.extend({
                 "separator_before" : false,
                 "separator_after" : false,
                 "action" : function (data) {
-                  if(document.querySelector('#newModalModel')) {
-                    document.querySelector('#newModalModel').remove()
-                  }
-                  let modal = $(renderCreateModalHtml(false)).modal();
-                  let okBtn = document.querySelector('#newModalModel .ok-model-btn');
-                  let input = document.querySelector('#newModalModel #modelNameInput');
-                  input.addEventListener("keyup", function (event) {
-                    if(event.keyCode === 13){
-                      event.preventDefault();
-                      okBtn.click();
-                    }
-                  });
-                  let modelName;
-                  okBtn.addEventListener('click', function (e) {
-                    console.log("Ok button clicked")
-                    if (Boolean(input.value)) {
-                      let modelName = input.value + '.mdl';
-                      let modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName)
-                      window.location.href = modelPath;
-                    }
-                  });
+                  self.newModelOrDirectory(o, true, false);
                 }
               } 
             }
