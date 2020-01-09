@@ -65,6 +65,7 @@ let treeSettings = {
         xhr({uri: endpoint}, function(err, response, body) {
           if(body.startsWith("Success!")) {
             node.original._path = path.join(newDir, file)
+            $('#models-jstree').jstree().refresh_node(par);
           }
         });
       }
