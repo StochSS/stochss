@@ -127,7 +127,7 @@ let renderCreateModalHtml = (isModel, isSpatial, disabled) => {
             <label for="modelNameInput">Name:</label>
             <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
             <div>
-              <input type="radio" id="in-user-dir" name="dir-source" ${disabled}> Create ${titleText} in user directory
+              <input type="radio" id="in-user-dir" name="dir-source" ${disabled}> Create ${titleText} in root directory
             </div>
             <div>
               <input type="radio" id="in-selected-dir" name="dir-source" checked ${disabled}> Create ${titleText} in selected directory
@@ -212,8 +212,12 @@ let FileBrowser = PageView.extend({
     if(answer){
       var endpoint = path.join("/stochss/api/file/delete", o.original._path)
       xhr({uri: endpoint}, function(err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(o.parent);
-        $('#models-jstree').jstree().refresh_node(node);
+        if(o.parent !== "#"){
+          var node = $('#models-jstree').jstree().get_node(o.parent);
+          $('#models-jstree').jstree().refresh_node(node);
+        }else{
+          $('#models-jstree').jstree().refresh();
+        }
       })
     }
   },

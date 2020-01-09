@@ -134,7 +134,7 @@ class MoveFileAPIHandler(BaseHandler):
         client, user_pod = stochss_kubernetes.load_kube_client(user)
         old_path = "/home/jovyan/{0}".format(data.split('/<--MoveTo-->')[0])
         new_path = "/home/jovyan/{0}".format(data.split('/<--MoveTo-->').pop())
-        exec_cmd = ['mv', old_path, new_path]
+        exec_cmd = ['mv', '{0}'.format(old_path), '{0}'.format(new_path)]
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         if not len(resp):
             self.write("Success! {0} was moved to {1}.")
