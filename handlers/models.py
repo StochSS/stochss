@@ -127,6 +127,8 @@ class RunModelAPIHandler(BaseHandler):
         results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(str(results))
         # Send data back to client
-        self.write(results)
-
+        if results:
+            self.write(results)
+        else:
+            self.write("running->{0}".format(outfile))
 
