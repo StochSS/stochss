@@ -15,7 +15,7 @@ class ModelBrowserHandler(BaseHandler):
 
   @web.authenticated
   async def get(self):
-    html = self.render_template("stochss-model-browser.html")
+    html = self.render_template("stochss-file-browser.html")
     self.finish(html)
 
 
