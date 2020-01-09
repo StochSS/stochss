@@ -68,6 +68,7 @@ module.exports = View.extend({
     var endpoint = path.join('/stochss/api/models/run/', 'start', 'none', model.directory);
     var self = this;
     xhr({ uri: endpoint }, function (err, response, body) {
+      self.outfile = body.split('->').pop()
       self.getResults(body)
     });
   },
@@ -83,12 +84,11 @@ module.exports = View.extend({
     loader.style.display = "none";
     el.style.display = "block";
   },
-  getResults: function (body) {
+  getResults: function (data) {
     var self = this;
     var model = this.model;
     setTimeout(function () {
-      var outfile = body.split("->").pop()
-      endpoint = path.join('/stochss/api/models/run/', 'read', outfile, model.directory);
+      endpoint = path.join('/stochss/api/models/run/', 'read', self.outfile, model.directory);
       xhr({ uri: endpoint }, function (err, response, body) {
         if(!body.startsWith('running')){
           var data = JSON.parse(body);
