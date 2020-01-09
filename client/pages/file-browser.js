@@ -108,7 +108,7 @@ let treeSettings = {
 
 
 // Using a bootstrap modal to input model names for now
-let renderCreateModalHtml = (isModel, isSpatial, disabled) => {
+let renderCreateModalHtml = (isModel, isSpatial, show) => {
   var titleText = 'Directory';
   if(isModel){
     titleText = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
@@ -126,12 +126,14 @@ let renderCreateModalHtml = (isModel, isSpatial, disabled) => {
           <div class="modal-body">
             <label for="modelNameInput">Name:</label>
             <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
-            <div>
-              <input type="radio" id="in-user-dir" name="dir-source" ${disabled}> Create ${titleText} in root directory
-            </div>
-            <div>
-              <input type="radio" id="in-selected-dir" name="dir-source" checked ${disabled}> Create ${titleText} in selected directory
-            </div>
+            <div class="collapse ${show}">
+              <div>
+                <input type="radio" id="in-user-dir" name="dir-source" checked > Create ${titleText} in root directory
+              </div>
+              <div>
+                <input type="radio" id="in-selected-dir" name="dir-source" > Create ${titleText} in selected directory
+              </div>
+	    </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary ok-model-btn">OK</button>
@@ -361,7 +363,7 @@ let FileBrowser = PageView.extend({
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
-    let disabled = o === undefined ? 'disabled' : ''
+    let disabled = o === undefined ? '' : 'show'
     if(document.querySelector('#newModalModel')) {
       document.querySelector('#newModalModel').remove()
     }
