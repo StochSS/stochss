@@ -456,7 +456,7 @@ if __name__ == "__main__":
             os.remove(outfile)
             os.remove(outfile + ".done")
         else:
-            print("running")
+            print("running->{0}".format(outfile))
     log_stream.close()
 
 
