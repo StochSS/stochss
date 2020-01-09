@@ -97,7 +97,7 @@ module.exports = View.extend({
           }
           self.plotResults(data.results);
         }else{
-          getResults(body);
+          self.getResults(body);
         }
       });
     }, 2000);
