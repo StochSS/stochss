@@ -4,16 +4,19 @@ USER root
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get install -y vtk6
+RUN apt-get update && apt-get install -y vtk6 g++ make
 
 RUN python3 -m pip install --no-cache \
   numpy \
   scipy \
-  https://github.com/GillesPy2/GillesPy2/tarball/develop \
+  python-libsbml \
   vtk \
   https://github.com/spatialpy/SpatialPy/tarball/develop \
   pygmsh==5.0.2 \
   meshio==2.3.10 
+
+RUN python3 -m pip install --no-cache --force-reinstall \
+  https://github.com/GillesPy2/GillesPy2/tarball/develop
 
 RUN apt-get update && apt-get install -y screen vim
 
@@ -21,9 +24,9 @@ USER jovyan
 
 WORKDIR /home/jovyan
 
-RUN rmdir work && mkdir -p Models Notebooks Jobs Models/Examples
+RUN rmdir work && mkdir -p Examples
 
-COPY --chown=jovyan:users public_models/* Models/Examples/
+COPY --chown=jovyan:users public_models Examples/
 
 # Overwrite the default page template for the jupyter notebook
 COPY --chown=jovyan:users page.html /opt/conda/lib/python3.6/site-packages/notebook/templates/

@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 from os import path
-from shutil import copyfile
+from shutil import copyfile, copytree
 
 
 user_dir = '/home/jovyan'
@@ -25,8 +25,11 @@ def get_unqiue_file_name(_path):
     ext = '.' + file.split('.').pop()
     if '-copy' in file:
         name = file.split('-copy')[0]
-    else:
+    elif '.' in file:
         name = file.split(ext)[0]
+    else:
+        name = file
+        ext = ""
 
     # Check if the file is an original of at least the second copy
     if not '-copy' in file or '-copy(' in file:
@@ -49,7 +52,7 @@ def get_unqiue_file_name(_path):
     return _path.replace(file, copy_file)
 
 
-def duplicate(_path, unique_file_name):
+def duplicate(_path, unique_file_name, is_directory):
     '''
     Copies the target file with a unique file name in the same directory 
     as the target file.
@@ -61,7 +64,10 @@ def duplicate(_path, unique_file_name):
     unique_file_name : str
         File name to use for the copied file.
     '''
-    copyfile(_path, unique_file_name)
+    if is_directory:
+        copytree(_path, unique_file_name)
+    else:
+        copyfile(_path, unique_file_name)
     return "The model {0} has been successfully copied as {1}".format(_path, unique_file_name)
 
 
@@ -92,7 +98,8 @@ def get_parsed_args():
 
     '''
     parser = argparse.ArgumentParser(description="Copy the file with a '-copy' added before the file extension.")
-    parser.add_argument('file_path', help="The path from the user directory to the file being duplicated.")
+    parser.add_argument('file_path', help="The path from the user directory to the object being duplicated.")
+    parser.add_argument('-d', '--is_directory', action="store_true", help="Indicates that a directory is being copied.")
     return parser.parse_args()
 
 
@@ -100,5 +107,5 @@ if __name__ == "__main__":
     args = get_parsed_args()
     full_path = path.join(user_dir, args.file_path)
     unique_file_path = get_unqiue_file_name(full_path)
-    message = duplicate(full_path, unique_file_path)
+    message = duplicate(full_path, unique_file_path, args.is_directory)
     print(message)

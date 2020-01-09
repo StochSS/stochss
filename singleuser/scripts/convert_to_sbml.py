@@ -4,6 +4,7 @@ import libsbml
 import json
 import argparse
 import os
+from rename import get_unique_file_name
 
 
 user_dir = "/home/jovyan"
@@ -222,7 +223,7 @@ if __name__ == "__main__":
     model_file = path.split('/').pop()
     model_name = model_file.split('.')[0]
     sbml_file = model_name + ".sbml"
-    sbml_path = path.replace(model_file, sbml_file)
+    sbml_path = get_unique_file_name(sbml_file, path.split(model_file)[0])[0]
     model = get_stochss_model(path)
     model['name'] = model_name
     sbml_doc = convert_to_sbml(model)

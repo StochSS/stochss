@@ -6,6 +6,7 @@ import nbformat
 import argparse
 from nbformat import v4 as nbf
 from os import path
+from rename import get_unique_file_name
 
 
 user_dir = '/home/jovyan'
@@ -25,7 +26,7 @@ def generate_imports_cell(json_data):
             # Stochastic, use specified stochastic solver
             algorithm = json_data['simulationSettings']['stochasticSettings']['algorithm']
             algorithm_map = {
-                    'SSA': 'from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver',
+                    'SSA': '',
                     'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver',
                     'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver'
                     }
@@ -141,11 +142,11 @@ def generate_run_cell(json_data):
 
             # Select Solver
             solver_map = {
-                    'SSA': 'SSACSolver',
-                    'Tau-Leaping': 'BasicTauLeapingSolver',
-                    'Hybrid-Tau-Leaping': 'BasicTauHybridSolver'
+                    'SSA': '',
+                    'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
+                    'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, '
                     }
-            run_cell += 'solver={0}'.format(solver_map[algorithm])
+            run_cell += '{0}'.format(solver_map[algorithm])
 
             # Append Settings
             settings_map = {
@@ -165,7 +166,7 @@ def generate_run_cell(json_data):
                     settings[settings_map[algorithm]][remap_keys[key]] = settings[settings_map[algorithm]].pop(key) 
             
             #Parse settings for algorithm
-            algorithm_settings =  [', {0}={1}'.format(key, val) for key, val in settings[settings_map[algorithm]].items()]
+            algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings[settings_map[algorithm]].items()]
             for item in algorithm_settings:
                 run_cell += item
 
@@ -190,8 +191,9 @@ def generate_run_cell(json_data):
 def convertToNotebook(_model_path):
 
     model_path = path.join(user_dir,_model_path)
-    name = model_path.split('/').pop().split('.')[0]
-    dest_path = model_path.split(name)[0]
+    file = model_path.split('/').pop()
+    name = file.split('.')[0]
+    dest_path = model_path.split(file)[0]
     
     # Collect .mdl Data
     try:
@@ -220,7 +222,7 @@ def convertToNotebook(_model_path):
     nb = nbf.new_notebook(cells=cells)
 
     # Open and write to file
-    dest_file = path.join(dest_path, '{}.ipynb'.format(name))
+    dest_file = get_unique_file_name('{}.ipynb'.format(name), dest_path)[0]
     with open(dest_file, 'w') as f:
         nbformat.write(nb, f, version=4)
     f.close()

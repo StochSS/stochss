@@ -78,12 +78,14 @@ hub:
         DeleteFileAPIHandler, \
         MoveFileAPIHandler, \
         DuplicateModelHandler, \
+        DuplicateDirectoryHandler, \
         RenameAPIHandler, \
         ConvertToSpatialAPIHandler, \
         ConvertToModelAPIHandler, \
         SBMLToModelAPIHandler, \
         ModelToSBMLAPIHandler, \
-        DownloadAPIHandler
+        DownloadAPIHandler, \
+        CreateDirectoryHandler
         
       # Model API handlers
       from handlers.models import \
@@ -122,6 +124,8 @@ hub:
           (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
           (r"/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
           (r"/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
+          (r"/stochss/api/directory/duplicate/(.+)\/?", DuplicateDirectoryHandler),
+          (r"/stochss/api/directory/create/(.+)\/?", CreateDirectoryHandler),
           # Pages
           (r"/stochss\/?", HomeHandler),
           (r"/stochss/models\/?$", ModelBrowserHandler),
