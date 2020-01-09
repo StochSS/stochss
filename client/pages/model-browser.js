@@ -107,7 +107,7 @@ let treeSettings = {
 
 
 // Using a bootstrap modal to input model names for now
-let renderCreateModalHtml = (isModel, isSpatial) => {
+let renderCreateModalHtml = (isModel, isSpatial, disabled) => {
   var titleText = 'Directory';
   if(isModel){
     titleText = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
@@ -125,6 +125,12 @@ let renderCreateModalHtml = (isModel, isSpatial) => {
           <div class="modal-body">
             <label for="modelNameInput">Name:</label>
             <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
+            <div>
+              <input type="radio" id="in-user-dir" name="dir-source" ${disabled}> Create ${titleText} in user directory
+            </div>
+            <div>
+              <input type="radio" id="in-selected-dir" name="dir-source" checked ${disabled}> Create ${titleText} in selected directory
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary ok-model-btn">OK</button>
@@ -350,12 +356,14 @@ let FileBrowser = PageView.extend({
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
+    let disabled = o === undefined ? 'disabled' : ''
     if(document.querySelector('#newModalModel')) {
       document.querySelector('#newModalModel').remove()
     }
-    let modal = $(renderCreateModalHtml(isModel, isSpatial)).modal();
+    let modal = $(renderCreateModalHtml(isModel, isSpatial, disabled)).modal();
     let okBtn = document.querySelector('#newModalModel .ok-model-btn');
     let input = document.querySelector('#newModalModel #modelNameInput');
+    let source = document.querySelector('#newModalModel #in-user-dir');
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
         event.preventDefault();
@@ -364,25 +372,20 @@ let FileBrowser = PageView.extend({
     });
     let modelName;
     okBtn.addEventListener('click', function (e) {
+      let fromUserDir = source.checked;
       if (Boolean(input.value)) {
         if(isModel) {
           let modelName = input.value + '.mdl';
-          var modelPath;
-          if(modelName.includes('/')){
-            modelPath = path.join("/hub/stochss/models/edit", modelName);
-          }else{
-            modelPath = path.join("/hub/stochss/models/edit", o.original._path, modelName);
-          }
+          var parentPath = fromUserDir ? '/' : o.original._path
+          var modelPath = path.join("/hub/stochss/models/edit", parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
-          var parentPath = Boolean(o) ? o.original._path : "/";
+          var parentPath = (!fromUserDir && Boolean(o)) ? o.original._path : "/";
           let endpoint = path.join("/stochss/api/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(Boolean(o) && o.parent !== "#"){
-              console.log(o.parent)
               var node = $('#models-jstree').jstree().get_node(o.parent);
-              console.log(node)
               $('#models-jstree').jstree().refresh_node(node);
             }else{
               self.refreshJSTree()
@@ -585,7 +588,6 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Convert to Notebook",
             "action" : function (data) {
-              console.log(o.original._path)
               var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
               xhr({ uri: endpoint },
                     function (err, response, body) {

@@ -6,6 +6,7 @@ import nbformat
 import argparse
 from nbformat import v4 as nbf
 from os import path
+from rename import get_unique_file_name
 
 
 user_dir = '/home/jovyan'
@@ -221,7 +222,7 @@ def convertToNotebook(_model_path):
     nb = nbf.new_notebook(cells=cells)
 
     # Open and write to file
-    dest_file = path.join(dest_path, '{}.ipynb'.format(name))
+    dest_file = get_unique_file_name('{}.ipynb'.format(name), dest_path)[0]
     with open(dest_file, 'w') as f:
         nbformat.write(nb, f, version=4)
     f.close()
