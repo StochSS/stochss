@@ -9,6 +9,13 @@ NUM_CPUS=2
 RAM=5000
 DISK_SIZE='20000mb'
 
+MOUNT_PATH=$PWD
+
+if [ $# -eq 1 ]
+then
+  MOUNT_PATH=$1
+fi
+
 minikube delete
 
 minikube \
@@ -28,7 +35,7 @@ eval $(minikube docker-env)
 docker build -t $DOCKER_HUB_IMAGE:dev .
 docker build -t $DOCKER_NOTEBOOK_IMAGE:dev ./singleuser
 
-./minikube_install_jhub.sh
+./minikube_install_jhub.sh $MOUNT_PATH
 
 kubectl apply -f jhub-rb.yaml
 
