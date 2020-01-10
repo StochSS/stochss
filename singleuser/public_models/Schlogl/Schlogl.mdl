@@ -101,9 +101,10 @@
         {
             "name": "r1",
             "reactionType": "custom-massaction",
-            "annotation": "s1+s4 \\rightarrow 2s4",
+            "summary": "s1+s4 \\rightarrow 2s4",
             "massaction": true,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -169,9 +170,10 @@
         {
             "name": "r2",
             "reactionType": "merge",
-            "annotation": "s2+s4 \\rightarrow s3",
+            "summary": "s2+s4 \\rightarrow s3",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "

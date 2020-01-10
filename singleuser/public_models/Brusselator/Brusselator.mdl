@@ -137,9 +137,10 @@
         {
             "name": "reaction1",
             "reactionType": "custom-propensity",
-            "annotation": "A \\rightarrow X+A",
+            "summary": "A \\rightarrow X+A",
             "massaction": false,
             "propensity": "rate1",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -201,9 +202,10 @@
         {
             "name": "reaction2",
             "reactionType": "custom-propensity",
-            "annotation": "B+X \\rightarrow Y+C+B",
+            "summary": "B+X \\rightarrow Y+C+B",
             "massaction": false,
             "propensity": "rate2*X",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -297,9 +299,10 @@
         {
             "name": "reaction3",
             "reactionType": "custom-propensity",
-            "annotation": "2X+Y \\rightarrow 3X",
+            "summary": "2X+Y \\rightarrow 3X",
             "massaction": false,
             "propensity": "rate3*Y*X*(X-1)/2",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -361,9 +364,10 @@
         {
             "name": "reaction4",
             "reactionType": "custom-propensity",
-            "annotation": "X \\rightarrow D",
+            "summary": "X \\rightarrow D",
             "massaction": false,
             "propensity": "rate4*X",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "

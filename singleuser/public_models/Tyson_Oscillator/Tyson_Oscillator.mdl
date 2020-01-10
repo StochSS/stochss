@@ -100,9 +100,10 @@
         {
             "name": "rxn1",
             "reactionType": "custom-propensity",
-            "annotation": "\\emptyset \\rightarrow X",
+            "summary": "\\emptyset \\rightarrow X",
             "massaction": false,
             "propensity": "vol*1/(1+(Y*Y/((vol*vol))))",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -131,9 +132,10 @@
         {
             "name": "rxn2",
             "reactionType": "destruction",
-            "annotation": "X \\rightarrow \\emptyset",
+            "summary": "X \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -166,9 +168,10 @@
         {
             "name": "rxn3",
             "reactionType": "split",
-            "annotation": "X \\rightarrow X+Y",
+            "summary": "X \\rightarrow X+Y",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -234,9 +237,10 @@
         {
             "name": "rxn4",
             "reactionType": "destruction",
-            "annotation": "Y \\rightarrow \\emptyset",
+            "summary": "Y \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -269,9 +273,10 @@
         {
             "name": "rxn5",
             "reactionType": "custom-propensity",
-            "annotation": "Y \\rightarrow \\emptyset",
+            "summary": "Y \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "Y/(a0 + a1*(Y/vol)+a2*Y*Y/(vol*vol))",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "

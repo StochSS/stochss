@@ -75,9 +75,10 @@
         {
             "name": "r_creation",
             "reactionType": "dimerization",
-            "annotation": "2Monomer \\rightarrow Dimer",
+            "summary": "2Monomer \\rightarrow Dimer",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -127,9 +128,10 @@
         {
             "name": "r_dissociation",
             "reactionType": "custom-massaction",
-            "annotation": "Dimer \\rightarrow 2Monomer",
+            "summary": "Dimer \\rightarrow 2Monomer",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "

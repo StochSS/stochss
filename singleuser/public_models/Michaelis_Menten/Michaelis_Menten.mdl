@@ -106,9 +106,10 @@
         {
             "name": "r1",
             "reactionType": "merge",
-            "annotation": "A+B \\rightarrow C",
+            "summary": "A+B \\rightarrow C",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -174,9 +175,10 @@
         {
             "name": "r2",
             "reactionType": "split",
-            "annotation": "C \\rightarrow A+B",
+            "summary": "C \\rightarrow A+B",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -242,9 +244,10 @@
         {
             "name": "r3",
             "reactionType": "split",
-            "annotation": "C \\rightarrow B+D",
+            "summary": "C \\rightarrow B+D",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "

@@ -57,9 +57,10 @@
         {
             "name": "reaction",
             "reactionType": "destruction",
-            "annotation": "protein \\rightarrow \\emptyset",
+            "summary": "protein \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "

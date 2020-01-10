@@ -90,9 +90,10 @@
         {
             "name": "cu",
             "reactionType": "custom-propensity",
-            "annotation": "\\emptyset \\rightarrow A",
+            "summary": "\\emptyset \\rightarrow A",
             "massaction": false,
             "propensity": "alpha1/(1+pow(B, beta))",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -121,9 +122,10 @@
         {
             "name": "cv",
             "reactionType": "custom-propensity",
-            "annotation": "\\emptyset \\rightarrow B",
+            "summary": "\\emptyset \\rightarrow B",
             "massaction": false,
             "propensity": "alpha2/(1+pow(A, gamma))",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -152,9 +154,10 @@
         {
             "name": "du",
             "reactionType": "destruction",
-            "annotation": "A \\rightarrow \\emptyset",
+            "summary": "A \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -187,9 +190,10 @@
         {
             "name": "dv",
             "reactionType": "destruction",
-            "annotation": "B \\rightarrow \\emptyset",
+            "summary": "B \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "

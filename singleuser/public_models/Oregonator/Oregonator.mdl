@@ -129,9 +129,10 @@
         {
             "name": "reaction1",
             "reactionType": "four",
-            "annotation": "B+F \\rightarrow A+F",
+            "summary": "B+F \\rightarrow A+F",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -213,9 +214,10 @@
         {
             "name": "reaction2",
             "reactionType": "merge",
-            "annotation": "A+B \\rightarrow P",
+            "summary": "A+B \\rightarrow P",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -281,9 +283,10 @@
         {
             "name": "reaction3",
             "reactionType": "custom-massaction",
-            "annotation": "A+F \\rightarrow 2A+C+F",
+            "summary": "A+F \\rightarrow 2A+C+F",
             "massaction": true,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -381,9 +384,10 @@
         {
             "name": "reaction4",
             "reactionType": "dimerization",
-            "annotation": "2A \\rightarrow P",
+            "summary": "2A \\rightarrow P",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -433,9 +437,10 @@
         {
             "name": "reaction5",
             "reactionType": "four",
-            "annotation": "C+F \\rightarrow B+F",
+            "summary": "C+F \\rightarrow B+F",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
