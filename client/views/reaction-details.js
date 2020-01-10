@@ -21,9 +21,9 @@ module.exports = View.extend({
       type: 'value',
       hook: 'select-rate-parameter'
     },
-    'model.annotation' : {
+    'model.summary' : {
       type: function (el, value, previousValue) {
-        katex.render(this.model.annotation, this.queryByHook('summary-container'), {
+        katex.render(this.model.summary, this.queryByHook('summary-container'), {
           displayMode: true,
           output: 'html'
         });
@@ -141,7 +141,7 @@ module.exports = View.extend({
     var label = e.target.selectedOptions.item(0).value;
     var type = _.findKey(ReactionTypes, function (o) { return o.label === label; });
     this.model.reactionType = type;
-    this.model.annotation = label
+    this.model.summary = label
     this.updateStoichSpeciesForReactionType(type);
     this.model.collection.trigger("change");
     this.model.trigger('change-reaction')

@@ -18,6 +18,7 @@ Reactions = Collection.extend({
       reactionType: reactionType,
       massaction: massaction,
       propensity: '',
+      annotation: '',
       subdomains: subdomains,
       reactants: stoichArgs.reactants,
       products: stoichArgs.products,
@@ -26,7 +27,7 @@ Reactions = Collection.extend({
     this.setDefaultSpecieForStoichSpecies(reaction.products);
     if(reactionType !== 'custom-propensity')
       reaction.rate = this.getDefaultRate();
-    reaction.buildAnnotation()
+    reaction.buildSummary()
     this.add(reaction);
     return reaction;
   },

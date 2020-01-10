@@ -9,9 +9,10 @@ module.exports = State.extend({
   props: {
     name: 'string',
     reactionType: 'string',
-    annotation: 'string',
+    summary: 'string',
     massaction: 'boolean',
     propensity: 'string',
+    annotation: 'string',
     subdomains: {
       type: 'object',
       default: function () {return []; },
@@ -32,52 +33,52 @@ module.exports = State.extend({
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
-    this.on('change-reaction', this.buildAnnotation, this)
+    this.on('change-reaction', this.buildSummary, this)
   },
-  buildAnnotation: function () {
-    var annotation = "";
+  buildSummary: function () {
+    var summary = "";
 
     var numReactants = this.reactants.models.length;
     var numProducts = this.products.models.length;
 
     if(numReactants === 0){
-      annotation = '\\emptyset';
+      summary = '\\emptyset';
     }else{
       for(var i = 0; i < numReactants; i++){
         var reactant = this.reactants.models[i];
         if(reactant.ratio > 1){
-          annotation += reactant.ratio + reactant.specie.name;
+          summary += reactant.ratio + reactant.specie.name;
         }else{
-          annotation += reactant.specie.name;
+          summary += reactant.specie.name;
         }
 
         if(i < numReactants - 1){
-          annotation += '+';
+          summary += '+';
         }
       }
     }
 
-    annotation += ' \\rightarrow ';
+    summary += ' \\rightarrow ';
 
     if(numProducts === 0){
-      annotation += '\\emptyset';
+      summary += '\\emptyset';
     }else{
       for(var i = 0; i < numProducts; i++){
         var product = this.products.models[i];
         if(product.ratio > 1){
-          annotation += product.ratio + product.specie.name;
+          summary += product.ratio + product.specie.name;
         }else{
-          annotation += product.specie.name;
+          summary += product.specie.name;
         }
 
         if(i < numProducts - 1){
-          annotation += '+';
+          summary += '+';
         }
       }
     }
     
-    annotation = annotation.replace(/_/g, '\\_');
+    summary = summary.replace(/_/g, '\\_');
 
-    this.annotation = annotation
+    this.summary = summary
   },
 });

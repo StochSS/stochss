@@ -13,16 +13,17 @@ div#reactions-editor.card.card-body
       | For non-linear reactions, use the custom propensity type. 
 
     div.row
-      div.col-md-6.container-part: table.table
+      div.col-md-7.container-part: table.table
         thead: tr
-          td Edit
-          td Name
-          td Summary
-          td Delete
+          th(scope="col") Edit
+          th(scope="col") Name
+          th(scope="col") Summary
+          th(scope="col") Annotation
+          th(scope="col") Delete
 
         tbody(data-hook="reaction-list")
 
-      div.col-md-6.container-part(data-hook="reaction-details-container")
+      div.col-md-5.container-part(data-hook="reaction-details-container")
       
     div.dropdown
 

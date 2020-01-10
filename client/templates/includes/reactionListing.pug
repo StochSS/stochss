@@ -1,9 +1,10 @@
 tr
-  td
-    input(type="radio", data-hook="select", name="reaction-select")
-  td
-    div(data-hook="input-name-container")
-  td
-    div(data-hook="summary", style="width: auto !important")
-  td
-    button.btn.btn-outline-secondary(data-hook="remove") X
+  td: input(type="radio", data-hook="select", name="reaction-select")
+  
+  td: div(data-hook="input-name-container")
+  
+  td: div(data-hook="summary", style="width: auto !important")
+  
+  td: button.btn.btn-outline-secondary(data-hook="edit-annotation-btn") Edit
+
+  td: button.btn.btn-outline-secondary(data-hook="remove") X
