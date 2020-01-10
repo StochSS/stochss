@@ -54,8 +54,23 @@ module.exports = View.extend({
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
+    var self = this;
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.collection.parent;
+    this.collection.on('update-species', function (name, specie) {
+      self.collection.parent.reactions.map(function (reaction) {
+        reaction.reactants.map(function (reactant) {
+          if(reactant.specie.name === name) {
+            reactant.specie = specie;
+          }
+        });
+        reaction.products.map(function (product) {
+          if(product.specie.name === name) {
+            product.specie = specie;
+          }
+        });
+      });
+    });
   },
   render: function () {
     this.template = this.parent.model.is_spatial ? spatialSpecieTemplate : nonspatialSpecieTemplate;

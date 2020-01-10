@@ -55,6 +55,13 @@ module.exports = Model.extend({
   },
   //called when save button is clicked
   saveModel: function () {
+    var self = this;
+    this.species.map(function (specie) {
+      self.species.trigger('update-species', specie.name, specie);
+    });
+    this.parameters.map(function (parameter) {
+      self.parameters.trigger('update-parameters', parameter.name, parameter);
+    });
     this.save();
     // xhr({ 
     //   method: 'post',

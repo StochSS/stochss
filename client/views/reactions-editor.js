@@ -82,10 +82,10 @@ module.exports = View.extend({
     $(this.queryByHook('add-reaction-partial')).prop('disabled', (this.collection.parent.species.length <= 0));
   },
   toggleReactionTypes: function (e, prev, curr) {
-    if(curr.add && this.collection.parent.parameters.length === 1){
+    if(curr && curr.add && this.collection.parent.parameters.length === 1){
       $(this.queryByHook('add-reaction-full')).prop('hidden', false);
       $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
-    }else if(!curr.add && this.collection.parent.parameters.length === 0){
+    }else if(curr && !curr.add && this.collection.parent.parameters.length === 0){
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
       $(this.queryByHook('add-reaction-partial')).prop('hidden', false);
     }

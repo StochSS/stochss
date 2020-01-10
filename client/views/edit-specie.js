@@ -43,6 +43,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
     'click [data-hook=remove]' : 'removeSpecie',
+    'change [data-hook=input-name-container]' : 'setSpeciesName',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -52,11 +53,18 @@ module.exports = View.extend({
   },
   update: function () {
   },
-  updateValid: function () {
+  updateValid: function (e) {
+    console.log(e.target.value, this.model.name)
   },
   removeSpecie: function () {
     this.remove();
     this.collection.removeSpecie(this.model);
+  },
+  setSpeciesName: function (e) {
+    var oldName = this.model.name;
+    this.model.name = e.target.value;
+    this.model.collection.trigger('update-species', oldName, this.model);
+    this.model.collection.trigger('remove');
   },
   editAnnotation: function () {
     var self = this;
@@ -91,7 +99,7 @@ module.exports = View.extend({
           name: 'name',
           label: '',
           tests: tests.nameTests,
-          modelKey: 'name',
+          modelKey: '',
           valueType: 'string',
           value: this.model.name,
         });

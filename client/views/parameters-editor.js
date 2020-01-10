@@ -12,7 +12,15 @@ module.exports = View.extend({
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
+    var self = this;
     View.prototype.initialize.apply(this, arguments);
+    this.collection.on('update-parameters', function (name, parameter) {
+      self.collection.parent.reactions.map(function (reaction) {
+        if(reaction.rate && reaction.rate.name === name){
+          reaction.rate = parameter;
+        }
+      });
+    });
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
