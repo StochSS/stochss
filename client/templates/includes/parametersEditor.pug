@@ -2,7 +2,7 @@ div#parameters-editor.card.card-body
 
   div
 
-    h3.editor-header Parameters Editor
+    h3.editor-header Parameters
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-parameters", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-parameters")
@@ -12,6 +12,7 @@ div#parameters-editor.card.card-body
         tr
           th(scope="col") Name
           th(scope="col") Value
+          th(scope="col") Annotation
           th(scope="col") Remove
         
       tbody(data-hook="parameter-list")
