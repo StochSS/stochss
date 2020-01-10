@@ -101,23 +101,28 @@
     "parameters": [
         {
             "name": "k1",
-            "value": 2
+            "value": 2,
+            "annotation": ""
         },
         {
             "name": "k2",
-            "value": 0.1
+            "value": 0.1,
+            "annotation": ""
         },
         {
             "name": "k3",
-            "value": 104
+            "value": 104,
+            "annotation": ""
         },
         {
             "name": "k4",
-            "value": 4e-7
+            "value": 4e-7,
+            "annotation": ""
         },
         {
             "name": "k5",
-            "value": 26
+            "value": 26,
+            "annotation": ""
         }
     ],
     "reactions": [
@@ -133,7 +138,8 @@
             ],
             "rate": {
                 "name": "k1",
-                "value": 2
+                "value": 2,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -216,7 +222,8 @@
             ],
             "rate": {
                 "name": "k2",
-                "value": 0.1
+                "value": 0.1,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -283,7 +290,8 @@
             ],
             "rate": {
                 "name": "k3",
-                "value": 104
+                "value": 104,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -382,7 +390,8 @@
             ],
             "rate": {
                 "name": "k4",
-                "value": 4e-7
+                "value": 4e-7,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -433,7 +442,8 @@
             ],
             "rate": {
                 "name": "k5",
-                "value": 26
+                "value": 26,
+                "annotation": ""
             },
             "reactants": [
                 {

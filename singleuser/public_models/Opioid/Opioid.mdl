@@ -113,43 +113,53 @@
     "parameters": [
         {
             "name": "alpha",
-            "value": 0.15
+            "value": 0.15,
+            "annotation": ""
         },
         {
             "name": "epsilon",
-            "value": 0.8
+            "value": 0.8,
+            "annotation": ""
         },
         {
             "name": "beta_p",
-            "value": 0.00266
+            "value": 0.00266,
+            "annotation": ""
         },
         {
             "name": "beta_a",
-            "value": 0.00094
+            "value": 0.00094,
+            "annotation": ""
         },
         {
             "name": "gamma",
-            "value": 0.00744
+            "value": 0.00744,
+            "annotation": ""
         },
         {
             "name": "zeta",
-            "value": 0.2
+            "value": 0.2,
+            "annotation": ""
         },
         {
             "name": "delta",
-            "value": 0.1
+            "value": 0.1,
+            "annotation": ""
         },
         {
             "name": "sigma",
-            "value": 0.9
+            "value": 0.9,
+            "annotation": ""
         },
         {
             "name": "mu",
-            "value": 0.00729
+            "value": 0.00729,
+            "annotation": ""
         },
         {
             "name": "mu_prime",
-            "value": 0.01159
+            "value": 0.01159,
+            "annotation": ""
         }
     ],
     "reactions": [
@@ -165,7 +175,8 @@
             ],
             "rate": {
                 "name": "alpha",
-                "value": 0.15
+                "value": 0.15,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -216,7 +227,8 @@
             ],
             "rate": {
                 "name": "beta_a",
-                "value": 0.00094
+                "value": 0.00094,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -267,7 +279,8 @@
             ],
             "rate": {
                 "name": "beta_p",
-                "value": 0.00266
+                "value": 0.00266,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -318,7 +331,8 @@
             ],
             "rate": {
                 "name": "gamma",
-                "value": 0.00744
+                "value": 0.00744,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -369,7 +383,8 @@
             ],
             "rate": {
                 "name": "epsilon",
-                "value": 0.8
+                "value": 0.8,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -420,7 +435,8 @@
             ],
             "rate": {
                 "name": "zeta",
-                "value": 0.2
+                "value": 0.2,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -471,7 +487,8 @@
             ],
             "rate": {
                 "name": "delta",
-                "value": 0.1
+                "value": 0.1,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -522,7 +539,8 @@
             ],
             "rate": {
                 "name": "sigma",
-                "value": 0.9
+                "value": 0.9,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -573,7 +591,8 @@
             ],
             "rate": {
                 "name": "mu",
-                "value": 0.00729
+                "value": 0.00729,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -640,7 +659,8 @@
             ],
             "rate": {
                 "name": "mu",
-                "value": 0.00729
+                "value": 0.00729,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -707,7 +727,8 @@
             ],
             "rate": {
                 "name": "mu",
-                "value": 0.00729
+                "value": 0.00729,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -774,7 +795,8 @@
             ],
             "rate": {
                 "name": "mu_prime",
-                "value": 0.01159
+                "value": 0.01159,
+                "annotation": ""
             },
             "reactants": [
                 {

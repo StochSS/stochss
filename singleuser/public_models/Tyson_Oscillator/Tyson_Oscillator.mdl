@@ -62,31 +62,38 @@
     "parameters": [
         {
             "name": "P",
-            "value": 2
+            "value": 2,
+            "annotation": ""
         },
         {
             "name": "kt",
-            "value": 10
+            "value": 10,
+            "annotation": ""
         },
         {
             "name": "kd",
-            "value": 1
+            "value": 1,
+            "annotation": ""
         },
         {
             "name": "a0",
-            "value": 0.005
+            "value": 0.005,
+            "annotation": ""
         },
         {
             "name": "a1",
-            "value": 0.05
+            "value": 0.05,
+            "annotation": ""
         },
         {
             "name": "a2",
-            "value": 0.1
+            "value": 0.1,
+            "annotation": ""
         },
         {
             "name": "kdx",
-            "value": 1
+            "value": 1,
+            "annotation": ""
         }
     ],
     "reactions": [
@@ -133,7 +140,8 @@
             ],
             "rate": {
                 "name": "kdx",
-                "value": 1
+                "value": 1,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -167,7 +175,8 @@
             ],
             "rate": {
                 "name": "kt",
-                "value": 10
+                "value": 10,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -234,7 +243,8 @@
             ],
             "rate": {
                 "name": "kd",
-                "value": 1
+                "value": 1,
+                "annotation": ""
             },
             "reactants": [
                 {

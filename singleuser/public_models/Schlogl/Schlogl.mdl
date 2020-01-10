@@ -88,11 +88,13 @@
     "parameters": [
         {
             "name": "k1",
-            "value": 1
+            "value": 1,
+            "annotation": ""
         },
         {
             "name": "k2",
-            "value": 1
+            "value": 1,
+            "annotation": ""
         }
     ],
     "reactions": [
@@ -108,7 +110,8 @@
             ],
             "rate": {
                 "name": "k1",
-                "value": 1
+                "value": 1,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -175,7 +178,8 @@
             ],
             "rate": {
                 "name": "k2",
-                "value": 1
+                "value": 1,
+                "annotation": ""
             },
             "reactants": [
                 {

@@ -153,63 +153,78 @@
     "parameters": [
         {
             "name": "alpha_a",
-            "value": 50
+            "value": 50,
+            "annotation": ""
         },
         {
             "name": "alpha_a_prime",
-            "value": 500
+            "value": 500,
+            "annotation": ""
         },
         {
             "name": "alpha_r",
-            "value": 0.01
+            "value": 0.01,
+            "annotation": ""
         },
         {
             "name": "alpha_r_prime",
-            "value": 50
+            "value": 50,
+            "annotation": ""
         },
         {
             "name": "beta_a",
-            "value": 50
+            "value": 50,
+            "annotation": ""
         },
         {
             "name": "beta_r",
-            "value": 5
+            "value": 5,
+            "annotation": ""
         },
         {
             "name": "delta_ma",
-            "value": 10
+            "value": 10,
+            "annotation": ""
         },
         {
             "name": "delta_mr",
-            "value": 0.5
+            "value": 0.5,
+            "annotation": ""
         },
         {
             "name": "delta_a",
-            "value": 1
+            "value": 1,
+            "annotation": ""
         },
         {
             "name": "delta_r",
-            "value": 0.2
+            "value": 0.2,
+            "annotation": ""
         },
         {
             "name": "gamma_a",
-            "value": 1
+            "value": 1,
+            "annotation": ""
         },
         {
             "name": "gamma_r",
-            "value": 1
+            "value": 1,
+            "annotation": ""
         },
         {
             "name": "gamma_c",
-            "value": 2
+            "value": 2,
+            "annotation": ""
         },
         {
             "name": "theta_a",
-            "value": 50
+            "value": 50,
+            "annotation": ""
         },
         {
             "name": "theta_r",
-            "value": 100
+            "value": 100,
+            "annotation": ""
         }
     ],
     "reactions": [
@@ -225,7 +240,8 @@
             ],
             "rate": {
                 "name": "theta_a",
-                "value": 50
+                "value": 50,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -276,7 +292,8 @@
             ],
             "rate": {
                 "name": "gamma_a",
-                "value": 1
+                "value": 1,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -343,7 +360,8 @@
             ],
             "rate": {
                 "name": "theta_r",
-                "value": 100
+                "value": 100,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -394,7 +412,8 @@
             ],
             "rate": {
                 "name": "gamma_r",
-                "value": 1
+                "value": 1,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -461,7 +480,8 @@
             ],
             "rate": {
                 "name": "alpha_a_prime",
-                "value": 500
+                "value": 500,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -528,7 +548,8 @@
             ],
             "rate": {
                 "name": "alpha_a",
-                "value": 50
+                "value": 50,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -595,7 +616,8 @@
             ],
             "rate": {
                 "name": "delta_ma",
-                "value": 10
+                "value": 10,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -629,7 +651,8 @@
             ],
             "rate": {
                 "name": "beta_a",
-                "value": 50
+                "value": 50,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -696,7 +719,8 @@
             ],
             "rate": {
                 "name": "theta_a",
-                "value": 50
+                "value": 50,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -763,7 +787,8 @@
             ],
             "rate": {
                 "name": "theta_a",
-                "value": 50
+                "value": 50,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -830,7 +855,8 @@
             ],
             "rate": {
                 "name": "gamma_c",
-                "value": 2
+                "value": 2,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -864,7 +890,8 @@
             ],
             "rate": {
                 "name": "gamma_c",
-                "value": 2
+                "value": 2,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -931,7 +958,8 @@
             ],
             "rate": {
                 "name": "alpha_r_prime",
-                "value": 50
+                "value": 50,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -998,7 +1026,8 @@
             ],
             "rate": {
                 "name": "alpha_r",
-                "value": 0.01
+                "value": 0.01,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -1065,7 +1094,8 @@
             ],
             "rate": {
                 "name": "delta_mr",
-                "value": 0.5
+                "value": 0.5,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -1099,7 +1129,8 @@
             ],
             "rate": {
                 "name": "beta_r",
-                "value": 5
+                "value": 5,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -1166,7 +1197,8 @@
             ],
             "rate": {
                 "name": "delta_r",
-                "value": 0.2
+                "value": 0.2,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -1200,7 +1232,8 @@
             ],
             "rate": {
                 "name": "delta_a",
-                "value": 1
+                "value": 1,
+                "annotation": ""
             },
             "reactants": [
                 {

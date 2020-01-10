@@ -114,19 +114,23 @@
     "parameters": [
         {
             "name": "rate1",
-            "value": 5000
+            "value": 5000,
+            "annotation": ""
         },
         {
             "name": "rate2",
-            "value": 50
+            "value": 50,
+            "annotation": ""
         },
         {
             "name": "rate3",
-            "value": 0.00005
+            "value": 0.00005,
+            "annotation": ""
         },
         {
             "name": "rate4",
-            "value": 5
+            "value": 5,
+            "annotation": ""
         }
     ],
     "reactions": [

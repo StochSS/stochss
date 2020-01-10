@@ -62,11 +62,13 @@
     "parameters": [
         {
             "name": "k_c",
-            "value": 0.005
+            "value": 0.005,
+            "annotation": ""
         },
         {
             "name": "k_d",
-            "value": 0.08
+            "value": 0.08,
+            "annotation": ""
         }
     ],
     "reactions": [
@@ -82,7 +84,8 @@
             ],
             "rate": {
                 "name": "k_c",
-                "value": 0.005
+                "value": 0.005,
+                "annotation": ""
             },
             "reactants": [
                 {
@@ -133,7 +136,8 @@
             ],
             "rate": {
                 "name": "k_d",
-                "value": 0.08
+                "value": 0.08,
+                "annotation": ""
             },
             "reactants": [
                 {
