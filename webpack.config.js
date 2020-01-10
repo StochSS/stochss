@@ -5,7 +5,7 @@ module.exports = {
   mode: 'development',
   entry: {
     home: './client/pages/home.js',
-    browser: './client/pages/model-browser.js',
+    browser: './client/pages/file-browser.js',
     editor: './client/pages/model-editor.js',
     jobEditor: './client/pages/job-manager.js',
   },
@@ -24,7 +24,7 @@ module.exports = {
     }),
     new HtmlWebpackPlugin({
       title: 'StochSS | Model Browser',
-      filename: 'stochss-model-browser.html',
+      filename: 'stochss-file-browser.html',
       template: 'handlers/page_templates/page_template.pug',
       name: 'browser',
       inject: false

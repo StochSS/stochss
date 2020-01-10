@@ -43,18 +43,22 @@ class JsonFileAPIHandler(BaseHandler):
         log.debug(model_path)
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        model_path = model_path.replace(" ", "\ ")
         full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
         try:
             to_write = stochss_kubernetes.read_from_pod(client, 
-                user_pod, full_path) # Use cat to read json file
+                user_pod, "{0}".format(full_path)) # Use cat to read json file
         except:
             new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
             with open(new_path, 'r') as json_file:
                 data = json_file.read()
                 to_write = json.loads(str(data))
-                stochss_kubernetes.write_to_pod(client,
-                    user_pod, full_path, to_write)
+            
+            directories = os.path.dirname(full_path)
+            exec_cmd = ['mkdir', '-p', '-v', '{0}'.format(directories)]
+            stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+
+            full_path = full_path.replace(" ", "\ ")
+            stochss_kubernetes.write_to_pod(client, user_pod, "{0}".format(full_path), to_write)
 
         self.write(to_write) # Send data to client
                 
@@ -123,9 +127,8 @@ class RunModelAPIHandler(BaseHandler):
         results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(str(results))
         # Send data back to client
-        if results == '' or results == 'running':
-            self.write("running->" + outfile)
-        else:
+        if results:
             self.write(results)
-
+        else:
+            self.write("running->{0}".format(outfile))
 

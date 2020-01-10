@@ -24,10 +24,8 @@ except:
     log.warn("Events are not supported by gillespy2!")
 
 from gillespy2.core.gillespyError import SolverError, DirectoryError, BuildError, ExecutionError
-from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
 from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
-from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver
 
 import warnings
 warnings.simplefilter("ignore")
@@ -102,7 +100,8 @@ class ModelFactory():
         timeStep = (data['simulationSettings']['timeStep'])
         endSim = data['simulationSettings']['endSim']
         volume = data['simulationSettings']['volume']
-        self.species = list(map(lambda s: self.build_specie(s), data['species']))
+        is_stochastic = data['simulationSettings']['is_stochastic']
+        self.species = list(map(lambda s: self.build_specie(s, is_stochastic), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
         self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), data['eventsCollection']))
@@ -110,7 +109,7 @@ class ModelFactory():
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), rate_rules))
         self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, endSim, timeStep, volume)
 
-    def build_specie(self, args):
+    def build_specie(self, args, is_stochastic):
         '''
         Build a GillesPy2 species.
 
@@ -121,7 +120,10 @@ class ModelFactory():
         '''
         name = args['name'].strip()
         value = args['value']
-        mode = args['mode']
+        if is_stochastic:
+            mode = args['mode']
+        else:
+            mode = 'continuous'
         return Species(name=name, initial_value=value, mode=mode)
 
     def build_parameter(self, args):
@@ -330,7 +332,7 @@ def basicODESolver(model, data, run_timeout):
         Number of seconds until the simulation times out.
     '''
     results = model.run(
-        solver = BasicODESolver,
+        solver = BasicTauHybridSolver,
         timeout = run_timeout,
         integrator_options = { 'atol' : data['deterministicSettings']['absoluteTol'], 'rtol' : data['deterministicSettings']['relativeTol']}
     )
@@ -354,7 +356,6 @@ def ssaSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = get_best_ssa_solver(),
         timeout = run_timeout,
         number_of_trajectories = data['stochasticSettings']['realizations'],
         seed = seed
@@ -455,7 +456,7 @@ if __name__ == "__main__":
             os.remove(outfile)
             os.remove(outfile + ".done")
         else:
-            print("running")
+            print("running->{0}".format(outfile))
     log_stream.close()
 
 
