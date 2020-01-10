@@ -9,6 +9,10 @@ var nonspatialSpecieTemplate = require('../templates/includes/speciesEditor.pug'
 var spatialSpecieTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
 
 let renderDefaultModeModalHtml = () => {
+  let concentrationDesciption = `Description For Concentration`;
+  let populationDescription = `Description For Population`;
+  let hybridDescription = `Description For Hybrid Concentration/Population`;
+
   return `
     <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
@@ -22,15 +26,15 @@ let renderDefaultModeModalHtml = () => {
           <div class="modal-body">
             <div class="default-mode">
               <button type="button" class="btn btn-primary concentration-btn">Concentration</button>
-              <p>Description For Concentration</p>
+              <p>${concentrationDesciption}</p>
             </div>
             <div class="default-mode">
               <button type="button" class="btn btn-primary population-btn">Population</button>
-              <p>Description For Population</p>
+              <p>${populationDescription}</p>
             </div>
             <div class="default-mode">
               <button type="button" class="btn btn-primary hybrid-btn">Hybrid Concentration/Population</button>
-              <p>Description For Hybrid Concentration/Population</p>
+              <p>${hybridDescription}</p>
             </div>
           </div>
           <div class="modal-footer">
@@ -56,11 +60,15 @@ module.exports = View.extend({
   render: function () {
     this.template = this.parent.model.is_spatial ? spatialSpecieTemplate : nonspatialSpecieTemplate;
     View.prototype.render.apply(this, arguments);
-    if(this.collection.parent.defaultMode === ""){
+    var defaultMode = this.collection.parent.defaultMode;
+    if(defaultMode === ""){
       this.getInitialDefaultSpeciesMode();
     }else{
       var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'}
       $(this.queryByHook(dataHooks[this.collection.parent.defaultMode])).prop('checked', true)
+      if(defaultMode === "dynamic"){
+        $(this.queryByHook('advanced-species')).collapse('show');
+      }
     }
     var editSpecieView = !this.collection.parent.is_spatial ? EditNonspatialSpecieView : EditSpatialSpecieView;
     this.renderCollection(this.collection, editSpecieView, this.queryByHook('specie-list'));
