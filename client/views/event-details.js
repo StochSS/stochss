@@ -9,19 +9,34 @@ var template = require('../templates/includes/eventDetails.pug');
 
 module.exports = View.extend({
   template: template,
+  bindings: {
+    'model.initialValue': {
+      hook: 'event-trigger-init-value',
+      type: 'booleanAttribute',
+      name: 'checked',
+    },
+    'model.persistent': {
+      hook: 'event-trigger-persistent',
+      type: 'booleanAttribute',
+      name: 'checked',
+    },
+    'model.useValuesFromTriggerTime': {
+      hook: 'use-values-from-trigger-time',
+      type: 'booleanAttribute',
+      name: 'checked',
+    },
+  },
   events: {
     'change [data-hook=event-trigger-init-value]' : 'setTriggerInitialValue',
     'change [data-hook=event-trigger-persistent]' : 'setTriggerPersistent',
     'change [data-hook=use-values-from-trigger-time]' : 'setUseValuesFromTriggerTime',
+    'click [data-hook=advanced-event-button]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    $(this.queryByHook('event-trigger-init-value')).prop('checked', this.model.initialValue);
-    $(this.queryByHook('event-trigger-persistent')).prop('checked', this.model.persistent);
-    $(this.queryByHook('use-values-from-trigger-time')).prop('checked', this.model.useValuesFromTriggerTime);
     var eventAssignment = new EventAssignment({
       collection: this.model.eventAssignments,
     });
@@ -44,6 +59,10 @@ module.exports = View.extend({
   setUseValuesFromTriggerTime: function (e) {
     this.model.useValuesFromTriggerTime = e.target.checked;
   },
+  changeCollapseButtonText: function (e) {
+    var text = $(this.queryByHook('advanced-event-button')).text();
+    text === '+' ? $(this.queryByHook('advanced-event-button')).text('-') : $(this.queryByHook('advanced-event-button')).text('+');
+  },
   subviews: {
     inputDelay: {
       hook: 'event-delay',
@@ -52,7 +71,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'delay',
-          label: '',
+          label: 'Delay: ',
           tests: '',
           modelKey: 'delay',
           valueType: 'string',
@@ -67,7 +86,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'priority',
-          label: '',
+          label: 'Priority: ',
           tests: '',
           modelKey: 'priority',
           valueType: 'string',
@@ -82,7 +101,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'trigger-expression',
-          label: '',
+          label: 'Trigger Expression: ',
           tests: '',
           modelKey: 'triggerExpression',
           valueType: 'string',

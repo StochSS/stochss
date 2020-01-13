@@ -10,7 +10,7 @@ div#events.card.card-body
 
     div.row
 
-      div.col-md-4.container-part
+      div.col-md-6.container-part
 
         table.table
 
@@ -22,11 +22,13 @@ div#events.card.card-body
 
               th(scope="col") Name
 
+              th(scope="col") Annotation
+
               th(scope="col") Remove
 
           tbody(data-hook="event-listing-container")
 
-      div.col-md-8.container-part(data-hook="event-details-container")
+      div.col-md-6.container-part(data-hook="event-details-container")
 
     button.btn.btn-outline-primary(data-hook="add-event", type="button")
       | Add Event

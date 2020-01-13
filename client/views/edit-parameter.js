@@ -18,7 +18,7 @@ let parameterAnnotationModalHtml = (parameterName, annotation) => {
             </button>
           </div>
           <div class="modal-body">
-            <label for="parameterAnnotationInput">Annotation: </label>
+            <span for="parameterAnnotationInput">Annotation: </span>
             <input type="text" id="parameterAnnotationInput" name="parameterAnnotationInput" size="30" autofocus value="${annotation}">
           </div>
           <div class="modal-footer">

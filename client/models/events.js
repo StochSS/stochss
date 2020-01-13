@@ -10,6 +10,7 @@ module.exports = Collection.extend({
     var name = this.getDefaultName();
     var event = this.add({
       name: name,
+      annotation: "",
       delay: "",
       priority: "0",
       triggerExpression: "",

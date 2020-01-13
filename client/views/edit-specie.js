@@ -18,7 +18,7 @@ let speciesAnnotationModalHtml = (speciesName, annotation) => {
             </button>
           </div>
           <div class="modal-body">
-            <label for="speciesAnnotationInput">Annotation: </label>
+            <span for="speciesAnnotationInput">Annotation: </span>
             <input type="text" id="speciesAnnotationInput" name="speciesAnnotationInput" size="30" autofocus value="${annotation}">
           </div>
           <div class="modal-footer">

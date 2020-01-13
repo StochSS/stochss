@@ -19,7 +19,7 @@ let reactionAnnotationModalHtml = (reactionName, annotation) => {
             </button>
           </div>
           <div class="modal-body">
-            <label for="reactionAnnotationInput">Annotation: </label>
+            <span for="reactionAnnotationInput">Annotation: </span>
             <input type="text" id="reactionAnnotationInput" name="reactionAnnotationInput" size="30" autofocus value="${annotation}">
           </div>
           <div class="modal-footer">

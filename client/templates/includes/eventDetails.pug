@@ -1,44 +1,41 @@
 div(data-hook="event-details")
 
-  table.table.event
+  div(data-hook="event-trigger-expression" style="display: block;")
 
-    thead
+  div
 
-      tr
+    h6.editor-header Advanced
+    button.btn.btn-outline-collapse(data-toggle='collapse', data-target='#advanced-events', data-hook='advanced-event-button') +
 
-        th(scope="col") Delay
+  div.collapse(id="advanced-events")
 
-        th(scope="col") Priority
+    div.row
 
-        th(scope="col") Trigger Expression
+      div.col-md-6(data-hook="event-delay")
 
-      tr
+      div.col-md-6(data-hook="event-priority")
 
-        td: div(data-hook="event-delay")
+    div.row
 
-        td: div(data-hook="event-priority")
+      div.col-md-6
 
-        td: div(data-hook="event-trigger-expression")
+        span.checkbox(for="initial-value") Initial Value:
 
-  div.row
+        input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value")
 
-    div.col-md-3
+      div.col-md-6
 
-      label(for="initial-value") Initial Value:
+        span.checkbox(for="persistent") Persistent: 
 
-      input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value", style="padding: 0.75rem;")
+        input(type="checkbox", id="persistent", data-hook="event-trigger-persistent")
 
-    div.col-md-3
+    div.row
 
-      label(for="persistent") Persistent: 
+      div.col-md-12
 
-      input(type="checkbox", id="persistent", data-hook="event-trigger-persistent", style="padding: 0.75rem;")
+        span.checkbox(for="use-values-from-trigger-time") Use Values From Trigger Time: 
 
-    div.col-md-6
-
-      label(for="use-values-from-trigger-time") Use Values From Trigger Time: 
-
-      input(type="checkbox", id="use-values-from-trigger-time", data-hook="use-values-from-trigger-time", style="padding: 0.75rem;")
+        input(type="checkbox", id="use-values-from-trigger-time", data-hook="use-values-from-trigger-time")
 
   h5 Assignments
 

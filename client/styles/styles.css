@@ -20,6 +20,7 @@ select {
 label {
   padding-right: 0.25rem;
   padding-left: 0.25rem;
+  width: 100%;
 }
 
 span.custom {
@@ -27,8 +28,12 @@ span.custom {
   padding-left: 0.25rem;
 }
 
+button.custom {
+  margin: 0.25rem;
+}
+
 .form-input {
-  width: 100%;
+  width: 60%;
 }
 
 .sidebar-nav {
@@ -173,6 +178,15 @@ span.custom {
   width: 240px;
   margin-right: 0.75rem;
 }
+
+input[type="checkbox"] {
+  padding: 0.75rem;
+}
+
+span.checkbox {
+  padding-right: 0.25rem;
+}
+
 .event {
   margin-bottom: 0px;
 }
