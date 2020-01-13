@@ -58,15 +58,18 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.collection.parent;
     this.collection.on('update-species', function (name, specie) {
+      self.renderSpeciesAdvancedView()
       self.collection.parent.reactions.map(function (reaction) {
         reaction.reactants.map(function (reactant) {
           if(reactant.specie.name === name) {
             reactant.specie = specie;
+            reaction.buildSummary();
           }
         });
         reaction.products.map(function (product) {
           if(product.specie.name === name) {
             product.specie = specie;
+            reaction.buildSummary();
           }
         });
       });
