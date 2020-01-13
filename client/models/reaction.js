@@ -30,10 +30,18 @@ module.exports = State.extend({
       type: 'boolean',
       default: true,
     },
+    hasConflict: {
+      type: 'boolean',
+      default: false,
+    },
   },
   initialize: function (attrs, options) {
+    var self = this;
     State.prototype.initialize.apply(this, arguments);
-    this.on('change-reaction', this.buildSummary, this)
+    this.on('change-reaction', function () {
+      self.buildSummary();
+      self.checkModes();
+    });
   },
   buildSummary: function () {
     var summary = "";
@@ -80,5 +88,24 @@ module.exports = State.extend({
     summary = summary.replace(/_/g, '\\_');
 
     this.summary = summary
+  },
+  checkModes: function () {
+    var hasContinuous = false;
+    var hasDynamic = false;
+    this.reactants.map(function (reactant) { 
+      if(reactant.specie.mode === 'continuous' && !hasContinuous)
+        hasContinuous = true;
+      else if(reactant.specie.mode === 'dynamic' && !hasDynamic)
+        hasDynamic = true;
+    });
+    if(!hasContinuous || !hasDynamic) {
+      this.products.map(function (product) { 
+        if(product.specie.mode === 'continuous' && !hasContinuous)
+          hasContinuous = true;
+        else if(product.specie.mode === 'dynamic' && !hasDynamic)
+          hasDynamic = true;
+      });
+    }
+    this.hasConflict = Boolean(hasContinuous && hasDynamic)
   },
 });

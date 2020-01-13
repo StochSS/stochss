@@ -57,21 +57,24 @@ module.exports = View.extend({
     var self = this;
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.collection.parent;
-    this.collection.on('update-species', function (name, specie) {
+    this.collection.on('update-species', function (name, specie, isNameUpdate) {
       self.renderSpeciesAdvancedView()
       self.collection.parent.reactions.map(function (reaction) {
         reaction.reactants.map(function (reactant) {
           if(reactant.specie.name === name) {
             reactant.specie = specie;
-            reaction.buildSummary();
           }
         });
         reaction.products.map(function (product) {
           if(product.specie.name === name) {
             product.specie = specie;
-            reaction.buildSummary();
           }
         });
+        if(isNameUpdate) {
+          reaction.buildSummary();
+        }else{
+          reaction.checkModes();
+        }
       });
     });
   },
@@ -126,10 +129,12 @@ module.exports = View.extend({
     this.setAllSpeciesModes(e.target.dataset.name)
   },
   setAllSpeciesModes: function (defaultMode) {
+    var self = this;
     this.collection.parent.defaultMode = defaultMode;
-    if(defaultMode !== 'automatic'){
-      this.collection.map(function (specie) { specie.mode = defaultMode})
-    }
+    this.collection.map(function (specie) { 
+      specie.mode = defaultMode
+      self.collection.trigger('update-species', specie.name, specie, false)
+    });
     if(defaultMode === "dynamic"){
       this.renderSpeciesAdvancedView()
       $(this.queryByHook('advanced-species')).collapse('show');

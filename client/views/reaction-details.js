@@ -30,6 +30,14 @@ module.exports = View.extend({
       },
       hook: 'summary-container',
     },
+    'model.hasConflict': {
+      type: function (el, value, previousValue) {
+        this.model.hasConflict ? 
+          $(this.queryByHook('conflicting-modes-message')).collapse('show') : 
+          $(this.queryByHook('conflicting-modes-message')).collapse('hide')
+      },
+      hook: 'conflicting-modes-message',
+    },
   },
   events: {
     'change [data-hook=select-rate-parameter]' : 'selectRateParam',

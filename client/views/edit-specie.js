@@ -63,7 +63,7 @@ module.exports = View.extend({
   setSpeciesName: function (e) {
     var oldName = this.model.name;
     this.model.name = e.target.value;
-    this.model.collection.trigger('update-species', oldName, this.model);
+    this.model.collection.trigger('update-species', oldName, this.model, true);
     this.model.collection.trigger('remove');
   },
   editAnnotation: function () {
