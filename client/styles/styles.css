@@ -32,7 +32,15 @@ button.custom {
   margin: 0.25rem;
 }
 
+.name {
+  width: 8rem;
+}
+
 .form-input {
+  width: 100%;
+}
+
+.form-input.labeled {
   width: 60%;
 }
 
