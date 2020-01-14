@@ -1,0 +1,43 @@
+div#rules-editor.card.card-body
+
+  div
+
+    h3.editor-header Rules
+
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-rules", data-hook="collapse") -
+
+  div.collapse(class="show", id="collapse-rules")
+
+    table.table
+
+      thead
+
+        tr
+
+          th(scope="col") Name
+
+          th(scope="col") Type
+
+          th(scope="col") Variable
+
+          th(scope="col") Expression
+
+          th(scope="col") Annotation
+
+          th(scope="col") Remove
+
+      tbody(data-hook="rule-list-container")
+
+    div.dropdown
+
+      button.btn.btn-outline-primary.dropdown-toggle#addRuleBtn(
+        data-hook="add-rule",
+        data-toggle="dropdown",
+        aria-haspopup="true",
+        aria-expanded="false",
+        type="button"
+      ) Add Rule <span class="caret"></span>
+
+      ul.dropdown-menu(aria-labelledby="addRuleBtn")
+        li.dropdown-item(data-hook="rate-rule" data-name="Rate Rule") Rate Rule
+        li.dropdown-item(data-hook="assignment-rule" data-name="Assignment Rule") Assignment Rule
