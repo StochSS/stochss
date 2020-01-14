@@ -58,7 +58,6 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.collection.parent;
     this.collection.on('update-species', function (name, specie, isNameUpdate) {
-      self.renderSpeciesAdvancedView()
       self.collection.parent.reactions.map(function (reaction) {
         reaction.reactants.map(function (reactant) {
           if(reactant.specie.name === name) {
@@ -72,8 +71,22 @@ module.exports = View.extend({
         });
         if(isNameUpdate) {
           reaction.buildSummary();
+          self.renderSpeciesAdvancedView();
         }else{
           reaction.checkModes();
+        }
+      });
+      self.collection.parent.eventsCollection.map(function (event) {
+        event.eventAssignments.map(function (assignment) {
+          if(assignment.variable.name === name) {
+            assignment.variable = specie;
+          }
+        })
+        if(isNameUpdate) {
+          self.collection.parent.eventsCollection.map(function (event) {
+            if(event.selected)
+              event.detailsView.renderEventAssignments();
+          });
         }
       });
     });

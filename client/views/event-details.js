@@ -37,14 +37,20 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    var eventAssignment = new EventAssignment({
-      collection: this.model.eventAssignments,
-    });
-    this.registerRenderSubview(eventAssignment, 'event-assignments');
+    this.renderEventAssignments();
   },
   update: function () {
   },
   updateValid: function () {
+  },
+  renderEventAssignments: function () {
+    if(this.eventAssignmentsView){
+      this.eventAssignmentsView.remove()
+    }
+    this.eventAssignmentsView = new EventAssignment({
+      collection: this.model.eventAssignments,
+    });
+    this.registerRenderSubview(this.eventAssignmentsView, 'event-assignments');
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

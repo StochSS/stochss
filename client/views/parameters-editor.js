@@ -20,6 +20,17 @@ module.exports = View.extend({
           reaction.rate = parameter;
         }
       });
+      self.collection.parent.eventsCollection.map(function (event) {
+        event.eventAssignments.map(function (assignment) {
+          if(assignment.variable.name === name) {
+            assignment.variable = parameter;
+          }
+        })
+        self.collection.parent.eventsCollection.map(function (event) {
+          if(event.selected)
+            event.detailsView.renderEventAssignments();
+        });
+      });
     });
   },
   render: function () {
