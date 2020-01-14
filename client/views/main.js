@@ -104,6 +104,7 @@ module.exports = View.extend({
     'click [data-hook=jupyter-hub-information-main]' : function () {
       let modal = $(operationInfoModalHtml('Jupyter Hub')).modal();
     },
+    'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
     //'click a[href]': 'handleLinkClick'
   },
   render: function () {
@@ -139,6 +140,11 @@ module.exports = View.extend({
       e.preventDefault();
       this.navigate(localPath);
     }
+  },
+
+  handleRegistrationLinkClick: function () {
+    $(this.queryByHook("registration-form")).collapse('show');
+    $(this.queryByHook("registration-link")).collapse();
   },
 
   navigate: function (page) {
