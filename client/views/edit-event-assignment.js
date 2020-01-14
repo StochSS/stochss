@@ -1,3 +1,4 @@
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -26,6 +27,8 @@ module.exports = View.extend({
       value: this.model.variable.name,
     });
     this.registerRenderSubview(variableSelectView, 'event-assignment-variable');
+    var inputField = this.queryByHook('event-assignment-Expression').children[0].children[1];
+    $(inputField).attr("placeholder", "---No Expression Entered---");
   },
   update: function () {
   },

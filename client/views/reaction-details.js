@@ -111,8 +111,13 @@ module.exports = View.extend({
     });
     this.registerRenderSubview(reactionTypeSelectView, 'select-reaction-type');
     this.renderReactionTypes();
-    (this.model.reactionType === 'custom-propensity') ? this.registerRenderSubview(propensityView, 'select-rate-parameter') :
-     this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
+    if(this.model.reactionType === 'custom-propensity'){
+      this.registerRenderSubview(propensityView, 'select-rate-parameter')
+      var inputField = this.queryByHook('select-rate-parameter').children[0].children[1];
+      $(inputField).attr("placeholder", "---No Expression Entered---");
+    }else{
+      this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
+    }
     this.registerRenderSubview(subdomainsView, 'subdomains-editor');
     this.registerRenderSubview(reactantsView, 'reactants-editor');
     this.registerRenderSubview(productsView, 'products-editor');

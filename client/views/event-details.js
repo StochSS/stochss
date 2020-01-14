@@ -38,6 +38,10 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderEventAssignments();
+    var triggerExpressionField = this.queryByHook('event-trigger-expression').children[0].children[1];
+    $(triggerExpressionField).attr("placeholder", "---No Expression Entered---");
+    var delayField = this.queryByHook('event-delay').children[0].children[1];
+    $(delayField).attr("placeholder", "---No Expression Entered---");
   },
   update: function () {
   },

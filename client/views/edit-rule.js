@@ -46,7 +46,7 @@ module.exports = View.extend({
   render: function () {
     this.renderWithTemplate();
     var inputField = this.queryByHook('rule-expression').children[0].children[1];
-    $(inputField).attr("placeholder", "-Enter Expression-");
+    $(inputField).attr("placeholder", "---No Expression Entered---");
     var varOptions = this.getOptions();
     var typeOptions = ['Rate Rule', 'Assignment Rule']
     var typeSelectView = new SelectView({

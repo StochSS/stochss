@@ -44,6 +44,26 @@ button.custom {
   width: 60%;
 }
 
+::-webkit-input-placeholder {
+  text-align: center;
+}
+
+::-moz-placeholder {
+  text-align: center;
+}
+
+:-ms-input-placeholder {
+  text-align: center;
+}
+
+::-ms-input-placeholder {
+  text-align: center;
+}
+
+::placeholder {
+  text-align: center;
+}
+
 .sidebar-nav {
   padding: 9px 0;
   font-size: 14px;
