@@ -71,7 +71,6 @@ module.exports = View.extend({
         });
         if(isNameUpdate) {
           reaction.buildSummary();
-          self.renderSpeciesAdvancedView();
         }else{
           reaction.checkModes();
         }
@@ -82,13 +81,19 @@ module.exports = View.extend({
             assignment.variable = specie;
           }
         })
-        if(isNameUpdate) {
-          self.collection.parent.eventsCollection.map(function (event) {
-            if(event.selected)
-              event.detailsView.renderEventAssignments();
-          });
+        if(isNameUpdate && event.selected) {
+          event.detailsView.renderEventAssignments();
         }
       });
+      self.collection.parent.rules.map(function (rule) {
+        if(rule.variable.name === name) {
+          rule.variable = specie;
+        }
+      });
+      if(isNameUpdate) {
+        self.renderSpeciesAdvancedView();
+        self.parent.renderRulesView();
+      }
     });
   },
   render: function () {

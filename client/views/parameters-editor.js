@@ -26,11 +26,15 @@ module.exports = View.extend({
             assignment.variable = parameter;
           }
         })
-        self.collection.parent.eventsCollection.map(function (event) {
-          if(event.selected)
-            event.detailsView.renderEventAssignments();
-        });
+        if(event.selected)
+          event.detailsView.renderEventAssignments();
       });
+      self.collection.parent.rules.map(function (rule) {
+        if(rule.variable.name === name) {
+          rule.variable = parameter;
+        }
+      });
+      self.parent.renderRulesView();
     });
   },
   render: function () {
