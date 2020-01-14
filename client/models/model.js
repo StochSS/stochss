@@ -10,7 +10,7 @@ var Species = require('./species');
 var InitialConditions = require('./initial-conditions');
 var Parameters = require('./parameters');
 var Reactions = require('./reactions');
-var RateRules = require('./rate-rules');
+var Rules = require('./rules');
 var Events = require('./events');
 
 module.exports = Model.extend({
@@ -34,7 +34,7 @@ module.exports = Model.extend({
     initialConditions: InitialConditions,
     parameters: Parameters,
     reactions: Reactions,
-    rateRules: RateRules,
+    rules: Rules,
     eventsCollection: Events,
   },
   children: {
