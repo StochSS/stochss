@@ -3,7 +3,6 @@ var tests = require('./tests');
 var View = require('ampersand-view');
 var InputView = require('./input');
 var SelectView = require('ampersand-select-view');
-var RateRulesView = require('./rate-rules-editor');
 //templates
 var template = require('../templates/includes/hybridSettings.pug');
 
@@ -76,17 +75,6 @@ module.exports = View.extend({
           modelKey: 'switchTol',
           valueType: 'number',
           value: this.model.switchTol
-        });
-      },
-    },
-    rateRules: {
-      selector: '[data-hook=rate-rules-container]',
-      waitFor: 'model',
-      prepareView: function (el) {
-        return new RateRulesView({
-          parent: this,
-          collection: this.model.parent.parent.parent.rateRules,
-          species: this.model.parent.parent.parent.species
         });
       },
     },

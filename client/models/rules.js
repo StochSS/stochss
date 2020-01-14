@@ -6,12 +6,12 @@ var Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: Rule,
-  addRule: function () {
+  addRule: function (type) {
     var name = this.getDefaultName();
     var variable = this.getDefaultVariable();
     var rule = new Rule({
       name: name,
-      type: 'Rate Rule',
+      type: type,
       expression: '',
       annotation: '',
     });

@@ -9,6 +9,7 @@ var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
 var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
+var RulesEditorView = require('../views/rules-editor');
 var SimSettingsView = require('../views/simulation-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 //models
@@ -134,9 +135,8 @@ let ModelEditor = PageView.extend({
     var reactionsEditor = new ReactionsEditorView({
       collection: this.model.reactions
     });
-    var eventsEditor = new EventsEditorView({
-      collection: this.model.eventsCollection
-    });
+    this.renderEventsView();
+    this.renderRulesView();
     var simSettings = new SimSettingsView({
       parent: this,
       model: this.model.simulationSettings,
@@ -150,13 +150,30 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
-    this.registerRenderSubview(eventsEditor, 'events-editor-container');
     this.registerRenderSubview(simSettings, 'sim-settings-container');
     this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
+  },
+  renderEventsView: function () {
+    if(this.eventsEditor){
+      this.eventsEditor.remove();
+    }
+    this.eventsEditor = new EventsEditorView({
+      collection: this.model.eventsCollection
+    });
+    this.registerRenderSubview(this.eventsEditor, 'events-editor-container');
+  },
+  renderRulesView: function () {
+    if(this.rulesEditor){
+      this.rulesEditor.remove();
+    }
+    this.rulesEditor = new RulesEditorView({
+      collection: this.model.rules
+    });
+    this.registerRenderSubview(this.rulesEditor, 'rules-editor-container');
   },
   subviews: {
   },
