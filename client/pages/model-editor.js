@@ -139,7 +139,7 @@ let ModelEditor = PageView.extend({
     this.renderRulesView();
     var previewSettings = new PreviewSettingsView({
       parent: this,
-      model: this.model.simulationSettings,
+      model: this.model.previewSettings,
     });
     var modelStateButtons = new ModelStateButtonsView({
       model: this.model

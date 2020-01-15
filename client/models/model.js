@@ -3,6 +3,7 @@ var path = require('path');
 var xhr = require('xhr');
 //models
 var Model = require('ampersand-model');
+var PreviewSettings = require('./preview-settings');
 var SimulationSettings = require('./simulation-settings');
 var MeshSettings = require('./mesh-settings');
 //collections
@@ -38,6 +39,7 @@ module.exports = Model.extend({
     eventsCollection: Events,
   },
   children: {
+    previewSettings: PreviewSettings,
     simulationSettings: SimulationSettings,
     meshSettings: MeshSettings
   },
