@@ -9,14 +9,19 @@ var template = require('../templates/includes/simulationSettings.pug');
 module.exports = View.extend({
   template: template,
   bindings: {
+    'model.isAutomatic': {
+      type: 'attribute',
+      name: 'checked',
+      hook: 'select-automatic',
+    },
   },
   events: {
     'click [data-hook=collapse]' :  'changeCollapseButtonText',
-    'change [data-hook=select-ode]' : 'setSimulationAlgorith',
-    'change [data-hook=select-ssa]' : 'setSimulationAlgorith',
-    'change [data-hook=select-tau-leaping]' : 'setSimulationAlgorith',
-    'change [data-hook=select-hybrid-tau]' : 'setSimulationAlgorith',
-    'change [data-hook=select-automatic]' : 'setSimulationAlgorith',
+    'change [data-hook=select-ode]' : 'handleSelectSimulationAlgorithmClick',
+    'change [data-hook=select-ssa]' : 'handleSelectSimulationAlgorithmClick',
+    'change [data-hook=select-tau-leaping]' : 'handleSelectSimulationAlgorithmClick',
+    'change [data-hook=select-hybrid-tau]' : 'handleSelectSimulationAlgorithmClick',
+    'change [data-hook=select-automatic]' : 'handleSelectSimulationAlgorithmClick',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -24,9 +29,14 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.model.is_stochastic ?
-      $(this.queryByHook('select-stochastic')).prop('checked', true) : 
-      $(this.queryByHook('select-deterministic')).prop('checked', true);
+    if(this.model.isAutomatic){
+      this.setSimulationAlgorithm('Automatic')
+    }else{
+      $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));
+      $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA")); 
+      $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
+      $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
+    }
   },
   update: function (e) {
   },
@@ -36,8 +46,11 @@ module.exports = View.extend({
     var text = $(this.queryByHook('collapse')).text();
     text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
   },
-  setSimulationAlgorithm: function (e) {
+  handleSelectSimulationAlgorithmClick: function (e) {
     var value = e.target.dataset.name;
+    this.setSimulationAlgorithm(value)
+  },
+  setSimulationAlgorithm: function (value) {
     console.log(value)
 
     var defaultMode = this.model.parent.defaultMode;
@@ -53,7 +66,8 @@ module.exports = View.extend({
     var rTol = this.model.relativeTol
     console.log(tTol, sTol, rTol, aTol)
 
-    if(value !== 'Automatic'){
+    this.model.isAutomatic = Boolean(value === 'Automatic')
+    if(!this.model.isAutomatic){
       this.model.algorithm = value;
     }else if(numEvents || numRules || defaultMode !== 'discrete' || sTol !== 0.03 || rTol !== 0.03 || aTol !== 0.03){
       this.model.algorithm = "Hybrid-Tau-Leaping";
@@ -62,7 +76,21 @@ module.exports = View.extend({
     }else{
       this.model.algorithm = "SSA"
     }
+    this.disableInputFieldByAlgorithm();
     console.log(this.model.algorithm)
+  },
+  disableInputFieldByAlgorithm: function () {
+    var isAutomatic = this.model.isAutomatic
+    var isODE = this.model.algorithm === "ODE";
+    var isSSA = this.model.algorithm === "SSA";
+    var isLeaping = this.model.algorithm === "Tau-Leaping";
+    var isHybrid = this.model.algorithm === "Hybrid-Tau-Leaping";
+    $(this.queryByHook("relative-tolerance")).find('input').prop('disabled', !(isODE || isHybrid || isAutomatic));
+    $(this.queryByHook("absolute-tolerance")).find('input').prop('disabled', !(isODE || isHybrid || isAutomatic));
+    $(this.queryByHook("trajectories")).find('input').prop('disabled', !(isSSA || isLeaping || isHybrid || isAutomatic));
+    $(this.queryByHook("seed")).find('input').prop('disabled', !(isSSA || isLeaping || isHybrid || isAutomatic));
+    $(this.queryByHook("tau-tolerance")).find('input').prop('disabled', !(isHybrid || isLeaping || isAutomatic));
+    $(this.queryByHook("switching-tolerance")).find('input').prop('disabled', !(isHybrid || isAutomatic));
   },
   subviews: {
     inputRelativeTolerance: {
