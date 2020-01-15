@@ -1,0 +1,31 @@
+div#preview-settings.card.card-body
+
+  div
+
+    h3.editor-header Preview Settings
+
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-preview-settings", data-hook="collapse") -
+
+  div.collapse(class="show", id="collapse-preview-settings")
+
+    table.table
+
+      thead
+
+        tr
+
+          th(scope="col") Preview Time
+
+          th(scope="col") Time Units
+
+          th(scope="col") Volume
+
+      tbody
+
+        tr
+
+          td: div(data-hook="preview-time")
+
+          td: div(data-hook="time-units")
+
+          td: div(data-hook="volume")
