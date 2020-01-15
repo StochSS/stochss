@@ -4,7 +4,7 @@ var $ = require('jquery');
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
-var template = require('../templates/includes/previewSettings.pug');
+var template = require('../templates/includes/modelSettings.pug');
 
 module.exports = View.extend({
   template: template,

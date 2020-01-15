@@ -10,7 +10,7 @@ var ParametersEditorView = require('../views/parameters-editor');
 var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
 var RulesEditorView = require('../views/rules-editor');
-var PreviewSettingsView = require('../views/preview-settings');
+var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 //models
 var Model = require('../models/model');
@@ -137,9 +137,9 @@ let ModelEditor = PageView.extend({
     });
     this.renderEventsView();
     this.renderRulesView();
-    var previewSettings = new PreviewSettingsView({
+    var modelSettings = new ModelSettingsView({
       parent: this,
-      model: this.model.previewSettings,
+      model: this.model.modelSettings,
     });
     var modelStateButtons = new ModelStateButtonsView({
       model: this.model
@@ -149,7 +149,7 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
-    this.registerRenderSubview(previewSettings, 'preview-settings-container');
+    this.registerRenderSubview(modelSettings, 'model-settings-container');
     this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
   },
   registerRenderSubview: function (view, hook) {
