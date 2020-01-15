@@ -33,6 +33,8 @@ module.exports = View.extend({
     window.location.href = path.join("/hub/stochss/jobs/edit", this.model.directory);
   },
   saveModel: function (cb) {
+    var algorithm = this.model.defaultMode === 'discrete' ? 'SSA' : 'Hybrid-Tau-Leaping'
+    this.model.previewSettings.algorithm = algorithm;
     this.saving();
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;
