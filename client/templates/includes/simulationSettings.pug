@@ -1,4 +1,4 @@
-div#sim-settings.card.card-body
+div#simulation-settings.card.card-body
 
   div
 
@@ -10,29 +10,53 @@ div#sim-settings.card.card-body
     table.table
       thead
         tr
-          th(scope="col", colspan="2") Simulation Type
+          th(scope="col", colspan="5") Simulation Algorithm
       tbody
         tr
           td
-            input(type="radio", name="simType", data-hook="select-deterministic", data-name="deterministic")
-            |  Deterministic
+            input(type="radio", name="simAlgorithm", data-hook="select-ode", data-name="Hybrid-Tau-Leaping")
+            |  ODE
 
           td
-            input(type="radio", name="simType", data-hook="select-stochastic", data-name="stochastic")
-            |   Stochastic
+            input(type="radio", name="simAlgorithm", data-hook="select-ssa", data-name="SSA")
+            |  SSA
+
+          td
+            input(type="radio", name="simAlgorithm", data-hook="select-tau-leaping", data-name="Tau-Leaping")
+            |  Tau Leaping
+
+          td
+            input(type="radio", name="simAlgorithm", data-hook="select-hybrid-tau", data-name="Hybrid-Tau-Leaping")
+            |  Hybrid Tau Leaping
+
+          td
+            input(type="radio", name="simAlgorithm", data-hook="select-automatic", data-name="Automatic")
+            |  Let us choose for you
       
-    div(data-hook='advanced-settings-container')
+    h5.editor-header Deterministic Settings
 
     table.table
       thead
         tr
-          th(scope="col") Simulation Time
-
-          th(scope="col") Time Units
+          th(scope="col") Relative Tolerance
+          th(scope="col") Absolute Tolerance
       tbody
         tr
-          td: div(data-hook="end-sim-container")
-          
-          td: div(data-hook="time-units-container")
+          td: div(data-hook="relative-tolerance")
+          td: div(data-hook="absolute-tolerance")
+    
+    h5.editor-header Stochastic Settings
 
-          td: div(data-hook="volume-container")
+    table.table
+      thead
+        tr
+          th(scope="col") Trajectories
+          th(scope="col") Seed
+          th(scope="col") Tau Tolerance
+          th(scope="col") Switching Tolerance
+      tbody
+        tr
+          td: div(data-hook="trajectories")
+          td: div(data-hook="seed")
+          td: div(data-hook="tau-tolerance")
+          td: div(data-hook="switching-tolerance")

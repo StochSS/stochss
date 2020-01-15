@@ -50,7 +50,6 @@ module.exports = View.extend({
     var simSettings = new SimSettingsView({
       parent: this,
       model: this.model.simulationSettings,
-      species: this.model.species
     });
     var jobStateButtons = new JobStateButtonsView({
       model: this.model
@@ -58,8 +57,7 @@ module.exports = View.extend({
     this.registerRenderSubview(inputName, "model-name-container");
     this.registerRenderSubview(simSettings, 'sim-settings-container');
     this.registerRenderSubview(jobStateButtons, 'job-state-buttons-container');
-    $(this.queryByHook("model-name-container")).find('input').width(1350)
-    this.parent.trajectories = this.model.simulationSettings.stochasticSettings.realizations
+    this.parent.trajectories = this.model.simulationSettings.realizations
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
