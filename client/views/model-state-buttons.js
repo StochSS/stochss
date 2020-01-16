@@ -34,7 +34,7 @@ module.exports = View.extend({
   },
   saveModel: function (cb) {
     var algorithm = this.model.defaultMode === 'discrete' ? 'SSA' : 'Hybrid-Tau-Leaping'
-    this.model.simulationSettings.algorithm = algorithm;
+    this.model.modelSettings.algorithm = algorithm;
     this.saving();
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;

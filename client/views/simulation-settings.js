@@ -29,9 +29,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    if(this.model.isAutomatic){
-      this.setSimulationAlgorithm('Automatic')
-    }else{
+    if(!this.model.isAutomatic){
       $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));
       $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA")); 
       $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
@@ -51,33 +49,11 @@ module.exports = View.extend({
     this.setSimulationAlgorithm(value)
   },
   setSimulationAlgorithm: function (value) {
-    console.log(value)
-
-    var defaultMode = this.model.parent.defaultMode;
-    console.log(defaultMode)
-
-    var numEvents = this.model.parent.eventsCollection.length
-    var numRules = this.model.parent.rules.length
-    console.log(numEvents, numRules)
-
-    var sTol = this.model.switchTol
-    var tTol = this.model.tauTol
-    var aTol = this.model.absoluteTol
-    var rTol = this.model.relativeTol
-    console.log(tTol, sTol, rTol, aTol)
-
     this.model.isAutomatic = Boolean(value === 'Automatic')
     if(!this.model.isAutomatic){
       this.model.algorithm = value;
-    }else if(numEvents || numRules || defaultMode !== 'discrete' || sTol !== 0.03 || rTol !== 0.03 || aTol !== 0.03){
-      this.model.algorithm = "Hybrid-Tau-Leaping";
-    }else if(tTol !== 0.03){
-      this.model.algorithm = "Tau-Leaping";
-    }else{
-      this.model.algorithm = "SSA"
     }
     this.disableInputFieldByAlgorithm();
-    console.log(this.model.algorithm)
   },
   disableInputFieldByAlgorithm: function () {
     var isAutomatic = this.model.isAutomatic

@@ -13,7 +13,8 @@
 	"modelSettings": {
 		"endSim": 20,
 		"timeStep": 0.05,
-		"volume": 1
+		"volume": 1,
+		"realizations": 1
 	},
 	"meshSettings": {
 		"count": 2

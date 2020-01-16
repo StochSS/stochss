@@ -64,6 +64,9 @@ module.exports = Model.extend({
     this.parameters.map(function (parameter) {
       self.parameters.trigger('update-parameters', parameter.name, parameter);
     });
+    if(!isPreview){
+      this.simulationSettings.letUsChooseForUse()
+    }
     this.save();
     // xhr({ 
     //   method: 'post',
