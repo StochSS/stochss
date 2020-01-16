@@ -15,14 +15,13 @@ for handler in log.handlers:
 
 
 from gillespy2 import Species, Parameter, Reaction, RateRule, Model
+try:
+    from gillespy2 import AssignmentRule
+except:
+    log.warn("Assignment Rules are not supported")
 import numpy
 import gillespy2.core.gillespySolver
-
-try:
-    from gillespy2.core.events import EventAssignment, EventTrigger, Event
-except:
-    log.warn("Events are not supported by gillespy2!")
-
+from gillespy2.core.events import EventAssignment, EventTrigger, Event
 from gillespy2.core.gillespyError import SolverError, DirectoryError, BuildError, ExecutionError
 from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
 from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
@@ -40,7 +39,7 @@ class _Model(Model):
     Build a GillesPy2 model.
     ##############################################################################
     '''
-    def __init__(self, name, species, parameters, reactions, events, rate_rules, endSim, timeStep, volume):
+    def __init__(self, name, species, parameters, reactions, events, rate_rules, assignment_rules, endSim, timeStep, volume):
         '''
         Initialize and empty model and add its components.
 
@@ -58,6 +57,8 @@ class _Model(Model):
             List of GillesPy2 events to be added to the model.
         rate_rules : list
             List of GillesPy2 rate rules to be added to the model.
+        assignment_rules : list
+            List of GillesPy2 assignment rules to be added to the model.
         endSim : int
             Simulation duration of the model.
         timeStep : int
@@ -71,11 +72,12 @@ class _Model(Model):
         self.add_parameter(parameters)
         self.add_species(species)
         self.add_reaction(reactions)
-        try:
-            self.add_event(events)
-        except:
-            log.warn("Could not add events as events are not supported.")
+        self.add_event(events)
         self.add_rate_rule(rate_rules)
+        try:
+            self.add_assignment_rules(assignment_rules)
+        except:
+            log.warn('Assignment rules are not supported.')
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
 
@@ -97,19 +99,21 @@ class ModelFactory():
         '''
         
         name = data['name']
-        timeStep = (data['simulationSettings']['timeStep'])
-        endSim = data['simulationSettings']['endSim']
-        volume = data['simulationSettings']['volume']
-        is_stochastic = data['simulationSettings']['is_stochastic']
-        self.species = list(map(lambda s: self.build_specie(s, is_stochastic), data['species']))
+        timeStep = (data['modelSettings']['timeStep'])
+        endSim = data['modelSettings']['endSim']
+        volume = data['modelSettings']['volume']
+        is_ode = data['simulationSettings']['algorithm'] == "ODE"
+        self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
         self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), data['eventsCollection']))
-        rate_rules = list(filter(lambda rr: self.is_valid_rate_rule(rr), data['rateRules']))
-        self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), rate_rules))
-        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, endSim, timeStep, volume)
+        rate_rules = list(filter(lambda rr: self.is_valid_rate_rule(rr), data['rules']))
+        assignment_rules = list(filter(lambda rr: self.is_valid_assignment_rule(rr), data["rules"]))
+        self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr, self.species, self.parameters), rate_rules))
+        self.assignment_rules = list(map(lambda ar: self.build_assignment_rules(ar, self.species, self.parameters), assignment_rules))
+        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, self.assignment_rules, endSim, timeStep, volume)
 
-    def build_specie(self, args, is_stochastic):
+    def build_specie(self, args, is_ode):
         '''
         Build a GillesPy2 species.
 
@@ -120,7 +124,7 @@ class ModelFactory():
         '''
         name = args['name'].strip()
         value = args['value']
-        if is_stochastic:
+        if not is_ode:
             mode = args['mode']
         else:
             mode = 'continuous'
@@ -190,17 +194,11 @@ class ModelFactory():
         persistent = args['persistent']
         use_values_from_trigger_time = args['useValuesFromTriggerTime']
 
-        try:
-            trigger = EventTrigger(expression=trigger_expression, initial_value = initial_value, persistent = persistent)
-        except:
-            log.warn("Can't create an event trigger as events are not supported")
+        trigger = EventTrigger(expression=trigger_expression, initial_value=initial_value, persistent=persistent)
 
         assignments = list(map(lambda a: self.build_event_assignment(a, self.species, self.parameters), args['eventAssignments']))
 
-        try:
-            return Event(name=name, delay=delay, assignments=assignments, priority=priority, trigger=trigger, use_values_from_trigger_time=use_values_from_trigger_time)
-        except:
-            log.warn("Can't create an event as events are not supported")
+        return Event(name=name, delay=delay, assignments=assignments, priority=priority, trigger=trigger, use_values_from_trigger_time=use_values_from_trigger_time)
 
 
     def build_event_assignment(self, args, species, parameters):
@@ -221,18 +219,20 @@ class ModelFactory():
         if not len(variable):
             variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
 
-        try:
-            return EventAssignment(variable=variable[0], expression=expression)
-        except:
-            log.warn("Can't create an event assignment as events are not supported")
-
+        return EventAssignment(variable=variable[0], expression=expression)
+        
 
     def is_valid_rate_rule(self, rr):
-        if not rr['rule'] == "":
+        if rr['type'] == "Rate Rule" and not rr['rule'] == "":
             return rr
 
 
-    def build_rate_rules(self, args):
+    def is_valid_assignment_rule(self, rr):
+        if rr['type'] == "Assignment Rule" and not rr['rule'] == "":
+            return rr
+
+
+    def build_rate_rules(self, args, species, parameters):
         '''
         Build a GillesPy2 rate rule.
 
@@ -240,12 +240,42 @@ class ModelFactory():
         ----------
         args : dict
             A json representation of a rate rule.
+        species : list
+            List of GillesPy2 species.
+        parameter : list
+            List of GillesPy2 parameters.
         '''
-        if not args['rule'] == "":
-            name = args['name']
-            species = self.build_specie(args['specie'])
-            expression = args['rule']
-            return RateRule(name=name, species=species, expression=expression)
+        name = args['name']
+        variable = list(filter(lambda s: s.name == args['variable']['name'], species))
+        if not len(variable):
+            variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
+        expression = args['expression']
+        return RateRule(name=name, species=variable[0], expression=expression)
+
+
+    def build_assignment_rule(self, args, species, parameters):
+        '''
+        Build a GillesPy2 assignment rule.
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of an assignment rule.
+        species : list
+            List of GillesPy2 species.
+        parameter : list
+            List of GillesPy2 parameters.
+        '''
+        name = args['name']
+        variable = list(filter(lambda s: s.name == args['variable']['name'], species))
+        if not len(variable):
+            variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
+        expression = args['expression']
+        try:
+            return AssignmentRule(variable=variable[0], formula=expression)
+        except:
+            log.warn("Assignment rules are not yet supported")
+
 
     def build_stoich_species_dict(self, args):
         '''
@@ -280,6 +310,8 @@ def run_model(model_path):
     jsonData = json.loads(str(data))
     jsonData['name'] = model_path.split('/').pop().split('.')[0]
     _model = ModelFactory(jsonData)
+    jsonData['simulationSettings']['realizations'] = jsonData['modelSettings']['realizations']
+    jsonData['simulationSettings']['algorithm'] = jsonData['modelSettings']['algorithm']
     _results = run_solver(_model.model, jsonData['simulationSettings'], 5)
     results = _results[0]
     res_dict = dict(results)
@@ -307,9 +339,10 @@ def run_solver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    if(data['is_stochastic'] == False):
+    # print("Selecting the algorithm")
+    algorithm = data['algorithm']
+    if(algorithm == "ODE"):
         return basicODESolver(model, data, run_timeout)
-    algorithm = data['stochasticSettings']['algorithm']
     if(algorithm == "SSA"):
         return ssaSolver(model, data, run_timeout)
     if(algorithm == "Tau-Leaping"):
@@ -331,10 +364,11 @@ def basicODESolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
+    # print("running ode solver")
     results = model.run(
         solver = BasicTauHybridSolver,
         timeout = run_timeout,
-        integrator_options = { 'atol' : data['deterministicSettings']['absoluteTol'], 'rtol' : data['deterministicSettings']['relativeTol']}
+        integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
     return results
 
@@ -352,12 +386,13 @@ def ssaSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    seed = data['stochasticSettings']['ssaSettings']['seed']
+    # print("running ssa solver")
+    seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
         timeout = run_timeout,
-        number_of_trajectories = data['stochasticSettings']['realizations'],
+        number_of_trajectories = data['realizations'],
         seed = seed
     )
     return results
@@ -376,15 +411,16 @@ def basicTauLeapingSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    seed = data['stochasticSettings']['tauSettings']['seed']
+    # print("running tau leaping solver")
+    seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
         solver = BasicTauLeapingSolver,
         timeout = run_timeout,
-        number_of_trajectories = data['stochasticSettings']['realizations'],
+        number_of_trajectories = data['realizations'],
         seed = seed,
-        tau_tol = data['stochasticSettings']['tauSettings']['tauTol']
+        tau_tol = data['tauTol']
     )
     return results
 
@@ -402,16 +438,18 @@ def basicTauHybridSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    seed = data['stochasticSettings']['hybridSettings']['seed']
+    # print("running hybrid solver")
+    seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
         solver = BasicTauHybridSolver,
         timeout = run_timeout,
-        number_of_trajectories = data['stochasticSettings']['realizations'],
+        number_of_trajectories = data['realizations'],
         seed = seed,
-        switch_tol = data['stochasticSettings']['hybridSettings']['switchTol'],
-        tau_tol = data['stochasticSettings']['hybridSettings']['tauTol']
+        switch_tol = data['switchTol'],
+        tau_tol = data['tauTol'],
+        integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
     return results
 

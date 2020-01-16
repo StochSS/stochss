@@ -111,7 +111,6 @@ class RunModelAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User validation
         user = self.current_user.name # Get User Name
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
-        model_path = model_path.replace(" ", "\ ")
         self.set_header('Content-Type', 'application/json')
         # Create temporary results file it doesn't already exist
         if outfile == 'none':
@@ -119,7 +118,7 @@ class RunModelAPIHandler(BaseHandler):
             outfile = "{0}".format(outfile_uuid)
             outfile = outfile.replace("-", "_")
         log.warn(str(outfile))
-        exec_cmd = ['run_model.py', model_path, '{}.tmp'.format(outfile)] # Script commands for read run_cmd
+        exec_cmd = ['run_model.py', '{0}'.format(model_path), '{}.tmp'.format(outfile)] # Script commands for read run_cmd
         exec_cmd.append(''.join(['--', run_cmd]))
         if run_cmd == 'start':
             exec_cmd = ['screen', '-d', '-m'] + exec_cmd # Add screen cmd to Script commands for start run_cmd

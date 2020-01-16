@@ -180,7 +180,7 @@ def run_job(job_model, model_file, info_path, job_path):
         open(os.path.join(job_path, 'ERROR'), 'w').close()
     else:
         open(os.path.join(job_path, 'COMPLETE'), 'w').close() # update status to complete
-        return results, data['simulationSettings']['stochasticSettings']['realizations'], data['simulationSettings']['is_stochastic']
+        return results, data['simulationSettings']['realizations'], (not data['simulationSettings']['algorithm'] == "ODE")
 
 
 def plot_results(results, results_path, trajectories, is_stochastic):
