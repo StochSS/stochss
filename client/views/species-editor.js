@@ -144,14 +144,15 @@ module.exports = View.extend({
     this.setAllSpeciesModes(mode)
   },
   getDefaultSpeciesMode: function (e) {
-    this.setAllSpeciesModes(e.target.dataset.name)
+    var self = this;
+    this.setAllSpeciesModes(e.target.dataset.name, function () {
+      self.collection.trigger('update-species', specie.name, specie, false)
+    });
   },
   setAllSpeciesModes: function (defaultMode) {
-    var self = this;
     this.collection.parent.defaultMode = defaultMode;
     this.collection.map(function (specie) { 
       specie.mode = defaultMode
-      self.collection.trigger('update-species', specie.name, specie, false)
     });
     if(defaultMode === "dynamic"){
       this.renderSpeciesAdvancedView()

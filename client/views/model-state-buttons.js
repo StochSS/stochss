@@ -25,6 +25,7 @@ module.exports = View.extend({
     this.saveModel(this.saved.bind(this));
   },
   clickRunHandler: function (e) {
+    $(this.parent.queryByHook('model-run-error-container')).collapse('hide');
     var el = this.parent.queryByHook('model-run-container');
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
@@ -33,8 +34,16 @@ module.exports = View.extend({
     window.location.href = path.join("/hub/stochss/jobs/edit", this.model.directory);
   },
   saveModel: function (cb) {
-    var algorithm = this.model.defaultMode === 'discrete' ? 'SSA' : 'Hybrid-Tau-Leaping'
-    this.model.modelSettings.algorithm = algorithm;
+    var numEvents = this.model.eventsCollection.length;
+    var numRules = this.model.rules.length;
+    var defaultMode = this.model.defaultMode;
+    if(!numEvents && !numRules && defaultMode === "continuous"){
+      this.model.modelSettings.algorithm = "ODE";
+    }else if(!numEvents && !numRules && defaultMode === "discrete"){
+      this.model.modelSettings.algorithm = "SSA";
+    }else{
+      this.model.modelSettings.algorithm = "Hybrid-Tau-Leaping";
+    }
     this.saving();
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;
@@ -97,7 +106,13 @@ module.exports = View.extend({
           if(data.timeout){
             $(self.parent.queryByHook('model-timeout-message')).collapse('show');
           }
-          self.plotResults(data.results);
+          try{
+            self.plotResults(data.results);
+          }catch(err){
+            self.ran
+            $(self.parent.queryByHook('model-run-error-message')).text(data.results);
+            $(self.parent.queryByHook('model-run-error-container')).collapse('show');
+          }
         }else{
           self.getResults(body);
         }

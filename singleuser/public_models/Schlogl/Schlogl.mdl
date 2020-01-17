@@ -5,7 +5,7 @@
         "endSim": 100000,
         "timeStep": 1000,
         "volume": 1,
-        "realizations" 1,
+        "realizations": 1,
         "algorithm": "SSA"
     },
     "simulationSettings": {

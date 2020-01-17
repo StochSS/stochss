@@ -22,7 +22,7 @@ except:
 import numpy
 import gillespy2.core.gillespySolver
 from gillespy2.core.events import EventAssignment, EventTrigger, Event
-from gillespy2.core.gillespyError import SolverError, DirectoryError, BuildError, ExecutionError
+from gillespy2.core.gillespyError import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
 from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
 from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
 
@@ -479,11 +479,15 @@ if __name__ == "__main__":
     model_path = os.path.join(user_dir, args.model_path)
     outfile = os.path.join(user_dir, ".{0}".format(args.outfile))
     if not args.read:
-        results = run_model(model_path)
-        resp = {"timeout":False, "results":results}
-        logs = log_stream.getvalue()
-        if 'GillesPy2 simulation exceeded timeout.' in logs:
-            resp['timeout'] = True
+        resp = {"timeout":False}
+        try:
+            results = run_model(model_path)
+            resp["results"] = results
+            logs = log_stream.getvalue()
+            if 'GillesPy2 simulation exceeded timeout.' in logs:
+                resp['timeout'] = True
+        except ModelError as error:
+            resp['results'] = str(error)
         with open(outfile, "w") as fd:
             json.dump(resp, fd)
         open(outfile + ".done", "w").close()
