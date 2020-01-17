@@ -84,16 +84,12 @@ module.exports = View.extend({
     });
   },
   running: function () {
-    var el = this.parent.queryByHook('model-run-container');
-    var loader = this.parent.queryByHook('plot-loader');
-    el.style.display = "none"
-    loader.style.display = "block"
+    $(this.parent.queryByHook('model-run-container')).collapse('hide');
+    $(this.parent.queryByHook('plot-loader')).collapse('show');
   },
   ran: function () {
-    var el = this.parent.queryByHook('model-run-container');
-    var loader = this.parent.queryByHook('plot-loader');
-    loader.style.display = "none";
-    el.style.display = "block";
+    $(this.parent.queryByHook('model-run-container')).collapse('show');
+    $(this.parent.queryByHook('plot-loader')).collapse('hide');
   },
   getResults: function (data) {
     var self = this;
@@ -106,11 +102,11 @@ module.exports = View.extend({
           if(data.timeout){
             $(self.parent.queryByHook('model-timeout-message')).collapse('show');
           }
-          try{
+          if(data.results){
             self.plotResults(data.results);
-          }catch(err){
-            self.ran
-            $(self.parent.queryByHook('model-run-error-message')).text(data.results);
+          }else{
+            self.ran();
+            $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
             $(self.parent.queryByHook('model-run-error-container')).collapse('show');
           }
         }else{

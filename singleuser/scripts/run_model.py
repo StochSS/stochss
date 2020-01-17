@@ -487,7 +487,7 @@ if __name__ == "__main__":
             if 'GillesPy2 simulation exceeded timeout.' in logs:
                 resp['timeout'] = True
         except ModelError as error:
-            resp['results'] = str(error)
+            resp['errors'] = str(error)
         with open(outfile, "w") as fd:
             json.dump(resp, fd)
         open(outfile + ".done", "w").close()

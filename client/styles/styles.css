@@ -161,7 +161,7 @@ button.custom {
 }
 
 .spinner-border {
-  display: none;
+  display: block;
   position: relative;
   margin: 15px;
   left: 40%;

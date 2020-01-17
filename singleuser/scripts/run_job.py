@@ -157,7 +157,10 @@ def run_job(job_model, model_file, info_path, job_path):
         open(os.path.join(job_path, 'ERROR'), 'w').close() # update status to error
     data = json.loads(str(_data))
     data['name'] = model_file.split('.')[0]
-    _model = ModelFactory(data) # build GillesPy2 model
+    try:
+        _model = ModelFactory(data) # build GillesPy2 model
+    except Exception as error:
+        log.error(str(error))
     # Add the start time to the job info file
     with open(info_path, 'r') as info_file:
         _info_data = info_file.read()
@@ -178,6 +181,7 @@ def run_job(job_model, model_file, info_path, job_path):
     except:
         # update job status to error if GillesPy2 throws an exception
         open(os.path.join(job_path, 'ERROR'), 'w').close()
+        return None, None, None
     else:
         open(os.path.join(job_path, 'COMPLETE'), 'w').close() # update status to complete
         return results, data['simulationSettings']['realizations'], (not data['simulationSettings']['algorithm'] == "ODE")
@@ -313,7 +317,7 @@ if __name__ == "__main__":
 
     data, trajectories, is_stochastic = opts[opt_type](job_path, model_path, job_model, results_path=results_path, model_file=model_file)
     
-    if args.run:
+    if args.run and data:
         if not 'results' in os.listdir(path=job_path):
             os.mkdir(results_path)
         with open("{0}/results.p".format(results_path), 'wb') as results_file:
