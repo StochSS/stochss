@@ -8,13 +8,6 @@ var template = require('../templates/includes/simulationSettings.pug');
 
 module.exports = View.extend({
   template: template,
-  bindings: {
-    'model.isAutomatic': {
-      type: 'attribute',
-      name: 'checked',
-      hook: 'select-automatic',
-    },
-  },
   events: {
     'click [data-hook=collapse]' :  'changeCollapseButtonText',
     'change [data-hook=select-ode]' : 'handleSelectSimulationAlgorithmClick',
@@ -34,6 +27,8 @@ module.exports = View.extend({
       $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA")); 
       $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
       $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
+    }else{
+      $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic); 
     }
   },
   update: function (e) {

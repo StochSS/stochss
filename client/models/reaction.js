@@ -92,11 +92,14 @@ module.exports = State.extend({
   checkModes: function () {
     var hasContinuous = false;
     var hasDynamic = false;
+    var hasDiscrete = false;
     this.reactants.map(function (reactant) { 
       if(reactant.specie.mode === 'continuous' && !hasContinuous)
         hasContinuous = true;
       else if(reactant.specie.mode === 'dynamic' && !hasDynamic)
         hasDynamic = true;
+      else if(reactant.specie.mode === 'discrete' && !hasDiscrete)
+        hasDiscrete = true;
     });
     if(!hasContinuous || !hasDynamic) {
       this.products.map(function (product) { 
@@ -104,8 +107,10 @@ module.exports = State.extend({
           hasContinuous = true;
         else if(product.specie.mode === 'dynamic' && !hasDynamic)
           hasDynamic = true;
+        else if(product.specie.mode === 'discrete' && !hasDiscrete)
+        hasDiscrete = true;
       });
     }
-    this.hasConflict = Boolean(hasContinuous && hasDynamic)
+    this.hasConflict = Boolean(hasContinuous && (hasDynamic || hasDiscrete))
   },
 });

@@ -66,6 +66,7 @@ module.exports = View.extend({
       });
     }
     this.model.variable = eventVar[0];
+    this.model.collection.parent.collection.trigger('change');
   },
   subviews: {
     inputAssignmentExpression: {

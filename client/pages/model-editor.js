@@ -85,6 +85,14 @@ let ModelEditor = PageView.extend({
       this.updateSpeciesInUse();
       this.updateParametersInUse();
     }, this);
+    this.model.eventsCollection.on("add change remove", function (){
+      this.updateSpeciesInUse();
+      this.updateParametersInUse();
+    }, this);
+    this.model.rules.on("add change remove", function() {
+      this.updateSpeciesInUse();
+      this.updateParametersInUse();
+    }, this);
   },
   update: function () {
   },
@@ -93,21 +101,39 @@ let ModelEditor = PageView.extend({
   updateSpeciesInUse: function () {
     var species = this.model.species;
     var reactions = this.model.reactions;
+    var events = this.model.eventsCollection;
+    var rules = this.model.rules;
     species.forEach(function (specie) { specie.inUse = false; });
-    var updateInUse = function (stoichSpecie) {
+    var updateInUseForReaction = function (stoichSpecie) {
       _.where(species.models, { name: stoichSpecie.specie.name })
        .forEach(function (specie) {
           specie.inUse = true;
         });
     }
+    var updateInUseForOther = function (specie) {
+      _.where(species.models, { name: specie.name })
+       .forEach(function (specie) {
+         specie.inUse = true;
+       });
+    }
     reactions.forEach(function (reaction) {
-      reaction.products.forEach(updateInUse);
-      reaction.reactants.forEach(updateInUse);
+      reaction.products.forEach(updateInUseForReaction);
+      reaction.reactants.forEach(updateInUseForReaction);
+    });
+    events.forEach(function (event) {
+      event.eventAssignments.forEach(function (assignment) {
+        updateInUseForOther(assignment.variable)
+      });
+    });
+    rules.forEach(function (rule) {
+      updateInUseForOther(rule.variable);
     });
   },
   updateParametersInUse: function () {
     var parameters = this.model.parameters;
     var reactions = this.model.reactions;
+    var events = this.model.eventsCollection;
+    var rules = this.model.rules;
     parameters.forEach(function (param) { param.inUse = false; });
     var updateInUse = function (param) {
       _.where(parameters.models, { name: param.name })
@@ -117,6 +143,14 @@ let ModelEditor = PageView.extend({
     }
     reactions.forEach(function (reaction) {
       updateInUse(reaction.rate);
+    });
+    events.forEach(function (event) {
+      event.eventAssignments.forEach(function (assignment) {
+        updateInUse(assignment.variable)
+      });
+    });
+    rules.forEach(function (rule) {
+      updateInUse(rule.variable);
     });
   },
   renderSubviews: function () {

@@ -14,21 +14,36 @@ module.exports = View.extend({
   },
   initialize: function (args) {
     View.prototype.initialize.apply(this, arguments);
+    this.collection.parent.species.on('add remove', this.toggleAddRuleButton, this);
+    this.collection.parent.parameters.on('add remove', this.toggleAddRuleButton, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderRules();
+    this.toggleAddRuleButton()
   },
   update: function () {
   },
   updateValid: function () {
   },
   renderRules: function () {
-    this.renderCollection(
+    if(this.rulesView) {
+      this.rulesView.remove();
+    }
+    this.rulesView = this.renderCollection(
       this.collection,
       RuleView,
       this.queryByHook('rule-list-container')
     );
+  },
+  toggleAddRuleButton: function () {
+    if(this.collection.length > 0){
+      this.renderRules();
+    }
+    var numSpecies = this.collection.parent.species.length;
+    var numParameters = this.collection.parent.parameters.length;
+    var disabled = numSpecies <= 0 && numParameters <= 0
+    $(this.queryByHook('add-rule')).prop('disabled', disabled);
   },
   addRule: function (e) {
     var type = e.target.dataset.name

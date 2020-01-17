@@ -30,6 +30,8 @@ module.exports = View.extend({
         this.collection.trigger("select", selected);
       }
     }, this);
+    this.collection.parent.species.on('add remove', this.toggleAddEventButton, this);
+    this.collection.parent.parameters.on('add remove', this.toggleAddEventButton, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -46,10 +48,22 @@ module.exports = View.extend({
       this.setSelectedEvent(this.collection.at(0));
       this.collection.trigger("select", this.selectedEvent);
     }
+    this.toggleAddEventButton()
   },
   update: function () {
   },
   updateValid: function () {
+  },
+  toggleAddEventButton: function () {
+    this.collection.map(function (event) {
+      if(event.detailsView && event.selected){
+        event.detailsView.renderEventAssignments();
+      }
+    })
+    var numSpecies = this.collection.parent.species.length;
+    var numParameters = this.collection.parent.parameters.length;
+    var disabled = numSpecies <= 0 && numParameters <= 0
+    $(this.queryByHook('add-event')).prop('disabled', disabled);
   },
   setSelectedEvent: function (event) {
     this.collection.each(function (m) { m.selected = false; });
