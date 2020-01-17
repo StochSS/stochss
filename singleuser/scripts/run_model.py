@@ -223,12 +223,12 @@ class ModelFactory():
         
 
     def is_valid_rate_rule(self, rr):
-        if rr['type'] == "Rate Rule" and not rr['rule'] == "":
+        if rr['type'] == "Rate Rule" and not rr['expression'] == "":
             return rr
 
 
     def is_valid_assignment_rule(self, rr):
-        if rr['type'] == "Assignment Rule" and not rr['rule'] == "":
+        if rr['type'] == "Assignment Rule" and not rr['expression'] == "":
             return rr
 
 

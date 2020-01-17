@@ -37,10 +37,23 @@ def convert_to_sbml(model):
     events = model['eventsCollection']
     convert_events(sbml_model, events)
 
-    rate_rules = model['rateRules']
+    rate_rules = list(filter(lambda r: is_valid_rate_rule(r), model['rules']))
     convert_rate_rules(sbml_model, rate_rules)
+
+    assignment_rules = list(filter(lambda r: is_valid_assignment_rule(r), model['rules']))
+    convert_assignment_rules(sbml_model, assignment_rules)
     
     return document
+
+
+def is_valid_rate_rule(rule):
+    if rule['type'] == "Rate Rule" and not rule['expression'] == "":
+        return rule
+
+
+def is_valid_assignment_rule(rule):
+    if rule['type'] == "Assignment Rule" and not rule['expression'] == "":
+        return rule
 
 
 def convert_species(sbml_model, species):
@@ -50,6 +63,7 @@ def convert_species(sbml_model, species):
         s.setCompartment('c')
         s.setId(specie['name'])
         s.setInitialAmount(specie['value'])
+        s.setAnnotation(specie['annotation'])
 
 
 def convert_parameters(sbml_model, parameters):
@@ -58,6 +72,7 @@ def convert_parameters(sbml_model, parameters):
         p.initDefaults()
         p.setId(parameter['name'])
         p.setValue(float(parameter['value']))
+        p.setAnnotation(parameter['annotation'])
 
 
 def convert_reactions(sbml_model, reactions):
@@ -65,6 +80,7 @@ def convert_reactions(sbml_model, reactions):
         r = sbml_model.createReaction()
         r.initDefaults()
         r.setId(reaction['name'])
+        r.setAnnotation(reaction['annotation'])
 
         _reactants = reaction['reactants']
         reactants = convert_reactants(r, _reactants)
@@ -140,6 +156,7 @@ def convert_events(sbml_model, events):
         e = sbml_model.createEvent()
         e.setId(event['name'])
         e.setUseValuesFromTriggerTime(event['useValuesFromTriggerTime'])
+        e.setAnnotation(event['annotation'])
 
         delay = event['delay'].replace('and', '&&').replace('or', '||')
         d = e.createDelay()
@@ -184,18 +201,33 @@ def convert_event_assignments(event_name, sbml_event, assignments):
 
 def convert_rate_rules(sbml_model, rules):
     for rule in rules:
-        species = rule['specie']
+        variable = rule['variable']
         r = sbml_model.createRateRule()
         r.setId(rule['name'])
-        r.setVariable(species['name'])
-        equation = rule['rule']
-        equation = equation.replace("and", "&&")
-        equation = equation.replace("or", "||")
-
+        r.setVariable(variable['name'])
+        r.setAnnotation(rule['annotation'])
+        equation = rule['expression'].replace("and", "&&").replace("or", "||")
+        
         try:
             r.setMath(libsbml.parseL3Formula(equation))
         except Exception as error:
             raise Exception('libsbml threw an error when parsing rate equation "{0}" for rate rule "{1}"'.format(equation, rule['name']))
+
+
+def convert_assignment_rules(sbml_model, rules):
+    for rule in rules:
+        variable = rule['variable']
+        r = sbml_model.createAssignmentRule()
+        r.setId(rule['name'])
+        r.setVariable(variable['name'])
+        r.setAnnotation(rule['annotation'])
+        equation = rule['expression'].replace("and", "&&").replace("or", "||")
+
+        try:
+            r.setMath(libsbml.parseL3Formula(equation))
+        except:
+            raise Exception('libsbml threw an error when parsing assignment equation "{0}" for assignment rule "{1}"'.format(equation, rule['name']))
+
 
 
 def write_sbml_to_file(sbml_path, sbml_doc):

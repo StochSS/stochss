@@ -22,19 +22,15 @@ def generate_imports_cell(json_data):
         # Non-Spatial
         imports += 'import gillespy2\n'
         imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule\n'
-        if json_data['simulationSettings']['is_stochastic']:
-            # Stochastic, use specified stochastic solver
-            algorithm = json_data['simulationSettings']['stochasticSettings']['algorithm']
-            algorithm_map = {
-                    'SSA': '',
-                    'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver',
-                    'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver'
-                    }
-            imports += algorithm_map[algorithm]
-        else:
-            # Deterministic, use ODE
-            imports += 'from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver'
-
+        algorithm = json_data['simulationSettings']['algorithm']
+        algorithm_map = {
+                'SSA': '',
+                'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver',
+                'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver',
+                'ODE': 'from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver'
+                }
+        imports += algorithm_map[algorithm]
+    
     return imports
 
 def create_parameter_strings(json_data, padding):
@@ -84,15 +80,16 @@ def create_reaction_strings(json_data, padding):
 
 def create_rate_rule_strings(json_data, padding):
     rr_string = ''
-    is_stochastic = json_data['simulationSettings']['is_stochastic']
-    algorithm = json_data['simulationSettings']['stochasticSettings']['algorithm']
+    is_stochastic = not json_data['simulationSettings']['algorithm'] == "ODE"
+    algorithm = json_data['simulationSettings']['algorithm']
     if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
         rr_string += '\n' + padding + '# Rate Rules\n'
-        for rr in json_data['rateRules']:
-            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", expression="{1}", species=self.listOfSpecies["{2}"]))\n'.format(
-                    rr['name'], 
-                    rr['rule'], 
-                    rr['specie']['name'])
+        for rr in json_data['rules']:
+            if rr['type'] == "Rate Rules":
+                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", expression="{1}", species=self.listOfSpecies["{2}"]))\n'.format(
+                        rr['name'], 
+                        rr['expression'], 
+                        rr['variable']['name'])
     return rr_string
 
 def generate_model_cell(json_data, name):
@@ -109,7 +106,7 @@ def generate_model_cell(json_data, name):
         padding = '        '
         model_cell += padding + 'Model.__init__(self, name="{0}")\n'.format(name)
         model_cell += padding + 'self.volume = {0}\n'.format(
-                json_data['simulationSettings']['volume'])
+                json_data['modelSettings']['volume'])
 
         model_cell += create_parameter_strings(json_data, padding)
         model_cell += create_species_strings(json_data, padding)
@@ -117,10 +114,10 @@ def generate_model_cell(json_data, name):
         model_cell += create_rate_rule_strings(json_data, padding)
 
         model_cell += '\n' + padding + '# Timespan\n'
-        duration = json_data['simulationSettings']['endSim']
+        duration = json_data['modelSettings']['endSim']
         model_cell += padding + 'self.timespan(np.linspace(0, {0}, {1}))'.format(
                 duration,
-                round(duration/json_data['simulationSettings']['timeStep'] + 1))
+                round(duration/json_data['modelSettings']['timeStep'] + 1))
             
         # Create strings from Reactions
 
@@ -135,55 +132,48 @@ def generate_run_cell(json_data):
     else:
         # Non-Spatial
         run_cell += 'results = model.run('
-        if json_data['simulationSettings']['is_stochastic']:
-            settings = json_data['simulationSettings']['stochasticSettings']
-            # Stochastic
-            algorithm = settings['algorithm']
+        
+        settings = json_data['simulationSettings']
+        # Stochastic
+        algorithm = settings['algorithm']
 
-            # Select Solver
-            solver_map = {
-                    'SSA': '',
-                    'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
-                    'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, '
-                    }
-            run_cell += '{0}'.format(solver_map[algorithm])
+        # Select Solver
+        solver_map = {
+                'SSA': '',
+                'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
+                'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, ',
+                'ODE': 'solver=BasicODESolver, '
+                }
+        run_cell += '{0}'.format(solver_map[algorithm])
 
-            # Append Settings
-            settings_map = {
-                    'SSA': 'ssaSettings',
-                    'Tau-Leaping': 'tauSettings',
-                    'Hybrid-Tau-Leaping': 'hybridSettings'
-                    }
-            if settings[settings_map[algorithm]]['seed'] == -1:
-                settings[settings_map[algorithm]]['seed'] = None
+        # Append Settings
+        if settings['seed'] == -1:
+            settings['seed'] = None
 
-            # GillesPy requires snake case, remap camelCase from json data to
-            # snake case for notebook
-            remap_keys = {'tauTol': 'tau_tol', 
-                    'switchTol': 'switch_tol'}
-            for key in list(settings[settings_map[algorithm]].keys()):
-                if key in remap_keys:
-                    settings[settings_map[algorithm]][remap_keys[key]] = settings[settings_map[algorithm]].pop(key) 
-            
-            #Parse settings for algorithm
-            algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings[settings_map[algorithm]].items()]
-            for item in algorithm_settings:
-                run_cell += item
-
-        else:
-            # Deterministic
-            run_cell += 'solver=BasicODESolver'
-            settings = json_data['simulationSettings']['deterministicSettings']
-            remap_keys = {'relativeTol': 'rtol', 
-                    'absoluteTol': 'atol'}
-            integrator_options = {}
-            for key in list(settings.keys()):
-                if key in remap_keys:
-                    integrator_options[remap_keys[key]] = settings.pop(key)
-            settings['integrator_options'] = str(integrator_options)
-            algorithm_settings =  [', {0}={1}'.format(key, val) for key, val in settings.items()]
-            for item in algorithm_settings:
-                run_cell += item
+        # GillesPy requires snake case, remap camelCase from json data to
+        # snake case for notebook
+        ode_settings = { "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] }) }
+        ssa_settings = { "number_of_trajectories":settings['realizations'], "seed":settings['seed'] }
+        tau_leaping_settings = { "number_of_trajectories":settings['realizations'], 
+                                 "seed":settings['seed'], 
+                                 "tau_tol":settings['tauTol']}
+        hybrid_settings = { "number_of_trajectories":settings['realizations'], 
+                            "seed":settings['seed'], 
+                            "tau_tol":settings['tauTol'], 
+                            "switch_tol":settings['switchTol'], 
+                            "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] })
+                          }
+        settings_map = {'ODE':ode_settings, 
+                        'SSA':ssa_settings, 
+                        'Tau-Leaping':tau_leaping_settings, 
+                        'Hybrid-Tau-Leaping':hybrid_settings
+                       }
+        
+        #Parse settings for algorithm
+        
+        algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings_map[algorithm].items()]
+        algorithm_settings = ', '.join(algorithm_settings)
+        run_cell += algorithm_settings
 
         run_cell += ')'
     return run_cell
@@ -192,7 +182,7 @@ def convertToNotebook(_model_path):
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
-    name = file.split('.')[0]
+    name = file.split('.')[0].replace('-', '_')
     dest_path = model_path.split(file)[0]
     
     # Collect .mdl Data

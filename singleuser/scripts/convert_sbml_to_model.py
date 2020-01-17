@@ -23,15 +23,17 @@ def convert_to_gillespy_model(path):
 
 
 def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
+    errors = []
     if type(gillespy_model) is gillespy2.core.gillespy2.Model:
         sbml_model_file = full_path.split('/').pop()
         stochss_model_file = gillespy_model.name + '.mdl'
         stochss_model_path = get_unique_file_name(stochss_model_file, full_path.split(sbml_model_file)[0])[0]
 
         species = gillespy_model.get_all_species()
-        stochss_species, algorithm = get_species(species)
+        stochss_species, algorithm, default_mode = get_species(species)
         stochss_model['species'].extend(stochss_species)
-        stochss_model['simulationSettings']['stochasticSettings']['algorithm'] = algorithm
+        stochss_model['defaultMode'] = default_mode
+        stochss_model['simulationSettings']['algorithm'] = algorithm
 
         parameters = gillespy_model.get_all_parameters()
         stochss_parameters = get_parameters(parameters)
@@ -46,15 +48,22 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
         stochss_model['eventsCollection'].extend(stochss_events)
 
         rate_rules = gillespy_model.listOfRateRules
-        stochss_rate_rules = get_rate_rules(rate_rules, stochss_species)
-        stochss_model['rateRules'].extend(stochss_rate_rules)
+        stochss_rate_rules = get_rate_rules(rate_rules, stochss_species, stochss_parameters)
+        stochss_model['rules'].extend(stochss_rate_rules)
+
+        try:
+            assignment_rules = gillespy_model.listOfAssignmentRules
+            stochss_assignment_rules = get_assignment_rules(assignment_rules, stochss_species, stochss_parameters)
+            stochss_model['rules'].extend(stochss_assignment_rules)
+        except:
+            errors.append("Assignment rules are not supported by gillespy2.")
         
         with open(stochss_model_path, "w") as stochss_file:
             json.dump(stochss_model, stochss_file)
     
-        return "The SBML Model was successfully converted to a StochSS Model."
+        return "The SBML Model was successfully converted to a StochSS Model.", errors
     else:
-        return "ERROR! We were unable to convert the SBML Model into a StochSS Model."
+        return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", []
 
 
 def get_species(species):
@@ -74,6 +83,9 @@ def get_species(species):
         stochss_specie = {"name":specie.name,
                           "value":specie.initial_value,
                           "mode":mode,
+                          "switchingVal": 0.03,
+                          "isSwitchTol": True,
+                          "annotation": "",
                           "diffusionCoeff":0,
                           "subdomains": [
                               "subdomain 1: ",
@@ -82,7 +94,7 @@ def get_species(species):
 
         stochss_species.append(stochss_specie)
 
-    return stochss_species, algorithm
+    return stochss_species, algorithm, mode
 
 
 def get_parameters(parameters):
@@ -92,7 +104,8 @@ def get_parameters(parameters):
         parameter = parameters[name]
 
         stochss_parameter = {"name":parameter.name,
-                             "value":float(parameter.expression)
+                             "value":float(parameter.expression),
+                             "annotation": ""
                             }
 
         stochss_parameters.append(stochss_parameter)
@@ -110,6 +123,7 @@ def get_reactions(reactions, stochss_species):
                             "reactionType": "custom-propensity",
                             "massaction": False,
                             "propensity": reaction.propensity_function,
+                            "annotation": "",
                             "rate": {},
                             "subdomains": [
                               "subdomain 1: ",
@@ -127,8 +141,8 @@ def get_reactions(reactions, stochss_species):
         stochss_products = get_products(products, stochss_species)
         stochss_reaction['products'].extend(stochss_products)
 
-        annotation = build_annotation(stochss_reactants, stochss_products)
-        stochss_reaction['annotation'] = annotation
+        summary = build_summary(stochss_reactants, stochss_products)
+        stochss_reaction['summary'] = summary
         
         stochss_reactions.append(stochss_reaction)
 
@@ -169,29 +183,29 @@ def get_parameter(stochss_parameters, name):
     return list(filter(lambda parameter: parameter['name'] == name, stochss_parameters))[0]
 
 
-def build_annotation(stochss_reactants, stochss_products):
-    annotation = ""
+def build_summary(stochss_reactants, stochss_products):
+    summary = ""
 
     if len(stochss_reactants):
-        reactant_elements = list(map(build_annotation_element, stochss_reactants))
-        reactants_annotation = '+'.join(reactant_elements)
+        reactant_elements = list(map(build_summary_element, stochss_reactants))
+        reactants_summary = '+'.join(reactant_elements)
     else:
-        reactants_annotation = "\\emptyset"
-    annotation += reactants_annotation
+        reactants_summary = "\\emptyset"
+    summary += reactants_summary
 
-    annotation += " \\rightarrow "
+    summary += " \\rightarrow "
 
     if len(stochss_products):
-        product_elements = list(map(build_annotation_element, stochss_products))
-        products_annotation = '+'.join(product_elements)
+        product_elements = list(map(build_summary_element, stochss_products))
+        products_summary = '+'.join(product_elements)
     else:
-        products_annotation = "\\emptyset"
-    annotation += products_annotation
+        products_summary = "\\emptyset"
+    summary += products_summary
 
-    return annotation
+    return summary
 
 
-def build_annotation_element(stoich_specie):
+def build_summary_element(stoich_specie):
     ratio = stoich_specie['ratio']
     name = stoich_specie['specie']['name']
 
@@ -208,6 +222,7 @@ def get_events(events, stochss_species, stochss_parameters):
         event = events['name']
 
         stochss_event = {"name": event.name,
+                         "annotation": "",
                          "delay": event.delay,
                          "priority": event.priority,
                          "triggerExpression": event.trigger.expression,
@@ -231,9 +246,9 @@ def get_event_assignment(assignments, stochss_species, stochss_parameters):
 
     for assignment in assignments:
         try:
-            variable = get_specie(stochss_species, assignment.variable)
+            variable = get_specie(stochss_species, assignment.variable.name)
         except:
-            variable = get_parameter(stochss_parameters, assignment.variable)
+            variable = get_parameter(stochss_parameters, assignment.variable.name)
 
         stochss_assignment = {"variable": variable,
                               "expression": assignment.expression
@@ -244,22 +259,50 @@ def get_event_assignment(assignments, stochss_species, stochss_parameters):
     return stochss_assignments
 
 
-def get_rate_rules(rate_rules, stochss_species):
+def get_rate_rules(rate_rules, stochss_species, stochss_parameters):
     stochss_rate_rules = []
 
     for name in rate_rules.keys():
         rate_rule = rate_rules[name]
 
-        specie = get_specie(stochss_species, rate_rule.species.name)
+        try:
+            variable = get_specie(stochss_species, rate_rule.species.name)
+        except:
+            variable = get_parameter(stochss_parameters, rate_rule.species.name)
 
         stochss_rate_rule = {"name":rate_rule.name,
-                             "rule":rate_rule.expression,
-                             "specie":specie
+                             "expression":rate_rule.expression,
+                             "type":"Rate Rule",
+                             "variable":variable,
+                             "annotation": ""
                             }
 
         stochss_rate_rules.append(stochss_rate_rule)
 
     return stochss_rate_rules
+
+
+def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters):
+    stochss_assignment_rules = []
+
+    for name in assignment_rules.keys():
+        assignment_rule = assignment_rules[name]
+
+        try:
+            variable = get_specie(stochss_species, assignment_rule.variable.name)
+        except:
+            variable = get_parameter(stochss_parameters, assignment_rule.variable.name)
+
+        stochss_assignment_rule = {"name":assignment_rule.name,
+                                   "expression":assignment_rule.expression,
+                                   "type":"Assignment Rule",
+                                   "variable":variable,
+                                   "annotation":""
+                                  }
+
+        stochss_assignment_rules.append(stochss_assignment_rule)
+
+    return stochss_assignment_rules
 
 
 def get_parsed_args():
@@ -273,8 +316,9 @@ if __name__ == "__main__":
     args = get_parsed_args()
     full_path = os.path.join(user_dir, args.path)
     template = json.loads(args.model_template)
-    gillespy_model, errors = convert_to_gillespy_model(full_path)
-    errors = list(map(lambda error: error[0], errors))
-    msg = convert_to_stochss_model(template, gillespy_model, full_path)
-    resp = {"message":msg,"errors":errors}
+    gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)
+    sbml_errors = list(map(lambda error: error[0], sbml_errors))
+    msg, errors = convert_to_stochss_model(template, gillespy_model, full_path)
+    sbml_errors.extend(errors)
+    resp = {"message":msg,"errors":sbml_errors}
     print(json.dumps(resp))

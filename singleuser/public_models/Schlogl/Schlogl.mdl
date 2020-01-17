@@ -1,31 +1,22 @@
 {
     "is_spatial": false,
     "defaultMode": "discrete",
-    "simulationSettings": {
-        "is_stochastic": true,
+    "modelSettings": {
         "endSim": 100000,
         "timeStep": 1000,
         "volume": 1,
-        "stochasticSettings": {
-            "realizations": 1,
-            "algorithm": "SSA",
-            "ssaSettings": {
-                "seed": -1
-            },
-            "tauSettings": {
-                "seed": -1,
-                "tauTol": 0.03
-            },
-            "hybridSettings": {
-                "seed": -1,
-                "tauTol": 0.03,
-                "switchTol": 0.03
-            }
-        },
-        "deterministicSettings": {
-            "relativeTol": 0.03,
-            "absoluteTol": 0.03
-        }
+        "realizations" 1,
+        "algorithm": "SSA"
+    },
+    "simulationSettings": {
+        "isAutomatic": false,
+        "realizations": 1,
+        "algorithm": "SSA",
+        "seed": -1,
+        "tauTol": 0.03,
+        "switchTol": 0.03,
+        "relativeTol": 0.03,
+        "absoluteTol": 0.03
     },
     "meshSettings": {
         "count": 2
@@ -237,6 +228,6 @@
             ]
         }
     ],
-    "rateRules": [],
+    "rules": [],
     "eventsCollection": []
 }
