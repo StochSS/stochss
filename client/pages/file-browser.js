@@ -2,7 +2,7 @@ let jstree = require('jstree');
 let path = require('path');
 let xhr = require('xhr');
 let PageView = require('./base');
-let template = require('../templates/pages/modelBrowser.pug');
+let template = require('../templates/pages/fileBrowser.pug');
 let $ = require('jquery');
 //let bootstrap = require('bootstrap');
 
