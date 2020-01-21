@@ -28,13 +28,13 @@ section.page.col-md-10
 
     p.text-warning The model took longer than 5 seconds to run and timed out!
 
-  div.collapse(data-hook="model-run-error-container")
+  div.errors(data-hook="model-run-error-container")
 
     p.text-danger(data-hook="model-run-error-message")
 
-  div.collapse(data-hook="model-run-container")
+  div(data-hook="model-run-container")
 
-  div.collapse.spinner-border(data-hook="plot-loader")
+  div.spinner-border(data-hook="plot-loader")
 
   div(data-hook="model-state-buttons-container")
 

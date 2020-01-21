@@ -161,7 +161,7 @@ button.custom {
 }
 
 .spinner-border {
-  display: block;
+  display: none;
   position: relative;
   margin: 15px;
   left: 40%;
@@ -169,6 +169,10 @@ button.custom {
   height: 90px;
   border: 12px solid rgba(0, 0, 0, 0.125);
   border-right-color: #007bff;
+}
+
+.errors {
+  display: none;
 }
 
 .mdl-edit-btn {

@@ -84,12 +84,23 @@ module.exports = View.extend({
     });
   },
   running: function () {
-    $(this.parent.queryByHook('model-run-container')).collapse('hide');
-    $(this.parent.queryByHook('plot-loader')).collapse('show');
+    var plot = this.parent.queryByHook('model-run-container');
+    var spinner = this.parent.queryByHook('plot-loader');
+    var errors = this.parent.queryByHook('model-run-error-container');
+    plot.style.display = "none";
+    spinner.style.display = "block";
+    errors.style.display = "none";
   },
-  ran: function () {
-    $(this.parent.queryByHook('model-run-container')).collapse('show');
-    $(this.parent.queryByHook('plot-loader')).collapse('hide');
+  ran: function (noErrors) {
+    var plot = this.parent.queryByHook('model-run-container');
+    var spinner = this.parent.queryByHook('plot-loader');
+    var errors = this.parent.queryByHook('model-run-error-container');
+    if(noErrors){
+      plot.style.display = "block";
+    }else{
+      errors.style.display = "block"
+    }
+    spinner.style.display = "none";
   },
   getResults: function (data) {
     var self = this;
@@ -105,9 +116,8 @@ module.exports = View.extend({
           if(data.results){
             self.plotResults(data.results);
           }else{
-            self.ran();
+            self.ran(false);
             $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
-            $(self.parent.queryByHook('model-run-error-container')).collapse('show');
           }
         }else{
           self.getResults(body);
@@ -118,7 +128,7 @@ module.exports = View.extend({
   plotResults: function (data) {
     // TODO abstract this into an event probably
     var title = this.model.name + " Model Preview"
-    this.ran()
+    this.ran(true)
     el = this.parent.queryByHook('model-run-container');
     time = data.time
     y_labels = Object.keys(data).filter(function (key) {
