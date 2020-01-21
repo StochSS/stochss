@@ -5,26 +5,26 @@ var path = require('path');
 var xhr = require('xhr');
 //views
 var PageView = require('./base');
-var JobEditorView = require('../views/job-editor');
-var JobStatusView = require('../views/job-status');
-var JobResultsView = require('../views/job-results');
+var WorkflowEditorView = require('../views/workflow-editor');
+var WorkflowStatusView = require('../views/workflow-status');
+var WorkflowResultsView = require('../views/workflow-results');
 // var ModelViewer = require('../views/model-viewer');
 var InputView = require('../views/input');
 //templates
-var template = require('../templates/pages/jobManager.pug');
+var template = require('../templates/pages/workflowManager.pug');
 
 import initPage from './page.js';
 
 let operationInfoModalHtml = () => {
-  let editJobMessage = `
-    <b>Job Name</b>: On the Job Manager page you may edit the name of job as long as the job as not been saved.  
-    Job Names always end with a time stamp.<br>
+  let editWorkflowMessage = `
+    <b>Workflow Name</b>: On the Workflow Manager page you may edit the name of workflow as long as the workflow as not been saved.  
+    Workflow Names always end with a time stamp.<br>
     <b>Model Path</b>: If you move or rename the model make sure to update this path.<br>
-    <b>Job Editor</b>: This is where you can customize the settings for your job.  
+    <b>Workflow Editor</b>: This is where you can customize the settings for your workflow.  
     If you need to edit other part of you model click on the edit model button.  
-    The Job Editor is only available for models that have not been run.<br>
+    The Workflow Editor is only available for models that have not been run.<br>
     <b>Plot Results</b>: You may change the title, x-axis label, and y-axis label by entering the name in the correct field, then click plot.<br>
-    <b>Model Viewer</b>: You can view the model that will be used when you run your job in the Model section.
+    <b>Model Viewer</b>: You can view the model that will be used when you run your workflow in the Model section.
   `;
 
   return `
@@ -32,13 +32,13 @@ let operationInfoModalHtml = () => {
       <div class="modal-dialog" role="document">
         <div class="modal-content info">
           <div class="modal-header">
-            <h5 class="modal-title"> Job Manager Help </h5>
+            <h5 class="modal-title"> Workflow Manager Help </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            <p> ${editJobMessage} </p>
+            <p> ${editWorkflowMessage} </p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -49,33 +49,33 @@ let operationInfoModalHtml = () => {
   ` 
 }
 
-let JobManager = PageView.extend({
+let WorkflowManager = PageView.extend({
   template: template,
   events: {
-    'change [data-hook=job-name]' : 'setJobName',
-    'click [data-hook=edit-job-help]' : function () {
+    'change [data-hook=workflow-name]' : 'setWorkflowName',
+    'click [data-hook=edit-workflow-help]' : function () {
       let modal = $(operationInfoModalHtml()).modal();
     },
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    this.directory = decodeURI(document.URL.split('/jobs/edit').pop());
+    this.directory = decodeURI(document.URL.split('/workflow/edit').pop());
     if(this.directory.endsWith('.mdl')){
       var modelFile = this.directory.split('/').pop();
       var name = modelFile.split('.')[0];
       this.modelDirectory = this.directory;
-      this.jobDate = this.getCurrentDate();
-      this.jobName = name + this.jobDate;
+      this.workflowDate = this.getCurrentDate();
+      this.workflowName = name + this.workflowDate;
       this.status = 'new';
     }else{
-      var endpoint = path.join("/stochss/api/jobs/job-info", this.directory, "/info.json");
+      var endpoint = path.join("/stochss/api/workflow/workflow-info", this.directory, "/info.json");
       xhr({uri: endpoint}, function (err, response, body){
         self.modelDirectory = JSON.parse(body).model.split('/home/jovyan').pop();
         self.startTime = JSON.parse(body).start_time;
-        var jobDir = self.directory.split('/').pop();
-        self.jobName = jobDir.split('.')[0];
-        var statusEndpoint = path.join("/stochss/api/jobs/job-status", self.directory);
+        var workflowDir = self.directory.split('/').pop();
+        self.workflowName = workflowDir.split('.')[0];
+        var statusEndpoint = path.join("/stochss/api/workflow/workflow-status", self.directory);
         xhr({uri: statusEndpoint}, function (err, response, body) {
           self.status = body;
           if(self.status === 'complete' || self.status === 'error'){
@@ -97,45 +97,45 @@ let JobManager = PageView.extend({
   updateValid: function () {
   },
   renderSubviews: function () {
-    var jobEditor = new JobEditorView({
+    var workflowEditor = new WorkflowEditorView({
       directory: this.modelDirectory,
     });
     var inputName = new InputView({
       parent: this,
       required: true,
       name: 'name',
-      label: 'Job Name: ',
+      label: 'Workflow Name: ',
       tests: tests.nameTests,
       modelKey: null,
       valueType: 'string',
-      value: this.jobName,
+      value: this.workflowName,
     });
-    this.jobEditorView = this.registerRenderSubview(jobEditor, 'job-editor-container');
-    this.registerRenderSubview(inputName, 'job-name');
-    this.renderJobStatusView();
+    this.workflowEditorView = this.registerRenderSubview(workflowEditor, 'workflow-editor-container');
+    this.registerRenderSubview(inputName, 'workflow-name');
+    this.renderWorkflowStatusView();
     this.updateTrajectories();
     // var modelViewer = new ModelViewer({
     //   directory: this.modelDirectory,
     // });
     // this.registerRenderSubview(modelViewer, 'model-viewer-container')
     if(this.status !== 'new'){
-      this.disableJobNameInput();
+      this.disableWorkflowNameInput();
     }
     if(this.status !== 'new' && this.status !== 'ready'){
-      jobEditor.collapseContainer();
+      workflowEditor.collapseContainer();
     }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     return this.renderSubview(view, this.queryByHook(hook));
   },
-  setJobName: function(e) {
-    var newJobName = e.target.value;
-    if(newJobName.endsWith(this.jobDate)){
-      this.jobName = newJobName
+  setWorkflowName: function(e) {
+    var newWorkflowName = e.target.value;
+    if(newWorkflowName.endsWith(this.workflowDate)){
+      this.workflowName = newWorkflowName
     }else{
-      this.jobName = newJobName + this.jobDate
-      e.target.value = this.jobName
+      this.workflowName = newWorkflowName + this.workflowDate
+      e.target.value = this.workflowName
     }
   },
   getCurrentDate: function () {
@@ -148,59 +148,59 @@ let JobManager = PageView.extend({
     var seconds = date.getSeconds();
     return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
-  disableJobNameInput: function() {
-    $(this.queryByHook("job-name")).find('input').prop('disabled', true);
+  disableWorkflowNameInput: function() {
+    $(this.queryByHook("workflow-name")).find('input').prop('disabled', true);
   },
-  renderJobStatusView: function () {
-    if(this.jobStatusView){
-      this.jobStatusView.remove();
+  renderWorkflowStatusView: function () {
+    if(this.workflowStatusView){
+      this.workflowStatusView.remove();
     }
-    var statusView = new JobStatusView({
+    var statusView = new WorkflowStatusView({
       startTime: this.startTime,
       status: this.status,
     });
-    this.jobStatusView = this.registerRenderSubview(statusView, 'job-status-container');
+    this.workflowStatusView = this.registerRenderSubview(statusView, 'workflow-status-container');
   },
-  getJobInfo: function (cb) {
+  getWorkflowInfo: function (cb) {
     var self = this;
-    var endpoint = path.join("/stochss/api/jobs/job-info", this.directory, "/info.json");
+    var endpoint = path.join("/stochss/api/workflow/workflow-info", this.directory, "/info.json");
     xhr({uri: endpoint}, function (err, response, body){
       self.startTime = JSON.parse(body).start_time;
       cb();
     });
   },
-  getJobStatus: function () {
+  getWorkflowStatus: function () {
     var self = this;
-    var statusEndpoint = path.join("/stochss/api/jobs/job-status", this.directory);
+    var statusEndpoint = path.join("/stochss/api/workflow/workflow-status", this.directory);
     xhr({uri: statusEndpoint}, function (err, response, body) {
       if(self.status !== body ){
         self.status = body;
-        self.renderJobStatusView();
+        self.renderWorkflowStatusView();
       }
       if(self.status !== 'error' && self.status !== 'complete'){
-        setTimeout(_.bind(self.getJobStatus, self), 1000);
+        setTimeout(_.bind(self.getWorkflowStatus, self), 1000);
       }else if(self.status === 'complete') {
         self.renderResultsView();
       }
     });
   },
-  updateJobStatus: function () {
+  updateWorkflowStatus: function () {
     var self = this;
     setTimeout(function () {  
-      self.getJobInfo(function () {
-        self.getJobStatus();
+      self.getWorkflowInfo(function () {
+        self.getWorkflowStatus();
       });
     }, 3000);
   },
   renderResultsView: function () {
-    if(this.jobResultsView){
-      this.jobResultsView.remove();
+    if(this.workflowResultsView){
+      this.workflowResultsView.remove();
     }
-    var resultsView = new JobResultsView({
+    var resultsView = new WorkflowResultsView({
       trajectories: this.trajectories,
       status: this.status
     });
-    this.jobResultsView = this.registerRenderSubview(resultsView, 'job-results-container');
+    this.workflowResultsView = this.registerRenderSubview(resultsView, 'workflow-results-container');
   },
   updateTrajectories: function () {
     var self = this
@@ -210,10 +210,10 @@ let JobManager = PageView.extend({
       }, 1000);
     }
     else{
-      this.trajectories = this.jobEditorView.model.simulationSettings.is_stochastic ? this.trajectories : 1
+      this.trajectories = this.workflowEditorView.model.simulationSettings.algorithm !== "ODE" ? this.trajectories : 1
       this.renderResultsView()
     }
   },
 });
 
-initPage(JobManager);
+initPage(WorkflowManager);

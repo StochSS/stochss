@@ -87,7 +87,7 @@ let treeSettings = {
     'nonspatial' : {
       "icon": "jstree-icon jstree-file"
     },
-    'job' : {
+    'workflow' : {
       "icon": "jstree-icon jstree-file"
     },
     'notebook' : {
@@ -530,13 +530,13 @@ let FileBrowser = PageView.extend({
 
             }
           },
-          "Create New Job" : {
+          "Create New Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Create New Job",
+            "label" : "Create New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
+              window.location.href = path.join("/hub/stochss/workflow/edit", o.original._path);
             }
           },
           "Delete" : {
@@ -621,13 +621,13 @@ let FileBrowser = PageView.extend({
               self.toSBML(o)
             }
           },
-          "Create New Job" : {
+          "Create New Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Create New Job",
+            "label" : "Create New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
+              window.location.href = path.join("/hub/stochss/workflow/edit", o.original._path);
             }
           },
           "Export" : {
@@ -650,16 +650,16 @@ let FileBrowser = PageView.extend({
           },
 	      }
       }
-      else if (o.type === 'job') {
+      else if (o.type === 'workflow') {
         return {
-          "View Job" : {
+          "View Workflow" : {
             "separator_before" : false,
             "separator_after" : true,
             "_disabled" : false,
             "_class" : "font-weight-bolder",
-            "label" : "View Job",
+            "label" : "View Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/jobs/edit", o.original._path);
+              window.location.href = path.join("/hub/stochss/workflow/edit", o.original._path);
             }
           },
           "Rename" : {
@@ -671,20 +671,20 @@ let FileBrowser = PageView.extend({
               self.renameNode(o);
             }
           },
-          "Stop Job" : {
+          "Stop Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : true,
-            "label" : "Stop Job",
+            "label" : "Stop Workflow",
             "action" : function (data) {
 
             }
           },
-          "Start/Restart Job" : {
+          "Start/Restart Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : true,
-            "label" : "Start/Restart Job",
+            "label" : "Start/Restart Workflow",
             "action" : function (data) {
 
             }
@@ -925,8 +925,8 @@ let FileBrowser = PageView.extend({
           var openPath = path.join("/user/", body, "/edit/", _path)
           window.open(openPath, '_blank')
         });
-      }else if(file.endsWith('.job')){
-        window.location.href = path.join("/hub/stochss/jobs/edit", _path);
+      }else if(file.endsWith('.wkfl')){
+        window.location.href = path.join("/hub/stochss/workflow/edit", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }

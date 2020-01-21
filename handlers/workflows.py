@@ -16,137 +16,137 @@ log = logging.getLogger()
 from handlers import stochss_kubernetes
 
 
-class JobInfoAPIHandler(BaseHandler):
+class WorkflowInfoAPIHandler(BaseHandler):
 
     '''
     ########################################################################
-    Handler for getting Job Info including start date tine and path to the 
-    model at the last job save.
+    Handler for getting Workflow Info including start date tine and path to the 
+    model at the last workflow save.
     ########################################################################
     '''
 
     @web.authenticated
     async def get(self, info_path):
         '''
-        Retrieve job info from user container. Data is transferred to hub
+        Retrieve workflow info from user container. Data is transferred to hub
         container as JSON string.
 
         Attributes
         ----------
         info_path : str
-            Path to selected jobs info file within user pod container.
+            Path to selected workflows info file within user pod container.
         '''
 
         checkUserOrRaise(self) # User Validation
         log.debug(info_path)
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        full_path = "/home/jovyan{0}".format(info_path) # full path to job info
+        full_path = "/home/jovyan{0}".format(info_path) # full path to workflow info
         json_data = stochss_kubernetes.read_from_pod(client, 
             user_pod, "{0}".format(full_path)) # Use cat to read json file
         self.write(json_data) # Send data to client
 
 
-class RunJobAPIHandler(BaseHandler):
+class RunWorkflowAPIHandler(BaseHandler):
 
     '''
     ########################################################################
-    Handler for running jobs.
+    Handler for running workflows.
     ########################################################################
     '''
 
     @web.authenticated
     async def get(self, opt_type, data):
         '''
-        Start running a job and record the time in UTC in the job_info file.
-        Creates job directory and job_info file if running a new job.  Copys 
-        model into the job directory.
+        Start running a workflow and record the time in UTC in the workflow_info file.
+        Creates workflow directory and workflow_info file if running a new workflow.  Copys 
+        model into the workflow directory.
 
         Attributes
         ----------
         opt_type : str
-            type of job being run (rn) for new job (re) for existing job.
+            type of workflow being run (rn) for new workflow (re) for existing workflow.
         data : str
-            Path to selected jobs model file and name of job within user pod container.
+            Path to selected workflows model file and name of workflow within user pod container.
         '''
 
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        model_path, job_name = data.split('/<--GillesPy2Job-->/') # get model path and job name from data
+        model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        log.warn('starting the job')
-        exec_cmd = "screen -d -m run_job.py {} {}".format(model_path, job_name).split(" ") # Script commands
-        # exec_cmd = ["run_job.py", "{}".format(model_path), "{0}".format(job_name)] # Script commands
+        log.warn('starting the workflow')
+        # exec_cmd = "screen -d -m run_workflow.py {} {}".format(model_path, workflow_name).split(" ") # Script commands
+        exec_cmd = ["run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name)] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        log.warn('sent the job')
+        log.warn('sent the workflow')
 
 
-class SaveJobAPIHandler(BaseHandler):
+class SaveWorkflowAPIHandler(BaseHandler):
 
     '''
     ########################################################################
-    Handler for saving jobs.
+    Handler for saving workflows.
     ########################################################################
     '''
 
     @web.authenticated
     async def get(self, opt_type, data):
         '''
-        Start saving the job.  Creates the job directory and job_info file if
-        saving a new job.  Copys model into the job directory.
+        Start saving the workflow.  Creates the workflow directory and workflow_info file if
+        saving a new workflow.  Copys model into the workflow directory.
 
         Attributes
         ----------
         opt_type : str
-            type of job being run (rn) for new job (re) for existing job.
+            type of workflow being run (rn) for new workflow (re) for existing workflow.
         data : str
-            Path to selected jobs model file and name of job within user pod container.
+            Path to selected workflows model file and name of workflow within user pod container.
         '''
 
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        model_path, job_name = data.split('/<--GillesPy2Job-->/') # get model path and job name from data
+        model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        exec_cmd = [ "run_job.py", "{0}".format(model_path), "{0}".format(job_name) ] # Script commands
+        exec_cmd = [ "run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.warn(exec_cmd)
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
 
 
-class JobStatusAPIHandler(BaseHandler):
+class WorkflowStatusAPIHandler(BaseHandler):
 
     '''
     ########################################################################
-    Handler for getting Job Status (checking for RUNNING and COMPLETE files.
+    Handler for getting Workflow Status (checking for RUNNING and COMPLETE files.
     ########################################################################
     '''
 
     @web.authenticated
-    async def get(self, job_path):
+    async def get(self, workflow_path):
         '''
-        Retrieve job status from user container. Data is transferred to hub
+        Retrieve workflow status from user container. Data is transferred to hub
         container as a string.
 
         Attributes
         ----------
-        job_path : str
-            Path to selected job directory within user pod container.
+        workflow_path : str
+            Path to selected workflow directory within user pod container.
         '''
 
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        log.warn('getting the status of the job')
-        exec_cmd = [ 'job_status.py', "{0}".format(job_path) ]
+        log.warn('getting the status of the workflow')
+        exec_cmd = [ 'workflow_status.py', "{0}".format(workflow_path) ]
         status = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        log.warn('the status of the job is: ' + status)
+        log.warn('the status of the workflow is: ' + status)
         self.write(status.strip()) # Send data to client
 
 
-class PlotJobResultsAPIHandler(BaseHandler):
+class PlotWorkflowResultsAPIHandler(BaseHandler):
 
     '''
     ########################################################################
@@ -155,23 +155,23 @@ class PlotJobResultsAPIHandler(BaseHandler):
     '''
 
     @web.authenticated
-    async def get(self, job_path):
+    async def get(self, workflow_path):
         '''
-        Retrieve a plot figure of the job results based on the plot type 
+        Retrieve a plot figure of the workflow results based on the plot type 
         in the request body. Data is transferred to hub container as JSON 
         string.
 
         Attributes
         ----------
-        job_path : str
-            Path to selected job directory within user pod container.
+        workflow_path : str
+            Path to selected workflow directory within user pod container.
         '''
 
         body = json.loads(self.get_query_argument(name='data')) # Plot request body
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        results_path = os.path.join(job_path, 'results/results.p') # Path to the results file
+        results_path = os.path.join(workflow_path, 'results/results.p') # Path to the results file
         log.warn(self.request.body)
         plt_type = body['plt_type'] # type of plot to be retrieved 
         plt_data = json.dumps(body['plt_data']) # plot title and axes lables

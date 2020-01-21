@@ -27,10 +27,10 @@ let operationInfoModalHtml = (infoMessageKey) => {
     Enter a name for the model and click OK.<br>
     <b>Edit GillesPy2 Model</b>: Double click on a model or right click on a model and click Edit Model.
   `;
-  let createEditJobMeeage = `
-    <b>Create Job</b>: From the File Browser page right click on a model and click Create Job.  
-    From the Model Editor page click on the Create Job button at the bottum of the page.<br>
-    <b>View/Edit Job</b>: Double click on the Job or right click on the job and click View Job.<br>
+  let createEditWorkflowMeeage = `
+    <b>Create Workflow</b>: From the File Browser page right click on a model and click Create Workflow.  
+    From the Model Editor page click on the Create Workflow button at the bottum of the page.<br>
+    <b>View/Edit Workflow</b>: Double click on the Workflow or right click on the workflow and click View Workflow.<br>
   `;
   let notebookMessage = `
     <b>Create New Notebook</b>: Right click on a model and click Convert to Notebook, 
@@ -56,7 +56,7 @@ let operationInfoModalHtml = (infoMessageKey) => {
 
   let infoMessages = {'File System': fileSystemMessage,
                       'Create/Edit Model': createEditModelMessage,
-                      'Create/View/Edit Job': createEditJobMeeage,
+                      'Create/View/Edit Workflow': createEditWorkflowMeeage,
                       'Jupyter Notebooks' : notebookMessage,
                       'Jupyter Hub': jhubMessage};
 
@@ -95,8 +95,8 @@ module.exports = View.extend({
     'click [data-hook=create-model-information-main]' : function () {
       let modal = $(operationInfoModalHtml('Create/Edit Model')).modal();
     },
-    'click [data-hook=create-job-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Create/View/Edit Job')).modal();
+    'click [data-hook=create-workflow-information-main]' : function () {
+      let modal = $(operationInfoModalHtml('Create/View/Edit Workflow')).modal();
     },
     'click [data-hook=notebook-information-main]' : function () {
       let modal = $(operationInfoModalHtml('Jupyter Notebooks')).modal();

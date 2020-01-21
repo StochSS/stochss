@@ -27,7 +27,7 @@ let operationInfoModalHtml = () => {
     <b>Edit a Reaction</b>: Select the reaction you wish to edit, and make changes to the right or the reaction list.<br>
     <b>Species Mode</b>: Select the Hybrid Tua-Leaping algorithm in the advanced settings.<br>
     <b>Set Rate Rules</b>: Set the mode of the species to continuous, then add the rate rule to the right of the species mode.<br>
-    <b>Results</b>: The plot shown are a preview of the full results.  To get the full results, create and run a job.
+    <b>Results</b>: The plot shown are a preview of the full results.  To get the full results, create and run a workflow.
   `;
 
   return `

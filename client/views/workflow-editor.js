@@ -5,11 +5,11 @@ var tests = require('../views/tests');
 var View = require('ampersand-view');
 var InputView = require('./input');
 var SimSettingsView = require('../views/simulation-settings');
-var JobStateButtonsView = require('../views/job-state-buttons');
+var WorkflowStateButtonsView = require('../views/workflow-state-buttons');
 //models
 var Model = require('../models/model');
 //templates
-var template = require('../templates/includes/jobEditor.pug');
+var template = require('../templates/includes/workflowEditor.pug');
 
 module.exports = View.extend({
   template: template,
@@ -51,12 +51,12 @@ module.exports = View.extend({
       parent: this,
       model: this.model.simulationSettings,
     });
-    var jobStateButtons = new JobStateButtonsView({
+    var workflowStateButtons = new WorkflowStateButtonsView({
       model: this.model
     });
     this.registerRenderSubview(inputName, "model-name-container");
     this.registerRenderSubview(simSettings, 'sim-settings-container');
-    this.registerRenderSubview(jobStateButtons, 'job-state-buttons-container');
+    this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
     this.parent.trajectories = this.model.simulationSettings.realizations
   },
   registerRenderSubview: function (view, hook) {
@@ -64,6 +64,6 @@ module.exports = View.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   collapseContainer: function () {
-    $(this.queryByHook("job-editor-container")).collapse();
+    $(this.queryByHook("workflow-editor-container")).collapse();
   },
 });

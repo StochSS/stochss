@@ -6,8 +6,8 @@ var Plotly = require('../lib/plotly');
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
-var resultsTemplate = require('../templates/includes/jobResults.pug');
-var resultsEnsembleTemplate = require('../templates/includes/jobResultsEnsemble.pug');
+var resultsTemplate = require('../templates/includes/workflowResults.pug');
+var resultsEnsembleTemplate = require('../templates/includes/workflowResultsEnsemble.pug');
 
 module.exports = View.extend({
   events: {
@@ -61,7 +61,7 @@ module.exports = View.extend({
       this.template = resultsTemplate
     }
     View.prototype.render.apply(this, arguments);
-    if(this.status !== 'ready' && this.status !== 'new'){
+    if(this.status === 'complete'){
       this.expandContainer()
     }
   },
@@ -108,7 +108,7 @@ module.exports = View.extend({
       data['plt_data'] = "None"
     }
     console.log(data)
-    var endpoint = path.join("/stochss/api/jobs/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
+    var endpoint = path.join("/stochss/api/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
     xhr({url: endpoint}, function (err, response, body){
       if(body.startsWith("ERROR!")){
         $(self.queryByHook(type)).html(body)
@@ -145,7 +145,7 @@ module.exports = View.extend({
     linkElement.click();
   },
   expandContainer: function () {
-    $(this.queryByHook('job-results')).collapse('show');
+    $(this.queryByHook('workflow-results')).collapse('show');
     $(this.queryByHook('collapse')).prop('disabled', false);
     this.changeCollapseButtonText("collapse")
     this.trajectories > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")

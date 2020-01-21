@@ -13,7 +13,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
-    'click [data-hook=start-job]' : 'clickStartJobHandler',
+    'click [data-hook=start-workflow]' : 'clickStartWorkflowHandler',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -30,8 +30,8 @@ module.exports = View.extend({
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
-  clickStartJobHandler: function (e) {
-    window.location.href = path.join("/hub/stochss/jobs/edit", this.model.directory);
+  clickStartWorkflowHandler: function (e) {
+    window.location.href = path.join("/hub/stochss/workflow/edit", this.model.directory);
   },
   saveModel: function (cb) {
     var numEvents = this.model.eventsCollection.length;

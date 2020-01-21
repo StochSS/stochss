@@ -5,13 +5,13 @@ var path = require('path');
 //views
 var View = require('ampersand-view');
 //templates
-var template = require('../templates/includes/jobStateButtons.pug');
+var template = require('../templates/includes/workflowStateButtons.pug');
 
 module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
-    'click [data-hook=start-job]'  : 'clickStartJobHandler',
+    'click [data-hook=start-workflow]'  : 'clickStartWorkflowHandler',
     'click [data-hook=edit-model]' : 'clickEditModelHandler',
   },
   initialize: function (attrs, options) {
@@ -25,9 +25,9 @@ module.exports = View.extend({
     var self = this;
     var model = this.model
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
-    var job = document.URL.endsWith(".mdl") ? this.parent.parent.jobName : this.parent.parent.directory
+    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
     this.saveModel(function () {
-      var endpoint = path.join('/stochss/api/jobs/save-job/', optType, model.directory, "<--GillesPy2Job-->", job);
+      var endpoint = path.join('/stochss/api/workflow/save-workflow/', optType, model.directory, "<--GillesPy2Workflow-->", workflow);
       xhr({uri: endpoint}, function (err, response, body) {
         self.saved();
         if(document.URL.endsWith('.mdl')){
@@ -35,14 +35,14 @@ module.exports = View.extend({
             var dirname = path.dirname(document.URL).split('hub')
             dirname.shift()
             dirname = dirname.join('hub')
-            window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+            window.location.href = path.join(dirname, self.parent.parent.workflowName + '.wkfl')
           }, 3000); 
         }
       });
     });
   },
-  clickStartJobHandler: function (e) {
-    this.saveModel(this.runJob.bind(this));
+  clickStartWorkflowHandler: function (e) {
+    this.saveModel(this.runWorkflow.bind(this));
   },
   clickEditModelHandler: function (e) {
     var self = this
@@ -66,32 +66,32 @@ module.exports = View.extend({
     }
   },
   saving: function () {
-    var saving = this.queryByHook('saving-job');
-    var saved = this.queryByHook('saved-job');
+    var saving = this.queryByHook('saving-workflow');
+    var saved = this.queryByHook('saved-workflow');
     saved.style.display = "none";
     saving.style.display = "inline-block";
   },
   saved: function () {
-    var saving = this.queryByHook('saving-job');
-    var saved = this.queryByHook('saved-job');
+    var saving = this.queryByHook('saving-workflow');
+    var saved = this.queryByHook('saved-workflow');
     saving.style.display = "none";
     saved.style.display = "inline-block";
   },
-  runJob: function () {
+  runWorkflow: function () {
     var model = this.model;
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
-    var job = document.URL.endsWith(".mdl") ? this.parent.parent.jobName : this.parent.parent.directory
-    var endpoint = path.join('/stochss/api/jobs/run-job/', optType, model.directory, "<--GillesPy2Job-->", job);
+    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
+    var endpoint = path.join('/stochss/api/workflow/run-workflow/', optType, model.directory, "<--GillesPy2Workflow-->", workflow);
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
       self.parent.collapseContainer();
-      self.parent.parent.updateJobStatus();
+      self.parent.parent.updateWorkflowStatus();
       if(document.URL.endsWith('.mdl')){
         setTimeout(function () {
           var dirname = path.dirname(document.URL).split('hub')
           dirname.shift()
           dirname = dirname.join('hub')
-          window.location.href = path.join(dirname, self.parent.parent.jobName + '.job')
+          window.location.href = path.join(dirname, self.parent.parent.workflowName + '.wkfl')
         }, 3000);        
       }
     });

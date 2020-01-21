@@ -1,0 +1,28 @@
+div#workflow-status.card.card-body
+
+  div
+
+    h3.editor-header Workflow Status
+
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-status", data-hook="collapse", disabled) +
+
+  div.collapse(id="collapse-status", data-hook="workflow-status")
+
+    table.table
+      thead
+        tr
+
+          th(scope="col") Date
+          th(scope="col") Status
+
+      tbody
+        tr
+
+          td=this.startTime
+          td=this.status
+
+    button.btn.btn-outline-primary(data-hook="stop-workflow", type="button", disabled)
+      | Stop Workflow
+
+    button.btn.btn-outline-primary(data-hook="restart-workflow", type="button", disabled)
+      | Restart Workflow

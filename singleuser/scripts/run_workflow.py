@@ -19,171 +19,171 @@ from datetime import datetime, timezone, timedelta
 user_dir = "/home/jovyan"
 
 
-def save_new_job(job_path, model_path, job_model, **kwargs):
+def save_new_workflow(workflow_path, model_path, workflow_model, **kwargs):
     '''
-    Create and save a new job in the same directory as the model 
+    Create and save a new workflow in the same directory as the model 
     used for it.
 
     Attributes
     ----------
-    job_path : str
-        Path to the job directory.
+    workflow_path : str
+        Path to the workflow directory.
     model_path : str
         Path to the model file.
-    job_model : str
-        Path to the model file in the job directory.
+    workflow_model : str
+        Path to the model file in the workflow directory.
     kwargs : {
         results_path : str
-            Path to the job's results directory.
+            Path to the workflow's results directory.
     }
     '''
     results_path = kwargs['results_path']
-    os.mkdir(results_path) # make the job's result directory
+    os.mkdir(results_path) # make the workflow's result directory
     try:
-        copyfile(model_path, job_model) # copy the model into the job directory
+        copyfile(model_path, workflow_model) # copy the model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"model":"{0}".format(model_path), } # job info
-    info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
+    model_info = {"model":"{0}".format(model_path), } # workflow info
+    info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
     with open(info_path, "w") as info_file:
-        info_file.write(json.dumps(model_info)) # write the job info file
+        info_file.write(json.dumps(model_info)) # write the workflow info file
     return model_info, None, None
 
 
-def save_existing_job(job_path, model_path, job_model, **kwargs):
+def save_existing_workflow(workflow_path, model_path, workflow_model, **kwargs):
     '''
-    Save an existing job.
+    Save an existing workflow.
 
     Attributes
     ----------
-    job_path : str
-        Path to the job directory.
+    workflow_path : str
+        Path to the workflow directory.
     model_path : str
         Path to the model file.
-    job_model : str
-        Path to the model file in the job directory.
+    workflow_model : str
+        Path to the model file in the workflow directory.
     kwargs : {
         model_file : str
             Name of the model file.
     }
     '''
     model_file = kwargs['model_file']
-    info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
-    old_model_path = os.path.join(job_path, model_file) # path to the old model
+    info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
+    old_model_path = os.path.join(workflow_path, model_file) # path to the old model
     os.remove(old_model_path) # remove the old model
     try:
-        copyfile(model_path, job_model) # copy the new model into the job directory
+        copyfile(model_path, workflow_model) # copy the new model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"model":"{0}".format(model_path), } # updated job info
+    model_info = {"model":"{0}".format(model_path), } # updated workflow info
     with open(info_path, "w") as info_file:
-        info_file.write(json.dumps(model_info)) # update the job info file
+        info_file.write(json.dumps(model_info)) # update the workflow info file
     return model_info, None, None
 
 
-def run_new_job(job_path, model_path, job_model, **kwargs):
+def run_new_workflow(workflow_path, model_path, workflow_model, **kwargs):
     '''
-    Save and run a new job.
+    Save and run a new workflow.
 
     Attributes
     ----------
-    job_path : str
-        Path to the job directory.
+    workflow_path : str
+        Path to the workflow directory.
     model_path : str
         Path to the model file.
-    job_model : str
-        Path to the model file in the job directory.
+    workflow_model : str
+        Path to the model file in the workflow directory.
     kwargs : {
         results_path ; str
-            Path to the job's results directory.
+            Path to the workflow's results directory.
         model_file : str
             Name of the model file.
     }
     '''
     results_path = kwargs['results_path']
     model_file = kwargs['model_file']
-    info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
-    save_new_job(job_path, model_path, job_model, results_path=results_path) # save the job
-    return run_job(job_model, model_file, info_path, job_path)
+    info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
+    save_new_workflow(workflow_path, model_path, workflow_model, results_path=results_path) # save the workflow
+    return run_workflow(workflow_model, model_file, info_path, workflow_path)
 
 
-def run_existing_job(job_path, model_path, job_model, **kwargs):
+def run_existing_workflow(workflow_path, model_path, workflow_model, **kwargs):
     '''
-    Save and run an existing job.
+    Save and run an existing workflow.
 
     Attributes
     ----------
-    job_path : str
-        Path to the job directory.
+    workflow_path : str
+        Path to the workflow directory.
     model_path : str
         Path to the model file.
-    job_model : str
-        Path to the model file in the job directory.
+    workflow_model : str
+        Path to the model file in the workflow directory.
     kwargs : {
         model_file : str
             Name of the model file.
     }
     '''
     model_file = kwargs['model_file']
-    info_path = os.path.join(job_path, 'info.json') # path to the jobs info file
-    save_existing_job(job_path, model_path, job_model, model_file=model_file) # save the job
-    return run_job(job_model, model_file, info_path, job_path)
+    info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
+    save_existing_workflow(workflow_path, model_path, workflow_model, model_file=model_file) # save the workflow
+    return run_workflow(workflow_model, model_file, info_path, workflow_path)
 
 
-def run_job(job_model, model_file, info_path, job_path):
+def run_workflow(workflow_model, model_file, info_path, workflow_path):
     '''
-    Run the job and return the results, number of trajectories, and is_stochastic.
-    Records when the job was start and updates the model path in the job info file.
+    Run the workflow and return the results, number of trajectories, and is_stochastic.
+    Records when the workflow was start and updates the model path in the workflow info file.
     Updates status with status files and logs warnings and errors in the log file.
     Errors are logged to the console.
 
     Attributes
     ----------
-    job_model : str
-        Path to the model file in the job directory.
+    workflow_model : str
+        Path to the model file in the workflow directory.
     model_file : str
         Name of the model file.
     info_path : str
-        Path to the jobs info file.
-    job_path : str
-        Path to the job directory.
+        Path to the workflows info file.
+    workflow_path : str
+        Path to the workflow directory.
     '''
     # Get the model data from the file and create the model object
     try:
-        with open(job_model, 'r') as json_file:
+        with open(workflow_model, 'r') as json_file:
             _data = json_file.read()
     except FileNotFoundError as error:
         log.critical("Failed to copy the model into the directory: {0}".format(error))
-        open(os.path.join(job_path, 'ERROR'), 'w').close() # update status to error
+        open(os.path.join(workflow_path, 'ERROR'), 'w').close() # update status to error
     data = json.loads(str(_data))
     data['name'] = model_file.split('.')[0]
     try:
         _model = ModelFactory(data) # build GillesPy2 model
     except Exception as error:
         log.error(str(error))
-    # Add the start time to the job info file
+    # Add the start time to the workflow info file
     with open(info_path, 'r') as info_file:
         _info_data = info_file.read()
         info_data = json.loads(_info_data)
-    today = datetime.now() # job run start time
+    today = datetime.now() # workflow run start time
     str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC") # format timestamp
-    info_data['start_time'] = str_datetime # add start time to job info
+    info_data['start_time'] = str_datetime # add start time to workflow info
     # Update the location of the model
-    info_data['model'] = job_model
-    # Update the job info file
+    info_data['model'] = workflow_model
+    # Update the workflow info file
     with open(info_path, "w") as info_file:
         info_file.write(json.dumps(info_data))
-    # Update job status to running
-    open(os.path.join(job_path, 'RUNNING'), 'w').close()
-    # run the job
+    # Update workflow status to running
+    open(os.path.join(workflow_path, 'RUNNING'), 'w').close()
+    # run the workflow
     try:
         results = run_solver(_model.model, data['simulationSettings'], 0)
     except:
-        # update job status to error if GillesPy2 throws an exception
-        open(os.path.join(job_path, 'ERROR'), 'w').close()
+        # update workflow status to error if GillesPy2 throws an exception
+        open(os.path.join(workflow_path, 'ERROR'), 'w').close()
         return None, None, None
     else:
-        open(os.path.join(job_path, 'COMPLETE'), 'w').close() # update status to complete
+        open(os.path.join(workflow_path, 'COMPLETE'), 'w').close() # update status to complete
         return results, data['simulationSettings']['realizations'], (not data['simulationSettings']['algorithm'] == "ODE")
 
 
@@ -194,13 +194,13 @@ def plot_results(results, results_path, trajectories, is_stochastic):
     Attributes
     ----------
     results : GillesPy2 ResultsEnsemble or GillesPy2 Results
-        Results of a job run.
+        Results of a workflow run.
     results_path : str
         Path to the results directory.
     trajectories : int
-        Number of trajectories for the job.
+        Number of trajectories for the workflow.
     is_stochastic : bool
-        Was the job a stochastic simulation?.
+        Was the workflow a stochastic simulation?.
     '''
     if is_stochastic and trajectories > 1:
         stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
@@ -221,16 +221,16 @@ def plot_results(results, results_path, trajectories, is_stochastic):
             json.dump(plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
 
 
-def setup_logger(job_path):
+def setup_logger(workflow_path):
     '''
     Changer the GillesPy2 logger to record only error level logs and higher
     to the console and to log warning level logs and higher to a log file in
-    the job directory.
+    the workflow directory.
 
     Attributes
     ----------
-    job_path : str
-        Path to the job directory
+    workflow_path : str
+        Path to the workflow directory
     '''
     formatter = log.handlers[0].formatter # gillespy2 log formatter
     fh_is_needed = True
@@ -242,7 +242,7 @@ def setup_logger(job_path):
             fh_is_needed = False # File Handler was already added to the log
     # Add the file handler if it not in the log already
     if fh_is_needed:
-        fh = logging.FileHandler(os.path.join(job_path, "logs.txt")) # initialize file handler
+        fh = logging.FileHandler(os.path.join(workflow_path, "logs.txt")) # initialize file handler
         fh.setLevel(logging.WARNING) # log warning, error, and critical logs to file
         fh.setFormatter(formatter) # add gillespy2 log formatter
         log.addHandler(fh) # add file handler to log
@@ -257,14 +257,14 @@ def get_parsed_args():
     ----------
 
     '''
-    description = "Run and/or Save (-r or -s) a new or existing (-n or -e) job.\n Creates a job directory with a model, info, logs, and status files and a directory for results."
+    description = "Run and/or Save (-r or -s) a new or existing (-n or -e) workflow.\n Creates a workflow directory with a model, info, logs, and status files and a directory for results."
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('model_path', help="The path from the user directory to the  model.")
-    parser.add_argument('job', help="The name of a new job or the path from the user directory to an existing job.")
-    parser.add_argument('-n', '--new', action="store_true", help="Specifies a new job.")
-    parser.add_argument('-e', '--existing', action="store_true", help="Specifies an existing job.")
-    parser.add_argument('-s', '--save', action="store_true", help="Save the job.")
-    parser.add_argument('-r', '--run', action="store_true", help="Run the job.")
+    parser.add_argument('workflow', help="The name of a new workflow or the path from the user directory to an existing workflow.")
+    parser.add_argument('-n', '--new', action="store_true", help="Specifies a new workflow.")
+    parser.add_argument('-e', '--existing', action="store_true", help="Specifies an existing workflow.")
+    parser.add_argument('-s', '--save', action="store_true", help="Save the workflow.")
+    parser.add_argument('-r', '--run', action="store_true", help="Run the workflow.")
     args = parser.parse_args()
     if not (args.new or args.existing):
         parser.error("Please specify new (-n) or existing (-e).")
@@ -286,39 +286,39 @@ if __name__ == "__main__":
     else:
         opt_type += 'e'
     if args.new:
-        job_name = args.job
-        _job_dir = "{0}.job".format(job_name)
+        workflow_name = args.workflow
+        _workflow_dir = "{0}.wkfl".format(workflow_name)
         model_file = model_path.split('/').pop()
         dir_path = model_path.split(model_file)[0]
         i = 2
-        exists = _job_dir in os.listdir(path=dir_path)
+        exists = _workflow_dir in os.listdir(path=dir_path)
         while exists:
-            job_dir = '({0}).'.format(i).join(_job_dir.split('.'))
-            exists = job_dir in os.listdir(path=dir_path)
+            workflow_dir = '({0}).'.format(i).join(_workflow_dir.split('.'))
+            exists = workflow_dir in os.listdir(path=dir_path)
             i += 1
         try:
-            job_path = os.path.join(dir_path, job_dir)
+            workflow_path = os.path.join(dir_path, workflow_dir)
         except:
-            job_path = os.path.join(dir_path, _job_dir)
+            workflow_path = os.path.join(dir_path, _workflow_dir)
     else:
-        job_path = os.path.join(user_dir, args.job)
-        job_name = job_path.split('/').pop()
-        dir_path = job_path.split(job_name)[0]
+        workflow_path = os.path.join(user_dir, args.workflow)
+        workflow_name = workflow_path.split('/').pop()
+        dir_path = workflow_path.split(workflow_name)[0]
         model_file = model_path.split('/').pop()
     
-    results_path = os.path.join(job_path, 'results')
-    job_model = os.path.join(job_path, model_file)
+    results_path = os.path.join(workflow_path, 'results')
+    workflow_model = os.path.join(workflow_path, model_file)
 
-    if not job_name in os.listdir(path=dir_path):
-        os.mkdir(job_path) # make the job directory
-    setup_logger(job_path)
+    if not workflow_name in os.listdir(path=dir_path):
+        os.mkdir(workflow_path) # make the workflow directory
+    setup_logger(workflow_path)
 
-    opts = { "sn":save_new_job, "rn":run_new_job, "se":save_existing_job, "re":run_existing_job, }
+    opts = { "sn":save_new_workflow, "rn":run_new_workflow, "se":save_existing_workflow, "re":run_existing_workflow, }
 
-    data, trajectories, is_stochastic = opts[opt_type](job_path, model_path, job_model, results_path=results_path, model_file=model_file)
+    data, trajectories, is_stochastic = opts[opt_type](workflow_path, model_path, workflow_model, results_path=results_path, model_file=model_file)
     
     if args.run and data:
-        if not 'results' in os.listdir(path=job_path):
+        if not 'results' in os.listdir(path=workflow_path):
             os.mkdir(results_path)
         with open("{0}/results.p".format(results_path), 'wb') as results_file:
             pickle.dump(data, results_file, protocol=pickle.HIGHEST_PROTOCOL)

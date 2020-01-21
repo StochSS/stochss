@@ -2,7 +2,7 @@ var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 //templates
-var template = require('../templates/includes/jobStatus.pug');
+var template = require('../templates/includes/workflowStatus.pug');
 
 
 module.exports = View.extend({
@@ -24,7 +24,7 @@ module.exports = View.extend({
     }
   },
   expandContainer: function () {
-    $(this.queryByHook('job-status')).collapse('show');
+    $(this.queryByHook('workflow-status')).collapse('show');
     $(this.queryByHook('collapse')).prop('disabled', false);
     this.changeCollapseButtonText()
   },
