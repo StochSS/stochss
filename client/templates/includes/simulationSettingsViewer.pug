@@ -5,37 +5,50 @@ div#settings-viewer.card.card-body
     h3.editor-header Simulation Settings
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings-viewer", data-hook="collapse") -
 
-  div.collapse(class="show", id="collapse-settings-viewer")
+  div.row.collapse(class="show", id="collapse-settings-viewer")
 
-    table.table
-      thead
-        tr
-          th.col-md-3-view(scope="col") Simulation Type
-          th.col-md-3-view(scope="col") Time Span
-          th.col-md-3-view(scope="col") Increment
-          th.col-md-3-view(scope="col") Volume
+    div.col-md-12(style="margin-bottom: 0.75rem;")=this.algorithm
 
-      tbody
-        tr
-          td Stochastic
-          td="0 to " + this.model.endSim
-          td=this.model.timeStep
-          td=this.model.volume
+    div.col-md-6.collapse(data-hook="deterministic")
 
-    p="Realizations: " + this.model.stochasticSettings.realizations
-
-    div
-
-      h6.editor-header Advanced Settings
-      button.btn.btn-outline-collapse(data-toggle='collapse', data-target='#advanced-settings-viewer', data-hook='advanced-settings-button') +
-
-    div(id='advanced-settings-viewer', class='collapse', data-hook='advanced-settings')
+      h5.editor-header Deterministic Settings
 
       table.table
         thead
           tr
-            th(scope="col") Seed
-
+            th(scope="col") Relative Tolerance
+            th(scope="col") Absolute Tolerance
         tbody
           tr
-            td=this.model.stochasticSettings.ssaSettings.seed
+            td=this.model.relativeTol
+            td=this.model.absoluteTol
+
+    div.col-md-6.collapse(data-hook="stochastic")
+
+      h5.editor-header Stochastic Settings
+
+      div.collapse(data-hook="SSA")
+
+        table.table
+          thead
+            tr
+              th(scope="col") Number of Trajectories
+              th(scope="col") Seed
+          tbody
+            tr
+              td=this.model.realizations
+              td=this.model.seed
+
+      div.collapse(data-hook="Tau")
+
+        table.table
+          thead
+            tr
+              th(scope="col") Number of Trajectories
+              th(scope="col") Seed
+              th(scope="col") Tau Tolerance
+          tbody
+            tr
+              td=this.model.realizations
+              td=this.model.seed
+              td=this.model.tauTol

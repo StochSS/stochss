@@ -1,9 +1,9 @@
 var $ = require('jquery');
 //views
 var View = require('ampersand-view');
-var ViewRateRules = require('./view-rate-rules');
+var ViewRules = require('./view-rules');
 //templates
-var template = require('../templates/includes/RateRulesViewer.pug');
+var template = require('../templates/includes/rulesViewer.pug');
 
 module.exports = View.extend({
   template: template,
@@ -15,7 +15,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(this.collection, ViewRateRules, this.queryByHook('rate-rules-list'))
+    this.renderCollection(this.collection, ViewRules, this.queryByHook('rules-list'))
   },
   changeCollapseButtonText: function () {
     var text = $(this.queryByHook('collapse')).text();

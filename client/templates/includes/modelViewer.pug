@@ -3,7 +3,7 @@ div#model-viewer.card.card-body
   div
 
     h3.editor-header Model
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-model", data-hook="collapse-model") +
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-model", data-hook="collapse-model" disabled) +
 
   div.collapse(id="collapse-model")
 
@@ -15,6 +15,6 @@ div#model-viewer.card.card-body
 
     div(data-hook="reactions-viewer-container")
 
-    div(data-hook="rate-rules-viewer-container")
+    div(data-hook="rules-viewer-container")
 
-    div(data-hook="settings-viewer-container")
+    div(data-hook="simulation-settings-viewer-container")

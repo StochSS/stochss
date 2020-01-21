@@ -8,7 +8,7 @@ var PageView = require('./base');
 var WorkflowEditorView = require('../views/workflow-editor');
 var WorkflowStatusView = require('../views/workflow-status');
 var WorkflowResultsView = require('../views/workflow-results');
-// var ModelViewer = require('../views/model-viewer');
+var ModelViewer = require('../views/model-viewer');
 var InputView = require('../views/input');
 //templates
 var template = require('../templates/pages/workflowManager.pug');
@@ -114,10 +114,7 @@ let WorkflowManager = PageView.extend({
     this.registerRenderSubview(inputName, 'workflow-name');
     this.renderWorkflowStatusView();
     this.updateTrajectories();
-    // var modelViewer = new ModelViewer({
-    //   directory: this.modelDirectory,
-    // });
-    // this.registerRenderSubview(modelViewer, 'model-viewer-container')
+    this.renderModelViewer();
     if(this.status !== 'new'){
       this.disableWorkflowNameInput();
     }
@@ -181,6 +178,7 @@ let WorkflowManager = PageView.extend({
         setTimeout(_.bind(self.getWorkflowStatus, self), 1000);
       }else if(self.status === 'complete') {
         self.renderResultsView();
+        self.renderModelViewer();
       }
     });
   },
@@ -201,6 +199,16 @@ let WorkflowManager = PageView.extend({
       status: this.status
     });
     this.workflowResultsView = this.registerRenderSubview(resultsView, 'workflow-results-container');
+  },
+  renderModelViewer: function (){
+    if(this.modelViewer){
+      this.modelViewer.remove();
+    }
+    this.modelViewer = new ModelViewer({
+      directory: this.modelDirectory,
+      status: this.status
+    });
+    this.registerRenderSubview(this.modelViewer, 'model-viewer-container')
   },
   updateTrajectories: function () {
     var self = this

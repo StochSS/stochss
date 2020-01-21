@@ -5,8 +5,8 @@ var View = require('ampersand-view');
 var SpeciesViewer = require('./species-viewer');
 var ParametersViewer = require('./parameters-viewer');
 var ReactionsViewer = require('./reactions-viewer');
-var RateRulesViewer = require('./rate-rules-viewer');
-var SettingsViewwer = require('./settings-viewer');
+var RulesViewer = require('./rules-viewer');
+var SimulationSettingsViewer = require('./simulation-settings-viewer');
 //models
 var Model = require('../models/model');
 //templates
@@ -19,6 +19,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.status = attrs.status;
     var self = this;
     var directory = attrs.directory
     var modelFile = directory.split('/').pop();
@@ -45,17 +46,26 @@ module.exports = View.extend({
     var reactionsViewer = new ReactionsViewer({
       collection: this.model.reactions,
     });
-    var rateRulesViewer = new RateRulesViewer({
-      collection: this.model.rateRules,
+    var rulesViewer = new RulesViewer({
+      collection: this.model.rules,
     });
-    var settingsViewer = new SettingsViewwer({
-      model: this.model.simulationSettings,
-    });
+    this.renderSimulationSettingsView();
     this.registerRenderSubview(speciesViewer, "species-viewer-container");
     this.registerRenderSubview(parametersViewer, "parameters-viewer-container");
     this.registerRenderSubview(reactionsViewer, "reactions-viewer-container");
-    this.registerRenderSubview(rateRulesViewer, "rate-rules-viewer-container");
-    this.registerRenderSubview(settingsViewer, "settings-viewer-container");
+    this.registerRenderSubview(rulesViewer, "rules-viewer-container");
+    if(this.status === 'complete'){
+      this.enableCollapseButton();
+    }
+  },
+  renderSimulationSettingsView: function () {
+    if(this.simulationSettingsView){
+      this.simulationSettingsView.remove();
+    }
+    this.simulationSettingsView = new SimulationSettingsViewer({
+      model: this.model.simulationSettings,
+    });
+    this.registerRenderSubview(this.simulationSettingsView, "simulation-settings-viewer-container");
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -64,5 +74,8 @@ module.exports = View.extend({
   changeCollapseButtonText: function () {
     var text = $(this.queryByHook('collapse-model')).text();
     text === '+' ? $(this.queryByHook('collapse-model')).text('-') : $(this.queryByHook('collapse-model')).text('+');
+  },
+  enableCollapseButton: function () {
+    $(this.queryByHook('collapse-model')).prop('disabled', false);
   },
 });
