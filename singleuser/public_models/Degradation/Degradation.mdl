@@ -40,7 +40,7 @@
     "parameters": [
         {
             "name": "decayrate",
-            "value": 0.05,
+            "expression": "0.05",
             "annotation": ""
         }
     ],
@@ -58,7 +58,7 @@
             ],
             "rate": {
                 "name": "decayrate",
-                "value": 0.05,
+                "expression": "0.05",
                 "annotation": ""
             },
             "reactants": [

@@ -10,7 +10,7 @@ module.exports = Collection.extend({
     var name = this.getDefaultName();
     var parameter = this.add({
       name: name,
-      value: 0.0,
+      expression: '0.0',
       annotation: "",
     });
   },

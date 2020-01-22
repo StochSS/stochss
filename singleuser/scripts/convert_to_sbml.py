@@ -71,7 +71,7 @@ def convert_parameters(sbml_model, parameters):
         p = sbml_model.createParameter()
         p.initDefaults()
         p.setId(parameter['name'])
-        p.setValue(float(parameter['value']))
+        p.setValue(float(parameter['expression']))
         p.setAnnotation(parameter['annotation'])
 
 

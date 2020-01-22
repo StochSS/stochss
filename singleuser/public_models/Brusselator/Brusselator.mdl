@@ -105,22 +105,22 @@
     "parameters": [
         {
             "name": "rate1",
-            "value": 5000,
+            "expression": "5000",
             "annotation": ""
         },
         {
             "name": "rate2",
-            "value": 50,
+            "expression": "50",
             "annotation": ""
         },
         {
             "name": "rate3",
-            "value": 0.00005,
+            "expression": "0.00005",
             "annotation": ""
         },
         {
             "name": "rate4",
-            "value": 5,
+            "expression": "5",
             "annotation": ""
         }
     ],

@@ -110,11 +110,11 @@ module.exports = View.extend({
         return new InputView({
           parent: this,
           required: true,
-          name: 'value',
+          name: 'expression',
           label: '',
-          tests: tests.valueTests,
+          tests: '',
           modelKey: 'value',
-          valueType: 'number',
+          valueType: 'string',
           value: this.model.value,
         });
       },

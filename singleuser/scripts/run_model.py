@@ -140,8 +140,8 @@ class ModelFactory():
             A json representation of a parameter.
         '''
         name = args['name'].strip()
-        value = args['value']
-        return Parameter(name=name, expression=value)
+        expression = args['expression']
+        return Parameter(name=name, expression=expression)
 
     def build_reaction(self, args, parameters):
         '''

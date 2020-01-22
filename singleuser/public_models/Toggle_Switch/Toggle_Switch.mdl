@@ -53,27 +53,27 @@
     "parameters": [
         {
             "name": "alpha1",
-            "value": 1,
+            "expression": "1",
             "annotation": ""
         },
         {
             "name": "alpha2",
-            "value": 1,
+            "expression": "1",
             "annotation": ""
         },
         {
             "name": "beta",
-            "value": 2,
+            "expression": "2",
             "annotation": ""
         },
         {
             "name": "gamma",
-            "value": 2,
+            "expression": "2",
             "annotation": ""
         },
         {
             "name": "mu",
-            "value": 1,
+            "expression": "1",
             "annotation": ""
         }
     ],
@@ -155,7 +155,7 @@
             ],
             "rate": {
                 "name": "mu",
-                "value": 1,
+                "expression": "1",
                 "annotation": ""
             },
             "reactants": [
@@ -191,7 +191,7 @@
             ],
             "rate": {
                 "name": "mu",
-                "value": 1,
+                "expression": "1",
                 "annotation": ""
             },
             "reactants": [

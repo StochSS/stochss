@@ -104,7 +104,7 @@ def get_parameters(parameters):
         parameter = parameters[name]
 
         stochss_parameter = {"name":parameter.name,
-                             "value":float(parameter.expression),
+                             "expression":str(parameter.expression),
                              "annotation": ""
                             }
 

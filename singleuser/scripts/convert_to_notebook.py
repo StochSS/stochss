@@ -38,7 +38,7 @@ def create_parameter_strings(json_data, padding):
     for param in json_data['parameters']:
         param_string += padding + 'self.add_parameter(Parameter(name="{0}", expression={1}))\n'.format(
                 param['name'], 
-                param['value'])
+                param['expression'])
     return param_string
 
 def create_species_strings(json_data, padding):

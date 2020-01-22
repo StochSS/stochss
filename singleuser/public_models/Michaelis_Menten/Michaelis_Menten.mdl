@@ -79,17 +79,17 @@
     "parameters": [
         {
             "name": "rate1",
-            "value": 0.0017,
+            "expression": "0.0017",
             "annotation": ""
         },
         {
             "name": "rate2",
-            "value": 0.5,
+            "expression": "0.5",
             "annotation": ""
         },
         {
             "name": "rate3",
-            "value": 0.1,
+            "expression": "0.1",
             "annotation": ""
         }
     ],
@@ -107,7 +107,7 @@
             ],
             "rate": {
                 "name": "rate1",
-                "value": 0.0017,
+                "expression": "0.0017",
                 "annotation": ""
             },
             "reactants": [
@@ -176,7 +176,7 @@
             ],
             "rate": {
                 "name": "rate2",
-                "value": 0.5,
+                "expression": "0.5",
                 "annotation": ""
             },
             "reactants": [
@@ -245,7 +245,7 @@
             ],
             "rate": {
                 "name": "rate3",
-                "value": 0.1,
+                "expression": "0.1",
                 "annotation": ""
             },
             "reactants": [
