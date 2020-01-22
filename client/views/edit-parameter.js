@@ -113,9 +113,9 @@ module.exports = View.extend({
           name: 'expression',
           label: '',
           tests: '',
-          modelKey: 'value',
+          modelKey: 'expression',
           valueType: 'string',
-          value: this.model.value,
+          value: this.model.expression,
         });
       },
     },
