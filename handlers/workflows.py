@@ -182,3 +182,33 @@ class PlotWorkflowResultsAPIHandler(BaseHandler):
         log.warn(plt_fig)
         self.write(plt_fig) # Send data to client
 
+
+class WorkflowLogsAPIHandler(BaseHandler):
+
+    '''
+    ########################################################################
+    Handler for getting Workflow Status (checking for RUNNING and COMPLETE files.
+    ########################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, logs_path):
+        '''
+        Retrieve workflow status from user container. Data is transferred to hub
+        container as a string.
+
+        Attributes
+        ----------
+        workflow_path : str
+            Path to selected workflow directory within user pod container.
+        '''
+
+        checkUserOrRaise(self) # User Validation
+        user = self.current_user.name # Get Username
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
+        full_path = "/home/jovyan/{0}".format(logs_path)
+        data = stochss_kubernetes.read_from_pod(client, 
+            user_pod, "{0}".format(full_path), isJSON=False) # Use cat to read json file
+        log.warn("Log data: {0}".format(data))
+        self.write(data) # Send data to client
+

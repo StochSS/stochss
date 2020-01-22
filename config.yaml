@@ -98,6 +98,7 @@ hub:
         RunWorkflowAPIHandler, \
         WorkflowInfoAPIHandler, \
         WorkflowStatusAPIHandler, \
+        WorkflowLogsAPIHandler, \
         PlotWorkflowResultsAPIHandler
 
       # Username API Handler
@@ -119,6 +120,7 @@ hub:
           (r"/stochss/api/workflow/run-workflow/(\w+)\/?(.+)\/?", RunWorkflowAPIHandler),
           (r"/stochss/api/workflow/workflow-info(.+)\/?", WorkflowInfoAPIHandler),
           (r"/stochss/api/workflow/workflow-status/(.+)\/?", WorkflowStatusAPIHandler),
+          (r"/stochss/api/workflow/workflow-logs/(.+)\/?", WorkflowLogsAPIHandler),
           (r"/stochss/api/workflow/plot-results/(.+)\/?", PlotWorkflowResultsAPIHandler),
           (r"/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
           (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),

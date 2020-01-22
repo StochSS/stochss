@@ -9,6 +9,7 @@ var WorkflowEditorView = require('../views/workflow-editor');
 var WorkflowStatusView = require('../views/workflow-status');
 var WorkflowResultsView = require('../views/workflow-results');
 var ModelViewer = require('../views/model-viewer');
+var InfoView = require('../views/workflow-info');
 var InputView = require('../views/input');
 //templates
 var template = require('../templates/pages/workflowManager.pug');
@@ -115,6 +116,7 @@ let WorkflowManager = PageView.extend({
     this.renderWorkflowStatusView();
     this.updateTrajectories();
     this.renderModelViewer();
+    this.renderInfoView();
     if(this.status !== 'new'){
       this.disableWorkflowNameInput();
     }
@@ -179,6 +181,7 @@ let WorkflowManager = PageView.extend({
       }else if(self.status === 'complete') {
         self.renderResultsView();
         self.renderModelViewer();
+        self.renderInfoView();
       }
     });
   },
@@ -209,6 +212,16 @@ let WorkflowManager = PageView.extend({
       status: this.status
     });
     this.registerRenderSubview(this.modelViewer, 'model-viewer-container')
+  },
+  renderInfoView: function () {
+    if(this.infoView){
+      this.infoView.remove();
+    }
+    this.infoView = new InfoView({
+      status: this.status,
+      logsPath: path.join(this.directory, "logs.txt")
+    });
+    this.registerRenderSubview(this.infoView, 'workflow-info-container')
   },
   updateTrajectories: function () {
     var self = this
