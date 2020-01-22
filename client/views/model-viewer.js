@@ -5,7 +5,9 @@ var View = require('ampersand-view');
 var SpeciesViewer = require('./species-viewer');
 var ParametersViewer = require('./parameters-viewer');
 var ReactionsViewer = require('./reactions-viewer');
+var EventsViewer = require('./events-viewer');
 var RulesViewer = require('./rules-viewer');
+var ModelSettingsViewer = require('./model-settings-viewer');
 var SimulationSettingsViewer = require('./simulation-settings-viewer');
 //models
 var Model = require('../models/model');
@@ -46,14 +48,22 @@ module.exports = View.extend({
     var reactionsViewer = new ReactionsViewer({
       collection: this.model.reactions,
     });
+    var eventsViewer = new EventsViewer({
+      collection: this.model.eventsCollection,
+    });
     var rulesViewer = new RulesViewer({
       collection: this.model.rules,
     });
     this.renderSimulationSettingsView();
+    var modelSettingsViewer = new ModelSettingsViewer({
+      model: this.model.modelSettings,
+    });
     this.registerRenderSubview(speciesViewer, "species-viewer-container");
     this.registerRenderSubview(parametersViewer, "parameters-viewer-container");
     this.registerRenderSubview(reactionsViewer, "reactions-viewer-container");
+    this.registerRenderSubview(eventsViewer, "events-viewer-container");
     this.registerRenderSubview(rulesViewer, "rules-viewer-container");
+    this.registerRenderSubview(modelSettingsViewer, "model-settings-viewer-container");
     if(this.status === 'complete'){
       this.enableCollapseButton();
     }
