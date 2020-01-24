@@ -50,6 +50,9 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    $(document).on('shown.bs.modal', function (e) {
+      $('[autofocus]', e.target).focus();
+    });
   },
   update: function () {
   },
@@ -61,9 +64,8 @@ module.exports = View.extend({
     this.collection.removeSpecie(this.model);
   },
   setSpeciesName: function (e) {
-    var oldName = this.model.name;
     this.model.name = e.target.value;
-    this.model.collection.trigger('update-species', oldName, this.model, true);
+    this.model.collection.trigger('update-species', this.model.compID, this.model, true);
     this.model.collection.trigger('remove');
   },
   editAnnotation: function () {
@@ -85,6 +87,7 @@ module.exports = View.extend({
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
         self.model.annotation = input.value;
+        self.parent.renderEditSpeciesView();
       }
       modal.modal('hide');
     });

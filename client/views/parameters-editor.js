@@ -18,15 +18,15 @@ module.exports = View.extend({
                      "expression":"A parameter value or a mathematical expression calculating the parameter value.",
                      "annotation":"An optional note about a parameter.",
                     }
-    this.collection.on('update-parameters', function (name, parameter) {
+    this.collection.on('update-parameters', function (compID, parameter) {
       self.collection.parent.reactions.map(function (reaction) {
-        if(reaction.rate && reaction.rate.name === name){
+        if(reaction.rate && reaction.rate.compID === compID){
           reaction.rate = parameter;
         }
       });
       self.collection.parent.eventsCollection.map(function (event) {
         event.eventAssignments.map(function (assignment) {
-          if(assignment.variable.name === name) {
+          if(assignment.variable.compID === compID) {
             assignment.variable = parameter;
           }
         })
@@ -34,7 +34,7 @@ module.exports = View.extend({
           event.detailsView.renderEventAssignments();
       });
       self.collection.parent.rules.map(function (rule) {
-        if(rule.variable.name === name) {
+        if(rule.variable.compID === compID) {
           rule.variable = parameter;
         }
       });
@@ -43,15 +43,27 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(
-      this.collection,
-      EditParameterView,
-      this.queryByHook('parameter-list')
-    );
+    this.renderEditParameter();
   },
   update: function () {
   },
   updateValid: function () {
+  },
+  renderEditParameter: function () {
+    if(this.editParameterView){
+      this.editParameterView.remove();
+    }
+    this.editParameterView = this.renderCollection(
+      this.collection,
+      EditParameterView,
+      this.queryByHook('parameter-list')
+    );
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   addParameter: function () {
     this.collection.addParameter();

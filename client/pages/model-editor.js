@@ -105,13 +105,13 @@ let ModelEditor = PageView.extend({
     var rules = this.model.rules;
     species.forEach(function (specie) { specie.inUse = false; });
     var updateInUseForReaction = function (stoichSpecie) {
-      _.where(species.models, { name: stoichSpecie.specie.name })
+      _.where(species.models, { compID: stoichSpecie.specie.compID })
        .forEach(function (specie) {
           specie.inUse = true;
         });
     }
     var updateInUseForOther = function (specie) {
-      _.where(species.models, { name: specie.name })
+      _.where(species.models, { compID: specie.compID })
        .forEach(function (specie) {
          specie.inUse = true;
        });
@@ -136,7 +136,7 @@ let ModelEditor = PageView.extend({
     var rules = this.model.rules;
     parameters.forEach(function (param) { param.inUse = false; });
     var updateInUse = function (param) {
-      _.where(parameters.models, { name: param.name })
+      _.where(parameters.models, { compID: param.compID })
        .forEach(function (param) {
          param.inUse = true;
        });

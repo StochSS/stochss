@@ -67,15 +67,15 @@ module.exports = View.extend({
                      "switchValue":"Switching Tolerance - <br>" +
                                    "Minimum Value For Switching - "
                     }
-    this.collection.on('update-species', function (name, specie, isNameUpdate) {
+    this.collection.on('update-species', function (compID, specie, isNameUpdate) {
       self.collection.parent.reactions.map(function (reaction) {
         reaction.reactants.map(function (reactant) {
-          if(reactant.specie.name === name) {
+          if(reactant.specie.compID === compID) {
             reactant.specie = specie;
           }
         });
         reaction.products.map(function (product) {
-          if(product.specie.name === name) {
+          if(product.specie.compID === compID) {
             product.specie = specie;
           }
         });
@@ -87,7 +87,7 @@ module.exports = View.extend({
       });
       self.collection.parent.eventsCollection.map(function (event) {
         event.eventAssignments.map(function (assignment) {
-          if(assignment.variable.name === name) {
+          if(assignment.variable.compID === compID) {
             assignment.variable = specie;
           }
         })
@@ -96,7 +96,7 @@ module.exports = View.extend({
         }
       });
       self.collection.parent.rules.map(function (rule) {
-        if(rule.variable.name === name) {
+        if(rule.variable.compID === compID) {
           rule.variable = specie;
         }
       });
@@ -119,9 +119,8 @@ module.exports = View.extend({
         $(this.queryByHook('advanced-species')).collapse('show');
       }
     }
-    var editSpecieView = !this.collection.parent.is_spatial ? EditNonspatialSpecieView : EditSpatialSpecieView;
-    this.renderCollection(this.collection, editSpecieView, this.queryByHook('specie-list'));
-    this.renderSpeciesAdvancedView() 
+    this.renderEditSpeciesView();
+    this.renderSpeciesAdvancedView();
   },
   update: function () {
   },
@@ -156,7 +155,7 @@ module.exports = View.extend({
   getDefaultSpeciesMode: function (e) {
     var self = this;
     this.setAllSpeciesModes(e.target.dataset.name, function () {
-      self.collection.trigger('update-species', specie.name, specie, false)
+      self.collection.trigger('update-species', specie.compID, specie, false)
     });
   },
   setAllSpeciesModes: function (defaultMode) {
@@ -171,6 +170,23 @@ module.exports = View.extend({
     else{
       $(this.queryByHook('advanced-species')).collapse('hide');
     }
+  },
+  renderEditSpeciesView: function () {
+    if(this.editSpeciesView){
+      this.editSpeciesView.remove();
+    }
+    var editSpecieView = !this.collection.parent.is_spatial ? EditNonspatialSpecieView : EditSpatialSpecieView;
+    this.editSpeciesView = this.renderCollection(
+      this.collection,
+      editSpecieView,
+      this.queryByHook('specie-list')
+    );
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   renderSpeciesAdvancedView: function () {
     if(this.speciesAdvancedView) {

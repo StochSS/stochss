@@ -25,6 +25,10 @@ module.exports = Model.extend({
   },
   props: {
     is_spatial: 'boolean',
+    defaultID: {
+      type: 'number',
+      default: 1,
+    },
     defaultMode: {
       type: 'string',
       default: '',
@@ -52,6 +56,12 @@ module.exports = Model.extend({
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
   },
+  getDefaultID: function () {
+    var id = this.defaultID;
+    this.defaultID += 1;
+    console.log(id);
+    return id;
+  },
   autoSave: function () {
     //TODO: implement auto save
   },
@@ -59,10 +69,10 @@ module.exports = Model.extend({
   saveModel: function () {
     var self = this;
     this.species.map(function (specie) {
-      self.species.trigger('update-species', specie.name, specie, false);
+      self.species.trigger('update-species', specie.compID, specie, false);
     });
     this.parameters.map(function (parameter) {
-      self.parameters.trigger('update-parameters', parameter.name, parameter);
+      self.parameters.trigger('update-parameters', parameter.compID, parameter);
     });
     if(!isPreview){
       this.simulationSettings.letUsChooseForUse()

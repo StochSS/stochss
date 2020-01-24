@@ -20,16 +20,12 @@ module.exports = View.extend({
       type: 'booleanAttribute',
       name: 'checked',
     },
-    'model.useValuesFromTriggerTime': {
-      hook: 'use-values-from-trigger-time',
-      type: 'booleanAttribute',
-      name: 'checked',
-    },
   },
   events: {
     'change [data-hook=event-trigger-init-value]' : 'setTriggerInitialValue',
     'change [data-hook=event-trigger-persistent]' : 'setTriggerPersistent',
-    'change [data-hook=use-values-from-trigger-time]' : 'setUseValuesFromTriggerTime',
+    'change [data-hook=trigger-time]' : 'setUseValuesFromTriggerTime',
+    'change [data-hook=assignment-time]' : 'setUseValuesFromTriggerTime',
     'click [data-hook=advanced-event-button]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
@@ -42,6 +38,11 @@ module.exports = View.extend({
     $(triggerExpressionField).attr("placeholder", "---No Expression Entered---");
     var delayField = this.queryByHook('event-delay').children[0].children[1];
     $(delayField).attr("placeholder", "---No Expression Entered---");
+    if(this.model.useValuesFromTriggerTime){
+      $(this.queryByHook('trigger-time')).prop('checked', true)
+    }else{
+      $(this.queryByHook('assignment-time')).prop('checked', true)
+    }
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip({delay: { "show": 1000, "hide": 0 }});
       $('[data-toggle="tooltip"]').click(function () {
@@ -74,7 +75,8 @@ module.exports = View.extend({
     this.model.persistent = e.target.checked;
   },
   setUseValuesFromTriggerTime: function (e) {
-    this.model.useValuesFromTriggerTime = e.target.checked;
+    this.model.useValuesFromTriggerTime = e.target.dataset.name === "trigger";
+    console.log(this.model.useValuesFromTriggerTime)
   },
   changeCollapseButtonText: function (e) {
     var text = $(this.queryByHook('advanced-event-button')).text();
@@ -86,7 +88,7 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new InputView({
           parent: this,
-          required: true,
+          required: false,
           name: 'delay',
           label: '',
           tests: '',

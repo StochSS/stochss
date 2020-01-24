@@ -32,7 +32,7 @@ module.exports = View.extend({
     this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
                      "annotation":"An optional note about the reaction.",
                      "rate":"The rate of the mass-action reaction.",
-                     "propensity":"The custom propensity function for the reaction.",
+                     "propensity":"The custom propensity expression for the reaction.",
                      "reactant":"The reactants that are consumed in the reaction, with stoichiometry.",
                      "product":"The species that are created by the reaction event, with stoichiometry.",
                      "reaction":"For a species that is NOT consumed in the reaction but is part of a mass" +
@@ -60,12 +60,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    //this.renderWithTemplate();
-    this.renderCollection(
-      this.collection,
-      ReactionListingView,
-      this.queryByHook('reaction-list')
-    );
+    this.renderReactionListingView();
     this.detailsContainer = this.queryByHook('reaction-details-container');
     this.detailsViewSwitcher = new ViewSwitcher({
       el: this.detailsContainer,
@@ -87,6 +82,22 @@ module.exports = View.extend({
   update: function () {
   },
   updateValid: function () {
+  },
+  renderReactionListingView: function () {
+    if(this.reactionListingView){
+      this.reactionListingView.remove();
+    }
+    this.reactionListingView = this.renderCollection(
+      this.collection,
+      ReactionListingView,
+      this.queryByHook('reaction-list')
+    );
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   toggleAddReactionButton: function () {
     $(this.queryByHook('add-reaction-full')).prop('disabled', (this.collection.parent.species.length <= 0));

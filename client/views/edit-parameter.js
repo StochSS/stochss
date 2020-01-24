@@ -50,6 +50,9 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    $(document).on('shown.bs.modal', function (e) {
+      $('[autofocus]', e.target).focus();
+    });
   },
   update: function () {
   },
@@ -78,14 +81,14 @@ module.exports = View.extend({
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
         self.model.annotation = input.value;
+        self.parent.renderEditParameter();
       }
       modal.modal('hide');
     });
   },
   setParameterName: function (e) {
-    var oldName = this.model.name;
     this.model.name = e.target.value;
-    this.model.collection.trigger('update-parameters', oldName, this.model);
+    this.model.collection.trigger('update-parameters', this.model.compID, this.model);
     this.model.collection.trigger('remove')
   },
   subviews: {

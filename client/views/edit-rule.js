@@ -67,6 +67,9 @@ module.exports = View.extend({
     });
     this.registerRenderSubview(typeSelectView, "rule-type");
     this.registerRenderSubview(variableSelectView, 'rule-variable');
+    $(document).on('shown.bs.modal', function (e) {
+      $('[autofocus]', e.target).focus();
+    });
   },
   update: function (e) {
   },
@@ -91,6 +94,7 @@ module.exports = View.extend({
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
         self.model.annotation = input.value;
+        self.parent.renderRules();
       }
       modal.modal('hide');
     });

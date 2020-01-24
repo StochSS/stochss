@@ -19,9 +19,21 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.model = attrs.model;
-    this.tooltips = {"rtol":"Value must be greater than 0.0.",
-                     "atol":"Value must be greater than 0.0.",
-                     "ttol":"Value must be between 0.0 and 1.0.",
+    this.tooltips = {"rtol":"Relative tolerance for ode solutions, controls a relative "+
+                            "accuracy (number of correct digits).  The solver keeps the "+
+                            "local error estimates less than atol + rtol * abs(y).  Value "+
+                            "must be greater than 0.0.",
+                     "atol":"Absolute tolerance for ode solutions, if a component of y is "+
+                            "approximately below atol, the error only needs to fall within "+
+                            "the same atol threshold, and the number of correct digits is "+
+                            "not guaranteed.  The solver keeps the local error estimates "+
+                            "less than atol + rtol * abs(y).  Value must be greater than 0.0.",
+                     "ttol":"A relative error tolerance value governing tau-leaping tau "+
+                            "selections.  Based on Cao, Y.; Gillespie, D. T.; Petzold, L. R. "+
+                            "(2006). 'Efficient step size selection for the tau-leaping "+
+                            "simulation method' (PDF). The Journal of Chemical Physics. 124 "+
+                            "(4): 044109. Bibcode:2006JChPh.124d4109C. doi:10.1063/1.2159468. "+
+                            "PMID 16460151  Value must be between 0.0 and 1.0.",
                      "seed":"The seed for the simulation.  Set to -1 for a random seed.",
                      "realizations":"The number of times to sample the chemical "+
                             "master equation. Each trajectory will be returned at the end "+

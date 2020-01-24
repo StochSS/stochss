@@ -18,12 +18,12 @@ module.exports = View.extend({
     this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
                      "annotation":"An optional note about an event.",
                      "triggerExpression":"The trigger expression can be any mathematical expression "+
-                                "which evaluates to a boolean value (i.e. t==50).  This expression is "+
-                                "evaluable within the model namespace, and any variable (Species, "+
-                                "Parameters, etc.) can be referenced in the expression.  Time is "+
-                                "represented with the lower case variable 't'. An event will begin "+
-                                "execution of assignments (or delay, if any) once this expression "+
-                                "changes from 'False' to 'True.'",
+                                "which evaluates to a boolean value in a python environment "+
+                                "(i.e. t==50).  This expression is evaluable within the model "+
+                                "namespace, and any variable (Species, Parameters, etc.) can be "+
+                                "referenced in the expression.  Time is represented with the lower "+
+                                "case variable 't'. An event will begin execution of assignments "+
+                                "(or delay, if any) once this expression changes from 'False' to 'True.'",
                      "delay":"contains math expression evaluable within model namespace. This "+
                                 "expression designates a delay between the trigger of an event and "+
                                 "the execution of its assignments.",
@@ -34,7 +34,11 @@ module.exports = View.extend({
                                 "start of simulation.  This can be useful for some models, since an "+
                                 "event is only executed when the trigger expression state changes "+
                                 "from 'False' to 'True'.",
-                     "persistent":"",
+                     "persistent":"If persistent, an event assignment will always be executed when "+
+                                "the event's trigger expression evaluates to true.  If not persistent, "+
+                                "the event assignment will not be executed if the trigger expression "+
+                                "evaluates to false between the time the event is triggered and the "+
+                                "time the assignment is executed.",
                      "useValuesFromTriggerTime":"If set to true, assignment execution will be based "+
                                 "off of the model state at trigger time. If false (default), the "+
                                 "assignment will be made using values at assignment time.",
@@ -68,11 +72,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(
-      this.collection,
-      EventListings,
-      this.queryByHook('event-listing-container')
-    );
+    this.renderEventListingsView();
     this.detailsContainer = this.queryByHook('event-details-container');
     this.detailsViewSwitcher = new ViewSwitcher({
       el: this.detailsContainer,
@@ -86,6 +86,22 @@ module.exports = View.extend({
   update: function () {
   },
   updateValid: function () {
+  },
+  renderEventListingsView: function () {
+    if(this.eventListingsView){
+      this.eventListingsView.remove();
+    }
+    this.eventListingsView = this.renderCollection(
+      this.collection,
+      EventListings,
+      this.queryByHook('event-listing-container')
+    );
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   toggleAddEventButton: function () {
     this.collection.map(function (event) {

@@ -7,6 +7,7 @@ var StoichSpecies = require('./stoich-species');
 
 module.exports = State.extend({
   props: {
+    compID: 'number',
     name: 'string',
     reactionType: 'string',
     summary: 'string',

@@ -11,9 +11,11 @@ Reactions = Collection.extend({
     Collection.prototype.initialize.apply(this, arguments);
   },
   addReaction: function (reactionType, stoichArgs, subdomains) {
+    var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var massaction = reactionType === 'custom-massaction';
     var reaction = new Reaction({
+      compID: id,
       name: name,
       reactionType: reactionType,
       massaction: massaction,

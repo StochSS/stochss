@@ -61,6 +61,15 @@ module.exports = View.extend({
     'click [data-hook=select]'  : 'selectReaction',
     'click [data-hook=remove]'  : 'removeReaction'
   },
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
+  },
+  render: function () {
+    View.prototype.render.apply(this, arguments);
+    $(document).on('shown.bs.modal', function (e) {
+      $('[autofocus]', e.target).focus();
+    });
+  },
   update: function () {
   },
   updateValid: function () {
@@ -91,6 +100,7 @@ module.exports = View.extend({
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
         self.model.annotation = input.value;
+        self.parent.renderReactionListingView();
       }
       modal.modal('hide');
     });

@@ -7,8 +7,10 @@ var Collection = require('ampersand-collection');
 module.exports = Collection.extend({
   model: Event,
   addEvent: function () {
+    var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var event = this.add({
+      compID: id,
       name: name,
       annotation: "",
       delay: "",

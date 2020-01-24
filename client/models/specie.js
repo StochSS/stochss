@@ -4,10 +4,12 @@ var State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
+    compID: 'number',
     name: 'string',
     value: 'number',
     mode: 'string',
-    switchingVal: 'number',
+    switchTol: 'number',
+    switchMin: 'number',
     isSwitchTol: 'boolean',
     annotation: 'string',
     diffusionCoeff: 'number',

@@ -530,11 +530,11 @@ let FileBrowser = PageView.extend({
 
             }
           },
-          "Create New Workflow" : {
+          "New Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Create New Workflow",
+            "label" : "New Workflow",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/workflow/edit", o.original._path);
             }
@@ -621,11 +621,11 @@ let FileBrowser = PageView.extend({
               self.toSBML(o)
             }
           },
-          "Create New Workflow" : {
+          "New Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Create New Workflow",
+            "label" : "New Workflow",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/workflow/edit", o.original._path);
             }

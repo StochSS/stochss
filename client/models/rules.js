@@ -7,9 +7,11 @@ var Collection = require('ampersand-collection');
 module.exports = Collection.extend({
   model: Rule,
   addRule: function (type) {
+    var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var variable = this.getDefaultVariable();
     var rule = new Rule({
+      compID: id,
       name: name,
       type: type,
       expression: '',

@@ -31,8 +31,10 @@ module.exports = View.extend({
     this.registerRenderSubview(modeSelectView, "specie-mode")
     if(this.model.isSwitchTol){
       $(this.queryByHook('switching-tol')).prop('checked', true);
+      $(this.queryByHook('switching-threshold')).find('input').prop('disabled', true);
     }else{
       $(this.queryByHook('switching-min')).prop('checked', true);
+      $(this.queryByHook('switching-tolerance')).find('input').prop('disabled', true);
     }
   },
   update: function () {
@@ -47,30 +49,47 @@ module.exports = View.extend({
     var value = e.target.selectedOptions.item(0).text
     var modeDict = {"Concentration":"continuous","Population":"discrete","Hybrid Concentration/Population":"dynamic"}
     this.model.mode = modeDict[value]
-    this.model.collection.trigger('update-species', this.model.name, this.model, false);
+    this.model.collection.trigger('update-species', this.model.compID, this.model, false);
   },
   setSwitchingType: function (e) {
     this.model.isSwitchTol = $(this.queryByHook('switching-tol')).is(":checked");
     if(this.model.isSwitchTol){
-      this.model.switchingVal = 0.03;
+      $(this.queryByHook('switching-threshold')).find('input').prop('disabled', true);
+      $(this.queryByHook('switching-tolerance')).find('input').prop('disabled', false);
     }else{
-      this.model.switchingVal = 100;
+      $(this.queryByHook('switching-tolerance')).find('input').prop('disabled', true);
+      $(this.queryByHook('switching-threshold')).find('input').prop('disabled', false);
     }
     this.parent.renderSpeciesAdvancedView();
   },
   subviews: {
-    inputName: {
-      hook: 'switching-value',
+    inputSwitchTol: {
+      hook: 'switching-tolerance',
       prepareView: function (el) {
         return new InputView({
           parent: this,
           required: true,
-          name: 'switching-value',
+          name: 'switching-tolerance',
           label: '',
           tests: tests.valueTests,
-          modelKey: 'switchingVal',
+          modelKey: 'switchTol',
           valueType: 'number',
-          value: this.model.switchingVal,
+          value: this.model.switchTol,
+        });
+      },
+    },
+    inputSwitchMin: {
+      hook: 'switching-threshold',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'switching-threshold',
+          label: '',
+          tests: tests.valueTests,
+          modelKey: 'switchMin',
+          valueType: 'number',
+          value: this.model.switchMin,
         });
       },
     },
