@@ -185,6 +185,13 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
     this.registerRenderSubview(modelSettings, 'model-settings-container');
     this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

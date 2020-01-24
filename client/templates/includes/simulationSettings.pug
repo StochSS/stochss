@@ -2,7 +2,7 @@ div#simulation-settings.card.card-body
 
   div
 
-    h3.editor-header Simulation Settings
+    h3.inline Simulation Settings
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-settings")
@@ -31,32 +31,36 @@ div#simulation-settings.card.card-body
 
           td
             input(type="radio", name="simAlgorithm", data-hook="select-automatic", data-name="Automatic")
-            |  Let us choose for you
+            |  Choose for me
       
-    h5.editor-header Deterministic Settings
+    div.row
 
-    table.table
-      thead
-        tr
-          th(scope="col") Relative Tolerance
-          th(scope="col") Absolute Tolerance
-      tbody
-        tr
-          td: div(data-hook="relative-tolerance")
-          td: div(data-hook="absolute-tolerance")
-    
-    h5.editor-header Stochastic Settings
+      div.col-md-5
 
-    table.table
-      thead
-        tr
-          th(scope="col") Trajectories
-          th(scope="col") Seed
-          th(scope="col") Tau Tolerance
-          th(scope="col") Switching Tolerance
-      tbody
-        tr
-          td: div(data-hook="trajectories")
-          td: div(data-hook="seed")
-          td: div(data-hook="tau-tolerance")
-          td: div(data-hook="switching-tolerance")
+        h5.inline Deterministic Settings
+
+        table.table
+          thead
+            tr
+              th(scope="col") Relative Tolerance
+              th(scope="col") Absolute Tolerance
+          tbody
+            tr
+              td: div(data-hook="relative-tolerance")
+              td: div(data-hook="absolute-tolerance")
+
+      div.col-md-7
+        
+        h5.inline Stochastic Settings
+
+        table.table
+          thead
+            tr
+              th(scope="col") Trajectories
+              th(scope="col") Seed
+              th(scope="col") Tau Tolerance
+          tbody
+            tr
+              td: div(data-hook="trajectories")
+              td: div(data-hook="seed")
+              td: div(data-hook="tau-tolerance")

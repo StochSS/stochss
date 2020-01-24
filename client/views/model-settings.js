@@ -15,6 +15,12 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = {"previewTime":"",
+                     "timeUnits":"Stores the state every ___ units.",
+                     "volume":"The volume of the system matters when converting to from population "+
+                                 "to concentration form. This will also set a parameter 'vol' for use "+
+                                 "in custom (i.e. non-mass-action) propensity functions."
+                    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -50,7 +56,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'time-units',
-          label: 'store state every ',
+          label: '',
           tests: tests.valueTests,
           modelKey: 'timeStep',
           valueType: 'number',
@@ -65,7 +71,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'volume',
-          label: 'Volume: ',
+          label: '',
           tests: tests.valueTests,
           modelKey: 'volume',
           valueType: 'number',

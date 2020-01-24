@@ -16,6 +16,12 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.collection.parent.species.on('add remove', this.toggleAddRuleButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleAddRuleButton, this);
+    this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
+                     "type":"",
+                     "variable":"",
+                     "expression":"",
+                     "annotation":"An optional note about a rule."
+                    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);

@@ -62,7 +62,7 @@ module.exports = View.extend({
     }
     var self = this;
     var reactionTypeSelectView = new SelectView({
-      label: 'Reaction type',
+      label: 'Reaction Type:',
       name: 'reaction-type',
       required: true,
       idAttribute: 'cid',
@@ -70,7 +70,7 @@ module.exports = View.extend({
       value: ReactionTypes[self.model.reactionType].label,
     });
     var rateParameterView = new SelectView({
-      label: 'Rate parameter:',
+      label: '',
       name: 'rate',
       required: true,
       idAttribute: 'cid',
@@ -85,7 +85,7 @@ module.exports = View.extend({
       parent: this,
       required: true,
       name: 'rate',
-      label: 'Propensity:',
+      label: '',
       tests:'',
       modelKey:'propensity',
       valueType: 'string',
@@ -115,8 +115,12 @@ module.exports = View.extend({
       this.registerRenderSubview(propensityView, 'select-rate-parameter')
       var inputField = this.queryByHook('select-rate-parameter').children[0].children[1];
       $(inputField).attr("placeholder", "---No Expression Entered---");
+      $(this.queryByHook('rate-parameter-label')).text('Propensity:')
+      $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.propensity);
     }else{
       this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
+      $(this.queryByHook('rate-parameter-label')).text('Rate Parameter:')
+      $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.rate);
     }
     this.registerRenderSubview(subdomainsView, 'subdomains-editor');
     this.registerRenderSubview(reactantsView, 'reactants-editor');
@@ -124,6 +128,13 @@ module.exports = View.extend({
     this.totalRatio = this.getTotalReactantRatio();
     if(this.parent.collection.parent.is_spatial)
       $(this.queryByHook('subdomains-editor')).collapse();
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip({delay: { "show": 1000, "hide": 0 }});
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   update: function () {
   },

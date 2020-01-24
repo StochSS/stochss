@@ -19,6 +19,12 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.model = attrs.model;
+    this.tooltips = {"rtol":"Value must be greater than 0.0.",
+                     "atol":"Value must be greater than 0.0.",
+                     "ttol":"Value must be between 0.0 and 1.0.",
+                     "seed":"Set to -1 for a random seed.",
+                     "realizations":""
+                    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -61,7 +67,6 @@ module.exports = View.extend({
     $(this.queryByHook("trajectories")).find('input').prop('disabled', !(isSSA || isLeaping || isHybrid || isAutomatic));
     $(this.queryByHook("seed")).find('input').prop('disabled', !(isSSA || isLeaping || isHybrid || isAutomatic));
     $(this.queryByHook("tau-tolerance")).find('input').prop('disabled', !(isHybrid || isLeaping || isAutomatic));
-    $(this.queryByHook("switching-tolerance")).find('input').prop('disabled', !(isHybrid || isAutomatic));
   },
   subviews: {
     inputRelativeTolerance: {
@@ -71,7 +76,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'relative-tolerance',
-          label: 'Valeus must be greater than 0.0: ',
+          label: '',
           tests: tests.valueTests,
           modelKey: 'relativeTol',
           valueType: 'number',
@@ -86,7 +91,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'absolute-tolerance',
-          label: 'Values must be greater than 0.0: ',
+          label: '',
           tests: tests.valueTests,
           modelKey: 'absoluteTol',
           valueType: 'number',
@@ -116,7 +121,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'seed',
-          label: 'Set to -1 for a random seed: ',
+          label: '',
           tests: '',
           modelKey: 'seed',
           valueType: 'number',
@@ -131,26 +136,11 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'Tau-Tolerance',
-          label: 'Value must be between 0.0 and 1.0: ',
+          label: '',
           tests: tests.valueTests,
           modelKey: 'tauTol',
           valueType: 'number',
           value: this.model.tauTol
-        });
-      },
-    },
-    inputSwitchingTolerance: {
-      hook: 'switching-tolerance',
-      prepareView: function () {
-        return new InputView ({
-          parent: this,
-          required: true,
-          name: 'Switching Tolerance',
-          label: 'Values must be between 0.0 and 1.0: ',
-          tests: tests.valueTests,
-          modelKey: 'switchTol',
-          valueType: 'number',
-          value: this.model.switchTol
         });
       },
     },

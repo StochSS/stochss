@@ -2,23 +2,23 @@ div#workflow-info-view.card.card-body
 
   div
 
-    h3.editor-header Info
+    h3.inline Info
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-info", data-hook="collapse", disabled) +
 
   div.collapse(id="collapse-info", data-hook="workflow-info")
 
     div.collapse
 
-      h5.editor-header Statistics
+      h5.inline Statistics
 
     div.collapse(data-hook="workflow-warnings")
 
-      h5.editor-header Warnings
+      h5.inline Warnings
 
       div(data-hook="list-of-warnings")
 
     div.collapse(data-hook="workflow-errors")
 
-      h5.editor-header Errors
+      h5.inline Errors
 
       div(data-hook="list-of-errors")

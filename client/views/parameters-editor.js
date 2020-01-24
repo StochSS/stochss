@@ -14,6 +14,10 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     var self = this;
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
+                     "expression":"A parameter value or a mathematical expression calculating the parameter value.",
+                     "annotation":"An optional note about a parameter.",
+                    }
     this.collection.on('update-parameters', function (name, parameter) {
       self.collection.parent.reactions.map(function (reaction) {
         if(reaction.rate && reaction.rate.name === name){

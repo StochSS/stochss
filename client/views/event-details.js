@@ -42,6 +42,13 @@ module.exports = View.extend({
     $(triggerExpressionField).attr("placeholder", "---No Expression Entered---");
     var delayField = this.queryByHook('event-delay').children[0].children[1];
     $(delayField).attr("placeholder", "---No Expression Entered---");
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip({delay: { "show": 1000, "hide": 0 }});
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   update: function () {
   },
@@ -81,7 +88,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'delay',
-          label: 'Delay: ',
+          label: '',
           tests: '',
           modelKey: 'delay',
           valueType: 'string',
@@ -96,7 +103,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'priority',
-          label: 'Priority: ',
+          label: '',
           tests: '',
           modelKey: 'priority',
           valueType: 'string',
@@ -111,7 +118,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'trigger-expression',
-          label: 'Trigger Expression: ',
+          label: '',
           tests: '',
           modelKey: 'triggerExpression',
           valueType: 'string',

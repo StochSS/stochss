@@ -10,7 +10,6 @@ module.exports = State.extend({
     algorithm: 'string',
     seed: 'number',
     tauTol: 'number',
-    switchTol: 'number'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
@@ -19,12 +18,11 @@ module.exports = State.extend({
     var defaultMode = this.parent.defaultMode;
     var numEvents = this.parent.eventsCollection.length;
     var numRules = this.parent.rules.length;
-    var sTol = this.switchTol
     var tTol = this.tauTol
     var aTol = this.absoluteTol
     var rTol = this.relativeTol
 
-    if(numEvents || numRules || defaultMode !== 'discrete' || sTol !== 0.03 || rTol !== 0.03 || aTol !== 0.03){
+    if(numEvents || numRules || defaultMode !== 'discrete' || rTol !== 0.03 || aTol !== 0.03){
       this.model.algorithm = "Hybrid-Tau-Leaping";
     }else if(tTol !== 0.03){
       this.model.algorithm = "Tau-Leaping";

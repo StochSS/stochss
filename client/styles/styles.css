@@ -5,8 +5,8 @@ body {
   background-attachment: fixed;
 }
 
-h3, h5, h6.editor-header {
-  display: inline-block;
+.inline{
+  display: inline-block !important;
 }
 
 span {
@@ -19,7 +19,6 @@ select {
 
 label {
   padding-right: 0.25rem;
-  padding-left: 0.25rem;
   width: 100%;
 }
 
@@ -91,7 +90,7 @@ button.custom {
 }
 
 .reaction-summary {
-  padding-left: 22px;
+  padding-left: 15px;
   padding-right: 5px;
   padding-bottom: 10px;
   display: inline-block;
@@ -114,6 +113,15 @@ button.custom {
   vertical-align: top;
 }
 
+.tooltip-icon {
+  display: inline-block;
+  font-size: 12px;
+  padding-left: 2px;
+  padding-right: 2px;
+  vertical-align: top;
+  color: #007bff;
+}
+
 .information-btn:hover {
   color: #0056b3;
 }
@@ -126,6 +134,10 @@ button.custom {
 
 .btn-outline-collapse:hover {
   color: #007bff;
+}
+
+.btn-primary {
+  margin: 5px !important;
 }
 
 .reaction-subdomain {
@@ -225,4 +237,22 @@ span.checkbox {
 
 .event-th .event-td {
   padding-left: 0px !important;
+}
+
+.tooltip-inner {
+  max-width: 300px;
+  padding: 0.25rem 0.5rem;
+  color: #fff;
+  text-align: left;
+  background-color: #000;
+  border-radius: 0.25rem;
+}
+
+.verticle-space {
+  padding-bottom: 10px;
+}
+
+.horizontal-space {
+  padding-left: 5px;
+  padding-right: 5px;
 }

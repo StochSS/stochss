@@ -57,6 +57,16 @@ module.exports = View.extend({
     var self = this;
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.collection.parent;
+    this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
+                     "initialValue":"Initial population of a species.",
+                     "annotation":"An optional note about the species.",
+                     "mode":"Concentration - Species will only be represented as deterministic.<br>" + 
+                            "Population - Species will only be represented as stochastic.<br>" + 
+                            "Hybrid Concentration/Population - allows a species to be represented " + 
+                            "as either deterministic or stochastic.",
+                     "switchValue":"Switching Tolerance - <br>" +
+                                   "Minimum Value For Switching - "
+                    }
     this.collection.on('update-species', function (name, specie, isNameUpdate) {
       self.collection.parent.reactions.map(function (reaction) {
         reaction.reactants.map(function (reactant) {

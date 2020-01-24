@@ -29,6 +29,17 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
+                     "annotation":"An optional note about the reaction.",
+                     "rate":"The rate of the mass-action reaction.",
+                     "propensity":"The custom propensity function for the reaction.",
+                     "reactant":"The reactants that are consumed in the reaction, with stoichiometry.",
+                     "product":"The species that are created by the reaction event, with stoichiometry.",
+                     "reaction":"For a species that is NOT consumed in the reaction but is part of a mass" +
+                                "action reaction, add it as both a reactant and a product.\n" +
+                                "Mass-action reactions must also have a rate term added. Note that the input" +
+                                "rate represents the mass-action constant rate independent of volume."
+                    }
     this.collection.on("select", function (reaction) {
       this.setSelectedReaction(reaction);
       this.setDetailsView(reaction);

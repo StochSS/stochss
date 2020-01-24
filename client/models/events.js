@@ -16,7 +16,7 @@ module.exports = Collection.extend({
       triggerExpression: "",
       initialValue: false,
       persistent: false,
-      useValuesFromTriggerTime: true,
+      useValuesFromTriggerTime: false,
     });
     event.eventAssignments.addEventAssignment()
     return event
