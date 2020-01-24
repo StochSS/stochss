@@ -15,8 +15,8 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = {"previewTime":"",
-                     "timeUnits":"Stores the state every ___ units.",
+    this.tooltips = {"previewTime":"End time of simulation.",
+                     "timeUnits":"Save point increment for recording data.",
                      "volume":"The volume of the system matters when converting to from population "+
                                  "to concentration form. This will also set a parameter 'vol' for use "+
                                  "in custom (i.e. non-mass-action) propensity functions."

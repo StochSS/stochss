@@ -22,8 +22,11 @@ module.exports = View.extend({
     this.tooltips = {"rtol":"Value must be greater than 0.0.",
                      "atol":"Value must be greater than 0.0.",
                      "ttol":"Value must be between 0.0 and 1.0.",
-                     "seed":"Set to -1 for a random seed.",
-                     "realizations":""
+                     "seed":"The seed for the simulation.  Set to -1 for a random seed.",
+                     "realizations":"The number of times to sample the chemical "+
+                            "master equation. Each trajectory will be returned at the end "+
+                            "of the simulation.",
+                     "algorithm":"The solver by which to simulate the model."
                     }
   },
   render: function () {
@@ -36,6 +39,13 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic); 
     }
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   update: function (e) {
   },

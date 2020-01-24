@@ -10,7 +10,12 @@ div#simulation-settings.card.card-body
     table.table
       thead
         tr
-          th(scope="col", colspan="5") Simulation Algorithm
+          th(scope="col", colspan="5")
+            div
+              div.inline Simulation Algorithm
+
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.algorithm) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+              
       tbody
         tr
           td
@@ -42,8 +47,18 @@ div#simulation-settings.card.card-body
         table.table
           thead
             tr
-              th(scope="col") Relative Tolerance
-              th(scope="col") Absolute Tolerance
+              th(scope="col") 
+                div
+                  div.inline Relative Tolerance
+
+                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.rtol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+              th(scope="col") 
+                div
+                  div.inline Absolute Tolerance
+
+                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.atol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
           tbody
             tr
               td: div(data-hook="relative-tolerance")
@@ -56,9 +71,24 @@ div#simulation-settings.card.card-body
         table.table
           thead
             tr
-              th(scope="col") Trajectories
-              th(scope="col") Seed
-              th(scope="col") Tau Tolerance
+              th(scope="col")
+                div
+                  div.inline Trajectories
+
+                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.realizations) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+              th(scope="col")
+                div
+                  div.inline Seed
+
+                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.seed) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+              th(scope="col")
+                div
+                  div.inline Tau Tolerance
+
+                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ttol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
           tbody
             tr
               td: div(data-hook="trajectories")
