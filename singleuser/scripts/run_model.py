@@ -447,7 +447,6 @@ def basicTauHybridSolver(model, data, run_timeout):
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,
-        switch_tol = data['switchTol'],
         tau_tol = data['tauTol'],
         integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
