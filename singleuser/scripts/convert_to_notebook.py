@@ -160,7 +160,6 @@ def generate_run_cell(json_data):
         hybrid_settings = { "number_of_trajectories":settings['realizations'], 
                             "seed":settings['seed'], 
                             "tau_tol":settings['tauTol'], 
-                            "switch_tol":settings['switchTol'], 
                             "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] })
                           }
         settings_map = {'ODE':ode_settings, 

@@ -1,5 +1,6 @@
 {
     "is_spatial": false,
+    "defaultID": 15,
     "defaultMode": "discrete",
     "modelSettings": {
         "endSim": 100,
@@ -14,7 +15,6 @@
         "algorithm": "SSA",
         "seed": -1,
         "tauTol": 0.03,
-        "switchTol": 0.03,
         "relativeTol": 0.03,
         "absoluteTol": 0.03
     },
@@ -23,10 +23,12 @@
     },
     "species": [
         {
+            "compID": 1,
             "name": "X",
             "value": 197,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -36,10 +38,12 @@
             ]
         },
         {
+            "compID": 2,
             "name": "Y",
             "value": 255,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -52,36 +56,43 @@
     "initialConditions": [],
     "parameters": [
         {
+            "compID": 3,
             "name": "P",
             "expression": "2",
             "annotation": ""
         },
         {
+            "compID": 4,
             "name": "kt",
-            "expression": "10",
+            "expression": "20",
             "annotation": ""
         },
         {
+            "compID": 5,
             "name": "kd",
             "expression": "1",
             "annotation": ""
         },
         {
+            "compID": 6,
             "name": "a0",
             "expression": "0.005",
             "annotation": ""
         },
         {
+            "compID": 7,
             "name": "a1",
             "expression": "0.05",
             "annotation": ""
         },
         {
+            "compID": 8,
             "name": "a2",
             "expression": "0.1",
             "annotation": ""
         },
         {
+            "compID": 9,
             "name": "kdx",
             "expression": "1",
             "annotation": ""
@@ -89,6 +100,7 @@
     ],
     "reactions": [
         {
+            "compID": 10,
             "name": "rxn1",
             "reactionType": "custom-propensity",
             "summary": "\\emptyset \\rightarrow X",
@@ -105,10 +117,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "X",
                         "value": 197,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -121,6 +135,7 @@
             ]
         },
         {
+            "compID": 11,
             "name": "rxn2",
             "reactionType": "destruction",
             "summary": "X \\rightarrow \\emptyset",
@@ -132,6 +147,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 9,
                 "name": "kdx",
                 "expression": "1",
                 "annotation": ""
@@ -140,10 +156,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "X",
                         "value": 197,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -157,6 +175,7 @@
             "products": []
         },
         {
+            "compID": 12,
             "name": "rxn3",
             "reactionType": "split",
             "summary": "X \\rightarrow X+Y",
@@ -168,18 +187,21 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 4,
                 "name": "kt",
-                "expression": "10",
+                "expression": "20",
                 "annotation": ""
             },
             "reactants": [
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "X",
                         "value": 197,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -194,10 +216,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "X",
                         "value": 197,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -210,10 +234,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Y",
                         "value": 255,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -226,6 +252,7 @@
             ]
         },
         {
+            "compID": 13,
             "name": "rxn4",
             "reactionType": "destruction",
             "summary": "Y \\rightarrow \\emptyset",
@@ -237,6 +264,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 5,
                 "name": "kd",
                 "expression": "1",
                 "annotation": ""
@@ -245,10 +273,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Y",
                         "value": 255,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -262,6 +292,7 @@
             "products": []
         },
         {
+            "compID": 14,
             "name": "rxn5",
             "reactionType": "custom-propensity",
             "summary": "Y \\rightarrow \\emptyset",
@@ -277,10 +308,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Y",
                         "value": 255,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,

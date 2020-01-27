@@ -1,5 +1,6 @@
 {
     "is_spatial": false,
+    "defaultID": 29,
     "defaultMode": "discrete",
     "modelSettings": {
         "endSim": 200,
@@ -14,7 +15,6 @@
         "algorithm": "Tau-Leaping",
         "seed": -1,
         "tauTol": 0.03,
-        "switchTol": 0.03,
         "relativeTol": 0.03,
         "absoluteTol": 0.03
     },
@@ -23,10 +23,12 @@
     },
     "species": [
         {
+            "compID": 1,
             "name": "Susceptible",
             "value": 200,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -36,9 +38,11 @@
             ]
         },
         {
+            "compID": 2,
             "name": "Prescribed_User",
             "value": 0,
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -48,10 +52,12 @@
             ]
         },
         {
+            "compID": 3,
             "name": "Addicted",
             "value": 0,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -61,10 +67,12 @@
             ]
         },
         {
+            "compID": 4,
             "name": "Rehab",
             "value": 0,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -74,10 +82,12 @@
             ]
         },
         {
+            "compID": 5,
             "name": "Natural_Deaths",
             "value": 0,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -87,10 +97,12 @@
             ]
         },
         {
+            "compID": 6,
             "name": "Addicted_Deaths",
             "value": 0,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -103,51 +115,61 @@
     "initialConditions": [],
     "parameters": [
         {
+            "compID": 7,
             "name": "alpha",
             "expression": "0.15",
             "annotation": ""
         },
         {
+            "compID": 8,
             "name": "epsilon",
             "expression": "0.8",
             "annotation": ""
         },
         {
+            "compID": 9,
             "name": "beta_p",
             "expression": "0.00266",
             "annotation": ""
         },
         {
+            "compID": 10,
             "name": "beta_a",
             "expression": "0.00094",
             "annotation": ""
         },
         {
+            "compID": 11,
             "name": "gamma",
             "expression": "0.00744",
             "annotation": ""
         },
         {
+            "compID": 12,
             "name": "zeta",
             "expression": "0.2",
             "annotation": ""
         },
         {
+            "compID": 13,
             "name": "delta",
             "expression": "0.1",
             "annotation": ""
         },
         {
+            "compID": 14,
             "name": "sigma",
             "expression": "0.9",
             "annotation": ""
         },
         {
+            "compID": 15,
             "name": "mu",
             "expression": "0.00729",
             "annotation": ""
         },
         {
+            "compID": 16,
             "name": "mu_prime",
             "expression": "0.01159",
             "annotation": ""
@@ -155,6 +177,7 @@
     ],
     "reactions": [
         {
+            "compID": 17,
             "name": "SP",
             "reactionType": "change",
             "summary": "Susceptible \\rightarrow Prescribed\\_User",
@@ -166,6 +189,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 7,
                 "name": "alpha",
                 "expression": "0.15",
                 "annotation": ""
@@ -174,10 +198,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -192,10 +218,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Prescribed_User",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -208,6 +236,7 @@
             ]
         },
         {
+            "compID": 18,
             "name": "SA_a",
             "reactionType": "change",
             "summary": "Susceptible \\rightarrow Addicted",
@@ -219,6 +248,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 10,
                 "name": "beta_a",
                 "expression": "0.00094",
                 "annotation": ""
@@ -227,10 +257,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -245,10 +277,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Addicted",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -261,6 +295,7 @@
             ]
         },
         {
+            "compID": 19,
             "name": "SA_p",
             "reactionType": "change",
             "summary": "Susceptibl \\rightarrow Addicted",
@@ -272,6 +307,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 9,
                 "name": "beta_p",
                 "expression": "0.00266",
                 "annotation": ""
@@ -280,10 +316,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -298,10 +336,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Addicted",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -314,6 +354,7 @@
             ]
         },
         {
+            "compID": 20,
             "name": "PA",
             "reactionType": "change",
             "summary": "Prescribed\\_User \\rightarrow Addicted",
@@ -325,6 +366,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 11,
                 "name": "gamma",
                 "expression": "0.00744",
                 "annotation": ""
@@ -333,10 +375,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Prescribed_User",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -351,10 +395,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Addicted",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -367,6 +413,7 @@
             ]
         },
         {
+            "compID": 21,
             "name": "PS",
             "reactionType": "change",
             "summary": "Prescribed\\_User \\rightarrow Susceptible",
@@ -378,6 +425,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 8,
                 "name": "epsilon",
                 "expression": "0.8",
                 "annotation": ""
@@ -386,10 +434,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Prescribed_User",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -404,10 +454,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -420,6 +472,7 @@
             ]
         },
         {
+            "compID": 22,
             "name": "AR",
             "reactionType": "change",
             "summary": "Addicted \\rightarrow Rehab",
@@ -431,6 +484,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 12,
                 "name": "zeta",
                 "expression": "0.2",
                 "annotation": ""
@@ -439,10 +493,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Addicted",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -457,10 +513,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "Rehab",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -473,6 +531,7 @@
             ]
         },
         {
+            "compID": 23,
             "name": "RA",
             "reactionType": "change",
             "summary": "Rehab \\rightarrow Addicted",
@@ -484,6 +543,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 13,
                 "name": "delta",
                 "expression": "0.1",
                 "annotation": ""
@@ -492,10 +552,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "Rehab",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -510,10 +572,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Addicted",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -526,6 +590,7 @@
             ]
         },
         {
+            "compID": 24,
             "name": "RS",
             "reactionType": "change",
             "summary": "Rehab \\rightarrow Susceptible",
@@ -537,6 +602,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 14,
                 "name": "sigma",
                 "expression": "0.9",
                 "annotation": ""
@@ -545,10 +611,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "Rehab",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -563,10 +631,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -579,6 +649,7 @@
             ]
         },
         {
+            "compID": 25,
             "name": "mu_S",
             "reactionType": "split",
             "summary": "Susceptible \\rightarrow Susceptible+Natural\\_Deaths",
@@ -590,6 +661,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 15,
                 "name": "mu",
                 "expression": "0.00729",
                 "annotation": ""
@@ -598,10 +670,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -616,10 +690,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -632,10 +708,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Natural_Deaths",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -648,6 +726,7 @@
             ]
         },
         {
+            "compID": 26,
             "name": "mu_P",
             "reactionType": "split",
             "summary": "Prescribed\\_User \\rightarrow Susceptible+Natural\\_Deaths",
@@ -659,6 +738,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 15,
                 "name": "mu",
                 "expression": "0.00729",
                 "annotation": ""
@@ -667,10 +747,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Prescribed_User",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -685,10 +767,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -701,10 +785,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Natural_Deaths",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -717,6 +803,7 @@
             ]
         },
         {
+            "compID": 27,
             "name": "mu_R",
             "reactionType": "split",
             "summary": "Rehab \\rightarrow Susceptible+Natural\\_Deaths",
@@ -728,6 +815,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 15,
                 "name": "mu",
                 "expression": "0.00729",
                 "annotation": ""
@@ -736,10 +824,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "Rehab",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -754,10 +844,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -770,10 +862,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Natural_Deaths",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -786,6 +880,7 @@
             ]
         },
         {
+            "compID": 28,
             "name": "mu_prime_A",
             "reactionType": "split",
             "summary": "Addicted \\rightarrow Susceptible+Addicted\\_Deaths",
@@ -797,6 +892,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 16,
                 "name": "mu_prime",
                 "expression": "0.01159",
                 "annotation": ""
@@ -805,10 +901,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Addicted",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -823,10 +921,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Susceptible",
                         "value": 200,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -839,10 +939,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 6,
                         "name": "Addicted_Deaths",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,

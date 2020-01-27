@@ -1,32 +1,34 @@
 {
     "is_spatial": false,
+    "defaultID": 12,
     "defaultMode": "discrete",
     "modelSettings": {
         "endSim": 250,
         "timeStep": 1,
         "volume": 1,
-        "realizations": 1,
-        "algorithm": "SSA"
+        "algorithm": "SSA",
+        "realizations": 1
     },
     "simulationSettings": {
         "isAutomatic": false,
+        "relativeTol": 0.03,
+        "absoluteTol": 0.03,
         "realizations": 1,
         "algorithm": "SSA",
         "seed": -1,
-        "tauTol": 0.03,
-        "switchTol": 0.03,
-        "relativeTol": 0.03,
-        "absoluteTol": 0.03
+        "tauTol": 0.03
     },
     "meshSettings": {
         "count": 2
     },
     "species": [
         {
+            "compID": 1,
             "name": "A",
-            "value": 10,
+            "value": 2,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -36,10 +38,12 @@
             ]
         },
         {
+            "compID": 2,
             "name": "B",
-            "value": 10,
+            "value": 2,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -52,26 +56,31 @@
     "initialConditions": [],
     "parameters": [
         {
+            "compID": 3,
             "name": "alpha1",
-            "expression": "1",
+            "expression": "10",
             "annotation": ""
         },
         {
+            "compID": 4,
             "name": "alpha2",
-            "expression": "1",
+            "expression": "10",
             "annotation": ""
         },
         {
+            "compID": 5,
             "name": "beta",
             "expression": "2",
             "annotation": ""
         },
         {
+            "compID": 6,
             "name": "gamma",
             "expression": "2",
             "annotation": ""
         },
         {
+            "compID": 7,
             "name": "mu",
             "expression": "1",
             "annotation": ""
@@ -79,6 +88,7 @@
     ],
     "reactions": [
         {
+            "compID": 8,
             "name": "cu",
             "reactionType": "custom-propensity",
             "summary": "\\emptyset \\rightarrow A",
@@ -95,10 +105,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "A",
-                        "value": 10,
+                        "value": 2,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -111,6 +123,7 @@
             ]
         },
         {
+            "compID": 9,
             "name": "cv",
             "reactionType": "custom-propensity",
             "summary": "\\emptyset \\rightarrow B",
@@ -127,10 +140,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "B",
-                        "value": 10,
+                        "value": 2,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -143,6 +158,7 @@
             ]
         },
         {
+            "compID": 10,
             "name": "du",
             "reactionType": "destruction",
             "summary": "A \\rightarrow \\emptyset",
@@ -154,6 +170,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 7,
                 "name": "mu",
                 "expression": "1",
                 "annotation": ""
@@ -162,10 +179,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "A",
-                        "value": 10,
+                        "value": 2,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -179,6 +198,7 @@
             "products": []
         },
         {
+            "compID": 11,
             "name": "dv",
             "reactionType": "destruction",
             "summary": "B \\rightarrow \\emptyset",
@@ -190,6 +210,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 7,
                 "name": "mu",
                 "expression": "1",
                 "annotation": ""
@@ -198,10 +219,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "B",
-                        "value": 10,
+                        "value": 2,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,

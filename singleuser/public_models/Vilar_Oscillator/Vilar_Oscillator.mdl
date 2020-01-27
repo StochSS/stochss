@@ -1,5 +1,6 @@
 {
     "is_spatial": false,
+    "defaultID": 43,
     "defaultMode": "discrete",
     "modelSettings": {
         "endSim": 200,
@@ -14,7 +15,6 @@
         "algorithm": "SSA",
         "seed": -1,
         "tauTol": 0.03,
-        "switchTol": 0.03,
         "relativeTol": 0.03,
         "absoluteTol": 0.03
     },
@@ -23,10 +23,12 @@
     },
     "species": [
         {
+            "compID": 1,
             "name": "Da",
             "value": 1,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -36,10 +38,12 @@
             ]
         },
         {
+            "compID": 2,
             "name": "Da_prime",
             "value": 0,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -49,10 +53,12 @@
             ]
         },
         {
+            "compID": 3,
             "name": "Ma",
             "value": 0,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -62,10 +68,12 @@
             ]
         },
         {
+            "compID": 4,
             "name": "Dr",
             "value": 1,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -75,10 +83,12 @@
             ]
         },
         {
+            "compID": 5,
             "name": "Dr_prime",
             "value": 0,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -88,10 +98,12 @@
             ]
         },
         {
+            "compID": 6,
             "name": "Mr",
             "value": 0,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -101,10 +113,12 @@
             ]
         },
         {
+            "compID": 7,
             "name": "C",
             "value": 10,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -114,10 +128,12 @@
             ]
         },
         {
+            "compID": 8,
             "name": "A",
             "value": 10,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -127,10 +143,12 @@
             ]
         },
         {
+            "compID": 9,
             "name": "R",
             "value": 10,
             "mode": "discrete",
-            "switchingVal": 0.03,
+            "switchTol": 0.03,
+            "switchMin": 100,
             "isSwitchTol": true,
             "annotation": "",
             "diffusionCoeff": 0,
@@ -143,76 +161,91 @@
     "initialConditions": [],
     "parameters": [
         {
+            "compID": 10,
             "name": "alpha_a",
             "expression": "50",
             "annotation": ""
         },
         {
+            "compID": 11,
             "name": "alpha_a_prime",
             "expression": "500",
             "annotation": ""
         },
         {
+            "compID": 12,
             "name": "alpha_r",
             "expression": "0.01",
             "annotation": ""
         },
         {
+            "compID": 13,
             "name": "alpha_r_prime",
             "expression": "50",
             "annotation": ""
         },
         {
+            "compID": 14,
             "name": "beta_a",
             "expression": "50",
             "annotation": ""
         },
         {
+            "compID": 15,
             "name": "beta_r",
             "expression": "5",
             "annotation": ""
         },
         {
+            "compID": 16,
             "name": "delta_ma",
             "expression": "10",
             "annotation": ""
         },
         {
+            "compID": 17,
             "name": "delta_mr",
             "expression": "0.5",
             "annotation": ""
         },
         {
+            "compID": 18,
             "name": "delta_a",
             "expression": "1",
             "annotation": ""
         },
         {
+            "compID": 19,
             "name": "delta_r",
             "expression": "0.2",
             "annotation": ""
         },
         {
+            "compID": 20,
             "name": "gamma_a",
             "expression": "1",
             "annotation": ""
         },
         {
+            "compID": 21,
             "name": "gamma_r",
             "expression": "1",
             "annotation": ""
         },
         {
+            "compID": 22,
             "name": "gamma_c",
             "expression": "2",
             "annotation": ""
         },
         {
+            "compID": 23,
             "name": "theta_a",
             "expression": "50",
             "annotation": ""
         },
         {
+            "compID": 24,
             "name": "theta_r",
             "expression": "100",
             "annotation": ""
@@ -220,6 +253,7 @@
     ],
     "reactions": [
         {
+            "compID": 25,
             "name": "r1",
             "reactionType": "change",
             "summary": "Da\\_prime \\rightarrow Da",
@@ -231,6 +265,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 23,
                 "name": "theta_a",
                 "expression": "50",
                 "annotation": ""
@@ -239,10 +274,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Da_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -257,10 +294,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Da",
                         "value": 1,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -273,6 +312,7 @@
             ]
         },
         {
+            "compID": 26,
             "name": "r2",
             "reactionType": "merge",
             "summary": "Da+A \\rightarrow Da\\_prime",
@@ -284,6 +324,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 20,
                 "name": "gamma_a",
                 "expression": "1",
                 "annotation": ""
@@ -292,10 +333,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Da",
                         "value": 1,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -308,10 +351,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 8,
                         "name": "A",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -326,10 +371,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Da_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -342,6 +389,7 @@
             ]
         },
         {
+            "compID": 27,
             "name": "r3",
             "reactionType": "change",
             "summary": "Dr\\_prime \\rightarrow Dr",
@@ -353,6 +401,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 24,
                 "name": "theta_r",
                 "expression": "100",
                 "annotation": ""
@@ -361,10 +410,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Dr_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -379,10 +430,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "Dr",
                         "value": 1,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -395,6 +448,7 @@
             ]
         },
         {
+            "compID": 28,
             "name": "r4",
             "reactionType": "merge",
             "summary": "Dr+A \\rightarrow Dr\\_prime",
@@ -406,6 +460,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 21,
                 "name": "gamma_r",
                 "expression": "1",
                 "annotation": ""
@@ -414,10 +469,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "Dr",
                         "value": 1,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -430,10 +487,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 8,
                         "name": "A",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -448,10 +507,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Dr_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -464,6 +525,7 @@
             ]
         },
         {
+            "compID": 29,
             "name": "r5",
             "reactionType": "split",
             "summary": "Da\\_prime \\rightarrow Da\\_prime+Ma",
@@ -475,6 +537,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 11,
                 "name": "alpha_a_prime",
                 "expression": "500",
                 "annotation": ""
@@ -483,10 +546,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Da_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -501,10 +566,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Da_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -517,10 +584,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Ma",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -533,6 +602,7 @@
             ]
         },
         {
+            "compID": 30,
             "name": "r6",
             "reactionType": "split",
             "summary": "Da \\rightarrow Da+Ma",
@@ -544,6 +614,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 10,
                 "name": "alpha_a",
                 "expression": "50",
                 "annotation": ""
@@ -552,10 +623,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Da",
                         "value": 1,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -570,10 +643,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "Da",
                         "value": 1,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -586,10 +661,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Ma",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -602,6 +679,7 @@
             ]
         },
         {
+            "compID": 31,
             "name": "r7",
             "reactionType": "destruction",
             "summary": "Ma \\rightarrow \\emptyset",
@@ -613,6 +691,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 16,
                 "name": "delta_ma",
                 "expression": "10",
                 "annotation": ""
@@ -621,10 +700,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Ma",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -638,6 +719,7 @@
             "products": []
         },
         {
+            "compID": 32,
             "name": "r8",
             "reactionType": "split",
             "summary": "Ma \\rightarrow A+Ma",
@@ -649,6 +731,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 14,
                 "name": "beta_a",
                 "expression": "50",
                 "annotation": ""
@@ -657,10 +740,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Ma",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -675,10 +760,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 8,
                         "name": "A",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -691,10 +778,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "Ma",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -707,6 +796,7 @@
             ]
         },
         {
+            "compID": 33,
             "name": "r9",
             "reactionType": "split",
             "summary": "Da\\_prime \\rightarrow Da\\_prime+A",
@@ -718,6 +808,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 23,
                 "name": "theta_a",
                 "expression": "50",
                 "annotation": ""
@@ -726,10 +817,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Da_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -744,10 +837,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Da_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -760,10 +855,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 8,
                         "name": "A",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -776,6 +873,7 @@
             ]
         },
         {
+            "compID": 34,
             "name": "r10",
             "reactionType": "split",
             "summary": "Dr\\_prime \\rightarrow Dr\\_prime+A",
@@ -787,6 +885,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 23,
                 "name": "theta_a",
                 "expression": "50",
                 "annotation": ""
@@ -795,10 +894,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Dr_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -813,10 +914,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Dr_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -829,10 +932,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 8,
                         "name": "A",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -845,6 +950,7 @@
             ]
         },
         {
+            "compID": 35,
             "name": "r11",
             "reactionType": "destruction",
             "summary": "A \\rightarrow \\emptyset",
@@ -856,6 +962,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 22,
                 "name": "gamma_c",
                 "expression": "2",
                 "annotation": ""
@@ -864,10 +971,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 8,
                         "name": "A",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -881,6 +990,7 @@
             "products": []
         },
         {
+            "compID": 36,
             "name": "r12",
             "reactionType": "merge",
             "summary": "A+R \\rightarrow C",
@@ -892,6 +1002,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 22,
                 "name": "gamma_c",
                 "expression": "2",
                 "annotation": ""
@@ -900,10 +1011,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 8,
                         "name": "A",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -916,10 +1029,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 9,
                         "name": "R",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -934,10 +1049,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 7,
                         "name": "C",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -950,6 +1067,7 @@
             ]
         },
         {
+            "compID": 37,
             "name": "r13",
             "reactionType": "split",
             "summary": "Dr\\_prime \\rightarrow Dr\\_prime+Mr",
@@ -961,6 +1079,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 13,
                 "name": "alpha_r_prime",
                 "expression": "50",
                 "annotation": ""
@@ -969,10 +1088,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Dr_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -987,10 +1108,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 5,
                         "name": "Dr_prime",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1003,10 +1126,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 6,
                         "name": "Mr",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1019,6 +1144,7 @@
             ]
         },
         {
+            "compID": 38,
             "name": "r14",
             "reactionType": "split",
             "summary": "Dr \\rightarrow Dr+Mr",
@@ -1030,6 +1156,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 12,
                 "name": "alpha_r",
                 "expression": "0.01",
                 "annotation": ""
@@ -1038,10 +1165,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "Dr",
                         "value": 1,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1056,10 +1185,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "Dr",
                         "value": 1,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1072,10 +1203,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 6,
                         "name": "Mr",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1088,6 +1221,7 @@
             ]
         },
         {
+            "compID": 39,
             "name": "r15",
             "reactionType": "destruction",
             "summary": "Mr \\rightarrow \\emptyset",
@@ -1099,6 +1233,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 17,
                 "name": "delta_mr",
                 "expression": "0.5",
                 "annotation": ""
@@ -1107,10 +1242,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 6,
                         "name": "Mr",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1124,6 +1261,7 @@
             "products": []
         },
         {
+            "compID": 40,
             "name": "r16",
             "reactionType": "split",
             "summary": "Mr \\rightarrow Mr+R",
@@ -1135,6 +1273,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 15,
                 "name": "beta_r",
                 "expression": "5",
                 "annotation": ""
@@ -1143,10 +1282,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 6,
                         "name": "Mr",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1161,10 +1302,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 6,
                         "name": "Mr",
                         "value": 0,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1177,10 +1320,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 9,
                         "name": "R",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1193,6 +1338,7 @@
             ]
         },
         {
+            "compID": 41,
             "name": "r17",
             "reactionType": "destruction",
             "summary": "R \\rightarrow \\emptyset",
@@ -1204,6 +1350,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 19,
                 "name": "delta_r",
                 "expression": "0.2",
                 "annotation": ""
@@ -1212,10 +1359,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 9,
                         "name": "R",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1229,6 +1378,7 @@
             "products": []
         },
         {
+            "compID": 42,
             "name": "r18",
             "reactionType": "change",
             "summary": "C \\rightarrow R",
@@ -1240,6 +1390,7 @@
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 18,
                 "name": "delta_a",
                 "expression": "1",
                 "annotation": ""
@@ -1248,10 +1399,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 7,
                         "name": "C",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
@@ -1266,10 +1419,12 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 9,
                         "name": "R",
                         "value": 10,
                         "mode": "discrete",
-                        "switchingVal": 0.03,
+                        "switchTol": 0.03,
+                        "switchMin": 100,
                         "isSwitchTol": true,
                         "annotation": "",
                         "diffusionCoeff": 0,
