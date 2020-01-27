@@ -60,6 +60,10 @@ module.exports = View.extend({
     this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
                      "initialValue":"Initial population of a species.",
                      "annotation":"An optional note about the species.",
+                     "speciesMode":"Concentration - Species will only be represented as deterministic.<br>" + 
+                            "Population - Species will only be represented as stochastic.<br>" + 
+                            "Advanced - Customize the mode of individual species and set the switching "+
+                            "tolerance or minimum value for switching.",
                      "mode":"Concentration - Species will only be represented as deterministic.<br>" + 
                             "Population - Species will only be represented as stochastic.<br>" + 
                             "Hybrid Concentration/Population - allows a species to be represented " + 

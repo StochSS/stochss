@@ -148,7 +148,7 @@ button.custom {
 }
 
 .btn-primary {
-  margin: 5px !important;
+  margin: 5px 10px 5px 0px !important;
 }
 
 .reaction-subdomain {
@@ -218,7 +218,7 @@ button.custom {
 
 .right-justify {
   position: absolute !important;
-  right: 15px;
+  right: 5px;
   left: auto;
 }
 
