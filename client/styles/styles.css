@@ -124,10 +124,10 @@ button.custom {
 
 .tooltip-icon-large {
   display: inline-block;
-  font-size: 16px;
+  font-size: 20px;
   padding-left: 10px;
   padding-right: 10px;
-  vertical-align: middle;
+  vertical-align: bottom;
   color: #007bff;
 }
 
