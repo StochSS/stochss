@@ -260,7 +260,7 @@
             ]
         },
         {
-            "compID": 10
+            "compID": 10,
             "name": "r3",
             "reactionType": "split",
             "summary": "C \\rightarrow B+D",

@@ -61,7 +61,9 @@ let WorkflowManager = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    this.directory = decodeURI(document.URL.split('/workflow/edit').pop());
+    var url = decodeURI(document.URL)
+    this.type = url.split('/workflow/edit/').pop().split('/')[0];
+    this.directory = url.split('/workflow/edit/' + this.type).pop();
     if(this.directory.endsWith('.mdl')){
       var modelFile = this.directory.split('/').pop();
       var name = modelFile.split('.')[0];
@@ -72,8 +74,10 @@ let WorkflowManager = PageView.extend({
     }else{
       var endpoint = path.join("/stochss/api/workflow/workflow-info", this.directory, "/info.json");
       xhr({uri: endpoint}, function (err, response, body){
-        self.modelDirectory = JSON.parse(body).model.split('/home/jovyan').pop();
-        self.startTime = JSON.parse(body).start_time;
+        var resp = JSON.parse(body)
+        self.modelDirectory = resp.model.split('/home/jovyan').pop();
+        self.type = resp.type;
+        self.startTime = resp.start_time;
         var workflowDir = self.directory.split('/').pop();
         self.workflowName = workflowDir.split('.')[0];
         var statusEndpoint = path.join("/stochss/api/workflow/workflow-status", self.directory);
@@ -100,6 +104,7 @@ let WorkflowManager = PageView.extend({
   renderSubviews: function () {
     var workflowEditor = new WorkflowEditorView({
       directory: this.modelDirectory,
+      type: this.type,
     });
     var inputName = new InputView({
       parent: this,

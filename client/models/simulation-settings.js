@@ -23,11 +23,11 @@ module.exports = State.extend({
     var rTol = this.relativeTol
 
     if(numEvents || numRules || defaultMode !== 'discrete' || rTol !== 0.03 || aTol !== 0.03){
-      this.model.algorithm = "Hybrid-Tau-Leaping";
+      this.algorithm = "Hybrid-Tau-Leaping";
     }else if(tTol !== 0.03){
-      this.model.algorithm = "Tau-Leaping";
+      this.algorithm = "Tau-Leaping";
     }else{
-      this.model.algorithm = "SSA"
+      this.algorithm = "SSA"
     }
   },
 });

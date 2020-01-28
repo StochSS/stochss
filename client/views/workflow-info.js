@@ -20,9 +20,11 @@ module.exports = View.extend({
     this.listOfErrors = [];
     var endpoint = path.join("/stochss/api/workflow/workflow-logs", this.logsPath)
     xhr({uri: endpoint}, function (err, response, body) {
-      var logs = body.split("\n")
-      logs.forEach(self.parseLogs, self)
-      self.expandLogContainers();
+      if(body){
+        var logs = body.split("\n")
+        logs.forEach(self.parseLogs, self)
+        self.expandLogContainers();
+      }
     });
   },
   render: function () {

@@ -56,7 +56,7 @@ class RunWorkflowAPIHandler(BaseHandler):
     '''
 
     @web.authenticated
-    async def get(self, opt_type, data):
+    async def get(self, wkfl_type, opt_type, data):
         '''
         Start running a workflow and record the time in UTC in the workflow_info file.
         Creates workflow directory and workflow_info file if running a new workflow.  Copys 
@@ -77,7 +77,7 @@ class RunWorkflowAPIHandler(BaseHandler):
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         log.warn('starting the workflow')
         # exec_cmd = "screen -d -m run_workflow.py {} {}".format(model_path, workflow_name).split(" ") # Script commands
-        exec_cmd = ["run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name)] # Script commands
+        exec_cmd = ["run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('sent the workflow')
@@ -92,7 +92,7 @@ class SaveWorkflowAPIHandler(BaseHandler):
     '''
 
     @web.authenticated
-    async def get(self, opt_type, data):
+    async def get(self, wkfl_type, opt_type, data):
         '''
         Start saving the workflow.  Creates the workflow directory and workflow_info file if
         saving a new workflow.  Copys model into the workflow directory.
@@ -110,7 +110,7 @@ class SaveWorkflowAPIHandler(BaseHandler):
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        exec_cmd = [ "run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name) ] # Script commands
+        exec_cmd = [ "run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.warn(exec_cmd)
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)

@@ -57,7 +57,6 @@ module.exports = View.extend({
   update: function () {
   },
   updateValid: function (e) {
-    console.log(e.target.value, this.model.name)
   },
   removeSpecie: function () {
     this.remove();

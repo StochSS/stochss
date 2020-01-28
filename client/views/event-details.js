@@ -76,7 +76,6 @@ module.exports = View.extend({
   },
   setUseValuesFromTriggerTime: function (e) {
     this.model.useValuesFromTriggerTime = e.target.dataset.name === "trigger";
-    console.log(this.model.useValuesFromTriggerTime)
   },
   changeCollapseButtonText: function (e) {
     var text = $(this.queryByHook('advanced-event-button')).text();

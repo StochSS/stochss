@@ -15,6 +15,8 @@ module.exports = View.extend({
   template: template,
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.type = attrs.type;
+    this.settingsViews = {};
     var self = this;
     var directory = attrs.directory
     var modelFile = directory.split('/').pop();
@@ -47,7 +49,8 @@ module.exports = View.extend({
       valueType: 'string',
       value: this.model.directory,
     });
-    var simSettings = new SimSettingsView({
+    //initialize the settings views and add it to the dictionary of settings views
+    this.settingsViews.gillespy = new SimSettingsView({
       parent: this,
       model: this.model.simulationSettings,
     });
@@ -55,7 +58,7 @@ module.exports = View.extend({
       model: this.model
     });
     this.registerRenderSubview(inputName, "model-name-container");
-    this.registerRenderSubview(simSettings, 'sim-settings-container');
+    this.registerRenderSubview(this.settingsViews[this.type], 'sim-settings-container');
     this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
     this.parent.trajectories = this.model.simulationSettings.realizations
   },

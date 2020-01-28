@@ -31,7 +31,7 @@ module.exports = View.extend({
     this.saveModel(this.runModel.bind(this));
   },
   clickStartWorkflowHandler: function (e) {
-    window.location.href = path.join("/hub/stochss/workflow/edit", this.model.directory);
+    window.location.href = path.join("/hub/stochss/workflow/selection", this.model.directory);
   },
   saveModel: function (cb) {
     var numEvents = this.model.eventsCollection.length;

@@ -7,6 +7,7 @@ module.exports = {
     home: './client/pages/home.js',
     browser: './client/pages/file-browser.js',
     editor: './client/pages/model-editor.js',
+    workflowSelection: './client/pages/workflow-selection.js',
     workflowEditor: './client/pages/workflow-manager.js',
   },
   output: {
@@ -34,6 +35,13 @@ module.exports = {
       filename: 'stochss-model-editor.html',
       template: 'handlers/page_templates/page_template.pug',
       name: 'editor',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Workflow Selection',
+      filename: 'stochss-workflow-selection.html',
+      template: 'handlers/page_templates/page_template.pug',
+      name: 'workflowSelection',
       inject: false
     }),
     new HtmlWebpackPlugin({

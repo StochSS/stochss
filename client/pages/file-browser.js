@@ -536,7 +536,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/edit", o.original._path);
+              window.location.href = path.join("/hub/stochss/workflow/selection", o.original._path);
             }
           },
           "Delete" : {
@@ -627,7 +627,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/edit", o.original._path);
+              window.location.href = path.join("/hub/stochss/workflow/selection", o.original._path);
             }
           },
           "Export" : {
@@ -659,7 +659,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "View Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/edit", o.original._path);
+              window.location.href = path.join("/hub/stochss/workflow/edit/none", o.original._path);
             }
           },
           "Rename" : {
@@ -926,7 +926,7 @@ let FileBrowser = PageView.extend({
           window.open(openPath, '_blank')
         });
       }else if(file.endsWith('.wkfl')){
-        window.location.href = path.join("/hub/stochss/workflow/edit", _path);
+        window.location.href = path.join("/hub/stochss/workflow/edit/none", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }

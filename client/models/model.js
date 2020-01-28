@@ -59,7 +59,6 @@ module.exports = Model.extend({
   getDefaultID: function () {
     var id = this.defaultID;
     this.defaultID += 1;
-    console.log(id);
     return id;
   },
   autoSave: function () {

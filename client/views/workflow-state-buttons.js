@@ -24,10 +24,11 @@ module.exports = View.extend({
     this.saving();
     var self = this;
     var model = this.model
+    var wkflType = this.parent.parent.type;
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
     var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
     this.saveModel(function () {
-      var endpoint = path.join('/stochss/api/workflow/save-workflow/', optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+      var endpoint = path.join('/stochss/api/workflow/save-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
       xhr({uri: endpoint}, function (err, response, body) {
         self.saved();
         if(document.URL.endsWith('.mdl')){
@@ -52,6 +53,9 @@ module.exports = View.extend({
   },
   saveModel: function (cb) {
     // this.model is a ModelVersion, the parent of the collection is Model
+    if(this.model.simulationSettings.isAutomatic){
+      this.model.simulationSettings.letUsChooseForYou();
+    }
     var model = this.model;
     if (cb) {
       model.save(model.attributes, {
@@ -79,9 +83,10 @@ module.exports = View.extend({
   },
   runWorkflow: function () {
     var model = this.model;
+    var wkflType = this.parent.parent.type;
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
     var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
-    var endpoint = path.join('/stochss/api/workflow/run-workflow/', optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+    var endpoint = path.join('/stochss/api/workflow/run-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
       self.parent.collapseContainer();

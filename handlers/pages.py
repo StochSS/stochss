@@ -26,6 +26,13 @@ class ModelEditorHandler(BaseHandler):
     self.finish(html)
 
 
+class WorkflowSelectionHandler(BaseHandler):
+  @web.authenticated
+  async def get(self, model_name):
+    html = self.render_template("stochss-workflow-selection.html")
+    self.finish(html)
+
+
 class WorkflowEditorHandler(BaseHandler):
   @web.authenticated
   async def get(self, model_name):

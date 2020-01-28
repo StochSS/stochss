@@ -129,7 +129,6 @@ module.exports = View.extend({
   update: function () {
   },
   updateValid: function (e) {
-    console.log("checked")
   },
   getInitialDefaultSpeciesMode: function () {
     var self = this;

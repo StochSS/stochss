@@ -19,7 +19,7 @@ from datetime import datetime, timezone, timedelta
 user_dir = "/home/jovyan"
 
 
-def save_new_workflow(workflow_path, model_path, workflow_model, **kwargs):
+def save_new_workflow(workflow_path, model_path, workflow_model, wkfl_type, **kwargs):
     '''
     Create and save a new workflow in the same directory as the model 
     used for it.
@@ -43,14 +43,14 @@ def save_new_workflow(workflow_path, model_path, workflow_model, **kwargs):
         copyfile(model_path, workflow_model) # copy the model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"model":"{0}".format(model_path), } # workflow info
+    model_info = {"model":"{0}".format(model_path), "type":"{0}".format(wkfl_type)} # workflow info
     info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
     with open(info_path, "w") as info_file:
         info_file.write(json.dumps(model_info)) # write the workflow info file
     return model_info, None, None
 
 
-def save_existing_workflow(workflow_path, model_path, workflow_model, **kwargs):
+def save_existing_workflow(workflow_path, model_path, workflow_model, wkfl_type, **kwargs):
     '''
     Save an existing workflow.
 
@@ -75,13 +75,13 @@ def save_existing_workflow(workflow_path, model_path, workflow_model, **kwargs):
         copyfile(model_path, workflow_model) # copy the new model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"model":"{0}".format(model_path), } # updated workflow info
+    model_info = {"model":"{0}".format(model_path), "type":"{0}".format(wkfl_type)} # updated workflow info
     with open(info_path, "w") as info_file:
         info_file.write(json.dumps(model_info)) # update the workflow info file
     return model_info, None, None
 
 
-def run_new_workflow(workflow_path, model_path, workflow_model, **kwargs):
+def run_new_workflow(workflow_path, model_path, workflow_model, wkfl_type, **kwargs):
     '''
     Save and run a new workflow.
 
@@ -103,11 +103,11 @@ def run_new_workflow(workflow_path, model_path, workflow_model, **kwargs):
     results_path = kwargs['results_path']
     model_file = kwargs['model_file']
     info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
-    save_new_workflow(workflow_path, model_path, workflow_model, results_path=results_path) # save the workflow
+    save_new_workflow(workflow_path, model_path, workflow_model, wkfl_type, results_path=results_path) # save the workflow
     return run_workflow(workflow_model, model_file, info_path, workflow_path)
 
 
-def run_existing_workflow(workflow_path, model_path, workflow_model, **kwargs):
+def run_existing_workflow(workflow_path, model_path, workflow_model, wkfl_type, **kwargs):
     '''
     Save and run an existing workflow.
 
@@ -126,7 +126,7 @@ def run_existing_workflow(workflow_path, model_path, workflow_model, **kwargs):
     '''
     model_file = kwargs['model_file']
     info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
-    save_existing_workflow(workflow_path, model_path, workflow_model, model_file=model_file) # save the workflow
+    save_existing_workflow(workflow_path, model_path, workflow_model, wkfl_type, model_file=model_file) # save the workflow
     return run_workflow(workflow_model, model_file, info_path, workflow_path)
 
 
@@ -261,6 +261,7 @@ def get_parsed_args():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('model_path', help="The path from the user directory to the  model.")
     parser.add_argument('workflow', help="The name of a new workflow or the path from the user directory to an existing workflow.")
+    parser.add_argument('type', help="The type of the workflow.")
     parser.add_argument('-n', '--new', action="store_true", help="Specifies a new workflow.")
     parser.add_argument('-e', '--existing', action="store_true", help="Specifies an existing workflow.")
     parser.add_argument('-s', '--save', action="store_true", help="Save the workflow.")
@@ -276,6 +277,7 @@ def get_parsed_args():
 if __name__ == "__main__":
     args = get_parsed_args()
     model_path = os.path.join(user_dir, args.model_path)
+    wkfl_type = args.type
     opt_type = ""
     if args.save:
         opt_type += 's'
@@ -315,7 +317,7 @@ if __name__ == "__main__":
 
     opts = { "sn":save_new_workflow, "rn":run_new_workflow, "se":save_existing_workflow, "re":run_existing_workflow, }
 
-    data, trajectories, is_stochastic = opts[opt_type](workflow_path, model_path, workflow_model, results_path=results_path, model_file=model_file)
+    data, trajectories, is_stochastic = opts[opt_type](workflow_path, model_path, workflow_model, wkfl_type, results_path=results_path, model_file=model_file)
     
     if args.run and data:
         if not 'results' in os.listdir(path=workflow_path):

@@ -49,8 +49,10 @@ module.exports = View.extend({
       $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
       $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
     }else{
-      $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic); 
+      $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic);
+      this.model.letUsChooseForYou();
     }
+    this.disableInputFieldByAlgorithm();
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
@@ -75,6 +77,8 @@ module.exports = View.extend({
     this.model.isAutomatic = Boolean(value === 'Automatic')
     if(!this.model.isAutomatic){
       this.model.algorithm = value;
+    }else{
+      this.model.letUsChooseForYou();
     }
     this.disableInputFieldByAlgorithm();
   },
