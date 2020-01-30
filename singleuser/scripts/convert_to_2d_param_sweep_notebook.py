@@ -22,18 +22,14 @@ def generate_imports_cell(json_data):
         # Non-Spatial
         imports += 'import gillespy2\n'
         imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule\n'
-        if json_data['simulationSettings']['is_stochastic']:
-            # Stochastic, use specified stochastic solver
-            algorithm = json_data['simulationSettings']['stochasticSettings']['algorithm']
-            algorithm_map = {
-                    'SSA': '',
-                    'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver',
-                    'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver'
-                    }
-            imports += algorithm_map[algorithm]
-        else:
-            # Deterministic, use ODE
-            imports += 'from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver'
+        algorithm = json_data['simulationSettings']['algorithm']
+        algorithm_map = {
+                'SSA': '',
+                'ODE': 'from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver',
+                'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver',
+                'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver'
+                }
+        imports += algorithm_map[algorithm]
 
     return imports
 
@@ -42,7 +38,7 @@ def create_parameter_strings(json_data, padding):
     for param in json_data['parameters']:
         param_string += padding + 'self.add_parameter(Parameter(name="{0}", expression={1}))\n'.format(
                 param['name'], 
-                param['value'])
+                param['expression'])
     return param_string
 
 def create_species_strings(json_data, padding):
@@ -84,15 +80,16 @@ def create_reaction_strings(json_data, padding):
 
 def create_rate_rule_strings(json_data, padding):
     rr_string = ''
-    is_stochastic = json_data['simulationSettings']['is_stochastic']
-    algorithm = json_data['simulationSettings']['stochasticSettings']['algorithm']
+    is_stochastic = not json_data['simulationSettings']['algorithm'] == 'ODE'
+    algorithm = json_data['simulationSettings']['algorithm']
     if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
         rr_string += '\n' + padding + '# Rate Rules\n'
         for rr in json_data['rateRules']:
-            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", expression="{1}", species=self.listOfSpecies["{2}"]))\n'.format(
-                    rr['name'], 
-                    rr['rule'], 
-                    rr['specie']['name'])
+            if rr['type'] == "Rate Rules":
+                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", expression="{1}", species=self.listOfSpecies["{2}"]))\n'.format(
+                        rr['name'], 
+                        rr['expression'], 
+                        rr['variable']['name'])
     return rr_string
 
 def generate_model_cell(json_data, name):
@@ -109,7 +106,7 @@ def generate_model_cell(json_data, name):
         padding = '        '
         model_cell += padding + 'Model.__init__(self, name="{0}")\n'.format(name)
         model_cell += padding + 'self.volume = {0}\n'.format(
-                json_data['simulationSettings']['volume'])
+                json_data['modelSettings']['volume'])
 
         model_cell += create_parameter_strings(json_data, padding)
         model_cell += create_species_strings(json_data, padding)
@@ -117,10 +114,10 @@ def generate_model_cell(json_data, name):
         model_cell += create_rate_rule_strings(json_data, padding)
 
         model_cell += '\n' + padding + '# Timespan\n'
-        duration = json_data['simulationSettings']['endSim']
+        duration = json_data['modelSettings']['endSim']
         model_cell += padding + 'self.timespan(np.linspace(0, {0}, {1}))'.format(
                 duration,
-                round(duration/json_data['simulationSettings']['timeStep'] + 1))
+                round(duration/json_data['modelSettings']['timeStep'] + 1))
             
         # Create strings from Reactions
 
@@ -135,141 +132,129 @@ def generate_run_cell(json_data):
     else:
         # Non-Spatial
         run_cell += 'results = model.run('
-        if json_data['simulationSettings']['is_stochastic']:
-            settings = json_data['simulationSettings']['stochasticSettings']
-            # Stochastic
-            algorithm = settings['algorithm']
+        
+        settings = json_data['simulationSettings']
+        algorithm = settings['algorithm']
 
-            # Select Solver
-            solver_map = {
-                    'SSA': '',
-                    'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
-                    'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, '
-                    }
-            run_cell += '{0}'.format(solver_map[algorithm])
+        # Select Solver
+        solver_map = {
+                'SSA': '',
+                'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
+                'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, ',
+                'ODE': 'solver=BasicODESolver, '
+                }
+        run_cell += '{0}'.format(solver_map[algorithm])
 
-            # Append Settings
-            settings_map = {
-                    'SSA': 'ssaSettings',
-                    'Tau-Leaping': 'tauSettings',
-                    'Hybrid-Tau-Leaping': 'hybridSettings'
-                    }
-            if settings[settings_map[algorithm]]['seed'] == -1:
-                settings[settings_map[algorithm]]['seed'] = None
+        # Append Settings
+        if settings['seed'] == -1:
+            settings['seed'] = None
 
-            # GillesPy requires snake case, remap camelCase from json data to
-            # snake case for notebook
-            remap_keys = {'tauTol': 'tau_tol', 
-                    'switchTol': 'switch_tol'}
-            for key in list(settings[settings_map[algorithm]].keys()):
-                if key in remap_keys:
-                    settings[settings_map[algorithm]][remap_keys[key]] = settings[settings_map[algorithm]].pop(key) 
-            
-            #Parse settings for algorithm
-            algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings[settings_map[algorithm]].items()]
-            for item in algorithm_settings:
-                run_cell += item
-
-        else:
-            # Deterministic
-            run_cell += 'solver=BasicODESolver'
-            settings = json_data['simulationSettings']['deterministicSettings']
-            remap_keys = {'relativeTol': 'rtol', 
-                    'absoluteTol': 'atol'}
-            integrator_options = {}
-            for key in list(settings.keys()):
-                if key in remap_keys:
-                    integrator_options[remap_keys[key]] = settings.pop(key)
-            settings['integrator_options'] = str(integrator_options)
-            algorithm_settings =  [', {0}={1}'.format(key, val) for key, val in settings.items()]
-            for item in algorithm_settings:
-                run_cell += item
+        # GillesPy requires snake case, remap camelCase from json data to
+        # snake case for notebook
+        ode_settings = { "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] }) }
+        ssa_settings = { "number_of_trajectories":settings['realizations'], "seed":settings['seed'] }
+        tau_leaping_settings = { "number_of_trajectories":settings['realizations'], 
+                                 "seed":settings['seed'], 
+                                 "tau_tol":settings['tauTol']}
+        hybrid_settings = { "number_of_trajectories":settings['realizations'], 
+                            "seed":settings['seed'], 
+                            "tau_tol":settings['tauTol'], 
+                            "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] })
+                          }
+        settings_map = {'ODE':ode_settings, 
+                        'SSA':ssa_settings, 
+                        'Tau-Leaping':tau_leaping_settings, 
+                        'Hybrid-Tau-Leaping':hybrid_settings
+                       }
+        
+        #Parse settings for algorithm
+        
+        algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings_map[algorithm].items()]
+        algorithm_settings = ', '.join(algorithm_settings)
+        run_cell += algorithm_settings
 
         run_cell += ')'
     return run_cell
 
 def generate_feature_ext_and_aggregate_cell():
-    feature_and_aggregate_cell = '''
-    # Feature extraction function.  What value(s) do you want to extract
-    # from the simulation trajectory
+    feature_and_aggregate_cell = '''# Feature extraction function.  What value(s) do you want to extract
+# from the simulation trajectory
 
-    def population_at_last_timepoint(c,res):
-        if c.verbose: print('population_at_last_timepoint {0}={1}'.format(c.species_of_interest,result1[c.species_of_interest][-1]))
-        return res[c.species_of_interest][-1]
+def population_at_last_timepoint(c,res):
+    if c.verbose: print('population_at_last_timepoint {0}={1}'.format(c.species_of_interest,result1[c.species_of_interest][-1]))
+    return res[c.species_of_interest][-1]
 
-        # Aggregation function, How to we combine the values from multiple 
-        # trajectores
+    # Aggregation function, How to we combine the values from multiple 
+    # trajectores
 
-    def average_of_ensemble(c,data):
-        a=np.average(data)
-        if c.verbose: print('average_of_ensemble = {0}'.format(a))
-        return a'''
+def average_of_ensemble(c,data):
+    a=np.average(data)
+    if c.verbose: print('average_of_ensemble = {0}'.format(a))
+    return a'''
     return feature_and_aggregate_cell
 
 def generate_parameter_sweep_class_cell():
-    psweep_class_cell ='''
-    class ParameterSweep2D():
-        
-        def run(c, verbose=False):
-            c.verbose = verbose
-            fn = c.feature_extraction
-            ag = c.ensemble_aggragator
-            data = np.zeros((len(c.p1_range),len(c.p2_range)))
-            for i,v1 in enumerate(c.p1_range):
-                for j,v2 in enumerate(c.p2_range):
-                    tmp_model = c.ps_class()
-                    tmp_model.listOfParameters[c.p1].set_expression(v1)
-                    tmp_model.listOfParameters[c.p2].set_expression(v2)
-                    if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
-                    #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
-                    if(c.number_of_trajectories > 1):
-                        tmp_results = tmp_model.run(number_of_trajectories=c.number_of_trajectories)
-                        data[i,j] = ag([fn(x) for x in tmp_results])
-                    else:
-                        tmp_result = tmp_model.run()
-                        data[i,j] = c.feature_extraction(tmp_result)
-            c.data = data
+    psweep_class_cell ='''class ParameterSweep2D():
+    
+    def run(c, verbose=False):
+        c.verbose = verbose
+        fn = c.feature_extraction
+        ag = c.ensemble_aggragator
+        data = np.zeros((len(c.p1_range),len(c.p2_range)))
+        for i,v1 in enumerate(c.p1_range):
+            for j,v2 in enumerate(c.p2_range):
+                tmp_model = c.ps_class()
+                tmp_model.listOfParameters[c.p1].set_expression(v1)
+                tmp_model.listOfParameters[c.p2].set_expression(v2)
+                if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
+                #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
+                if(c.number_of_trajectories > 1):
+                    tmp_results = tmp_model.run(number_of_trajectories=c.number_of_trajectories)
+                    data[i,j] = ag([fn(x) for x in tmp_results])
+                else:
+                    tmp_result = tmp_model.run()
+                    data[i,j] = c.feature_extraction(tmp_result)
+        c.data = data
 
-        def plot(c):
-            from matplotlib import pyplot as plt
-            from mpl_toolkits.axes_grid1 import make_axes_locatable
-            import numpy
-            fig, ax = plt.subplots(figsize=(8,8))
-            plt.imshow(c.data)
-            ax.set_xticks(numpy.arange(c.data.shape[1])+0.5, minor=False)
-            ax.set_yticks(numpy.arange(c.data.shape[0])+0.5, minor=False)
-            plt.title("Parameter Sweep - Species: {0}".format(c.species_of_interest))
-            ax.set_xticklabels(c.p1_range, minor=False, rotation=90)
-            ax.set_yticklabels(c.p2_range, minor=False)
-            ax.set_xlabel(c.p1, fontsize=16, fontweight='bold')
-            ax.set_ylabel(c.p2, fontsize=16, fontweight='bold')
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.2)
-            _ = plt.colorbar(ax=ax, cax=cax)
-        '''
+    def plot(c):
+        from matplotlib import pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        import numpy
+        fig, ax = plt.subplots(figsize=(8,8))
+        plt.imshow(c.data)
+        ax.set_xticks(numpy.arange(c.data.shape[1])+0.5, minor=False)
+        ax.set_yticks(numpy.arange(c.data.shape[0])+0.5, minor=False)
+        plt.title("Parameter Sweep - Species: {0}".format(c.species_of_interest))
+        ax.set_xticklabels(c.p1_range, minor=False, rotation=90)
+        ax.set_yticklabels(c.p2_range, minor=False)
+        ax.set_xlabel(c.p1, fontsize=16, fontweight='bold')
+        ax.set_ylabel(c.p2, fontsize=16, fontweight='bold')
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.2)
+        _ = plt.colorbar(ax=ax, cax=cax)
+    '''
     return psweep_class_cell
 
 def generate_psweep_config_cell(json_data, model_name):
     p1 = json_data['parameters'][0]
     p2 = json_data['parameters'][1]
     soi = json_data['species'][0]['name']
-    psweep_config_cell = '''
-    # Configuration for the Parameter Sweep
-    class ParameterSweepConfig(ParameterSweep2D):
-        p1 = "{0}" # ENTER PARAMETER 1 HERE
-        p2 = "{1}" # ENTER PARAMETER 2 HERE
-        p1_range = np.linspace({2},{3},11) # ENTER RANGE FOR P1 HERE
-        p2_range = np.linspace({4},{5},11) # ENTER RANGE FOR P2 HERE
-        species_of_interest = "{6}" # ENTER SPECIES OF INTEREST HERE
-        number_of_trajectories = 10
-        # What feature of the simulation are we examining
-        feature_extraction = population_at_last_timepoint
-        # for number_of_trajectories > 1: how do we aggreggate the values
-        ensemble_aggragator = average_of_ensemble
-        # What class defines the GillesPy2 model
-        ps_class = {7}
-    '''.format(p1['name'], p2['name'], .5*p1['value'], 1.5*p1['value'],
-                .5*p2['value'], 1.5*p2['value'], soi, model_name)
+    psweep_config_cell = '''# Configuration for the Parameter Sweep
+class ParameterSweepConfig(ParameterSweep2D):
+    p1 = "{0}" # ENTER PARAMETER 1 HERE
+    p2 = "{1}" # ENTER PARAMETER 2 HERE
+    p1_range = np.linspace({2},{3},11) # ENTER RANGE FOR P1 HERE
+    p2_range = np.linspace({4},{5},11) # ENTER RANGE FOR P2 HERE
+    species_of_interest = "{6}" # ENTER SPECIES OF INTEREST HERE
+    number_of_trajectories = 10
+    # What feature of the simulation are we examining
+    feature_extraction = population_at_last_timepoint
+    # for number_of_trajectories > 1: how do we aggreggate the values
+    ensemble_aggragator = average_of_ensemble
+    # What class defines the GillesPy2 model
+    ps_class = {7}
+'''.format(p1['name'], p2['name'], .5*float(eval(p1['expression'])), 1.5*float(eval(p1['expression'])),
+                .5*float(eval(p2['expression'])), 1.5*float(eval(p2['expression'])), soi, model_name)
     return psweep_config_cell
 
 def convertToNotebook(_model_path):
@@ -300,7 +285,7 @@ def convertToNotebook(_model_path):
     # Model Run Cell
     cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
     # Plotting Cell
-    cells.append(nbf.new_code_cell('results.plot()'))
+    cells.append(nbf.new_code_cell('results.plotplotly()'))
     # Feature Extraction / Aggregate cell
     cells.append(nbf.new_code_cell(generate_feature_ext_and_aggregate_cell()))
     # Parameter Sweep Class cell

@@ -134,7 +134,6 @@ def generate_run_cell(json_data):
         run_cell += 'results = model.run('
         
         settings = json_data['simulationSettings']
-        # Stochastic
         algorithm = settings['algorithm']
 
         # Select Solver
