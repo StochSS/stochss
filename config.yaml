@@ -99,6 +99,7 @@ hub:
 
       # Workflow API Handlers
       from handlers.workflows import \
+        WorkflowNotebookHandler, \
         SaveWorkflowAPIHandler, \
         RunWorkflowAPIHandler, \
         WorkflowInfoAPIHandler, \
@@ -121,6 +122,7 @@ hub:
           (r"/stochss/api/model/to-sbml/(.+)\/?", ModelToSBMLAPIHandler),
           (r"/stochss/api/spatial/to-model/(.+)\/?", ConvertToModelAPIHandler),
           (r"/stochss/api/sbml/to-model/(.+)\/?", SBMLToModelAPIHandler),
+          (r"/stochss/api/workflow/notebook/(\w+)/(.+)\/?", WorkflowNotebookHandler),
           (r"/stochss/api/workflow/save-workflow/(\w+)/(\w+)\/?(.+)\/?", SaveWorkflowAPIHandler),
           (r"/stochss/api/workflow/run-workflow/(\w+)/(\w+)\/?(.+)\/?", RunWorkflowAPIHandler),
           (r"/stochss/api/workflow/workflow-info(.+)\/?", WorkflowInfoAPIHandler),

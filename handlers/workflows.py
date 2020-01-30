@@ -212,3 +212,34 @@ class WorkflowLogsAPIHandler(BaseHandler):
         log.warn("Log data: {0}".format(data))
         self.write(data) # Send data to client
 
+
+class WorkflowNotebookHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for handling conversions from model (.mdl) file to Jupyter Notebook
+    (.ipynb) file for notebook workflows.
+    ##############################################################################
+    '''
+    @web.authenticated
+    async def get(self, workflow_type, path):
+        '''
+        Sends request to server to run convert_to_notebook.py on target mdl
+        file.
+
+        Attributes
+        ----------
+        type : str
+            Type of notebook template to use for conversion.
+        path : str
+            Path to target model within user pod container.
+        '''
+        checkUserOrRaise(self) # Validate User
+        user = self.current_user.name # Get User Name
+        client, user_pod = stochss_kubernetes.load_kube_client(user) # Kube API
+        workflow_types = {"1d_parameter_sweep":"convert_to_1d_param_sweep_notebook.py",
+                          "2d_parameter_sweep":"convert_to_2d_param_sweep_notebook.py"
+                         }
+        exec_cmd = [workflow_types[workflow_type], path] # Script commands
+        log.warning(path)
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        self.write(resp)

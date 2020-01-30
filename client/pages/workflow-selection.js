@@ -1,3 +1,4 @@
+var xhr = require('xhr');
 var path = require('path');
 //views
 var PageView = require('./base');
@@ -9,7 +10,8 @@ import initPage from './page.js';
 let workflowSelection = PageView.extend({
   template: template,
   events: {
-    "click [data-hook=parameter-sweep]" : "notebookWorkflow",
+    "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
+    "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -18,13 +20,20 @@ let workflowSelection = PageView.extend({
   },
   notebookWorkflow: function (e) {
     var type = e.target.dataset.type;
-    console.log(type);
     this.toNotebook(type);
   },
   toNotebook: function (type) {
     var endpoint = path.join("/stochss/api/workflow/notebook", type, this.modelDir)
-    console.log(endpoint)
-  }
+    xhr({uri:endpoint}, function (err, response, body) {
+      var _path = body.split(' ')[0].split('/home/jovyan/').pop()
+      var endpoint = path.join('/stochss/api/user/');
+      xhr({ uri: endpoint }, function (err, response, body) {
+          var notebookPath = path.join("/user/", body, "/notebooks/", _path)
+          window.open(notebookPath, '_blank')
+        },
+      );
+    });
+  },
 });
 
 initPage(workflowSelection);
