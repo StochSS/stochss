@@ -200,6 +200,13 @@ module.exports = View.extend({
   addSpecies: function () {
     var subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
     this.collection.addSpecie(subdomains);
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   changeCollapseButtonText: function () {
     var text = $(this.queryByHook('collapse')).text();

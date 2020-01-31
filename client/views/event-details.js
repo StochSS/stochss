@@ -44,7 +44,7 @@ module.exports = View.extend({
       $(this.queryByHook('assignment-time')).prop('checked', true)
     }
     $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip({delay: { "show": 1000, "hide": 0 }});
+      $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
 

@@ -128,6 +128,13 @@ module.exports = View.extend({
     var reaction = this.collection.addReaction(reactionType, stoichArgs, subdomains);
     reaction.detailsView = this.newDetailsView(reaction);
     this.collection.trigger("select", reaction);
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   getStoichArgsForReactionType: function(type) {
     var args = ReactionTypes[type];

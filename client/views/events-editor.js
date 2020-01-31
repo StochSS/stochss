@@ -127,6 +127,13 @@ module.exports = View.extend({
     var event = this.collection.addEvent();
     event.detailsView = this.newDetailsView(event);
     this.collection.trigger("select", event);
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   newDetailsView: function (event) {
     var detailsView = new EventDetails({ model: event });

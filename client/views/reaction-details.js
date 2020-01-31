@@ -129,7 +129,7 @@ module.exports = View.extend({
     if(this.parent.collection.parent.is_spatial)
       $(this.queryByHook('subdomains-editor')).collapse();
     $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip({delay: { "show": 1000, "hide": 0 }});
+      $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
 
