@@ -24,4 +24,16 @@ tr
 
   td: div(data-hook="assignment-viewer")
 
-  td: input(type="checkbox", id="use-values-from-trigger-time", data-hook="use-values-from-trigger-time" disabled)
+  td 
+
+    div
+
+      span.inline.horizontal-space(for="trigger-time") Trggier Time
+
+      input(type="radio", id="trigger-time", name="use-values-from" data-hook="trigger-time" disabled)
+
+    div
+
+      span.inline.horizontal-space(for="assignment-time") Assignment Time
+
+      input(type="radio", id="assignment-time", name="use-values-from" data-hook="assignment-time" disabled)
