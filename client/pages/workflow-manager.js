@@ -21,11 +21,13 @@ let operationInfoModalHtml = () => {
     <b>Workflow Name</b>: On the Workflow Manager page you may edit the name of workflow as long as the workflow as not been saved.  
     Workflow Names always end with a time stamp.<br>
     <b>Model Path</b>: If you move or rename the model make sure to update this path.<br>
-    <b>Workflow Editor</b>: This is where you can customize the settings for your workflow.  
+    <b>Settings</b>: This is where you can customize the settings for your workflow.
     If you need to edit other part of you model click on the edit model button.  
-    The Workflow Editor is only available for models that have not been run.<br>
-    <b>Plot Results</b>: You may change the title, x-axis label, and y-axis label by entering the name in the correct field, then click plot.<br>
-    <b>Model Viewer</b>: You can view the model that will be used when you run your workflow in the Model section.
+    The settings are only available for workflows that have not been run.<br>
+    <b>Status</b>: This section displays the status and start time of the Workflow.  If the workflow hasn't been sarted this section is closed.<br>
+    <b>Results</b>: You may change the title, x-axis label, and y-axis label by clicking on the edit plot button then enter the name in the correct field.<br>
+    <b>Info</b>: This section displays any warnings and/or error that are logged by the running workflow.<br>
+    <b>Model</b>: This section lets you view the model that was used when you ran the workflow.
   `;
 
   return `

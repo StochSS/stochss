@@ -15,6 +15,7 @@ var config = app.config;
 
 let operationInfoModalHtml = (infoMessageKey) => {
   let fileSystemMessage = `
+    <b>Create a Directory</b>: Right click on a directory and enter the name of the directory or a path of directories.<br>
     <b>Expand Directory</b>: Click on the arrow next to the directory or double click on the directory.<br>
     <b>Rename File</b>: Right click on a file and enter the new name.<br>
     <b>Move File or Directory</b>: Click and drag the file or directory to the new location.   
@@ -24,12 +25,13 @@ let operationInfoModalHtml = (infoMessageKey) => {
   `;
   let createEditModelMessage = `
     <b>Create GillesPy2 Model</b>: Right click on a directory, click create model, then click Non-Spatial.
-    Enter a name for the model and click OK.<br>
+    Enter a name for the model or a path to the model and click OK.<br>
     <b>Edit GillesPy2 Model</b>: Double click on a model or right click on a model and click Edit Model.
   `;
   let createEditWorkflowMeeage = `
-    <b>Create Workflow</b>: From the File Browser page right click on a model and click Create Workflow.  
-    From the Model Editor page click on the Create Workflow button at the bottum of the page.<br>
+    <b>Select a Workflow</b>: From the File Browser page right click on a model and click New Workflow.  
+    From the Model Editor page click on the New Workflow button at the bottum of the page.<br>
+    <b>Create a Workflow</b>: From the Workflow Selection page click on one of the listed workflows.<br>
     <b>View/Edit Workflow</b>: Double click on the Workflow or right click on the workflow and click View Workflow.<br>
   `;
   let notebookMessage = `

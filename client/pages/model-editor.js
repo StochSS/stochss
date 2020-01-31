@@ -21,13 +21,16 @@ import initPage from './page.js';
 
 let operationInfoModalHtml = () => {
   let editModelMessage = `
-    <b>Add a Species or Parameter</b>: From the Model Editor page click on the Add Species or Add Parameter buttons.<br>
-    <b>Add a Reaction</b>: From the Model Editor page click on the Add Reaction button then select the type of reaction.  
-    To add a reaction you must have at least one Species.<br>
-    <b>Edit a Reaction</b>: Select the reaction you wish to edit, and make changes to the right or the reaction list.<br>
-    <b>Species Mode</b>: Select the Hybrid Tua-Leaping algorithm in the advanced settings.<br>
-    <b>Set Rate Rules</b>: Set the mode of the species to continuous, then add the rate rule to the right of the species mode.<br>
-    <b>Results</b>: The plot shown are a preview of the full results.  To get the full results, create and run a workflow.
+    <b>Add a Species or Parameter</b>: Click on the Add Species button in the Species section or the Add Parameter button in the Parameters section.<br>
+    <b>Add a Reaction</b>: Click on the Add Reaction button in the Reactions section and select a type.  
+    To add a Reaction you must have at least one Species.
+    To add a Mass Action Reaction you must have at least one Species and one Parameter.<br>
+    <b>Add an Event</b>: Click the Add Event button in the Events sections.
+    To add an Event you must have at least one Species or Parameter.<br>
+    <b>Add a Rule</b>: Click the Add Rule button in the Rules section and select a type.
+    To add a Rule you must have at least one Species or Parameter.<br>
+    <b>Edit a Reaction or an Event</b>: Select the Reaction or Event you wish to edit, and make changes to the right or the Reaction or Event list.<br>
+    <b>Results</b>: The plot shown is a preview of the full results.  To get the full results, create and run a workflow.
   `;
 
   return `
