@@ -33,7 +33,7 @@ let treeSettings = {
     'multiple' : false,
     'animation': 0,
     'check_callback': function (op, node, par, pos, more) {
-      if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type != 'folder'){
+      if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
         return false
       }
       if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
@@ -65,7 +65,11 @@ let treeSettings = {
         xhr({uri: endpoint}, function(err, response, body) {
           if(body.startsWith("Success!")) {
             node.original._path = path.join(newDir, file)
-            $('#models-jstree').jstree().refresh_node(par);
+            if(par.type === 'root'){
+              $('#models-jstree').jstree().refresh()
+            }else{
+              $('#models-jstree').jstree().refresh_node(par);
+            }
           }
         });
       }
@@ -78,6 +82,9 @@ let treeSettings = {
     'data': ajaxData,
   },
   'types' : {
+    'root' : {
+      "icon": "jstree-icon jstree-folder"
+    },
     'folder' : {
       "icon": "jstree-icon jstree-folder"
     },
@@ -108,7 +115,7 @@ let treeSettings = {
 
 
 // Using a bootstrap modal to input model names for now
-let renderCreateModalHtml = (isModel, isSpatial, show) => {
+let renderCreateModalHtml = (isModel, isSpatial) => {
   var titleText = 'Directory';
   if(isModel){
     titleText = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
@@ -126,15 +133,7 @@ let renderCreateModalHtml = (isModel, isSpatial, show) => {
           <div class="modal-body">
             <label for="modelNameInput">Name:</label>
             <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
-            <div class="collapse ${show}">
-              <div>
-                <input type="radio" id="in-user-dir" name="dir-source" checked > Create ${titleText} in root directory
-              </div>
-              <div>
-                <input type="radio" id="in-selected-dir" name="dir-source" > Create ${titleText} in selected directory
-              </div>
-	    </div>
-          </div>
+	        </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary ok-model-btn">OK</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -181,7 +180,6 @@ let FileBrowser = PageView.extend({
   template: template,
   events: {
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
-    'click [data-hook=make-directory]' : 'handlerMakeDirBtnClick',
   },
   render: function () {
     var self = this;
@@ -214,11 +212,11 @@ let FileBrowser = PageView.extend({
     if(answer){
       var endpoint = path.join("/stochss/api/file/delete", o.original._path)
       xhr({uri: endpoint}, function(err, response, body) {
-        if(o.parent !== "#"){
-          var node = $('#models-jstree').jstree().get_node(o.parent);
-          $('#models-jstree').jstree().refresh_node(node);
-        }else{
+        var node = $('#models-jstree').jstree().get_node(o.parent);
+        if(node.type === "root"){
           $('#models-jstree').jstree().refresh();
+        }else{
+          $('#models-jstree').jstree().refresh_node(node);
         }
       })
     }
@@ -233,10 +231,10 @@ let FileBrowser = PageView.extend({
     }
     xhr({uri: endpoint}, 
       function (err, response, body) {
-        if(parentID === "#"){
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
           $('#models-jstree').jstree().refresh()
         }else{          
-          var node = $('#models-jstree').jstree().get_node(parentID);
           $('#models-jstree').jstree().refresh_node(node);
         }
       }
@@ -248,10 +246,10 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join("/stochss/api/model/to-spatial", o.original._path);
     xhr({uri: endpoint}, 
       function (err, response, body) {
-        if(parentID === "#"){
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
           $('#models-jstree').jstree().refresh()
         }else{          
-          var node = $('#models-jstree').jstree().get_node(parentID);
           $('#models-jstree').jstree().refresh_node(node);
         }
       }
@@ -267,10 +265,10 @@ let FileBrowser = PageView.extend({
     }
     xhr({uri: endpoint}, 
       function (err, response, body) {
-        if(parentID === "#"){
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
           $('#models-jstree').jstree().refresh()
         }else{          
-          var node = $('#models-jstree').jstree().get_node(parentID);
           $('#models-jstree').jstree().refresh_node(node);
         }
         if(from === "SBML"){
@@ -289,10 +287,10 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join("/stochss/api/model/to-sbml", o.original._path);
     xhr({uri: endpoint},
       function (err, response, body) {
-        if(parentID === "#"){
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
           $('#models-jstree').jstree().refresh()
         }else{          
-          var node = $('#models-jstree').jstree().get_node(parentID);
           $('#models-jstree').jstree().refresh_node(node);
         }
       }
@@ -313,11 +311,12 @@ let FileBrowser = PageView.extend({
           if(!resp.message.startsWith('Success!')) {
             nameWarning.html(resp.message)
             nameWarning.collapse('show');
-            node.original._path = resp._path
-            $('#models-jstree').jstree().refresh_node(parent)
-          }else{
-            node.original._path = resp._path
-            $('#models-jstree').jstree().refresh_node(parent)
+          }
+          node.original._path = resp._path
+          if(parent.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
           }
         })
       }
@@ -358,19 +357,14 @@ let FileBrowser = PageView.extend({
     linkElement.setAttribute('download', fileName);
     linkElement.click();
   },
-  handlerMakeDirBtnClick: function (e) {
-    this.newModelOrDirectory(undefined, false, false);
-  },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
-    let disabled = o === undefined ? '' : 'show'
     if(document.querySelector('#newModalModel')) {
       document.querySelector('#newModalModel').remove()
     }
-    let modal = $(renderCreateModalHtml(isModel, isSpatial, disabled)).modal();
+    let modal = $(renderCreateModalHtml(isModel, isSpatial)).modal();
     let okBtn = document.querySelector('#newModalModel .ok-model-btn');
     let input = document.querySelector('#newModalModel #modelNameInput');
-    let source = document.querySelector('#newModalModel #in-user-dir');
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
         event.preventDefault();
@@ -379,23 +373,22 @@ let FileBrowser = PageView.extend({
     });
     let modelName;
     okBtn.addEventListener('click', function (e) {
-      let fromUserDir = source.checked;
       if (Boolean(input.value)) {
         if(isModel) {
           let modelName = input.value + '.mdl';
-          var parentPath = fromUserDir ? '/' : o.original._path
+          var parentPath = o.original._path
           var modelPath = path.join("/hub/stochss/models/edit", parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
-          var parentPath = (!fromUserDir && Boolean(o)) ? o.original._path : "/";
+          var parentPath = o.original._path;
           let endpoint = path.join("/stochss/api/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
-            if(Boolean(o) && o.parent !== "#"){
-              var node = $('#models-jstree').jstree().get_node(o.parent);
+            var node = $('#models-jstree').jstree().get_node(o);
+            if(node.type === "root"){
+              $('#models-jstree').jstree().refresh()
+            }else{          
               $('#models-jstree').jstree().refresh_node(node);
-            }else{
-              self.refreshJSTree()
             }
           });
           modal.modal('hide')
@@ -406,7 +399,56 @@ let FileBrowser = PageView.extend({
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
-      if (o.type ===  'folder') {
+      if (o.type === 'root'){
+        return {
+          "Refresh" : {
+            "label" : "Refresh",
+            "_disabled" : false,
+            "_class" : "font-weight-bold",
+            "separator_before" : false,
+            "separator_after" : true,
+            "action" : function (data) {
+              $('#models-jstree').jstree().refresh();
+            }
+          },
+          "Create_Directory" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Create Directory",
+            "action" : function (data) {
+              self.newModelOrDirectory(o, false, false);
+            }
+          },
+          "create_model" : {
+            "label" : "Create Model",
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "submenu" : {
+              "spatial" : {
+                "label" : "Spatial",
+                "_disabled" : true,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+
+                }
+              },
+              "nonspatial" : { 
+                "label" : "Non-Spatial",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.newModelOrDirectory(o, true, false);
+                }
+              } 
+            }
+          },
+        }
+      }
+      else if (o.type ===  'folder') {
         return {
           "Refresh" : {
             "label" : "Refresh",
@@ -599,7 +641,11 @@ let FileBrowser = PageView.extend({
               xhr({ uri: endpoint },
                     function (err, response, body) {
                 var node = $('#models-jstree').jstree().get_node(o.parent)
-                $('#models-jstree').jstree().refresh_node(node);
+                if(node.type === 'root'){
+                  $('#models-jstree').jstree().refresh();
+                }else{
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
                 var _path = body.split(' ')[0].split('/home/jovyan/').pop()
                 var endpoint = path.join('/stochss/api/user/');
                 xhr(
@@ -907,6 +953,7 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').on('dblclick.jstree', function(e) {
       var file = e.target.text
       var node = $('#models-jstree').jstree().get_node(e.target)
+      console.log(node)
       var _path = node.original._path;
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
         window.location.href = path.join("/hub/stochss/models/edit", _path);

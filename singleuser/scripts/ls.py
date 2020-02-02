@@ -70,6 +70,13 @@ def buildChild(text, f_type, p_path):
     return child
 
 
+def buildRoot(children):
+    root = {"text":"/", "type":"root", "_path":"/"}
+    root["children"] = children
+    root["state"] = {"opened":True}
+    return [root]
+
+
 def checkExtension(child, target):
     '''
     Check to see if the child's extension matchs the target extension.
@@ -107,5 +114,7 @@ if __name__ == "__main__":
     else:
         full_path = path.join(user_dir, p_path)
     data = getFileSystemData(full_path, p_path)
+    if p_path == "/":
+        data = buildRoot(data)
     print(json.dumps(data))
     
