@@ -202,7 +202,16 @@ def average_of_ensemble(c,data):
     return average_aggregate_cell
 
 
-def generate_1D_parameter_sweep_class_cell():
+def generate_1D_parameter_sweep_class_cell(json_data):
+    algorithm = json_data['simulationSettings']['algorithm']
+    solver_map = {
+                'SSA': '',
+                'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
+                'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, ',
+                'ODE': 'solver=BasicODESolver, '
+                }
+    solver_str = solver_map[algorithm]
+
     psweep_class_cell ='''class ParameterSweep1D():
     
     def run(c, verbose=False):
@@ -214,8 +223,9 @@ def generate_1D_parameter_sweep_class_cell():
             tmp_model = c.ps_class()
             tmp_model.listOfParameters[c.p1].set_expression(v1)
             if verbose: print("running {0}={1}".format(c.p1,v1))
-            #if verbose: print("\t{0}".format(["{0}={1},".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
-            if(c.number_of_trajectories > 1):
+            #if verbose: print("\t{0}".format(["{0}={1},".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))'''
+
+    psweep_class_cell += '''            if(c.number_of_trajectories > 1):
                 tmp_results = tmp_model.run(number_of_trajectories=c.number_of_trajectories)
                 (m,s) = ag([fn(x) for x in tmp_results])
                 data[i,0] = m
@@ -223,8 +233,9 @@ def generate_1D_parameter_sweep_class_cell():
             else:
                 tmp_result = tmp_model.run()
                 data[i,0] = c.feature_extraction(tmp_result)
-        c.data = data
+        c.data = data\n'''.format(solver_str)
 
+    psweep_class_cell += '''
     def plot(c):
         from matplotlib import pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -258,7 +269,16 @@ class ParameterSweepConfig(ParameterSweep1D):
     return psweep_config_cell
 
 
-def generate_2D_parameter_sweep_class_cell():
+def generate_2D_parameter_sweep_class_cell(json_data):
+    algorithm = json_data['simulationSettings']['algorithm']
+    solver_map = {
+                'SSA': '',
+                'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
+                'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, ',
+                'ODE': 'solver=BasicODESolver, '
+                }
+    solver_str = solver_map[algorithm]
+
     psweep_class_cell ='''class ParameterSweep2D():
     
     def run(c, verbose=False):
@@ -272,15 +292,17 @@ def generate_2D_parameter_sweep_class_cell():
                 tmp_model.listOfParameters[c.p1].set_expression(v1)
                 tmp_model.listOfParameters[c.p2].set_expression(v2)
                 if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
-                #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
-                if(c.number_of_trajectories > 1):
-                    tmp_results = tmp_model.run(number_of_trajectories=c.number_of_trajectories)
+                #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))'''
+    
+    psweep_class_cell += '''                if(c.number_of_trajectories > 1):
+                    tmp_results = tmp_model.run({0}number_of_trajectories=c.number_of_trajectories)
                     data[i,j] = ag([fn(x) for x in tmp_results])
                 else:
-                    tmp_result = tmp_model.run()
+                    tmp_result = tmp_model.run({0})
                     data[i,j] = c.feature_extraction(tmp_result)
-        c.data = data
+        c.data = data\n'''.format(solver_str)
 
+    psweep_class_cell += '''
     def plot(c):
         from matplotlib import pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable

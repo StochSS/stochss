@@ -51,7 +51,7 @@ def convertToNotebook(_model_path):
     # Feature Aggregate cell
     cells.append(nbf.new_code_cell(generate_mean_std_aggregate_cell()))
     # Parameter Sweep Class cell
-    cells.append(nbf.new_code_cell(generate_1D_parameter_sweep_class_cell()))
+    cells.append(nbf.new_code_cell(generate_1D_parameter_sweep_class_cell(json_data)))
     # Parameter Sweep Config cell
     cells.append(nbf.new_code_cell(generate_1D_psweep_config_cell(json_data, name)))
     # Parameter Sweep Execution cell
