@@ -226,12 +226,12 @@ def generate_1D_parameter_sweep_class_cell(json_data):
             #if verbose: print("\t{0}".format(["{0}={1},".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))'''
 
     psweep_class_cell += '''            if(c.number_of_trajectories > 1):
-                tmp_results = tmp_model.run(number_of_trajectories=c.number_of_trajectories)
+                tmp_results = tmp_model.run({0}number_of_trajectories=c.number_of_trajectories)
                 (m,s) = ag([fn(x) for x in tmp_results])
                 data[i,0] = m
                 data[i,1] = s
             else:
-                tmp_result = tmp_model.run()
+                tmp_result = tmp_model.run({0})
                 data[i,0] = c.feature_extraction(tmp_result)
         c.data = data\n'''.format(solver_str)
 
