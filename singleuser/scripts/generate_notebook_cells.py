@@ -223,7 +223,7 @@ def generate_1D_parameter_sweep_class_cell(json_data):
             tmp_model = c.ps_class()
             tmp_model.listOfParameters[c.p1].set_expression(v1)
             if verbose: print("running {0}={1}".format(c.p1,v1))
-            #if verbose: print("\t{0}".format(["{0}={1},".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))'''
+            #if verbose: print("\t{0}".format(["{0}={1},".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))\n'''
 
     psweep_class_cell += '''            if(c.number_of_trajectories > 1):
                 tmp_results = tmp_model.run({0}number_of_trajectories=c.number_of_trajectories)
@@ -256,16 +256,19 @@ def generate_1D_psweep_config_cell(json_data, model_name):
 class ParameterSweepConfig(ParameterSweep1D):
     # What class defines the GillesPy2 model
     ps_class = {0}
+    model = ps_class()
     # What is the first parameter we will vary
     p1 = "{1}" # ENTER PARAMETER HERE
-    p1_range = np.linspace({2},{3},11) # ENTER RANGE FOR PARAMETER HERE
+    p1_min = 0.5 * float(eval(model.get_parameter(p1).expression))
+    p1_max = 1.5 * float(eval(model.get_parameter(p1).expression))
+    p1_range = np.linspace(p1_min,p1_max,11) # ENTER RANGE FOR PARAMETER HERE
     number_of_trajectories = 10
-    species_of_interest = "{4}" # ENTER SPECIES OF INTEREST HERE
+    species_of_interest = "{2}" # ENTER SPECIES OF INTEREST HERE
     # What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
     # for number_of_trajectories > 1: how do we aggreggate the values
     ensemble_aggragator = mean_std_of_ensemble
-'''.format(model_name, p1['name'], .5*float(eval(p1['expression'])), 1.5*float(eval(p1['expression'])), soi)
+'''.format(model_name, p1['name'], soi)
     return psweep_config_cell
 
 
@@ -292,7 +295,7 @@ def generate_2D_parameter_sweep_class_cell(json_data):
                 tmp_model.listOfParameters[c.p1].set_expression(v1)
                 tmp_model.listOfParameters[c.p2].set_expression(v2)
                 if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
-                #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))'''
+                #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))\n'''
     
     psweep_class_cell += '''                if(c.number_of_trajectories > 1):
                     tmp_results = tmp_model.run({0}number_of_trajectories=c.number_of_trajectories)
@@ -329,19 +332,23 @@ def generate_2D_psweep_config_cell(json_data, model_name):
     soi = json_data['species'][0]['name']
     psweep_config_cell = '''# Configuration for the Parameter Sweep
 class ParameterSweepConfig(ParameterSweep2D):
+    # What class defines the GillesPy2 model
+    ps_class = {3}
+    model = ps_class()
     p1 = "{0}" # ENTER PARAMETER 1 HERE
     p2 = "{1}" # ENTER PARAMETER 2 HERE
-    p1_range = np.linspace({2},{3},11) # ENTER RANGE FOR P1 HERE
-    p2_range = np.linspace({4},{5},11) # ENTER RANGE FOR P2 HERE
-    species_of_interest = "{6}" # ENTER SPECIES OF INTEREST HERE
+    p1_min = 0.5 * float(eval(model.get_parameter(p1).expression))
+    p1_max = 1.5 * float(eval(model.get_parameter(p1).expression))
+    p1_range = np.linspace(p1_min,p1_max,11) # ENTER RANGE FOR P1 HERE
+    p2_min = 0.5 * float(eval(model.get_parameter(p2).expression))
+    p2_max = 1.5 * float(eval(model.get_parameter(p2).expression))
+    p2_range = np.linspace(p2_min,p2_max,11) # ENTER RANGE FOR P2 HERE
+    species_of_interest = "{2}" # ENTER SPECIES OF INTEREST HERE
     number_of_trajectories = 10
     # What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
     # for number_of_trajectories > 1: how do we aggreggate the values
     ensemble_aggragator = average_of_ensemble
-    # What class defines the GillesPy2 model
-    ps_class = {7}
-'''.format(p1['name'], p2['name'], .5*float(eval(p1['expression'])), 1.5*float(eval(p1['expression'])),
-                .5*float(eval(p2['expression'])), 1.5*float(eval(p2['expression'])), soi, model_name)
+'''.format(p1['name'], p2['name'], soi, model_name)
     return psweep_config_cell
 

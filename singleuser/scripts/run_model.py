@@ -5,6 +5,8 @@ import sys
 import json
 import argparse
 import logging
+import pickle
+import plotly
 
 from io import StringIO
 from gillespy2.core import log
@@ -31,6 +33,91 @@ warnings.simplefilter("ignore")
 
 
 user_dir = '/home/jovyan'
+
+
+class GillesPy2Workflow():
+
+    def __init__(self, wkfl_path, mdl_path):
+        self.wkfl_path = wkfl_path
+        self.mdl_path = mdl_path
+        if wkfl_path:
+            self.mdl_file = mdl_path.split('/').pop()
+            self.info_path = os.path.join(wkfl_path, 'info.json')
+            self.log_path = os.path.join(wkfl_path, 'logs.txt')
+            self.wkfl_mdl_path = os.path.join(wkfl_path, self.mdl_file)
+            self.res_path = os.path.join(wkfl_path, 'results')
+
+
+    def run_preview(self, gillespy2_model, stochss_model):
+        sim_settings = stochss_model['simulationSettings']
+        model_settings = stochss_model['modelSettings']
+
+        sim_settings['realizations'] = model_settings['realizations']
+        sim_settings['algorithm'] = model_settings['algorithm']
+
+        _results = run_solver(gillespy2_model, sim_settings, 5)
+        results = _results[0]
+        res_dict = dict(results)
+        for k, v in res_dict.items():
+            res_dict[k] = list(v)
+        results = res_dict
+        for key in results.keys():
+            if not isinstance(results[key], list):
+                # Assume it's an ndarray, use tolist()
+                results[key] = results[key].tolist()
+        results['data'] = stochss_model
+        return results
+
+
+    def run(self, gillespy2_model, stochss_model):
+        sim_settings = stochss_model['simulationSettings']
+        trajectories = sim_settings['realizations']
+        is_stochastic = not sim_settings['algorithm'] == "ODE"
+
+        results = run_solver(gillespy2_model, sim_settings, 0)
+        self.store_results(results)
+        self.plot_results(results, trajectories, is_stochastic)
+
+
+    def store_results(self, results):
+        if not 'results' in os.listdir(path=self.wkfl_path):
+            os.mkdir(self.res_path)
+        with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
+            pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
+        
+
+    def plot_results(self, results, trajectories, is_stochastic):
+        '''
+        Create the set of result plots and write them to file in the results directory.
+
+        Attributes
+        ----------
+        results : GillesPy2 ResultsEnsemble or GillesPy2 Results
+            Results of a workflow run.
+        results_path : str
+            Path to the results directory.
+        trajectories : int
+            Number of trajectories for the workflow.
+        is_stochastic : bool
+            Was the workflow a stochastic simulation?.
+        '''
+        if is_stochastic and trajectories > 1:
+            stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
+            stddevrange_plot["config"] = {"responsive": True,}
+            with open(os.path.join(self.res_path, 'std_dev_range_plot.json'), 'w') as json_file:
+                json.dump(stddevrange_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            stddev_plot = results.stddev_ensemble().plotplotly(return_plotly_figure=True)
+            stddev_plot["config"] = {"responsive": True,}
+            with open(os.path.join(self.res_path, 'stddev_ensemble_plot.json'), 'w') as json_file:
+                json.dump(stddev_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            avg_plot = results.average_ensemble().plotplotly(return_plotly_figure=True)
+            avg_plot["config"] = {"responsive": True,}
+            with open(os.path.join(self.res_path, 'ensemble_average_plot.json'), 'w') as json_file:
+                json.dump(avg_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+        plot = results.plotplotly(return_plotly_figure=True)
+        plot["config"] = {"responsive": True,}
+        with open(os.path.join(self.res_path, 'plotplotly_plot.json'), 'w') as json_file:
+                json.dump(plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
 
 
 class _Model(Model):
@@ -294,6 +381,23 @@ class ModelFactory():
         return d
 
 
+def get_models(full_path, name):
+    try:
+        with open(full_path, "r") as model_file:
+            stochss_model = json.loads(model_file.read())
+            stochss_model['name'] = name
+    except FileNotFoundError as error:
+        log.critical("Failed to copy the model into the directory: {0}".format(error))
+
+    try:
+        _model = ModelFactory(stochss_model) # build GillesPy2 model
+    except Exception as error:
+        log.error(str(error))
+    gillespy2_model = _model.model
+
+    return gillespy2_model, stochss_model
+
+
 def run_model(model_path):
     '''
     Run the model and return a preview of the results from the first trajectory.
@@ -305,24 +409,9 @@ def run_model(model_path):
     model_path : str
         Path to the model file.
     '''
-    with open(model_path, "r") as jsonFile:
-        data = jsonFile.read()
-    jsonData = json.loads(str(data))
-    jsonData['name'] = model_path.split('/').pop().split('.')[0]
-    _model = ModelFactory(jsonData)
-    jsonData['simulationSettings']['realizations'] = jsonData['modelSettings']['realizations']
-    jsonData['simulationSettings']['algorithm'] = jsonData['modelSettings']['algorithm']
-    _results = run_solver(_model.model, jsonData['simulationSettings'], 5)
-    results = _results[0]
-    res_dict = dict(results)
-    for k, v in res_dict.items():
-        res_dict[k] = list(v)
-    results = res_dict
-    for key in results.keys():
-        if not isinstance(results[key], list):
-            # Assume it's an ndarray, use tolist()
-            results[key] = results[key].tolist()
-    results['data'] = jsonData
+    gillespy2_model, stochss_model = get_models(model_path, model_path.split('/').pop().split('.')[0])
+    workflow = GillesPy2Workflow(None, model_path)
+    results = workflow.run_preview(gillespy2_model, stochss_model)
     return results
 
 

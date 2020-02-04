@@ -11,126 +11,101 @@ import logging
 
 from gillespy2.core import log
 
+from parameter_sweep import ParameterSweep
+
 from shutil import copyfile
-from run_model import ModelFactory, run_solver
+from run_model import GillesPy2Workflow, ModelFactory, run_solver
 from datetime import datetime, timezone, timedelta
 
 
 user_dir = "/home/jovyan"
 
 
-def save_new_workflow(workflow_path, model_path, workflow_model, wkfl_type, **kwargs):
+def save_new_workflow(wkfl, wkfl_type, is_new):
     '''
     Create and save a new workflow in the same directory as the model 
     used for it.
 
     Attributes
     ----------
-    workflow_path : str
-        Path to the workflow directory.
-    model_path : str
-        Path to the model file.
-    workflow_model : str
-        Path to the model file in the workflow directory.
-    kwargs : {
-        results_path : str
-            Path to the workflow's results directory.
-    }
+    wkfl : StochSS Workflow
+        The workflow object being worked with.
+    wkfl_type : str
+        The type of workflow to be used.
+    is_new : boolean
+        Represents whether the workflow is new or not.
     '''
-    results_path = kwargs['results_path']
-    os.mkdir(results_path) # make the workflow's result directory
+    os.mkdir(wkfl.res_path) # make the workflow's result directory
     try:
-        copyfile(model_path, workflow_model) # copy the model into the workflow directory
+        copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"model":"{0}".format(model_path), "type":"{0}".format(wkfl_type)} # workflow info
-    info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
-    with open(info_path, "w") as info_file:
+    model_info = {"model":"{0}".format(wkfl.mdl_path), "type":"{0}".format(wkfl_type)} # workflow info
+    with open(wkfl.info_path, "w") as info_file:
         info_file.write(json.dumps(model_info)) # write the workflow info file
-    return model_info, None, None
+    print(model_info)
 
 
-def save_existing_workflow(workflow_path, model_path, workflow_model, wkfl_type, **kwargs):
+def save_existing_workflow(wkfl, wkfl_type, is_new):
     '''
     Save an existing workflow.
 
     Attributes
     ----------
-    workflow_path : str
-        Path to the workflow directory.
-    model_path : str
-        Path to the model file.
-    workflow_model : str
-        Path to the model file in the workflow directory.
-    kwargs : {
-        model_file : str
-            Name of the model file.
-    }
+    wkfl : StochSS Workflow
+        The workflow object being worked with.
+    wkfl_type : str
+        The type of workflow to be used.
+    is_new : boolean
+        Represents whether the workflow is new or not.
     '''
-    model_file = kwargs['model_file']
-    info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
-    old_model_path = os.path.join(workflow_path, model_file) # path to the old model
+    old_model_path = os.path.join(wkfl.wkfl_path, wkfl.mdl_file) # path to the old model
     os.remove(old_model_path) # remove the old model
     try:
-        copyfile(model_path, workflow_model) # copy the new model into the workflow directory
+        copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the new model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"model":"{0}".format(model_path), "type":"{0}".format(wkfl_type)} # updated workflow info
-    with open(info_path, "w") as info_file:
+    model_info = {"model":"{0}".format(wkfl.mdl_path), "type":"{0}".format(wkfl_type)} # updated workflow info
+    with open(wkfl.info_path, "w") as info_file:
         info_file.write(json.dumps(model_info)) # update the workflow info file
-    return model_info, None, None
+    print(model_info)
 
 
-def run_new_workflow(workflow_path, model_path, workflow_model, wkfl_type, **kwargs):
-    '''
-    Save and run a new workflow.
+def get_models(full_path, name, wkfl_path):
+    try:
+        with open(full_path, "r") as model_file:
+            stochss_model = json.loads(model_file.read())
+            stochss_model['name'] = name
+    except FileNotFoundError as error:
+        log.critical("Failed to copy the model into the directory: {0}".format(error))
+        open(os.path.join(wkfl_path, 'ERROR'), 'w').close() # update status to error
+    
 
-    Attributes
-    ----------
-    workflow_path : str
-        Path to the workflow directory.
-    model_path : str
-        Path to the model file.
-    workflow_model : str
-        Path to the model file in the workflow directory.
-    kwargs : {
-        results_path ; str
-            Path to the workflow's results directory.
-        model_file : str
-            Name of the model file.
-    }
-    '''
-    results_path = kwargs['results_path']
-    model_file = kwargs['model_file']
-    info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
-    save_new_workflow(workflow_path, model_path, workflow_model, wkfl_type, results_path=results_path) # save the workflow
-    return run_workflow(workflow_model, model_file, info_path, workflow_path)
+    try:
+        _model = ModelFactory(stochss_model) # build GillesPy2 model
+    except Exception as error:
+        log.error(str(error))
+    gillespy2_model = _model.model
+
+    return gillespy2_model, stochss_model
 
 
-def run_existing_workflow(workflow_path, model_path, workflow_model, wkfl_type, **kwargs):
-    '''
-    Save and run an existing workflow.
+def update_info_file(info_path, wkfl_mdl_path):
+    today = datetime.now() # workflow run start time
+    str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC") # format timestamp
+    
+    with open(info_path, 'r') as info_file:
+        info_data = json.loads(info_file.read())
 
-    Attributes
-    ----------
-    workflow_path : str
-        Path to the workflow directory.
-    model_path : str
-        Path to the model file.
-    workflow_model : str
-        Path to the model file in the workflow directory.
-    kwargs : {
-        model_file : str
-            Name of the model file.
-    }
-    '''
-    model_file = kwargs['model_file']
-    info_path = os.path.join(workflow_path, 'info.json') # path to the workflows info file
-    save_existing_workflow(workflow_path, model_path, workflow_model, wkfl_type, model_file=model_file) # save the workflow
-    return run_workflow(workflow_model, model_file, info_path, workflow_path)
+    info_data['start_time'] = str_datetime # add start time to workflow info
+    info_data['model'] = wkfl_mdl_path # Update the location of the model
 
+    # Update the workflow info file
+    with open(info_path, "w") as info_file:
+        info_file.write(json.dumps(info_data))
+    
 
-def run_workflow(workflow_model, model_file, info_path, workflow_path):
+def run_workflow(wkfl, wkfl_type, is_new):
     '''
     Run the workflow and return the results, number of trajectories, and is_stochastic.
     Records when the workflow was start and updates the model path in the workflow info file.
@@ -139,89 +114,36 @@ def run_workflow(workflow_model, model_file, info_path, workflow_path):
 
     Attributes
     ----------
-    workflow_model : str
-        Path to the model file in the workflow directory.
-    model_file : str
-        Name of the model file.
-    info_path : str
-        Path to the workflows info file.
-    workflow_path : str
-        Path to the workflow directory.
+    wkfl : StochSS Workflow
+        The workflow object being worked with.
+    wkfl_type : str
+        The type of workflow to be used.
+    is_new : boolean
+        Represents whether the workflow is new or not.
     '''
+    # save the workflow
+    if is_new:
+        save_new_workflow(wkfl, wkfl_type, is_new)
+    else:
+        save_existing_workflow(wkfl, wkfl_type, is_new)
     # Get the model data from the file and create the model object
-    try:
-        with open(workflow_model, 'r') as json_file:
-            _data = json_file.read()
-    except FileNotFoundError as error:
-        log.critical("Failed to copy the model into the directory: {0}".format(error))
-        open(os.path.join(workflow_path, 'ERROR'), 'w').close() # update status to error
-    data = json.loads(str(_data))
-    data['name'] = model_file.split('.')[0]
-    try:
-        _model = ModelFactory(data) # build GillesPy2 model
-    except Exception as error:
-        log.error(str(error))
-    # Add the start time to the workflow info file
-    with open(info_path, 'r') as info_file:
-        _info_data = info_file.read()
-        info_data = json.loads(_info_data)
-    today = datetime.now() # workflow run start time
-    str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC") # format timestamp
-    info_data['start_time'] = str_datetime # add start time to workflow info
-    # Update the location of the model
-    info_data['model'] = workflow_model
-    # Update the workflow info file
-    with open(info_path, "w") as info_file:
-        info_file.write(json.dumps(info_data))
+    gillespy2_model, stochss_model = get_models(wkfl.wkfl_mdl_path, wkfl.mdl_file.split('.')[0], wkfl.wkfl_path)
+    # Update workflow info file with start time and permanent model file location
+    update_info_file(wkfl.info_path, wkfl.wkfl_mdl_path)
     # Update workflow status to running
-    open(os.path.join(workflow_path, 'RUNNING'), 'w').close()
+    open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
     # run the workflow
     try:
-        results = run_solver(_model.model, data['simulationSettings'], 0)
-    except:
+        wkfl.run(gillespy2_model, stochss_model)
+    except Exception as error:
         # update workflow status to error if GillesPy2 throws an exception
-        open(os.path.join(workflow_path, 'ERROR'), 'w').close()
-        return None, None, None
+        log.error("Workflow errors: {0}".format(error))
+        open(os.path.join(wkfl.wkfl_path, 'ERROR'), 'w').close()
     else:
-        open(os.path.join(workflow_path, 'COMPLETE'), 'w').close() # update status to complete
-        return results, data['simulationSettings']['realizations'], (not data['simulationSettings']['algorithm'] == "ODE")
+        open(os.path.join(wkfl.wkfl_path, 'COMPLETE'), 'w').close() # update status to complete
+        
 
-
-def plot_results(results, results_path, trajectories, is_stochastic):
-    '''
-    Create the set of result plots and write them to file in the results directory.
-
-    Attributes
-    ----------
-    results : GillesPy2 ResultsEnsemble or GillesPy2 Results
-        Results of a workflow run.
-    results_path : str
-        Path to the results directory.
-    trajectories : int
-        Number of trajectories for the workflow.
-    is_stochastic : bool
-        Was the workflow a stochastic simulation?.
-    '''
-    if is_stochastic and trajectories > 1:
-        stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
-        stddevrange_plot["config"] = {"responsive": True,}
-        with open(os.path.join(results_path, 'std_dev_range_plot.json'), 'w') as json_file:
-            json.dump(stddevrange_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
-        stddev_plot = results.stddev_ensemble().plotplotly(return_plotly_figure=True)
-        stddev_plot["config"] = {"responsive": True,}
-        with open(os.path.join(results_path, 'stddev_ensemble_plot.json'), 'w') as json_file:
-            json.dump(stddev_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
-        avg_plot = results.average_ensemble().plotplotly(return_plotly_figure=True)
-        avg_plot["config"] = {"responsive": True,}
-        with open(os.path.join(results_path, 'ensemble_average_plot.json'), 'w') as json_file:
-            json.dump(avg_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
-    plot = results.plotplotly(return_plotly_figure=True)
-    plot["config"] = {"responsive": True,}
-    with open(os.path.join(results_path, 'plotplotly_plot.json'), 'w') as json_file:
-            json.dump(plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
-
-
-def setup_logger(workflow_path):
+def setup_logger(log_path):
     '''
     Changer the GillesPy2 logger to record only error level logs and higher
     to the console and to log warning level logs and higher to a log file in
@@ -242,7 +164,7 @@ def setup_logger(workflow_path):
             fh_is_needed = False # File Handler was already added to the log
     # Add the file handler if it not in the log already
     if fh_is_needed:
-        fh = logging.FileHandler(os.path.join(workflow_path, "logs.txt")) # initialize file handler
+        fh = logging.FileHandler(log_path) # initialize file handler
         fh.setLevel(logging.WARNING) # log warning, error, and critical logs to file
         fh.setFormatter(formatter) # add gillespy2 log formatter
         log.addHandler(fh) # add file handler to log
@@ -306,25 +228,17 @@ if __name__ == "__main__":
         workflow_path = os.path.join(user_dir, args.workflow)
         workflow_name = workflow_path.split('/').pop()
         dir_path = workflow_path.split(workflow_name)[0]
-        model_file = model_path.split('/').pop()
-    
-    results_path = os.path.join(workflow_path, 'results')
-    workflow_model = os.path.join(workflow_path, model_file)
-
+        
     if not workflow_name in os.listdir(path=dir_path):
         os.mkdir(workflow_path) # make the workflow directory
-    setup_logger(workflow_path)
 
-    opts = { "sn":save_new_workflow, "rn":run_new_workflow, "se":save_existing_workflow, "re":run_existing_workflow, }
+    opts = { "sn":save_new_workflow, "rn":run_workflow, "se":save_existing_workflow, "re":run_workflow }
+    workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
 
-    data, trajectories, is_stochastic = opts[opt_type](workflow_path, model_path, workflow_model, wkfl_type, results_path=results_path, model_file=model_file)
+    workflow = workflows[wkfl_type](workflow_path, model_path)
+
+    setup_logger(workflow.log_path)
+
+    opts[opt_type](workflow, wkfl_type, args.new)
     
-    if args.run and data:
-        if not 'results' in os.listdir(path=workflow_path):
-            os.mkdir(results_path)
-        with open("{0}/results.p".format(results_path), 'wb') as results_file:
-            pickle.dump(data, results_file, protocol=pickle.HIGHEST_PROTOCOL)
-        plot_results(data, results_path, trajectories, is_stochastic)
-        
-    # print(data)
     
