@@ -18,6 +18,42 @@
         "relativeTol": 0.03,
         "absoluteTol": 0.03
     },
+    "parameterSweepSettings": {
+        "is1D": true,
+        "p1Min": 2500,
+        "p1Max": 7500,
+        "p1Steps": 11,
+        "p2Min": 25,
+        "p2Max": 75,
+        "p2Steps": 11,
+        "parameterOne": {
+            "compID": 7,
+            "name": "rate1",
+            "expression": "5000",
+            "annotation": ""
+        },
+        "parameterTwo": {
+            "compID": 8,
+            "name": "rate2",
+            "expression": "50",
+            "annotation": ""
+        },
+        "speciesOfInterest": {
+            "compID": 1,
+            "name": "A",
+            "value": 100000,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        }
+    },
     "meshSettings": {
         "count": 2
     },

@@ -18,6 +18,42 @@
         "relativeTol": 0.03,
         "absoluteTol": 0.03
     },
+    "parameterSweepSettings": {
+        "is1D": true,
+        "p1Min": 0.075,
+        "p1Max": 0.225,
+        "p1Steps": 11,
+        "p2Min": 0.4,
+        "p2Max": 1.2,
+        "p2Steps": 11,
+        "parameterOne": {
+            "compID": 7,
+            "name": "alpha",
+            "expression": "0.15",
+            "annotation": ""
+        },
+        "parameterTwo": {
+            "compID": 8,
+            "name": "epsilon",
+            "expression": "0.8",
+            "annotation": ""
+        },
+        "speciesOfInterest": {
+            "compID": 1,
+            "name": "Susceptible",
+            "value": 200,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        }
+    },
     "meshSettings": {
         "count": 2
     },

@@ -18,6 +18,42 @@
         "relativeTol": 0.03,
         "absoluteTol": 0.03
     },
+    "parameterSweepSettings": {
+        "is1D": true,
+        "p1Min": 25,
+        "p1Max": 75,
+        "p1Steps": 11,
+        "p2Min": 250,
+        "p2Max": 750,
+        "p2Steps": 11,
+        "parameterOne": {
+            "compID": 10,
+            "name": "alpha_a",
+            "expression": "50",
+            "annotation": ""
+        },
+        "parameterTwo": {
+            "compID": 11,
+            "name": "alpha_a_prime",
+            "expression": "500",
+            "annotation": ""
+        },
+        "speciesOfInterest": {
+            "compID": 1,
+            "name": "Da",
+            "value": 1,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
+        }
+    },
     "meshSettings": {
         "count": 2
     },
