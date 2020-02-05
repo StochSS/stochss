@@ -1,5 +1,8 @@
+var $ = require('jquery');
 var xhr = require('xhr');
 var path = require('path');
+//models
+var Model = require('../models/model');
 //views
 var PageView = require('./base');
 //templates
@@ -15,8 +18,29 @@ let workflowSelection = PageView.extend({
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
+    var self = this
     this.modelDir = decodeURI(document.URL.split('/workflow/selection').pop());
     this.modelFile = this.modelDir.split('/').pop().split('.').shift();
+    var isSpatial = this.modelDir.endsWith('.smdl');
+    this.model = new Model({
+      name: this.modelFile,
+      directory: this.modelDir,
+      is_spatial: isSpatial,
+      isPreview: false,
+    });
+    this.model.fetch({
+      success: function (model, response, options) {
+        self.validateWorkflows()
+      }
+    });
+  },
+  validateWorkflows: function () {
+    if(this.model.parameters.length < 1 || this.model.species.length < 1){
+      $(this.queryByHook('oned-parameter-sweep')).addClass('disabled')
+      $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
+    }else if(this.model.parameters.length < 2){
+      $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
+    }
   },
   notebookWorkflow: function (e) {
     var type = e.target.dataset.type;
