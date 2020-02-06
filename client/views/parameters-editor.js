@@ -17,6 +17,7 @@ module.exports = View.extend({
     this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
                      "expression":"A parameter value or a mathematical expression calculating the parameter value.",
                      "annotation":"An optional note about a parameter.",
+                     "remove":"A parameter may only be removed if it is not used in any reaction, event assignment, or rule."
                     }
     this.collection.on('update-parameters', function (compID, parameter) {
       self.collection.parent.reactions.map(function (reaction) {

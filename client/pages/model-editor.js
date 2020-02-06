@@ -21,7 +21,6 @@ import initPage from './page.js';
 
 let operationInfoModalHtml = () => {
   let editModelMessage = `
-    <b>Add a Species or Parameter</b>: Click on the Add Species button in the Species section or the Add Parameter button in the Parameters section.<br>
     <b>Add a Reaction</b>: Click on the Add Reaction button in the Reactions section and select a type.  
     To add a Reaction you must have at least one Species.
     To add a Mass Action Reaction you must have at least one Species and one Parameter.<br>
@@ -30,7 +29,7 @@ let operationInfoModalHtml = () => {
     <b>Add a Rule</b>: Click the Add Rule button in the Rules section and select a type.
     To add a Rule you must have at least one Species or Parameter.<br>
     <b>Edit a Reaction or an Event</b>: Select the Reaction or Event you wish to edit, and make changes to the right or the Reaction or Event list.<br>
-    <b>Results</b>: The plot shown is a preview of the full results.  To get the full results, create and run a workflow.
+    <b>Run Preview</b>: A preview of the model shows the results of the first five seconds of a single trajectory of the model simulation.
   `;
 
   return `

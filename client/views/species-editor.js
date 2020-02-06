@@ -9,9 +9,9 @@ var nonspatialSpecieTemplate = require('../templates/includes/speciesEditor.pug'
 var spatialSpecieTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
 
 let renderDefaultModeModalHtml = () => {
-  let concentrationDesciption = `Description For Concentration`;
-  let populationDescription = `Description For Population`;
-  let hybridDescription = `Description For Hybrid Concentration/Population`;
+  let concentrationDesciption = `Species will only be represented as a Concentration.`;
+  let populationDescription = `Species will only be represented as a Population.`;
+  let hybridDescription = `Allows a species to be represented as either a Concentration or a Population.`;
 
   return `
     <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">
@@ -24,6 +24,12 @@ let renderDefaultModeModalHtml = () => {
             </button>
           </div>
           <div class="modal-body">
+            <div>
+              <p>
+                The default mode is used to set the mode of all species added to the model.  
+                The mode of a species is used to determine how it will be represented in a Hybrid simulation.
+              </p>
+            </div>
             <div class="default-mode">
               <button type="button" class="btn btn-primary concentration-btn">Concentration</button>
               <p>${concentrationDesciption}</p>
@@ -60,6 +66,7 @@ module.exports = View.extend({
     this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
                      "initialValue":"Initial population of a species.",
                      "annotation":"An optional note about the species.",
+                     "remove":"A species may only be removed if it is not a part of any reaction, event assignment, or rule.",
                      "speciesMode":"Concentration - Species will only be represented as deterministic.<br>" + 
                             "Population - Species will only be represented as stochastic.<br>" + 
                             "Advanced - Customize the mode of individual species and set the switching "+

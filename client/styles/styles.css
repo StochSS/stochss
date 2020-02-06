@@ -235,7 +235,7 @@ a.disabled {
 }
 
 .concentration-btn, .population-btn, .hybrid-btn {
-  width: 240px;
+  min-width: 240px;
   margin-right: 0.75rem;
 }
 

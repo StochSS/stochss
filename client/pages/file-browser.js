@@ -175,6 +175,27 @@ let sbmlToModelHtml = (title, errors) => {
   `
 }
 
+let deleteFileHtml = (fileType) => {
+  return `
+    <div id="deleteFileModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Permanently delete this ${fileType}? </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary yes-modal-btn">Yes</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
   template: template,
@@ -208,8 +229,15 @@ let FileBrowser = PageView.extend({
       fileType = "model";
     else if(fileType === "spatial")
       fileType = "spatial model"
-    var answer = confirm("Click 'ok' to confirm that you wish to delete this " + fileType)
-    if(answer){
+    else if(fileType === "sbml-model")
+      fileType = "sbml model"
+    var self = this
+    if(document.querySelector('#deleteFileModal')) {
+      document.querySelector('#deleteFileModal').remove()
+    }
+    let modal = $(deleteFileHtml(fileType)).modal();
+    let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
+    yesBtn.addEventListener('click', function (e) {
       var endpoint = path.join("/stochss/api/file/delete", o.original._path)
       xhr({uri: endpoint}, function(err, response, body) {
         var node = $('#models-jstree').jstree().get_node(o.parent);
@@ -219,7 +247,8 @@ let FileBrowser = PageView.extend({
           $('#models-jstree').jstree().refresh_node(node);
         }
       })
-    }
+      modal.modal('hide')
+    });
   },
   duplicateFileOrDirectory: function(o, isDirectory) {
     var self = this;

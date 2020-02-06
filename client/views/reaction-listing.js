@@ -69,6 +69,9 @@ module.exports = View.extend({
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
+    if(!this.model.annotation){
+      $(this.queryByHook('edit-annotation-btn')).text('Add')
+    }
   },
   update: function () {
   },
@@ -98,10 +101,8 @@ module.exports = View.extend({
       }
     });
     okBtn.addEventListener('click', function (e) {
-      if (Boolean(input.value)) {
-        self.model.annotation = input.value;
-        self.parent.renderReactionListingView();
-      }
+      self.model.annotation = input.value;
+      self.parent.renderReactionListingView();
       modal.modal('hide');
     });
   },

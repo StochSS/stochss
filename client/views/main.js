@@ -15,52 +15,36 @@ var config = app.config;
 
 let operationInfoModalHtml = (infoMessageKey) => {
   let fileSystemMessage = `
-    <b>Create a Directory</b>: Right click on a directory and enter the name of the directory or a path of directories.<br>
-    <b>Expand Directory</b>: Click on the arrow next to the directory or double click on the directory.<br>
-    <b>Rename File</b>: Right click on a file and enter the new name.<br>
+    <b>Create a Directory</b>: Right-click on a directory and enter the name of directory or path.<br>
+    <b>Expand Directory</b>: Click on the arrow next to the directory or double-click on the directory.<br>
+    <b>Rename File</b>: Right-click on a file, click rename, and enter the new name.<br>
     <b>Move File or Directory</b>: Click and drag the file or directory to the new location.   
     You can only move an item to a directory if there isn't a file or directory with the same name in that location.<br>
-    <b>Duplicate A File</b>: Right click on a file and click Duplicate.<br>
-    <b>Delete File or Directory</b>: Right click on a file or directory and click Delete, then confirm the delete.
+    <b>Duplicate A File</b>: Right-click on a file and click Duplicate.<br>
+    <b>Delete File or Directory</b>: Right-click on a file or directory and click Delete, then confirm the delete.
   `;
   let createEditModelMessage = `
-    <b>Create GillesPy2 Model</b>: Right click on a directory, click create model, then click Non-Spatial.
+    <b>Create StochSS Model</b>: Right-click on a directory, click create model, then click Non-Spatial.
     Enter a name for the model or a path to the model and click OK.<br>
-    <b>Edit GillesPy2 Model</b>: Double click on a model or right click on a model and click Edit Model.
+    <b>Edit StochSS Model</b>: Double-click on a model or right-click on a model and click Edit Model.
   `;
   let createEditWorkflowMeeage = `
-    <b>Select a Workflow</b>: From the File Browser page right click on a model and click New Workflow.  
+    <b>Create a Workflow</b>: From the File Browser page right-click on a model and click New Workflow.  
     From the Model Editor page click on the New Workflow button at the bottum of the page.<br>
-    <b>Create a Workflow</b>: From the Workflow Selection page click on one of the listed workflows.<br>
-    <b>View/Edit Workflow</b>: Double click on the Workflow or right click on the workflow and click View Workflow.<br>
+    From the workflow selection page, click on one of the listed workflows.<br>
+    <b>View/Edit Workflow</b>: Double-click on the Workflow or right-click on the workflow and click View Workflow.<br>
   `;
   let notebookMessage = `
-    <b>Create New Notebook</b>: Right click on a model and click Convert to Notebook, 
+    <b>Create New Notebook</b>: Right-click on a model and click Convert to Notebook, 
     or click on the Jupyter Hub link under tools, then click on the new button, and select Python 3.<br>
-    <b>Open Notebook</b>: Double click on the Notebook or right click on the Notebook and click Open Notebook.<br>
+    <b>Open Notebook</b>: Double-click on the Notebook or right-click on the Notebook and click Open Notebook.<br>
     <b>Note</b>: Notebooks will open in a new tab so you may want to turn off the pop-up blocker.
   `;
-  let jhubMessage = `
-    You can access Jupyter Hub by clicking on the Jupyter Hub link under tools.<br>
-    <b>Open File or Directory</b>: Click on the file or directory.<br>
-    <b>File or Directory Options</b>: Check the box to the left of the file or directory and the options will show above the file browser.  
-    Checking multiple boxes will display options that are common to all checked items.
-    To delete a directory you must first make sure its empty.<br>
-    <b>New Directory</b>: Click on the new button then select Folder.  
-    To name the directory use the directory options.<br>
-    <b>New File</b>: Click on the new button then select Text File.  
-    To name the file click on 'untitled.txt' and enter the new name.<br>
-    <b>Upload File</b>: Click on the Upload button and select the file you wish to upload.  
-    You can rename the file by clicking on the file name and entering the new name.
-    You can move the file into a directory by navigating to the location before finishing the upload.  
-    To finish the upload click on the Upload button to the right of the file.
-  `;
-
+  
   let infoMessages = {'File System': fileSystemMessage,
                       'Create/Edit Model': createEditModelMessage,
                       'Create/View/Edit Workflow': createEditWorkflowMeeage,
-                      'Jupyter Notebooks' : notebookMessage,
-                      'Jupyter Hub': jhubMessage};
+                      'Jupyter Notebooks' : notebookMessage};
 
   return `
     <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
@@ -102,9 +86,6 @@ module.exports = View.extend({
     },
     'click [data-hook=notebook-information-main]' : function () {
       let modal = $(operationInfoModalHtml('Jupyter Notebooks')).modal();
-    },
-    'click [data-hook=jupyter-hub-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Jupyter Hub')).modal();
     },
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
     //'click a[href]': 'handleLinkClick'
