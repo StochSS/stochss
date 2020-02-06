@@ -215,7 +215,13 @@ class ModelFactory():
             mode = args['mode']
         else:
             mode = 'continuous'
-        return Species(name=name, initial_value=value, mode=mode)
+        switch_tol = args['switchTol']
+        if isSwitchTol:
+            switch_min = 0
+        else:
+            switch_min = args['switchMin']
+
+        return Species(name=name, initial_value=value, mode=mode, switch_tol=switch_tol, switch_min=switch_min)
 
     def build_parameter(self, args):
         '''
