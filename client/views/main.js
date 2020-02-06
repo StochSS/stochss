@@ -13,51 +13,57 @@ var bodyTemplate = require('!pug-loader!../templates/body.pug');
 
 var config = app.config;
 
-let operationInfoModalHtml = (infoMessageKey) => {
-  let fileSystemMessage = `
-    <b>Create a Directory</b>: Right-click on a directory and enter the name of directory or path.<br>
-    <b>Expand Directory</b>: Click on the arrow next to the directory or double-click on the directory.<br>
-    <b>Rename File</b>: Right-click on a file, click rename, and enter the new name.<br>
-    <b>Move File or Directory</b>: Click and drag the file or directory to the new location.   
-    You can only move an item to a directory if there isn't a file or directory with the same name in that location.<br>
-    <b>Duplicate A File</b>: Right-click on a file and click Duplicate.<br>
-    <b>Delete File or Directory</b>: Right-click on a file or directory and click Delete, then confirm the delete.
+let operationInfoModalHtml = (infoKey) => {
+  let fileBrowserInfo = `
+    <p>In StochSS we use custom file extensions for a number of files we work with.  Here is a list of our extentions with the files they are associated with:</p>
+    <table style="margin-left: 2em;">
+      <tr>
+        <td width=200> StochSS Model </td>
+        <td> .mdl </td>
+      </tr>
+      <tr>
+        <td width=200> StochSS Spatial Model </td>
+        <td> .smdl </td>
+      </tr>
+      <tr>
+        <td width=200> SBML Model </td>
+        <td> .sbml </td>
+      </tr>
+      <tr>
+        <td width=200> Workflows </td>
+        <td> .wkfl </td>
+      </tr>
+    </table>
+    <br>
+    <p>Other useful file extensions include the following:</p>
+    <table style="margin-left: 2em;">
+      <tr>
+        <td width=200> Jupyter Notebook </td>
+        <td> .ipynb </td>
+      </tr>
+    </table>
   `;
-  let createEditModelMessage = `
-    <b>Create StochSS Model</b>: Right-click on a directory, click create model, then click Non-Spatial.
-    Enter a name for the model or a path to the model and click OK.<br>
-    <b>Edit StochSS Model</b>: Double-click on a model or right-click on a model and click Edit Model.
+  let modelInfo = `
+    Model Information
   `;
-  let createEditWorkflowMeeage = `
-    <b>Create a Workflow</b>: From the File Browser page right-click on a model and click New Workflow.  
-    From the Model Editor page click on the New Workflow button at the bottum of the page.<br>
-    From the workflow selection page, click on one of the listed workflows.<br>
-    <b>View/Edit Workflow</b>: Double-click on the Workflow or right-click on the workflow and click View Workflow.<br>
+  let workflowInfo = `
+    Workflow Information
   `;
-  let notebookMessage = `
-    <b>Create New Notebook</b>: Right-click on a model and click Convert to Notebook, 
-    or click on the Jupyter Hub link under tools, then click on the new button, and select Python 3.<br>
-    <b>Open Notebook</b>: Double-click on the Notebook or right-click on the Notebook and click Open Notebook.<br>
-    <b>Note</b>: Notebooks will open in a new tab so you may want to turn off the pop-up blocker.
-  `;
-  
-  let infoMessages = {'File System': fileSystemMessage,
-                      'Create/Edit Model': createEditModelMessage,
-                      'Create/View/Edit Workflow': createEditWorkflowMeeage,
-                      'Jupyter Notebooks' : notebookMessage};
 
+  let infoList = {"File Browser":fileBrowserInfo, "Models":modelInfo, "Workflows":workflowInfo}
+  
   return `
     <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
         <div class="modal-content info">
           <div class="modal-header">
-            <h5 class="modal-title"> ${infoMessageKey} </h5>
+            <h5 class="modal-title"> Working with ${infoKey} </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            <p> ${infoMessages[infoMessageKey]} </p>
+            <p> ${infoList[infoKey]} </p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -76,16 +82,13 @@ module.exports = View.extend({
   },
   events: {
     'click [data-hook=file-system-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('File System')).modal();
+      let modal = $(operationInfoModalHtml('File Browser')).modal();
     },
     'click [data-hook=create-model-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Create/Edit Model')).modal();
+      let modal = $(operationInfoModalHtml('Models')).modal();
     },
     'click [data-hook=create-workflow-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Create/View/Edit Workflow')).modal();
-    },
-    'click [data-hook=notebook-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Jupyter Notebooks')).modal();
+      let modal = $(operationInfoModalHtml('Workflows')).modal();
     },
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
     //'click a[href]': 'handleLinkClick'

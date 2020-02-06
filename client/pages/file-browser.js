@@ -112,7 +112,47 @@ let treeSettings = {
   },  
 }
 
-
+let operationInfoModalHtml = () => {
+  let fileBrowserHelpMessage = `
+    <p><b>Open/Edit a File</b>: Double-click on a file or right-click on a file and click Open/Edit.  
+    <b>Note</b>: Some files will open in a new tab so you may want to turn off the pop-up blocker.</p>
+    <p><b>Open Directory</b>: Click on the arrow next to the directory or double-click on the directory.</p>
+    <p><b>Create a Directory/Model</b>: Right-click on a directory, click New Directory/New Model, and enter the name of directory/model or path.  
+    For models you will need to click on the type of model you wish to create before entering the name or path.</p>
+    <p><b>Create a Workflow</b>: Right-click on a model and click New Workflow, this takes you to the workflow selection page.  
+    From the workflow selection page, click on one of the listed workflows.</p>
+    <p><b>Convert a File</b>: Right-click on a Model/SBML and click on the desired Convert to option.  
+    Model files can be converted to Spatial Models, Notebooks, or SBML files.  
+    Spatial Models and SBML file can be converted to Models.  
+    <b>Note</b>: Notebooks will open in a new tab so you may want to turn off the pop-up blocker.</p>
+    <p><b>Move File or Directory</b>: Click and drag the file or directory to the new location.  
+    You can only move an item to a directory if there isn't a file or directory with the same name in that location.</p>
+    <p><b>Download a Model/Notebook/SBML File</b>: Right-click on the file and click download.</p>
+    <p><b>Rename File/Directory</b>: Right-click on a file/directory, click rename, and enter the new name.</p>
+    <p><b>Duplicate/Delete A File/Directory</b>: Right-click on the file/directory and click Duplicate/Delete.</p>
+  `;
+  
+  return `
+    <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> File Browser Help </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${fileBrowserHelpMessage} </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ` 
+}
 
 // Using a bootstrap modal to input model names for now
 let renderCreateModalHtml = (isModel, isSpatial) => {
@@ -201,6 +241,9 @@ let FileBrowser = PageView.extend({
   template: template,
   events: {
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
+    'click [data-hook=file-browser-help]' : function () {
+      let modal = $(operationInfoModalHtml()).modal();
+    },
   },
   render: function () {
     var self = this;
@@ -440,17 +483,17 @@ let FileBrowser = PageView.extend({
               $('#models-jstree').jstree().refresh();
             }
           },
-          "Create_Directory" : {
+          "New_Directory" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Create Directory",
+            "label" : "New Directory",
             "action" : function (data) {
               self.newModelOrDirectory(o, false, false);
             }
           },
-          "create_model" : {
-            "label" : "Create Model",
+          "New_model" : {
+            "label" : "New Model",
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
@@ -489,35 +532,17 @@ let FileBrowser = PageView.extend({
               $('#models-jstree').jstree().refresh_node(o);
             }
           },
-          "Rename" : {
+          "New_Directory" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, true)
-            }
-          },
-          "Create_Directory" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Create Directory",
+            "label" : "New Directory",
             "action" : function (data) {
               self.newModelOrDirectory(o, false, false);
             }
           },
-          "create_model" : {
-            "label" : "Create Model",
+          "New_model" : {
+            "label" : "New Model",
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
@@ -542,6 +567,24 @@ let FileBrowser = PageView.extend({
               } 
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate",
+            "action" : function (data) {
+              self.duplicateFileOrDirectory(o, true)
+            }
+          },
           "Delete" : {
             "label" : "Delete",
             "_disabled" : false,
@@ -563,24 +606,6 @@ let FileBrowser = PageView.extend({
             "label" : "Edit",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
             }
           },
           "Convert to Non Spatial" : {
@@ -610,6 +635,24 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join("/hub/stochss/workflow/selection", o.original._path);
             }
           },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate",
+            "action" : function (data) {
+              self.duplicateFileOrDirectory(o, false)
+            }
+          },
           "Delete" : {
             "label" : "Delete",
             "_disabled" : false,
@@ -631,24 +674,6 @@ let FileBrowser = PageView.extend({
             "label" : "Edit",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
             }
           },
           "Convert to Spatial" : {
@@ -705,13 +730,31 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join("/hub/stochss/workflow/selection", o.original._path);
             }
           },
-          "Export" : {
+          "Download" : {
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Export",
+            "label" : "Download",
             "action" : function (data) {
               self.getJsonFileForExport(o);
+            }
+          },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate",
+            "action" : function (data) {
+              self.duplicateFileOrDirectory(o, false)
             }
           },
           "Delete" : {
@@ -727,32 +770,14 @@ let FileBrowser = PageView.extend({
       }
       else if (o.type === 'workflow') {
         return {
-          "View Workflow" : {
+          "Open" : {
             "separator_before" : false,
             "separator_after" : true,
             "_disabled" : false,
             "_class" : "font-weight-bolder",
-            "label" : "View Workflow",
+            "label" : "Open",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/workflow/edit/none", o.original._path);
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Stop Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "Stop Workflow",
-            "action" : function (data) {
-
             }
           },
           "Start/Restart Workflow" : {
@@ -760,6 +785,15 @@ let FileBrowser = PageView.extend({
             "separator_after" : false,
             "_disabled" : true,
             "label" : "Start/Restart Workflow",
+            "action" : function (data) {
+
+            }
+          },
+          "Stop Workflow" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : true,
+            "label" : "Stop Workflow",
             "action" : function (data) {
 
             }
@@ -790,55 +824,6 @@ let FileBrowser = PageView.extend({
               }
             }
           },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
-        }
-      }
-      else if (o.type === 'notebook') {
-        return {
-          "Open Notebook" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open Notebook",
-            "action" : function (data) {
-              var filePath = o.original._path
-              var endpoint = path.join('/stochss/api/user/');
-              xhr(
-                { uri: endpoint },
-                function (err, response, body) {
-                  var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
-                  window.open(notebookPath, '_blank')
-                },
-              );
-            }
-          },
-          "Export" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Export",
-            "action" : function (data) {
-              self.getJsonFileForExport(o);
-      	    }
-      	  },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
-            }
-          },
           "Rename" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -859,9 +844,67 @@ let FileBrowser = PageView.extend({
           },
         }
       }
+      else if (o.type === 'notebook') {
+        return {
+          "Open" : {
+            "separator_before" : false,
+            "separator_after" : true,
+            "_disabled" : false,
+            "_class" : "font-weight-bolder",
+            "label" : "Open",
+            "action" : function (data) {
+              var filePath = o.original._path
+              var endpoint = path.join('/stochss/api/user/');
+              xhr(
+                { uri: endpoint },
+                function (err, response, body) {
+                  var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
+                  window.open(notebookPath, '_blank')
+                },
+              );
+            }
+          },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download",
+            "action" : function (data) {
+              self.getJsonFileForExport(o);
+      	    }
+      	  },
+          "Rename" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Rename",
+            "action" : function (data) {
+              self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate",
+            "action" : function (data) {
+              self.duplicateFileOrDirectory(o, false)
+            }
+          },
+          "Delete" : {
+            "label" : "Delete",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "action" : function (data) {
+              self.deleteFile(o);
+            }
+          },
+        }
+      }
       else if (o.type === 'sbml-model') {
         return {
-          "Open File" : {
+          "Open" : {
             "separator_before" : false,
             "separator_after" : true,
             "_disabled" : false,
@@ -876,15 +919,6 @@ let FileBrowser = PageView.extend({
               });
             }
           },
-          "Export File" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Export File",
-            "action" : function (data) {
-              self.getFileForExport(o);
-            }
-          },
           "Convert to Model" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -892,6 +926,15 @@ let FileBrowser = PageView.extend({
             "label" : "Convert to Model",
             "action" : function (data) {
               self.toModel(o, "SBML");
+            }
+          },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download",
+            "action" : function (data) {
+              self.getFileForExport(o);
             }
           },
           "Rename" : {
@@ -925,12 +968,12 @@ let FileBrowser = PageView.extend({
       }
       else {
         return {
-          "Open File" : {
+          "Open" : {
             "separator_before" : false,
             "separator_after" : true,
             "_disabled" : true,
             "_class" : "font-weight-bolder",
-            "label" : "Open File",
+            "label" : "Open",
             "action" : function (data) {
             }
           },

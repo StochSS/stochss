@@ -21,15 +21,17 @@ import initPage from './page.js';
 
 let operationInfoModalHtml = () => {
   let editModelMessage = `
-    <b>Add a Reaction</b>: Click on the Add Reaction button in the Reactions section and select a type.  
+    <p><b>Add a Reaction</b>: Click on the Add Reaction button in the Reactions section and select a type.  
     To add a Reaction you must have at least one Species.
-    To add a Mass Action Reaction you must have at least one Species and one Parameter.<br>
-    <b>Add an Event</b>: Click the Add Event button in the Events sections.
-    To add an Event you must have at least one Species or Parameter.<br>
-    <b>Add a Rule</b>: Click the Add Rule button in the Rules section and select a type.
-    To add a Rule you must have at least one Species or Parameter.<br>
-    <b>Edit a Reaction or an Event</b>: Select the Reaction or Event you wish to edit, and make changes to the right or the Reaction or Event list.<br>
-    <b>Run Preview</b>: A preview of the model shows the results of the first five seconds of a single trajectory of the model simulation.
+    To add a Mass Action Reaction you must have at least one Species and one Parameter.</p>
+    <p><b>Add an Event</b>: Click the Add Event button in the Events sections.
+    To add an Event you must have at least one Species or Parameter.</p>
+    <p><b>Add a Rule</b>: Click the Add Rule button in the Rules section and select a type.
+    To add a Rule you must have at least one Species or Parameter.</p>
+    <p><b>Edit a Reaction or an Event</b>: Select the Reaction or Event you wish to edit, and make changes to the right or the Reaction or Event list.</p>
+    <p><b>Run Preview</b>: A preview of the model shows the results of the first five seconds of a single trajectory of the model simulation.</p>
+    <p><b>Create a Workflow</b>: Click the New Workflow button, this takes you to the workflow selection page.  
+    From the workflow selection page, click on one of the listed workflows.</p>
   `;
 
   return `

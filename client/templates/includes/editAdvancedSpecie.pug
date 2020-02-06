@@ -5,11 +5,6 @@ tr
   td: div(data-hook="specie-mode")
 
   td
-    div(data-hook="switching-tolerance")
-  
-    div(data-hook="switching-threshold")
-
-  td
     div.switching
       input(type="radio", name=this.model.name + "-switch-method", data-hook="switching-tol") 
       |  Switching Tolerance
@@ -17,3 +12,8 @@ tr
     div.switching
       input(type="radio", name=this.model.name + "-switch-method", data-hook="switching-min")
       |  Minimum Value for Switching (number of molecules)
+
+  td
+    div(data-hook="switching-tolerance")
+  
+    div(data-hook="switching-threshold")

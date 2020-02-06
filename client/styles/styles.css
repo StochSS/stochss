@@ -36,6 +36,10 @@ a.disabled {
   cursor: default;
 }
 
+.nav-item {
+  display: inline-block;
+}
+
 .name {
   width: 8rem;
 }

@@ -75,8 +75,11 @@ module.exports = View.extend({
                             "Population - Species will only be represented as stochastic.<br>" + 
                             "Hybrid Concentration/Population - allows a species to be represented " + 
                             "as either deterministic or stochastic.",
-                     "switchValue":"Switching Tolerance - <br>" +
-                                   "Minimum Value For Switching - "
+                     "switchValue":"Switching Tolerance - Tolerance level for considering a dynamic species "+
+                            "deterministically, value is compared to an estimated sd/mean population of a "+
+                            "species after a given time step. This value will be used if a switch_min is not "+
+                            "provided.<br>Minimum Value For Switching - Minimum population value at which "+
+                            "species will be represented as Concentration."
                     }
     this.collection.on('update-species', function (compID, specie, isNameUpdate) {
       self.collection.parent.reactions.map(function (reaction) {

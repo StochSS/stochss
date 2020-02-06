@@ -18,16 +18,16 @@ import initPage from './page.js';
 
 let operationInfoModalHtml = () => {
   let editWorkflowMessage = `
-    <b>Workflow Name</b>: You may edit the name of workflow as long as the workflow has not been saved.  
-    Workflow Names always end with a time stamp.<br>
-    <b>Model Path</b>: If you move or rename the model make sure to update this path.<br>
-    <b>Settings</b>: This is where you can customize the settings for your workflow.
+    <p><b>Workflow Name</b>: You may edit the name of workflow as long as the workflow has not been saved.  
+    Workflow Names always end with a time stamp.</p>
+    <p><b>Model Path</b>: If you move or rename the model make sure to update this path.</p>
+    <p><b>Settings</b>: This is where you can customize the settings for your workflow.
     If you need to edit other part of you model click on the edit model button.  
-    The settings are only available for workflows that have not been run.<br>
-    <b>Status</b>: This section displays the status and start time of the Workflow.  If the workflow hasn't been sarted this section is closed.<br>
-    <b>Results</b>: You may change the title, x-axis label, and y-axis label by clicking on the edit plot button then enter the name in the correct field.<br>
-    <b>Info</b>: This section displays any warnings and/or error that are logged by the running workflow.<br>
-    <b>Model</b>: This section lets you view the model that was used when you ran the workflow.
+    The settings are only available for workflows that have not been run.</p>
+    <p><b>Status</b>: This section displays the status and start time of the Workflow.  If the workflow hasn't been sarted this section is closed.</p>
+    <p><b>Results</b>: You may change the title, x-axis label, and y-axis label by clicking on the edit plot button then enter the name in the correct field.</p>
+    <p><b>Info</b>: This section displays any warnings and/or error that are logged by the running workflow.</p>
+    <p><b>Model</b>: This section lets you view the model that was used when you ran the workflow.</p>
   `;
 
   return `
