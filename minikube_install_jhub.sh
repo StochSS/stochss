@@ -2,25 +2,29 @@
 
 # Use this script to install/re-install jupyterhub/stochss via helm into a minikube VM.
 #
-# You must run this to see changes to config-minikube.yaml take effect.
+# You must run this to see changes to config.yaml take effect.
 #
 # WARNING: The command will install jupyterhub to whatever cluster helm is configured for!
 
+set -e
+
 source .env
+
+# Dummy admin account for minikube
+ADMINS='{admin}'
+
+# No OAuth settings for minikube
+OAUTH_CONFIG=""
 
 MOUNT_PATH=$PWD
 
-if [ $# -eq 1 ]
-then
-  MOUNT_PATH=$1
+echo "Where should we store user data?"
+read USER_DATA_PATH
+
+if [ ! -d $USER_DATA_PATH ]; then
+  echo "That directory doesn't exist. We'll try to make it now..."
+  mkdir $USER_DATA_PATH
 fi
 
-helm upgrade --install jhub jupyterhub/jupyterhub \
-      --namespace jhub \
-      --version 0.8.2 \
-      --values config.yaml \
-      --set hub.cookieSecret="$(openssl rand -hex 32)" \
-      --set proxy.secretToken="$(openssl rand -hex 32)" \
-      --set hub.image.name="$DOCKER_HUB_IMAGE" \
-      --set hub.extraVolumes[0].hostPath.path="$MOUNT_PATH" \
-      --set singleuser.image.name="$DOCKER_NOTEBOOK_IMAGE"
+# Use source here to retain our environment
+source ./helm_install.sh
