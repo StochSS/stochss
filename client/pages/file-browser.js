@@ -121,7 +121,7 @@ let operationInfoModalHtml = () => {
     For models you will need to click on the type of model you wish to create before entering the name or path.</p>
     <p><b>Create a Workflow</b>: Right-click on a model and click New Workflow, this takes you to the workflow selection page.  
     From the workflow selection page, click on one of the listed workflows.</p>
-    <p><b>Convert a File</b>: Right-click on a Model/SBML and click on the desired Convert to option.  
+    <p><b>Convert a File</b>: Right-click on a Model/SBML, click Convert, and click on the desired Convert to option.  
     Model files can be converted to Spatial Models, Notebooks, or SBML files.  
     Spatial Models and SBML file can be converted to Models.  
     <b>Note</b>: Notebooks will open in a new tab so you may want to turn off the pop-up blocker.</p>
@@ -601,29 +601,36 @@ let FileBrowser = PageView.extend({
           "Edit" : {
             "separator_before" : false,
             "separator_after" : true,
-            "_disabled" : false,
+            "_disabled" : true,
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
             }
           },
-          "Convert to Non Spatial" : {
+          "Convert" : {
+            "label" : "Convert",
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Convert to Non Spatial",
-            "action" : function (data) {
-              self.toModel(o, "Spatial");
-            }
-          },
-          "Convert to Notebook" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "Convert to Notebook",
-            "action" : function (data) {
-
+            "submenu" : {
+              "Convert to Model" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : false,
+                "label" : "Convert to Non Spatial",
+                "action" : function (data) {
+                  self.toModel(o, "Spatial");
+                }
+              },
+              "Convert to Notebook" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : true,
+                "label" : "Convert to Notebook",
+                "action" : function (data) {
+                }
+              },
             }
           },
           "New Workflow" : {
@@ -676,49 +683,57 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
             }
           },
-          "Convert to Spatial" : {
+          "Convert" : {
+            "label" : "Convert",
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Convert to Spatial",
-            "action" : function (data) {
-              self.toSpatial(o)
-            }
-          },
-          "Convert to Notebook" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Convert to Notebook",
-            "action" : function (data) {
-              var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
-              xhr({ uri: endpoint },
-                    function (err, response, body) {
-                var node = $('#models-jstree').jstree().get_node(o.parent)
-                if(node.type === 'root'){
-                  $('#models-jstree').jstree().refresh();
-                }else{
-                  $('#models-jstree').jstree().refresh_node(node);
+            "submenu" : {
+              "Convert to Spatial" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : false,
+                "label" : "To Spatial Model",
+                "action" : function (data) {
+                  self.toSpatial(o)
                 }
-                var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-                var endpoint = path.join('/stochss/api/user/');
-                xhr(
-                  { uri: endpoint },
-                  function (err, response, body) {
-                    var notebookPath = path.join("/user/", body, "/notebooks/", _path)
-                    window.open(notebookPath, '_blank')
-                  },
-                );
-              });
-            }
-          },
-          "Convert to SBML" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Convert to SBML",
-            "action" : function (data) {
-              self.toSBML(o)
+              },
+              "Convert to Notebook" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : false,
+                "label" : "To Notebook",
+                "action" : function (data) {
+                  var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
+                  xhr({ uri: endpoint },
+                        function (err, response, body) {
+                    var node = $('#models-jstree').jstree().get_node(o.parent)
+                    if(node.type === 'root'){
+                      $('#models-jstree').jstree().refresh();
+                    }else{
+                      $('#models-jstree').jstree().refresh_node(node);
+                    }
+                    var _path = body.split(' ')[0].split('/home/jovyan/').pop()
+                    var endpoint = path.join('/stochss/api/user/');
+                    xhr(
+                      { uri: endpoint },
+                      function (err, response, body) {
+                        var notebookPath = path.join("/user/", body, "/notebooks/", _path)
+                        window.open(notebookPath, '_blank')
+                      },
+                    );
+                  });
+                }
+              },
+              "Convert to SBML" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : false,
+                "label" : "To SBML Model",
+                "action" : function (data) {
+                  self.toSBML(o)
+                }
+              },
             }
           },
           "New Workflow" : {
@@ -919,13 +934,21 @@ let FileBrowser = PageView.extend({
               });
             }
           },
-          "Convert to Model" : {
+          "Convert" : {
+            "label" : "Convert",
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Convert to Model",
-            "action" : function (data) {
-              self.toModel(o, "SBML");
+            "submenu" : {
+              "Convert to Model" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : false,
+                "label" : "To Model",
+                "action" : function (data) {
+                  self.toModel(o, "SBML");
+                }
+              },
             }
           },
           "Download" : {

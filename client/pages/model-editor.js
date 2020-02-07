@@ -21,17 +21,28 @@ import initPage from './page.js';
 
 let operationInfoModalHtml = () => {
   let editModelMessage = `
-    <p><b>Add a Reaction</b>: Click on the Add Reaction button in the Reactions section and select a type.  
-    To add a Reaction you must have at least one Species.
-    To add a Mass Action Reaction you must have at least one Species and one Parameter.</p>
-    <p><b>Add an Event</b>: Click the Add Event button in the Events sections.
-    To add an Event you must have at least one Species or Parameter.</p>
-    <p><b>Add a Rule</b>: Click the Add Rule button in the Rules section and select a type.
-    To add a Rule you must have at least one Species or Parameter.</p>
-    <p><b>Edit a Reaction or an Event</b>: Select the Reaction or Event you wish to edit, and make changes to the right or the Reaction or Event list.</p>
-    <p><b>Run Preview</b>: A preview of the model shows the results of the first five seconds of a single trajectory of the model simulation.</p>
-    <p><b>Create a Workflow</b>: Click the New Workflow button, this takes you to the workflow selection page.  
-    From the workflow selection page, click on one of the listed workflows.</p>
+    <p><b>Species</b>: A species refers to a pool of entities that are considered 
+      indistinguishable from each other for the purposes of the model and may participate 
+      in reactions.</p>
+    <p><b>Parameter</b>: A Parameter is used to define a symbol associated with 
+      a value; this symbol can then be used in mathematical formulas in a model.</p>
+    <p><b>Reaction</b>: A reaction in SBML represents any kind of process that can change 
+      the quantity of one or more species in a model.  At least one species is required to 
+      add a reaction and at least one parameter is required to add a mass action reaction.</p>
+    <p><b>Event</b>: Events describe the time and form of instantaneous, discontinuous state 
+      changes in the model.  An Event object defines when the event can occur, the variables 
+      that are affected by it, how the variables are affected, and the event’s relationship 
+      to other events.  At least one species or parameter is required to add an event.</p>
+    <p><b>Rule</b>: Rules provide additional ways to define the values of variables 
+      in a model, their relationships, and the dynamical behaviors of those variables.  The 
+      rule type Assignment Rule is used to express equations that set the values of variables.  
+      The rule type Rate Rule is used to express equations that determine the rates of change 
+      of variables.  At least one species or parameter is required to add a rule.</p>
+    <p><b>Preview</b>: A preview of the model shows the results of the first five seconds of a 
+      single trajectory of the model simulation.  At least one species is required to run a preview.</p>
+    <p><b>Workflow</b>: A workflow allows you to run a full model with multiple trajectories with 
+      settings the will help refine the simulation.    At least one species is required to create 
+      a new workflow.</p>
   `;
 
   return `

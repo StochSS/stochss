@@ -11,8 +11,8 @@
     },
     "simulationSettings": {
         "isAutomatic": false,
-        "relativeTol": 0.03,
-        "absoluteTol": 0.03,
+        "relativeTol": 1e-3,
+        "absoluteTol": 1e-6,
         "realizations": 1,
         "algorithm": "SSA",
         "seed": -1,

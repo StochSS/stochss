@@ -18,7 +18,7 @@ import initPage from './page.js';
 
 let operationInfoModalHtml = () => {
   let editWorkflowMessage = `
-    <p><b>Workflow Name</b>: You may edit the name of workflow as long as the workflow has not been saved.  
+    <p><b>Workflow Name/Path</b>: You may edit the name/path of the workflow as long as the workflow has not been saved.  
     Workflow Names always end with a time stamp.</p>
     <p><b>Model Path</b>: If you move or rename the model make sure to update this path.</p>
     <p><b>Settings</b>: This is where you can customize the settings for your workflow.
@@ -113,7 +113,7 @@ let WorkflowManager = PageView.extend({
       required: true,
       name: 'name',
       label: 'Workflow Name: ',
-      tests: tests.nameTests,
+      tests: '',
       modelKey: null,
       valueType: 'string',
       value: this.workflowName,

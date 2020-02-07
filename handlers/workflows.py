@@ -109,11 +109,16 @@ class SaveWorkflowAPIHandler(BaseHandler):
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
+        log.warn("Path to the model: {0}".format(model_path))
+        log.warn("Name of workflow or workflow path: {0}".format(workflow_name))
+        log.warn("Type of workflow: {0}".format(wkfl_type))
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         exec_cmd = [ "run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
-        log.warn(exec_cmd)
-        stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        log.warn("Run workflow options: {0}".format(opt_type))
+        log.warn("Exec command sent to the user pod: {0}".format(exec_cmd))
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        log.warn("Response to the command: {0}".format(resp))
 
 
 class WorkflowStatusAPIHandler(BaseHandler):

@@ -15,8 +15,8 @@
         "algorithm": "SSA",
         "seed": -1,
         "tauTol": 0.03,
-        "relativeTol": 0.03,
-        "absoluteTol": 0.03
+        "relativeTol": 1e-3,
+        "absoluteTol": 1e-6
     },
     "parameterSweepSettings": {
         "is1D": true,

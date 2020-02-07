@@ -56,7 +56,7 @@ module.exports = View.extend({
     'change [data-hook=all-continuous]' : 'getDefaultSpeciesMode',
     'change [data-hook=all-discrete]' : 'getDefaultSpeciesMode',
     'change [data-hook=advanced]' : 'getDefaultSpeciesMode',
-    'click [data-hook=add-species]' : 'addSpecies',
+    'click [data-hook=add-species]' : 'handleAddSpeciesClick',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
@@ -206,6 +206,15 @@ module.exports = View.extend({
       this.speciesAdvancedView.remove()
     }
     this.speciesAdvancedView = this.renderCollection(this.collection, EditAdvancedSpecie, this.queryByHook('edit-species-mode'));
+  },
+  handleAddSpeciesClick: function (e) {
+    var self = this;
+    var defaultMode = this.collection.parent.defaultMode;
+    if(defaultMode === ""){
+      this.getInitialDefaultSpeciesMode();
+    }else{
+      this.addSpecies();
+    }
   },
   addSpecies: function () {
     var subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });

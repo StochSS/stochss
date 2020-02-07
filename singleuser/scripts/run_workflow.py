@@ -210,10 +210,14 @@ if __name__ == "__main__":
     else:
         opt_type += 'e'
     if args.new:
-        workflow_name = args.workflow
+        workflow_name = args.workflow.split('/').pop()
         _workflow_dir = "{0}.wkfl".format(workflow_name)
         model_file = model_path.split('/').pop()
         dir_path = model_path.split(model_file)[0]
+        print(args.workflow)
+        if len(args.workflow.split('/')) > 1:
+            dir_path = os.path.join(dir_path, args.workflow.split(workflow_name)[0])
+            os.makedirs(dir_path)
         i = 2
         exists = _workflow_dir in os.listdir(path=dir_path)
         while exists:
