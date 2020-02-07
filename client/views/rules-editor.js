@@ -57,6 +57,7 @@ module.exports = View.extend({
     });
   },
   toggleAddRuleButton: function () {
+    this.renderRules();
     var numSpecies = this.collection.parent.species.length;
     var numParameters = this.collection.parent.parameters.length;
     var disabled = numSpecies <= 0 && numParameters <= 0

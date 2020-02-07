@@ -38,7 +38,12 @@ module.exports = View.extend({
                      "realizations":"The number of times to sample the chemical "+
                             "master equation. Each trajectory will be returned at the end "+
                             "of the simulation.",
-                     "algorithm":"The solver by which to simulate the model."
+                     "algorithm":"The solver by which to simulate the model.",
+                     "chooseForMe":"Hybrid will be chosen based on Event, Rules, and other "+
+                            "SBML model components or if the model is represented as "+
+                            "Concentration.  Tau Leaping will be chosen if the Tau Tolerance "+
+                            "is changed to a value other than 0.03.  SSA will be chosen if "+
+                            "the model is represented as Population."
                     }
   },
   render: function () {

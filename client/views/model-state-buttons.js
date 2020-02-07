@@ -17,9 +17,14 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.model.species.on('add remove', this.togglePreviewWorkflowBtn, this);
+    this.model.reactions.on('add remove', this.togglePreviewWorkflowBtn, this);
+    this.model.eventsCollection.on('add remove', this.togglePreviewWorkflowBtn, this);
+    this.model.rules.on('add remove', this.togglePreviewWorkflowBtn, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    this.togglePreviewWorkflowBtn();
   },
   clickSaveHandler: function (e) {
     this.saveModel(this.saved.bind(this));
@@ -32,6 +37,14 @@ module.exports = View.extend({
   },
   clickStartWorkflowHandler: function (e) {
     window.location.href = path.join("/hub/stochss/workflow/selection", this.model.directory);
+  },
+  togglePreviewWorkflowBtn: function () {
+    var numSpecies = this.model.species.length;
+    var numReactions = this.model.reactions.length
+    var numEvents = this.model.eventsCollection.length
+    var numRules = this.model.rules.length
+    $(this.queryByHook('run')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
+    $(this.queryByHook('start-workflow')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
   },
   saveModel: function (cb) {
     var numEvents = this.model.eventsCollection.length;

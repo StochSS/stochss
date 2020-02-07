@@ -31,11 +31,10 @@ module.exports = View.extend({
     this.registerRenderSubview(modeSelectView, "specie-mode")
     if(this.model.isSwitchTol){
       $(this.queryByHook('switching-tol')).prop('checked', true);
-      $(this.queryByHook('switching-threshold')).find('input').prop('disabled', true);
     }else{
       $(this.queryByHook('switching-min')).prop('checked', true);
-      $(this.queryByHook('switching-tolerance')).find('input').prop('disabled', true);
     }
+    this.toggleSwitchingSettings();
   },
   update: function () {
   },
@@ -50,9 +49,13 @@ module.exports = View.extend({
     var modeDict = {"Concentration":"continuous","Population":"discrete","Hybrid Concentration/Population":"dynamic"}
     this.model.mode = modeDict[value]
     this.model.collection.trigger('update-species', this.model.compID, this.model, false);
+    this.toggleSwitchingSettings();
   },
   setSwitchingType: function (e) {
     this.model.isSwitchTol = $(this.queryByHook('switching-tol')).is(":checked");
+    this.toggleSwitchingSettingsInput();
+  },
+  toggleSwitchingSettingsInput: function () {
     if(this.model.isSwitchTol){
       $(this.queryByHook('switching-threshold')).find('input').prop('disabled', true);
       $(this.queryByHook('switching-tolerance')).find('input').prop('disabled', false);
@@ -60,7 +63,18 @@ module.exports = View.extend({
       $(this.queryByHook('switching-tolerance')).find('input').prop('disabled', true);
       $(this.queryByHook('switching-threshold')).find('input').prop('disabled', false);
     }
-    this.parent.renderSpeciesAdvancedView();
+  },
+  toggleSwitchingSettings: function () {
+    if(this.model.mode === "dynamic"){
+      $(this.queryByHook('switching-tol')).prop('disabled', false);
+      $(this.queryByHook('switching-min')).prop('disabled', false);
+      this.toggleSwitchingSettingsInput();
+    }else{
+      $(this.queryByHook('switching-tol')).prop('disabled', true);
+      $(this.queryByHook('switching-min')).prop('disabled', true);
+      $(this.queryByHook('switching-threshold')).find('input').prop('disabled', true);
+      $(this.queryByHook('switching-tolerance')).find('input').prop('disabled', true);
+    }
   },
   subviews: {
     inputSwitchTol: {

@@ -32,15 +32,15 @@ let renderDefaultModeModalHtml = () => {
             </div>
             <div class="default-mode">
               <button type="button" class="btn btn-primary concentration-btn">Concentration</button>
-              <p>${concentrationDesciption}</p>
+              <p style="margin-top: 5px;">${concentrationDesciption}</p>
             </div>
             <div class="default-mode">
               <button type="button" class="btn btn-primary population-btn">Population</button>
-              <p>${populationDescription}</p>
+              <p style="margin-top: 5px;">${populationDescription}</p>
             </div>
             <div class="default-mode">
               <button type="button" class="btn btn-primary hybrid-btn">Hybrid Concentration/Population</button>
-              <p>${hybridDescription}</p>
+              <p style="margin-top: 5px;">${hybridDescription}</p>
             </div>
           </div>
           <div class="modal-footer">
