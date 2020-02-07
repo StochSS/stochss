@@ -216,12 +216,15 @@ class ModelFactory():
         else:
             mode = 'continuous'
         switch_tol = args['switchTol']
-        if isSwitchTol:
+        if args['isSwitchTol']:
             switch_min = 0
         else:
             switch_min = args['switchMin']
 
-        return Species(name=name, initial_value=value, mode=mode, switch_tol=switch_tol, switch_min=switch_min)
+        try:
+            return Species(name=name, initial_value=value, mode=mode, switch_tol=switch_tol, switch_min=switch_min)
+        except:
+            return Species(name=name, initial_value=value, mode=mode)
 
     def build_parameter(self, args):
         '''
@@ -393,13 +396,16 @@ def get_models(full_path, name):
             stochss_model = json.loads(model_file.read())
             stochss_model['name'] = name
     except FileNotFoundError as error:
-        log.critical("Failed to copy the model into the directory: {0}".format(error))
+        print(str(error))
+        log.critical("Failed to find the model file: {0}".format(error))
 
     try:
         _model = ModelFactory(stochss_model) # build GillesPy2 model
+        gillespy2_model = _model.model
     except Exception as error:
+        print(str(error))
         log.error(str(error))
-    gillespy2_model = _model.model
+        gillespy2_model = None
 
     return gillespy2_model, stochss_model
 
