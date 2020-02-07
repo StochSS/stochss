@@ -9,27 +9,60 @@ var template = require('../templates/includes/eventDetails.pug');
 
 module.exports = View.extend({
   template: template,
+  bindings: {
+    'model.initialValue': {
+      hook: 'event-trigger-init-value',
+      type: 'booleanAttribute',
+      name: 'checked',
+    },
+    'model.persistent': {
+      hook: 'event-trigger-persistent',
+      type: 'booleanAttribute',
+      name: 'checked',
+    },
+  },
   events: {
     'change [data-hook=event-trigger-init-value]' : 'setTriggerInitialValue',
     'change [data-hook=event-trigger-persistent]' : 'setTriggerPersistent',
-    'change [data-hook=use-values-from-trigger-time]' : 'setUseValuesFromTriggerTime',
+    'change [data-hook=trigger-time]' : 'setUseValuesFromTriggerTime',
+    'change [data-hook=assignment-time]' : 'setUseValuesFromTriggerTime',
+    'click [data-hook=advanced-event-button]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    $(this.queryByHook('event-trigger-init-value')).prop('checked', this.model.initialValue);
-    $(this.queryByHook('event-trigger-persistent')).prop('checked', this.model.persistent);
-    $(this.queryByHook('use-values-from-trigger-time')).prop('checked', this.model.useValuesFromTriggerTime);
-    var eventAssignment = new EventAssignment({
-      collection: this.model.eventAssignments,
+    this.renderEventAssignments();
+    var triggerExpressionField = this.queryByHook('event-trigger-expression').children[0].children[1];
+    $(triggerExpressionField).attr("placeholder", "---No Expression Entered---");
+    var delayField = this.queryByHook('event-delay').children[0].children[1];
+    $(delayField).attr("placeholder", "---No Expression Entered---");
+    if(this.model.useValuesFromTriggerTime){
+      $(this.queryByHook('trigger-time')).prop('checked', true)
+    }else{
+      $(this.queryByHook('assignment-time')).prop('checked', true)
+    }
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
     });
-    this.registerRenderSubview(eventAssignment, 'event-assignments');
   },
   update: function () {
   },
   updateValid: function () {
+  },
+  renderEventAssignments: function () {
+    if(this.eventAssignmentsView){
+      this.eventAssignmentsView.remove()
+    }
+    this.eventAssignmentsView = new EventAssignment({
+      collection: this.model.eventAssignments,
+    });
+    this.registerRenderSubview(this.eventAssignmentsView, 'event-assignments');
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -42,7 +75,11 @@ module.exports = View.extend({
     this.model.persistent = e.target.checked;
   },
   setUseValuesFromTriggerTime: function (e) {
-    this.model.useValuesFromTriggerTime = e.target.checked;
+    this.model.useValuesFromTriggerTime = e.target.dataset.name === "trigger";
+  },
+  changeCollapseButtonText: function (e) {
+    var text = $(this.queryByHook('advanced-event-button')).text();
+    text === '+' ? $(this.queryByHook('advanced-event-button')).text('-') : $(this.queryByHook('advanced-event-button')).text('+');
   },
   subviews: {
     inputDelay: {
@@ -50,7 +87,7 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new InputView({
           parent: this,
-          required: true,
+          required: false,
           name: 'delay',
           label: '',
           tests: '',

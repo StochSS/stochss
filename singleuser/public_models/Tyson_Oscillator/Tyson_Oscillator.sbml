@@ -10,7 +10,7 @@
     </listOfSpecies>
     <listOfParameters>
       <parameter id="P" value="2" constant="true"/>
-      <parameter id="kt" value="10" constant="true"/>
+      <parameter id="kt" value="20" constant="true"/>
       <parameter id="kd" value="1" constant="true"/>
       <parameter id="a0" value="0.005" constant="true"/>
       <parameter id="a1" value="0.05" constant="true"/>

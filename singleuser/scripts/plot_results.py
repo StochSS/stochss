@@ -16,7 +16,7 @@ user_dir = "/home/jovyan"
 
 def get_results(results_path):
     '''
-    Unpickle the job results from the rusults.p file.
+    Unpickle the workflow results from the rusults.p file.
 
     Attributes
     ----------
@@ -60,7 +60,7 @@ def plot_std_dev_range(results, kwargs):
     Attributes
     ----------
     results : GillesPy2 ResultsEnsemble
-        Results of a job run with number_of_trajectories > 1.
+        Results of a workflow run with number_of_trajectories > 1.
     kwargs : dict
         Arguments to be passed to the plotplotly() function.
     '''
@@ -79,7 +79,7 @@ def plot(results, kwargs):
     Attributes
     ----------
     results : GillesPy2 ResultsEnsemble or GillesPy2 Results
-        Results of a job run.
+        Results of a workflow run.
     kwargs : dict
         Arguments to be passed to the plotplotly() function.
     '''
@@ -99,7 +99,7 @@ def plot_std_dev(results, kwargs):
     Attributes
     ----------
     results : GillesPy2 ResultsEnsemble
-        Results of a job run with number_of_trajectories > 1.
+        Results of a workflow run with number_of_trajectories > 1.
     kwargs : dict
         Arguments to be passed to the plotplotly() function.
     '''
@@ -118,7 +118,7 @@ def plot_average(results, kwargs):
     Attributes
     ----------
     results : GillesPy2 ResultsEnsemble
-        Results of a job run with number_of_trajectories > 1.
+        Results of a workflow run with number_of_trajectories > 1.
     kwargs : dict
         Arguments to be passed to the plotplotly() function.
     '''
@@ -140,10 +140,10 @@ def get_parsed_args():
 
     '''
     # For using picked results
-    # description = "Plot the job results based on the plot type with the plot data."
+    # description = "Plot the workflow results based on the plot type with the plot data."
 
     # For reading plot files
-    description = "Get the job plot based on the plot type and modify it with the plot data."
+    description = "Get the workflow plot based on the plot type and modify it with the plot data."
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('results_path', help="The path from the user directory to the results file (pickled file).")

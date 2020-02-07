@@ -11,13 +11,16 @@ Reactions = Collection.extend({
     Collection.prototype.initialize.apply(this, arguments);
   },
   addReaction: function (reactionType, stoichArgs, subdomains) {
+    var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var massaction = reactionType === 'custom-massaction';
     var reaction = new Reaction({
+      compID: id,
       name: name,
       reactionType: reactionType,
       massaction: massaction,
       propensity: '',
+      annotation: '',
       subdomains: subdomains,
       reactants: stoichArgs.reactants,
       products: stoichArgs.products,
@@ -26,7 +29,7 @@ Reactions = Collection.extend({
     this.setDefaultSpecieForStoichSpecies(reaction.products);
     if(reactionType !== 'custom-propensity')
       reaction.rate = this.getDefaultRate();
-    reaction.buildAnnotation()
+    reaction.buildSummary()
     this.add(reaction);
     return reaction;
   },

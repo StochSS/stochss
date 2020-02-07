@@ -1,0 +1,28 @@
+div#events-viewer.card.card-body
+
+  div
+
+    h3.inline Events
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-events-viewer", data-hook="collapse") -
+
+  div.row.collapse(class="show", id="collapse-model-events-viewer")
+
+    table.table
+
+      thead
+
+        tr
+
+          th(scope="col") Name
+
+          th(scope="col") Delay
+
+          th(scope="col") Priority
+
+          th(scope="col") Triggger
+
+          th(scope="col") Assignments
+
+          th(scope="col") Use Values From
+
+      tbody(data-hook="view-events-container")

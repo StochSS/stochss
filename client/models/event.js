@@ -5,7 +5,9 @@ var EventAssignments = require('./event-assignments');
 
 module.exports = State.extend({
   props: {
+    compID: 'number',
     name: 'string',
+    annotation: 'string',
     delay: 'string',
     priority: 'string',
     triggerExpression: 'string',

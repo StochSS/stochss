@@ -1,45 +1,78 @@
 div(data-hook="event-details")
 
-  table.table.event
+  div
 
-    thead
+    span(for="event-trigger-expression") Trigger Expression:
 
-      tr
+      div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.triggerExpression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-        th(scope="col") Delay
+    div.col-md-8.inline(id="event-trigger-expression" data-hook="event-trigger-expression")
 
-        th(scope="col") Priority
+  div
 
-        th(scope="col") Trigger Expression
+    h6.inline Advanced
+    button.btn.btn-outline-collapse(data-toggle='collapse', data-target='#advanced-events', data-hook='advanced-event-button') +
 
-      tr
+  div.collapse(id="advanced-events")
 
-        td: div(data-hook="event-delay")
+    div.row
 
-        td: div(data-hook="event-priority")
+      div.col-md-6
 
-        td: div(data-hook="event-trigger-expression")
+        span(for="event-trigger-expression") Delay:
 
-  div.row
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.delay) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-    div.col-md-3
+        div.col-md-9.inline(id="event-delay" data-hook="event-delay")
 
-      label(for="initial-value") Initial Value:
+      div.col-md-6
 
-      input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value", style="padding: 0.75rem;")
+        span(for="event-trigger-expression") Prioirty:
 
-    div.col-md-3
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.priority) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-      label(for="persistent") Persistent: 
+        div.col-md-8.inline(data-hook="event-priority")
 
-      input(type="checkbox", id="persistent", data-hook="event-trigger-persistent", style="padding: 0.75rem;")
+    div.row
 
-    div.col-md-6
+      div.col-md-6.verticle-space
 
-      label(for="use-values-from-trigger-time") Use Values From Trigger Time: 
+        span.checkbox(for="initial-value") Initial Value:
 
-      input(type="checkbox", id="use-values-from-trigger-time", data-hook="use-values-from-trigger-time", style="padding: 0.75rem;")
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.initialValue) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-  h5 Assignments
+        input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value")
+
+      div.col-md-6.verticle-space
+
+        span.checkbox(for="persistent") Persistent:
+
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.persistent) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        input(type="checkbox", id="persistent", data-hook="event-trigger-persistent")
+
+    div.row
+
+      div.col-md-12.verticle-space
+
+        span.checkbox(for="use-values-from-trigger-time") Use Values From:
+
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.useValuesFromTriggerTime) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        div.horizontal-space.inline
+
+          input(type="radio", name="use-values-from" data-hook="trigger-time" data-name="trigger") 
+          |  Trigger Time
+
+        div.horizontal-space.inline
+
+          input(type="radio", name="use-values-from" data-hook="assignment-time" data-name="assignment") 
+          |  Assignment Time
+
+  h5.inline
+    div
+      div.inline Assignments
+
+      div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.assignments) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
   div(data-hook="event-assignments")
