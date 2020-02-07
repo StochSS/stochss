@@ -120,8 +120,8 @@ class RunModelAPIHandler(BaseHandler):
         log.warn(str(outfile))
         exec_cmd = ['run_model.py', '{0}'.format(model_path), '{}.tmp'.format(outfile)] # Script commands for read run_cmd
         exec_cmd.append(''.join(['--', run_cmd]))
-        # if run_cmd == 'start':
-        #     exec_cmd = ['screen', '-d', '-m'] + exec_cmd # Add screen cmd to Script commands for start run_cmd
+        if run_cmd == 'start':
+            exec_cmd = ['screen', '-d', '-m'] + exec_cmd # Add screen cmd to Script commands for start run_cmd
         log.warning(exec_cmd)
         results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(str(results))

@@ -9,9 +9,11 @@ var nonspatialSpecieTemplate = require('../templates/includes/speciesEditor.pug'
 var spatialSpecieTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
 
 let renderDefaultModeModalHtml = () => {
-  let concentrationDesciption = `Species will only be represented as a Concentration.`;
-  let populationDescription = `Species will only be represented as a Population.`;
-  let hybridDescription = `Allows a species to be represented as either a Concentration or a Population.`;
+  let concentrationDesciption = `Species will only be represented deterministically.`;
+  let populationDescription = `Species will only be represented stochastically.`;
+  let hybridDescription = `Allows a species to be represented deterministically and/or stochastically.  
+                            This allow you to customize the mode of individual species and set the switching 
+                            tolerance or minimum value for switching."`;
 
   return `
     <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">
@@ -69,12 +71,14 @@ module.exports = View.extend({
                      "remove":"A species may only be removed if it is not a part of any reaction, event assignment, or rule.",
                      "speciesMode":"Concentration - Species will only be represented as deterministic.<br>" + 
                             "Population - Species will only be represented as stochastic.<br>" + 
-                            "Advanced - Customize the mode of individual species and set the switching "+
-                            "tolerance or minimum value for switching.",
+                            "Hybrid Concentration/Population - Allows a species to be represented " + 
+                            "as either deterministic or stochastic. This allow you to customize the "+
+                            "mode of individual species and set the switching tolerance or minimum "+
+                            "value for switching.",
                      "mode":"Concentration - Species will only be represented as deterministic.<br>" + 
                             "Population - Species will only be represented as stochastic.<br>" + 
-                            "Hybrid Concentration/Population - allows a species to be represented " + 
-                            "as either deterministic or stochastic.",
+                            "Hybrid Concentration/Population - Allows a species to be represented " + 
+                            "deterministically and/or stochastically.",
                      "switchValue":"Switching Tolerance - Tolerance level for considering a dynamic species "+
                             "deterministically, value is compared to an estimated sd/mean population of a "+
                             "species after a given time step. This value will be used if a switch_min is not "+

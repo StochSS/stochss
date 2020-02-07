@@ -39,10 +39,11 @@ let operationInfoModalHtml = () => {
       The rule type Rate Rule is used to express equations that determine the rates of change 
       of variables.  At least one species or parameter is required to add a rule.</p>
     <p><b>Preview</b>: A preview of the model shows the results of the first five seconds of a 
-      single trajectory of the model simulation.  At least one species is required to run a preview.</p>
+      single trajectory of the model simulation.  At least one species and one reaction, event, 
+      or rule is required to run a preview.</p>
     <p><b>Workflow</b>: A workflow allows you to run a full model with multiple trajectories with 
-      settings the will help refine the simulation.    At least one species is required to create 
-      a new workflow.</p>
+      settings the will help refine the simulation.  At least one species and one reaction, event, 
+      or rule is required to create a new workflow.</p>
   `;
 
   return `
