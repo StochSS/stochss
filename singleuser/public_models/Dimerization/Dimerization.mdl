@@ -1,29 +1,57 @@
 {
     "is_spatial": false,
-    "simulationSettings": {
-        "is_stochastic": true,
+    "defaultID": 7,
+    "defaultMode": "discrete",
+    "modelSettings": {
         "endSim": 100,
         "timeStep": 1,
         "volume": 1,
-        "stochasticSettings": {
-            "realizations": 1,
-            "algorithm": "SSA",
-            "ssaSettings": {
-                "seed": -1
-            },
-            "tauSettings": {
-                "seed": -1,
-                "tauTol": 0.03
-            },
-            "hybridSettings": {
-                "seed": -1,
-                "tauTol": 0.03,
-                "switchTol": 0.03
-            }
+        "realizations": 1,
+        "algorithm": "SSA"
+    },
+    "simulationSettings": {
+        "isAutomatic": false,
+        "realizations": 1,
+        "algorithm": "SSA",
+        "seed": -1,
+        "tauTol": 0.03,
+        "relativeTol": 1e-3,
+        "absoluteTol": 1e-6
+    },
+    "parameterSweepSettings": {
+        "is1D": true,
+        "p1Min": 0.0025,
+        "p1Max": 0.0075,
+        "p1Steps": 11,
+        "p2Min": 0.04,
+        "p2Max": 0.12,
+        "p2Steps": 11,
+        "parameterOne": {
+            "compID": 3,
+            "name": "k_c",
+            "expression": "0.005",
+            "annotation": ""
         },
-        "deterministicSettings": {
-            "relativeTol": 0.03,
-            "absoluteTol": 0.03
+        "parameterTwo": {
+            "compID": 4,
+            "name": "k_d",
+            "expression": "0.08",
+            "annotation": ""
+        },
+        "speciesOfInterest": {
+            "compID": 1,
+            "name": "Monomer",
+            "value": 30,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
         }
     },
     "meshSettings": {
@@ -31,9 +59,14 @@
     },
     "species": [
         {
+            "compID": 1,
             "name": "Monomer",
             "value": 30,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -41,9 +74,14 @@
             ]
         },
         {
+            "compID": 2,
             "name": "Dimer",
             "value": 0,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -54,36 +92,49 @@
     "initialConditions": [],
     "parameters": [
         {
+            "compID": 3,
             "name": "k_c",
-            "value": 0.005
+            "expression": "0.005",
+            "annotation": ""
         },
         {
+            "compID": 4,
             "name": "k_d",
-            "value": 0.08
+            "expression": "0.08",
+            "annotation": ""
         }
     ],
     "reactions": [
         {
+            "compID": 5,
             "name": "r_creation",
             "reactionType": "dimerization",
-            "annotation": "2Monomer \\rightarrow Dimer",
+            "summary": "2Monomer \\rightarrow Dimer",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 3,
                 "name": "k_c",
-                "value": 0.005
+                "expression": "0.005",
+                "annotation": ""
             },
             "reactants": [
                 {
                     "ratio": 2,
                     "specie": {
+                        "compID": 1,
                         "name": "Monomer",
                         "value": 30,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -96,9 +147,14 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Dimer",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -109,26 +165,35 @@
             ]
         },
         {
+            "compID": 6,
             "name": "r_dissociation",
             "reactionType": "custom-massaction",
-            "annotation": "Dimer \\rightarrow 2Monomer",
+            "summary": "Dimer \\rightarrow 2Monomer",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 4,
                 "name": "k_d",
-                "value": 0.08
+                "expression": "0.08",
+                "annotation": ""
             },
             "reactants": [
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "Dimer",
                         "value": 0,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -141,9 +206,14 @@
                 {
                     "ratio": 2,
                     "specie": {
+                        "compID": 1,
                         "name": "Monomer",
                         "value": 30,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -154,6 +224,6 @@
             ]
         }
     ],
-    "rateRules": [],
+    "rules": [],
     "eventsCollection": []
 }

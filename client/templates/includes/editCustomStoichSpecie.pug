@@ -1,10 +1,9 @@
 div
-  button.btn.btn-outline-secondary(class='btn-sm', data-hook='increment') +
-  span.custom(data-hook="ratio")
-  button.btn.btn-outline-secondary(class='btn-sm', data-hook='decrement') -
   label.select
-    span(data-hook="label")
+    button.btn.btn-outline-secondary(class='btn-sm', data-hook='increment') +
+    span.custom(data-hook="ratio")
+    button.btn.btn-outline-secondary(class='btn-sm', data-hook='decrement') -
     select(data-hook="select-stoich-specie")
       span.message.message-below.message-error(data-hook="message-container")
         p(data-hook="message-text")
-  button.btn.btn-outline-secondary(class='btn-sm', data-hook='remove') X
+    button.btn.btn-outline-secondary.custom(class='btn-sm', data-hook='remove') X

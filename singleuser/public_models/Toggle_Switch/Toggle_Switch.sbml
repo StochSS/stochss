@@ -5,12 +5,12 @@
       <compartment id="c" spatialDimensions="3" size="1" constant="true"/>
     </listOfCompartments>
     <listOfSpecies>
-      <species id="A" compartment="c" initialAmount="10" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="B" compartment="c" initialAmount="10" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="A" compartment="c" initialAmount="2" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="B" compartment="c" initialAmount="2" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
-      <parameter id="alpha1" value="1" constant="true"/>
-      <parameter id="alpha2" value="1" constant="true"/>
+      <parameter id="alpha1" value="10" constant="true"/>
+      <parameter id="alpha2" value="10" constant="true"/>
       <parameter id="beta" value="2" constant="true"/>
       <parameter id="gamma" value="2" constant="true"/>
       <parameter id="mu" value="1" constant="true"/>

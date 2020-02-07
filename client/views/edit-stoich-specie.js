@@ -1,3 +1,4 @@
+var $ = require('jquery');
 //views
 var SelectView = require('ampersand-select-view');
 //templates

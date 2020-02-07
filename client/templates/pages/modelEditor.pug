@@ -20,11 +20,17 @@ section.page.col-md-10
 
   div(data-hook="events-editor-container")
 
-  div(data-hook="sim-settings-container")
+  div(data-hook="rules-editor-container")
+
+  div(data-hook="model-settings-container")
 
   div.collapse(data-hook="model-timeout-message")
 
     p.text-warning The model took longer than 5 seconds to run and timed out!
+
+  div.errors(data-hook="model-run-error-container")
+
+    p.text-danger(data-hook="model-run-error-message")
 
   div(data-hook="model-run-container")
 

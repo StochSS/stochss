@@ -7,11 +7,17 @@ var Collection = require('ampersand-collection');
 module.exports = Collection.extend({
   model: Specie,
   addSpecie: function (subdomains) {
+    var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var specie = this.add({
+      compID: id,
       name: name,
       value: 0,
-      mode: 'dynamic',
+      mode: this.parent.defaultMode,
+      switchTol: 0.03,
+      switchMin: 100,
+      isSwitchTol: true,
+      annotation: "",
       diffusionCoeff: 0.0,
       subdomains: subdomains
     });
@@ -29,4 +35,4 @@ module.exports = Collection.extend({
   removeSpecie: function (specie) {
     this.remove(specie);
   },
-})
+});

@@ -104,7 +104,12 @@ hub:
       c.JupyterHub.default_url = '/stochss'
 
       # Page handlers
-      from handlers.pages import HomeHandler, ModelBrowserHandler, ModelEditorHandler, JobEditorHandler
+      from handlers.pages import \
+        HomeHandler, \
+        ModelBrowserHandler, \
+        ModelEditorHandler, \
+        WorkflowSelectionHandler, \
+        WorkflowEditorHandler
 
       # File Browser API Handlers
       from handlers.file_browser import \
@@ -127,13 +132,15 @@ hub:
         JsonFileAPIHandler, \
         RunModelAPIHandler
 
-      # Job API Handlers
-      from handlers.jobs import \
-        SaveJobAPIHandler, \
-        RunJobAPIHandler, \
-        JobInfoAPIHandler, \
-        JobStatusAPIHandler, \
-        PlotJobResultsAPIHandler
+      # Workflow API Handlers
+      from handlers.workflows import \
+        WorkflowNotebookHandler, \
+        SaveWorkflowAPIHandler, \
+        RunWorkflowAPIHandler, \
+        WorkflowInfoAPIHandler, \
+        WorkflowStatusAPIHandler, \
+        WorkflowLogsAPIHandler, \
+        PlotWorkflowResultsAPIHandler
 
       # Username API Handler
       from handlers.username import UsernameHandler
@@ -150,11 +157,13 @@ hub:
           (r"/stochss/api/model/to-sbml/(.+)\/?", ModelToSBMLAPIHandler),
           (r"/stochss/api/spatial/to-model/(.+)\/?", ConvertToModelAPIHandler),
           (r"/stochss/api/sbml/to-model/(.+)\/?", SBMLToModelAPIHandler),
-          (r"/stochss/api/jobs/save-job/(\w+)\/?(.+)\/?", SaveJobAPIHandler),
-          (r"/stochss/api/jobs/run-job/(\w+)\/?(.+)\/?", RunJobAPIHandler),
-          (r"/stochss/api/jobs/job-info(.+)\/?", JobInfoAPIHandler),
-          (r"/stochss/api/jobs/job-status/(.+)\/?", JobStatusAPIHandler),
-          (r"/stochss/api/jobs/plot-results/(.+)\/?", PlotJobResultsAPIHandler),
+          (r"/stochss/api/workflow/notebook/(\w+)/(.+)\/?", WorkflowNotebookHandler),
+          (r"/stochss/api/workflow/save-workflow/(\w+)/(\w+)\/?(.+)\/?", SaveWorkflowAPIHandler),
+          (r"/stochss/api/workflow/run-workflow/(\w+)/(\w+)\/?(.+)\/?", RunWorkflowAPIHandler),
+          (r"/stochss/api/workflow/workflow-info(.+)\/?", WorkflowInfoAPIHandler),
+          (r"/stochss/api/workflow/workflow-status/(.+)\/?", WorkflowStatusAPIHandler),
+          (r"/stochss/api/workflow/workflow-logs/(.+)\/?", WorkflowLogsAPIHandler),
+          (r"/stochss/api/workflow/plot-results/(.+)\/?", PlotWorkflowResultsAPIHandler),
           (r"/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
           (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
           (r"/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
@@ -166,7 +175,8 @@ hub:
           (r"/stochss/models\/?$", ModelBrowserHandler),
           (r"/stochss/models/browser-list(.+)\/?", ModelBrowserFileList),
           (r"/stochss/models/edit\/?(.+)?\/?", ModelEditorHandler),
-          (r"/stochss/jobs/edit\/?(.+)?\/?", JobEditorHandler),
+          (r"/stochss/workflow/selection\/?(.+)?\/?", WorkflowSelectionHandler),
+          (r"/stochss/workflow/edit\/?(.+)?\/?", WorkflowEditorHandler),
           #(r"/stochss.*", MainHandler)
       ]
 

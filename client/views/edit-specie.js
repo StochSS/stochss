@@ -1,9 +1,35 @@
 var tests = require('./tests');
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
 var template = require('../templates/includes/editReactionVar.pug');
+
+let speciesAnnotationModalHtml = (speciesName, annotation) => {
+  return `
+    <div id="speciesAnnotationModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Annotation for ${speciesName}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <span for="speciesAnnotationInput">Annotation: </span>
+            <input type="text" id="speciesAnnotationInput" name="speciesAnnotationInput" size="30" autofocus value="${annotation}">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary ok-model-btn">OK</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
 
 module.exports = View.extend({
   template: template,
@@ -15,21 +41,56 @@ module.exports = View.extend({
     },
   },
   events: {
+    'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
     'click [data-hook=remove]' : 'removeSpecie',
+    'change [data-hook=input-name-container]' : 'setSpeciesName',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    $(document).on('shown.bs.modal', function (e) {
+      $('[autofocus]', e.target).focus();
+    });
+    if(!this.model.annotation){
+      $(this.queryByHook('edit-annotation-btn')).text('Add')
+    }
   },
   update: function () {
   },
-  updateValid: function () {
+  updateValid: function (e) {
   },
   removeSpecie: function () {
     this.remove();
     this.collection.removeSpecie(this.model);
+  },
+  setSpeciesName: function (e) {
+    this.model.name = e.target.value;
+    this.model.collection.trigger('update-species', this.model.compID, this.model, true);
+    this.model.collection.trigger('remove');
+  },
+  editAnnotation: function () {
+    var self = this;
+    var name = this.model.name;
+    var annotation = this.model.annotation;
+    if(document.querySelector('#speciesAnnotationModal')) {
+      document.querySelector('#speciesAnnotationModal').remove();
+    }
+    let modal = $(speciesAnnotationModalHtml(name, annotation)).modal();
+    let okBtn = document.querySelector('#speciesAnnotationModal .ok-model-btn');
+    let input = document.querySelector('#speciesAnnotationModal #speciesAnnotationInput');
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener('click', function (e) {
+      self.model.annotation = input.value;
+      self.parent.renderEditSpeciesView();
+      modal.modal('hide');
+    });
   },
   subviews: {
     inputName: {
@@ -41,7 +102,7 @@ module.exports = View.extend({
           name: 'name',
           label: '',
           tests: tests.nameTests,
-          modelKey: 'name',
+          modelKey: '',
           valueType: 'string',
           value: this.model.name,
         });
