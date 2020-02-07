@@ -13,6 +13,7 @@ var Parameters = require('./parameters');
 var Reactions = require('./reactions');
 var Rules = require('./rules');
 var Events = require('./events');
+var FunctionDefinitions = require('./function-definitions');
 
 module.exports = Model.extend({
   url: function () {
@@ -41,6 +42,7 @@ module.exports = Model.extend({
     reactions: Reactions,
     rules: Rules,
     eventsCollection: Events,
+    functionDefinition: FunctionDefinitions,
   },
   children: {
     modelSettings: ModelSettings,
@@ -77,14 +79,5 @@ module.exports = Model.extend({
       this.simulationSettings.letUsChooseForUse()
     }
     this.save();
-    // xhr({ 
-    //   method: 'post',
-    //   body: this.toJSON(),
-    //   uri: this.url() },
-    //   function (err, response, body) {
-    //   },
-    // );
   },
-  // toJSON: function () {
-  // },
 });
