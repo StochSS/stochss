@@ -42,7 +42,7 @@ module.exports = Model.extend({
     reactions: Reactions,
     rules: Rules,
     eventsCollection: Events,
-    functionDefinition: FunctionDefinitions,
+    functionDefinitions: FunctionDefinitions,
   },
   children: {
     modelSettings: ModelSettings,

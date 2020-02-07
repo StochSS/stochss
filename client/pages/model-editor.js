@@ -10,6 +10,7 @@ var ParametersEditorView = require('../views/parameters-editor');
 var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
 var RulesEditorView = require('../views/rules-editor');
+var SBMLComponentView = require('../views/sbml-component-viewer');
 var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 //models
@@ -94,6 +95,9 @@ let ModelEditor = PageView.extend({
         if(!self.model.is_spatial){
           self.queryByHook('mesh-editor-container').style.display = "none";
           self.queryByHook('initial-conditions-editor-container').style.display = "none";
+        }
+        if(!self.model.functionDefinitions.length) {
+          self.queryByHook('sbml-component-container').style.display = "none";
         }
       }
     });
@@ -187,6 +191,9 @@ let ModelEditor = PageView.extend({
     });
     this.renderEventsView();
     this.renderRulesView();
+    var sbmlComponentView = new SBMLComponentView({
+      functionDefinitions: this.model.functionDefinitions,
+    });
     var modelSettings = new ModelSettingsView({
       parent: this,
       model: this.model.modelSettings,
@@ -199,6 +206,7 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
+    this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
     this.registerRenderSubview(modelSettings, 'model-settings-container');
     this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
     $(document).ready(function () {

@@ -1,0 +1,27 @@
+div#sbml-components.card.card-body
+
+  div
+
+    h3.inline SBML Components
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-sbml-component", data-hook="collapse") -
+
+  div.collapse(class="show", id="collapse-sbml-component")
+
+    div
+
+      h5.inline Function Defintions
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-function-definitions", data-hook="collapse-function-definitions") -
+
+    div.collapse(class="show", id="collapse-function-definitions")
+
+      table.table
+
+        thead
+      
+          tr
+      
+            th(scope="col") Name
+      
+            th(scope="col") Function
+      
+        tbody(data-hook="function-definition-list")
