@@ -76,8 +76,8 @@ class RunWorkflowAPIHandler(BaseHandler):
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         log.warn('starting the workflow')
-        # exec_cmd = "screen -d -m run_workflow.py {} {}".format(model_path, workflow_name).split(" ") # Script commands
-        exec_cmd = ["run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        exec_cmd = "screen -d -m run_workflow.py {} {}".format(model_path, workflow_name).split(" ") # Script commands
+        # exec_cmd = ["run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('sent the workflow')
