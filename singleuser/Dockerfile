@@ -20,13 +20,9 @@ RUN python3 -m pip install --no-cache --force-reinstall \
 
 RUN apt-get update && apt-get install -y screen vim
 
-USER jovyan
+RUN rmdir /home/jovyan/work
 
-WORKDIR /home/jovyan
-
-RUN rmdir work && mkdir -p Examples
-
-COPY --chown=jovyan:users public_models Examples/
+COPY --chown=jovyan:users public_models /tmp/public_models/
 
 # Overwrite the default page template for the jupyter notebook
 COPY --chown=jovyan:users page.html /opt/conda/lib/python3.6/site-packages/notebook/templates/

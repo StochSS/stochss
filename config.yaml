@@ -4,24 +4,14 @@ singleuser:
     name: "SINGLEUSER_IMAGE_NAME"
     tag: dev
   memory:
-    limit: 200M
+    limit: 1G
     guarantee: 200M
   cpu:
     limit: 1
     guarantee: .3
   storage:
-    # Dynamically allocated user storage is not supported for non-cloud environments!
-    #
-    # Jupyterhub for k8s expects a storage class to be available that will
-    # allocate new Persistent Volumes for each user. This would be fine if we 
-    # were using a cloud-based storage class which can dynamically provision
-    # new virtual volumes for each user. However, local storage classes
-    # behave differently. A local PV is a physical hard disk attached to the node,
-    # and dynamic allocation is not supported.
+    # User data is mounted via a pre-spawn hook (see extraConfig below)
     type: none
-#    capacity: 1Gi
-#    dynamic:
-#      storageClass: standard
 
 debug:
   enabled: true
@@ -41,6 +31,12 @@ cull:
 rbac:
   enabled: true
 
+# Put the user data directory path here so we can access it
+# from the extraConfig python context
+custom:
+  userDataDir: "USER_DATA_PATH"
+  publicModelsDir: /stochss/singleuser/public_models
+
 hub:
   image:
     name: "HUB_IMAGE_NAME"
@@ -48,20 +44,59 @@ hub:
   db:
     type: sqlite-memory
   extraVolumes:
+    # DANGER! ORDER MATTERS IN THIS LIST!
+    # See install_jhub.sh script for more info on how these values are set
     - name: stochss
       hostPath:
-        path: "HOST_PATH"
+        path: "MOUNT_PATH"
+        type: Directory
+    - name: stochss-user-data
+      hostPath:
+        path: "USER_DATA_PATH"
         type: Directory
   extraVolumeMounts:
     - mountPath: /stochss
       name: stochss
+    - mountPath: /stochss-user-data
+      name: stochss-user-data
 
   cookieSecret: "SECRET"
-
+  
   extraConfig: 
     oauth: ""
     stochss: |
-      import sys
+      import sys, os.path, z2jh, shutil
+
+      def kubespawner_pre_spawn_hook(spawner):
+        username = spawner.user.name
+
+        # We mounted all the user data to the hub so we can make user data dirs for new users
+        user_data_path_on_hub = os.path.join('/stochss-user-data', username)
+
+        if not os.path.exists(user_data_path_on_hub):
+          # Setup new user's directory
+          os.mkdir(user_data_path_on_hub)
+          publicModelsDirSrc = z2jh.get_config('custom.publicModelsDir')
+          publicModelsDirDst = os.path.join(user_data_path_on_hub, 'Examples')
+          shutil.copytree(publicModelsDirSrc, publicModelsDirDst)
+        
+        user_data_path_on_host = os.path.join(z2jh.get_config('custom.userDataDir'), username)
+
+        spawner.volumes.append({
+          'name': username + '-data',
+          'hostPath': {
+            'path': os.path.join(user_data_path_on_host),
+            'type': 'Directory'
+          }
+        })
+
+        spawner.volume_mounts.append({
+          'mountPath': '/home/jovyan',
+          'name': username + '-data'
+        })
+
+      c.Spawner.pre_spawn_hook = kubespawner_pre_spawn_hook
+
       sys.path.insert(1, '/stochss')
 
       c.JupyterHub.log_level = 'DEBUG'

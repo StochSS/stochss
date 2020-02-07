@@ -2,8 +2,7 @@
 
 source .env
 
-# k8s version used by Jetstream
-K8S_VERSION='v1.11.10'
+K8S_VERSION='v1.16.6'
 
 NUM_CPUS=2
 RAM=5000
