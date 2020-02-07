@@ -1,17 +1,26 @@
-#!/bin/bash
+!/bin/bash
 
 # Use this script to install/re-install jupyterhub/stochss via helm.
 #
 # You must run this to see changes to config.yaml take effect.
 #
 # WARNING: The command will install jupyterhub to whatever cluster helm is configured for!
+# (You can use kubectl config get-contexts to verify the active cluster.)
+
+set -e
 
 # No admins my default. 
 ADMINS="{}"
 
-# This should be where the stochss repo lives on the host machine
+# This is where the stochss repo lives on the host machine
 MOUNT_PATH=/stochss
 
+# The user data directory. Sub-folders are created for each new user.
+USER_DATA_PATH=/stochss-user-data
+
+echo "Using $USER_DATA_PATH to store user data... This directory should already exist!"
+
+# Source these here 
 source .env
 source .admins.beta.env
 source .oauth.beta.env
@@ -26,15 +35,4 @@ c.GoogleOAuthenticator.client_id=\"$CLIENT_ID\"
 c.GoogleOAuthenticator.client_secret=\"$CLIENT_SECRET\"
 "
 
-helm upgrade --install jhub jupyterhub/jupyterhub \
-      --namespace jhub \
-      --version 0.8.2 \
-      --values config.yaml \
-      --set auth.admin.users="$ADMINS" \
-      --set hub.extraConfig.oauth="$OAUTH_CONFIG" \
-      --set hub.cookieSecret="$(openssl rand -hex 32)" \
-      --set proxy.secretToken="$(openssl rand -hex 32)" \
-      --set hub.image.name="$DOCKER_HUB_IMAGE" \
-      --set hub.extraVolumes[0].hostPath.path="$MOUNT_PATH" \
-      --set singleuser.image.name="$DOCKER_NOTEBOOK_IMAGE"
-
+source ./helm_install.sh
