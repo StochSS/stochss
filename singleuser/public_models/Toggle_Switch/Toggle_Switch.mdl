@@ -1,29 +1,57 @@
 {
     "is_spatial": false,
-    "simulationSettings": {
-        "is_stochastic": true,
+    "defaultID": 12,
+    "defaultMode": "discrete",
+    "modelSettings": {
         "endSim": 250,
         "timeStep": 1,
         "volume": 1,
-        "stochasticSettings": {
-            "realizations": 1,
-            "algorithm": "SSA",
-            "ssaSettings": {
-                "seed": -1
-            },
-            "tauSettings": {
-                "seed": -1,
-                "tauTol": 0.03
-            },
-            "hybridSettings": {
-                "seed": -1,
-                "tauTol": 0.03,
-                "switchTol": 0.03
-            }
+        "algorithm": "SSA",
+        "realizations": 1
+    },
+    "simulationSettings": {
+        "isAutomatic": false,
+        "relativeTol": 1e-3,
+        "absoluteTol": 1e-6,
+        "realizations": 1,
+        "algorithm": "SSA",
+        "seed": -1,
+        "tauTol": 0.03
+    },
+    "parameterSweepSettings": {
+        "is1D": true,
+        "p1Min": 5,
+        "p1Max": 15,
+        "p1Steps": 11,
+        "p2Min": 5,
+        "p2Max": 15,
+        "p2Steps": 11,
+        "parameterOne": {
+            "compID": 3,
+            "name": "alpha1",
+            "expression": "10",
+            "annotation": ""
         },
-        "deterministicSettings": {
-            "relativeTol": 0.03,
-            "absoluteTol": 0.03
+        "parameterTwo": {
+            "compID": 4,
+            "name": "alpha2",
+            "expression": "10",
+            "annotation": ""
+        },
+        "speciesOfInterest": {
+            "compID": 1,
+            "name": "A",
+            "value": 2,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
         }
     },
     "meshSettings": {
@@ -31,9 +59,14 @@
     },
     "species": [
         {
+            "compID": 1,
             "name": "A",
-            "value": 10,
-            "mode": "dynamic",
+            "value": 2,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -41,9 +74,14 @@
             ]
         },
         {
+            "compID": 2,
             "name": "B",
-            "value": 10,
-            "mode": "dynamic",
+            "value": 2,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -54,33 +92,45 @@
     "initialConditions": [],
     "parameters": [
         {
+            "compID": 3,
             "name": "alpha1",
-            "value": 1
+            "expression": "10",
+            "annotation": ""
         },
         {
+            "compID": 4,
             "name": "alpha2",
-            "value": 1
+            "expression": "10",
+            "annotation": ""
         },
         {
+            "compID": 5,
             "name": "beta",
-            "value": 2
+            "expression": "2",
+            "annotation": ""
         },
         {
+            "compID": 6,
             "name": "gamma",
-            "value": 2
+            "expression": "2",
+            "annotation": ""
         },
         {
+            "compID": 7,
             "name": "mu",
-            "value": 1
+            "expression": "1",
+            "annotation": ""
         }
     ],
     "reactions": [
         {
+            "compID": 8,
             "name": "cu",
             "reactionType": "custom-propensity",
-            "annotation": "\\emptyset \\rightarrow A",
+            "summary": "\\emptyset \\rightarrow A",
             "massaction": false,
             "propensity": "alpha1/(1+pow(B, beta))",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -91,9 +141,14 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "A",
-                        "value": 10,
-                        "mode": "dynamic",
+                        "value": 2,
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -104,11 +159,13 @@
             ]
         },
         {
+            "compID": 9,
             "name": "cv",
             "reactionType": "custom-propensity",
-            "annotation": "\\emptyset \\rightarrow B",
+            "summary": "\\emptyset \\rightarrow B",
             "massaction": false,
             "propensity": "alpha2/(1+pow(A, gamma))",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
@@ -119,9 +176,14 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "B",
-                        "value": 10,
-                        "mode": "dynamic",
+                        "value": 2,
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -132,26 +194,35 @@
             ]
         },
         {
+            "compID": 10,
             "name": "du",
             "reactionType": "destruction",
-            "annotation": "A \\rightarrow \\emptyset",
+            "summary": "A \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 7,
                 "name": "mu",
-                "value": 1
+                "expression": "1",
+                "annotation": ""
             },
             "reactants": [
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "A",
-                        "value": 10,
-                        "mode": "dynamic",
+                        "value": 2,
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -163,26 +234,35 @@
             "products": []
         },
         {
+            "compID": 11,
             "name": "dv",
             "reactionType": "destruction",
-            "annotation": "B \\rightarrow \\emptyset",
+            "summary": "B \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 7,
                 "name": "mu",
-                "value": 1
+                "expression": "1",
+                "annotation": ""
             },
             "reactants": [
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "B",
-                        "value": 10,
-                        "mode": "dynamic",
+                        "value": 2,
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -194,6 +274,6 @@
             "products": []
         }
     ],
-    "rateRules": [],
+    "rules": [],
     "eventsCollection": []
 }

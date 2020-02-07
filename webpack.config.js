@@ -7,7 +7,8 @@ module.exports = {
     home: './client/pages/home.js',
     browser: './client/pages/file-browser.js',
     editor: './client/pages/model-editor.js',
-    jobEditor: './client/pages/job-manager.js',
+    workflowSelection: './client/pages/workflow-selection.js',
+    workflowEditor: './client/pages/workflow-manager.js',
   },
   output: {
     filename: '[name].bundle.js',
@@ -37,10 +38,17 @@ module.exports = {
       inject: false
     }),
     new HtmlWebpackPlugin({
-      title: 'StochSS | Job Editor',
-      filename: 'stochss-job-manager.html',
+      title: 'StochSS | Workflow Selection',
+      filename: 'stochss-workflow-selection.html',
       template: 'handlers/page_templates/page_template.pug',
-      name: 'jobEditor',
+      name: 'workflowSelection',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Workflow Editor',
+      filename: 'stochss-workflow-manager.html',
+      template: 'handlers/page_templates/page_template.pug',
+      name: 'workflowEditor',
       inject: false
     }),
   ],

@@ -1,29 +1,57 @@
 {
     "is_spatial": false,
-    "simulationSettings": {
-        "is_stochastic": true,
+    "defaultID": 9,
+    "defaultMode": "discrete",
+    "modelSettings": {
         "endSim": 100000,
         "timeStep": 1000,
         "volume": 1,
-        "stochasticSettings": {
-            "realizations": 1,
-            "algorithm": "SSA",
-            "ssaSettings": {
-                "seed": -1
-            },
-            "tauSettings": {
-                "seed": -1,
-                "tauTol": 0.03
-            },
-            "hybridSettings": {
-                "seed": -1,
-                "tauTol": 0.03,
-                "switchTol": 0.03
-            }
+        "realizations": 1,
+        "algorithm": "SSA"
+    },
+    "simulationSettings": {
+        "isAutomatic": false,
+        "realizations": 1,
+        "algorithm": "SSA",
+        "seed": -1,
+        "tauTol": 0.03,
+        "relativeTol": 1e-3,
+        "absoluteTol": 1e-6
+    },
+    "parameterSweepSettings": {
+        "is1D": true,
+        "p1Min": 0.5,
+        "p1Max": 1.5,
+        "p1Steps": 11,
+        "p2Min": 0.5,
+        "p2Max": 1.5,
+        "p2Steps": 11,
+        "parameterOne": {
+            "compID": 5,
+            "name": "k1",
+            "expression": "1",
+            "annotation": ""
         },
-        "deterministicSettings": {
-            "relativeTol": 0.03,
-            "absoluteTol": 0.03
+        "parameterTwo": {
+            "compID": 6,
+            "name": "k2",
+            "expression": "1",
+            "annotation": ""
+        },
+        "speciesOfInterest": {
+            "compID": 1,
+            "name": "s1",
+            "value": 300,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
         }
     },
     "meshSettings": {
@@ -31,9 +59,14 @@
     },
     "species": [
         {
+            "compID": 1,
             "name": "s1",
             "value": 300,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -41,9 +74,14 @@
             ]
         },
         {
+            "compID": 2,
             "name": "s2",
             "value": 300,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -51,9 +89,14 @@
             ]
         },
         {
+            "compID": 3,
             "name": "s3",
             "value": 300,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -61,9 +104,14 @@
             ]
         },
         {
+            "compID": 4,
             "name": "s4",
             "value": 300,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -74,36 +122,49 @@
     "initialConditions": [],
     "parameters": [
         {
+            "compID": 5,
             "name": "k1",
-            "value": 1
+            "expression": "1",
+            "annotation": ""
         },
         {
+            "compID": 6,
             "name": "k2",
-            "value": 1
+            "expression": "1",
+            "annotation": ""
         }
     ],
     "reactions": [
         {
+            "compID": 7,
             "name": "r1",
             "reactionType": "custom-massaction",
-            "annotation": "s1+s4 \\rightarrow 2s4",
+            "summary": "s1+s4 \\rightarrow 2s4",
             "massaction": true,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 5,
                 "name": "k1",
-                "value": 1
+                "expression": "1",
+                "annotation": ""
             },
             "reactants": [
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "s1",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -114,9 +175,14 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "s4",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -129,9 +195,14 @@
                 {
                     "ratio": 2,
                     "specie": {
+                        "compID": 4,
                         "name": "s4",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -142,26 +213,35 @@
             ]
         },
         {
+            "compID": 8,
             "name": "r2",
             "reactionType": "merge",
-            "annotation": "s2+s4 \\rightarrow s3",
+            "summary": "s2+s4 \\rightarrow s3",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 6,
                 "name": "k2",
-                "value": 1
+                "expression": "1",
+                "annotation": ""
             },
             "reactants": [
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 2,
                         "name": "s2",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -172,9 +252,14 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 4,
                         "name": "s4",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -187,9 +272,14 @@
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 3,
                         "name": "s3",
                         "value": 300,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -200,6 +290,6 @@
             ]
         }
     ],
-    "rateRules": [],
+    "rules": [],
     "eventsCollection": []
 }

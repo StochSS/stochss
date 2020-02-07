@@ -13,26 +13,50 @@ module.exports = View.extend({
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
-    'click [data-hook=start-job]' : 'clickStartJobHandler',
+    'click [data-hook=start-workflow]' : 'clickStartWorkflowHandler',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.model.species.on('add remove', this.togglePreviewWorkflowBtn, this);
+    this.model.reactions.on('add remove', this.togglePreviewWorkflowBtn, this);
+    this.model.eventsCollection.on('add remove', this.togglePreviewWorkflowBtn, this);
+    this.model.rules.on('add remove', this.togglePreviewWorkflowBtn, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    this.togglePreviewWorkflowBtn();
   },
   clickSaveHandler: function (e) {
     this.saveModel(this.saved.bind(this));
   },
   clickRunHandler: function (e) {
+    $(this.parent.queryByHook('model-run-error-container')).collapse('hide');
     var el = this.parent.queryByHook('model-run-container');
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
-  clickStartJobHandler: function (e) {
-    window.location.href = path.join("/hub/stochss/jobs/edit", this.model.directory);
+  clickStartWorkflowHandler: function (e) {
+    window.location.href = path.join("/hub/stochss/workflow/selection", this.model.directory);
+  },
+  togglePreviewWorkflowBtn: function () {
+    var numSpecies = this.model.species.length;
+    var numReactions = this.model.reactions.length
+    var numEvents = this.model.eventsCollection.length
+    var numRules = this.model.rules.length
+    $(this.queryByHook('run')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
+    $(this.queryByHook('start-workflow')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
   },
   saveModel: function (cb) {
+    var numEvents = this.model.eventsCollection.length;
+    var numRules = this.model.rules.length;
+    var defaultMode = this.model.defaultMode;
+    if(!numEvents && !numRules && defaultMode === "continuous"){
+      this.model.modelSettings.algorithm = "ODE";
+    }else if(!numEvents && !numRules && defaultMode === "discrete"){
+      this.model.modelSettings.algorithm = "SSA";
+    }else{
+      this.model.modelSettings.algorithm = "Hybrid-Tau-Leaping";
+    }
     this.saving();
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;
@@ -73,16 +97,23 @@ module.exports = View.extend({
     });
   },
   running: function () {
-    var el = this.parent.queryByHook('model-run-container');
-    var loader = this.parent.queryByHook('plot-loader');
-    el.style.display = "none"
-    loader.style.display = "block"
+    var plot = this.parent.queryByHook('model-run-container');
+    var spinner = this.parent.queryByHook('plot-loader');
+    var errors = this.parent.queryByHook('model-run-error-container');
+    plot.style.display = "none";
+    spinner.style.display = "block";
+    errors.style.display = "none";
   },
-  ran: function () {
-    var el = this.parent.queryByHook('model-run-container');
-    var loader = this.parent.queryByHook('plot-loader');
-    loader.style.display = "none";
-    el.style.display = "block";
+  ran: function (noErrors) {
+    var plot = this.parent.queryByHook('model-run-container');
+    var spinner = this.parent.queryByHook('plot-loader');
+    var errors = this.parent.queryByHook('model-run-error-container');
+    if(noErrors){
+      plot.style.display = "block";
+    }else{
+      errors.style.display = "block"
+    }
+    spinner.style.display = "none";
   },
   getResults: function (data) {
     var self = this;
@@ -95,7 +126,12 @@ module.exports = View.extend({
           if(data.timeout){
             $(self.parent.queryByHook('model-timeout-message')).collapse('show');
           }
-          self.plotResults(data.results);
+          if(data.results){
+            self.plotResults(data.results);
+          }else{
+            self.ran(false);
+            $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
+          }
         }else{
           self.getResults(body);
         }
@@ -105,7 +141,7 @@ module.exports = View.extend({
   plotResults: function (data) {
     // TODO abstract this into an event probably
     var title = this.model.name + " Model Preview"
-    this.ran()
+    this.ran(true)
     el = this.parent.queryByHook('model-run-container');
     time = data.time
     y_labels = Object.keys(data).filter(function (key) {

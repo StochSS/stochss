@@ -9,7 +9,8 @@ var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
 var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
-var SimSettingsView = require('../views/simulation-settings');
+var RulesEditorView = require('../views/rules-editor');
+var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 //models
 var Model = require('../models/model');
@@ -20,13 +21,28 @@ import initPage from './page.js';
 
 let operationInfoModalHtml = () => {
   let editModelMessage = `
-    <b>Add a Species or Parameter</b>: From the Model Editor page click on the Add Species or Add Parameter buttons.<br>
-    <b>Add a Reaction</b>: From the Model Editor page click on the Add Reaction button then select the type of reaction.  
-    To add a reaction you must have at least one Species.<br>
-    <b>Edit a Reaction</b>: Select the reaction you wish to edit, and make changes to the right or the reaction list.<br>
-    <b>Species Mode</b>: Select the Hybrid Tua-Leaping algorithm in the advanced settings.<br>
-    <b>Set Rate Rules</b>: Set the mode of the species to continuous, then add the rate rule to the right of the species mode.<br>
-    <b>Results</b>: The plot shown are a preview of the full results.  To get the full results, create and run a job.
+    <p><b>Species</b>: A species refers to a pool of entities that are considered 
+      indistinguishable from each other for the purposes of the model and may participate 
+      in reactions.</p>
+    <p><b>Parameter</b>: A Parameter is used to define a symbol associated with 
+      a value; this symbol can then be used in mathematical formulas in a model.</p>
+    <p><b>Reaction</b>: A reaction in SBML represents any kind of process that can change 
+      the quantity of one or more species in a model.  At least one species is required to 
+      add a reaction and at least one parameter is required to add a mass action reaction.</p>
+    <p><b>Event</b>: Events describe the time and form of instantaneous, discontinuous state 
+      changes in the model.  An Event object defines when the event can occur, the variables 
+      that are affected by it, how the variables are affected, and the event’s relationship 
+      to other events.  At least one species or parameter is required to add an event.</p>
+    <p><b>Rule</b>: Rules provide additional ways to define the values of variables 
+      in a model, their relationships, and the dynamical behaviors of those variables.  The 
+      rule type Assignment Rule is used to express equations that set the values of variables.  
+      The rule type Rate Rule is used to express equations that determine the rates of change 
+      of variables.  At least one species or parameter is required to add a rule.</p>
+    <p><b>Preview</b>: A preview of the model shows the results of the first five seconds of a 
+      single trajectory of the model simulation.  At least one species is required to run a preview.</p>
+    <p><b>Workflow</b>: A workflow allows you to run a full model with multiple trajectories with 
+      settings the will help refine the simulation.    At least one species is required to create 
+      a new workflow.</p>
   `;
 
   return `
@@ -84,6 +100,14 @@ let ModelEditor = PageView.extend({
       this.updateSpeciesInUse();
       this.updateParametersInUse();
     }, this);
+    this.model.eventsCollection.on("add change remove", function (){
+      this.updateSpeciesInUse();
+      this.updateParametersInUse();
+    }, this);
+    this.model.rules.on("add change remove", function() {
+      this.updateSpeciesInUse();
+      this.updateParametersInUse();
+    }, this);
   },
   update: function () {
   },
@@ -92,30 +116,56 @@ let ModelEditor = PageView.extend({
   updateSpeciesInUse: function () {
     var species = this.model.species;
     var reactions = this.model.reactions;
+    var events = this.model.eventsCollection;
+    var rules = this.model.rules;
     species.forEach(function (specie) { specie.inUse = false; });
-    var updateInUse = function (stoichSpecie) {
-      _.where(species.models, { name: stoichSpecie.specie.name })
+    var updateInUseForReaction = function (stoichSpecie) {
+      _.where(species.models, { compID: stoichSpecie.specie.compID })
        .forEach(function (specie) {
           specie.inUse = true;
         });
     }
+    var updateInUseForOther = function (specie) {
+      _.where(species.models, { compID: specie.compID })
+       .forEach(function (specie) {
+         specie.inUse = true;
+       });
+    }
     reactions.forEach(function (reaction) {
-      reaction.products.forEach(updateInUse);
-      reaction.reactants.forEach(updateInUse);
+      reaction.products.forEach(updateInUseForReaction);
+      reaction.reactants.forEach(updateInUseForReaction);
+    });
+    events.forEach(function (event) {
+      event.eventAssignments.forEach(function (assignment) {
+        updateInUseForOther(assignment.variable)
+      });
+    });
+    rules.forEach(function (rule) {
+      updateInUseForOther(rule.variable);
     });
   },
   updateParametersInUse: function () {
     var parameters = this.model.parameters;
     var reactions = this.model.reactions;
+    var events = this.model.eventsCollection;
+    var rules = this.model.rules;
     parameters.forEach(function (param) { param.inUse = false; });
     var updateInUse = function (param) {
-      _.where(parameters.models, { name: param.name })
+      _.where(parameters.models, { compID: param.compID })
        .forEach(function (param) {
          param.inUse = true;
        });
     }
     reactions.forEach(function (reaction) {
       updateInUse(reaction.rate);
+    });
+    events.forEach(function (event) {
+      event.eventAssignments.forEach(function (assignment) {
+        updateInUse(assignment.variable)
+      });
+    });
+    rules.forEach(function (rule) {
+      updateInUse(rule.variable);
     });
   },
   renderSubviews: function () {
@@ -134,13 +184,11 @@ let ModelEditor = PageView.extend({
     var reactionsEditor = new ReactionsEditorView({
       collection: this.model.reactions
     });
-    var eventsEditor = new EventsEditorView({
-      collection: this.model.eventsCollection
-    });
-    var simSettings = new SimSettingsView({
+    this.renderEventsView();
+    this.renderRulesView();
+    var modelSettings = new ModelSettingsView({
       parent: this,
-      model: this.model.simulationSettings,
-      species: this.model.species
+      model: this.model.modelSettings,
     });
     var modelStateButtons = new ModelStateButtonsView({
       model: this.model
@@ -150,13 +198,37 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
-    this.registerRenderSubview(eventsEditor, 'events-editor-container');
-    this.registerRenderSubview(simSettings, 'sim-settings-container');
+    this.registerRenderSubview(modelSettings, 'model-settings-container');
     this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
+  },
+  renderEventsView: function () {
+    if(this.eventsEditor){
+      this.eventsEditor.remove();
+    }
+    this.eventsEditor = new EventsEditorView({
+      collection: this.model.eventsCollection
+    });
+    this.registerRenderSubview(this.eventsEditor, 'events-editor-container');
+  },
+  renderRulesView: function () {
+    if(this.rulesEditor){
+      this.rulesEditor.remove();
+    }
+    this.rulesEditor = new RulesEditorView({
+      collection: this.model.rules
+    });
+    this.registerRenderSubview(this.rulesEditor, 'rules-editor-container');
   },
   subviews: {
   },

@@ -5,6 +5,8 @@ import sys
 import json
 import argparse
 import logging
+import pickle
+import plotly
 
 from io import StringIO
 from gillespy2.core import log
@@ -15,15 +17,14 @@ for handler in log.handlers:
 
 
 from gillespy2 import Species, Parameter, Reaction, RateRule, Model
+try:
+    from gillespy2 import AssignmentRule
+except:
+    log.warn("Assignment Rules are not supported")
 import numpy
 import gillespy2.core.gillespySolver
-
-try:
-    from gillespy2.core.events import EventAssignment, EventTrigger, Event
-except:
-    log.warn("Events are not supported by gillespy2!")
-
-from gillespy2.core.gillespyError import SolverError, DirectoryError, BuildError, ExecutionError
+from gillespy2.core.events import EventAssignment, EventTrigger, Event
+from gillespy2.core.gillespyError import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
 from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
 from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
 
@@ -34,13 +35,98 @@ warnings.simplefilter("ignore")
 user_dir = '/home/jovyan'
 
 
+class GillesPy2Workflow():
+
+    def __init__(self, wkfl_path, mdl_path):
+        self.wkfl_path = wkfl_path
+        self.mdl_path = mdl_path
+        if wkfl_path:
+            self.mdl_file = mdl_path.split('/').pop()
+            self.info_path = os.path.join(wkfl_path, 'info.json')
+            self.log_path = os.path.join(wkfl_path, 'logs.txt')
+            self.wkfl_mdl_path = os.path.join(wkfl_path, self.mdl_file)
+            self.res_path = os.path.join(wkfl_path, 'results')
+
+
+    def run_preview(self, gillespy2_model, stochss_model):
+        sim_settings = stochss_model['simulationSettings']
+        model_settings = stochss_model['modelSettings']
+
+        sim_settings['realizations'] = model_settings['realizations']
+        sim_settings['algorithm'] = model_settings['algorithm']
+
+        _results = run_solver(gillespy2_model, sim_settings, 5)
+        results = _results[0]
+        res_dict = dict(results)
+        for k, v in res_dict.items():
+            res_dict[k] = list(v)
+        results = res_dict
+        for key in results.keys():
+            if not isinstance(results[key], list):
+                # Assume it's an ndarray, use tolist()
+                results[key] = results[key].tolist()
+        results['data'] = stochss_model
+        return results
+
+
+    def run(self, gillespy2_model, stochss_model):
+        sim_settings = stochss_model['simulationSettings']
+        trajectories = sim_settings['realizations']
+        is_stochastic = not sim_settings['algorithm'] == "ODE"
+
+        results = run_solver(gillespy2_model, sim_settings, 0)
+        self.store_results(results)
+        self.plot_results(results, trajectories, is_stochastic)
+
+
+    def store_results(self, results):
+        if not 'results' in os.listdir(path=self.wkfl_path):
+            os.mkdir(self.res_path)
+        with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
+            pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
+        
+
+    def plot_results(self, results, trajectories, is_stochastic):
+        '''
+        Create the set of result plots and write them to file in the results directory.
+
+        Attributes
+        ----------
+        results : GillesPy2 ResultsEnsemble or GillesPy2 Results
+            Results of a workflow run.
+        results_path : str
+            Path to the results directory.
+        trajectories : int
+            Number of trajectories for the workflow.
+        is_stochastic : bool
+            Was the workflow a stochastic simulation?.
+        '''
+        if is_stochastic and trajectories > 1:
+            stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
+            stddevrange_plot["config"] = {"responsive": True,}
+            with open(os.path.join(self.res_path, 'std_dev_range_plot.json'), 'w') as json_file:
+                json.dump(stddevrange_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            stddev_plot = results.stddev_ensemble().plotplotly(return_plotly_figure=True)
+            stddev_plot["config"] = {"responsive": True,}
+            with open(os.path.join(self.res_path, 'stddev_ensemble_plot.json'), 'w') as json_file:
+                json.dump(stddev_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            avg_plot = results.average_ensemble().plotplotly(return_plotly_figure=True)
+            avg_plot["config"] = {"responsive": True,}
+            with open(os.path.join(self.res_path, 'ensemble_average_plot.json'), 'w') as json_file:
+                json.dump(avg_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+        plot = results.plotplotly(return_plotly_figure=True)
+        plot["config"] = {"responsive": True,}
+        with open(os.path.join(self.res_path, 'plotplotly_plot.json'), 'w') as json_file:
+                json.dump(plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+
+
 class _Model(Model):
     '''
     ##############################################################################
     Build a GillesPy2 model.
     ##############################################################################
     '''
-    def __init__(self, name, species, parameters, reactions, events, rate_rules, endSim, timeStep, volume):
+    def __init__(self, name, species, parameters, reactions, events, rate_rules, assignment_rules, endSim, timeStep, volume):
         '''
         Initialize and empty model and add its components.
 
@@ -58,6 +144,8 @@ class _Model(Model):
             List of GillesPy2 events to be added to the model.
         rate_rules : list
             List of GillesPy2 rate rules to be added to the model.
+        assignment_rules : list
+            List of GillesPy2 assignment rules to be added to the model.
         endSim : int
             Simulation duration of the model.
         timeStep : int
@@ -71,11 +159,12 @@ class _Model(Model):
         self.add_parameter(parameters)
         self.add_species(species)
         self.add_reaction(reactions)
-        try:
-            self.add_event(events)
-        except:
-            log.warn("Could not add events as events are not supported.")
+        self.add_event(events)
         self.add_rate_rule(rate_rules)
+        try:
+            self.add_assignment_rules(assignment_rules)
+        except:
+            log.warn('Assignment rules are not supported.')
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
 
@@ -97,19 +186,21 @@ class ModelFactory():
         '''
         
         name = data['name']
-        timeStep = (data['simulationSettings']['timeStep'])
-        endSim = data['simulationSettings']['endSim']
-        volume = data['simulationSettings']['volume']
-        is_stochastic = data['simulationSettings']['is_stochastic']
-        self.species = list(map(lambda s: self.build_specie(s, is_stochastic), data['species']))
+        timeStep = (data['modelSettings']['timeStep'])
+        endSim = data['modelSettings']['endSim']
+        volume = data['modelSettings']['volume']
+        is_ode = data['simulationSettings']['algorithm'] == "ODE"
+        self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
         self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), data['eventsCollection']))
-        rate_rules = list(filter(lambda rr: self.is_valid_rate_rule(rr), data['rateRules']))
-        self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr), rate_rules))
-        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, endSim, timeStep, volume)
+        rate_rules = list(filter(lambda rr: self.is_valid_rate_rule(rr), data['rules']))
+        assignment_rules = list(filter(lambda rr: self.is_valid_assignment_rule(rr), data["rules"]))
+        self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr, self.species, self.parameters), rate_rules))
+        self.assignment_rules = list(map(lambda ar: self.build_assignment_rules(ar, self.species, self.parameters), assignment_rules))
+        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, self.assignment_rules, endSim, timeStep, volume)
 
-    def build_specie(self, args, is_stochastic):
+    def build_specie(self, args, is_ode):
         '''
         Build a GillesPy2 species.
 
@@ -120,11 +211,17 @@ class ModelFactory():
         '''
         name = args['name'].strip()
         value = args['value']
-        if is_stochastic:
+        if not is_ode:
             mode = args['mode']
         else:
             mode = 'continuous'
-        return Species(name=name, initial_value=value, mode=mode)
+        switch_tol = args['switchTol']
+        if isSwitchTol:
+            switch_min = 0
+        else:
+            switch_min = args['switchMin']
+
+        return Species(name=name, initial_value=value, mode=mode, switch_tol=switch_tol, switch_min=switch_min)
 
     def build_parameter(self, args):
         '''
@@ -136,8 +233,8 @@ class ModelFactory():
             A json representation of a parameter.
         '''
         name = args['name'].strip()
-        value = args['value']
-        return Parameter(name=name, expression=value)
+        expression = args['expression']
+        return Parameter(name=name, expression=expression)
 
     def build_reaction(self, args, parameters):
         '''
@@ -190,17 +287,11 @@ class ModelFactory():
         persistent = args['persistent']
         use_values_from_trigger_time = args['useValuesFromTriggerTime']
 
-        try:
-            trigger = EventTrigger(expression=trigger_expression, initial_value = initial_value, persistent = persistent)
-        except:
-            log.warn("Can't create an event trigger as events are not supported")
+        trigger = EventTrigger(expression=trigger_expression, initial_value=initial_value, persistent=persistent)
 
         assignments = list(map(lambda a: self.build_event_assignment(a, self.species, self.parameters), args['eventAssignments']))
 
-        try:
-            return Event(name=name, delay=delay, assignments=assignments, priority=priority, trigger=trigger, use_values_from_trigger_time=use_values_from_trigger_time)
-        except:
-            log.warn("Can't create an event as events are not supported")
+        return Event(name=name, delay=delay, assignments=assignments, priority=priority, trigger=trigger, use_values_from_trigger_time=use_values_from_trigger_time)
 
 
     def build_event_assignment(self, args, species, parameters):
@@ -221,18 +312,20 @@ class ModelFactory():
         if not len(variable):
             variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
 
-        try:
-            return EventAssignment(variable=variable[0], expression=expression)
-        except:
-            log.warn("Can't create an event assignment as events are not supported")
-
+        return EventAssignment(variable=variable[0], expression=expression)
+        
 
     def is_valid_rate_rule(self, rr):
-        if not rr['rule'] == "":
+        if rr['type'] == "Rate Rule" and not rr['expression'] == "":
             return rr
 
 
-    def build_rate_rules(self, args):
+    def is_valid_assignment_rule(self, rr):
+        if rr['type'] == "Assignment Rule" and not rr['expression'] == "":
+            return rr
+
+
+    def build_rate_rules(self, args, species, parameters):
         '''
         Build a GillesPy2 rate rule.
 
@@ -240,12 +333,42 @@ class ModelFactory():
         ----------
         args : dict
             A json representation of a rate rule.
+        species : list
+            List of GillesPy2 species.
+        parameter : list
+            List of GillesPy2 parameters.
         '''
-        if not args['rule'] == "":
-            name = args['name']
-            species = self.build_specie(args['specie'])
-            expression = args['rule']
-            return RateRule(name=name, species=species, expression=expression)
+        name = args['name']
+        variable = list(filter(lambda s: s.name == args['variable']['name'], species))
+        if not len(variable):
+            variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
+        expression = args['expression']
+        return RateRule(name=name, species=variable[0], expression=expression)
+
+
+    def build_assignment_rule(self, args, species, parameters):
+        '''
+        Build a GillesPy2 assignment rule.
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of an assignment rule.
+        species : list
+            List of GillesPy2 species.
+        parameter : list
+            List of GillesPy2 parameters.
+        '''
+        name = args['name']
+        variable = list(filter(lambda s: s.name == args['variable']['name'], species))
+        if not len(variable):
+            variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
+        expression = args['expression']
+        try:
+            return AssignmentRule(variable=variable[0], formula=expression)
+        except:
+            log.warn("Assignment rules are not yet supported")
+
 
     def build_stoich_species_dict(self, args):
         '''
@@ -264,6 +387,23 @@ class ModelFactory():
         return d
 
 
+def get_models(full_path, name):
+    try:
+        with open(full_path, "r") as model_file:
+            stochss_model = json.loads(model_file.read())
+            stochss_model['name'] = name
+    except FileNotFoundError as error:
+        log.critical("Failed to copy the model into the directory: {0}".format(error))
+
+    try:
+        _model = ModelFactory(stochss_model) # build GillesPy2 model
+    except Exception as error:
+        log.error(str(error))
+    gillespy2_model = _model.model
+
+    return gillespy2_model, stochss_model
+
+
 def run_model(model_path):
     '''
     Run the model and return a preview of the results from the first trajectory.
@@ -275,22 +415,9 @@ def run_model(model_path):
     model_path : str
         Path to the model file.
     '''
-    with open(model_path, "r") as jsonFile:
-        data = jsonFile.read()
-    jsonData = json.loads(str(data))
-    jsonData['name'] = model_path.split('/').pop().split('.')[0]
-    _model = ModelFactory(jsonData)
-    _results = run_solver(_model.model, jsonData['simulationSettings'], 5)
-    results = _results[0]
-    res_dict = dict(results)
-    for k, v in res_dict.items():
-        res_dict[k] = list(v)
-    results = res_dict
-    for key in results.keys():
-        if not isinstance(results[key], list):
-            # Assume it's an ndarray, use tolist()
-            results[key] = results[key].tolist()
-    results['data'] = jsonData
+    gillespy2_model, stochss_model = get_models(model_path, model_path.split('/').pop().split('.')[0])
+    workflow = GillesPy2Workflow(None, model_path)
+    results = workflow.run_preview(gillespy2_model, stochss_model)
     return results
 
 
@@ -307,9 +434,10 @@ def run_solver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    if(data['is_stochastic'] == False):
+    # print("Selecting the algorithm")
+    algorithm = data['algorithm']
+    if(algorithm == "ODE"):
         return basicODESolver(model, data, run_timeout)
-    algorithm = data['stochasticSettings']['algorithm']
     if(algorithm == "SSA"):
         return ssaSolver(model, data, run_timeout)
     if(algorithm == "Tau-Leaping"):
@@ -331,10 +459,11 @@ def basicODESolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
+    # print("running ode solver")
     results = model.run(
         solver = BasicTauHybridSolver,
         timeout = run_timeout,
-        integrator_options = { 'atol' : data['deterministicSettings']['absoluteTol'], 'rtol' : data['deterministicSettings']['relativeTol']}
+        integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
     return results
 
@@ -352,12 +481,13 @@ def ssaSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    seed = data['stochasticSettings']['ssaSettings']['seed']
+    # print("running ssa solver")
+    seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
         timeout = run_timeout,
-        number_of_trajectories = data['stochasticSettings']['realizations'],
+        number_of_trajectories = data['realizations'],
         seed = seed
     )
     return results
@@ -376,15 +506,16 @@ def basicTauLeapingSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    seed = data['stochasticSettings']['tauSettings']['seed']
+    # print("running tau leaping solver")
+    seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
         solver = BasicTauLeapingSolver,
         timeout = run_timeout,
-        number_of_trajectories = data['stochasticSettings']['realizations'],
+        number_of_trajectories = data['realizations'],
         seed = seed,
-        tau_tol = data['stochasticSettings']['tauSettings']['tauTol']
+        tau_tol = data['tauTol']
     )
     return results
 
@@ -402,16 +533,17 @@ def basicTauHybridSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    seed = data['stochasticSettings']['hybridSettings']['seed']
+    # print("running hybrid solver")
+    seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
         solver = BasicTauHybridSolver,
         timeout = run_timeout,
-        number_of_trajectories = data['stochasticSettings']['realizations'],
+        number_of_trajectories = data['realizations'],
         seed = seed,
-        switch_tol = data['stochasticSettings']['hybridSettings']['switchTol'],
-        tau_tol = data['stochasticSettings']['hybridSettings']['tauTol']
+        tau_tol = data['tauTol'],
+        integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
     return results
 
@@ -441,11 +573,15 @@ if __name__ == "__main__":
     model_path = os.path.join(user_dir, args.model_path)
     outfile = os.path.join(user_dir, ".{0}".format(args.outfile))
     if not args.read:
-        results = run_model(model_path)
-        resp = {"timeout":False, "results":results}
-        logs = log_stream.getvalue()
-        if 'GillesPy2 simulation exceeded timeout.' in logs:
-            resp['timeout'] = True
+        resp = {"timeout":False}
+        try:
+            results = run_model(model_path)
+            resp["results"] = results
+            logs = log_stream.getvalue()
+            if 'GillesPy2 simulation exceeded timeout.' in logs:
+                resp['timeout'] = True
+        except ModelError as error:
+            resp['errors'] = str(error)
         with open(outfile, "w") as fd:
             json.dump(resp, fd)
         open(outfile + ".done", "w").close()

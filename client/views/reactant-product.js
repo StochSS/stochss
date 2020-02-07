@@ -52,6 +52,11 @@ module.exports = View.extend({
       $(this.queryByHook('collapse')).collapse()
     }
     this.toggleAddSpecieButton();
+    if(this.fieldTitle === "Reactants"){
+      $(this.queryByHook('field-title-tooltip')).prop('title', this.parent.parent.tooltips.reactant)
+    }else{
+      $(this.queryByHook('field-title-tooltip')).prop('title', this.parent.parent.tooltips.product)
+    }
   },
   selectSpecie: function (e) {
     if(this.unselectedText === e.target.selectedOptions.item(0).text){

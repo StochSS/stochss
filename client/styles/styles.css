@@ -5,8 +5,8 @@ body {
   background-attachment: fixed;
 }
 
-h3, h5, h6.editor-header {
-  display: inline-block;
+.inline{
+  display: inline-block !important;
 }
 
 span {
@@ -19,7 +19,7 @@ select {
 
 label {
   padding-right: 0.25rem;
-  padding-left: 0.25rem;
+  width: 100%;
 }
 
 span.custom {
@@ -27,8 +27,49 @@ span.custom {
   padding-left: 0.25rem;
 }
 
+button.custom {
+  margin: 0.25rem;
+}
+
+a.disabled {
+  pointer-events: none;
+  cursor: default;
+}
+
+.nav-item {
+  display: inline-block;
+}
+
+.name {
+  width: 8rem;
+}
+
 .form-input {
   width: 100%;
+}
+
+.form-input.labeled {
+  width: 60%;
+}
+
+::-webkit-input-placeholder {
+  text-align: center;
+}
+
+::-moz-placeholder {
+  text-align: center;
+}
+
+:-ms-input-placeholder {
+  text-align: center;
+}
+
+::-ms-input-placeholder {
+  text-align: center;
+}
+
+::placeholder {
+  text-align: center;
 }
 
 .sidebar-nav {
@@ -58,7 +99,7 @@ span.custom {
 }
 
 .reaction-summary {
-  padding-left: 22px;
+  padding-left: 15px;
   padding-right: 5px;
   padding-bottom: 10px;
   display: inline-block;
@@ -81,6 +122,24 @@ span.custom {
   vertical-align: top;
 }
 
+.tooltip-icon {
+  display: inline-block;
+  font-size: 12px;
+  padding-left: 2px;
+  padding-right: 2px;
+  vertical-align: top;
+  color: #007bff;
+}
+
+.tooltip-icon-large {
+  display: inline-block;
+  font-size: 20px;
+  padding-left: 10px;
+  padding-right: 10px;
+  vertical-align: bottom;
+  color: #007bff;
+}
+
 .information-btn:hover {
   color: #0056b3;
 }
@@ -89,10 +148,16 @@ span.custom {
   color: #000;
   padding: 0px 10px;
   font-size: 20px;
+  vertical-align: middle;
+  margin-bottom: 0.75rem;
 }
 
 .btn-outline-collapse:hover {
   color: #007bff;
+}
+
+.btn-primary {
+  margin: 5px 10px 5px 0px !important;
 }
 
 .reaction-subdomain {
@@ -123,6 +188,10 @@ span.custom {
   width: 150%;
 }
 
+.modal-content.default-species {
+  width: 60%;
+}
+
 .spinner-border {
   display: none;
   position: relative;
@@ -132,6 +201,10 @@ span.custom {
   height: 90px;
   border: 12px solid rgba(0, 0, 0, 0.125);
   border-right-color: #007bff;
+}
+
+.errors {
+  display: none;
 }
 
 .mdl-edit-btn {
@@ -154,8 +227,28 @@ span.custom {
 
 .right-justify {
   position: absolute !important;
-  right: 15px;
+  right: 5px;
   left: auto;
+}
+
+.default-mode {
+  margin: 0.75rem;
+  display: flex;
+  align-items: left;
+  justify-content: left;
+}
+
+.concentration-btn, .population-btn, .hybrid-btn {
+  min-width: 240px;
+  margin-right: 0.75rem;
+}
+
+input[type="checkbox"] {
+  padding: 0.75rem;
+}
+
+span.checkbox {
+  padding-right: 0.25rem;
 }
 
 .event {
@@ -164,4 +257,28 @@ span.custom {
 
 .event-th .event-td {
   padding-left: 0px !important;
+}
+
+.tooltip-inner {
+  max-width: 300px;
+  padding: 0.25rem 0.5rem;
+  color: #fff;
+  text-align: left;
+  background-color: #000;
+  border-radius: 0.25rem;
+}
+
+.verticle-space {
+  padding-bottom: 10px;
+}
+
+.horizontal-space {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.switching {
+  vertical-align: middle;
+  margin-bottom: 5px;
+  height: 29px;
 }

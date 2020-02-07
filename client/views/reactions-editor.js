@@ -29,6 +29,17 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
+                     "annotation":"An optional note about the reaction.",
+                     "rate":"The rate of the mass-action reaction.",
+                     "propensity":"The custom propensity expression for the reaction.",
+                     "reactant":"The reactants that are consumed in the reaction, with stoichiometry.",
+                     "product":"The species that are created by the reaction event, with stoichiometry.",
+                     "reaction":"For a species that is NOT consumed in the reaction but is part of a mass" +
+                                "action reaction, add it as both a reactant and a product.\n" +
+                                "Mass-action reactions must also have a rate term added. Note that the input" +
+                                "rate represents the mass-action constant rate independent of volume."
+                    }
     this.collection.on("select", function (reaction) {
       this.setSelectedReaction(reaction);
       this.setDetailsView(reaction);
@@ -49,12 +60,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    //this.renderWithTemplate();
-    this.renderCollection(
-      this.collection,
-      ReactionListingView,
-      this.queryByHook('reaction-list')
-    );
+    this.renderReactionListingView();
     this.detailsContainer = this.queryByHook('reaction-details-container');
     this.detailsViewSwitcher = new ViewSwitcher({
       el: this.detailsContainer,
@@ -77,15 +83,31 @@ module.exports = View.extend({
   },
   updateValid: function () {
   },
+  renderReactionListingView: function () {
+    if(this.reactionListingView){
+      this.reactionListingView.remove();
+    }
+    this.reactionListingView = this.renderCollection(
+      this.collection,
+      ReactionListingView,
+      this.queryByHook('reaction-list')
+    );
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
   toggleAddReactionButton: function () {
     $(this.queryByHook('add-reaction-full')).prop('disabled', (this.collection.parent.species.length <= 0));
     $(this.queryByHook('add-reaction-partial')).prop('disabled', (this.collection.parent.species.length <= 0));
   },
   toggleReactionTypes: function (e, prev, curr) {
-    if(curr.add && this.collection.parent.parameters.length === 1){
+    if(curr && curr.add && this.collection.parent.parameters.length === 1){
       $(this.queryByHook('add-reaction-full')).prop('hidden', false);
       $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
-    }else if(!curr.add && this.collection.parent.parameters.length === 0){
+    }else if(curr && !curr.add && this.collection.parent.parameters.length === 0){
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
       $(this.queryByHook('add-reaction-partial')).prop('hidden', false);
     }
@@ -106,6 +128,13 @@ module.exports = View.extend({
     var reaction = this.collection.addReaction(reactionType, stoichArgs, subdomains);
     reaction.detailsView = this.newDetailsView(reaction);
     this.collection.trigger("select", reaction);
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   getStoichArgsForReactionType: function(type) {
     var args = ReactionTypes[type];

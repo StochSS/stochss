@@ -1,0 +1,39 @@
+tr
+
+  td=this.model.name
+
+  td=this.delay
+
+  td=this.model.priority
+
+  td
+
+    div="Expression: " + this.model.triggerExpression
+
+    div
+
+      span.checkbox(for="initial-value") Initial Value: 
+
+      input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value" disabled)
+
+    div
+
+      span.checkbox(for="persistent") Persistent: 
+
+      input(type="checkbox", id="persistent", data-hook="event-trigger-persistent" disabled)
+
+  td: div(data-hook="assignment-viewer")
+
+  td 
+
+    div
+
+      span.inline.horizontal-space(for="trigger-time") Trggier Time
+
+      input(type="radio", id="trigger-time", name="use-values-from" data-hook="trigger-time" disabled)
+
+    div
+
+      span.inline.horizontal-space(for="assignment-time") Assignment Time
+
+      input(type="radio", id="assignment-time", name="use-values-from" data-hook="assignment-time" disabled)

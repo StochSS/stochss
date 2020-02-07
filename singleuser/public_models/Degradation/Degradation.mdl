@@ -1,29 +1,52 @@
 {
     "is_spatial": false,
-    "simulationSettings": {
-        "is_stochastic": true,
+    "defaultID": 4,
+    "defaultMode": "discrete",
+    "modelSettings": {
         "endSim": 100,
         "timeStep": 1,
         "volume": 1,
-        "stochasticSettings": {
-            "realizations": 1,
-            "algorithm": "SSA",
-            "ssaSettings": {
-                "seed": -1
-            },
-            "tauSettings": {
-                "seed": -1,
-                "tauTol": 0.03
-            },
-            "hybridSettings": {
-                "seed": -1,
-                "tauTol": 0.03,
-                "switchTol": 0.03
-            }
+        "realizations": 1,
+        "algorithm": "SSA"
+    },
+    "simulationSettings": {
+        "isAutomatic": false,
+        "realizations": 1,
+        "algorithm": "SSA",
+        "seed": -1,
+        "tauTol": 0.03,
+        "relativeTol": 1e-3,
+        "absoluteTol": 1e-6
+    },
+    "parameterSweepSettings": {
+        "is1D": true,
+        "p1Min": 0.025,
+        "p1Max": 0.075,
+        "p1Steps": 11,
+        "p2Min": 0,
+        "p2Max": 0,
+        "p2Steps": 0,
+        "parameterOne": {
+            "compID": 2,
+            "name": "decayrate",
+            "expression": "0.05",
+            "annotation": ""
         },
-        "deterministicSettings": {
-            "relativeTol": 0.03,
-            "absoluteTol": 0.03
+        "parameterTwo": {},
+        "speciesOfInterest": {
+            "compID": 1,
+            "name": "protein",
+            "value": 50,
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
+            "diffusionCoeff": 0,
+            "subdomains": [
+                "subdomain 1: ",
+                "subdomain 2: "
+            ]
         }
     },
     "meshSettings": {
@@ -31,9 +54,14 @@
     },
     "species": [
         {
+            "compID": 1,
             "name": "protein",
             "value": 50,
-            "mode": "dynamic",
+            "mode": "discrete",
+            "switchTol": 0.03,
+            "switchMin": 100,
+            "isSwitchTol": true,
+            "annotation": "",
             "diffusionCoeff": 0,
             "subdomains": [
                 "subdomain 1: ",
@@ -44,32 +72,43 @@
     "initialConditions": [],
     "parameters": [
         {
+            "compID": 2,
             "name": "decayrate",
-            "value": 0.05
+            "expression": "0.05",
+            "annotation": ""
         }
     ],
     "reactions": [
         {
+            "compID": 3,
             "name": "reaction",
             "reactionType": "destruction",
-            "annotation": "protein \\rightarrow \\emptyset",
+            "summary": "protein \\rightarrow \\emptyset",
             "massaction": false,
             "propensity": "",
+            "annotation": "",
             "subdomains": [
                 "subdomain 1: ",
                 "subdomain 2: "
             ],
             "rate": {
+                "compID": 2,
                 "name": "decayrate",
-                "value": 0.05
+                "expression": "0.05",
+                "annotation": ""
             },
             "reactants": [
                 {
                     "ratio": 1,
                     "specie": {
+                        "compID": 1,
                         "name": "protein",
                         "value": 50,
-                        "mode": "dynamic",
+                        "mode": "discrete",
+                        "switchTol": 0.03,
+                        "switchMin": 100,
+                        "isSwitchTol": true,
+                        "annotation": "",
                         "diffusionCoeff": 0,
                         "subdomains": [
                             "subdomain 1: ",
@@ -81,6 +120,6 @@
             "products": []
         }
     ],
-    "rateRules": [],
+    "rules": [],
     "eventsCollection": []
 }
