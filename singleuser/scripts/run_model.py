@@ -21,6 +21,10 @@ try:
     from gillespy2 import AssignmentRule
 except:
     log.warn("Assignment Rules are not supported")
+try:
+    from gillespy2 import FunctionDefintion
+except:
+    log.warn("Function Definitions are not supported")
 import numpy
 import gillespy2.core.gillespySolver
 from gillespy2.core.events import EventAssignment, EventTrigger, Event
@@ -126,7 +130,8 @@ class _Model(Model):
     Build a GillesPy2 model.
     ##############################################################################
     '''
-    def __init__(self, name, species, parameters, reactions, events, rate_rules, assignment_rules, endSim, timeStep, volume):
+    def __init__(self, name, species, parameters, reactions, events, rate_rules, 
+        assignment_rules, function_definitions, endSim, timeStep, volume):
         '''
         Initialize and empty model and add its components.
 
@@ -146,6 +151,8 @@ class _Model(Model):
             List of GillesPy2 rate rules to be added to the model.
         assignment_rules : list
             List of GillesPy2 assignment rules to be added to the model.
+        function_definitions : list
+            List of GillesPy2 function definitions to be added to the model.
         endSim : int
             Simulation duration of the model.
         timeStep : int
@@ -165,6 +172,10 @@ class _Model(Model):
             self.add_assignment_rules(assignment_rules)
         except:
             log.warn('Assignment rules are not supported.')
+        try:
+            self.add_function_definition(function_definitions)
+        except:
+            log.warn('Function Definitions are not supported.')
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
 
@@ -198,7 +209,9 @@ class ModelFactory():
         assignment_rules = list(filter(lambda rr: self.is_valid_assignment_rule(rr), data["rules"]))
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr, self.species, self.parameters), rate_rules))
         self.assignment_rules = list(map(lambda ar: self.build_assignment_rules(ar, self.species, self.parameters), assignment_rules))
-        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, self.assignment_rules, endSim, timeStep, volume)
+        self.function_definitions = list(map(lambda fd: self.build_function_definitions(fd), data['functionDefinitions']))
+        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, 
+            self.assignment_rules, self.function_definitions, endSim, timeStep, volume)
 
     def build_specie(self, args, is_ode):
         '''
@@ -388,6 +401,25 @@ class ModelFactory():
             value = stoich_specie['ratio']
             d[key] = value
         return d
+
+
+    def build_function_definitions(self, args):
+        '''
+        Build a GillesPy2 function definition.
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of a function definition.
+        '''
+        name = args['name']
+        variables = args['variables'].split(', ')
+        expression = args['expression']
+
+        try:
+            return FunctionDefinition(name=name, args=variables, function=expression)
+        except:
+            log.warn("Function Definitions are not yet supported.")
 
 
 def get_models(full_path, name):

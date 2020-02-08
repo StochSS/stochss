@@ -42,6 +42,9 @@ def convert_to_sbml(model):
 
     assignment_rules = list(filter(lambda r: is_valid_assignment_rule(r), model['rules']))
     convert_assignment_rules(sbml_model, assignment_rules)
+
+    function_definitions = model['functionDefinitions']
+    convert_function_definitions(sbml_model, function_definitions)
     
     return document
 
@@ -228,6 +231,18 @@ def convert_assignment_rules(sbml_model, rules):
         except:
             raise Exception('libsbml threw an error when parsing assignment equation "{0}" for assignment rule "{1}"'.format(equation, rule['name']))
 
+
+def convert_function_definitions(sbml_model, function_definitions):
+    for function_definition in function_definitions:
+        fd = sbml_model.createFunctionDefinition()
+        fd.setId(function_definition['name '])
+        fd.setAnnotation(function_definition['annotation'])
+        function = function_definition['function'].replace("and", "&&").replace("or", "||").replace("**", "^")
+
+        try:
+            fd.setMath(libsbml.parseL3Formula(function))
+        except:
+            raise Exception('libsbml threw an error when parsing function "{0}" for function definition "{1}"'.format(function, function_definition['name']))
 
 
 def write_sbml_to_file(sbml_path, sbml_doc):

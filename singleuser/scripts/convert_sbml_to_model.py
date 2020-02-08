@@ -57,6 +57,13 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
             stochss_model['rules'].extend(stochss_assignment_rules)
         except:
             errors.append("Assignment rules are not supported by gillespy2.")
+
+        try:
+            function_definitions = gillespy_model.listOfFunctionDefinitions
+            stochss_function_definitions = get_function_definitions(function_definitions)
+            stochss_model['functionDefinitions'].extend(stochss_function_definitions)
+        except:
+            errors.append("Function Definitions are not supported by gillespy2.")
         
         with open(stochss_model_path, "w") as stochss_file:
             json.dump(stochss_model, stochss_file)
@@ -303,6 +310,30 @@ def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters):
         stochss_assignment_rules.append(stochss_assignment_rule)
 
     return stochss_assignment_rules
+
+
+def get_function_definitions(function_definitions):
+    stochss_function_definitions = []
+
+    for name in function_definitions.keys():
+        function_definition = function_definitions[name]
+
+        function_elements = function_definition.function.split(': ')
+        expression = function_elements.pop()
+        variables = function_elements[0].split('lambda ').pop()
+        signature = "{0}({1})".format(function_definition.name, variables)
+
+        stochss_function_definition = {"name":function_defintion.name,
+                                       "function":function_definition.function,
+                                       "expression":expression,
+                                       "variables":variables,
+                                       "signature":signature,
+                                       "annotation":""
+                                       }
+
+        stochss_function_definitions.append(stochss_function_definition)
+
+    return stochss_function_definitions
 
 
 def get_parsed_args():
