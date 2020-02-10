@@ -17,6 +17,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = {"annotation":"An optional note about the Function Definition."}
     this.functionDefinitions = attrs.functionDefinitions;
   },
   render: function () {

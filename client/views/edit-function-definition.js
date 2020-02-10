@@ -32,8 +32,8 @@ let functionDefinitionAnnotationModalHtml = (functionDefinitionName, annotation)
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hock=remove]' : 'removeFunctionDefinition',
-    'click [data-hock=edit-annotation-btn]' : 'editAnnotation',
+    'click [data-hook=remove]' : 'removeFunctionDefinition',
+    'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
