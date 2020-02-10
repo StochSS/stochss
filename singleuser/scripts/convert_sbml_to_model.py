@@ -304,7 +304,7 @@ def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters):
                                    "expression":assignment_rule.expression,
                                    "type":"Assignment Rule",
                                    "variable":variable,
-                                   "annotation":""
+                                   "annotation": ""
                                   }
 
         stochss_assignment_rules.append(stochss_assignment_rule)
@@ -328,7 +328,7 @@ def get_function_definitions(function_definitions):
                                        "expression":expression,
                                        "variables":variables,
                                        "signature":signature,
-                                       "annotation":""
+                                       "annotation": ""
                                        }
 
         stochss_function_definitions.append(stochss_function_definition)

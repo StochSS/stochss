@@ -66,8 +66,7 @@ def convert_species(sbml_model, species):
         s.setCompartment('c')
         s.setId(specie['name'])
         s.setInitialAmount(specie['value'])
-        s.setAnnotation(specie['annotation'])
-
+        
 
 def convert_parameters(sbml_model, parameters):
     for parameter in parameters:
@@ -75,16 +74,14 @@ def convert_parameters(sbml_model, parameters):
         p.initDefaults()
         p.setId(parameter['name'])
         p.setValue(float(parameter['expression']))
-        p.setAnnotation(parameter['annotation'])
-
+        
 
 def convert_reactions(sbml_model, reactions):
     for reaction in reactions:
         r = sbml_model.createReaction()
         r.initDefaults()
         r.setId(reaction['name'])
-        r.setAnnotation(reaction['annotation'])
-
+        
         _reactants = reaction['reactants']
         reactants = convert_reactants(r, _reactants)
 
@@ -159,8 +156,7 @@ def convert_events(sbml_model, events):
         e = sbml_model.createEvent()
         e.setId(event['name'])
         e.setUseValuesFromTriggerTime(event['useValuesFromTriggerTime'])
-        e.setAnnotation(event['annotation'])
-
+        
         delay = event['delay'].replace('and', '&&').replace('or', '||')
         d = e.createDelay()
         try:
@@ -208,7 +204,6 @@ def convert_rate_rules(sbml_model, rules):
         r = sbml_model.createRateRule()
         r.setId(rule['name'])
         r.setVariable(variable['name'])
-        r.setAnnotation(rule['annotation'])
         equation = rule['expression'].replace("and", "&&").replace("or", "||")
         
         try:
@@ -223,7 +218,6 @@ def convert_assignment_rules(sbml_model, rules):
         r = sbml_model.createAssignmentRule()
         r.setId(rule['name'])
         r.setVariable(variable['name'])
-        r.setAnnotation(rule['annotation'])
         equation = rule['expression'].replace("and", "&&").replace("or", "||")
 
         try:
@@ -236,7 +230,6 @@ def convert_function_definitions(sbml_model, function_definitions):
     for function_definition in function_definitions:
         fd = sbml_model.createFunctionDefinition()
         fd.setId(function_definition['name '])
-        fd.setAnnotation(function_definition['annotation'])
         function = function_definition['function'].replace("and", "&&").replace("or", "||").replace("**", "^")
 
         try:
