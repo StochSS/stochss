@@ -9,7 +9,7 @@ div#sbml-components.card.card-body
 
     div
 
-      h5.inline Function Defintions
+      h5.inline Function Definitions
       button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-function-definitions", data-hook="collapse-function-definitions") -
 
     div.collapse(class="show", id="collapse-function-definitions")
@@ -20,8 +20,10 @@ div#sbml-components.card.card-body
       
           tr
       
-            th(scope="col") Name
-      
-            th(scope="col") Function
+            th(scope="col") Signature
+
+            th(scope="col") Annotation
+
+            th(scope="col") Remove
       
         tbody(data-hook="function-definition-list")

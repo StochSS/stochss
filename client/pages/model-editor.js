@@ -10,7 +10,7 @@ var ParametersEditorView = require('../views/parameters-editor');
 var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
 var RulesEditorView = require('../views/rules-editor');
-var SBMLComponentView = require('../views/sbml-component-viewer');
+var SBMLComponentView = require('../views/sbml-component-editor');
 var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 //models

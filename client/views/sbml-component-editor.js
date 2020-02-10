@@ -1,9 +1,9 @@
 var $ = require('jquery');
 //views
 var View = require('ampersand-view');
-var ViewFunctionDefinition = require('./view-function-definition');
+var EditFunctionDefinition = require('./edit-function-definition');
 //templates
-var template = require('../templates/includes/sbmlComponentViewer.pug');
+var template = require('../templates/includes/sbmlComponentEditor.pug');
 
 module.exports = View.extend({
   template: template,
@@ -21,7 +21,23 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(this.functionDefinitions, ViewFunctionDefinition, this.queryByHook('function-definition-list'))
+    this.renderEdirFunctionDefinitionView();
+  },
+  renderEdirFunctionDefinitionView: function () {
+    if(this.editFunctionDefinitionView){
+      this.editFunctionDefinitionView.remove();
+    }
+    this.editFunctionDefinitionView = this.renderCollection(
+      this.functionDefinitions,
+      EditFunctionDefinition,
+      this.queryByHook('function-definition-list')
+    );
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   changeCollapseButtonText: function (hook) {
     var text = $(this.queryByHook(hook)).text();
