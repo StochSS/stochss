@@ -43,7 +43,10 @@ class ParameterSweep1D():
         c.verbose = verbose
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
+        results = {}
         data = np.zeros((len(c.p1_range),2))# mean and std
+        for species in c.list_of_species:
+            results[species] = data
         for i,v1 in enumerate(c.p1_range):
             tmp_model = copy.deepcopy(c.ps_model)
             tmp_model.listOfParameters[c.p1].set_expression(v1)
@@ -51,12 +54,16 @@ class ParameterSweep1D():
             #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
             if(c.number_of_trajectories > 1):
                 tmp_results = run_solver(tmp_model, settings, 0)
-                (m,s) = ag([fn(x) for x in tmp_results])
-                data[i,0] = m
-                data[i,1] = s
+                for species in c.list_of_species:
+                    c.species_of_interest = species
+                    (m,s) = ag([fn(x) for x in tmp_results])
+                    results[species][i,0] = m
+                    results[species][i,1] = s
             else:
                 tmp_result = run_solver(tmp_model, settings, 0)
-                data[i,0] = c.feature_extraction(tmp_result)
+                for species in c.list_of_species:
+                    c.species_of_interest = species
+                    results[species][i,0] = c.feature_extraction(tmp_result)
         c.data = data
         return data
 
@@ -80,7 +87,10 @@ class ParameterSweep2D():
         c.verbose = verbose
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
+        results = {}
         data = np.zeros((len(c.p1_range),len(c.p2_range)))
+        for species in c.list_of_species:
+            results[species] = data
         for i,v1 in enumerate(c.p1_range):
             for j,v2 in enumerate(c.p2_range):
                 tmp_model = copy.deepcopy(c.ps_model)
@@ -90,12 +100,16 @@ class ParameterSweep2D():
                 #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
                 if(c.number_of_trajectories > 1):
                     tmp_results = run_solver(tmp_model, settings, 0)
-                    data[i,j] = ag([fn(x) for x in tmp_results])
+                    for species in c.list_of_species:
+                        c.species_of_interest = species
+                        results[species][i,j] = ag([fn(x) for x in tmp_results])
                 else:
                     tmp_result = run_solver(tmp_model, settings, 0)
-                    data[i,j] = c.feature_extraction(tmp_result)
-        c.data = data
-        return data
+                    for species in c.list_of_species:
+                        c.species_of_interest = species
+                        results[species][i,j] = c.feature_extraction(tmp_result)
+        c.data = results
+        return results
 
         
     def plot(c):
@@ -138,6 +152,7 @@ class ParameterSweepConfig1D(ParameterSweep1D):
         self.p1_range = np.linspace(settings['p1Min'], settings['p1Max'], settings['p1Steps'])
         self.number_of_trajectories = trajectories
         self.species_of_interest = settings['speciesOfInterest']['name']
+        self.list_of_species = model.get_all_species().keys()
 
 
 # Configuration for the Parameter Sweep
@@ -162,11 +177,12 @@ class ParameterSweepConfig2D(ParameterSweep2D):
     def configure(self, gillespy2_model, settings, trajectories):
         self.ps_model = gillespy2_model
         self.p1 = settings['parameterOne']['name']
-        self.p1 = settings['parameterTwo']['name']
+        self.p2 = settings['parameterTwo']['name']
         self.p1_range = np.linspace(settings['p1Min'], settings['p1Max'], settings['p1Steps'])
         self.p2_range = np.linspace(settings['p2Min'], settings['p2Max'], settings['p2Steps'])
         self.number_of_trajectories = trajectories
         self.species_of_interest = settings['speciesOfInterest']['name']
+        self.list_of_species = model.get_all_species().keys()
 
 
 class ParameterSweep():
