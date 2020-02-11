@@ -27,7 +27,17 @@ module.exports = View.extend({
     $(this.queryByHook('current-value-two-input')).text(eval(this.model.parameterTwo.expression))
     this.toggleParamTwo();
     var parameters = this.model.parent.parameters;
+    var species = this.model.parent.species:
     var paramNames = parameters.map(function (parameter) { return parameter.name});
+    var speciesNames = species.map(function (specie) { return specie.name});
+    var speciesOfInterestView = new SelectView({
+      label: '',
+      name: 'species-of-interest',
+      required: true,
+      idAttribute: 'cid',
+      options: speciesNames,
+      value: this.model.speciesOfInterest.name
+    });
     var parameterOneView = new SelectView({
       label: '',
       name: 'sweep-variable-one',
@@ -44,6 +54,7 @@ module.exports = View.extend({
       options: paramNames,
       value: this.model.parameterTwo.name
     });
+    this.registerRenderSubview(speciesOfInterestView, 'specie-of-interest-list');
     this.registerRenderSubview(parameterOneView, 'sweep-variable-one-select');
     this.registerRenderSubview(parameterTwoView, 'sweep-variable-two-select');
   },
