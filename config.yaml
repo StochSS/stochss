@@ -70,7 +70,7 @@ hub:
       def kubespawner_pre_spawn_hook(spawner):
         username = spawner.user.name
 
-        sanitized_username = user.replace("@", "-40").replace(".", "-2e")
+        sanitized_username = username.replace("@", "-40").replace(".", "-2e")
 
         # We mounted all the user data to the hub so we can make user data dirs for new users
         user_data_path_on_hub = os.path.join('/stochss-user-data', sanitized_username)
