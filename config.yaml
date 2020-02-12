@@ -82,7 +82,7 @@ hub:
           publicModelsDirDst = os.path.join(user_data_path_on_hub, 'Examples')
           shutil.copytree(publicModelsDirSrc, publicModelsDirDst)
         
-        user_data_path_on_host = os.path.join(z2jh.get_config('custom.userDataDir'), username)
+        user_data_path_on_host = os.path.join(z2jh.get_config('custom.userDataDir'), sanitized_username)
 
         spawner.volumes.append({
           'name': username + '-data',
