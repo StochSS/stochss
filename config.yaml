@@ -70,8 +70,10 @@ hub:
       def kubespawner_pre_spawn_hook(spawner):
         username = spawner.user.name
 
+        sanitized_username = user.replace("@", "-40").replace(".", "-2e")
+
         # We mounted all the user data to the hub so we can make user data dirs for new users
-        user_data_path_on_hub = os.path.join('/stochss-user-data', username)
+        user_data_path_on_hub = os.path.join('/stochss-user-data', sanitized_username)
 
         if not os.path.exists(user_data_path_on_hub):
           # Setup new user's directory
@@ -92,7 +94,7 @@ hub:
 
         spawner.volume_mounts.append({
           'mountPath': '/home/jovyan',
-          'name': username + '-data'
+          'name': sanitized_username + '-data'
         })
 
       c.Spawner.pre_spawn_hook = kubespawner_pre_spawn_hook
