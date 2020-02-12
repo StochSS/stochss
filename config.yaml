@@ -85,7 +85,7 @@ hub:
         user_data_path_on_host = os.path.join(z2jh.get_config('custom.userDataDir'), sanitized_username)
 
         spawner.volumes.append({
-          'name': username + '-data',
+          'name': sanitized_username + '-data',
           'hostPath': {
             'path': os.path.join(user_data_path_on_host),
             'type': 'Directory'
