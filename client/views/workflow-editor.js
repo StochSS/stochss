@@ -55,17 +55,6 @@ module.exports = View.extend({
       parent: this,
       model: this.model.simulationSettings,
     });
-<<<<<<< HEAD:client/views/job-editor.js
-<<<<<<< Updated upstream:client/views/job-editor.js
-    var jobStateButtons = new JobStateButtonsView({
-      model: this.model
-    });
-    this.registerRenderSubview(inputName, "model-name-container");
-    this.registerRenderSubview(simSettings, 'sim-settings-container');
-    this.registerRenderSubview(jobStateButtons, 'job-state-buttons-container');
-    $(this.queryByHook("model-name-container")).find('input').width(1350)
-    this.parent.trajectories = this.model.simulationSettings.stochasticSettings.realizations
-=======
     this.settingsViews.parameterSweep = new ParamSweepSettingsView({
       parent: this,
       model: this.model.parameterSweepSettings,
@@ -75,19 +64,11 @@ module.exports = View.extend({
     });
     this.registerRenderSubview(inputName, "model-name-container");
     this.registerRenderSubview(this.settingsViews['gillespy'], 'sim-settings-container');
-    this.registerRenderSubview(this.settingsViews['parameterSweep'], 'param-sweep-settings-container');
+    if(this.type === "parameterSweep"){
+      this.registerRenderSubview(this.settingsViews['parameterSweep'], 'param-sweep-settings-container');
+    }
     this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
     this.parent.trajectories = this.model.simulationSettings.realizations
->>>>>>> Stashed changes:client/views/workflow-editor.js
-=======
-    var workflowStateButtons = new WorkflowStateButtonsView({
-      model: this.model
-    });
-    this.registerRenderSubview(inputName, "model-name-container");
-    this.registerRenderSubview(this.settingsViews[this.type], 'sim-settings-container');
-    this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
-    this.parent.trajectories = this.model.simulationSettings.realizations
->>>>>>> cbbae8efe1030112d3bc658982cd3231965b60bd:client/views/workflow-editor.js
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

@@ -21,13 +21,8 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    $(this.queryByHook('one-parameter')).prop('checked', this.model.is1D)
-    $(this.queryByHook('two-parameter')).prop('checked', !this.model.is1D)
-    $(this.queryByHook('current-value-one-input')).text(eval(this.model.parameterOne.expression))
-    $(this.queryByHook('current-value-two-input')).text(eval(this.model.parameterTwo.expression))
-    this.toggleParamTwo();
     var parameters = this.model.parent.parameters;
-    var species = this.model.parent.species:
+    var species = this.model.parent.species;
     var paramNames = parameters.map(function (parameter) { return parameter.name});
     var speciesNames = species.map(function (specie) { return specie.name});
     var speciesOfInterestView = new SelectView({
@@ -54,9 +49,17 @@ module.exports = View.extend({
       options: paramNames,
       value: this.model.parameterTwo.name
     });
+    if(this.model.parent.parameters.length > 1){
+      $(this.queryByHook('two-parameter')).prop('disabled', false)
+      $(this.queryByHook('one-parameter')).prop('checked', this.model.is1D)
+      $(this.queryByHook('two-parameter')).prop('checked', !this.model.is1D)
+      $(this.queryByHook('current-value-two-input')).text(eval(this.model.parameterTwo.expression))
+      this.toggleParamTwo();
+      this.registerRenderSubview(parameterTwoView, 'sweep-variable-two-select');
+    }
+    $(this.queryByHook('current-value-one-input')).text(eval(this.model.parameterOne.expression))
     this.registerRenderSubview(speciesOfInterestView, 'specie-of-interest-list');
     this.registerRenderSubview(parameterOneView, 'sweep-variable-one-select');
-    this.registerRenderSubview(parameterTwoView, 'sweep-variable-two-select');
   },
   update: function () {
   },
