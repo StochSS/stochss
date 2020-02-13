@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 # Use this script to install/re-install jupyterhub/stochss via helm.
 #
