@@ -10,14 +10,12 @@ from jupyterhub.handlers.base import BaseHandler
 from tornado import web # handle authentication
 from handlers.db_util import checkUserOrRaise
 
-from kubernetes.stream import stream
 import ast # for eval_literal to use with kube response
 import json
 import uuid
 
 import logging
 log = logging.getLogger()
-from handlers import stochss_kubernetes
 
 
 class JsonFileAPIHandler(BaseHandler):
@@ -42,6 +40,7 @@ class JsonFileAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User Validation
         log.debug(model_path)
         user = self.current_user.name # Get Username
+        '''
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
         try:
@@ -61,6 +60,7 @@ class JsonFileAPIHandler(BaseHandler):
             stochss_kubernetes.write_to_pod(client, user_pod, "{0}".format(full_path), to_write)
 
         self.write(to_write) # Send data to client
+        '''
                 
 
     @web.authenticated
@@ -77,9 +77,11 @@ class JsonFileAPIHandler(BaseHandler):
         user = self.current_user.name # Get User Name
         model_path = model_path.replace(" ", "\ ")
         full_path = '/home/jovyan/{0}'.format(model_path) #full path to model
+        '''
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load Kube client
         stochss_kubernetes.write_to_pod(client,
             user_pod, full_path, self.request.body.decode())
+        '''
 
 
 
@@ -123,6 +125,7 @@ class RunModelAPIHandler(BaseHandler):
         if run_cmd == 'start':
             exec_cmd = ['screen', '-d', '-m'] + exec_cmd # Add screen cmd to Script commands for start run_cmd
         log.warning(exec_cmd)
+        '''
         results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(str(results))
         # Send data back to client
@@ -130,4 +133,5 @@ class RunModelAPIHandler(BaseHandler):
             self.write(results)
         else:
             self.write("running->{0}".format(outfile))
+        '''
 

@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y screen vim
 
 RUN rmdir /home/jovyan/work
 
-COPY --chown=jovyan:users public_models /tmp/public_models/
+COPY --chown=jovyan:users public_models /home/jovyan/Examples
 
 # Overwrite the default page template for the jupyter notebook
 COPY --chown=jovyan:users page.html /opt/conda/lib/python3.6/site-packages/notebook/templates/

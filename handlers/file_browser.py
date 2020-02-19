@@ -7,13 +7,12 @@ requests without a referrer field
 from jupyterhub.handlers.base import BaseHandler
 from tornado import web # handle authentication
 from handlers.db_util import checkUserOrRaise
-
+import docker
 import json
-
 import logging
 log = logging.getLogger()
-from handlers import stochss_kubernetes
 
+client = docker.from_env()
 
 class ModelBrowserFileList(BaseHandler):
     '''
@@ -38,16 +37,12 @@ class ModelBrowserFileList(BaseHandler):
         '''
 
         checkUserOrRaise(self) # Authenticate User
-        user = self.current_user.name # Get User Name
-        client, user_pod = stochss_kubernetes.load_kube_client(user) # Get Kubernetes API+UserPod
+        user = self.current_user.name
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         exec_cmd = ['ls.py', '{0}'.format(path)] # /usr/local/bin/ls.py in UserPod
-
-        # Utilize Kubernetes API to execute exec_cmd on user pod and return
-        # response to variable to populate the js-tree
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-
-        # Then dump to JSON and write out
-        self.write(json.dumps(resp))
+        exit_code, output = container.exec_run(exec_cmd) 
+        log.warn(output)
+        self.write(output)
 
   
 class ModelToNotebookHandler(BaseHandler):
@@ -70,10 +65,10 @@ class ModelToNotebookHandler(BaseHandler):
         '''
         checkUserOrRaise(self) # Validate User
         user = self.current_user.name # Get User Name
-        client, user_pod = stochss_kubernetes.load_kube_client(user) # Kube API
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
         exec_cmd = ['convert_to_notebook.py', path] # Script commands
         log.warning(path)
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        exit_code, output = container.exec_run(exec_cmd) 
         self.write(resp)
 
 
@@ -99,14 +94,15 @@ class DeleteFileAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        file_path = '/home/jovyan{0}'.format(path)
-        exec_cmd = ['rm', '-R', file_path]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        if len(resp):
-            self.write(json.dumps(resp))
-        else:
-            self.write("{0} was successfully deleted.".format(path.split('/').pop()))
+        container = client.containers.list(filters={'name': 'jupyter-{0}'.format(user)})[0]
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #file_path = '/home/jovyan{0}'.format(path)
+        #exec_cmd = ['rm', '-R', file_path]
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #if len(resp):
+        #    self.write(json.dumps(resp))
+        #else:
+        #    self.write("{0} was successfully deleted.".format(path.split('/').pop()))
 
 
 class MoveFileAPIHandler(BaseHandler):
@@ -131,16 +127,16 @@ class MoveFileAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        old_path = "/home/jovyan/{0}".format(data.split('/<--MoveTo-->')[0])
-        new_path = "/home/jovyan/{0}".format(data.split('/<--MoveTo-->').pop())
-        exec_cmd = ['mv', '{0}'.format(old_path), '{0}'.format(new_path)]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        if not len(resp):
-            self.write("Success! {0} was moved to {1}.")
-        else:
-            message = resp
-            self.write(message)     
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #old_path = "/home/jovyan/{0}".format(data.split('/<--MoveTo-->')[0])
+        #new_path = "/home/jovyan/{0}".format(data.split('/<--MoveTo-->').pop())
+        #exec_cmd = ['mv', '{0}'.format(old_path), '{0}'.format(new_path)]
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #if not len(resp):
+        #    self.write("Success! {0} was moved to {1}.")
+        #else:
+        #    message = resp
+        #    self.write(message)     
 
  
 class DuplicateModelHandler(BaseHandler):
@@ -165,10 +161,10 @@ class DuplicateModelHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        exec_cmd = ['duplicate.py', path]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(json.dumps(resp))
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #exec_cmd = ['duplicate.py', path]
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #self.write(json.dumps(resp))
 
 
 class DuplicateDirectoryHandler(BaseHandler):
@@ -193,10 +189,10 @@ class DuplicateDirectoryHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        exec_cmd = ['duplicate.py', path, '-d']
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(json.dumps(resp))
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #exec_cmd = ['duplicate.py', path, '-d']
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #self.write(json.dumps(resp))
 
         
 class RenameAPIHandler(BaseHandler):
@@ -221,11 +217,11 @@ class RenameAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        path, new_name = _path.split('/<--change-->/')
-        exec_cmd = ['rename.py', path, new_name]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(resp)
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #path, new_name = _path.split('/<--change-->/')
+        #exec_cmd = ['rename.py', path, new_name]
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #self.write(resp)
 
 
 class ConvertToSpatialAPIHandler(BaseHandler):
@@ -251,10 +247,10 @@ class ConvertToSpatialAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        exec_cmd = ['convert_to_smdl_mdl.py', path, 'spatial']
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(resp)
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #exec_cmd = ['convert_to_smdl_mdl.py', path, 'spatial']
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #self.write(resp)
 
 
 class ConvertToModelAPIHandler(BaseHandler):
@@ -280,10 +276,10 @@ class ConvertToModelAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        exec_cmd = ['convert_to_smdl_mdl.py', path, 'model']
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(resp)
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #exec_cmd = ['convert_to_smdl_mdl.py', path, 'model']
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #self.write(resp)
 
 
 class ModelToSBMLAPIHandler(BaseHandler):
@@ -309,10 +305,10 @@ class ModelToSBMLAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        exec_cmd = ['convert_to_sbml.py', path]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(resp)
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #exec_cmd = ['convert_to_sbml.py', path]
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #self.write(resp)
 
         
 class SBMLToModelAPIHandler(BaseHandler):
@@ -338,13 +334,13 @@ class SBMLToModelAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
-        with open(template_path, "r") as template_file:
-            model_template = template_file.read()
-        exec_cmd = ['convert_sbml_to_model.py', path, model_template]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(resp)
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
+        #with open(template_path, "r") as template_file:
+        #    model_template = template_file.read()
+        #exec_cmd = ['convert_sbml_to_model.py', path, model_template]
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #self.write(resp)
 
         
 class DownloadAPIHandler(BaseHandler):
@@ -368,9 +364,9 @@ class DownloadAPIHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        resp = stochss_kubernetes.read_from_pod(client, user_pod, path, isJSON=False)
-        self.write(resp)
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #resp = stochss_kubernetes.read_from_pod(client, user_pod, path, isJSON=False)
+        #self.write(resp)
 
 
 class CreateDirectoryHandler(BaseHandler):
@@ -394,9 +390,9 @@ class CreateDirectoryHandler(BaseHandler):
         '''
         checkUserOrRaise(self)
         user = self.current_user.name
-        client, user_pod = stochss_kubernetes.load_kube_client(user)
-        exec_cmd = ['mkdir', '-p', '-v', '{0}'.format(directories)]
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        self.write(resp)
+        #client, user_pod = stochss_kubernetes.load_kube_client(user)
+        #exec_cmd = ['mkdir', '-p', '-v', '{0}'.format(directories)]
+        #resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        #self.write(resp)
 
     

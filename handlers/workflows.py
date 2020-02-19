@@ -13,7 +13,6 @@ from handlers.db_util import checkUserOrRaise
 
 import logging
 log = logging.getLogger()
-from handlers import stochss_kubernetes
 
 
 class WorkflowInfoAPIHandler(BaseHandler):
@@ -40,11 +39,13 @@ class WorkflowInfoAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User Validation
         log.debug(info_path)
         user = self.current_user.name # Get Username
+        '''
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         full_path = "/home/jovyan{0}".format(info_path) # full path to workflow info
         json_data = stochss_kubernetes.read_from_pod(client, 
             user_pod, "{0}".format(full_path)) # Use cat to read json file
         self.write(json_data) # Send data to client
+        '''
 
 
 class RunWorkflowAPIHandler(BaseHandler):
@@ -72,6 +73,7 @@ class RunWorkflowAPIHandler(BaseHandler):
 
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
+        '''
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
@@ -81,6 +83,7 @@ class RunWorkflowAPIHandler(BaseHandler):
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('sent the workflow')
+        '''
 
 
 class SaveWorkflowAPIHandler(BaseHandler):
@@ -107,6 +110,7 @@ class SaveWorkflowAPIHandler(BaseHandler):
 
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
+        '''
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         log.warn("Path to the model: {0}".format(model_path))
@@ -119,6 +123,7 @@ class SaveWorkflowAPIHandler(BaseHandler):
         log.warn("Exec command sent to the user pod: {0}".format(exec_cmd))
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn("Response to the command: {0}".format(resp))
+        '''
 
 
 class WorkflowStatusAPIHandler(BaseHandler):
@@ -143,12 +148,14 @@ class WorkflowStatusAPIHandler(BaseHandler):
 
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
+        '''
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         log.warn('getting the status of the workflow')
         exec_cmd = [ 'workflow_status.py', "{0}".format(workflow_path) ]
         status = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn('the status of the workflow is: ' + status)
         self.write(status.strip()) # Send data to client
+        '''
 
 
 class PlotWorkflowResultsAPIHandler(BaseHandler):
@@ -175,6 +182,7 @@ class PlotWorkflowResultsAPIHandler(BaseHandler):
         body = json.loads(self.get_query_argument(name='data')) # Plot request body
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
+        '''
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         results_path = os.path.join(workflow_path, 'results/results.p') # Path to the results file
         log.warn(self.request.body)
@@ -186,6 +194,7 @@ class PlotWorkflowResultsAPIHandler(BaseHandler):
         plt_fig = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         log.warn(plt_fig)
         self.write(plt_fig) # Send data to client
+        '''
 
 
 class WorkflowLogsAPIHandler(BaseHandler):
@@ -212,10 +221,12 @@ class WorkflowLogsAPIHandler(BaseHandler):
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
         full_path = "/home/jovyan/{0}".format(logs_path)
+        '''
         data = stochss_kubernetes.read_from_pod(client, 
             user_pod, "{0}".format(full_path), isJSON=False) # Use cat to read json file
         log.warn("Log data: {0}".format(data))
         self.write(data) # Send data to client
+        '''
 
 
 class WorkflowNotebookHandler(BaseHandler):
@@ -240,6 +251,7 @@ class WorkflowNotebookHandler(BaseHandler):
         '''
         checkUserOrRaise(self) # Validate User
         user = self.current_user.name # Get User Name
+        '''
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Kube API
         workflow_types = {"1d_parameter_sweep":"convert_to_1d_param_sweep_notebook.py",
                           "2d_parameter_sweep":"convert_to_2d_param_sweep_notebook.py"
@@ -248,3 +260,4 @@ class WorkflowNotebookHandler(BaseHandler):
         log.warning(path)
         resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
         self.write(resp)
+        '''
