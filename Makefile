@@ -24,6 +24,6 @@ install_jhub:
 	./install_jhub_minikube.sh
 
 run:
-	minikube --kubernetes-version v1.11.10 --vm-driver=virtualbox start
+	minikube --kubernetes-version v1.16.6 --vm-driver=virtualbox start
 
 .PHONY: webpack watch singleuser hub_image bootstrap_vm build run 
