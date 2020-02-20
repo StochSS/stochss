@@ -373,6 +373,36 @@ class DownloadAPIHandler(BaseHandler):
         self.write(resp)
 
 
+class DownloadZipFileAPIHandler(BaseHandler):
+    '''
+    ##############################################################################
+    Handler for downloading zip files to the users download directory.
+    ##############################################################################
+    '''
+
+    @web.authenticated
+    async def get(self, path):
+        '''
+        Send Get request to generate and/or get the zip file in user pod for download. 
+        This method utilizes the kubernetes python api.
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the target file or directory.
+
+        '''
+        checkUserOrRaise(self)
+        user = self.current_user.name
+        client, user_pod = stochss_kubernetes.load_kube_client(user)
+        exec_cmd = ['generate_zip_file.py', path]
+        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
+        file_name = "{0}.zip".format(path.split('.')[0])
+        self.set_header('Content-Type', 'application/zip')
+        self.set_header('Content_Disposition', 'attachment; filename="{0}"'.format(file_name))
+        self.write(resp)
+
+
 class CreateDirectoryHandler(BaseHandler):
     '''
     ##############################################################################

@@ -429,6 +429,9 @@ let FileBrowser = PageView.extend({
     linkElement.setAttribute('download', fileName);
     linkElement.click();
   },
+  exportToZipFile: function (o) {
+    window.location.href = path.join("/stochss/api/file/download-zip", o.original._path);
+  },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
     if(document.querySelector('#newModalModel')) {
@@ -565,6 +568,15 @@ let FileBrowser = PageView.extend({
                   self.newModelOrDirectory(o, true, false);
                 }
               } 
+            }
+          },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download as .zip",
+            "action" : function (data) {
+              self.exportToZipFile(o);
             }
           },
           "Rename" : {
@@ -998,6 +1010,15 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
+            }
+          },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download as .zip",
+            "action" : function (data) {
+              self.exportToZipFile(o);
             }
           },
           "Rename" : {

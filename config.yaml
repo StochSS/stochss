@@ -127,6 +127,7 @@ hub:
         SBMLToModelAPIHandler, \
         ModelToSBMLAPIHandler, \
         DownloadAPIHandler, \
+        DownloadZipFileAPIHandler, \
         CreateDirectoryHandler
         
       # Model API handlers
@@ -170,6 +171,7 @@ hub:
           (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
           (r"/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
           (r"/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
+          (r"/stochss/api/file/download-zip/(.+)\/?", DownloadZipFileAPIHandler),
           (r"/stochss/api/directory/duplicate/(.+)\/?", DuplicateDirectoryHandler),
           (r"/stochss/api/directory/create/(.+)\/?", CreateDirectoryHandler),
           # Pages
