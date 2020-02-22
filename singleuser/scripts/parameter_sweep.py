@@ -6,6 +6,7 @@ import copy
 import json
 import numpy as np
 import pickle
+import plotly
 
 from run_model import run_solver
 
@@ -64,8 +65,8 @@ class ParameterSweep1D():
                 for species in c.list_of_species:
                     c.species_of_interest = species
                     results[species][i,0] = c.feature_extraction(tmp_result)
-        c.data = data
-        return data
+        c.data = results
+        return results
 
         
     def plot(c):
@@ -77,6 +78,37 @@ class ParameterSweep1D():
         plt.errorbar(c.p1_range,c.data[:,0],c.data[:,1])
         plt.xlabel(c.p1, fontsize=16, fontweight='bold')
         plt.ylabel("Population", fontsize=16, fontweight='bold')
+
+
+    def plotplotly(c, title=None, xaxis_label=None, yaxis_label="<b>Population</b>", return_plotly_figure=True, species_of_interest=None):
+        from plotly.offline import iplot
+        import plotly.graph_objs as go
+
+        if species_of_interest is None:
+            species_of_interest = list(c.list_of_species)[0]
+
+        data = c.data[species_of_interest]
+        visible = c.number_of_trajectories > 1
+        error_y = dict(type="data", array=data[:,1], visible=visible)
+
+        trace_list = go.Scatter(x=c.p1_range, y=data[:,0], error_y=error_y)
+
+        if title is None:
+            title = "<b>Parameter Sweep - Species: {0}</b>".format(species_of_interest)
+        if xaxis_label is None:
+            xaxis_label = "<b>{0}</b>".format(c.p1)
+        plt_title = dict(text=title, x=0.5)
+        xaxis = dict(title=xaxis_label)
+        yaxis = dict(title=yaxis_label)
+
+        layout = go.Layout(title=plt_title, xaxis=xaxis, yaxis=yaxis)
+
+        fig = dict(data=trace_list, layout=layout)
+
+        if return_plotly_figure:
+            return fig
+        else:
+            iplot(fig)
 
 
 class ParameterSweep2D():
@@ -130,6 +162,37 @@ class ParameterSweep2D():
         _ = plt.colorbar(ax=ax, cax=cax)
 
 
+    def plotplotly(c, title=None, xaxis_label=None, yaxis_label=None, return_plotly_figure=True, species_of_interest=None):
+        from plotly.offline import iplot
+        import plotly.graph_objs as go
+
+        if species_of_interest is None:
+            species_of_interest = list(c.list_of_species)[0]
+            
+        data = c.data[species_of_interest]
+
+        trace_list = go.Heatmap(z=data, x=c.p1_range, y=c.p2_range)
+
+        if title is None:
+            title = "<b>Parameter Sweep - Species: {0}</b>".format(species_of_interest)
+        if xaxis_label is None:
+            xaxis_label = "<b>{0}</b>".format(c.p1)
+        if yaxis_label is None:
+            yaxis_label = "<b>{0}</b>".format(c.p2)
+        plt_title = dict(text=title, x=0.5)
+        xaxis = dict(title=xaxis_label)
+        yaxis = dict(title=yaxis_label)
+
+        layout = go.Layout(title=plt_title, xaxis=xaxis, yaxis=yaxis)
+
+        fig = dict(data=trace_list, layout=layout)
+
+        if return_plotly_figure:
+            return fig
+        else:
+            iplot(fig)
+
+
 # Configuration for the Parameter Sweep
 class ParameterSweepConfig1D(ParameterSweep1D):
     # What class defines the GillesPy2 model
@@ -146,13 +209,13 @@ class ParameterSweepConfig1D(ParameterSweep1D):
     ensemble_aggragator = mean_std_of_ensemble
 
     
-    def configure(self, model, settings, trajectories):
-        self.ps_model = model
+    def configure(self, gillespy2_model, settings, trajectories):
+        self.ps_model = gillespy2_model
         self.p1 = settings['parameterOne']['name']
         self.p1_range = np.linspace(settings['p1Min'], settings['p1Max'], settings['p1Steps'])
         self.number_of_trajectories = trajectories
         self.species_of_interest = settings['speciesOfInterest']['name']
-        self.list_of_species = model.get_all_species().keys()
+        self.list_of_species = gillespy2_model.get_all_species().keys()
 
 
 # Configuration for the Parameter Sweep
@@ -182,7 +245,7 @@ class ParameterSweepConfig2D(ParameterSweep2D):
         self.p2_range = np.linspace(settings['p2Min'], settings['p2Max'], settings['p2Steps'])
         self.number_of_trajectories = trajectories
         self.species_of_interest = settings['speciesOfInterest']['name']
-        self.list_of_species = model.get_all_species().keys()
+        self.list_of_species = gillespy2_model.get_all_species().keys()
 
 
 class ParameterSweep():
@@ -197,7 +260,7 @@ class ParameterSweep():
         self.res_path = os.path.join(wkfl_path, 'results')
 
 
-    def run(self, gillespy2_model, stochss_model, timeout):
+    def run(self, gillespy2_model, stochss_model):
         ps_settings = stochss_model['parameterSweepSettings']
         sim_settings = stochss_model['simulationSettings']
         trajectories = sim_settings['realizations']
@@ -210,6 +273,7 @@ class ParameterSweep():
         ps.configure(gillespy2_model, ps_settings, trajectories)
         results = ps.run(sim_settings)
         self.store_results(results)
+        self.store_plots(ps)
 
 
     def store_results(self, results):
@@ -221,4 +285,14 @@ class ParameterSweep():
 
         with open(os.path.join(self.res_path, 'results.json'), 'w') as json_file:
             json_file.write(json.dumps(str(results)))
+
+
+    def store_plots(self, ps):
+        plot_figs = {}
+        for species in ps.list_of_species:
+            plot_fig = ps.plotplotly(species_of_interest=species)
+            plot_figs[species] = plot_fig
+
+        with open(os.path.join(self.res_path, 'plots.json'), 'w') as plots_file:
+            json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
 

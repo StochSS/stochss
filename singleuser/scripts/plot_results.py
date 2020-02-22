@@ -130,6 +130,23 @@ def plot_average(results, kwargs):
     # return results.average_ensemble().plotplotly(**kwargs)
 
 
+def plot_psweep(results, kwargs):
+    '''
+    Gets the plot of the average of all trajectories for a Results Ensemble.
+
+    Attributes
+    ----------
+    results : GillesPy2 ResultsEnsemble
+        Results of a workflow run with number_of_trajectories > 1.
+    kwargs : dict
+        Arguments to be passed to the plotplotly() function.
+    '''
+    plot_path = results.replace('results.p', 'plots.json')
+    plots = get_results(plot_path)
+    species_of_interest = kwargs['speciesOfInterest']
+    return plots[species_of_interest]
+
+
 def get_parsed_args():
     '''
     Initializes an argpaser to document this script and returns a dict of
@@ -164,10 +181,12 @@ if __name__ == "__main__":
     # plt_args['return_plotly_figure'] = True
     # results = get_results(results_path)
     
-    opts = {"stddevran":plot_std_dev_range,"trajectories":plot,"stddev":plot_std_dev,"avg":plot_average}
+    opts = {"stddevran":plot_std_dev_range,"trajectories":plot,"stddev":plot_std_dev,"avg":plot_average,"psweep":plot_psweep}
 
     # For reading plot files
     plt_fig = opts[plt_type](results_path, plt_args)
+    if plt_type == "psweep":
+        del plt_args['speciesOfInterest']
     if not type(plt_fig) is str:
         for key in plt_args.keys():
             if key == 'title':
