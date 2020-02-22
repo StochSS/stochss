@@ -45,14 +45,12 @@ class ParameterSweep1D():
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
         results = {}
-        data = np.zeros((len(c.p1_range),2))# mean and std
         for species in c.list_of_species:
-            results[species] = data
+            results[species] = np.zeros((len(c.p1_range),2))# mean and std
         for i,v1 in enumerate(c.p1_range):
             tmp_model = copy.deepcopy(c.ps_model)
             tmp_model.listOfParameters[c.p1].set_expression(v1)
             if verbose: print("running {0}={1}".format(c.p1,v1))
-            #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
             if(c.number_of_trajectories > 1):
                 tmp_results = run_solver(tmp_model, settings, 0)
                 for species in c.list_of_species:
@@ -120,16 +118,14 @@ class ParameterSweep2D():
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
         results = {}
-        data = np.zeros((len(c.p1_range),len(c.p2_range)))
         for species in c.list_of_species:
-            results[species] = data
+            results[species] = np.zeros((len(c.p1_range),len(c.p2_range)))
         for i,v1 in enumerate(c.p1_range):
             for j,v2 in enumerate(c.p2_range):
                 tmp_model = copy.deepcopy(c.ps_model)
                 tmp_model.listOfParameters[c.p1].set_expression(v1)
                 tmp_model.listOfParameters[c.p2].set_expression(v2)
                 if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
-                #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
                 if(c.number_of_trajectories > 1):
                     tmp_results = run_solver(tmp_model, settings, 0)
                     for species in c.list_of_species:
