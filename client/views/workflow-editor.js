@@ -69,6 +69,8 @@ module.exports = View.extend({
     }
     this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
     this.parent.trajectories = this.model.simulationSettings.realizations
+    this.parent.species = this.model.species
+    this.parent.speciesOfInterest = this.model.parameterSweepSettings.speciesOfInterest
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
