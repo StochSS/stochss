@@ -103,6 +103,17 @@ module.exports = View.extend({
     $(this.queryByHook('minimum-value-two-input')).find('input').val(this.model.p2Min)
     $(this.queryByHook('maximum-value-two-input')).find('input').val(this.model.p2Max)
   },
+  selectSpeciesOfInterest: function (e) {
+    var val = e.target.selectedOptions.item(0).text;
+    var species = this.getSpecies(val);
+    this.model.speciesOfInterest = species
+  },
+  getSpecies: function (name) {
+    var species = this.model.parent.species.filter(function (specie) {
+      if(specie.name === name) return specie
+    })[0];
+    return species;
+  },
   getParameter: function (val) {
     var parameter = this.model.parent.parameters.filter(function (parameter) {
       if(parameter.name === val) return parameter;
