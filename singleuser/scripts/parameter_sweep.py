@@ -67,13 +67,19 @@ class ParameterSweep1D():
         return results
 
         
-    def plot(c):
+    def plot(c, species_of_interest=None):
         from matplotlib import pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         import numpy
+
+        if species_of_interest is None:
+            species_of_interest = list(c.list_of_species)[0]
+
+        data = c.data[species_of_interest]
+
         fig, ax = plt.subplots(figsize=(8,8))
-        plt.title("Parameter Sweep - Species: {0}".format(c.species_of_interest))
-        plt.errorbar(c.p1_range,c.data[:,0],c.data[:,1])
+        plt.title("Parameter Sweep - Species: {0}".format(species_of_interest))
+        plt.errorbar(c.p1_range,data[:,0],data[:,1])
         plt.xlabel(c.p1, fontsize=16, fontweight='bold')
         plt.ylabel("Population", fontsize=16, fontweight='bold')
 
@@ -140,15 +146,21 @@ class ParameterSweep2D():
         return results
 
         
-    def plot(c):
+    def plot(c, species_of_interest=None):
         from matplotlib import pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         import numpy
+
+        if species_of_interest is None:
+            species_of_interest = list(c.list_of_species)[0]
+
+        data = c.data[species_of_interest]
+
         fig, ax = plt.subplots(figsize=(8,8))
-        plt.imshow(c.data)
-        ax.set_xticks(numpy.arange(c.data.shape[1])+0.5, minor=False)
-        ax.set_yticks(numpy.arange(c.data.shape[0])+0.5, minor=False)
-        plt.title("Parameter Sweep - Species: {0}".format(c.species_of_interest))
+        plt.imshow(data)
+        ax.set_xticks(numpy.arange(data.shape[1])+0.5, minor=False)
+        ax.set_yticks(numpy.arange(data.shape[0])+0.5, minor=False)
+        plt.title("Parameter Sweep - Species: {0}".format(species_of_interest))
         ax.set_xticklabels(c.p1_range, minor=False, rotation=90)
         ax.set_yticklabels(c.p2_range, minor=False)
         ax.set_xlabel(c.p1, fontsize=16, fontweight='bold')
