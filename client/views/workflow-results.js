@@ -5,9 +5,11 @@ var Plotly = require('../lib/plotly');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
+var SelectView = require('ampersand-select-view');
 //templates
-var resultsTemplate = require('../templates/includes/workflowResults.pug');
-var resultsEnsembleTemplate = require('../templates/includes/workflowResultsEnsemble.pug');
+var gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
+var gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
+var parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResults.pug');
 
 module.exports = View.extend({
   events: {
@@ -23,12 +25,16 @@ module.exports = View.extend({
     'click [data-hook=collapse-trajmean]' : function () {
       this.changeCollapseButtonText("collapse-trajmean");
     },
+    'click [data-hook=collapse-trajmean]' : function () {
+      this.changeCollapseButtonText("collapse-psweep");
+    },
     'click [data-hook=collapse]' : function () {
       this.changeCollapseButtonText("collapse");
     },
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
+    'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'click [data-hook=plot]' : function (e) {
       var type = e.target.id
       if(this.plots[type]) {
@@ -51,18 +57,33 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.trajectories = attrs.trajectories;
     this.status = attrs.status;
+    this.species = attrs.species;
+    this.type = attrs.type;
+    this.speciesOfInterest = attrs.speciesOfInterest;
     this.plots = {}
     this.plotArgs = {}
   },
   render: function () {
-    if(this.trajectories > 1){
-      this.template = resultsEnsembleTemplate
+    if(this.type === "parameterSweep"){
+      this.template = parameterSweepResultsTemplate
     }else{
-      this.template = resultsTemplate
+      this.template = this.trajectories > 1 ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate
     }
     View.prototype.render.apply(this, arguments);
     if(this.status === 'complete'){
       this.expandContainer()
+    }
+    var speciesNames = this.species.map(function (specie) { return specie.name});
+    var speciesOfInterestView = new SelectView({
+      label: '',
+      name: 'species-of-interest',
+      required: true,
+      idAttribute: 'cid',
+      options: speciesNames,
+      value: this.speciesOfInterest.name
+    });
+    if(this.type === "parameterSweep"){
+      this.registerRenderSubview(speciesOfInterestView, 'specie-of-interest-list');
     }
   },
   update: function () {
@@ -102,6 +123,9 @@ module.exports = View.extend({
     var el = this.queryByHook(type)
     Plotly.purge(el)
     var data = {"plt_type": type}
+    if(type === 'psweep') {
+      this.plotArgs.speciesOfInterest = this.speciesOfInterest
+    }
     if(Object.keys(this.plotArgs).length){
       data['plt_data'] = this.plotArgs
     }else{
@@ -122,7 +146,7 @@ module.exports = View.extend({
     var self = this;
     var hook = type;
     var el = this.queryByHook(hook)
-    Plotly.newPlot(el, figure)
+    Plotly.newPlot(el, figure.data, figure.layout)
     this.queryAll("#" + type).forEach(function (el) {
       if(el.disabled){
         el.disabled = false;
@@ -147,7 +171,19 @@ module.exports = View.extend({
     $(this.queryByHook('workflow-results')).collapse('show');
     $(this.queryByHook('collapse')).prop('disabled', false);
     this.changeCollapseButtonText("collapse")
-    this.trajectories > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
+    if(this.type === "parameterSweep"){
+      this.getPlot("psweep")
+    }else{
+      this.trajectories > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
+    }
+  },
+  registerRenderSubview: function (view, hook) {
+    this.registerSubview(view);
+    this.renderSubview(view, this.queryByHook(hook));
+  },
+  getPlotForSpecies: function (e) {
+    this.speciesOfInterest = e.target.selectedOptions.item(0).text;
+    this.getPlot('psweep')
   },
   subviews: {
     inputTitle: {
