@@ -95,7 +95,7 @@ class ParameterSweep1D():
         visible = c.number_of_trajectories > 1
         error_y = dict(type="data", array=data[:,1], visible=visible)
 
-        trace_list = go.Scatter(x=c.p1_range, y=data[:,0], error_y=error_y)
+        trace_list = [go.Scatter(x=c.p1_range, y=data[:,0], error_y=error_y)]
 
         if title is None:
             title = "<b>Parameter Sweep - Species: {0}</b>".format(species_of_interest)
@@ -179,7 +179,7 @@ class ParameterSweep2D():
             
         data = c.data[species_of_interest]
 
-        trace_list = go.Heatmap(z=data, x=c.p1_range, y=c.p2_range)
+        trace_list = [go.Heatmap(z=data, x=c.p1_range, y=c.p2_range)]
 
         if title is None:
             title = "<b>Parameter Sweep - Species: {0}</b>".format(species_of_interest)
@@ -193,7 +193,9 @@ class ParameterSweep2D():
 
         layout = go.Layout(title=plt_title, xaxis=xaxis, yaxis=yaxis)
 
-        fig = dict(data=trace_list, layout=layout)
+        config = {"responsive": True,}
+
+        fig = dict(data=trace_list, layout=layout, config=config)
 
         if return_plotly_figure:
             return fig

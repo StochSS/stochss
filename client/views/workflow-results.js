@@ -80,7 +80,7 @@ module.exports = View.extend({
       required: true,
       idAttribute: 'cid',
       options: speciesNames,
-      value: this.speciesOfInterest.name
+      value: this.speciesOfInterest
     });
     if(this.type === "parameterSweep"){
       this.registerRenderSubview(speciesOfInterestView, 'specie-of-interest-list');
@@ -146,7 +146,7 @@ module.exports = View.extend({
     var self = this;
     var hook = type;
     var el = this.queryByHook(hook)
-    Plotly.newPlot(el, figure.data, figure.layout)
+    Plotly.newPlot(el, figure)
     this.queryAll("#" + type).forEach(function (el) {
       if(el.disabled){
         el.disabled = false;

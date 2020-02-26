@@ -13,7 +13,8 @@ module.exports = View.extend({
     'change [data-hook=one-parameter]' : 'updateParamSweepType',
     'change [data-hook=two-parameter]' : 'updateParamSweepType',
     'change [data-hook=sweep-variable-one-select]' : 'selectSweepVarOne',
-    'change [data-hook=sweep-variable-two-select]' : 'selectSweepVarTwo'
+    'change [data-hook=sweep-variable-two-select]' : 'selectSweepVarTwo',
+    'change [data-hook=specie-of-interest-list]' : 'selectSpeciesOfInterest'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
