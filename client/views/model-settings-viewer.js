@@ -1,3 +1,4 @@
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 //templates

@@ -219,7 +219,8 @@ let WorkflowManager = PageView.extend({
     }
     this.modelViewer = new ModelViewer({
       directory: this.modelDirectory,
-      status: this.status
+      status: this.status,
+      type: this.type
     });
     this.registerRenderSubview(this.modelViewer, 'model-viewer-container')
   },
