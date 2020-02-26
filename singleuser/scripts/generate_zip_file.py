@@ -40,6 +40,7 @@ def get_parsed_args():
     '''
     parser = argparse.ArgumentParser(description="Generate a zip file and return its contents for download.")
     parser.add_argument('path', help="The path to the directory or file to be zipped.")
+    parser.add_argument('-z', '--zip', action='store_true', help="Zip the file or directory.")
     return parser.parse_args()
 
 
@@ -47,9 +48,7 @@ if __name__ == "__main__":
     args = get_parsed_args()
     target = os.path.join(user_dir, args.path)
 
-    if target.endswith('.zip'):
-        full_path = target
-    else:
+    if args.zip:
         full_path = "{0}.zip".format(target.split('.')[0])
 
         file_directory = os.path.dirname(full_path)
@@ -58,7 +57,11 @@ if __name__ == "__main__":
         target = target.split('/').pop()
 
         generate_zip_file(full_path, target)
+        print("Successfully created {0}".format(full_path))
+    else:
+        data = get_zip_file_data(target)
+        print(data)
 
-    data = get_zip_file_data(full_path)
+        
 
-    print(data)
+    
