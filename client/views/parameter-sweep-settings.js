@@ -10,6 +10,7 @@ var template = require('../templates/includes/parameterSweepSettings.pug');
 module.exports = View.extend({
   template: template,
   events: {
+    'click [data-hook=collapse]' :  'changeCollapseButtonText',
     'change [data-hook=one-parameter]' : 'updateParamSweepType',
     'change [data-hook=two-parameter]' : 'updateParamSweepType',
     'change [data-hook=sweep-variable-one-select]' : 'selectSweepVarOne',
@@ -120,6 +121,10 @@ module.exports = View.extend({
       if(parameter.name === val) return parameter;
     })[0];
     return parameter;
+  },
+  changeCollapseButtonText: function (e) {
+    var text = $(this.queryByHook('collapse')).text();
+    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+')
   },
   subviews: {
     param1MinValueInput: {
