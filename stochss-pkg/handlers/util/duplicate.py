@@ -66,5 +66,5 @@ def duplicate(file_path, is_directory=False):
         copytree(full_path, unique_file_path)
     else:
         copyfile(full_path, unique_file_path)
-    return "The model {0} has been successfully copied as {1}".format(_path, unique_file_path)
+    return "The model {0} has been successfully copied as {1}".format(full_path, unique_file_path)
 

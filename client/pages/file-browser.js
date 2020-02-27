@@ -388,7 +388,7 @@ let FileBrowser = PageView.extend({
           if(parent.type === "root"){
             $('#models-jstree').jstree().refresh()
           }else{          
-            $('#models-jstree').jstree().refresh_node(node);
+            $('#models-jstree').jstree().refresh_node(parent);
           }
         })
       }

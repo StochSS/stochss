@@ -35,7 +35,7 @@ def get_page_handlers(route_start):
         ("/stochss/api/workflow/workflow-logs/(.+)\/?", WorkflowLogsAPIHandler),
         ("/stochss/api/workflow/plot-results/(.+)\/?", PlotWorkflowResultsAPIHandler),
         ("/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
-        ("/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
+        ("/stochss/api/file/delete/(.+)\/?", DeleteFileAPIHandler),
         ("/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
         ("/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
         ("/stochss/api/directory/duplicate/(.+)\/?", DuplicateDirectoryHandler),

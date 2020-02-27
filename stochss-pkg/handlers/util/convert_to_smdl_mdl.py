@@ -17,7 +17,7 @@ def is_unique(path):
     path : str
         The path to the model file.
     '''
-    from rename import get_unique_file_name
+    from .rename import get_unique_file_name
 
     file_name = path.split('/').pop()
     dir_path = path.split(file_name)[0]
@@ -43,7 +43,8 @@ def convert_model(path, to_spatial):
     model_data = get_model_data(model_path)
     from_ext = '.mdl' if to_spatial else '.smdl'
     to_ext = '.smdl' if to_spatial else '.mdl'
+    model_path = is_unique(model_path.replace(from_ext, to_ext))
     model_data['is_spatial'] = to_spatial
-    with open(path, 'w') as model_file:
+    with open(model_path, 'w') as model_file:
         json.dump(model_data, model_file)
 

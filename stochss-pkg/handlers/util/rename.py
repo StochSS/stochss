@@ -69,8 +69,6 @@ def rename(path, new_name):
         new_name += "/"
         old_name += "/"
     dir_path = old_path.split(old_name)[0]
-    resp = rename(old_path, new_name, dir_path)
-    print(resp)
     new_path, changed = get_unique_file_name(new_name, dir_path)
     shutil.move(old_path, new_path)
     

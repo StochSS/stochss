@@ -8,7 +8,7 @@ Use finish() for json, write() for text
 '''
 from notebook.base.handlers import APIHandler
 
-from shutil import move
+from shutil import move, rmtree
 import json, os
 import logging
 log = logging.getLogger()
@@ -79,12 +79,10 @@ class DeleteFileAPIHandler(APIHandler):
 
         '''
         file_path = os.path.join('/home/jovyan', path)
-        print('path:', path)
-        print('file_path:', file_path)
         try:
             os.remove(file_path)
         except OSError:
-            os.removedirs(file_path)
+            rmtree(file_path)
         self.finish("{0} was successfully deleted.".format(path.split('/').pop()))
 
 
@@ -106,10 +104,10 @@ class MoveFileAPIHandler(APIHandler):
             Data string containing old and new locations of target file.
 
         '''
-        old_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->')[0]))
-        new_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->').pop()))
+        old_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/')[0]))
+        new_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/').pop()))
         if os.path.isdir(old_path):
-            shutil.move(old_path, new_path)
+            move(old_path, new_path)
         else:
             os.rename(old_path, new_path)
         self.write("Success! {0} was moved to {1}.")
@@ -302,7 +300,8 @@ class DownloadAPIHandler(APIHandler):
             Path from the user directory to the target sbml file.
 
         '''
-        with open(path, 'r') as f:
+        full_path = os.path.join("/home/jovyan", path)
+        with open(full_path, 'r') as f:
             resp = f.read()
         self.write(resp)
 
@@ -325,6 +324,7 @@ class CreateDirectoryHandler(APIHandler):
             Directory or path of directories to be created if needed.
 
         '''
-        os.makedirs(directories)
+        full_path = os.path.join("/home/jovyan", directories)
+        os.makedirs(full_path)
         self.write('')
 

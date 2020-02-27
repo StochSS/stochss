@@ -25,7 +25,7 @@ nbconvert==5.6.1
 nbformat==5.0.4
 notebook==6.0.3
 pandocfilters==1.4.2
-parso==0.6.1
+parso==0.6.2
 pexpect==4.8.0 ; sys_platform != 'win32'
 pickleshare==0.7.5
 prometheus-client==0.7.1
