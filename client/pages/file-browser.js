@@ -449,7 +449,7 @@ let FileBrowser = PageView.extend({
         if(isModel) {
           let modelName = input.value + '.mdl';
           var parentPath = o.original._path
-          var modelPath = path.join("/hub/stochss/models/edit", parentPath, modelName);
+          var modelPath = path.join("/stochss/models/edit", parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
@@ -605,7 +605,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
+              window.location.href = path.join("/stochss/models/edit", o.original._path);
             }
           },
           "Convert" : {
@@ -639,7 +639,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/selection", o.original._path);
+              window.location.href = path.join("/stochss/workflow/selection", o.original._path);
             }
           },
           "Rename" : {
@@ -680,7 +680,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
+              window.location.href = path.join("/stochss/models/edit", o.original._path);
             }
           },
           "Convert" : {
@@ -714,14 +714,8 @@ let FileBrowser = PageView.extend({
                       $('#models-jstree').jstree().refresh_node(node);
                     }
                     var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-                    var endpoint = path.join('/stochss/api/user/');
-                    xhr(
-                      { uri: endpoint },
-                      function (err, response, body) {
-                        var notebookPath = path.join("/user/", body, "/notebooks/", _path)
-                        window.open(notebookPath, '_blank')
-                      },
-                    );
+                    var notebookPath = path.join("/lab/tree", _path)
+                    window.open(notebookPath, '_blank')
                   });
                 }
               },
@@ -742,7 +736,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/selection", o.original._path);
+              window.location.href = path.join("/stochss/workflow/selection", o.original._path);
             }
           },
           "Download" : {
@@ -792,7 +786,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/edit/none", o.original._path);
+              window.location.href = path.join("/stochss/workflow/edit/none", o.original._path);
             }
           },
           "Start/Restart Workflow" : {
@@ -868,15 +862,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              var filePath = o.original._path
-              var endpoint = path.join('/stochss/api/user/');
-              xhr(
-                { uri: endpoint },
-                function (err, response, body) {
-                  var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
-                  window.open(notebookPath, '_blank')
-                },
-              );
+              window.open(path.join("/lab/tree", o.original._path));
             }
           },
           "Download" : {
@@ -927,11 +913,7 @@ let FileBrowser = PageView.extend({
             "label" : "Open File",
             "action" : function (data) {
               var filePath = o.original._path
-              var endpoint = path.join('/stochss/api/user/');
-              xhr({ uri: endpoint }, function (err, response, body) {
-                var openPath = path.join("/user/", body, "/edit/", filePath)
-                window.open(openPath, '_blank')
-              });
+              window.open(path.join("/lab/tree", filePath), '_blank')
             }
           },
           "Convert" : {
@@ -1048,27 +1030,17 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').on('dblclick.jstree', function(e) {
       var file = e.target.text
       var node = $('#models-jstree').jstree().get_node(e.target)
-      console.log(node)
       var _path = node.original._path;
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-        window.location.href = path.join("/hub/stochss/models/edit", _path);
+        window.location.href = path.join("/stochss/models/edit", _path);
       }else if(file.endsWith('.ipynb')){
-        var endpoint = path.join('/stochss/api/user/');
-        xhr(
-          { uri: endpoint },
-          function (err, response, body) {
-            var notebookPath = path.join("/user/", body, "/notebooks/", _path)
-            window.open(notebookPath, '_blank')
-          },
-        );
+        var notebookPath = path.join("/lab/tree/", _path)
+        window.open(notebookPath, '_blank')
       }else if(file.endsWith('.sbml')){
-        var endpoint = path.join('/stochss/api/user/');
-        xhr({ uri: endpoint }, function (err, response, body) {
-          var openPath = path.join("/user/", body, "/edit/", _path)
-          window.open(openPath, '_blank')
-        });
+        var openPath = path.join("/lab/tree/", _path)
+        window.open(openPath, '_blank')
       }else if(file.endsWith('.wkfl')){
-        window.location.href = path.join("/hub/stochss/workflow/edit/none", _path);
+        window.location.href = path.join("/stochss/workflow/edit/none", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }

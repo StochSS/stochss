@@ -12,3 +12,4 @@ jupyterhub-proxy.pid
 __pycache__
 userlist
 dist/*
+*.egg-info/

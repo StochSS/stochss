@@ -52,11 +52,12 @@ deps:
 hub_image: check-files network
 	docker build -t $(DOCKER_HUB_IMAGE):latest .
 
-build: check-files deps network notebook_image hub_image webpack userlist cert
+#build: check-files deps network notebook_image hub_image webpack userlist cert
 
-run_prod:
+
+run_hub:
 	docker run -it --rm \
-		--env-file .authclass.env \
+		--env-file .authclass.env \ #change to .dev.authclass.env for dummy auth
 		--name jupyterhub \
 		-p 443:443 \
 		--env-file .env \
@@ -66,17 +67,30 @@ run_prod:
 		--network $(DOCKER_NETWORK_NAME) \
 		$(DOCKER_HUB_IMAGE):latest
 
-run_dev: 
-	docker run -it --rm \
-		--env-file .dev.authclass.env \
-		--name jupyterhub \
-		-p 443:443 \
+build:
+	pipenv lock -r > requirements.txt
+	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
+
+run: 
+	docker run --rm \
+		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		--env-file ./secrets/oauth.env \
-		-v $(PWD):/srv/jupyterhub \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		--network $(DOCKER_NETWORK_NAME) \
-		$(DOCKER_HUB_IMAGE):latest
+		-v $(PWD):/stochss \
+		-p 8888:8888 \
+		$(DOCKER_STOCHSS_IMAGE):latest
+
+run_bash:
+	docker run -it --rm \
+		--name $(DOCKER_STOCHSS_IMAGE) \
+		--env-file .env \
+		-v $(PWD):/stochss \
+		-p 8888:8888 \
+		$(DOCKER_STOCHSS_IMAGE):latest \
+		/bin/bash
+
+
+update:
+	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss
 
 
 .PHONY: network volumes check-files pull notebook_image build
