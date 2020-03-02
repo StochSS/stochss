@@ -6,9 +6,8 @@ requests without a referrer field
 
 import json
 import os
+import subprocess
 from notebook.base.handlers import APIHandler
-from jupyterhub.handlers.base import BaseHandler
-from tornado import web # handle authentication
 
 from .util.workflow_status import get_status
 from .util.plot_results import plot_results
@@ -20,15 +19,12 @@ log = logging.getLogger()
 
 
 class WorkflowInfoAPIHandler(APIHandler):
-
     '''
     ########################################################################
     Handler for getting Workflow Info including start date tine and path to the 
     model at the last workflow save.
     ########################################################################
     '''
-
-    @web.authenticated
     async def get(self, info_path):
         '''
         Retrieve workflow info from user container. Data is transferred to hub
@@ -46,14 +42,12 @@ class WorkflowInfoAPIHandler(APIHandler):
         self.write(data) # Send data to client
 
 
-class RunWorkflowAPIHandler(BaseHandler):
+class RunWorkflowAPIHandler(APIHandler):
     '''
     ########################################################################
     Handler for running workflows.
     ########################################################################
     '''
-
-    @web.authenticated
     async def get(self, wkfl_type, opt_type, data):
         '''
         Start running a workflow and record the time in UTC in the workflow_info file.
@@ -68,27 +62,25 @@ class RunWorkflowAPIHandler(BaseHandler):
             Path to selected workflows model file and name of workflow within user pod container.
         '''
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
+        log.warning("Path to the model: {0}".format(model_path))
+        log.warning("Name of workflow or workflow path: {0}".format(workflow_name))
+        log.warning("Type of workflow: {0}".format(wkfl_type))
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        log.warn('starting the workflow')
-        # Use Popen instead and orphan/detach the process?
-        '''
-        exec_cmd = "screen -d -m run_workflow.py {} {}".format(model_path, workflow_name).split(" ") # Script commands
-        # exec_cmd = ["run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        exec_cmd = ["stochss-pkg/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
-        stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        log.warn('sent the workflow')
-        '''
+        log.warning("Save workflow options: {0}".format(opt_type))
+        log.warning("Exec command sent to the subprocess: {0}".format(exec_cmd))
+        log.warning('Sending the workflow run cmd')
+        pipe = subprocess.Popen(exec_cmd)
+        log.warning('The workflow has started')
 
 
-class SaveWorkflowAPIHandler(BaseHandler):
-
+class SaveWorkflowAPIHandler(APIHandler):
     '''
     ########################################################################
     Handler for saving workflows.
     ########################################################################
     '''
-
-    @web.authenticated
     async def get(self, wkfl_type, opt_type, data):
         '''
         Start saving the workflow.  Creates the workflow directory and workflow_info file if
@@ -101,31 +93,27 @@ class SaveWorkflowAPIHandler(BaseHandler):
         data : str
             Path to selected workflows model file and name of workflow within user pod container.
         '''
-
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
-        log.warn("Path to the model: {0}".format(model_path))
-        log.warn("Name of workflow or workflow path: {0}".format(workflow_name))
-        log.warn("Type of workflow: {0}".format(wkfl_type))
+        log.warning("Path to the model: {0}".format(model_path))
+        log.warning("Name of workflow or workflow path: {0}".format(workflow_name))
+        log.warning("Type of workflow: {0}".format(wkfl_type))
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        '''
-        exec_cmd = [ "run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        exec_cmd = [ "stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
-        log.warn("Run workflow options: {0}".format(opt_type))
-        log.warn("Exec command sent to the user pod: {0}".format(exec_cmd))
-        resp = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        log.warn("Response to the command: {0}".format(resp))
-        '''
+        log.warning("Save workflow options: {0}".format(opt_type))
+        log.warning("Exec command sent to the subprocess: {0}".format(exec_cmd))
+        pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
+        resp, errors = pipe.communicate()
+        log.warning("Response to the command: {0}".format(resp))
+        log.error("Errors thrown: {0}".format(errors))
 
 
 class WorkflowStatusAPIHandler(APIHandler):
-
     '''
     ########################################################################
     Handler for getting Workflow Status (checking for RUNNING and COMPLETE files.
     ########################################################################
     '''
-
-    @web.authenticated
     async def get(self, workflow_path):
         '''
         Retrieve workflow status from user container. Data is transferred to hub
@@ -143,14 +131,11 @@ class WorkflowStatusAPIHandler(APIHandler):
 
 
 class PlotWorkflowResultsAPIHandler(APIHandler):
-
     '''
     ########################################################################
     Handler for getting result plots based on plot type.
     ########################################################################
     '''
-
-    @web.authenticated
     async def get(self, workflow_path):
         '''
         Retrieve a plot figure of the workflow results based on the plot type 
@@ -181,7 +166,6 @@ class WorkflowLogsAPIHandler(APIHandler):
     Handler for getting Workflow Status (checking for RUNNING and COMPLETE files.
     ########################################################################
     '''
-    @web.authenticated
     async def get(self, logs_path):
         '''
         Retrieve workflow status from user container. Data is transferred to hub
@@ -192,10 +176,12 @@ class WorkflowLogsAPIHandler(APIHandler):
         workflow_path : str
             Path to selected workflow directory within user pod container.
         '''
-
         full_path = os.path.join("/home/jovyan/", logs_path)
-        with open(full_path, 'r') as log_file:
-            data = log_file.read()
+        try:
+            with open(full_path, 'r') as log_file:
+                data = log_file.read()
+        except:
+            data = "No logs were found for this workflow."
         log.warn("Log data: {0}".format(data))
         self.write(data) # Send data to client
 
@@ -207,7 +193,6 @@ class WorkflowNotebookHandler(APIHandler):
     (.ipynb) file for notebook workflows.
     ##############################################################################
     '''
-    @web.authenticated
     async def get(self, workflow_type, path):
         '''
         Sends request to server to run convert_to_notebook.py on target mdl

@@ -36,7 +36,7 @@ module.exports = View.extend({
     this.saveModel(this.runModel.bind(this));
   },
   clickStartWorkflowHandler: function (e) {
-    window.location.href = path.join("/hub/stochss/workflow/selection", this.model.directory);
+    window.location.href = path.join("/stochss/workflow/selection", this.model.directory);
   },
   togglePreviewWorkflowBtn: function () {
     var numSpecies = this.model.species.length;
