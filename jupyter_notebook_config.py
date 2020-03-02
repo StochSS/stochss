@@ -181,7 +181,7 @@ c.NotebookApp.extra_static_paths = [
 #  completely without authentication. These services can disable all
 #  authentication and security checks, with the full knowledge of what that
 #  implies.
-#c.NotebookApp.disable_check_xsrf = False
+c.NotebookApp.disable_check_xsrf = True
 
 ## Whether to enable MathJax for typesetting math/TeX
 #  

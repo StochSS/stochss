@@ -4,8 +4,10 @@ the base API handler has some logic that prevents
 requests without a referrer field
 '''
 
-import os.path
+import os
+import subprocess
 
+from notebook.base.handlers import APIHandler
 from jupyterhub.handlers.base import BaseHandler
 from tornado import web # handle authentication
 
@@ -17,7 +19,7 @@ import logging
 log = logging.getLogger()
 
 
-class JsonFileAPIHandler(BaseHandler):
+class JsonFileAPIHandler(APIHandler):
     '''
     ########################################################################
     Base Handler for interacting with Model file Get/Post Requests.
@@ -67,7 +69,7 @@ class JsonFileAPIHandler(BaseHandler):
             f.write(data)
 
 
-class RunModelAPIHandler(BaseHandler):
+class RunModelAPIHandler(APIHandler):
     '''
     ########################################################################
     Handler for running a model from the model editor.
@@ -97,18 +99,20 @@ class RunModelAPIHandler(BaseHandler):
             outfile = outfile.replace("-", "_")
         log.warn(str(outfile))
         # Use Popen instead? Can we orphan/detach the process somehow?
-        '''
-        exec_cmd = ['run_model.py', '{0}'.format(model_path), '{}.tmp'.format(outfile)] # Script commands for read run_cmd
+        exec_cmd = ['stochss-pkg/handlers/util/run_model.py', '{0}'.format(model_path), '{}.tmp'.format(outfile)] # Script commands for read run_cmd
         exec_cmd.append(''.join(['--', run_cmd]))
-        if run_cmd == 'start':
-            exec_cmd = ['screen', '-d', '-m'] + exec_cmd # Add screen cmd to Script commands for start run_cmd
         log.warning(exec_cmd)
-        results = stochss_kubernetes.run_script(exec_cmd, client, user_pod)
-        log.warn(str(results))
-        # Send data back to client
-        if results:
-            self.write(results)
-        else:
+        if(run_cmd == "start"):
+            pipe = subprocess.Popen(exec_cmd)
             self.write("running->{0}".format(outfile))
-        '''
+        else:
+            pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
+            results, error = pipe.communicate()
+            log.warning(results)
+            log.error(error)
+            # Send data back to client
+            if results:
+                self.write(results)
+            else:
+                self.write("running->{0}".format(outfile))
 

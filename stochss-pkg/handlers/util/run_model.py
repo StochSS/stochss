@@ -20,7 +20,7 @@ from gillespy2 import Species, Parameter, Reaction, RateRule, Model
 try:
     from gillespy2 import AssignmentRule
 except:
-    log.warn("Assignment Rules are not supported")
+    log.warning("Assignment Rules are not supported")
 import numpy
 import gillespy2.core.gillespySolver
 from gillespy2.core.events import EventAssignment, EventTrigger, Event
@@ -164,7 +164,7 @@ class _Model(Model):
         try:
             self.add_assignment_rules(assignment_rules)
         except:
-            log.warn('Assignment rules are not supported.')
+            log.warning('Assignment rules are not supported.')
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
 
@@ -370,7 +370,7 @@ class ModelFactory():
         try:
             return AssignmentRule(variable=variable[0], formula=expression)
         except:
-            log.warn("Assignment rules are not yet supported")
+            log.warning("Assignment rules are not yet supported")
 
 
     def build_stoich_species_dict(self, args):
