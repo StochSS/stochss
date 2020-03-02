@@ -8,8 +8,6 @@ import os
 import subprocess
 
 from notebook.base.handlers import APIHandler
-from jupyterhub.handlers.base import BaseHandler
-from tornado import web # handle authentication
 
 import ast # for eval_literal to use with kube response
 import json

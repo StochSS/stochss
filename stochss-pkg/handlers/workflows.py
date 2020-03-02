@@ -6,6 +6,7 @@ requests without a referrer field
 
 import json
 import os
+from notebook.base.handlers import APIHandler
 from jupyterhub.handlers.base import BaseHandler
 from tornado import web # handle authentication
 
@@ -18,7 +19,7 @@ import logging
 log = logging.getLogger()
 
 
-class WorkflowInfoAPIHandler(BaseHandler):
+class WorkflowInfoAPIHandler(APIHandler):
 
     '''
     ########################################################################
@@ -39,10 +40,10 @@ class WorkflowInfoAPIHandler(BaseHandler):
             Path to selected workflows info file within user pod container.
         '''
         log.debug(info_path)
-        full_path = "/home/jovyan{0}".format(info_path) # full path to workflow info
-        with open(full_path, 'r') as f:
-            json_data = read(f)
-        self.write(json_data) # Send data to client
+        full_path = os.path.join("/home/jovyan", info_path) # full path to workflow info
+        with open(full_path, 'r') as info_file:
+            data = info_file.read()
+        self.write(data) # Send data to client
 
 
 class RunWorkflowAPIHandler(BaseHandler):
@@ -116,7 +117,7 @@ class SaveWorkflowAPIHandler(BaseHandler):
         '''
 
 
-class WorkflowStatusAPIHandler(BaseHandler):
+class WorkflowStatusAPIHandler(APIHandler):
 
     '''
     ########################################################################
@@ -136,12 +137,12 @@ class WorkflowStatusAPIHandler(BaseHandler):
             Path to selected workflow directory within user pod container.
         '''
         log.warn('getting the status of the workflow')
-        get_status(workflow_path)        
+        status = get_status(workflow_path)        
         log.warn('the status of the workflow is: ' + status)
         self.write(status) # Send data to client
 
 
-class PlotWorkflowResultsAPIHandler(BaseHandler):
+class PlotWorkflowResultsAPIHandler(APIHandler):
 
     '''
     ########################################################################
@@ -165,15 +166,16 @@ class PlotWorkflowResultsAPIHandler(BaseHandler):
         results_path = os.path.join(workflow_path, 'results/results.p') # Path to the results file
         log.warn(self.request.body)
         plt_type = body['plt_type'] # type of plot to be retrieved 
-        plt_data = json.dumps(body['plt_data']) # plot title and axes lables
-        plt_fig = plot_results(results_path, plt_type)
-        if not "None" in plt_data:
+        plt_data = body['plt_data'] # plot title and axes lables
+        if "None" in plt_data:
+            plt_fig = plot_results(results_path, plt_type)
+        else:
             plt_fig = plot_results(results_path, plt_type, plt_data) # Add plot data to the exec cmd if its not "None"
         log.warn(plt_fig)
         self.write(plt_fig) # Send data to client
 
 
-class WorkflowLogsAPIHandler(BaseHandler):
+class WorkflowLogsAPIHandler(APIHandler):
     '''
     ########################################################################
     Handler for getting Workflow Status (checking for RUNNING and COMPLETE files.
@@ -191,14 +193,14 @@ class WorkflowLogsAPIHandler(BaseHandler):
             Path to selected workflow directory within user pod container.
         '''
 
-        full_path = "/home/jovyan/{0}".format(logs_path)
-        with open(full_path, 'r') as f:
-            data = f.read()
+        full_path = os.path.join("/home/jovyan/", logs_path)
+        with open(full_path, 'r') as log_file:
+            data = log_file.read()
         log.warn("Log data: {0}".format(data))
         self.write(data) # Send data to client
 
 
-class WorkflowNotebookHandler(BaseHandler):
+class WorkflowNotebookHandler(APIHandler):
     '''
     ##############################################################################
     Handler for handling conversions from model (.mdl) file to Jupyter Notebook

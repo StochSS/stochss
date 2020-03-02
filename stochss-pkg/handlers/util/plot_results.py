@@ -153,10 +153,8 @@ def get_parsed_args():
     return args
 
 
-def plot_results(results_path, plt_type, plt_data):
+def plot_results(results_path, plt_type, plt_data=None):
     results_path = path.join(user_dir, results_path)
-    plt_type = plt_type
-    plt_data = plt_data
     plt_args = get_plt_args(plt_data)
     # For using pickled results
     # plt_args['return_plotly_figure'] = True

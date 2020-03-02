@@ -30,7 +30,7 @@ def get_page_handlers(route_start):
         ("/stochss/api/workflow/notebook/(\w+)/(.+)\/?", WorkflowNotebookHandler),
         ("/stochss/api/workflow/save-workflow/(\w+)/(\w+)\/?(.+)\/?", SaveWorkflowAPIHandler),
         ("/stochss/api/workflow/run-workflow/(\w+)/(\w+)\/?(.+)\/?", RunWorkflowAPIHandler),
-        ("/stochss/api/workflow/workflow-info(.+)\/?", WorkflowInfoAPIHandler),
+        ("/stochss/api/workflow/workflow-info/(.+)\/?", WorkflowInfoAPIHandler),
         ("/stochss/api/workflow/workflow-status/(.+)\/?", WorkflowStatusAPIHandler),
         ("/stochss/api/workflow/workflow-logs/(.+)\/?", WorkflowLogsAPIHandler),
         ("/stochss/api/workflow/plot-results/(.+)\/?", PlotWorkflowResultsAPIHandler),
