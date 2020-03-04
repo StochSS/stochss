@@ -1,7 +1,7 @@
 
 include .env
 
-.DEFAULT_GOAL=build
+.DEFAULT_GOAL=build_and_run
 
 network:
 	@docker network inspect $(DOCKER_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(DOCKER_NETWORK_NAME)
@@ -26,15 +26,6 @@ userlist:
 
 check-files: userlist $(cert_files) secrets/oauth.env
 
-pull:
-	docker pull $(DOCKER_NOTEBOOK_IMAGE)
-
-notebook_image: pull singleuser/Dockerfile
-	docker build -t $(LOCAL_NOTEBOOK_IMAGE) \
-		--build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
-		--build-arg DOCKER_NOTEBOOK_IMAGE=$(DOCKER_NOTEBOOK_IMAGE) \
-		singleuser
-
 cert:
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
 
@@ -50,34 +41,35 @@ deps:
 	pipenv install
 
 hub_image: check-files network
-	docker build -t $(DOCKER_HUB_IMAGE):latest .
-
-#build: check-files deps network notebook_image hub_image webpack userlist cert
-
+	docker build \
+	  --build-arg JUPYTERHUB_VERSION=1.1.0 \
+	  -f Dockerfile.jupyterhub \
+	  -t $(DOCKER_HUB_IMAGE):latest .
 
 run_hub:
 	docker run -it --rm \
-		--env-file .authclass.env \ #change to .dev.authclass.env for dummy auth
 		--name jupyterhub \
 		-p 443:443 \
 		--env-file .env \
-		--env-file ./secrets/oauth.env \
+		--env OAUTH_CALLBACK_URL='' \
 		-v $(PWD):/srv/jupyterhub \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		--network $(DOCKER_NETWORK_NAME) \
 		$(DOCKER_HUB_IMAGE):latest
 
-build:
+build:  webpack
 	pipenv lock -r > requirements.txt
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
 
-run: 
+run:    
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
+
+build_and_run: build run
 
 run_bash:
 	docker run -it --rm \

@@ -1,19 +1,33 @@
-StochSS
+# StochSS
 
 (JupyterHub not connected yet)
 
-# Install pipenv, an environment manager for python
+### Setup 
+
+- Install pipenv, an environment manager for python
+
 `python3 -m pip install pipenv`
 
-# Build the docker container
+- Build the docker container
 `make build`
 
-# Run the notebook server
+### Run it
+
+- Run the notebook server
 `make run`
 
-# Rebuild static assets on source changes
+- Rebuild static assets on source changes
 `make watch`
 
-# Update a running server (for handlers/backend)
+- Update a running server (for handlers/backend)
 `make update`
- 
+
+### Add a python dependency
+
+- Use pipenv to control dependencies
+
+`pipenv install mylib`
+
+- Create a new requirements.txt file and rebuild the docker container
+
+`make build`

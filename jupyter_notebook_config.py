@@ -54,8 +54,22 @@ c.NotebookApp.nbserver_extensions = {
 # This is also where we put stochss page bundles
 c.NotebookApp.extra_static_paths = [
     # This entry comes first
-    os.path.realpath('./stochss-pkg/dist')
+    os.path.realpath('/stochss/stochss-pkg/dist')
 ]
+
+## Disable cross-site-request-forgery protection
+#  
+#  Jupyter notebook 4.3.1 introduces protection from cross-site request
+#  forgeries, requiring API requests to either:
+#  
+#  - originate from pages served by this server (validated with XSRF cookie and
+#  token), or - authenticate with a token
+#  
+#  Some anonymous compute resources still desire the ability to run code,
+#  completely without authentication. These services can disable all
+#  authentication and security checks, with the full knowledge of what that
+#  implies.
+c.NotebookApp.disable_check_xsrf = True
 
 ## The directory to use for notebooks and kernels.
 #c.NotebookApp.notebook_dir = ''
@@ -169,19 +183,6 @@ c.NotebookApp.extra_static_paths = [
 ## The default URL to redirect to from `/`
 #c.NotebookApp.default_url = '/tree'
 
-## Disable cross-site-request-forgery protection
-#  
-#  Jupyter notebook 4.3.1 introduces protection from cross-site request
-#  forgeries, requiring API requests to either:
-#  
-#  - originate from pages served by this server (validated with XSRF cookie and
-#  token), or - authenticate with a token
-#  
-#  Some anonymous compute resources still desire the ability to run code,
-#  completely without authentication. These services can disable all
-#  authentication and security checks, with the full knowledge of what that
-#  implies.
-c.NotebookApp.disable_check_xsrf = True
 
 ## Whether to enable MathJax for typesetting math/TeX
 #  

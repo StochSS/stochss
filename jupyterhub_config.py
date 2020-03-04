@@ -29,92 +29,21 @@ c.JupyterHub.log_level = 'DEBUG'
 
 # Page handlers
 
-c.JupyterHub.log_level = 'DEBUG'
-
-c.JupyterHub.default_url = '/stochss'
+#c.JupyterHub.default_url = '/stochss'
 
 # Page handlers
-from handlers.pages import \
-  HomeHandler, \
-  ModelBrowserHandler, \
-  ModelEditorHandler, \
-  WorkflowSelectionHandler, \
-  WorkflowEditorHandler
-
-# File Browser API Handlers
-from handlers.file_browser import \
-  ModelBrowserFileList, \
-  ModelToNotebookHandler, \
-  DeleteFileAPIHandler, \
-  MoveFileAPIHandler, \
-  DuplicateModelHandler, \
-  DuplicateDirectoryHandler, \
-  RenameAPIHandler, \
-  ConvertToSpatialAPIHandler, \
-  ConvertToModelAPIHandler, \
-  SBMLToModelAPIHandler, \
-  ModelToSBMLAPIHandler, \
-  DownloadAPIHandler, \
-  CreateDirectoryHandler
-  
-# Model API handlers
-from handlers.models import \
-  JsonFileAPIHandler, \
-  RunModelAPIHandler
-
-# Workflow API Handlers
-from handlers.workflows import \
-  WorkflowNotebookHandler, \
-  SaveWorkflowAPIHandler, \
-  RunWorkflowAPIHandler, \
-  WorkflowInfoAPIHandler, \
-  WorkflowStatusAPIHandler, \
-  WorkflowLogsAPIHandler, \
-  PlotWorkflowResultsAPIHandler
-
-# Username API Handler
-from handlers.username import UsernameHandler
+#from home_page import HomeHandler
 
 # StochSS request handlers
-c.JupyterHub.extra_handlers = [
-    # API handlers
-    (r"/stochss/api/user\/?", UsernameHandler),
-    (r"/stochss/api/json-data/(.+)\/?", JsonFileAPIHandler),
-    (r"/stochss/api/models/run/(\w+)/(\w+)?\/?(.+)\/?", RunModelAPIHandler),
-    (r"/stochss/api/model/duplicate/(.+)\/?", DuplicateModelHandler),
-    (r"/stochss/api/models/to-notebook/(.+)\/?", ModelToNotebookHandler),
-    (r"/stochss/api/model/to-spatial/(.+)\/?", ConvertToSpatialAPIHandler),
-    (r"/stochss/api/model/to-sbml/(.+)\/?", ModelToSBMLAPIHandler),
-    (r"/stochss/api/spatial/to-model/(.+)\/?", ConvertToModelAPIHandler),
-    (r"/stochss/api/sbml/to-model/(.+)\/?", SBMLToModelAPIHandler),
-    (r"/stochss/api/workflow/notebook/(\w+)/(.+)\/?", WorkflowNotebookHandler),
-    (r"/stochss/api/workflow/save-workflow/(\w+)/(\w+)\/?(.+)\/?", SaveWorkflowAPIHandler),
-    (r"/stochss/api/workflow/run-workflow/(\w+)/(\w+)\/?(.+)\/?", RunWorkflowAPIHandler),
-    (r"/stochss/api/workflow/workflow-info(.+)\/?", WorkflowInfoAPIHandler),
-    (r"/stochss/api/workflow/workflow-status/(.+)\/?", WorkflowStatusAPIHandler),
-    (r"/stochss/api/workflow/workflow-logs/(.+)\/?", WorkflowLogsAPIHandler),
-    (r"/stochss/api/workflow/plot-results/(.+)\/?", PlotWorkflowResultsAPIHandler),
-    (r"/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
-    (r"/stochss/api/file/delete(.+)\/?", DeleteFileAPIHandler),
-    (r"/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
-    (r"/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
-    (r"/stochss/api/directory/duplicate/(.+)\/?", DuplicateDirectoryHandler),
-    (r"/stochss/api/directory/create/(.+)\/?", CreateDirectoryHandler),
-    # Pages
-    (r"/stochss\/?", HomeHandler),
-    (r"/stochss/models\/?$", ModelBrowserHandler),
-    (r"/stochss/models/browser-list(.+)\/?", ModelBrowserFileList),
-    (r"/stochss/models/edit\/?(.+)?\/?", ModelEditorHandler),
-    (r"/stochss/workflow/selection\/?(.+)?\/?", WorkflowSelectionHandler),
-    (r"/stochss/workflow/edit\/?(.+)?\/?", WorkflowEditorHandler),
-    #(r"/stochss.*", MainHandler)
-]
+#c.JupyterHub.extra_handlers = [
+#    (r"/stochss\/?", HomeHandler),
+#]
 
 ## Paths to search for jinja templates, before using the default templates.
-c.JupyterHub.template_paths = [
-  "/stochss/jupyterhub_templates/",
-  "/opt/conda/share/jupyterhub/static/stochss"
-]
+#c.JupyterHub.template_paths = [
+#  "/stochss/jupyterhub_templates/",
+#  "/opt/conda/share/jupyterhub/static/stochss"
+#]
 
 ## Path to SSL certificate file for the public facing interface of the proxy
 #  
@@ -129,7 +58,7 @@ c.JupyterHub.ssl_key = os.getenv('SSL_KEY')
 ## The public facing URL of the whole JupyterHub application.
 #  
 #  This is the address on which the proxy will bind. Sets protocol, ip, base_url
-c.JupyterHub.bind_url = os.getenv('BIND_URL')
+#c.JupyterHub.bind_url = os.getenv('BIND_URL')
 
 ## Class for authenticating users.
 #  
@@ -153,11 +82,9 @@ c.JupyterHub.bind_url = os.getenv('BIND_URL')
 #    - pam: jupyterhub.auth.PAMAuthenticator
 #
 
-# Authenticate users with GitHub OAuth
-#c.JupyterHub.authenticator_class = 'oauthenticator.GitHubOAuthenticator'
-
 # Use the dummy authenticator for dev
 c.JupyterHub.authenticator_class = os.environ['AUTH_CLASS']
+# Only meaningful if using GitHub authenticator
 c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
 
 #c.Authenticator.whitelist = whitelist = set()
@@ -190,7 +117,7 @@ with open(os.path.join(pwd, 'userlist')) as f:
 #    - simple: jupyterhub.spawner.SimpleLocalProcessSpawner
 c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
 
-c.DockerSpawner.container_image = os.environ['LOCAL_NOTEBOOK_IMAGE']
+c.DockerSpawner.container_image = os.environ['DOCKER_STOCHSS_IMAGE']
 # JupyterHub requires a single-user instance of the Notebook server, so we
 # default to using the `start-singleuser.sh` script included in the
 # jupyter/docker-stacks *-notebook images as the Docker run command when
@@ -212,8 +139,7 @@ notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
 c.DockerSpawner.notebook_dir = notebook_dir
 # Mount the real user's Docker volume on the host to the notebook user's
 # notebook directory in the container
-# TODO BRING THIS BACK
-#c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
+c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
 
 # Remove containers once they are stopped
 c.DockerSpawner.remove_containers = True
@@ -229,7 +155,7 @@ c.DockerSpawner.debug = True
 #  
 #  See `hub_connect_ip` for cases where the bind and connect address should
 #  differ, or `hub_bind_url` for setting the full bind URL.
-c.JupyterHub.hub_ip =  'jupyterhub'
+#c.JupyterHub.hub_ip =  'jupyterhub'
 
 ## The internal port for the Hub process.
 #  
@@ -239,7 +165,7 @@ c.JupyterHub.hub_ip =  'jupyterhub'
 #  conflict.
 #  
 #  See also `hub_ip` for the ip and `hub_bind_url` for setting the full bind URL.
-c.JupyterHub.hub_port = 8080
+#c.JupyterHub.hub_port = 8080
 
 
 ## Maximum number of concurrent servers that can be active at a time.

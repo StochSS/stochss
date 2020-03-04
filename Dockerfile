@@ -1,15 +1,17 @@
 FROM jupyter/minimal-notebook:latest
 
+USER jovyan
+
 WORKDIR /stochss
-
-USER root
-
-COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
 RUN rm -r /home/jovyan/work
 
 COPY requirements.txt .
 
-RUN pip install -r requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
 
-CMD ["./start.sh"]
+COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
+
+COPY --chown=jovyan:users start-stochss.sh /usr/local/bin
+
+CMD ["start-stochss.sh"]
