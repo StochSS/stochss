@@ -24,8 +24,20 @@ div#workflow-results.card.card-body
 
     div
 
-      span.inline(for="species-of-interest") Species of Interest:
-      div.inline(id="species-of-interest" data-hook="specie-of-interest-list")
+      div.inline.horizontal-space
+
+        span.inline(for="species-of-interest") Species of Interest:
+        div.inline(id="species-of-interest" data-hook="specie-of-interest-list")
+
+      div.inline.horizontal-space
+
+        span.inline(for="feature-extractor") Feature Extraction: 
+        div.inline(id="feature-extractor" data-hook="feature-extraction-list")
+
+      div.inline.horizontal-space
+
+        span.inline(for="ensemble-aggragator") Ensemble Aggragator: 
+        div.inline(id="ensemble-aggragator" data-hook="ensemble-aggragator-list")
 
     div
 

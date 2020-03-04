@@ -176,11 +176,11 @@ class PlotWorkflowResultsAPIHandler(BaseHandler):
         checkUserOrRaise(self) # User Validation
         user = self.current_user.name # Get Username
         client, user_pod = stochss_kubernetes.load_kube_client(user) # Load kube client
-        results_path = os.path.join(workflow_path, 'results/results.p') # Path to the results file
+        results_path = os.path.join(workflow_path, 'results/plots.json') # Path to the results file
         log.warn(self.request.body)
-        plt_type = body['plt_type'] # type of plot to be retrieved 
+        plt_key = body['plt_key'] # type of plot to be retrieved 
         plt_data = json.dumps(body['plt_data']) # plot title and axes lables
-        exec_cmd = [ 'plot_results.py', "{0}".format(results_path), "{0}".format(plt_type)] # Script commands
+        exec_cmd = [ 'plot_results.py', "{0}".format(results_path), "{0}".format(plt_key)] # Script commands
         if not "None" in plt_data:
             exec_cmd.extend(["--plt_data", "{0}".format(plt_data)]) # Add plot data to the exec cmd if its not "None"
         plt_fig = stochss_kubernetes.run_script(exec_cmd, client, user_pod)

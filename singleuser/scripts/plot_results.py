@@ -14,137 +14,60 @@ from gillespy2.core.results import EnsembleResults, Results
 user_dir = "/home/jovyan"
 
 
-def get_results(results_path):
+def read_plots_file(plots_file_path):
     '''
-    Unpickle the workflow results from the rusults.p file.
+    Read the plots file and return its contents.
 
     Attributes
     ----------
-    results_path : str
-        Path to the pickled results file.
+    plots_file_path : str
+        Path to the plots file.
     '''
-    # For reading plot files
     try:
-        with open(results_path, 'r') as fd:
-            plot = json.load(fd)
+        with open(plots_file_path, 'r') as plt_file:
+            plots = json.load(plt_file)
     except FileNotFoundError as error:
         return "ERROR! This plot is not available: {0}".format(error)
-    return plot
+    return plots
     
-    # For using pickled results
-    # with open(path, 'rb') as fd:
-    #     results = pickle.load(fd)
-    # return results
 
-
-def get_plt_args(plt_data):
+def get_plot_fig(plots_file_path, plt_key):
     '''
-    Builds the arguments for the plotplotly function as a json string.
+    Get the plots for the workflow and return the plot at the plt_key.
 
     Attributes
     ----------
+    plots_file_path : str
+        Path to the plots file.
+    plt_key : str
+        The key that the target plot is stored under.
+    '''
+    plots = read_plots_file(plots_file_path)
+    try:
+        return plots[plt_key]
+    except:
+        return plots
+
+
+def edit_plot_fig(plt_fig, plt_data):
+    '''
+    Edit the title, x-axis label, and/or y-axis label to the plt_data.
+
+    Attributes
+    ----------
+    plt_fig : json
+        The plot figure to be edited.
     plt_data : str
-        JSON string fo the title and the axes labels.
+        The data that needs to be applied to the plot.
     '''
-    if not plt_data: # no arguments were passed to the script
-        return {}
-    else:
-        return json.loads(plt_data)
+    plt_data = json.loads(plt_data)
+    for key in plt_data.keys():
+        if key == "title":
+            plt_fig['layout']['title']['text'] = plt_data[key]
+        else:
+            plt_fig['layout'][key]['title']['text'] = plt_data[key]
 
-
-def plot_std_dev_range(results, kwargs):
-    '''
-    Gets the plot of the standard deviation range with the average of 
-    all trajectories for a Results Ensemble.
-
-    Attributes
-    ----------
-    results : GillesPy2 ResultsEnsemble
-        Results of a workflow run with number_of_trajectories > 1.
-    kwargs : dict
-        Arguments to be passed to the plotplotly() function.
-    '''
-    # For reading plot files
-    plot_path = results.replace('results.p', 'std_dev_range_plot.json')
-    return get_results(plot_path)
-
-    # For using pickled results
-    # return results.plotplotly_std_dev_range(**kwargs)
-
-
-def plot(results, kwargs):
-    '''
-    Gets the plot of all trajectories for Results or a Results Ensemble.
-
-    Attributes
-    ----------
-    results : GillesPy2 ResultsEnsemble or GillesPy2 Results
-        Results of a workflow run.
-    kwargs : dict
-        Arguments to be passed to the plotplotly() function.
-    '''
-    # For reading plot files
-    plot_path = results.replace('results.p', 'plotplotly_plot.json')
-    return get_results(plot_path)
-
-    # For using pickled results
-    # return results.plotplotly(**kwargs)
-
-
-def plot_std_dev(results, kwargs):
-    '''
-    Gets the plot of the standard deviation of all trajectories for a 
-    Results Ensemble.
-
-    Attributes
-    ----------
-    results : GillesPy2 ResultsEnsemble
-        Results of a workflow run with number_of_trajectories > 1.
-    kwargs : dict
-        Arguments to be passed to the plotplotly() function.
-    '''
-    # For reading plot files
-    plot_path = results.replace('results.p', 'stddev_ensemble_plot.json')
-    return get_results(plot_path)
-
-    # For using pickled results
-    # return results.stddev_ensemble().plotplotly(**kwargs)
-
-
-def plot_average(results, kwargs):
-    '''
-    Gets the plot of the average of all trajectories for a Results Ensemble.
-
-    Attributes
-    ----------
-    results : GillesPy2 ResultsEnsemble
-        Results of a workflow run with number_of_trajectories > 1.
-    kwargs : dict
-        Arguments to be passed to the plotplotly() function.
-    '''
-    # For reading plot files
-    plot_path = results.replace('results.p', 'ensemble_average_plot.json')
-    return get_results(plot_path)
-
-    # For using pickled results
-    # return results.average_ensemble().plotplotly(**kwargs)
-
-
-def plot_psweep(results, kwargs):
-    '''
-    Gets the plot of the average of all trajectories for a Results Ensemble.
-
-    Attributes
-    ----------
-    results : GillesPy2 ResultsEnsemble
-        Results of a workflow run with number_of_trajectories > 1.
-    kwargs : dict
-        Arguments to be passed to the plotplotly() function.
-    '''
-    plot_path = results.replace('results.p', 'plots.json')
-    plots = get_results(plot_path)
-    species_of_interest = kwargs['speciesOfInterest']
-    return plots[species_of_interest]
+    return plt_fig
 
 
 def get_parsed_args():
@@ -163,8 +86,8 @@ def get_parsed_args():
     description = "Get the workflow plot based on the plot type and modify it with the plot data."
 
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('results_path', help="The path from the user directory to the results file (pickled file).")
-    parser.add_argument('plt_type', help="The type of plot to get")
+    parser.add_argument('plots_path', help="The path from the user directory to the plots file.")
+    parser.add_argument('plt_key', help="The key used to retreive a plot.")
     parser.add_argument('--plt_data', help="The title and axis labels as a json string to be aplied to the plot.")
     args = parser.parse_args()
     return args
@@ -172,31 +95,18 @@ def get_parsed_args():
 
 if __name__ == "__main__":
     args = get_parsed_args()
-    results_path = path.join(user_dir, args.results_path)
-    plt_type = args.plt_type
+    full_path = path.join(user_dir, args.plots_path)
     plt_data = args.plt_data
+    plt_key = args.plt_key
 
-    plt_args = get_plt_args(plt_data)
-    # For using pickled results
-    # plt_args['return_plotly_figure'] = True
-    # results = get_results(results_path)
-    
-    opts = {"stddevran":plot_std_dev_range,"trajectories":plot,"stddev":plot_std_dev,"avg":plot_average,"psweep":plot_psweep}
+    plt_fig = get_plot_fig(full_path, plt_key)
 
-    # For reading plot files
-    plt_fig = opts[plt_type](results_path, plt_args)
-    if plt_type == "psweep":
-        del plt_args['speciesOfInterest']
-    if not type(plt_fig) is str:
-        for key in plt_args.keys():
-            if key == 'title':
-                plt_fig['layout']['title']['text'] = plt_args['title']
-            else:
-                plt_fig['layout'][key]['title']['text'] = plt_args[key]    
-
-        # For using pickled results
-        # plt_fig = opts[plt_type](results, plt_args)
-
-        print(json.dumps(plt_fig, cls=plotly.utils.PlotlyJSONEncoder))
-    else:
+    if type(plt_fig) is str:
         print(plt_fig)
+    elif not plt_data:
+        print(json.dumps(plt_fig))
+    else:
+        plt_fig = edit_plot_fig(plt_fig, plt_data)
+        print(json.dumps(plt_fig))
+
+        
