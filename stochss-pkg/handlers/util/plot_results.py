@@ -68,17 +68,15 @@ def edit_plot_fig(plt_fig, plt_data):
 
 
 def plot_results(plots_path, plt_key, plt_data=None):
-    args = get_parsed_args()
     full_path = path.join(user_dir, plots_path)
     
     plt_fig = get_plot_fig(full_path, plt_key)
 
     if type(plt_fig) is str:
-        print(plt_fig)
-    elif not plt_data:
-        print(json.dumps(plt_fig))
-    else:
-        plt_fig = edit_plot_fig(plt_fig, plt_data)
-        print(json.dumps(plt_fig))
+        return plt_fig
+    if not plt_data:
+        return json.dumps(plt_fig)
+    plt_fig = edit_plot_fig(plt_fig, plt_data)
+    return json.dumps(plt_fig)
 
         
