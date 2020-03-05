@@ -66,7 +66,7 @@ class RunWorkflowAPIHandler(APIHandler):
         log.warning("Name of workflow or workflow path: {0}".format(workflow_name))
         log.warning("Type of workflow: {0}".format(wkfl_type))
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        exec_cmd = ["stochss-pkg/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        exec_cmd = ["/stochss/stochss-pkg/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.warning("Save workflow options: {0}".format(opt_type))
         log.warning("Exec command sent to the subprocess: {0}".format(exec_cmd))
@@ -98,7 +98,7 @@ class SaveWorkflowAPIHandler(APIHandler):
         log.warning("Name of workflow or workflow path: {0}".format(workflow_name))
         log.warning("Type of workflow: {0}".format(wkfl_type))
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        exec_cmd = [ "stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        exec_cmd = [ "/stochss/stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.warning("Save workflow options: {0}".format(opt_type))
         log.warning("Exec command sent to the subprocess: {0}".format(exec_cmd))
