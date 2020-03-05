@@ -1,3 +1,4 @@
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 var ViewEvent = require('./view-events');

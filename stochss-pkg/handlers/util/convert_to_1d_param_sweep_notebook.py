@@ -58,6 +58,8 @@ def convert_to_1d_psweep_nb(_model_path):
     cells.append(nbf.new_code_cell('ps = ParameterSweepConfig()\n%time ps.run()'))
     # Parameter Sweet Plot Cell
     cells.append(nbf.new_code_cell('ps.plot()'))
+    # Parameter Sweet Plotly Cell
+    cells.append(nbf.new_code_cell('ps.plotplotly()'))
     # Append cells to worksheet
     nb = nbf.new_notebook(cells=cells)
 

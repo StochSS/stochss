@@ -245,6 +245,30 @@ def generate_1D_parameter_sweep_class_cell(json_data):
         plt.errorbar(c.p1_range,c.data[:,0],c.data[:,1])
         plt.xlabel(c.p1, fontsize=16, fontweight='bold')
         plt.ylabel("Population", fontsize=16, fontweight='bold')
+
+
+    def plotplotly(c, return_plotly_figure=False, species_of_interest=None):
+        from plotly.offline import iplot
+        import plotly.graph_objs as go
+
+        data = c.data
+        visible = c.number_of_trajectories > 1
+        error_y = dict(type='data', array=data[:,1], visible=visible)
+
+        trace_list = [go.Scatter(x=c.p1_range, y=data[:,0], error_y=error_y)]
+
+        title = dict(text="<b>Parameter Sweep - Species: {0}</b>".format(c.species_of_interest), x=0.5)
+        yaxis_label = dict(title="<b>Population</b>")
+        xaxis_label = dict(title="<b>{0}</b>".format(c.p1))
+
+        layout = go.Layout(title=title, xaxis=xaxis_label, yaxis=yaxis_label)
+
+        fig = dict(data=trace_list, layout=layout)
+
+        if return_plotly_figure:
+            return fig
+        else:
+            iplot(fig)
     '''
     return psweep_class_cell
 
@@ -322,6 +346,30 @@ def generate_2D_parameter_sweep_class_cell(json_data):
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.2)
         _ = plt.colorbar(ax=ax, cax=cax)
+
+
+    def plotplotly(c, return_plotly_figure=False):
+        from plotly.offline import init_notebook_mode, iplot
+        import plotly.graph_objs as go
+         
+        xaxis_ticks = c.p1_range
+        yaxis_ticks = c.p2_range
+        data = c.data
+
+        trace_list = [go.Heatmap(z=data, x=xaxis_ticks, y=yaxis_ticks)]
+
+        title = dict(text="<b>Parameter Sweep - Species: {0}</b>".format(c.species_of_interest), x=0.5)
+        xaxis_label = dict(title="<b>{0}</b>".format(c.p1))
+        yaxis_label = dict(title="<b>{0}</b>".format(c.p2))
+
+        layout = go.Layout(title=title, xaxis=xaxis_label, yaxis=yaxis_label)
+
+        fig = dict(data=trace_list, layout=layout)
+
+        if return_plotly_figure:
+            return fig
+        else:
+            iplot(fig)
     '''
     return psweep_class_cell
 

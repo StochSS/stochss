@@ -9,6 +9,7 @@ var EventsViewer = require('./events-viewer');
 var RulesViewer = require('./rules-viewer');
 var ModelSettingsViewer = require('./model-settings-viewer');
 var SimulationSettingsViewer = require('./simulation-settings-viewer');
+var ParameterSweepSettingsViewer = require('./parameter-sweep-settings-viewer');
 //models
 var Model = require('../models/model');
 //templates
@@ -22,6 +23,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.status = attrs.status;
+    this.wkflType = attrs.type;
     var self = this;
     var directory = attrs.directory
     var modelFile = directory.split('/').pop();
@@ -58,12 +60,18 @@ module.exports = View.extend({
     var modelSettingsViewer = new ModelSettingsViewer({
       model: this.model.modelSettings,
     });
+    var psweepSettingsViewer = new ParameterSweepSettingsViewer({
+      model: this.model.parameterSweepSettings,
+    });
     this.registerRenderSubview(speciesViewer, "species-viewer-container");
     this.registerRenderSubview(parametersViewer, "parameters-viewer-container");
     this.registerRenderSubview(reactionsViewer, "reactions-viewer-container");
     this.registerRenderSubview(eventsViewer, "events-viewer-container");
     this.registerRenderSubview(rulesViewer, "rules-viewer-container");
     this.registerRenderSubview(modelSettingsViewer, "model-settings-viewer-container");
+    if(this.wkflType === 'parameterSweep') {
+      this.registerRenderSubview(psweepSettingsViewer, 'parameter-sweep-settings-viewer-container')
+    }
     if(this.status === 'complete'){
       this.enableCollapseButton();
     }

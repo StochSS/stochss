@@ -148,15 +148,15 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             Path to selected workflow directory within user pod container.
         '''
         body = json.loads(self.get_query_argument(name='data')) # Plot request body
-        results_path = os.path.join(workflow_path, 'results/results.p') # Path to the results file
+        results_path = os.path.join(workflow_path, 'results/plots.json') # Path to the results file
         log.warn(self.request.body)
-        plt_type = body['plt_type'] # type of plot to be retrieved 
+        plt_key = body['plt_key'] # type of plot to be retrieved 
         plt_data = body['plt_data'] # plot title and axes lables
         if "None" in plt_data:
-            plt_fig = plot_results(results_path, plt_type)
+            plt_fig = plot_results(results_path, plt_key)
         else:
-            plt_fig = plot_results(results_path, plt_type, plt_data) # Add plot data to the exec cmd if its not "None"
-        log.warn(plt_fig)
+            plt_fig = plot_results(results_path, plt_key, plt_data) # Add plot data to the exec cmd if its not "None"
+        log.warning(plt_fig)
         self.write(plt_fig) # Send data to client
 
 
