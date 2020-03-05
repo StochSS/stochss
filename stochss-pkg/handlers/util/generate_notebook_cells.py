@@ -71,17 +71,46 @@ def create_reaction_strings(json_data, padding):
 
 def create_rate_rule_strings(json_data, padding):
     rr_string = ''
-    is_stochastic = not json_data['simulationSettings']['algorithm'] == "ODE"
     algorithm = json_data['simulationSettings']['algorithm']
+    is_stochastic = not algorithm == "ODE"
     if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
         rr_string += '\n' + padding + '# Rate Rules\n'
         for rr in json_data['rules']:
             if rr['type'] == "Rate Rules":
-                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", expression="{1}", species=self.listOfSpecies["{2}"]))\n'.format(
+                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable={2}))\n'.format(
                         rr['name'], 
                         rr['expression'], 
                         rr['variable']['name'])
     return rr_string
+
+
+def create_assignment_rule_string(json_data, padding):
+    ar_string = ''
+    algorithm = json_data['simulationSettings']['algorithm']
+    is_stochastic = not algorithm == "ODE"
+    if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
+        ar_string += '\n' + padding + '# Assignment Rules\n'
+        for ar in json_data['rules']:
+            if ar['type'] == "Assignment Rule":
+                ar_string += padding + 'self.add_assignment_rule(AssignmentRule(name={0}, formula={1}, variable={2}))\n'.format(
+                        ar['name'],
+                        ar['expression'],
+                        ar['variable']['name'])
+    return ar_string
+
+
+def create_function_definition_string(json_data, padding):
+    fd_string = ''
+    algorithm = json_data['simulationSettings']['algorithm']
+    is_stochastic = not algorithm == "ODE"
+    if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
+        fd_string += '\n' + padding + '# Function Definitions\n'
+        for fd in json_data['functionDefinitions']:
+            fd_string += padding + 'self.add_function_definition(FunctionDefintion(name={0}, function={1}, args={2}))\n'.format(
+                    fd['name'],
+                    fd['expression'],
+                    fd['variables'].split(', '))
+    return fd_string
 
 
 def generate_model_cell(json_data, name):
@@ -104,6 +133,8 @@ def generate_model_cell(json_data, name):
         model_cell += create_species_strings(json_data, padding)
         model_cell += create_reaction_strings(json_data, padding)
         model_cell += create_rate_rule_strings(json_data, padding)
+        model_cell += create_assignment_rule_string(json_data, padding)
+        model_cell += create_function_definition_string(json_data, padding)
 
         model_cell += '\n' + padding + '# Timespan\n'
         duration = json_data['modelSettings']['endSim']

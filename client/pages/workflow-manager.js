@@ -130,6 +130,9 @@ let WorkflowManager = PageView.extend({
     if(this.status !== 'new' && this.status !== 'ready'){
       workflowEditor.collapseContainer();
     }
+    if(this.status === 'running'){
+      this.getWorkflowStatus();
+    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
