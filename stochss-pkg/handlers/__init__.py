@@ -38,6 +38,7 @@ def get_page_handlers(route_start):
         ("/stochss/api/file/delete/(.+)\/?", DeleteFileAPIHandler),
         ("/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
         ("/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
+        ("/stochss/api/file/download-zip/(\w+)/(.+)\/?", DownloadZipFileAPIHandler),
         ("/stochss/api/directory/duplicate/(.+)\/?", DuplicateDirectoryHandler),
         ("/stochss/api/directory/create/(.+)\/?", CreateDirectoryHandler)
     ]
