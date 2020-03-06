@@ -73,7 +73,7 @@ class GillesPy2Workflow():
         return results
 
 
-    def run(self, gillespy2_model, stochss_model):
+    def run(self, gillespy2_model, stochss_model, verbose):
         sim_settings = stochss_model['simulationSettings']
         trajectories = sim_settings['realizations']
         is_stochastic = not sim_settings['algorithm'] == "ODE"

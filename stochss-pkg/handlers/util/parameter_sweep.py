@@ -44,7 +44,7 @@ def setup_results(c, is_2d=False):
 
 # Feature extraction function.  What value(s) do you want to extract
 # from the simulation trajectory
-def feature_extraction(i, species_results, species_res, j=0, verbose=False):
+def feature_extraction(i, species_results, species_res, species, j=0, verbose=False):
     species_res['min'][i,j] = np.min(species_results)
     species_res['max'][i,j] = np.max(species_results)
     species_res['avg'][i,j] = np.average(species_results)
@@ -52,11 +52,11 @@ def feature_extraction(i, species_results, species_res, j=0, verbose=False):
     species_res['final'][i,j] = species_results[-1]
 
     if verbose:
-        print('minimum_population {0}={1}'.format(species, mapped_results["min"]))
-        print('Maximum_population {0}={1}'.format(species, mapped_results["max"]))
-        print('average_population {0}={1}'.format(species, mapped_results["avg"]))
-        print('variance_population {0}={1}'.format(species, mapped_results["var"]))
-        print('population_at_last_timepoint {0}={1}'.format(species, mapped_results["final"]))
+        print('  Minimum_population {0}={1}'.format(species, species_res["min"][i,j]))
+        print('  Maximum_population {0}={1}'.format(species, species_res["max"][i,j]))
+        print('  Average_population {0}={1}'.format(species, species_res["avg"][i,j]))
+        print('  Variance_population {0}={1}'.format(species, species_res["var"][i,j]))
+        print('  Population_at_last_timepoint {0}={1}'.format(species, species_res["final"][i,j]))
 
 
 def ensemble_feature_extraction(i, results, species_res, species, j=0, is_1d=True, verbose=False):
@@ -68,15 +68,15 @@ def ensemble_feature_extraction(i, results, species_res, species, j=0, is_1d=Tru
     mapped_results["var"] = [np.var(x[species]) for x in results]
     mapped_results["final"] = [x[species][-1] for x in results]
     
+    if verbose:
+        print('  Minimum_population {0}={1}'.format(species, mapped_results["min"]))
+        print('  Maximum_population {0}={1}'.format(species, mapped_results["max"]))
+        print('  Average_population {0}={1}'.format(species, mapped_results["avg"]))
+        print('  Variance_population {0}={1}'.format(species, mapped_results["var"]))
+        print('  Population_at_last_timepoint {0}={1}'.format(species, mapped_results["final"]))
+
     for key in species_res.keys():
         ensemble_aggragator(i, j, mapped_results[key], species_res[key], is_1d, verbose)
-    
-    if verbose:
-        print('minimum_population {0}={1}'.format(species, mapped_results["min"]))
-        print('Maximum_population {0}={1}'.format(species, mapped_results["max"]))
-        print('average_population {0}={1}'.format(species, mapped_results["avg"]))
-        print('variance_population {0}={1}'.format(species, mapped_results["var"]))
-        print('population_at_last_timepoint {0}={1}'.format(species, mapped_results["final"]))
 
 
 # Aggregation function, How to we combine the values from multiple 
@@ -92,16 +92,16 @@ def ensemble_aggragator(i, j, data, map_res, is_1d, verbose):
         for key in map_res.keys():
             map_res[key][i,1] = std
         if verbose:
-            print('min_std_of_ensemble m:{0} s:{1}'.format(map_res['min'][i,j], std))
-            print('max_std_of_ensemble m:{0} s:{1}'.format(map_res['max'][i,j], std))
-            print('avg_std_of_ensemble m:{0} s:{1}'.format(map_res['avg'][i,j], std))
-            print('var_std_of_ensemble m:{0} s:{1}'.format(map_res['var'][i,j], std))
+            print('    Min_std_of_ensemble m:{0} s:{1}'.format(map_res['min'][i,j], std))
+            print('    Max_std_of_ensemble m:{0} s:{1}'.format(map_res['max'][i,j], std))
+            print('    Avg_std_of_ensemble m:{0} s:{1}'.format(map_res['avg'][i,j], std))
+            print('    Var_std_of_ensemble m:{0} s:{1}'.format(map_res['var'][i,j], std))
     else:
         if verbose:
-            print('min_of_ensemble = {0}'.format(map_res['min'][i,j]))
-            print('max_of_ensemble = {0}'.format(map_res['max'][i,j]))
-            print('avg_of_ensemble = {0}'.format(map_res['avg'][i,j]))
-            print('var_of_ensemble = {0}'.format(map_res['var'][i,j]))
+            print('    Min_of_ensemble = {0}'.format(map_res['min'][i,j]))
+            print('    Max_of_ensemble = {0}'.format(map_res['max'][i,j]))
+            print('    Avg_of_ensemble = {0}'.format(map_res['avg'][i,j]))
+            print('    Var_of_ensemble = {0}'.format(map_res['var'][i,j]))
 
 
 def get_data_for_plot(c, keys):
@@ -137,12 +137,12 @@ class ParameterSweep1D():
             if(c.number_of_trajectories > 1):
                 tmp_results = run_solver(tmp_model, settings, 0)
                 for species in c.list_of_species:
-                    ensemble_feature_extraction(i, tmp_results, results[species], species)
+                    ensemble_feature_extraction(i, tmp_results, results[species], species, verbose=verbose)
             else:
                 tmp_result = run_solver(tmp_model, settings, 0)
                 for species in c.list_of_species:
                     species_results = tmp_result[species]
-                    feature_extraction(i, species_results, results[species])
+                    feature_extraction(i, species_results, results[species], species, verbose=verbose)
         c.data = results
         return results
 
@@ -226,12 +226,12 @@ class ParameterSweep2D():
                 if(c.number_of_trajectories > 1):
                     tmp_results = run_solver(tmp_model, settings, 0)
                     for species in c.list_of_species:
-                        ensemble_feature_extraction(i, tmp_results, results[species], species, j=j, is_1d=False)
+                        ensemble_feature_extraction(i, tmp_results, results[species], species, j=j, is_1d=False, verbose=verbose)
                 else:
                     tmp_result = run_solver(tmp_model, settings, 0)
                     for species in c.list_of_species:
                         species_results = tmp_result[species]
-                        feature_extraction(i, species_results, results[species], j=j)
+                        feature_extraction(i, species_results, results[species], species, j=j, verbose=verbose)
         c.data = results
         return results
 
@@ -322,7 +322,7 @@ class ParameterSweep():
         self.res_path = os.path.join(wkfl_path, 'results')
 
 
-    def run(self, gillespy2_model, stochss_model):
+    def run(self, gillespy2_model, stochss_model, verbose):
         ps_settings = stochss_model['parameterSweepSettings']
         sim_settings = stochss_model['simulationSettings']
         trajectories = sim_settings['realizations']
@@ -333,7 +333,7 @@ class ParameterSweep():
             ps = ParameterSweepConfig2D()
 
         ps.configure(gillespy2_model, ps_settings, trajectories)
-        results = ps.run(sim_settings)
+        results = ps.run(sim_settings, verbose=verbose)
         self.store_results(results)
         self.store_plots(ps)
 
