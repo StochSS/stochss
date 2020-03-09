@@ -13,3 +13,4 @@ notebook = "*"
 jupyterlab = "*"
 python-libsbml = "*"
 gillespy2 = {file = "https://github.com/GillesPy2/GillesPy2/tarball/develop"}
+jupyterhub = "==1.1.0"

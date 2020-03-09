@@ -107,7 +107,7 @@ module.exports = View.extend({
     }else{
       data['plt_data'] = "None"
     }
-    var endpoint = path.join("/stochss/api/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
+    var endpoint = path.join("stochss/api/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
     xhr({url: endpoint}, function (err, response, body){
       if(body.startsWith("ERROR!")){
         $(self.queryByHook(type)).html(body)

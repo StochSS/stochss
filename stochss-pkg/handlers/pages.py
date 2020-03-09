@@ -1,4 +1,5 @@
 from notebook.base.handlers import IPythonHandler
+from logging import getLogger
 
 class PageHandler(IPythonHandler):
   '''
@@ -11,29 +12,41 @@ class PageHandler(IPythonHandler):
     '''
     return self.settings['config']['NotebookApp']['extra_static_paths'][0]
 
+  def get_server_path(self):
+    log = getLogger()
+    user = self.get_current_user()
+    try:
+        # If we're using jupyterhub, the server key will be set
+        # TODO: are there cases where this is set even when not using jupyterhub?
+        server_path = user['server']
+        log.warn(server_path)
+    except:
+        server_path = '/'
+    return server_path
+
 
 class HomeHandler(PageHandler):
   async def get(self):
-    self.render("stochss-home.html")
+    self.render("stochss-home.html", server_path=self.get_server_path())
 
 
 class ModelBrowserHandler(PageHandler):
   async def get(self):
-    self.render("stochss-file-browser.html")
+    self.render("stochss-file-browser.html", server_path=self.get_server_path())
 
 
 class ModelEditorHandler(PageHandler):
   async def get(self, model_name):
-    self.render("stochss-model-editor.html")
+    self.render("stochss-model-editor.html", server_path=self.get_server_path())
 
 
 class WorkflowSelectionHandler(PageHandler):
   async def get(self, model_name):
-    self.render("stochss-workflow-selection.html")
+    self.render("stochss-workflow-selection.html", server_path=self.get_server_path())
 
 
 class WorkflowEditorHandler(PageHandler):
   async def get(self, model_name):
-    self.render("stochss-workflow-manager.html")
+    self.render("stochss-workflow-manager.html", server_path=self.get_server_path())
 
 

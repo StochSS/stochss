@@ -6,6 +6,10 @@ include .env
 network:
 	@docker network inspect $(DOCKER_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(DOCKER_NETWORK_NAME)
 
+volumes:
+	@docker volume inspect $(DATA_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DATA_VOLUME_HOST)
+	@docker volume inspect $(DB_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DB_VOLUME_HOST)
+
 secrets/oauth.env:
 	@echo "Need oauth.env file in secrets with GitHub parameters"
 	@exit 1
@@ -18,13 +22,17 @@ secrets/jupyterhub.key:
 	@echo "Need an SSL key in secrets/jupyterhub.key"
 	@exit 1
 
+secrets/postgres.env:
+	@echo "Generating postgres password in $@"
+	@echo "POSTGRES_PASSWORD=$(shell openssl rand -hex 32)" > $@
+
 userlist:
 	@echo "Add usernames, one per line, to ./userlist, such as:"
 	@echo "    zoe admin"
 	@echo "    wash"
 	@exit 1
 
-check-files: userlist $(cert_files) secrets/oauth.env
+check-files: userlist $(cert_files) secrets/oauth.env secrets/postgres.env
 
 cert:
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
@@ -40,22 +48,11 @@ deps:
 	npm install
 	pipenv install
 
-hub_image: check-files network
-	docker build \
-	  --build-arg JUPYTERHUB_VERSION=1.1.0 \
-	  -f Dockerfile.jupyterhub \
-	  -t $(DOCKER_HUB_IMAGE):latest .
+hub: check-files network volumes
+	docker-compose build
 
 run_hub:
-	docker run -it --rm \
-		--name jupyterhub \
-		-p 443:443 \
-		--env-file .env \
-		--env OAUTH_CALLBACK_URL='' \
-		-v $(PWD):/srv/jupyterhub \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		--network $(DOCKER_NETWORK_NAME) \
-		$(DOCKER_HUB_IMAGE):latest
+	docker-compose up
 
 build:  webpack
 	pipenv lock -r > requirements.txt

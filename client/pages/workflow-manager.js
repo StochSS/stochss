@@ -74,7 +74,7 @@ let WorkflowManager = PageView.extend({
       this.workflowName = name + this.workflowDate;
       this.status = 'new';
     }else{
-      var endpoint = path.join("/stochss/api/workflow/workflow-info", this.directory, "/info.json");
+      var endpoint = path.join("stochss/api/workflow/workflow-info", this.directory, "/info.json");
       xhr({uri: endpoint}, function (err, response, body){
         var resp = JSON.parse(body)
         self.modelDirectory = resp.model.split('/home/jovyan').pop();
@@ -82,7 +82,7 @@ let WorkflowManager = PageView.extend({
         self.startTime = resp.start_time;
         var workflowDir = self.directory.split('/').pop();
         self.workflowName = workflowDir.split('.')[0];
-        var statusEndpoint = path.join("/stochss/api/workflow/workflow-status", self.directory);
+        var statusEndpoint = path.join("stochss/api/workflow/workflow-status", self.directory);
         xhr({uri: statusEndpoint}, function (err, response, body) {
           self.status = body;
           if(self.status === 'complete' || self.status === 'error'){
@@ -169,7 +169,7 @@ let WorkflowManager = PageView.extend({
   },
   getWorkflowInfo: function (cb) {
     var self = this;
-    var endpoint = path.join("/stochss/api/workflow/workflow-info", this.directory, "/info.json");
+    var endpoint = path.join("stochss/api/workflow/workflow-info", this.directory, "/info.json");
     xhr({uri: endpoint}, function (err, response, body){
       self.startTime = JSON.parse(body).start_time;
       cb();
@@ -177,7 +177,7 @@ let WorkflowManager = PageView.extend({
   },
   getWorkflowStatus: function () {
     var self = this;
-    var statusEndpoint = path.join("/stochss/api/workflow/workflow-status", this.directory);
+    var statusEndpoint = path.join("stochss/api/workflow/workflow-status", this.directory);
     xhr({uri: statusEndpoint}, function (err, response, body) {
       if(self.status !== body ){
         self.status = body;

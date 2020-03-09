@@ -19,46 +19,7 @@
 # JupyterHub(Application) configuration
 #------------------------------------------------------------------------------
 
-## An Application for starting a Multi-User Jupyter Notebook server.
 import sys, os.path, shutil
-sys.path.insert(1, '.')
-
-c = get_config()
-
-c.JupyterHub.log_level = 'DEBUG'
-
-# Page handlers
-
-#c.JupyterHub.default_url = '/stochss'
-
-# Page handlers
-#from home_page import HomeHandler
-
-# StochSS request handlers
-#c.JupyterHub.extra_handlers = [
-#    (r"/stochss\/?", HomeHandler),
-#]
-
-## Paths to search for jinja templates, before using the default templates.
-#c.JupyterHub.template_paths = [
-#  "/stochss/jupyterhub_templates/",
-#  "/opt/conda/share/jupyterhub/static/stochss"
-#]
-
-## Path to SSL certificate file for the public facing interface of the proxy
-#  
-#  When setting this, you should also set ssl_key
-c.JupyterHub.ssl_cert = os.getenv('SSL_CERT')
-
-## Path to SSL key file for the public facing interface of the proxy
-#  
-#  When setting this, you should also set ssl_cert
-c.JupyterHub.ssl_key = os.getenv('SSL_KEY')
-
-## The public facing URL of the whole JupyterHub application.
-#  
-#  This is the address on which the proxy will bind. Sets protocol, ip, base_url
-#c.JupyterHub.bind_url = os.getenv('BIND_URL')
 
 ## Class for authenticating users.
 #  
@@ -80,28 +41,73 @@ c.JupyterHub.ssl_key = os.getenv('SSL_KEY')
 #    - default: jupyterhub.auth.PAMAuthenticator
 #    - dummy: jupyterhub.auth.DummyAuthenticator
 #    - pam: jupyterhub.auth.PAMAuthenticator
-#
-
 # Use the dummy authenticator for dev
 c.JupyterHub.authenticator_class = os.environ['AUTH_CLASS']
 # Only meaningful if using GitHub authenticator
 c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
 
-#c.Authenticator.whitelist = whitelist = set()
-c.Authenticator.admin_users = admin = set([])
+# Persist hub data on volume mounted inside container
+data_dir = os.environ.get('DATA_VOLUME_CONTAINER', '/data')
 
-pwd = os.path.dirname(__file__)
-with open(os.path.join(pwd, 'userlist')) as f:
-    for line in f:
-        if not line:
-            continue
-        parts = line.split()
-        # in case of newline at the end of userlist file
-        if len(parts) >= 1:
-            name = parts[0]
-            #whitelist.add(name)
-            if len(parts) > 1 and parts[1] == 'admin':
-                admin.add(name)
+c.JupyterHub.cookie_secret_file = os.path.join(data_dir,
+    'jupyterhub_cookie_secret')
+
+c.JupyterHub.db_url = 'postgresql://postgres:{password}@{host}/{db}'.format(
+    host=os.environ['POSTGRES_HOST'],
+    password=os.environ['POSTGRES_PASSWORD'],
+    db=os.environ['POSTGRES_DB'],
+)
+
+## The location of jupyterhub data files (e.g. /usr/local/share/jupyterhub)
+c.JupyterHub.data_files_path = '/usr/local/share/jupyterhub'
+
+## An Application for starting a Multi-User Jupyter Notebook server.
+
+#sys.path.insert(1, '.')
+
+c = get_config()
+
+c.JupyterHub.log_level = 'DEBUG'
+
+# Page handlers
+
+#c.JupyterHub.default_url = '/stochss'
+
+# Page handlers
+#from home_page import HomeHandler
+
+# StochSS request handlers
+#c.JupyterHub.extra_handlers = [
+#    (r"/stochss\/?", HomeHandler),
+#]
+
+## Paths to search for jinja templates, before using the default templates.
+#c.JupyterHub.template_paths = [
+#  "/stochss/jupyterhub_templates/",
+#  "/usr/local/share/jupyterhub/templates"
+#
+
+## The URL on which the Hub will listen. This is a private URL for internal
+#  communication. Typically set in combination with hub_connect_url. If a unix
+#  socket, hub_connect_url **must** also be set.
+#  
+#  For example:
+#  
+#      "http://127.0.0.1:8081"
+#      "unix+http://%2Fsrv%2Fjupyterhub%2Fjupyterhub.sock"
+#  
+#  .. versionadded:: 0.9
+#c.JupyterHub.bind_url = 'http://127.0.0.1:8000'
+
+## Path to SSL certificate file for the public facing interface of the proxy
+#  
+#  When setting this, you should also set ssl_key
+#c.JupyterHub.ssl_cert = os.getenv('SSL_CERT')
+
+## Path to SSL key file for the public facing interface of the proxy
+#  
+#  When setting this, you should also set ssl_cert
+#c.JupyterHub.ssl_key = os.getenv('SSL_KEY')
 
 ## The class to use for spawning single-user servers.
 #  
@@ -123,7 +129,7 @@ c.DockerSpawner.container_image = os.environ['DOCKER_STOCHSS_IMAGE']
 # jupyter/docker-stacks *-notebook images as the Docker run command when
 # spawning containers.  Optionally, you can override the Docker run command
 # using the DOCKER_SPAWN_CMD environment variable.
-spawn_cmd = os.environ.get('DOCKER_SPAWN_CMD', "start-singleuser.sh")
+spawn_cmd = "start-singleuser.sh"
 c.DockerSpawner.extra_create_kwargs.update({ 'command': spawn_cmd })
 # Connect containers to this Docker network
 network_name = os.environ['DOCKER_NETWORK_NAME']
@@ -155,7 +161,7 @@ c.DockerSpawner.debug = True
 #  
 #  See `hub_connect_ip` for cases where the bind and connect address should
 #  differ, or `hub_bind_url` for setting the full bind URL.
-#c.JupyterHub.hub_ip =  'jupyterhub'
+c.JupyterHub.hub_ip = os.environ.get('DOCKER_HUB_IMAGE')
 
 ## The internal port for the Hub process.
 #  
@@ -165,8 +171,7 @@ c.DockerSpawner.debug = True
 #  conflict.
 #  
 #  See also `hub_ip` for the ip and `hub_bind_url` for setting the full bind URL.
-#c.JupyterHub.hub_port = 8080
-
+c.JupyterHub.hub_port = 8080
 
 ## Maximum number of concurrent servers that can be active at a time.
 #  
@@ -186,6 +191,14 @@ c.DockerSpawner.debug = True
 ## Duration (in seconds) to determine the number of active users.
 #c.JupyterHub.active_user_window = 1800
 
+## Resolution (in seconds) for updating activity
+#  
+#  If activity is registered that is less than activity_resolution seconds more
+#  recent than the current value, the new value will be ignored.
+#  
+#  This avoids too many writes to the Hub database.
+#c.JupyterHub.activity_resolution = 30
+
 ## Grant admin users permission to access single-user servers.
 #  
 #  Users should be properly informed if this is enabled.
@@ -200,15 +213,14 @@ c.DockerSpawner.debug = True
 ## Answer yes to any questions (e.g. confirm overwrite)
 #c.JupyterHub.answer_yes = False
 
-## PENDING DEPRECATION: consider using service_tokens
+## PENDING DEPRECATION: consider using services
 #  
 #  Dict of token:username to be loaded into the database.
 #  
 #  Allows ahead-of-time generation of API tokens for use by externally managed
 #  services, which authenticate as JupyterHub users.
 #  
-#  Consider using service_tokens for general services that talk to the JupyterHub
-#  API.
+#  Consider using services for general services that talk to the JupyterHub API.
 #c.JupyterHub.api_tokens = {}
 
 ## Authentication for prometheus metrics
@@ -283,21 +295,19 @@ c.DockerSpawner.debug = True
 ## File in which to store the cookie secret.
 #c.JupyterHub.cookie_secret_file = 'jupyterhub_cookie_secret'
 
-## The location of jupyterhub data files (e.g. /usr/local/share/jupyterhub)
-#c.JupyterHub.data_files_path = '/home/mgeiger/.local/share/virtualenvs/docker-net-QskcA8OG/share/jupyterhub'
-
 ## Include any kwargs to pass to the database connection. See
 #  sqlalchemy.create_engine for details.
 #c.JupyterHub.db_kwargs = {}
-
-## url for the database. e.g. `sqlite:///jupyterhub.sqlite`
-#c.JupyterHub.db_url = 'sqlite:///jupyterhub.sqlite'
 
 ## log all database transactions. This has A LOT of output
 #c.JupyterHub.debug_db = False
 
 ## DEPRECATED since version 0.8: Use ConfigurableHTTPProxy.debug
 #c.JupyterHub.debug_proxy = False
+
+## If named servers are enabled, default name of server to spawn or open, e.g. by
+#  user-redirect.
+#c.JupyterHub.default_server_name = ''
 
 ## The default URL for users when they arrive (e.g. when user directs to "/")
 #  
@@ -321,6 +331,13 @@ c.DockerSpawner.debug = True
 #  
 #  Use with internal_ssl
 #c.JupyterHub.external_ssl_authorities = {}
+
+## Register extra tornado Handlers for jupyterhub.
+#  
+#  Should be of the form ``("<regex>", Handler)``
+#  
+#  The Hub prefix will be added, so `/my-page` will be served at `/hub/my-page`.
+#c.JupyterHub.extra_handlers = []
 
 ## DEPRECATED: use output redirection instead, e.g.
 #  
@@ -386,6 +403,21 @@ c.DockerSpawner.debug = True
 #  .. versionadded:: 0.9
 #c.JupyterHub.hub_connect_url = ''
 
+## Timeout (in seconds) to wait for spawners to initialize
+#  
+#  Checking if spawners are healthy can take a long time if many spawners are
+#  active at hub start time.
+#  
+#  If it takes longer than this timeout to check, init_spawner will be left to
+#  complete in the background and the http server is allowed to start.
+#  
+#  A timeout of -1 means wait forever, which can mean a slow startup of the Hub
+#  but ensures that the Hub is fully consistent by the time it starts responding
+#  to requests. This matches the behavior of jupyterhub 1.0.
+#  
+#  .. versionadded: 1.1.0
+#c.JupyterHub.init_spawners_timeout = 10
+
 ## The location to store certificates automatically created by JupyterHub.
 #  
 #  Use with internal_ssl
@@ -437,6 +469,15 @@ c.DockerSpawner.debug = True
 
 ## File to write PID Useful for daemonizing JupyterHub.
 #c.JupyterHub.pid_file = ''
+
+## The public facing port of the proxy.
+#  
+#  This is the port on which the proxy will listen. This is the only port through
+#  which JupyterHub should be accessed by users.
+#  
+#  .. deprecated: 0.9
+#      Use JupyterHub.bind_url
+#c.JupyterHub.port = 8000
 
 ## DEPRECATED since version 0.8 : Use ConfigurableHTTPProxy.api_url
 #c.JupyterHub.proxy_api_ip = ''
@@ -590,6 +631,17 @@ c.DockerSpawner.debug = True
 #  backed up to a local file automatically.
 #c.JupyterHub.upgrade_db = False
 
+## Callable to affect behavior of /user-redirect/
+#  
+#  Receives 4 parameters: 1. path - URL path that was provided after /user-
+#  redirect/ 2. request - A Tornado HTTPServerRequest representing the current
+#  request. 3. user - The currently authenticated user. 4. base_url - The
+#  base_url of the current hub, for relative redirects
+#  
+#  It should return the new URL to redirect to, or None to preserve current
+#  behavior.
+#c.JupyterHub.user_redirect_hook = None
+
 #------------------------------------------------------------------------------
 # Spawner(LoggingConfigurable) configuration
 #------------------------------------------------------------------------------
@@ -610,6 +662,19 @@ c.DockerSpawner.debug = True
 #  environment variables here. Most, including the default, do not. Consult the
 #  documentation for your spawner to verify!
 #c.Spawner.args = []
+
+## An optional hook function that you can implement to pass `auth_state` to the
+#  spawner after it has been initialized but before it starts. The `auth_state`
+#  dictionary may be set by the `.authenticate()` method of the authenticator.
+#  This hook enables you to pass some or all of that information to your spawner.
+#  
+#  Example::
+#  
+#      def userdata_hook(spawner, auth_state):
+#          spawner.userdata = auth_state["userdata"]
+#  
+#      c.Spawner.auth_state_hook = userdata_hook
+#c.Spawner.auth_state_hook = None
 
 ## The command used for starting the single-user server.
 #  
@@ -876,7 +941,21 @@ c.DockerSpawner.debug = True
 #  Admin access should be treated the same way root access is.
 #  
 #  Defaults to an empty set, in which case no user has admin access.
-#c.Authenticator.admin_users = set()
+c.Authenticator.admin_users = admin = set([])
+
+pwd = os.path.dirname(__file__)
+with open(os.path.join(pwd, 'userlist')) as f:
+    for line in f:
+        if not line:
+            continue
+        parts = line.split()
+        # in case of newline at the end of userlist file
+        if len(parts) >= 1:
+            name = parts[0]
+            #whitelist.add(name)
+            if len(parts) > 1 and parts[1] == 'admin':
+                admin.add(name)
+
 
 ## The max age (in seconds) of authentication info before forcing a refresh of
 #  user auth info.

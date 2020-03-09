@@ -18,7 +18,7 @@ module.exports = View.extend({
     var self = this
     this.listOfWarnings = [];
     this.listOfErrors = [];
-    var endpoint = path.join("/stochss/api/workflow/workflow-logs", this.logsPath)
+    var endpoint = path.join("stochss/api/workflow/workflow-logs", this.logsPath)
     xhr({uri: endpoint}, function (err, response, body) {
       if(body){
         var logs = body.split("\n")
