@@ -47,8 +47,6 @@ COPY ./secrets/*.key $SSL_KEY
 RUN chmod 700 /srv/jupyterhub/secrets && \
     chmod 600 /srv/jupyterhub/secrets/*
 
-COPY ./userlist /srv/jupyterhub/userlist
-
-ONBUILD COPY jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
+COPY static/*    /usr/local/share/jupyterhub/static/
 
 CMD ["jupyterhub" "-f" "/srv/jupyterhub/jupyterhub_config.py"]
