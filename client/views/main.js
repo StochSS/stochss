@@ -11,8 +11,6 @@ var path = require('path');
 var headTemplate = require('!pug-loader!../templates/head.pug');
 var bodyTemplate = require('!pug-loader!../templates/body.pug');
 
-var config = app.config;
-
 let operationInfoModalHtml = (infoKey) => {
   let fileBrowserInfo = `
     <p>In StochSS we use custom file extensions for a number of files we work with.  Here is a list of our extentions with the files they are associated with:</p>

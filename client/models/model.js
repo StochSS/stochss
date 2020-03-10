@@ -19,8 +19,7 @@ var FunctionDefinitions = require('./function-definitions');
 module.exports = Model.extend({
   url: function () {
     return path.join(
-      String(app.config.routePrefix),
-      String(app.config.apiUrl),
+      app.getApiPath(),
       "json-data",
       String(this.directory)
     );

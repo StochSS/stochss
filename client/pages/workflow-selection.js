@@ -47,10 +47,10 @@ let workflowSelection = PageView.extend({
     this.toNotebook(type);
   },
   toNotebook: function (type) {
-    var endpoint = path.join("/stochss/api/workflow/notebook", type, this.modelDir)
+    var endpoint = path.join("stochss/api/workflow/notebook", type, this.modelDir)
     xhr({uri:endpoint}, function (err, response, body) {
       var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-      var notebookPath = path.join("/lab/tree", _path)
+      var notebookPath = path.join("lab/tree", _path)
       window.open(notebookPath, "_blank")
     });
   },
