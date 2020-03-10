@@ -5,6 +5,7 @@ var xhr = require('xhr');
 var Model = require('ampersand-model');
 var ModelSettings = require('./model-settings');
 var SimulationSettings = require('./simulation-settings');
+var ParameterSweepSettings = require('./parameter-sweep-settings');
 var MeshSettings = require('./mesh-settings');
 //collections
 var Species = require('./species');
@@ -13,6 +14,7 @@ var Parameters = require('./parameters');
 var Reactions = require('./reactions');
 var Rules = require('./rules');
 var Events = require('./events');
+var FunctionDefinitions = require('./function-definitions');
 
 module.exports = Model.extend({
   url: function () {
@@ -40,10 +42,12 @@ module.exports = Model.extend({
     reactions: Reactions,
     rules: Rules,
     eventsCollection: Events,
+    functionDefinitions: FunctionDefinitions,
   },
   children: {
     modelSettings: ModelSettings,
     simulationSettings: SimulationSettings,
+    parameterSweepSettings: ParameterSweepSettings,
     meshSettings: MeshSettings
   },
   session: {
@@ -76,14 +80,5 @@ module.exports = Model.extend({
       this.simulationSettings.letUsChooseForUse()
     }
     this.save();
-    // xhr({ 
-    //   method: 'post',
-    //   body: this.toJSON(),
-    //   uri: this.url() },
-    //   function (err, response, body) {
-    //   },
-    // );
   },
-  // toJSON: function () {
-  // },
 });

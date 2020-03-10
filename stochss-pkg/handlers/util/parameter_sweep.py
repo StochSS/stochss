@@ -6,114 +6,190 @@ import copy
 import json
 import numpy as np
 import pickle
+import plotly
 
 from run_model import run_solver
 
 
+def setup_species_results(c, is_2d):
+    results = {}
+
+    x = len(c.p1_range)
+    y = 2
+    if is_2d:
+        y = len(c.p2_range)
+
+    mapper_keys = ["min", "max", "avg", "var", "final"]
+    reducer_keys = ["min", "max", "avg", "var"]
+
+    if c.number_of_trajectories > 1:
+        for key1 in mapper_keys:
+            results[key1] = {}
+            for key2 in reducer_keys:
+                results[key1][key2] = np.zeros((x,y))
+    else:
+        for key in mapper_keys:
+            results[key] = np.zeros((x,y))
+
+    return results
+
+
+def setup_results(c, is_2d=False):
+    results = {}
+    for species in c.list_of_species:
+        results[species] = setup_species_results(c, is_2d)
+
+    return results
+
+
 # Feature extraction function.  What value(s) do you want to extract
 # from the simulation trajectory
+def feature_extraction(i, species_results, species_res, species, j=0, verbose=False):
+    species_res['min'][i,j] = np.min(species_results)
+    species_res['max'][i,j] = np.max(species_results)
+    species_res['avg'][i,j] = np.average(species_results)
+    species_res['var'][i,j] = np.var(species_results)
+    species_res['final'][i,j] = species_results[-1]
 
-def population_at_last_timepoint(c,res):
-    if c.verbose: print('population_at_last_timepoint {0}={1}'.format(c.species_of_interest,res[c.species_of_interest][-1]))
-    return res[c.species_of_interest][-1]
+    if verbose:
+        print('  Minimum_population {0}={1}'.format(species, species_res["min"][i,j]))
+        print('  Maximum_population {0}={1}'.format(species, species_res["max"][i,j]))
+        print('  Average_population {0}={1}'.format(species, species_res["avg"][i,j]))
+        print('  Variance_population {0}={1}'.format(species, species_res["var"][i,j]))
+        print('  Population_at_last_timepoint {0}={1}'.format(species, species_res["final"][i,j]))
+
+
+def ensemble_feature_extraction(i, results, species_res, species, j=0, is_1d=True, verbose=False):
+    mapped_results = {}
+    
+    mapped_results["min"] = [np.min(x[species]) for x in results]
+    mapped_results["max"] = [np.max(x[species]) for x in results]
+    mapped_results["avg"] = [np.mean(x[species]) for x in results]
+    mapped_results["var"] = [np.var(x[species]) for x in results]
+    mapped_results["final"] = [x[species][-1] for x in results]
+    
+    if verbose:
+        print('  Minimum_population {0}={1}'.format(species, mapped_results["min"]))
+        print('  Maximum_population {0}={1}'.format(species, mapped_results["max"]))
+        print('  Average_population {0}={1}'.format(species, mapped_results["avg"]))
+        print('  Variance_population {0}={1}'.format(species, mapped_results["var"]))
+        print('  Population_at_last_timepoint {0}={1}'.format(species, mapped_results["final"]))
+
+    for key in species_res.keys():
+        ensemble_aggragator(i, j, mapped_results[key], species_res[key], is_1d, verbose)
+
 
 # Aggregation function, How to we combine the values from multiple 
 # trajectores
+def ensemble_aggragator(i, j, data, map_res, is_1d, verbose):
+    map_res['min'][i,j] = np.min(data)
+    map_res['max'][i,j] = np.max(data)
+    map_res['avg'][i,j] = np.average(data)
+    map_res['var'][i,j] = np.var(data)
+    
+    if is_1d:
+        std = np.std(data)
+        for key in map_res.keys():
+            map_res[key][i,1] = std
+        if verbose:
+            print('    Min_std_of_ensemble m:{0} s:{1}'.format(map_res['min'][i,j], std))
+            print('    Max_std_of_ensemble m:{0} s:{1}'.format(map_res['max'][i,j], std))
+            print('    Avg_std_of_ensemble m:{0} s:{1}'.format(map_res['avg'][i,j], std))
+            print('    Var_std_of_ensemble m:{0} s:{1}'.format(map_res['var'][i,j], std))
+    else:
+        if verbose:
+            print('    Min_of_ensemble = {0}'.format(map_res['min'][i,j]))
+            print('    Max_of_ensemble = {0}'.format(map_res['max'][i,j]))
+            print('    Avg_of_ensemble = {0}'.format(map_res['avg'][i,j]))
+            print('    Var_of_ensemble = {0}'.format(map_res['var'][i,j]))
 
-def mean_std_of_ensemble(c,data):
-    a=np.average(data)
-    s=np.std(data)
-    if c.verbose: print('mean_std_of_ensemble m:{0} s:{1}'.format(a,s))
-    return (a,s)
 
-# Aggregation function, How to we combine the values from multiple 
-# trajectores
+def get_data_for_plot(c, keys):
+    if keys is None:
+        species_of_interest = list(c.list_of_species)[0]
+        mapper_key = "final"
+        reducer_key = "avg"
+    else:
+        try:
+            species_of_interest, mapper_key, reducer_key = keys.split('-')
+        except:
+            species_of_interest, mapper_key = keys.split('-')
 
-def average_of_ensemble(c,data):
-    a=np.average(data)
-    if c.verbose: print('average_of_ensemble = {0}'.format(a))
-    return a
+    if c.number_of_trajectories > 1:
+        data = c.data[species_of_interest][mapper_key][reducer_key]
+    else:
+        data = c.data[species_of_interest][mapper_key]
+
+    return data, species_of_interest
 
 
 class ParameterSweep1D():
-    
+
     def run(c, settings, verbose=False):
         if not c.ps_model:
             raise Exception("The parameter sweep has not been configured!")
         c.verbose = verbose
-        fn = c.feature_extraction
-        ag = c.ensemble_aggragator
-        data = np.zeros((len(c.p1_range),2))# mean and std
+        results = setup_results(c)
         for i,v1 in enumerate(c.p1_range):
             tmp_model = copy.deepcopy(c.ps_model)
             tmp_model.listOfParameters[c.p1].set_expression(v1)
             if verbose: print("running {0}={1}".format(c.p1,v1))
-            #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
             if(c.number_of_trajectories > 1):
                 tmp_results = run_solver(tmp_model, settings, 0)
-                (m,s) = ag([fn(x) for x in tmp_results])
-                data[i,0] = m
-                data[i,1] = s
+                for species in c.list_of_species:
+                    ensemble_feature_extraction(i, tmp_results, results[species], species, verbose=verbose)
             else:
                 tmp_result = run_solver(tmp_model, settings, 0)
-                data[i,0] = c.feature_extraction(tmp_result)
-        c.data = data
-        return data
+                for species in c.list_of_species:
+                    species_results = tmp_result[species]
+                    feature_extraction(i, species_results, results[species], species, verbose=verbose)
+        c.data = results
+        return results
 
         
-    def plot(c):
+    def plot(c, keys=None):
         from matplotlib import pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         import numpy
+
+        data, species_of_interest = get_data_for_plot(c, keys)
+
         fig, ax = plt.subplots(figsize=(8,8))
-        plt.title("Parameter Sweep - Species: {0}".format(c.species_of_interest))
-        plt.errorbar(c.p1_range,c.data[:,0],c.data[:,1])
+        plt.title("Parameter Sweep - Species: {0}".format(species_of_interest))
+        plt.errorbar(c.p1_range,data[:,0],data[:,1])
         plt.xlabel(c.p1, fontsize=16, fontweight='bold')
         plt.ylabel("Population", fontsize=16, fontweight='bold')
 
 
-class ParameterSweep2D():
+    def plotplotly(c, title=None, xaxis_label=None, yaxis_label="<b>Population</b>", return_plotly_figure=True, keys=None):
+        from plotly.offline import iplot
+        import plotly.graph_objs as go
 
-    def run(c, settings, verbose=False):
-        if not c.ps_model:
-            raise Exception("The parameter sweep has not been configured!")
-        c.verbose = verbose
-        fn = c.feature_extraction
-        ag = c.ensemble_aggragator
-        data = np.zeros((len(c.p1_range),len(c.p2_range)))
-        for i,v1 in enumerate(c.p1_range):
-            for j,v2 in enumerate(c.p2_range):
-                tmp_model = copy.deepcopy(c.ps_model)
-                tmp_model.listOfParameters[c.p1].set_expression(v1)
-                tmp_model.listOfParameters[c.p2].set_expression(v2)
-                if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
-                #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))
-                if(c.number_of_trajectories > 1):
-                    tmp_results = run_solver(tmp_model, settings, 0)
-                    data[i,j] = ag([fn(x) for x in tmp_results])
-                else:
-                    tmp_result = run_solver(tmp_model, settings, 0)
-                    data[i,j] = c.feature_extraction(tmp_result)
-        c.data = data
-        return data
+        data, species_of_interest = get_data_for_plot(c, keys)
 
-        
-    def plot(c):
-        from matplotlib import pyplot as plt
-        from mpl_toolkits.axes_grid1 import make_axes_locatable
-        import numpy
-        fig, ax = plt.subplots(figsize=(8,8))
-        plt.imshow(c.data)
-        ax.set_xticks(numpy.arange(c.data.shape[1])+0.5, minor=False)
-        ax.set_yticks(numpy.arange(c.data.shape[0])+0.5, minor=False)
-        plt.title("Parameter Sweep - Species: {0}".format(c.species_of_interest))
-        ax.set_xticklabels(c.p1_range, minor=False, rotation=90)
-        ax.set_yticklabels(c.p2_range, minor=False)
-        ax.set_xlabel(c.p1, fontsize=16, fontweight='bold')
-        ax.set_ylabel(c.p2, fontsize=16, fontweight='bold')
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.2)
-        _ = plt.colorbar(ax=ax, cax=cax)
+        visible = c.number_of_trajectories > 1
+        error_y = dict(type="data", array=data[:,1], visible=visible)
+
+        trace_list = [go.Scatter(x=c.p1_range, y=data[:,0], error_y=error_y)]
+
+        if title is None:
+            title = "<b>Parameter Sweep - Species: {0}</b>".format(species_of_interest)
+        if xaxis_label is None:
+            xaxis_label = "<b>{0}</b>".format(c.p1)
+        plt_title = dict(text=title, x=0.5)
+        xaxis = dict(title=xaxis_label)
+        yaxis = dict(title=yaxis_label)
+
+        layout = go.Layout(title=plt_title, xaxis=xaxis, yaxis=yaxis)
+
+        config = {"responsive": True}
+
+        fig = dict(data=trace_list, layout=layout, config=config)
+
+        if return_plotly_figure:
+            return fig
+        else:
+            iplot(fig)
 
 
 # Configuration for the Parameter Sweep
@@ -125,19 +201,90 @@ class ParameterSweepConfig1D(ParameterSweep1D):
     p1_range = np.linspace(1,10,10)
     number_of_trajectories = 100
     
-    species_of_interest = ""
-    # What feature of the simulation are we examining
-    feature_extraction = population_at_last_timepoint
-    # for number_of_trajectories > 1: how do we aggreggate the values
-    ensemble_aggragator = mean_std_of_ensemble
-
     
-    def configure(self, model, settings, trajectories):
-        self.ps_model = model
+    def configure(self, gillespy2_model, settings, trajectories):
+        self.ps_model = gillespy2_model
         self.p1 = settings['parameterOne']['name']
         self.p1_range = np.linspace(settings['p1Min'], settings['p1Max'], settings['p1Steps'])
         self.number_of_trajectories = trajectories
-        self.species_of_interest = settings['speciesOfInterest']['name']
+        self.list_of_species = gillespy2_model.get_all_species().keys()
+
+
+class ParameterSweep2D():
+
+    def run(c, settings, verbose=False):
+        if not c.ps_model:
+            raise Exception("The parameter sweep has not been configured!")
+        c.verbose = verbose
+        results = setup_results(c, is_2d=True)
+        for i,v1 in enumerate(c.p1_range):
+            for j,v2 in enumerate(c.p2_range):
+                tmp_model = copy.deepcopy(c.ps_model)
+                tmp_model.listOfParameters[c.p1].set_expression(v1)
+                tmp_model.listOfParameters[c.p2].set_expression(v2)
+                if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
+                if(c.number_of_trajectories > 1):
+                    tmp_results = run_solver(tmp_model, settings, 0)
+                    for species in c.list_of_species:
+                        ensemble_feature_extraction(i, tmp_results, results[species], species, j=j, is_1d=False, verbose=verbose)
+                else:
+                    tmp_result = run_solver(tmp_model, settings, 0)
+                    for species in c.list_of_species:
+                        species_results = tmp_result[species]
+                        feature_extraction(i, species_results, results[species], species, j=j, verbose=verbose)
+        c.data = results
+        return results
+
+        
+    def plot(c, keys=None):
+        from matplotlib import pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        import numpy
+
+        data, species_of_interest = get_data_for_plot(c, keys)
+
+        fig, ax = plt.subplots(figsize=(8,8))
+        plt.imshow(data)
+        ax.set_xticks(numpy.arange(data.shape[1])+0.5, minor=False)
+        ax.set_yticks(numpy.arange(data.shape[0])+0.5, minor=False)
+        plt.title("Parameter Sweep - Species: {0}".format(species_of_interest))
+        ax.set_xticklabels(c.p1_range, minor=False, rotation=90)
+        ax.set_yticklabels(c.p2_range, minor=False)
+        ax.set_xlabel(c.p1, fontsize=16, fontweight='bold')
+        ax.set_ylabel(c.p2, fontsize=16, fontweight='bold')
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.2)
+        _ = plt.colorbar(ax=ax, cax=cax)
+
+
+    def plotplotly(c, title=None, xaxis_label=None, yaxis_label=None, return_plotly_figure=True, keys=None):
+        from plotly.offline import iplot
+        import plotly.graph_objs as go
+
+        data, species_of_interest = get_data_for_plot(c, keys)
+
+        trace_list = [go.Heatmap(z=data, x=c.p1_range, y=c.p2_range)]
+
+        if title is None:
+            title = "<b>Parameter Sweep - Species: {0}</b>".format(species_of_interest)
+        if xaxis_label is None:
+            xaxis_label = "<b>{0}</b>".format(c.p1)
+        if yaxis_label is None:
+            yaxis_label = "<b>{0}</b>".format(c.p2)
+        plt_title = dict(text=title, x=0.5)
+        xaxis = dict(title=xaxis_label)
+        yaxis = dict(title=yaxis_label)
+
+        layout = go.Layout(title=plt_title, xaxis=xaxis, yaxis=yaxis)
+
+        config = {"responsive": True}
+
+        fig = dict(data=trace_list, layout=layout, config=config)
+
+        if return_plotly_figure:
+            return fig
+        else:
+            iplot(fig)
 
 
 # Configuration for the Parameter Sweep
@@ -152,21 +299,15 @@ class ParameterSweepConfig2D(ParameterSweep2D):
     p2_range = np.linspace(1,10,10)
     number_of_trajectories = 100
 
-    species_of_interest = ""
-    # What feature of the simulation are we examining
-    feature_extraction = population_at_last_timepoint
-    # for number_of_trajectories > 1: how do we aggreggate the values
-    ensemble_aggragator = average_of_ensemble
-
 
     def configure(self, gillespy2_model, settings, trajectories):
         self.ps_model = gillespy2_model
         self.p1 = settings['parameterOne']['name']
-        self.p1 = settings['parameterTwo']['name']
+        self.p2 = settings['parameterTwo']['name']
         self.p1_range = np.linspace(settings['p1Min'], settings['p1Max'], settings['p1Steps'])
         self.p2_range = np.linspace(settings['p2Min'], settings['p2Max'], settings['p2Steps'])
         self.number_of_trajectories = trajectories
-        self.species_of_interest = settings['speciesOfInterest']['name']
+        self.list_of_species = gillespy2_model.get_all_species().keys()
 
 
 class ParameterSweep():
@@ -181,7 +322,7 @@ class ParameterSweep():
         self.res_path = os.path.join(wkfl_path, 'results')
 
 
-    def run(self, gillespy2_model, stochss_model, timeout):
+    def run(self, gillespy2_model, stochss_model, verbose):
         ps_settings = stochss_model['parameterSweepSettings']
         sim_settings = stochss_model['simulationSettings']
         trajectories = sim_settings['realizations']
@@ -192,8 +333,9 @@ class ParameterSweep():
             ps = ParameterSweepConfig2D()
 
         ps.configure(gillespy2_model, ps_settings, trajectories)
-        results = ps.run(sim_settings)
+        results = ps.run(sim_settings, verbose=verbose)
         self.store_results(results)
+        self.store_plots(ps)
 
 
     def store_results(self, results):
@@ -206,3 +348,33 @@ class ParameterSweep():
         with open(os.path.join(self.res_path, 'results.json'), 'w') as json_file:
             json_file.write(json.dumps(str(results)))
 
+
+    def store_plots(self, ps):
+        plot_keys = self.get_plot_keys(ps)
+
+        plot_figs = {}
+        for key in plot_keys:
+            plot_fig = ps.plotplotly(keys=key)
+            plot_figs[key] = plot_fig
+
+        with open(os.path.join(self.res_path, 'plots.json'), 'w') as plots_file:
+            json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
+
+
+    def get_plot_keys(self, ps):
+        from itertools import product
+
+        species = list(ps.list_of_species)
+        mappers = ["min","max","avg","var","final"]
+        reducers = ["min","max","avg","var"]
+
+        if ps.number_of_trajectories > 1:
+            plot_keys = list(product(species, mappers, reducers))
+        else:
+            plot_keys = list(product(species, mappers))
+
+        for i in range(len(plot_keys)):
+            key = "-".join(list(plot_keys[i]))
+            plot_keys[i] = key
+
+        return plot_keys

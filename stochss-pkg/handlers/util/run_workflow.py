@@ -21,7 +21,7 @@ from datetime import datetime, timezone, timedelta
 user_dir = "/home/jovyan"
 
 
-def save_new_workflow(wkfl, wkfl_type, is_new):
+def save_new_workflow(wkfl, wkfl_type, is_new, verbose):
     '''
     Create and save a new workflow in the same directory as the model 
     used for it.
@@ -46,7 +46,7 @@ def save_new_workflow(wkfl, wkfl_type, is_new):
     print(model_info)
 
 
-def save_existing_workflow(wkfl, wkfl_type, is_new):
+def save_existing_workflow(wkfl, wkfl_type, is_new, verbose):
     '''
     Save an existing workflow.
 
@@ -105,7 +105,7 @@ def update_info_file(info_path, wkfl_mdl_path):
         info_file.write(json.dumps(info_data))
     
 
-def run_workflow(wkfl, wkfl_type, is_new):
+def run_workflow(wkfl, wkfl_type, is_new, verbose):
     '''
     Run the workflow and return the results, number of trajectories, and is_stochastic.
     Records when the workflow was start and updates the model path in the workflow info file.
@@ -123,9 +123,9 @@ def run_workflow(wkfl, wkfl_type, is_new):
     '''
     # save the workflow
     if is_new:
-        save_new_workflow(wkfl, wkfl_type, is_new)
+        save_new_workflow(wkfl, wkfl_type, is_new, verbose)
     else:
-        save_existing_workflow(wkfl, wkfl_type, is_new)
+        save_existing_workflow(wkfl, wkfl_type, is_new, verbose)
     # Get the model data from the file and create the model object
     gillespy2_model, stochss_model = get_models(wkfl.wkfl_mdl_path, wkfl.mdl_file.split('.')[0], wkfl.wkfl_path)
     # Update workflow info file with start time and permanent model file location
@@ -134,7 +134,7 @@ def run_workflow(wkfl, wkfl_type, is_new):
     open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
     # run the workflow
     try:
-        wkfl.run(gillespy2_model, stochss_model)
+        wkfl.run(gillespy2_model, stochss_model, verbose)
     except Exception as error:
         # update workflow status to error if GillesPy2 throws an exception
         log.error("Workflow errors: {0}".format(error))
@@ -188,6 +188,7 @@ def get_parsed_args():
     parser.add_argument('-e', '--existing', action="store_true", help="Specifies an existing workflow.")
     parser.add_argument('-s', '--save', action="store_true", help="Save the workflow.")
     parser.add_argument('-r', '--run', action="store_true", help="Run the workflow.")
+    parser.add_argument('-v', '--verbose', action="store_true", help="Print results as the are stored.")
     args = parser.parse_args()
     if not (args.new or args.existing):
         parser.error("Please specify new (-n) or existing (-e).")
@@ -242,6 +243,6 @@ if __name__ == "__main__":
 
     setup_logger(workflow.log_path)
 
-    opts[opt_type](workflow, wkfl_type, args.new)
+    opts[opt_type](workflow, wkfl_type, args.new, args.verbose)
     
     

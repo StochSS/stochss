@@ -71,17 +71,46 @@ def create_reaction_strings(json_data, padding):
 
 def create_rate_rule_strings(json_data, padding):
     rr_string = ''
-    is_stochastic = not json_data['simulationSettings']['algorithm'] == "ODE"
     algorithm = json_data['simulationSettings']['algorithm']
+    is_stochastic = not algorithm == "ODE"
     if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
         rr_string += '\n' + padding + '# Rate Rules\n'
         for rr in json_data['rules']:
             if rr['type'] == "Rate Rules":
-                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", expression="{1}", species=self.listOfSpecies["{2}"]))\n'.format(
+                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable={2}))\n'.format(
                         rr['name'], 
                         rr['expression'], 
                         rr['variable']['name'])
     return rr_string
+
+
+def create_assignment_rule_string(json_data, padding):
+    ar_string = ''
+    algorithm = json_data['simulationSettings']['algorithm']
+    is_stochastic = not algorithm == "ODE"
+    if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
+        ar_string += '\n' + padding + '# Assignment Rules\n'
+        for ar in json_data['rules']:
+            if ar['type'] == "Assignment Rule":
+                ar_string += padding + 'self.add_assignment_rule(AssignmentRule(name={0}, formula={1}, variable={2}))\n'.format(
+                        ar['name'],
+                        ar['expression'],
+                        ar['variable']['name'])
+    return ar_string
+
+
+def create_function_definition_string(json_data, padding):
+    fd_string = ''
+    algorithm = json_data['simulationSettings']['algorithm']
+    is_stochastic = not algorithm == "ODE"
+    if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
+        fd_string += '\n' + padding + '# Function Definitions\n'
+        for fd in json_data['functionDefinitions']:
+            fd_string += padding + 'self.add_function_definition(FunctionDefintion(name={0}, function={1}, args={2}))\n'.format(
+                    fd['name'],
+                    fd['expression'],
+                    fd['variables'].split(', '))
+    return fd_string
 
 
 def generate_model_cell(json_data, name):
@@ -104,6 +133,8 @@ def generate_model_cell(json_data, name):
         model_cell += create_species_strings(json_data, padding)
         model_cell += create_reaction_strings(json_data, padding)
         model_cell += create_rate_rule_strings(json_data, padding)
+        model_cell += create_assignment_rule_string(json_data, padding)
+        model_cell += create_function_definition_string(json_data, padding)
 
         model_cell += '\n' + padding + '# Timespan\n'
         duration = json_data['modelSettings']['endSim']
@@ -245,6 +276,30 @@ def generate_1D_parameter_sweep_class_cell(json_data):
         plt.errorbar(c.p1_range,c.data[:,0],c.data[:,1])
         plt.xlabel(c.p1, fontsize=16, fontweight='bold')
         plt.ylabel("Population", fontsize=16, fontweight='bold')
+
+
+    def plotplotly(c, return_plotly_figure=False, species_of_interest=None):
+        from plotly.offline import iplot
+        import plotly.graph_objs as go
+
+        data = c.data
+        visible = c.number_of_trajectories > 1
+        error_y = dict(type='data', array=data[:,1], visible=visible)
+
+        trace_list = [go.Scatter(x=c.p1_range, y=data[:,0], error_y=error_y)]
+
+        title = dict(text="<b>Parameter Sweep - Species: {0}</b>".format(c.species_of_interest), x=0.5)
+        yaxis_label = dict(title="<b>Population</b>")
+        xaxis_label = dict(title="<b>{0}</b>".format(c.p1))
+
+        layout = go.Layout(title=title, xaxis=xaxis_label, yaxis=yaxis_label)
+
+        fig = dict(data=trace_list, layout=layout)
+
+        if return_plotly_figure:
+            return fig
+        else:
+            iplot(fig)
     '''
     return psweep_class_cell
 
@@ -322,6 +377,30 @@ def generate_2D_parameter_sweep_class_cell(json_data):
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.2)
         _ = plt.colorbar(ax=ax, cax=cax)
+
+
+    def plotplotly(c, return_plotly_figure=False):
+        from plotly.offline import init_notebook_mode, iplot
+        import plotly.graph_objs as go
+         
+        xaxis_ticks = c.p1_range
+        yaxis_ticks = c.p2_range
+        data = c.data
+
+        trace_list = [go.Heatmap(z=data, x=xaxis_ticks, y=yaxis_ticks)]
+
+        title = dict(text="<b>Parameter Sweep - Species: {0}</b>".format(c.species_of_interest), x=0.5)
+        xaxis_label = dict(title="<b>{0}</b>".format(c.p1))
+        yaxis_label = dict(title="<b>{0}</b>".format(c.p2))
+
+        layout = go.Layout(title=title, xaxis=xaxis_label, yaxis=yaxis_label)
+
+        fig = dict(data=trace_list, layout=layout)
+
+        if return_plotly_figure:
+            return fig
+        else:
+            iplot(fig)
     '''
     return psweep_class_cell
 

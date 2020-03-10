@@ -66,7 +66,7 @@ class RunWorkflowAPIHandler(APIHandler):
         log.warning("Name of workflow or workflow path: {0}".format(workflow_name))
         log.warning("Type of workflow: {0}".format(wkfl_type))
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        exec_cmd = ["stochss-pkg/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        exec_cmd = ["/stochss/stochss-pkg/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.warning("Save workflow options: {0}".format(opt_type))
         log.warning("Exec command sent to the subprocess: {0}".format(exec_cmd))
@@ -98,7 +98,7 @@ class SaveWorkflowAPIHandler(APIHandler):
         log.warning("Name of workflow or workflow path: {0}".format(workflow_name))
         log.warning("Type of workflow: {0}".format(wkfl_type))
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        exec_cmd = [ "stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        exec_cmd = [ "/stochss/stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.warning("Save workflow options: {0}".format(opt_type))
         log.warning("Exec command sent to the subprocess: {0}".format(exec_cmd))
@@ -148,15 +148,15 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             Path to selected workflow directory within user pod container.
         '''
         body = json.loads(self.get_query_argument(name='data')) # Plot request body
-        results_path = os.path.join(workflow_path, 'results/results.p') # Path to the results file
+        results_path = os.path.join(workflow_path, 'results/plots.json') # Path to the results file
         log.warn(self.request.body)
-        plt_type = body['plt_type'] # type of plot to be retrieved 
+        plt_key = body['plt_key'] # type of plot to be retrieved 
         plt_data = body['plt_data'] # plot title and axes lables
         if "None" in plt_data:
-            plt_fig = plot_results(results_path, plt_type)
+            plt_fig = plot_results(results_path, plt_key)
         else:
-            plt_fig = plot_results(results_path, plt_type, plt_data) # Add plot data to the exec cmd if its not "None"
-        log.warn(plt_fig)
+            plt_fig = plot_results(results_path, plt_key, plt_data) # Add plot data to the exec cmd if its not "None"
+        log.warning(plt_fig)
         self.write(plt_fig) # Send data to client
 
 

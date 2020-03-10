@@ -97,7 +97,7 @@ class RunModelAPIHandler(APIHandler):
             outfile = outfile.replace("-", "_")
         log.warn(str(outfile))
         # Use Popen instead? Can we orphan/detach the process somehow?
-        exec_cmd = ['stochss-pkg/handlers/util/run_model.py', '{0}'.format(model_path), '{}.tmp'.format(outfile)] # Script commands for read run_cmd
+        exec_cmd = ['/stochss/stochss-pkg/handlers/util/run_model.py', '{0}'.format(model_path), '{}.tmp'.format(outfile)] # Script commands for read run_cmd
         exec_cmd.append(''.join(['--', run_cmd]))
         log.warning(exec_cmd)
         if(run_cmd == "start"):

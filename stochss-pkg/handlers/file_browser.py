@@ -20,6 +20,7 @@ from .util.rename import rename
 from .util.convert_to_smdl_mdl import convert_model
 from .util.convert_to_sbml import convert_to_sbml
 from .util.convert_sbml_to_model import convert_sbml_to_model
+from .util.generate_zip_file import download_zip
 
 
 class ModelBrowserFileList(APIHandler):
@@ -303,6 +304,35 @@ class DownloadAPIHandler(APIHandler):
         full_path = os.path.join("/home/jovyan", path)
         with open(full_path, 'r') as f:
             resp = f.read()
+        self.write(resp)
+
+
+class DownloadZipFileAPIHandler(APIHandler):
+     '''
+     ##############################################################################
+     Handler for downloading zip files to the users download directory.
+     ##############################################################################
+     '''
+
+     async def get(self, action, path):
+        '''
+        Send Get request to generate and/or get the zip file in user pod for download. 
+        This method utilizes the kubernetes python api.
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the target file or directory.
+
+        '''
+        if action == "download":
+            file_name = "{0}.zip".format(path.split('/').pop().split('.')[0])
+            log.warning(file_name)
+            self.set_header('Content-Type', 'application/zip')
+            self.set_header('Content_Disposition', 'attachment; filename="{0}"'.format(file_name))
+        
+        generate = not action == "download"
+        resp = download_zip(path, generate)
         self.write(resp)
 
 

@@ -21,6 +21,10 @@ try:
     from gillespy2 import AssignmentRule
 except:
     log.warning("Assignment Rules are not supported")
+try:
+    from gillespy2 import FunctionDefintion
+except:
+    log.warn("Function Definitions are not supported")
 import numpy
 import gillespy2.core.gillespySolver
 from gillespy2.core.events import EventAssignment, EventTrigger, Event
@@ -69,7 +73,7 @@ class GillesPy2Workflow():
         return results
 
 
-    def run(self, gillespy2_model, stochss_model):
+    def run(self, gillespy2_model, stochss_model, verbose):
         sim_settings = stochss_model['simulationSettings']
         trajectories = sim_settings['realizations']
         is_stochastic = not sim_settings['algorithm'] == "ODE"
@@ -101,23 +105,27 @@ class GillesPy2Workflow():
         is_stochastic : bool
             Was the workflow a stochastic simulation?.
         '''
+        plots = {}
+        
         if is_stochastic and trajectories > 1:
             stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
             stddevrange_plot["config"] = {"responsive": True,}
-            with open(os.path.join(self.res_path, 'std_dev_range_plot.json'), 'w') as json_file:
-                json.dump(stddevrange_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            plots['stddevran'] = stddevrange_plot
+
             stddev_plot = results.stddev_ensemble().plotplotly(return_plotly_figure=True)
             stddev_plot["config"] = {"responsive": True,}
-            with open(os.path.join(self.res_path, 'stddev_ensemble_plot.json'), 'w') as json_file:
-                json.dump(stddev_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            plots['stddev'] = stddev_plot
+
             avg_plot = results.average_ensemble().plotplotly(return_plotly_figure=True)
             avg_plot["config"] = {"responsive": True,}
-            with open(os.path.join(self.res_path, 'ensemble_average_plot.json'), 'w') as json_file:
-                json.dump(avg_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            plots['avg'] = avg_plot
+
         plot = results.plotplotly(return_plotly_figure=True)
         plot["config"] = {"responsive": True,}
-        with open(os.path.join(self.res_path, 'plotplotly_plot.json'), 'w') as json_file:
-                json.dump(plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+        plots['trajectories'] = plot
+
+        with open(os.path.join(self.res_path, 'plots.json'), 'w') as plots_file:
+            json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
 
 
 class _Model(Model):
@@ -126,7 +134,8 @@ class _Model(Model):
     Build a GillesPy2 model.
     ##############################################################################
     '''
-    def __init__(self, name, species, parameters, reactions, events, rate_rules, assignment_rules, endSim, timeStep, volume):
+    def __init__(self, name, species, parameters, reactions, events, rate_rules, 
+                    assignment_rules, function_definitions, endSim, timeStep, volume):
         '''
         Initialize and empty model and add its components.
 
@@ -146,6 +155,8 @@ class _Model(Model):
             List of GillesPy2 rate rules to be added to the model.
         assignment_rules : list
             List of GillesPy2 assignment rules to be added to the model.
+        function_definitions : list
+            List of GillesPy2 function definitions to be added to the model.
         endSim : int
             Simulation duration of the model.
         timeStep : int
@@ -165,6 +176,10 @@ class _Model(Model):
             self.add_assignment_rules(assignment_rules)
         except:
             log.warning('Assignment rules are not supported.')
+        try:
+            self.add_function_definition(function_definitions)
+        except:
+            log.warn('Function Definitions are not supported.')
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
 
@@ -198,7 +213,9 @@ class ModelFactory():
         assignment_rules = list(filter(lambda rr: self.is_valid_assignment_rule(rr), data["rules"]))
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr, self.species, self.parameters), rate_rules))
         self.assignment_rules = list(map(lambda ar: self.build_assignment_rules(ar, self.species, self.parameters), assignment_rules))
-        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, self.assignment_rules, endSim, timeStep, volume)
+        self.function_definitions = list(map(lambda fd: self.build_function_definitions(fd), data['functionDefinitions']))
+        self.model = _Model(name, self.species, self.parameters, self.reactions, self.events, self.rate_rules, 
+             self.assignment_rules, self.function_definitions, endSim, timeStep, volume)
 
     def build_specie(self, args, is_ode):
         '''
@@ -388,6 +405,25 @@ class ModelFactory():
             value = stoich_specie['ratio']
             d[key] = value
         return d
+
+
+    def build_function_definitions(self, args):
+        '''
+        Build a GillesPy2 function definition.
+
+        Attributes
+        ----------
+        args : dict
+            A json representation of a function definition.
+        '''
+        name = args['name']
+        variables = args['variables'].split(', ')
+        expression = args['expression']
+
+        try:
+            return FunctionDefinition(name=name, args=variables, function=expression)
+        except:
+            log.warn("Function Definitions are not yet supported.")
 
 
 def get_models(full_path, name):

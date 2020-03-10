@@ -130,6 +130,9 @@ let WorkflowManager = PageView.extend({
     if(this.status !== 'new' && this.status !== 'ready'){
       workflowEditor.collapseContainer();
     }
+    if(this.status === 'running'){
+      this.getWorkflowStatus();
+    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -206,7 +209,10 @@ let WorkflowManager = PageView.extend({
     }
     var resultsView = new WorkflowResultsView({
       trajectories: this.trajectories,
-      status: this.status
+      status: this.status,
+      species: this.species,
+      type: this.type,
+      speciesOfInterest: this.speciesOfInterest.name
     });
     this.workflowResultsView = this.registerRenderSubview(resultsView, 'workflow-results-container');
   },
@@ -216,7 +222,8 @@ let WorkflowManager = PageView.extend({
     }
     this.modelViewer = new ModelViewer({
       directory: this.modelDirectory,
-      status: this.status
+      status: this.status,
+      type: this.type
     });
     this.registerRenderSubview(this.modelViewer, 'model-viewer-container')
   },

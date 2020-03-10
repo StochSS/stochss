@@ -282,3 +282,12 @@ span.checkbox {
   margin-bottom: 5px;
   height: 29px;
 }
+
+.logo {
+  vertical-align: middle;
+  /*text-align: center;*/
+}
+
+.page-header {
+  text-align: center;
+}
