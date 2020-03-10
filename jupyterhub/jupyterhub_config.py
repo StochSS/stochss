@@ -59,18 +59,17 @@ c.JupyterHub.db_url = 'postgresql://postgres:{password}@{host}/{db}'.format(
 )
 
 ## The location of jupyterhub data files (e.g. /usr/local/share/jupyterhub)
-c.JupyterHub.data_files_path = '/usr/local/share/jupyterhub'
+#c.JupyterHub.data_files_path = '/usr/local/share/jupyterhub'
 
 ## An Application for starting a Multi-User Jupyter Notebook server.
 
-#sys.path.insert(1, '.')
-sys.path.insert(1, '/stochss/jupyterhub')
+sys.path.insert(1, '.')
 
 c.JupyterHub.log_level = 'DEBUG'
 
 # Page handlers
 
-#c.JupyterHub.default_url = '/stochss'
+c.JupyterHub.default_url = '/stochss'
 
 # Page handlers
 from handlers import HomeHandler
@@ -82,7 +81,7 @@ c.JupyterHub.extra_handlers = [
 
 ## Paths to search for jinja templates, before using the default templates.
 c.JupyterHub.template_paths = [
-  "/srv/jupyterhub/static/"
+    '/srv/jupyterhub/templates'
 ]
 
 ## The URL on which the Hub will listen. This is a private URL for internal
@@ -330,13 +329,6 @@ c.JupyterHub.hub_port = 8080
 #  Use with internal_ssl
 #c.JupyterHub.external_ssl_authorities = {}
 
-## Register extra tornado Handlers for jupyterhub.
-#  
-#  Should be of the form ``("<regex>", Handler)``
-#  
-#  The Hub prefix will be added, so `/my-page` will be served at `/hub/my-page`.
-#c.JupyterHub.extra_handlers = []
-
 ## DEPRECATED: use output redirection instead, e.g.
 #  
 #  jupyterhub &>> /var/log/jupyterhub.log
@@ -575,9 +567,6 @@ c.JupyterHub.hub_port = 8080
 #  
 #  When using SSL (i.e. always) this also requires a wildcard SSL certificate.
 #c.JupyterHub.subdomain_host = ''
-
-## Paths to search for jinja templates, before using the default templates.
-#c.JupyterHub.template_paths = []
 
 ## Extra variables to be passed into jinja templates
 #c.JupyterHub.template_vars = {}

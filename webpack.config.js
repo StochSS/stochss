@@ -4,7 +4,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: {
-    home: './client/pages/home.js',
     browser: './client/pages/file-browser.js',
     editor: './client/pages/model-editor.js',
     workflowSelection: './client/pages/workflow-selection.js',
@@ -16,13 +15,6 @@ module.exports = {
   },
   devtool: 'inline-source-map',
   plugins: [
-    new HtmlWebpackPlugin({
-      title: 'StochSS | Home',
-      filename: 'stochss-home.html',
-      template: 'page_template.pug',
-      name: 'home',
-      inject: false
-    }),
     new HtmlWebpackPlugin({
       title: 'StochSS | Model Browser',
       filename: 'stochss-file-browser.html',
