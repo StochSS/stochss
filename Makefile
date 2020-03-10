@@ -53,6 +53,11 @@ hub: check-files network volumes
 	cd ./jupyterhub && docker-compose build
 
 run_hub:
+	export AUTH_CLASS='jupyterhub.auth.DummyAuthenticator' && \
+	cd ./jupyterhub && docker-compose up
+
+run_hub_gh:
+	export AUTH_CLASS=oauthenticator.GitHubOAuthenticator && \
 	cd ./jupyterhub && docker-compose up
 
 build:  webpack
