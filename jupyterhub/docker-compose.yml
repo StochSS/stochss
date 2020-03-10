@@ -37,6 +37,7 @@ services:
       - hub-db
     environment:
       POSTGRES_HOST: hub-db
+      AUTH_CLASS: ${AUTH_CLASS}
     env_file:
       - .env
       - secrets/postgres.env
