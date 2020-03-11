@@ -414,7 +414,7 @@ let FileBrowser = PageView.extend({
   },
   getZipFileForExport: function (o) {
     var self = this;
-    var endpoint = path.join("/stochss/api/file/download-zip/generate", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "file/download-zip/generate", o.original._path);
     xhr({uri: endpoint}, function (err, response, body) {
       var filePath = body.split('/home/jovyan').pop()
       var node = $('#models-jstree').jstree().get_node(o.parent);

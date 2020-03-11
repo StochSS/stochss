@@ -1,5 +1,6 @@
 
 include .env
+include jupyterhub/.env
 
 .DEFAULT_GOAL=build_and_run
 
@@ -10,19 +11,19 @@ volumes:
 	@docker volume inspect $(DATA_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DATA_VOLUME_HOST)
 	@docker volume inspect $(DB_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DB_VOLUME_HOST)
 
-secrets/oauth.env:
+jupyterhub/secrets/oauth.env:
 	@echo "Need oauth.env file in secrets with GitHub parameters"
 	@exit 1
 
-secrets/jupyterhub.crt:
+jupyterhub/secrets/jupyterhub.crt:
 	@echo "Need an SSL certificate in secrets/jupyterhub.crt"
 	@exit 1
 
-secrets/jupyterhub.key:
+jupyterhub/secrets/jupyterhub.key:
 	@echo "Need an SSL key in secrets/jupyterhub.key"
 	@exit 1
 
-secrets/postgres.env:
+jupyterhub/secrets/postgres.env:
 	@echo "Generating postgres password in $@"
 	@echo "POSTGRES_PASSWORD=$(shell openssl rand -hex 32)" > $@
 
@@ -32,7 +33,7 @@ userlist:
 	@echo "    wash"
 	@exit 1
 
-check-files: userlist $(cert_files) secrets/oauth.env secrets/postgres.env
+check-files: jupyterhub/userlist $(cert_files) jupyterhub/secrets/oauth.env jupyterhub/secrets/postgres.env
 
 cert:
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
@@ -49,10 +50,16 @@ deps:
 	pipenv install
 
 hub: check-files network volumes
-	docker-compose build
+	export AUTH_CLASS='' && \
+	cd ./jupyterhub && docker-compose build
 
 run_hub:
-	docker-compose up
+	export AUTH_CLASS='jupyterhub.auth.DummyAuthenticator' && \
+	cd ./jupyterhub && docker-compose up
+
+run_hub_gh:
+	export AUTH_CLASS=oauthenticator.GitHubOAuthenticator && \
+	cd ./jupyterhub && docker-compose up
 
 build:  webpack
 	pipenv lock -r > requirements.txt
