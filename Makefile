@@ -49,7 +49,10 @@ deps:
 	npm install
 	pipenv install
 
-hub: check-files network volumes
+build_home_page:
+	npm run build-home
+
+hub: build_home_page check-files network volumes
 	export AUTH_CLASS='' && \
 	cd ./jupyterhub && docker-compose build
 

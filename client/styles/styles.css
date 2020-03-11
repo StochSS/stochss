@@ -1,8 +1,19 @@
 body {
-  padding-top: 80px;
-  padding-bottom: 40px;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+
+}
+
+.page {
+  padding-bottom: 150px;
+}
+
+.sidebar {
+  padding-top: 20px;
+  margin-top: 48px;
+}
+
+[role="main"] {
+  padding-top: 20px;
+  margin-top: 48px;
 }
 
 .inline{
@@ -87,12 +98,16 @@ a.disabled {
   font-size: 16px;
 }
 
+.sidebar-sticky {
+  position: fixed;
+}
+
 .tools {
   min-width: 16em !important;
 }
 
 .body {
-  min-width: 500px !important;
+/*  min-width: 500px !important; */
 }
 .plot-preview {
   margin: 10px;
@@ -290,4 +305,9 @@ span.checkbox {
 
 .page-header {
   text-align: center;
+}
+
+.big-browser-tip {
+  margin-left: -.2em;
+  margin-top: -.2em;
 }
