@@ -103,7 +103,7 @@ a.disabled {
 }
 
 .tools {
-  min-width: 16em !important;
+  min-width: 12em; 
 }
 
 .body {
@@ -307,7 +307,6 @@ span.checkbox {
   text-align: center;
 }
 
-.big-browser-tip {
-  margin-left: -.2em;
-  margin-top: -.2em;
+.big-tip {
+  margin-left: .2em;
 }

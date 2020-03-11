@@ -1,4 +1,4 @@
-var app = require('ampersand-app');
+let app = require('../app');
 var $ = require('jquery');
 var xhr = require('xhr');
 var path = require('path');
@@ -28,7 +28,7 @@ module.exports = View.extend({
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
     var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
     this.saveModel(function () {
-      var endpoint = path.join('stochss/api/workflow/save-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+      var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
       xhr({uri: endpoint}, function (err, response, body) {
         self.saved();
         if(document.URL.endsWith('.mdl')){
@@ -93,10 +93,12 @@ module.exports = View.extend({
       self.parent.parent.updateWorkflowStatus();
       if(document.URL.endsWith('.mdl')){
         setTimeout(function () {
-          //var dirname = path.dirname(document.URL).split('hub')
-          //dirname.shift()
-          //dirname = dirname.join('hub')
-          window.location.href = path.join(self.parent.parent.workflowName + '.wkfl')
+          let pathname = window.location.pathname.split('/');
+          pathname.pop()
+          pathname.shift()
+          pathname = pathname.join('/')
+          workflowpath = path.join(pathname, self.parent.parent.workflowName + '.wkfl')
+          window.location.href = workflowpath;
         }, 3000);        
       }
     });
