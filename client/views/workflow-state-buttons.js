@@ -33,10 +33,10 @@ module.exports = View.extend({
         self.saved();
         if(document.URL.endsWith('.mdl')){
           setTimeout(function () {
-            //var dirname = path.dirname(document.URL).split('hub')
-            //dirname.shift()
-            //dirname = dirname.join('hub')
-            window.location.href = path.join(self.parent.parent.workflowName + '.wkfl')
+            var dirname = path.dirname(document.URL).split('8888')
+            dirname.shift()
+            dirname = dirname.join()
+            window.location.href = path.join(dirname, self.parent.parent.workflowName + '.wkfl')
           }, 3000); 
         }
       });
