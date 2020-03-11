@@ -50,6 +50,7 @@ deps:
 	pipenv install
 
 hub: check-files network volumes
+	export AUTH_CLASS='' && \
 	cd ./jupyterhub && docker-compose build
 
 run_hub:

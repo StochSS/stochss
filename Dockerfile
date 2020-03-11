@@ -16,6 +16,10 @@ COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
 COPY --chown=jovyan:users . /stochss
 
+COPY --chown=jovyan:users stochss-logo.png /home/jovyan/.jupyter/custom/logo.png
+
+COPY --chown=jovyan:users custom.css /home/jovyan/.jupyter/custom/custom.css
+
 COPY jupyter_notebook_config.py /home/jovyan/.jupyter/jupyter_notebook_config.py
 
 RUN python -m pip --no-cache-dir install -e .
