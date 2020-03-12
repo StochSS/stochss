@@ -14,7 +14,7 @@ let HomePage = PageView.extend({
     template: template,
     render: function () {
       PageView.prototype.render.apply(this, arguments);
-      $(this.queryByHook('stochss-logo')).html(graphics['logo'])
+      //$(this.queryByHook('stochss-logo')).html(graphics['logo'])
     }
 });
 

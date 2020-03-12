@@ -303,6 +303,10 @@ span.checkbox {
   text-align: center;
 }
 
+.logo img {
+  width: 30;
+}
+
 .page-header {
   text-align: center;
 }

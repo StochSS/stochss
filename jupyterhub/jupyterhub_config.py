@@ -67,8 +67,9 @@ sys.path.insert(1, '.')
 
 c.JupyterHub.log_level = 'DEBUG'
 
-# Page handlers
-
+## The default URL for users when they arrive (e.g. when user directs to "/")
+#  
+#  By default, redirects users to their own server.
 c.JupyterHub.default_url = '/stochss'
 
 # Page handlers
@@ -305,11 +306,6 @@ c.JupyterHub.hub_port = 8080
 ## If named servers are enabled, default name of server to spawn or open, e.g. by
 #  user-redirect.
 #c.JupyterHub.default_server_name = ''
-
-## The default URL for users when they arrive (e.g. when user directs to "/")
-#  
-#  By default, redirects users to their own server.
-#c.JupyterHub.default_url = ''
 
 ## Dict authority:dict(files). Specify the key, cert, and/or ca file for an
 #  authority. This is useful for externally managed proxies that wish to use
@@ -633,6 +629,18 @@ c.JupyterHub.hub_port = 8080
 # Spawner(LoggingConfigurable) configuration
 #------------------------------------------------------------------------------
 
+## The URL the single-user server should start in.
+#  
+#  `{username}` will be expanded to the user's username
+#  
+#  Example uses:
+#  
+#  - You can set `notebook_dir` to `/` and `default_url` to `/tree/home/{username}` to allow people to
+#    navigate the whole filesystem from their notebook server, but still start in their home directory.
+#  - Start with `/notebooks` instead of `/tree` if `default_url` points to a notebook instead of a directory.
+#  - You can set this to `/lab` to have JupyterLab start by default, rather than Jupyter Notebook.
+c.Spawner.default_url = '/stochss/models'
+
 ## Base class for spawning single-user notebook servers.
 #  
 #  Subclass this, and override the following methods:
@@ -715,18 +723,6 @@ c.JupyterHub.hub_port = 8080
 
 ## Enable debug-logging of the single-user server
 #c.Spawner.debug = False
-
-## The URL the single-user server should start in.
-#  
-#  `{username}` will be expanded to the user's username
-#  
-#  Example uses:
-#  
-#  - You can set `notebook_dir` to `/` and `default_url` to `/tree/home/{username}` to allow people to
-#    navigate the whole filesystem from their notebook server, but still start in their home directory.
-#  - Start with `/notebooks` instead of `/tree` if `default_url` points to a notebook instead of a directory.
-#  - You can set this to `/lab` to have JupyterLab start by default, rather than Jupyter Notebook.
-#c.Spawner.default_url = ''
 
 ## Disable per-user configuration of single-user servers.
 #  
