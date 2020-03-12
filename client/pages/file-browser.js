@@ -449,7 +449,7 @@ let FileBrowser = PageView.extend({
     if(o.original){
       targetPath = o.original._path
     }
-    var endpoint = path.join("/files", targetPath);
+    var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.location.href = endpoint
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
@@ -637,7 +637,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join("stochss/models/edit", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
             }
           },
           "Convert" : {
@@ -671,7 +671,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("stochss/workflow/selection", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
             }
           },
           "Rename" : {
@@ -712,7 +712,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join("stochss/models/edit", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
             }
           },
           "Convert" : {
@@ -736,7 +736,7 @@ let FileBrowser = PageView.extend({
                 "_disabled" : false,
                 "label" : "To Notebook",
                 "action" : function (data) {
-                  var endpoint = path.join("stochss/api/models/to-notebook", o.original._path)
+                  var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
                   xhr({ uri: endpoint },
                         function (err, response, body) {
                     var node = $('#models-jstree').jstree().get_node(o.parent)
@@ -746,7 +746,7 @@ let FileBrowser = PageView.extend({
                       $('#models-jstree').jstree().refresh_node(node);
                     }
                     var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-                    var notebookPath = path.join("/lab/tree", _path)
+                    var notebookPath = path.join(app.getBasePath(), "/lab/tree", _path)
                     window.open(notebookPath, '_blank')
                   });
                 }
@@ -768,7 +768,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("stochss/workflow/selection", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
             }
           },
           "Download" : {
@@ -818,7 +818,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              window.location.href = path.join("stochss/workflow/edit/none", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", o.original._path);
             }
           },
           "Start/Restart Workflow" : {
@@ -903,7 +903,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              window.open(path.join("/lab/tree", o.original._path));
+              window.open(path.join(app.getBasePath(), "/lab/tree", o.original._path));
             }
           },
           "Download" : {
@@ -954,7 +954,7 @@ let FileBrowser = PageView.extend({
             "label" : "Open File",
             "action" : function (data) {
               var filePath = o.original._path
-              window.open(path.join("/lab/tree", filePath), '_blank')
+              window.open(path.join(app.getBasePath(), "/lab/tree", filePath), '_blank')
             }
           },
           "Convert" : {
@@ -1086,15 +1086,15 @@ let FileBrowser = PageView.extend({
       var node = $('#models-jstree').jstree().get_node(e.target)
       var _path = node.original._path;
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-        window.location.href = path.join("stochss/models/edit", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/models/edit", _path);
       }else if(file.endsWith('.ipynb')){
-        var notebookPath = path.join("lab/tree/", _path)
+        var notebookPath = path.join(app.getBasePath(), "lab/tree/", _path)
         window.open(notebookPath, '_blank')
       }else if(file.endsWith('.sbml')){
-        var openPath = path.join("lab/tree/", _path)
+        var openPath = path.join(app.getBasePath(), "lab/tree/", _path)
         window.open(openPath, '_blank')
       }else if(file.endsWith('.wkfl')){
-        window.location.href = path.join("stochss/workflow/edit/none", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }

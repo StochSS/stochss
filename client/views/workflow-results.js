@@ -2,6 +2,7 @@ var $ = require('jquery');
 var path = require('path');
 var xhr = require('xhr');
 var Plotly = require('../lib/plotly');
+var app = require('../app');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -161,7 +162,7 @@ module.exports = View.extend({
     }else{
       data['plt_data'] = "None"
     }
-    var endpoint = path.join("stochss/api/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
+    var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
     xhr({url: endpoint}, function (err, response, body){
       if(body.startsWith("ERROR!")){
         $(self.queryByHook(type)).html(body)

@@ -33,9 +33,9 @@ module.exports = View.extend({
         self.saved();
         if(document.URL.endsWith('.mdl')){
           setTimeout(function () {
-            var dirname = path.dirname(document.URL).split('8888')
-            dirname.shift()
-            dirname = dirname.join()
+            var dirname = window.location.pathname.split('/')
+            dirname.pop()
+            dirname = dirname.join('/')
             window.location.href = path.join(dirname, self.parent.parent.workflowName + '.wkfl')
           }, 3000); 
         }
@@ -48,7 +48,7 @@ module.exports = View.extend({
   clickEditModelHandler: function (e) {
     var self = this
     this.saveModel(function () {
-      window.location.href = path.join("stochss/models/edit", self.model.directory);
+      window.location.href = path.join(app.getBasePath(), "stochss/models/edit", self.model.directory);
     });
   },
   saveModel: function (cb) {
@@ -86,7 +86,7 @@ module.exports = View.extend({
     var wkflType = this.parent.parent.type;
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
     var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
-    var endpoint = path.join('stochss/api/workflow/run-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+    var endpoint = path.join(app.getApiPath(), '/workflow/run-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
       self.parent.collapseContainer();
@@ -95,7 +95,6 @@ module.exports = View.extend({
         setTimeout(function () {
           let pathname = window.location.pathname.split('/');
           pathname.pop()
-          pathname.shift()
           pathname = pathname.join('/')
           workflowpath = path.join(pathname, self.parent.parent.workflowName + '.wkfl')
           window.location.href = workflowpath;
