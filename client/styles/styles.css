@@ -107,7 +107,7 @@ a.disabled {
 }
 
 .body {
-/*  min-width: 500px !important; */
+  min-width: 500px !important; 
 }
 .plot-preview {
   margin: 10px;

@@ -1,6 +1,6 @@
 body
   nav.navbar.navbar-expand-lg.p-1.navbar-light.bg-light.fixed-top
-    a.navbar-brand(href="stochss")
+    a.navbar-brand(data-hook="home-link" href="")
       img(style="height: 38px;margin-left: -1.2em;" src="static/stochss-logo.png")
 
     div#navbar.collapse.navbar-collapse.justify-content-end
@@ -21,7 +21,7 @@ body
           | Sign Out
 
   div.container-fluid
-    div.row
+    div.row.flex-nowrap
       nav.col-md-1.tools.d-md-block.sidebar
         div.sidebar-sticky.card.card-body.tools
           ul.nav.flex-column
@@ -45,4 +45,4 @@ body
 
             //button.btn.information-btn(data-hook="create-workflow-information-main") Working with Workflows
 
-      main.col-md-11(role="main"): div.container-fluid(data-hook="page-container")
+      main.col-md-11.body(role="main"): div.container-fluid(data-hook="page-container")

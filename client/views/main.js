@@ -109,6 +109,9 @@ module.exports = View.extend({
       }
     });
 
+    var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/models"
+    $(this.queryByHook("home-link")).prop('href', homePath);
+
     return this;
   },
   
