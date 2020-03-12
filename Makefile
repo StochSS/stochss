@@ -14,7 +14,7 @@ volumes:
 jupyterhub/secrets/oauth.env:
 	@echo "Need oauth.env file in secrets with Google parameters"
 	@echo "Using an empty file for now..."
-	@touch $@
+	@echo "OAUTH_CALLBACK_URL=''" >> $@
 
 jupyterhub/secrets/jupyterhub.crt:
 	@echo "Need an SSL certificate in secrets/jupyterhub.crt"
@@ -23,6 +23,8 @@ jupyterhub/secrets/jupyterhub.crt:
 jupyterhub/secrets/jupyterhub.key:
 	@echo "Need an SSL key in secrets/jupyterhub.key"
 	@exit 1
+
+check-cert: jupyterhub/secrets/jupyterhub.key jupyterhub/secrets/jupyterhub.crt
 
 jupyterhub/secrets/postgres.env:
 	@echo "Generating postgres password in $@"
@@ -34,9 +36,10 @@ userlist:
 	@echo "    wash"
 	@exit 1
 
-check-files: jupyterhub/userlist $(cert_files) jupyterhub/secrets/oauth.env jupyterhub/secrets/postgres.env
+check-files: jupyterhub/userlist cert jupyterhub/secrets/oauth.env jupyterhub/secrets/postgres.env
 
 cert:
+	@echo "Generating certificate..."
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
 
 webpack:

@@ -1,9 +1,13 @@
 let $ = require('jquery');
 let PageView = require('./base');
-let template = require('../templates/pages/home.pug');
 let graphics = require('../graphics');
+let domReady = require('domready');
+let bootstrap = require('bootstrap');
+let template = require('../templates/pages/home.pug');
 
-import initPage from './page.js';
+import bootstrapStyles from '../styles/bootstrap.css';
+import styles from '../styles/styles.css';
+import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min.css'
 
 let HomePage = PageView.extend({
     pageTitle: 'StochSS | Home',
@@ -14,4 +18,9 @@ let HomePage = PageView.extend({
     }
 });
 
-initPage(HomePage)
+domReady(() => {
+  let p = new HomePage({
+    el: document.body
+  });
+  p.render()
+})
