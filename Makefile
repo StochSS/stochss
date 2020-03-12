@@ -12,8 +12,9 @@ volumes:
 	@docker volume inspect $(DB_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DB_VOLUME_HOST)
 
 jupyterhub/secrets/oauth.env:
-	@echo "Need oauth.env file in secrets with GitHub parameters"
-	@exit 1
+	@echo "Need oauth.env file in secrets with Google parameters"
+	@echo "Using an empty file for now..."
+	@touch $@
 
 jupyterhub/secrets/jupyterhub.crt:
 	@echo "Need an SSL certificate in secrets/jupyterhub.crt"
