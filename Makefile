@@ -52,7 +52,7 @@ deps:
 build_home_page:
 	npm run build-home
 
-build_hub: deps build_home_page check-files network volumes
+build_hub: build_home_page check-files network volumes
 	export AUTH_CLASS='' && \
 	cd ./jupyterhub && docker-compose build
 
@@ -66,7 +66,7 @@ run_hub_gh:
 
 hub: build_hub build run_hub
 
-build:  deps webpack
+build:  webpack
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 run:    
