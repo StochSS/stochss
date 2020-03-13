@@ -9,6 +9,8 @@ body {
 .sidebar {
   padding-top: 20px;
   margin-top: 48px;
+  min-height: 8em;
+  padding-left: 10px
 }
 
 [role="main"] {
@@ -298,13 +300,40 @@ span.checkbox {
   height: 29px;
 }
 
+#home-wrapper {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
 .logo {
   vertical-align: middle;
   text-align: center;
 }
 
-.page-header {
+.logo img {
+  width: 40em;
+  margin-left: -8em;
+}
+
+.try-stochss-btn {
+  padding: 1.5rem 1.5rem;
+  font-size: 2rem;
+  line-height: 1;
+  border-radius: 1.5rem;
+}
+
+.home-list {
+  line-height: 2;
+}
+
+.centered {
   text-align: center;
+}
+
+.home-p {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  font-size: 22px;
 }
 
 .big-tip {

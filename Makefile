@@ -30,11 +30,8 @@ jupyterhub/secrets/postgres.env:
 	@echo "Generating postgres password in $@"
 	@echo "POSTGRES_PASSWORD=$(shell openssl rand -hex 32)" > $@
 
-userlist:
-	@echo "Add usernames, one per line, to ./userlist, such as:"
-	@echo "    zoe admin"
-	@echo "    wash"
-	@exit 1
+jupyterhub/userlist:
+	@touch $@
 
 check-files: jupyterhub/userlist cert jupyterhub/secrets/oauth.env jupyterhub/secrets/postgres.env
 
@@ -49,14 +46,13 @@ watch:
 	npm run watch
 
 deps:
-	pip install -U pip pipenv
+	pip install pipenv
 	npm install
-	pipenv install
 
 build_home_page:
 	npm run build-home
 
-build_hub: build_home_page check-files network volumes
+build_hub: deps build_home_page check-files network volumes
 	export AUTH_CLASS='' && \
 	cd ./jupyterhub && docker-compose build
 
@@ -70,8 +66,7 @@ run_hub_gh:
 
 hub: build_hub build run_hub
 
-build:  webpack
-	pipenv lock -r > requirements.txt
+build:  deps webpack
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 run:    
