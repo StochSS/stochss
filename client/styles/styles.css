@@ -298,17 +298,40 @@ span.checkbox {
   height: 29px;
 }
 
+#home-wrapper {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
 .logo {
   vertical-align: middle;
   text-align: center;
 }
 
 .logo img {
-  width: 30;
+  width: 40em;
+  margin-left: -8em;
 }
 
-.page-header {
+.try-stochss-btn {
+  padding: 1.5rem 1.5rem;
+  font-size: 2rem;
+  line-height: 1;
+  border-radius: 1.5rem;
+}
+
+.home-list {
+  line-height: 2;
+}
+
+.centered {
   text-align: center;
+}
+
+.home-p {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  font-size: 22px;
 }
 
 .big-tip {

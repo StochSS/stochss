@@ -56,7 +56,7 @@ deps:
 build_home_page:
 	npm run build-home
 
-hub: build_home_page check-files network volumes
+build_hub: build_home_page check-files network volumes
 	export AUTH_CLASS='' && \
 	cd ./jupyterhub && docker-compose build
 
@@ -67,6 +67,8 @@ run_hub:
 run_hub_gh:
 	export AUTH_CLASS=oauthenticator.GitHubOAuthenticator && \
 	cd ./jupyterhub && docker-compose up
+
+hub: build_hub build run_hub
 
 build:  webpack
 	pipenv lock -r > requirements.txt
