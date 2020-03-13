@@ -44,7 +44,7 @@ import sys, os.path, shutil
 # Use the dummy authenticator for dev
 c.JupyterHub.authenticator_class = os.environ['AUTH_CLASS']
 # Only meaningful if using GitHub authenticator
-c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
+#c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
 
 # Persist hub data on volume mounted inside container
 data_dir = os.environ.get('DATA_VOLUME_CONTAINER', '/data')
@@ -639,7 +639,7 @@ c.JupyterHub.hub_port = 8080
 #    navigate the whole filesystem from their notebook server, but still start in their home directory.
 #  - Start with `/notebooks` instead of `/tree` if `default_url` points to a notebook instead of a directory.
 #  - You can set this to `/lab` to have JupyterLab start by default, rather than Jupyter Notebook.
-c.Spawner.default_url = '/'
+c.Spawner.default_url = '/stochss/models'
 
 ## Base class for spawning single-user notebook servers.
 #  
