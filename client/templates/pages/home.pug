@@ -1,46 +1,56 @@
-div#home-wrapper.container.card.card-body
-   
-  div.logo(id="stochss-logo" data-hook="stochss-logo")
-    img(src="/hub/static/stochss-logo.png")
+html
 
-  div.centered
-    h1.display-5 Welcome to the Stochastic Simulation Service!
+  head
+    meta(charset="utf-8")
+    title StochSS: Stochastic Simlation Service
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="description", content="")
+    meta(name="author", content="")
 
-    p.home-p
-      | StochSS 2.0 is an accessible platform for modeling biochemical systems.
+  body
+    div#home-wrapper.container.card.card-body
+       
+      div.logo(id="stochss-logo" data-hook="stochss-logo")
+        img(src="/hub/static/stochss-logo.png")
 
-  div.row.home-highlights
-    div.col-md-2
-    div.col-md-5
+      div.centered
+        h1.display-5 Welcome to the Stochastic Simulation Service!
 
-      h5 Features
-      ul.home-list
-        li Discrete Stochastic Modeling
-        li Continuous ODE Modeling
-        li Convert Between Stochastic and ODE Models
-        li Import SBML Models
-        li Parameter Sweep Workflows
+        p.home-p
+          | StochSS 2.0 is an accessible platform for modeling biochemical systems.
 
-    div.col-md-5
+      div.row.home-highlights
+        div.col-md-2
+        div.col-md-5
 
-      h5 Coming soon...
-      ul.home-list
-        li Sciope Integration
-        li Spatial Simulations
-        li Bring Your Own Cloud
+          h5 Features
+          ul.home-list
+            li Discrete Stochastic Modeling
+            li Continuous ODE Modeling
+            li Convert Between Stochastic and ODE Models
+            li Import SBML Models
+            li Parameter Sweep Workflows
 
-  div.centered
-    a.try-stochss-btn.btn.btn-primary(href="/hub/spawn" role="button") Get Started
+        div.col-md-5
 
-  //div.jumbotron.collapse(data-hook="registration-form" id="registration-form")
+          h5 Coming soon...
+          ul.home-list
+            li Sciope Integration
+            li Spatial Simulations
+            li Bring Your Own Cloud
 
-    //iframe(src="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true" width="100%" height="800" frameborder="0")
+      div.centered
+        a.try-stochss-btn.btn.btn-primary(href="/hub/spawn" role="button") Get Started
 
-  //div.jumbotron.collapse.show(data-hook="registration-link")
+      //div.jumbotron.collapse(data-hook="registration-form" id="registration-form")
 
-    //div.get-started
+        //iframe(src="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true" width="100%" height="800" frameborder="0")
 
-      //button.btn.btn-primary(data-hook="registration-link-button" style="margin: 1.5rem;") Register Stochss
+      //div.jumbotron.collapse.show(data-hook="registration-link")
 
-    //p.home-p
-      | StochSS is open-source software.  To obtain continued funding for sustained development, we must show that StochSS is making an impact in the scientific community.  For this, we need to know who is using the software, and a bit about what they are using it for.  Please consider registering StochSS to show your support.
+        //div.get-started
+
+          //button.btn.btn-primary(data-hook="registration-link-button" style="margin: 1.5rem;") Register Stochss
+
+        //p.home-p
+          | StochSS is open-source software.  To obtain continued funding for sustained development, we must show that StochSS is making an impact in the scientific community.  For this, we need to know who is using the software, and a bit about what they are using it for.  Please consider registering StochSS to show your support.

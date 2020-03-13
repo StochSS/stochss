@@ -14,7 +14,7 @@ volumes:
 jupyterhub/secrets/oauth.env:
 	@echo "Need oauth.env file in secrets with Google parameters"
 	@echo "Using an empty file for now..."
-	@echo "OAUTH_CALLBACK_URL=''" >> $@
+	@echo "OAUTH_CALLBACK_URL=''" > $@
 
 jupyterhub/secrets/jupyterhub.crt:
 	@echo "Need an SSL certificate in secrets/jupyterhub.crt"
