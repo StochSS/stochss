@@ -10,12 +10,18 @@ import styles from '../styles/styles.css';
 import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min.css'
 
 let HomePage = PageView.extend({
-    pageTitle: 'StochSS | Home',
     template: template,
+    events: {
+      'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick'
+    },
     render: function () {
       PageView.prototype.render.apply(this, arguments);
       //$(this.queryByHook('stochss-logo')).html(graphics['logo'])
-    }
+    },
+    handleRegistrationLinkClick: function () {
+      $(this.queryByHook("registration-form")).collapse('show');
+      $(this.queryByHook("registration-link")).collapse();
+    },
 });
 
 domReady(() => {
