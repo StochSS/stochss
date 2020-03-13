@@ -23,6 +23,7 @@ def convert_to_gillespy_model(path):
 
 
 def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
+    comp_id = 1
     errors = []
     if type(gillespy_model) is gillespy2.core.gillespy2.Model:
         sbml_model_file = full_path.split('/').pop()
@@ -30,40 +31,42 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
         stochss_model_path = get_unique_file_name(stochss_model_file, full_path.split(sbml_model_file)[0])[0]
 
         species = gillespy_model.get_all_species()
-        stochss_species, algorithm, default_mode = get_species(species)
+        stochss_species, algorithm, default_mode, comp_id = get_species(species, comp_id)
         stochss_model['species'].extend(stochss_species)
         stochss_model['defaultMode'] = default_mode
         stochss_model['simulationSettings']['algorithm'] = algorithm
 
         parameters = gillespy_model.get_all_parameters()
-        stochss_parameters = get_parameters(parameters)
+        stochss_parameters, comp_id = get_parameters(parameters, comp_id)
         stochss_model['parameters'].extend(stochss_parameters)
 
         reactions = gillespy_model.get_all_reactions()
-        stochss_reactions = get_reactions(reactions, stochss_species)
+        stochss_reactions, comp_id = get_reactions(reactions, stochss_species, comp_id)
         stochss_model['reactions'].extend(stochss_reactions)
 
         events = gillespy_model.listOfEvents
-        stochss_events = get_events(events, stochss_species, stochss_parameters)
+        stochss_events, comp_id = get_events(events, stochss_species, stochss_parameters, comp_id)
         stochss_model['eventsCollection'].extend(stochss_events)
 
         rate_rules = gillespy_model.listOfRateRules
-        stochss_rate_rules = get_rate_rules(rate_rules, stochss_species, stochss_parameters)
+        stochss_rate_rules, comp_id = get_rate_rules(rate_rules, stochss_species, stochss_parameters, comp_id)
         stochss_model['rules'].extend(stochss_rate_rules)
 
         try:
             assignment_rules = gillespy_model.listOfAssignmentRules
-            stochss_assignment_rules = get_assignment_rules(assignment_rules, stochss_species, stochss_parameters)
+            stochss_assignment_rules, comp_id = get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, comp_id)
             stochss_model['rules'].extend(stochss_assignment_rules)
         except:
             errors.append("Assignment rules are not supported by gillespy2.")
         
         try:
             function_definitions = gillespy_model.listOfFunctionDefinitions
-            stochss_function_definitions = get_function_definitions(function_definitions)
+            stochss_function_definitions, comp_id = get_function_definitions(function_definitions, comp_id)
             stochss_model['functionDefinitions'].extend(stochss_function_definitions)
         except:
             errors.append("Function Definitions are not supported by gillespy2.")
+
+        stochss_model['defaultID'] = comp_id
 
         with open(stochss_model_path, "w") as stochss_file:
             json.dump(stochss_model, stochss_file)
@@ -73,7 +76,7 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
         return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", []
 
 
-def get_species(species):
+def get_species(species, comp_id):
     stochss_species = []
     mode = "dynamic"
     algorithm = "SSA"
@@ -87,10 +90,12 @@ def get_species(species):
     for name in species.keys():
         specie = species[name]
 
-        stochss_specie = {"name":specie.name,
+        stochss_specie = {"compID":comp_id,
+                          "name":specie.name,
                           "value":specie.initial_value,
                           "mode":mode,
-                          "switchingVal": 0.03,
+                          "switchTol": 0.03,
+                          "switchMin": 100,
                           "isSwitchTol": True,
                           "annotation": "",
                           "diffusionCoeff":0,
@@ -100,33 +105,37 @@ def get_species(species):
                           ]}
 
         stochss_species.append(stochss_specie)
+        comp_id += 1
 
-    return stochss_species, algorithm, mode
+    return stochss_species, algorithm, mode, comp_id
 
 
-def get_parameters(parameters):
+def get_parameters(parameters, comp_id):
     stochss_parameters = []
 
     for name in parameters.keys():
         parameter = parameters[name]
 
-        stochss_parameter = {"name":parameter.name,
+        stochss_parameter = {"compID":comp_id,
+                             "name":parameter.name,
                              "expression":str(parameter.expression),
                              "annotation": ""
                             }
 
         stochss_parameters.append(stochss_parameter)
+        comp_id += 1
 
-    return stochss_parameters
+    return stochss_parameters, comp_id
 
 
-def get_reactions(reactions, stochss_species):
+def get_reactions(reactions, stochss_species, comp_id):
     stochss_reactions = []
 
     for name in reactions.keys():
         reaction = reactions[name]
 
-        stochss_reaction = {"name":reaction.name,
+        stochss_reaction = {"compID":comp_id,
+                            "name":reaction.name,
                             "reactionType": "custom-propensity",
                             "massaction": False,
                             "propensity": reaction.propensity_function,
@@ -152,8 +161,9 @@ def get_reactions(reactions, stochss_species):
         stochss_reaction['summary'] = summary
         
         stochss_reactions.append(stochss_reaction)
+        comp_id += 1
 
-    return stochss_reactions
+    return stochss_reactions, comp_id
 
 
 def get_reactants(reactants, stochss_species):
@@ -222,13 +232,14 @@ def build_summary_element(stoich_specie):
         return name
 
 
-def get_events(events, stochss_species, stochss_parameters):
+def get_events(events, stochss_species, stochss_parameters, comp_id):
     stochss_events = []
 
     for name in events.keys():
         event = events['name']
 
-        stochss_event = {"name": event.name,
+        stochss_event = {"compID":comp_id,
+                         "name": event.name,
                          "annotation": "",
                          "delay": event.delay,
                          "priority": event.priority,
@@ -244,8 +255,9 @@ def get_events(events, stochss_species, stochss_parameters):
         stochss_event['eventAssignment'].extend(stochss_assignments)
 
         stochss_events.append(stochss_event)
+        comp_id += 1
 
-    return stochss_events
+    return stochss_events, comp_id
 
 
 def get_event_assignment(assignments, stochss_species, stochss_parameters):
@@ -266,7 +278,7 @@ def get_event_assignment(assignments, stochss_species, stochss_parameters):
     return stochss_assignments
 
 
-def get_rate_rules(rate_rules, stochss_species, stochss_parameters):
+def get_rate_rules(rate_rules, stochss_species, stochss_parameters, comp_id):
     stochss_rate_rules = []
 
     for name in rate_rules.keys():
@@ -277,7 +289,8 @@ def get_rate_rules(rate_rules, stochss_species, stochss_parameters):
         except:
             variable = get_parameter(stochss_parameters, rate_rule.species.name)
 
-        stochss_rate_rule = {"name":rate_rule.name,
+        stochss_rate_rule = {"compID":comp_id,
+                             "name":rate_rule.name,
                              "expression":rate_rule.expression,
                              "type":"Rate Rule",
                              "variable":variable,
@@ -285,11 +298,12 @@ def get_rate_rules(rate_rules, stochss_species, stochss_parameters):
                             }
 
         stochss_rate_rules.append(stochss_rate_rule)
+        comp_id += 1
 
-    return stochss_rate_rules
+    return stochss_rate_rules, comp_id
 
 
-def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters):
+def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, comp_id):
     stochss_assignment_rules = []
 
     for name in assignment_rules.keys():
@@ -300,7 +314,8 @@ def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters):
         except:
             variable = get_parameter(stochss_parameters, assignment_rule.variable.name)
 
-        stochss_assignment_rule = {"name":assignment_rule.name,
+        stochss_assignment_rule = {"compID":comp_id,
+                                   "name":assignment_rule.name,
                                    "expression":assignment_rule.expression,
                                    "type":"Assignment Rule",
                                    "variable":variable,
@@ -308,11 +323,12 @@ def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters):
                                   }
 
         stochss_assignment_rules.append(stochss_assignment_rule)
+        comp_id += 1
 
-    return stochss_assignment_rules
+    return stochss_assignment_rules, comp_id
 
 
-def get_function_definitions(function_definitions):
+def get_function_definitions(function_definitions, comp_id):
     stochss_function_definitions = []
 
     for name in function_definitions.keys():
@@ -323,7 +339,8 @@ def get_function_definitions(function_definitions):
         variables = function_elements[0].split('lambda ').pop()
         signature = "{0}({1})".format(function_definition.name, variables)
 
-        stochss_function_definition = {"name":function_defintion.name,
+        stochss_function_definition = {"compID":comp_id,
+                                       "name":function_defintion.name,
                                        "function":function_definition.function,
                                        "expression":expression,
                                        "variables":variables,
@@ -332,8 +349,9 @@ def get_function_definitions(function_definitions):
                                        }
 
         stochss_function_definitions.append(stochss_function_definition)
+        comp_id += 1
 
-    return stochss_function_definitions
+    return stochss_function_definitions, comp_id
 
 
 def convert_sbml_to_model(path, model_template):

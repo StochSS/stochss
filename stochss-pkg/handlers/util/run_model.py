@@ -16,15 +16,8 @@ for handler in log.handlers:
         handler.stream = log_stream
 
 
-from gillespy2 import Species, Parameter, Reaction, RateRule, Model
-try:
-    from gillespy2 import AssignmentRule
-except:
-    log.warning("Assignment Rules are not supported")
-try:
-    from gillespy2 import FunctionDefintion
-except:
-    log.warn("Function Definitions are not supported")
+from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefintion
+
 import numpy
 import gillespy2.core.gillespySolver
 from gillespy2.core.events import EventAssignment, EventTrigger, Event
@@ -172,14 +165,8 @@ class _Model(Model):
         self.add_reaction(reactions)
         self.add_event(events)
         self.add_rate_rule(rate_rules)
-        try:
-            self.add_assignment_rules(assignment_rules)
-        except:
-            log.warning('Assignment rules are not supported.')
-        try:
-            self.add_function_definition(function_definitions)
-        except:
-            log.warn('Function Definitions are not supported.')
+        self.add_assignment_rule(assignment_rules)
+        self.add_function_definition(function_definitions)
         numSteps = int(endSim / timeStep + 1)
         self.timespan(numpy.linspace(0,endSim,numSteps))
 
@@ -238,11 +225,8 @@ class ModelFactory():
         else:
             switch_min = args['switchMin']
 
-        try:
-            return Species(name=name, initial_value=value, mode=mode, switch_tol=switch_tol, switch_min=switch_min)
-        except:
-            return Species(name=name, initial_value=value, mode=mode)
-
+        return Species(name=name, initial_value=value, mode=mode, switch_tol=switch_tol, switch_min=switch_min)
+        
     def build_parameter(self, args):
         '''
         Build a GillesPy2 parameter.
@@ -363,7 +347,7 @@ class ModelFactory():
         if not len(variable):
             variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
         expression = args['expression']
-        return RateRule(name=name, species=variable[0], expression=expression)
+        return RateRule(name=name, variable=variable[0], expression=expression)
 
 
     def build_assignment_rule(self, args, species, parameters):
@@ -384,10 +368,7 @@ class ModelFactory():
         if not len(variable):
             variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
         expression = args['expression']
-        try:
-            return AssignmentRule(variable=variable[0], formula=expression)
-        except:
-            log.warning("Assignment rules are not yet supported")
+        return AssignmentRule(name=name, variable=variable[0], expression=expression)
 
 
     def build_stoich_species_dict(self, args):
@@ -420,11 +401,8 @@ class ModelFactory():
         variables = args['variables'].split(', ')
         expression = args['expression']
 
-        try:
-            return FunctionDefinition(name=name, args=variables, function=expression)
-        except:
-            log.warn("Function Definitions are not yet supported.")
-
+        return FunctionDefinition(name=name, args=variables, function=expression)
+        
 
 def get_models(full_path, name):
     try:

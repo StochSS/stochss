@@ -472,7 +472,7 @@ let FileBrowser = PageView.extend({
         if(isModel) {
           let modelName = input.value + '.mdl';
           var parentPath = o.original._path
-          var modelPath = path.join(app.getBasePath(), app.routePrefix, parentPath, modelName);
+          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit', parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
