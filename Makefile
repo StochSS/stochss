@@ -46,8 +46,7 @@ watch:
 	npm run watch
 
 deps:
-	python -m pip install pipenv
-	npm install
+	pip install pipenv
 	pipenv install
 
 build_home_page:
