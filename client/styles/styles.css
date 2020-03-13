@@ -9,6 +9,8 @@ body {
 .sidebar {
   padding-top: 20px;
   margin-top: 48px;
+  min-height: 8em;
+  padding-left: 10px
 }
 
 [role="main"] {

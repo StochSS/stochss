@@ -22,27 +22,28 @@ body
 
   div.container-fluid
     div.row
-      nav.col-md-1.tools.d-md-block.sidebar
-        div.sidebar-sticky.card.card-body.tools
-          ul.nav.flex-column
-            li.nav-item: h5.icon-flask Tools
+      div.col-md-2
+        nav.sidebar
+          div.sidebar-sticky
+            ul.nav.flex-column
+              li.nav-item: h5.icon-flask Tools
 
-            li.nav-item: a.nav-link(href="stochss/models", title="Explore your StochSS models")
-              | Browser
+              li.nav-item: a.nav-link(href="stochss/models", title="Explore your StochSS models")
+                | Browser
 
-            li.nav-item: a.nav-link(target="_blank", href="lab", title="Browse your files in a Jupyter interface")
-              | Jupyter
+              li.nav-item: a.nav-link(target="_blank", href="lab", title="Browse your files in a Jupyter interface")
+                | Jupyter
 
-            li.nav-item: a.nav-link(data-hook="general-help-link", target="_blank", href="#", title="Help")
-              | Help
-           
-            
-            //li.nav-item: h5.icon-flask Information
+              li.nav-item: a.nav-link(data-hook="general-help-link", target="_blank", href="#", title="Help")
+                | Help
+             
+              
+              //li.nav-item: h5.icon-flask Information
 
-            //button.btn.information-btn(data-hook="file-system-information-main") Working with the File Browser
+              //button.btn.information-btn(data-hook="file-system-information-main") Working with the File Browser
 
-            //button.btn.information-btn(data-hook="create-model-information-main") Working with Models
+              //button.btn.information-btn(data-hook="create-model-information-main") Working with Models
 
-            //button.btn.information-btn(data-hook="create-workflow-information-main") Working with Workflows
+              //button.btn.information-btn(data-hook="create-workflow-information-main") Working with Workflows
 
-      main.col-md-11(role="main"): div.container-fluid(data-hook="page-container")
+      main.col-md-10(role="main"): div.container-fluid(data-hook="page-container")

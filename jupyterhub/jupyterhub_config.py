@@ -639,7 +639,7 @@ c.JupyterHub.hub_port = 8080
 #    navigate the whole filesystem from their notebook server, but still start in their home directory.
 #  - Start with `/notebooks` instead of `/tree` if `default_url` points to a notebook instead of a directory.
 #  - You can set this to `/lab` to have JupyterLab start by default, rather than Jupyter Notebook.
-c.Spawner.default_url = '/stochss/models'
+c.Spawner.default_url = '/'
 
 ## Base class for spawning single-user notebook servers.
 #  
