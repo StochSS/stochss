@@ -16,7 +16,7 @@ for handler in log.handlers:
         handler.stream = log_stream
 
 
-from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefintion
+from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
 
 import numpy
 import gillespy2.core.gillespySolver

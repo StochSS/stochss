@@ -92,7 +92,10 @@ def get_models(full_path, name, wkfl_path):
 
 def update_info_file(info_path, wkfl_mdl_path):
     today = datetime.now() # workflow run start time
-    str_datetime = today.strftime("%b. %d, %Y  %I:%M %p UTC") # format timestamp
+    # If this format is not something Javascript's Date.parse() method
+    # understands then the workflow status page will be unable to correctly create a
+    # Date object from the datestring parsed from the workflow's info.json file
+    str_datetime = today.strftime("%b %d, %Y  %I:%M %p UTC") # format timestamp
     
     with open(info_path, 'r') as info_file:
         info_data = json.loads(info_file.read())

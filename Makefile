@@ -46,7 +46,6 @@ watch:
 	npm run watch
 
 deps:
-	pip install pipenv
 	npm install
 
 reqs:
