@@ -49,6 +49,12 @@ deps:
 	pip install pipenv
 	npm install
 
+reqs:
+	docker run -it \
+	-v $(PWD):/stochss $(DOCKER_BASE_IMAGE) \
+	  "pip install pipenv && cd /stochss && \
+	  pipenv lock -r > requirements.txt"
+
 build_home_page:
 	npm run build-home
 

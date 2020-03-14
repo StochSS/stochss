@@ -1,3 +1,4 @@
+import os
 from notebook.base.handlers import IPythonHandler
 from logging import getLogger
 
@@ -14,14 +15,11 @@ class PageHandler(IPythonHandler):
 
   def get_server_path(self):
     log = getLogger()
-    user = self.get_current_user()
     try:
-        # If we're using jupyterhub, the server key will be set
-        # TODO: are there cases where this is set even when not using jupyterhub?
-        server_path = user['server']
-        log.warn(server_path)
+        server_path = os.environ['JUPYTERHUB_SERVICE_PREFIX']
     except:
         server_path = '/'
+
     return server_path
 
 

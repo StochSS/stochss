@@ -20,9 +20,9 @@ COPY --chown=jovyan:users custom.css /home/jovyan/.jupyter/custom/custom.css
 
 COPY jupyter_notebook_config.py /home/jovyan/.jupyter/jupyter_notebook_config.py
 
-RUN python -m pip install -U pip pipenv
+#RUN python -m pip install -U pip pipenv
 
-RUN rm -f Pipfile.lock && pipenv lock -r > /stochss/requirements.txt
+#RUN rm -f Pipfile.lock && pipenv lock -r > /stochss/requirements.txt
 
 RUN python -m pip install --no-cache-dir -r requirements.txt
 
