@@ -43,8 +43,9 @@ import sys, os.path, shutil
 #    - pam: jupyterhub.auth.PAMAuthenticator
 # Use the dummy authenticator for dev
 c.JupyterHub.authenticator_class = os.environ['AUTH_CLASS']
-# Only meaningful if using GitHub authenticator
-#c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
+c.GoogleOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK']
+c.GoogleOAuthenticator.client_id = os.environ['CLIENT_ID']
+c.GoogleOAuthenticator.client_secret = os.environ['CLIENT_SECRET']
 
 # Persist hub data on volume mounted inside container
 data_dir = os.environ.get('DATA_VOLUME_CONTAINER', '/data')

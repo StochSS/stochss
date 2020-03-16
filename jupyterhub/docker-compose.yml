@@ -41,7 +41,7 @@ services:
     env_file:
       - .env
       - secrets/postgres.env
-      - secrets/oauth.env
+      - secrets/${OAUTH_FILE}
     command: >
       jupyterhub -f /srv/jupyterhub/jupyterhub_config.py
 

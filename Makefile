@@ -11,10 +11,15 @@ volumes:
 	@docker volume inspect $(DATA_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DATA_VOLUME_HOST)
 	@docker volume inspect $(DB_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DB_VOLUME_HOST)
 
-jupyterhub/secrets/oauth.env:
-	@echo "Need oauth.env file in secrets with Google parameters"
-	@echo "Using an empty file for now..."
-	@echo "OAUTH_CALLBACK_URL=''" > $@
+jupyterhub/secrets/.oauth.google.env:
+	@echo "Need oauth.env file in secrets with Google OAuth parameters (OAUTH_CALLBACK, CLIENT_ID, and CLIENT_SECRET"
+	@exit 1
+
+jupyterhub/secrets/.oauth.dummy.env:
+	@echo "Generating dummy oauth file..."
+	@echo "OAUTH_CALLBACK=''" > $@
+	@echo "CLIENT_ID=''" >> $@
+	@echo "CLIENT_SECRET=''" >> $@
 
 jupyterhub/secrets/jupyterhub.crt:
 	@echo "Need an SSL certificate in secrets/jupyterhub.crt"
@@ -33,7 +38,9 @@ jupyterhub/secrets/postgres.env:
 jupyterhub/userlist:
 	@touch $@
 
-check-files: jupyterhub/userlist cert jupyterhub/secrets/oauth.env jupyterhub/secrets/postgres.env
+check-files: jupyterhub/userlist jupyterhub/secrets/.oauth.dummy.env cert jupyterhub/secrets/postgres.env
+
+check-files-google: check-files jupyterhub/secrets/.oauth.google.env
 
 cert:
 	@echo "Generating certificate..."
@@ -48,25 +55,21 @@ watch:
 deps:
 	npm install
 
-reqs:
-	docker run -it \
-	-v $(PWD):/stochss $(DOCKER_BASE_IMAGE) \
-	  "pip install pipenv && cd /stochss && \
-	  pipenv lock -r > requirements.txt"
-
 build_home_page:
 	npm run build-home
 
 build_hub: deps build_home_page check-files network volumes
-	export AUTH_CLASS='' && \
+	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build
 
 run_hub:
 	export AUTH_CLASS='jupyterhub.auth.DummyAuthenticator' && \
+	export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose up
 
-run_hub_gh:
-	export AUTH_CLASS=oauthenticator.GitHubOAuthenticator && \
+run_hub_google: check-files-google
+	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
+	export OAUTH_FILE='.oauth.google.env' && \
 	cd ./jupyterhub && docker-compose up
 
 hub: build_hub build run_hub
