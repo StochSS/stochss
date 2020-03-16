@@ -38,16 +38,19 @@ class JsonFileAPIHandler(APIHandler):
         try:
             with open(full_path, 'r') as f:
                 to_write = f.read()
-        except:
+        except Exception as e:
             new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
             with open(new_path, 'r') as json_file:
                 data = json_file.read()
                 to_write = json.loads(str(data))
             directories = os.path.dirname(full_path)
-            os.makedirs(directories)
+            try:
+                os.makedirs(directories)
+            except:
+                pass
             full_path = full_path.replace(" ", "\ ")
             with open(full_path, 'w') as f:
-                f.write(to_write)
+                f.write(json.dumps(to_write))
         self.write(to_write) # Send data to client
 
 
