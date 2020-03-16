@@ -72,6 +72,11 @@ run_hub_staging: check-files-staging
 	export OAUTH_FILE='.oauth.staging.env' && \
 	cd ./jupyterhub && docker-compose up &
 
+kill_hub_staging:
+	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
+	export OAUTH_FILE='.oauth.staging.env' && \
+	cd ./jupyterhub && docker-compose down
+
 run_hub_prod: check-files-prod
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.prod.env' && \
