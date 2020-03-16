@@ -29,8 +29,6 @@ jupyterhub/secrets/jupyterhub.key:
 	@echo "Need an SSL key in secrets/jupyterhub.key"
 	@exit 1
 
-check-cert: jupyterhub/secrets/jupyterhub.key jupyterhub/secrets/jupyterhub.crt
-
 jupyterhub/secrets/postgres.env:
 	@echo "Generating postgres password in $@"
 	@echo "POSTGRES_PASSWORD=$(shell openssl rand -hex 32)" > $@
@@ -38,7 +36,7 @@ jupyterhub/secrets/postgres.env:
 jupyterhub/userlist:
 	@touch $@
 
-check-files: jupyterhub/userlist jupyterhub/secrets/.oauth.dummy.env cert jupyterhub/secrets/postgres.env
+check-files: jupyterhub/userlist jupyterhub/secrets/.oauth.dummy.env jupyterhub/secrets/postgres.env
 
 check-files-google: check-files jupyterhub/secrets/.oauth.google.env
 
