@@ -40,6 +40,8 @@ check-files: jupyterhub/userlist jupyterhub/secrets/.oauth.dummy.env jupyterhub/
 
 check-files-staging: check-files jupyterhub/secrets/.oauth.staging.env
 
+check-files-prod: check-files jupyterhub/secrets/.oauth.prod.env
+
 cert:
 	@echo "Generating certificate..."
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
@@ -65,12 +67,12 @@ run_hub:
 	export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose up
 
-run_hub_staging: check-files-google
+run_hub_staging: check-files-staging
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.staging.env' && \
 	cd ./jupyterhub && docker-compose up &
 
-run_hub_prod: check-files-google
+run_hub_prod: check-files-prod
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.prod.env' && \
 	cd ./jupyterhub && docker-compose up &
