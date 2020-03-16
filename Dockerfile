@@ -2,24 +2,17 @@ FROM jupyter/minimal-notebook:latest
 
 USER root
 
+WORKDIR /stochss
+
 RUN apt-get update && apt-get install -y zip
 
-RUN mkdir /stochss && chown jovyan:users /stochss
-
-WORKDIR /tmp/stochss
-
-RUN chown jovyan:users /tmp/stochss
+RUN chown jovyan:users /stochss
 
 USER jovyan
 
-COPY --chown=jovyan:users Pipfile Pipfile
-
-RUN python -m pip install pipenv && \
-    pipenv lock -r > requirements.txt
+COPY --chown=jovyan:users requirements.txt .
 
 RUN python -m pip install --no-cache-dir -r requirements.txt
-
-WORKDIR /stochss
 
 COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
