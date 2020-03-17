@@ -4,6 +4,7 @@ let xhr = require('xhr');
 let PageView = require('./base');
 let template = require('../templates/pages/fileBrowser.pug');
 let $ = require('jquery');
+let app = require('../app');
 //let bootstrap = require('bootstrap');
 
 import initPage from './page.js';
@@ -11,9 +12,9 @@ import initPage from './page.js';
 let ajaxData = {
   "url" : function (node) {
     if(node.parent === null){
-      return "/stochss/models/browser-list/"
+      return "stochss/models/browser-list/"
     }
-    return "/stochss/models/browser-list" + node.original._path
+    return "stochss/models/browser-list" + node.original._path
   },
   "dataType" : "json",
   "data" : function (node) {
@@ -61,7 +62,7 @@ let treeSettings = {
         var newDir = par.original._path
         var file = node.original._path.split('/').pop()
         var oldPath = node.original._path
-        var endpoint = path.join("/stochss/api/file/move", oldPath, '<--MoveTo-->', newDir, file)
+        var endpoint = path.join(app.getApiPath(), "/file/move", oldPath, '<--MoveTo-->', newDir, file)
         xhr({uri: endpoint}, function(err, response, body) {
           if(body.startsWith("Success!")) {
             node.original._path = path.join(newDir, file)
@@ -137,7 +138,7 @@ let operationInfoModalHtml = () => {
       <div class="modal-dialog" role="document">
         <div class="modal-content info">
           <div class="modal-header">
-            <h5 class="modal-title"> File Browser Help </h5>
+            <h5 class="modal-title"> Help </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -281,7 +282,7 @@ let FileBrowser = PageView.extend({
     let modal = $(deleteFileHtml(fileType)).modal();
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
-      var endpoint = path.join("/stochss/api/file/delete", o.original._path)
+      var endpoint = path.join(app.getApiPath(), "/file/delete", o.original._path)
       xhr({uri: endpoint}, function(err, response, body) {
         var node = $('#models-jstree').jstree().get_node(o.parent);
         if(node.type === "root"){
@@ -297,9 +298,9 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     if(isDirectory){
-      var endpoint = path.join("/stochss/api/directory/duplicate", o.original._path);
+      var endpoint = path.join(app.getApiPath(), "directory/duplicate", o.original._path);
     }else{
-      var endpoint = path.join("/stochss/api/model/duplicate", o.original._path);
+      var endpoint = path.join(app.getApiPath(), "model/duplicate", o.original._path);
     }
     xhr({uri: endpoint}, 
       function (err, response, body) {
@@ -315,7 +316,7 @@ let FileBrowser = PageView.extend({
   toSpatial: function (o) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join("/stochss/api/model/to-spatial", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "/model/to-spatial", o.original._path);
     xhr({uri: endpoint}, 
       function (err, response, body) {
         var node = $('#models-jstree').jstree().get_node(parentID);
@@ -331,9 +332,9 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     if(from === "Spatial"){
-      var endpoint = path.join("/stochss/api/spatial/to-model", o.original._path);
+      var endpoint = path.join(app.getApiPath(), "/spatial/to-model", o.original._path);
     }else{
-      var endpoint = path.join("/stochss/api/sbml/to-model", o.original._path);
+      var endpoint = path.join(app.getApiPath(), "sbml/to-model", o.original._path);
     }
     xhr({uri: endpoint}, 
       function (err, response, body) {
@@ -356,7 +357,7 @@ let FileBrowser = PageView.extend({
   toSBML: function (o) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join("/stochss/api/model/to-sbml", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "model/to-sbml", o.original._path);
     xhr({uri: endpoint},
       function (err, response, body) {
         var node = $('#models-jstree').jstree().get_node(parentID);
@@ -377,7 +378,7 @@ let FileBrowser = PageView.extend({
     extensionWarning.collapse('show')
     $('#models-jstree').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
-        var endpoint = path.join("/stochss/api/file/rename", o.original._path, "<--change-->", node.text)
+        var endpoint = path.join(app.getApiPath(), "/file/rename", o.original._path, "<--change-->", node.text)
         xhr({uri: endpoint}, function (err, response, body){
           var resp = JSON.parse(body)
           if(!resp.message.startsWith('Success!')) {
@@ -388,7 +389,7 @@ let FileBrowser = PageView.extend({
           if(parent.type === "root"){
             $('#models-jstree').jstree().refresh()
           }else{          
-            $('#models-jstree').jstree().refresh_node(node);
+            $('#models-jstree').jstree().refresh_node(parent);
           }
         })
       }
@@ -398,7 +399,7 @@ let FileBrowser = PageView.extend({
   },
   getJsonFileForExport: function (o) {
     var self = this;
-    var endpoint = path.join("/stochss/api/json-data", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "json-data", o.original._path);
     xhr({uri: endpoint}, function (err, response, body) {
       var resp = JSON.parse(body);
       self.exportToJsonFile(resp, o.original.text);
@@ -406,9 +407,23 @@ let FileBrowser = PageView.extend({
   },
   getFileForExport: function (o) {
     var self = this;
-    var endpoint = path.join("/stochss/api/file/download", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "file/download", o.original._path);
     xhr({uri: endpoint}, function (err, response, body) {
       self.exportToFile(body, o.original.text);
+    });
+  },
+  getZipFileForExport: function (o) {
+    var self = this;
+    var endpoint = path.join(app.getApiPath(), "file/download-zip/generate", o.original._path);
+    xhr({uri: endpoint}, function (err, response, body) {
+      var filePath = body.split('/home/jovyan').pop()
+      var node = $('#models-jstree').jstree().get_node(o.parent);
+      if(node.type === "root"){
+        $('#models-jstree').jstree().refresh();
+      }else{
+        $('#models-jstree').jstree().refresh_node(node);
+      }
+      self.exportToZipFile(filePath)
     });
   },
   exportToJsonFile: function (fileData, fileName) {
@@ -428,6 +443,14 @@ let FileBrowser = PageView.extend({
     linkElement.setAttribute('href', dataURI);
     linkElement.setAttribute('download', fileName);
     linkElement.click();
+  },
+  exportToZipFile: function (o) {
+    var targetPath = o
+    if(o.original){
+      targetPath = o.original._path
+    }
+    var endpoint = path.join(app.getBasePath(), "/files", targetPath);
+    window.location.href = endpoint
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
@@ -449,12 +472,12 @@ let FileBrowser = PageView.extend({
         if(isModel) {
           let modelName = input.value + '.mdl';
           var parentPath = o.original._path
-          var modelPath = path.join("/hub/stochss/models/edit", parentPath, modelName);
+          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit', parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
           var parentPath = o.original._path;
-          let endpoint = path.join("/stochss/api/directory/create", parentPath, dirName);
+          let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             var node = $('#models-jstree').jstree().get_node(o);
             if(node.type === "root"){
@@ -567,6 +590,15 @@ let FileBrowser = PageView.extend({
               } 
             }
           },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download as .zip",
+            "action" : function (data) {
+              self.getZipFileForExport(o);
+            }
+          },
           "Rename" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -605,7 +637,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
             }
           },
           "Convert" : {
@@ -639,7 +671,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/selection", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
             }
           },
           "Rename" : {
@@ -680,7 +712,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/models/edit", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
             }
           },
           "Convert" : {
@@ -704,7 +736,7 @@ let FileBrowser = PageView.extend({
                 "_disabled" : false,
                 "label" : "To Notebook",
                 "action" : function (data) {
-                  var endpoint = path.join("/stochss/api/models/to-notebook", o.original._path)
+                  var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
                   xhr({ uri: endpoint },
                         function (err, response, body) {
                     var node = $('#models-jstree').jstree().get_node(o.parent)
@@ -714,14 +746,8 @@ let FileBrowser = PageView.extend({
                       $('#models-jstree').jstree().refresh_node(node);
                     }
                     var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-                    var endpoint = path.join('/stochss/api/user/');
-                    xhr(
-                      { uri: endpoint },
-                      function (err, response, body) {
-                        var notebookPath = path.join("/user/", body, "/notebooks/", _path)
-                        window.open(notebookPath, '_blank')
-                      },
-                    );
+                    var notebookPath = path.join(app.getBasePath(), "/lab/tree", _path)
+                    window.open(notebookPath, '_blank')
                   });
                 }
               },
@@ -742,7 +768,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/selection", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
             }
           },
           "Download" : {
@@ -792,7 +818,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              window.location.href = path.join("/hub/stochss/workflow/edit/none", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", o.original._path);
             }
           },
           "Start/Restart Workflow" : {
@@ -839,6 +865,15 @@ let FileBrowser = PageView.extend({
               }
             }
           },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download as .zip",
+            "action" : function (data) {
+              self.getZipFileForExport(o);
+            }
+          },
           "Rename" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -868,15 +903,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              var filePath = o.original._path
-              var endpoint = path.join('/stochss/api/user/');
-              xhr(
-                { uri: endpoint },
-                function (err, response, body) {
-                  var notebookPath = path.join("/user/", body, "/notebooks/", filePath)
-                  window.open(notebookPath, '_blank')
-                },
-              );
+              window.open(path.join(app.getBasePath(), "/lab/tree", o.original._path));
             }
           },
           "Download" : {
@@ -927,11 +954,7 @@ let FileBrowser = PageView.extend({
             "label" : "Open File",
             "action" : function (data) {
               var filePath = o.original._path
-              var endpoint = path.join('/stochss/api/user/');
-              xhr({ uri: endpoint }, function (err, response, body) {
-                var openPath = path.join("/user/", body, "/edit/", filePath)
-                window.open(openPath, '_blank')
-              });
+              window.open(path.join(app.getBasePath(), "/lab/tree", filePath), '_blank')
             }
           },
           "Convert" : {
@@ -1000,6 +1023,19 @@ let FileBrowser = PageView.extend({
             "action" : function (data) {
             }
           },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download as .zip",
+            "action" : function (data) {
+              if(o.original.text.endsWith('.zip')){
+                self.exportToZipFile(o);
+              }else{
+                self.getZipFileForExport(o)
+              }
+            }
+          },
           "Rename" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -1048,27 +1084,17 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').on('dblclick.jstree', function(e) {
       var file = e.target.text
       var node = $('#models-jstree').jstree().get_node(e.target)
-      console.log(node)
       var _path = node.original._path;
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-        window.location.href = path.join("/hub/stochss/models/edit", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/models/edit", _path);
       }else if(file.endsWith('.ipynb')){
-        var endpoint = path.join('/stochss/api/user/');
-        xhr(
-          { uri: endpoint },
-          function (err, response, body) {
-            var notebookPath = path.join("/user/", body, "/notebooks/", _path)
-            window.open(notebookPath, '_blank')
-          },
-        );
+        var notebookPath = path.join(app.getBasePath(), "lab/tree/", _path)
+        window.open(notebookPath, '_blank')
       }else if(file.endsWith('.sbml')){
-        var endpoint = path.join('/stochss/api/user/');
-        xhr({ uri: endpoint }, function (err, response, body) {
-          var openPath = path.join("/user/", body, "/edit/", _path)
-          window.open(openPath, '_blank')
-        });
+        var openPath = path.join(app.getBasePath(), "lab/tree/", _path)
+        window.open(openPath, '_blank')
       }else if(file.endsWith('.wkfl')){
-        window.location.href = path.join("/hub/stochss/workflow/edit/none", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }

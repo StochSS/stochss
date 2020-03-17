@@ -1,0 +1,11 @@
+- var name = htmlWebpackPlugin.options.name
+- var bundleUrl = "{{ server_path }}static/stochss-" + name + ".bundle.js"
+- var commonBundleUrl = "{{ server_path }}static/stochss-common.bundle.js"
+html
+  head
+    meta(charset="UTF-8")
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css")
+    base(href="{{ server_path }}")
+  body
+    script(type="text/javascript", src=bundleUrl)
+    script(type="text/javascript", src=commonBundleUrl)

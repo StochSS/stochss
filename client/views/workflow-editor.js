@@ -4,8 +4,9 @@ var tests = require('../views/tests');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
-var SimSettingsView = require('../views/simulation-settings');
-var WorkflowStateButtonsView = require('../views/workflow-state-buttons');
+var SimSettingsView = require('./simulation-settings');
+var ParamSweepSettingsView = require('./parameter-sweep-settings');
+var WorkflowStateButtonsView = require('./workflow-state-buttons');
 //models
 var Model = require('../models/model');
 //templates
@@ -54,13 +55,22 @@ module.exports = View.extend({
       parent: this,
       model: this.model.simulationSettings,
     });
+    this.settingsViews.parameterSweep = new ParamSweepSettingsView({
+      parent: this,
+      model: this.model.parameterSweepSettings,
+    });
     var workflowStateButtons = new WorkflowStateButtonsView({
       model: this.model
     });
     this.registerRenderSubview(inputName, "model-name-container");
-    this.registerRenderSubview(this.settingsViews[this.type], 'sim-settings-container');
+    this.registerRenderSubview(this.settingsViews['gillespy'], 'sim-settings-container');
+    if(this.type === "parameterSweep"){
+      this.registerRenderSubview(this.settingsViews['parameterSweep'], 'param-sweep-settings-container');
+    }
     this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
     this.parent.trajectories = this.model.simulationSettings.realizations
+    this.parent.species = this.model.species
+    this.parent.speciesOfInterest = this.model.parameterSweepSettings.speciesOfInterest
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

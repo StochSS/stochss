@@ -1,5 +1,3 @@
-.oauth.beta.env
-.admins.beta.env
 node_modules/
 *.swp
 *.swo
@@ -12,3 +10,4 @@ jupyterhub-proxy.pid
 __pycache__
 userlist
 dist/*
+*.egg-info/

@@ -4,7 +4,6 @@ let MainView = require('../views/main');
 let template = require('../templates/pages/home.pug');
 let domReady = require('domready');
 
-let $ = require('jquery');
 let bootstrap = require('bootstrap');
 
 let app = require('../app');
