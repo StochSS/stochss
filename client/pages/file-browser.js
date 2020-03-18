@@ -746,7 +746,7 @@ let FileBrowser = PageView.extend({
                       $('#models-jstree').jstree().refresh_node(node);
                     }
                     var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-                    var notebookPath = path.join(app.getBasePath(), "/lab/tree", _path)
+                    var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
                     window.open(notebookPath, '_blank')
                   });
                 }
@@ -903,7 +903,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              window.open(path.join(app.getBasePath(), "/lab/tree", o.original._path));
+              window.open(path.join(app.getBasePath(), "notebooks", o.original._path));
             }
           },
           "Download" : {
@@ -954,7 +954,7 @@ let FileBrowser = PageView.extend({
             "label" : "Open File",
             "action" : function (data) {
               var filePath = o.original._path
-              window.open(path.join(app.getBasePath(), "/lab/tree", filePath), '_blank')
+              window.open(path.join(app.getBasePath(), "lab/tree", filePath), '_blank')
             }
           },
           "Convert" : {
@@ -1088,10 +1088,10 @@ let FileBrowser = PageView.extend({
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
         window.location.href = path.join(app.getBasePath(), "stochss/models/edit", _path);
       }else if(file.endsWith('.ipynb')){
-        var notebookPath = path.join(app.getBasePath(), "lab/tree/", _path)
+        var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
         window.open(notebookPath, '_blank')
       }else if(file.endsWith('.sbml')){
-        var openPath = path.join(app.getBasePath(), "lab/tree/", _path)
+        var openPath = path.join(app.getBasePath(), "lab/tree", _path)
         window.open(openPath, '_blank')
       }else if(file.endsWith('.wkfl')){
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", _path);
