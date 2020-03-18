@@ -34,6 +34,10 @@ jupyterhub/secrets/postgres.env:
 	@echo "POSTGRES_PASSWORD=$(shell openssl rand -hex 32)" > $@
 
 jupyterhub/userlist:
+	@echo "You're missing a userlist file. We'll make a blank one for you."
+	@echo "If you'd like to set admins to jupyterhub, add entries to the userlist file"
+	@echo "in the jupyterhub/ directory like this (one user per line):"
+	@echo "myuser@uni.edu admin"
 	@touch $@
 
 check-files: jupyterhub/userlist jupyterhub/secrets/.oauth.dummy.env jupyterhub/secrets/postgres.env
@@ -72,15 +76,15 @@ run_hub_staging: check-files-staging
 	export OAUTH_FILE='.oauth.staging.env' && \
 	cd ./jupyterhub && docker-compose up &
 
-kill_hub:
-	export AUTH_CLASS='' && \
-	export OAUTH_FILE='.oauth.dummy.env' && \
-	cd ./jupyterhub && docker-compose down
-
 run_hub_prod: check-files-prod
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.prod.env' && \
 	cd ./jupyterhub && docker-compose up &
+
+kill_hub:
+	export AUTH_CLASS='' && \
+	export OAUTH_FILE='.oauth.dummy.env' && \
+	cd ./jupyterhub && docker-compose down
 
 hub: build_hub build run_hub
 
@@ -109,5 +113,6 @@ run_bash:
 
 update:
 	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss
+
 
 .PHONY: network volumes check-files pull notebook_image build
