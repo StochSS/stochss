@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-import sys
-import ast
 import json
 import nbformat
-import argparse
 from nbformat import v4 as nbf
 from os import path
 
@@ -11,10 +8,8 @@ from .rename import get_unique_file_name
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
 
 
-user_dir = '/home/jovyan'
-
-
 def convert_to_notebook(_model_path):
+    user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
@@ -24,10 +19,12 @@ def convert_to_notebook(_model_path):
     # Collect .mdl Data
     try:
         with open(model_path, 'r') as json_file:
-            # json_data = ast.literal_eval(json_file.read())
             json_data = json.loads(json_file.read())
     except Exception as e:
-        print('Could not read file: ' + e)
+        if type(e) is FileNotFoundError:
+            raise FileNotFoundError('Could not read file: ' + str(e))
+        else:
+            raise TypeError('The data is not JSON decobable: ' + str(e))
 
     # Create new notebook
     cells = []
@@ -53,8 +50,8 @@ def convert_to_notebook(_model_path):
         nbformat.write(nb, f, version=4)
     f.close()
 
-    print('{0} successfully created'.format(dest_file))
+    print()
 
-    return dest_file
+    return '{0} successfully created'.format(dest_file)
 
 

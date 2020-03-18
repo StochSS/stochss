@@ -26,15 +26,17 @@ from .util.generate_zip_file import download_zip
 class ModelBrowserFileList(APIHandler):
     '''
     ##############################################################################
-    Handler for interacting with the Model File Browser list 
+    Handler for interacting with the User's File Browser
     ##############################################################################
     '''
     async def get(self, path):
         '''
+        Reads the content of a directory and returns a jstree dictionary. 
+
         Attributes
         ----------
         path : str
-            Path to target directory.
+            Path from the user directory to the target directory.
         '''
         output = ls(path)
         self.finish(output)
@@ -49,16 +51,21 @@ class ModelToNotebookHandler(APIHandler):
     '''
     async def get(self, path):
         '''
-        Sends request to server to run convert_to_notebook.py on target mdl
-        file.
+        Runs the convert_to_notebook function from the convert_to_notebook script
+        to build a Jupyter Notebook version of the model and write it to a file.
 
         Attributes
         ----------
         path : str
-            Path to target model within user pod container.
+            Path from the user directory to the target model.
         '''
-        dest_file = convert_to_notebook(path)
-        self.write(dest_file)
+        try:
+            dest_file = convert_to_notebook(path)
+        except Exception as error:
+            self.set_status(400)
+            self.finish(str(error))
+        else:
+            self.write(dest_file)
 
 
 class DeleteFileAPIHandler(APIHandler):

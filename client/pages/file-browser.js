@@ -737,17 +737,18 @@ let FileBrowser = PageView.extend({
                 "label" : "To Notebook",
                 "action" : function (data) {
                   var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
-                  xhr({ uri: endpoint },
-                        function (err, response, body) {
-                    var node = $('#models-jstree').jstree().get_node(o.parent)
-                    if(node.type === 'root'){
-                      $('#models-jstree').jstree().refresh();
-                    }else{
-                      $('#models-jstree').jstree().refresh_node(node);
+                  xhr({ uri: endpoint }, function (err, response, body) {
+                    if(response.statusCode === 200){
+                      var node = $('#models-jstree').jstree().get_node(o.parent)
+                      if(node.type === 'root'){
+                        $('#models-jstree').jstree().refresh();
+                      }else{
+                        $('#models-jstree').jstree().refresh_node(node);
+                      }
+                      var _path = body.split(' ')[0].split('/home/jovyan/').pop()
+                      var notebookPath = path.join(app.getBasePath(), "/notebooks", _path)
+                      window.open(notebookPath, '_blank')
                     }
-                    var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-                    var notebookPath = path.join(app.getBasePath(), "/lab/tree", _path)
-                    window.open(notebookPath, '_blank')
                   });
                 }
               },
