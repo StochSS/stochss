@@ -21,7 +21,7 @@ def convert_to_2d_psweep_nb(_model_path):
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
-    name = file.split('.')[0]
+    name = file.split('.')[0].replace('-', '_')
     dest_path = model_path.split(file)[0]
     
     # Collect .mdl Data
