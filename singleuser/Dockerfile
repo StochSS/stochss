@@ -18,7 +18,7 @@ RUN python3 -m pip install --no-cache \
 RUN python3 -m pip install --no-cache --force-reinstall \
   https://github.com/GillesPy2/GillesPy2/tarball/develop
 
-RUN apt-get update && apt-get install -y screen vim
+RUN apt-get update && apt-get install -y screen vim zip
 
 RUN rmdir /home/jovyan/work
 

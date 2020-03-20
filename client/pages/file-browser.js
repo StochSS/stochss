@@ -411,6 +411,20 @@ let FileBrowser = PageView.extend({
       self.exportToFile(body, o.original.text);
     });
   },
+  getZipFileForExport: function (o) {
+    var self = this;
+    var endpoint = path.join("/stochss/api/file/download-zip/generate", o.original._path);
+    xhr({uri: endpoint}, function (err, response, body) {
+      var filePath = body.split('/home/jovyan').pop()
+      var node = $('#models-jstree').jstree().get_node(o.parent);
+      if(node.type === "root"){
+        $('#models-jstree').jstree().refresh();
+      }else{
+        $('#models-jstree').jstree().refresh_node(node);
+      }
+      self.exportToZipFile(filePath)
+    });
+  },
   exportToJsonFile: function (fileData, fileName) {
     let dataStr = JSON.stringify(fileData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
@@ -428,6 +442,14 @@ let FileBrowser = PageView.extend({
     linkElement.setAttribute('href', dataURI);
     linkElement.setAttribute('download', fileName);
     linkElement.click();
+  },
+  exportToZipFile: function (o) {
+    var targetPath = o
+    if(o.original){
+      targetPath = o.original._path
+    }
+    var endpoint = path.join("/stochss/api/file/download-zip/download", targetPath);
+    window.open(endpoint).close()
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
@@ -565,6 +587,15 @@ let FileBrowser = PageView.extend({
                   self.newModelOrDirectory(o, true, false);
                 }
               } 
+            }
+          },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download as .zip",
+            "action" : function (data) {
+              self.getZipFileForExport(o);
             }
           },
           "Rename" : {
@@ -839,6 +870,15 @@ let FileBrowser = PageView.extend({
               }
             }
           },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download as .zip",
+            "action" : function (data) {
+              self.getZipFileForExport(o);
+            }
+          },
           "Rename" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -998,6 +1038,19 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
+            }
+          },
+          "Download" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Download as .zip",
+            "action" : function (data) {
+              if(o.original.text.endsWith('.zip')){
+                self.exportToZipFile(o);
+              }else{
+                self.getZipFileForExport(o)
+              }
             }
           },
           "Rename" : {
