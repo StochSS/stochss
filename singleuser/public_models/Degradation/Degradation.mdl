@@ -121,5 +121,6 @@
         }
     ],
     "rules": [],
-    "eventsCollection": []
+    "eventsCollection": [],
+    "functionDefinitions": []
 }

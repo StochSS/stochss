@@ -275,5 +275,6 @@
         }
     ],
     "rules": [],
-    "eventsCollection": []
+    "eventsCollection": [],
+    "functionDefinitions": []
 }

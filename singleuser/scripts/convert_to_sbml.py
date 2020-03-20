@@ -42,6 +42,9 @@ def convert_to_sbml(model):
 
     assignment_rules = list(filter(lambda r: is_valid_assignment_rule(r), model['rules']))
     convert_assignment_rules(sbml_model, assignment_rules)
+
+    function_definitions = model['functionDefinitions']
+    convert_function_definitions(sbml_model, function_definitions)
     
     return document
 
@@ -63,8 +66,7 @@ def convert_species(sbml_model, species):
         s.setCompartment('c')
         s.setId(specie['name'])
         s.setInitialAmount(specie['value'])
-        s.setAnnotation(specie['annotation'])
-
+        
 
 def convert_parameters(sbml_model, parameters):
     for parameter in parameters:
@@ -72,16 +74,14 @@ def convert_parameters(sbml_model, parameters):
         p.initDefaults()
         p.setId(parameter['name'])
         p.setValue(float(parameter['expression']))
-        p.setAnnotation(parameter['annotation'])
-
+        
 
 def convert_reactions(sbml_model, reactions):
     for reaction in reactions:
         r = sbml_model.createReaction()
         r.initDefaults()
         r.setId(reaction['name'])
-        r.setAnnotation(reaction['annotation'])
-
+        
         _reactants = reaction['reactants']
         reactants = convert_reactants(r, _reactants)
 
@@ -156,8 +156,7 @@ def convert_events(sbml_model, events):
         e = sbml_model.createEvent()
         e.setId(event['name'])
         e.setUseValuesFromTriggerTime(event['useValuesFromTriggerTime'])
-        e.setAnnotation(event['annotation'])
-
+        
         delay = event['delay'].replace('and', '&&').replace('or', '||')
         d = e.createDelay()
         try:
@@ -205,7 +204,6 @@ def convert_rate_rules(sbml_model, rules):
         r = sbml_model.createRateRule()
         r.setId(rule['name'])
         r.setVariable(variable['name'])
-        r.setAnnotation(rule['annotation'])
         equation = rule['expression'].replace("and", "&&").replace("or", "||")
         
         try:
@@ -220,7 +218,6 @@ def convert_assignment_rules(sbml_model, rules):
         r = sbml_model.createAssignmentRule()
         r.setId(rule['name'])
         r.setVariable(variable['name'])
-        r.setAnnotation(rule['annotation'])
         equation = rule['expression'].replace("and", "&&").replace("or", "||")
 
         try:
@@ -228,6 +225,17 @@ def convert_assignment_rules(sbml_model, rules):
         except:
             raise Exception('libsbml threw an error when parsing assignment equation "{0}" for assignment rule "{1}"'.format(equation, rule['name']))
 
+
+def convert_function_definitions(sbml_model, function_definitions):
+    for function_definition in function_definitions:
+        fd = sbml_model.createFunctionDefinition()
+        fd.setId(function_definition['name '])
+        function = function_definition['function'].replace("and", "&&").replace("or", "||").replace("**", "^")
+
+        try:
+            fd.setMath(libsbml.parseL3Formula(function))
+        except:
+            raise Exception('libsbml threw an error when parsing function "{0}" for function definition "{1}"'.format(function, function_definition['name']))
 
 
 def write_sbml_to_file(sbml_path, sbml_doc):

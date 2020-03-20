@@ -1474,5 +1474,6 @@
         }
     ],
     "rules": [],
-    "eventsCollection": []
+    "eventsCollection": [],
+    "functionDefinitions": []
 }

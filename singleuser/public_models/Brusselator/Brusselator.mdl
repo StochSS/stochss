@@ -485,5 +485,6 @@
         }
     ],
     "rules": [],
-    "eventsCollection": []
+    "eventsCollection": [],
+    "functionDefinitions": []
 }

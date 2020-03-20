@@ -994,5 +994,6 @@
         }
     ],
     "rules": [],
-    "eventsCollection": []
+    "eventsCollection": [],
+    "functionDefinitions": []
 }
