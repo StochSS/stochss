@@ -1,0 +1,52 @@
+div#workflow-results.card.card-body
+
+  div
+
+    h3.inline Results
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", data-hook="collapse", disabled) +
+
+  div.collapse(id="collapse-results", data-hook="workflow-results")
+
+    div.collapse(data-hook="edit-plot-args")
+
+      table.table
+        thead
+          tr
+            th(scope="col") Title
+            th(scope="col") X-axis Label
+            th(scope="col") Y-axis Label
+
+        tbody
+          tr
+            td: div(data-hook="title")
+            td: div(data-hook="xaxis")
+            td: div(data-hook="yaxis")
+
+    div
+
+      div.inline.horizontal-space
+
+        span.inline(for="species-of-interest") Species of Interest:
+        div.inline(id="species-of-interest" data-hook="specie-of-interest-list")
+
+      div.inline.horizontal-space
+
+        span.inline(for="feature-extractor") Feature Extraction: 
+        div.inline(id="feature-extractor" data-hook="feature-extraction-list")
+
+      div.inline.horizontal-space
+
+        span.inline(for="ensemble-aggragator") Ensemble Aggragator: 
+        div.inline(id="ensemble-aggragator" data-hook="ensemble-aggragator-list")
+
+    div
+
+      h5.inline Parameter Sweep
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-psweep", data-hook="collapse-psweep") -
+
+    div.collapse(class="show", id="collapse-psweep")
+
+      div(data-hook="psweep")
+      button.btn.btn-primary(id="psweep" data-hook="plot") Edit Plot
+      button.btn.btn-primary(id="psweep" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary(id="psweep" data-hook="download-json" disabled) Download JSON

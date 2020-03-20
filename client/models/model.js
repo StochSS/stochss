@@ -5,6 +5,7 @@ var xhr = require('xhr');
 var Model = require('ampersand-model');
 var ModelSettings = require('./model-settings');
 var SimulationSettings = require('./simulation-settings');
+var ParameterSweepSettings = require('./parameter-sweep-settings');
 var MeshSettings = require('./mesh-settings');
 //collections
 var Species = require('./species');
@@ -45,6 +46,7 @@ module.exports = Model.extend({
   children: {
     modelSettings: ModelSettings,
     simulationSettings: SimulationSettings,
+    parameterSweepSettings: ParameterSweepSettings,
     meshSettings: MeshSettings
   },
   session: {

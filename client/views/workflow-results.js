@@ -5,9 +5,11 @@ var Plotly = require('../lib/plotly');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
+var SelectView = require('ampersand-select-view');
 //templates
-var resultsTemplate = require('../templates/includes/workflowResults.pug');
-var resultsEnsembleTemplate = require('../templates/includes/workflowResultsEnsemble.pug');
+var gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
+var gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
+var parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResults.pug');
 
 module.exports = View.extend({
   events: {
@@ -23,12 +25,18 @@ module.exports = View.extend({
     'click [data-hook=collapse-trajmean]' : function () {
       this.changeCollapseButtonText("collapse-trajmean");
     },
+    'click [data-hook=collapse-trajmean]' : function () {
+      this.changeCollapseButtonText("collapse-psweep");
+    },
     'click [data-hook=collapse]' : function () {
       this.changeCollapseButtonText("collapse");
     },
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
+    'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
+    'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
+    'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
     'click [data-hook=plot]' : function (e) {
       var type = e.target.id
       if(this.plots[type]) {
@@ -51,18 +59,58 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.trajectories = attrs.trajectories;
     this.status = attrs.status;
+    this.species = attrs.species;
+    this.type = attrs.type;
+    this.speciesOfInterest = attrs.speciesOfInterest;
+    this.featureExtractor = "final";
+    this.ensembleAggragator = "avg";
     this.plots = {}
     this.plotArgs = {}
   },
   render: function () {
-    if(this.trajectories > 1){
-      this.template = resultsEnsembleTemplate
+    if(this.type === "parameterSweep"){
+      this.template = parameterSweepResultsTemplate
     }else{
-      this.template = resultsTemplate
+      this.template = this.trajectories > 1 ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate
     }
     View.prototype.render.apply(this, arguments);
     if(this.status === 'complete'){
       this.expandContainer()
+    }
+    var speciesNames = this.species.map(function (specie) { return specie.name});
+    var featureExtractors = ["Minimum of population", "Maximum of population", "Average of population", "Variance of population", "Population at last time point"]
+    var ensembleAggragators = ["Minimum of ensemble", "Maximum of ensemble", "Average of ensemble", "Variance of ensemble"]
+    var speciesOfInterestView = new SelectView({
+      label: '',
+      name: 'species-of-interest',
+      required: true,
+      idAttribute: 'cid',
+      options: speciesNames,
+      value: this.speciesOfInterest
+    });
+    var featureExtractorView = new SelectView({
+      label: '',
+      name: 'feature-extractor',
+      requires: true,
+      idAttribute: 'cid',
+      options: featureExtractors,
+      value: "Population at last time point"
+    });
+    var ensembleAggragatorView = new SelectView({
+      label: '',
+      name: 'ensemble-aggragator',
+      requires: true,
+      idAttribute: 'cid',
+      options: ensembleAggragators,
+      value: "Average of ensemble"
+    });
+    if(this.type === "parameterSweep"){
+      this.registerRenderSubview(speciesOfInterestView, 'specie-of-interest-list');
+      this.registerRenderSubview(featureExtractorView, 'feature-extraction-list');
+      this.registerRenderSubview(ensembleAggragatorView, 'ensemble-aggragator-list');
+      if(this.trajectories <= 1){
+        $(this.queryByHook('ensemble-aggragator-list')).find('select').prop('disabled', true);
+      }
     }
   },
   update: function () {
@@ -101,7 +149,13 @@ module.exports = View.extend({
     var self = this;
     var el = this.queryByHook(type)
     Plotly.purge(el)
-    var data = {"plt_type": type}
+    var data = {}
+    if(type === 'psweep'){
+      let key = this.getPsweepKey()
+      data['plt_key'] = key;
+    }else{
+      data['plt_key'] = type;
+    }
     if(Object.keys(this.plotArgs).length){
       data['plt_data'] = this.plotArgs
     }else{
@@ -147,7 +201,46 @@ module.exports = View.extend({
     $(this.queryByHook('workflow-results')).collapse('show');
     $(this.queryByHook('collapse')).prop('disabled', false);
     this.changeCollapseButtonText("collapse")
-    this.trajectories > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
+    if(this.type === "parameterSweep"){
+      this.getPlot("psweep")
+    }else{
+      this.trajectories > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
+    }
+  },
+  registerRenderSubview: function (view, hook) {
+    this.registerSubview(view);
+    this.renderSubview(view, this.queryByHook(hook));
+  },
+  getPlotForSpecies: function (e) {
+    this.speciesOfInterest = e.target.selectedOptions.item(0).text;
+    this.getPlot('psweep')
+  },
+  getPlotForFeatureExtractor: function (e) {
+    var featureExtractors = {"Minimum of population":"min", 
+                             "Maximum of population":"max", 
+                             "Average of population":"avg", 
+                             "Variance of population":"var", 
+                             "Population at last time point":"final"}
+    var value = e.target.selectedOptions.item(0).text;
+    this.featureExtractor = featureExtractors[value]
+    this.getPlot('psweep')
+  },
+  getPlotForEnsembleAggragator: function (e) {
+    var ensembleAggragators = {"Minimum of ensemble":"min", 
+                               "Maximum of ensemble":"max", 
+                               "Average of ensemble":"avg", 
+                               "Variance of ensemble":"var"}
+    var value = e.target.selectedOptions.item(0).text;
+    this.ensembleAggragator = ensembleAggragators[value]
+    this.getPlot('psweep')
+  },
+  getPsweepKey: function () {
+    let key = this.speciesOfInterest + "-" + this.featureExtractor
+    if(this.trajectories > 1){
+      key += ("-" + this.ensembleAggragator)
+    }
+    console.log(key)
+    return key
   },
   subviews: {
     inputTitle: {

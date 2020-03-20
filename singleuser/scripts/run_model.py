@@ -101,23 +101,27 @@ class GillesPy2Workflow():
         is_stochastic : bool
             Was the workflow a stochastic simulation?.
         '''
+        plots = {}
+        
         if is_stochastic and trajectories > 1:
             stddevrange_plot = results.plotplotly_std_dev_range(return_plotly_figure=True)
             stddevrange_plot["config"] = {"responsive": True,}
-            with open(os.path.join(self.res_path, 'std_dev_range_plot.json'), 'w') as json_file:
-                json.dump(stddevrange_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            plots['stddevran'] = stddevrange_plot
+
             stddev_plot = results.stddev_ensemble().plotplotly(return_plotly_figure=True)
             stddev_plot["config"] = {"responsive": True,}
-            with open(os.path.join(self.res_path, 'stddev_ensemble_plot.json'), 'w') as json_file:
-                json.dump(stddev_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            plots['stddev'] = stddev_plot
+
             avg_plot = results.average_ensemble().plotplotly(return_plotly_figure=True)
             avg_plot["config"] = {"responsive": True,}
-            with open(os.path.join(self.res_path, 'ensemble_average_plot.json'), 'w') as json_file:
-                json.dump(avg_plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+            plots['avg'] = avg_plot
+        
         plot = results.plotplotly(return_plotly_figure=True)
         plot["config"] = {"responsive": True,}
-        with open(os.path.join(self.res_path, 'plotplotly_plot.json'), 'w') as json_file:
-                json.dump(plot, json_file, cls=plotly.utils.PlotlyJSONEncoder)
+        plots['trajectories'] = plot
+        
+        with open(os.path.join(self.res_path, 'plots.json'), 'w') as plots_file:
+                json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
 
 
 class _Model(Model):
