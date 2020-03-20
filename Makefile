@@ -11,10 +11,6 @@ volumes:
 	@docker volume inspect $(DATA_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DATA_VOLUME_HOST)
 	@docker volume inspect $(DB_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DB_VOLUME_HOST)
 
-jupyterhub/secrets/.oauth.google.env:
-	@echo "Need oauth.env file in secrets with Google OAuth parameters (OAUTH_CALLBACK, CLIENT_ID, and CLIENT_SECRET"
-	@exit 1
-
 jupyterhub/secrets/.oauth.dummy.env:
 	@echo "Generating dummy oauth file..."
 	@echo "OAUTH_CALLBACK=''" > $@

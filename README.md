@@ -16,9 +16,8 @@ At the moment StochSS development on Windows is not supported. You can try using
 
 - Build and run the stochss notebook server: `make`
 
-- Once your terminal calms down you'll see a link to your server that looks something like this: 
+- Once your terminal calms down you'll see a link to your server that looks something like this: `127.0.0.1:8888/?token=X8dSfd...`
 
-```127.0.0.1:8888/?token=X8dSfd...```
 
 - Navigate to that link and get started!
 
