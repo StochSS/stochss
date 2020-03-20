@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
 import os
-import argparse
 from .rename import get_unique_file_name
-
-
-user_dir = "/home/jovyan"
+from .stochss_errors import StochSSFileNotFoundError
 
 
 def generate_zip_file(file_path, target):
@@ -23,13 +20,18 @@ def generate_zip_file(file_path, target):
 
 
 def get_zip_file_data(file_path):
-    with open(file_path, "rb") as zip_file:
-        data = zip_file.read()
+    try:
+        with open(file_path, "rb") as zip_file:
+            data = zip_file.read()
+    except FileNotFoundError as err:
+        raise StochSSFileNotFoundError("Could not find the file or directory: " + str(err))
 
     return data
 
 
 def download_zip(path, generate):
+    user_dir = "/home/jovyan"
+
     target = os.path.join(user_dir, path)
 
     if generate:
@@ -41,7 +43,8 @@ def download_zip(path, generate):
         target = target.split('/').pop()
 
         generate_zip_file(full_path, target)
-        return "Successfully created {0}".format(full_path)
+        resp = {"Message":"Successfully created {0}".format(full_path),"Path":full_path.replace(user_dir+"/", "")}
+        return resp
     else:
         data = get_zip_file_data(target)
         return data

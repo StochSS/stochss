@@ -408,8 +408,7 @@ class DownloadAPIHandler(APIHandler):
 
     async def get(self, path):
         '''
-        Send Get request to get the file data in user pod for download. 
-        This method utilizes the kubernetes python api.
+        Read and return plain text files.
 
         Attributes
         ----------
@@ -417,10 +416,21 @@ class DownloadAPIHandler(APIHandler):
             Path from the user directory to the target sbml file.
 
         '''
+        log.setLevel(logging.DEBUG)
+        log.debug("Path to the model: {0}\n".format(path))
         full_path = os.path.join("/home/jovyan", path)
-        with open(full_path, 'r') as f:
-            resp = f.read()
-        self.write(resp)
+        log.debug("Full path to the model: {0}\n".format(full_path))
+        try:
+            with open(full_path, 'r') as f:
+                resp = f.read()
+            self.write(resp)
+        except FileNotFoundError as err:
+            self.set_status(404)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":"File Not Found","Message":"Could not find file: " + str(err)}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
 
 class DownloadZipFileAPIHandler(APIHandler):
@@ -432,8 +442,9 @@ class DownloadZipFileAPIHandler(APIHandler):
 
      async def get(self, action, path):
         '''
-        Send Get request to generate and/or get the zip file in user pod for download. 
-        This method utilizes the kubernetes python api.
+        Read and download a zip file or generate a zip file from a directory or 
+        file and then download.  Generated zip files are stored in the targets 
+        parent directory with a unique name.
 
         Attributes
         ----------
@@ -441,15 +452,31 @@ class DownloadZipFileAPIHandler(APIHandler):
             Path from the user directory to the target file or directory.
 
         '''
+        log.setLevel(logging.DEBUG)
+        log.debug("Path to the model: {0}\n".format(path))
+        log.debug("Action: {0}\n".format(action))
         if action == "download":
             file_name = "{0}.zip".format(path.split('/').pop().split('.')[0])
-            log.warning(file_name)
+            log.debug("Name of the download file: {0}\n".format(file_name))
             self.set_header('Content-Type', 'application/zip')
             self.set_header('Content_Disposition', 'attachment; filename="{0}"'.format(file_name))
+        else:
+            self.set_header('Content-Type', 'application/json')
         
         generate = not action == "download"
-        resp = download_zip(path, generate)
-        self.write(resp)
+        log.debug("Generate script arguement: {0}\n".format(generate))
+        try:
+            resp = download_zip(path, generate)
+            log.debug("Response: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            if action == "download":
+                self.set_header('Content-Type', 'application/json')
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
 
 class CreateDirectoryHandler(APIHandler):
@@ -461,8 +488,8 @@ class CreateDirectoryHandler(APIHandler):
 
     async def get(self, directories):
         '''
-        Send Get request to get the file data in user pod for download. 
-        This method utilizes the kubernetes python api.
+        Creates a single directory or if the path od directories contains other
+        directories that do not exist, a path of directories.
 
         Attributes
         ----------
@@ -470,7 +497,18 @@ class CreateDirectoryHandler(APIHandler):
             Directory or path of directories to be created if needed.
 
         '''
+        log.setLevel(logging.DEBUG)
+        log.debug("Path of directories: {0}\n".format(directories))
         full_path = os.path.join("/home/jovyan", directories)
-        os.makedirs(full_path)
-        self.write('')
+        log.debug("Full path of directories: {0}\n".format(full_path))
+        try:
+            os.makedirs(full_path)
+            self.write("{0} was successfully created!".format(directories))
+        except FileExistsError as err:
+            self.set_status(406)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":"Directory Already Exists","Message":"Could not create your directory: "+str(err)}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
