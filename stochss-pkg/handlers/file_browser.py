@@ -271,10 +271,8 @@ class ConvertToSpatialAPIHandler(APIHandler):
 
     async def get(self, path):
         '''
-        Send Get request to convert a target model to a spatial model in user pod.  
-        This method utilizes the kubernetes python api to invoke the 
-        convert_to_smdl_mdl.py module of the user container (stored in 
-        [UserPod]:/usr/local/bin).
+        Creates a spatial model file with a unique name from a model file and 
+        stores it in the same directory as the original.
 
         Attributes
         ----------
@@ -282,8 +280,19 @@ class ConvertToSpatialAPIHandler(APIHandler):
             Path from the user directory to the model.
 
         '''
-        resp = convert_model(path, to_spatial=True)
-        self.finish(resp)
+        log.setLevel(logging.DEBUG)
+        log.debug("Path to the model: {0}\n".format(path))
+        try:
+            resp = convert_model(path, to_spatial=True)
+            log.debug("Response: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
 
 class ConvertToModelAPIHandler(APIHandler):
@@ -295,19 +304,28 @@ class ConvertToModelAPIHandler(APIHandler):
 
     async def get(self, path):
         '''
-        Send Get request to convert a target spatial model to a model in user pod.  
-        This method utilizes the kubernetes python api to invoke the 
-        convert_to_smdl_mdl.py module of the user container (stored in 
-        [UserPod]:/usr/local/bin).
+        Creates a model file with a unique name from a spatial model file and 
+        stores it in the same directory as the original.
 
         Attributes
         ----------
         path : str
-            Path from the user directory to the model.
+            Path from the user directory to the spatial model.
 
         '''
-        resp = convert_model(path, to_spatial=False)
-        self.finish(resp)
+        log.setLevel(logging.DEBUG)
+        log.debug("Path to the model: {0}\n".format(path))
+        try:
+            resp = convert_model(path, to_spatial=False)
+            log.debug("Response: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
 
 class ModelToSBMLAPIHandler(APIHandler):
@@ -319,10 +337,8 @@ class ModelToSBMLAPIHandler(APIHandler):
 
     async def get(self, path):
         '''
-        Send Get request to convert a target StochSS model to a SBML model in user 
-        pod. This method utilizes the kubernetes python api to invoke the 
-        convert_to_sbml.py module of the user container (stored in 
-        [UserPod]:/usr/local/bin).
+        Create a SBML Model file with a unique name from a model file and 
+        store it in the same directory as the original.
 
         Attributes
         ----------
@@ -330,8 +346,19 @@ class ModelToSBMLAPIHandler(APIHandler):
             Path from the user directory to the target model file.
 
         '''
-        convert_to_sbml(path)
-        self.write('Done')
+        log.setLevel(logging.DEBUG)
+        log.debug("Path to the model: {0}\n".format(path))
+        try:
+            resp = convert_to_sbml(path)
+            log.debug("Response: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
         
 class SBMLToModelAPIHandler(APIHandler):
@@ -343,10 +370,8 @@ class SBMLToModelAPIHandler(APIHandler):
 
     async def get(self, path):
         '''
-        Send Get request to convert a target SBML model to a StochSS model in user 
-        pod. This method utilizes the kubernetes python api to invoke the 
-        convert_sbml_to_model.py module of the user container (stored in 
-        [UserPod]:/usr/local/bin).
+        Creates a StochSS model with a unique name from an sbml model and 
+        store it in the same directory as the original.
 
         Attributes
         ----------
@@ -354,11 +379,24 @@ class SBMLToModelAPIHandler(APIHandler):
             Path from the user directory to the target sbml file.
 
         '''
+        log.setLevel(logging.DEBUG)
+        log.debug("Path to the model: {0}\n".format(path))
         template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
+        log.debug("Path to the model template: {0}\n".format(template_path))
         with open(template_path, "r") as template_file:
             model_template = template_file.read()
-        resp = convert_sbml_to_model(path, model_template)
-        self.finish(resp)
+        log.debug("StochSS Model template: {0}\n".format(model_template))
+        self.set_header('Content-Type', 'application/json')
+        try:
+            resp = convert_sbml_to_model(path, model_template)
+            log.debug("Response: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
         
 class DownloadAPIHandler(APIHandler):

@@ -32,3 +32,11 @@ class ModelNotJSONFormatError(StochSSAPIError):
         self.status_code = 406
         self.reason = "Model Data Not JSON Format"
         self.message = msg
+
+
+class JSONFileNotModelError(StochSSAPIError):
+
+    def __init__(self, msg):
+        self.status_code = 406
+        self.reason = "JSON File Not StochSS Model Format"
+        self.message = msg

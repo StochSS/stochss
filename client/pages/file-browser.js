@@ -329,11 +329,15 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getApiPath(), "/model/to-spatial", o.original._path);
     xhr({uri: endpoint}, 
       function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+        }else{
+          body = JSON.parse(body)
         }
       }
     );
@@ -346,20 +350,23 @@ let FileBrowser = PageView.extend({
     }else{
       var endpoint = path.join(app.getApiPath(), "sbml/to-model", o.original._path);
     }
-    xhr({uri: endpoint}, 
-      function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-        if(from === "SBML"){
-          var title = ""
-          var resp = JSON.parse(body)
-          var msg = resp.message
-          var errors = resp.errors
-          let modal = $(sbmlToModelHtml(msg, errors)).modal();
+    xhr({uri: endpoint}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+          if(from === "SBML"){
+            var title = ""
+            var resp = JSON.parse(body)
+            var msg = resp.message
+            var errors = resp.errors
+            let modal = $(sbmlToModelHtml(msg, errors)).modal();
+          }
+        }else{
+          body = JSON.parse(body)
         }
       }
     );
@@ -385,11 +392,15 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getApiPath(), "model/to-sbml", o.original._path);
     xhr({uri: endpoint},
       function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+        }else{
+          body = JSON.parse(body)
         }
       }
     );

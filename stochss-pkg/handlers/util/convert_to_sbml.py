@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 
 import libsbml
-import json
-import argparse
 import os
+import json
+from json.decoder import JSONDecodeError
 from .rename import get_unique_file_name
-
-
-user_dir = "/home/jovyan"
+from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
 def convert_to_sbml(_path):
+    user_dir = "/home/jovyan"
+    
     path = os.path.join(user_dir, _path)
     model_file = path.split('/').pop()
     model_name = model_file.split('.')[0]
     sbml_file = model_name + ".sbml"
     sbml_path = get_unique_file_name(sbml_file, path.split(model_file)[0])[0]
+    
     model = get_stochss_model(path)
     model['name'] = model_name
 
@@ -33,28 +34,33 @@ def convert_to_sbml(_path):
     c.setSize(1)
     c.setSpatialDimensions(3)
 
-    species = model['species']
-    convert_species(sbml_model, species)
+    try:
+        species = model['species']
+        convert_species(sbml_model, species)
 
-    parameters = model['parameters']
-    convert_parameters(sbml_model, parameters)
+        parameters = model['parameters']
+        convert_parameters(sbml_model, parameters)
 
-    reactions = model['reactions']
-    convert_reactions(sbml_model, reactions)
+        reactions = model['reactions']
+        convert_reactions(sbml_model, reactions)
 
-    events = model['eventsCollection']
-    convert_events(sbml_model, events)
+        events = model['eventsCollection']
+        convert_events(sbml_model, events)
 
-    rate_rules = list(filter(lambda r: is_valid_rate_rule(r), model['rules']))
-    convert_rate_rules(sbml_model, rate_rules)
+        rate_rules = list(filter(lambda r: is_valid_rate_rule(r), model['rules']))
+        convert_rate_rules(sbml_model, rate_rules)
 
-    assignment_rules = list(filter(lambda r: is_valid_assignment_rule(r), model['rules']))
-    convert_assignment_rules(sbml_model, assignment_rules)
+        assignment_rules = list(filter(lambda r: is_valid_assignment_rule(r), model['rules']))
+        convert_assignment_rules(sbml_model, assignment_rules)
 
-    function_definitions = model['functionDefinitions']
-    convert_function_definitions(sbml_model, function_definitions)
+        function_definitions = model['functionDefinitions']
+        convert_function_definitions(sbml_model, function_definitions)
+    except KeyError as err:
+        raise JSONFileNotModelError("Could not convert your model: " + str(err))
 
     write_sbml_to_file(sbml_path, document)
+
+    return "{0} was successfully converted to {1}".format(model_file, sbml_file)
     
 
 def is_valid_rate_rule(rule):
@@ -254,8 +260,13 @@ def write_sbml_to_file(sbml_path, sbml_doc):
 
 
 def get_stochss_model(path):
-    with open(path, "r") as model_file:
-        model = json.loads(model_file.read())
-    return model
+    try:
+        with open(path, "r") as model_file:
+            model = json.loads(model_file.read())
+        return model
+    except FileNotFoundError as err:
+        raise ModelNotFoundError("Could not finf model file: " + str(err))
+    except JSONDecodeError as err:
+        raise ModelNotJSONFormatError("The model is not JSON decodable: " + str(err))
 
 

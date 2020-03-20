@@ -1,25 +1,20 @@
 #!/usr/bin/env python3
 
-import argparse
 import os
 import json
 from .rename import get_unique_file_name
+from .stochss_errors import StochSSFileNotFoundError
 # from run_model import ModelFactory
 from gillespy2.sbml.SBMLimport import convert
 import gillespy2
 
 
-user_dir = "/home/jovyan"
-
-
 def convert_to_gillespy_model(path):
-    gpy_model, errors = convert(path)
-    return gpy_model, errors
-    # with open(path, "r") as model_file:
-    #     stochss_model = json.loads(model_file.read())
-    #     stochss_model['name'] = path.split('/').pop().split('.')[0]
-    # gillespy_model = ModelFactory(stochss_model)
-    # return gillespy_model.model, []
+    try:
+        gpy_model, errors = convert(path)
+        return gpy_model, errors
+    except FileNotFoundError as err:
+        raise StochSSFileNotFoundError("Could not find the sbml file: "+str(err))
 
 
 def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
@@ -52,19 +47,13 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
         stochss_rate_rules, comp_id = get_rate_rules(rate_rules, stochss_species, stochss_parameters, comp_id)
         stochss_model['rules'].extend(stochss_rate_rules)
 
-        try:
-            assignment_rules = gillespy_model.listOfAssignmentRules
-            stochss_assignment_rules, comp_id = get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, comp_id)
-            stochss_model['rules'].extend(stochss_assignment_rules)
-        except:
-            errors.append("Assignment rules are not supported by gillespy2.")
+        assignment_rules = gillespy_model.listOfAssignmentRules
+        stochss_assignment_rules, comp_id = get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, comp_id)
+        stochss_model['rules'].extend(stochss_assignment_rules)
         
-        try:
-            function_definitions = gillespy_model.listOfFunctionDefinitions
-            stochss_function_definitions, comp_id = get_function_definitions(function_definitions, comp_id)
-            stochss_model['functionDefinitions'].extend(stochss_function_definitions)
-        except:
-            errors.append("Function Definitions are not supported by gillespy2.")
+        function_definitions = gillespy_model.listOfFunctionDefinitions
+        stochss_function_definitions, comp_id = get_function_definitions(function_definitions, comp_id)
+        stochss_model['functionDefinitions'].extend(stochss_function_definitions)
 
         stochss_model['defaultID'] = comp_id
 
@@ -355,6 +344,8 @@ def get_function_definitions(function_definitions, comp_id):
 
 
 def convert_sbml_to_model(path, model_template):
+    user_dir = "/home/jovyan"
+    
     full_path = os.path.join(user_dir, path)
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)

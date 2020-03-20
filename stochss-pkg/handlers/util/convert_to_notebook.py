@@ -7,7 +7,7 @@ from os import path
 
 from .rename import get_unique_file_name
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
-from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError
+from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
 def convert_to_notebook(_model_path):
@@ -31,14 +31,17 @@ def convert_to_notebook(_model_path):
     cells = []
     # Create Markdown Cell with name
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
-    # Create imports cell
-    cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
-    # Create Model Cell
-    cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
-    # Instantiate Model Cell
-    cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-    # Model Run Cell
-    cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
+    try:
+        # Create imports cell
+        cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
+        # Create Model Cell
+        cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
+        # Instantiate Model Cell
+        cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        # Model Run Cell
+        cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
+    except KeyError as err:
+        raise JSONFileNotModelError("Could not conver your model: " + str(err))
     # Plotting Cell
     cells.append(nbf.new_code_cell('results.plotplotly()'))
 
