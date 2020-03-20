@@ -13,6 +13,7 @@ import json, os
 import logging
 log = logging.getLogger()
 
+from .util.stochss_errors import StochSSAPIError
 from .util.ls import ls
 from .util.convert_to_notebook import convert_to_notebook
 from .util.duplicate import duplicate
@@ -38,7 +39,10 @@ class ModelBrowserFileList(APIHandler):
         path : str
             Path from the user directory to the target directory.
         '''
+        log.setLevel(logging.DEBUG)
+        log.debug("Path to the directory: {0}\n".format(path))
         output = ls(path)
+        log.debug("Contents of the directory: {0}\n".format(output))
         self.finish(output)
 
   
@@ -59,26 +63,30 @@ class ModelToNotebookHandler(APIHandler):
         path : str
             Path from the user directory to the target model.
         '''
+        log.setLevel(logging.DEBUG)
+        self.set_header('Content-Type', 'application/json')
         try:
+            log.debug("Path to the model file: {0}\n".format(path))
             dest_file = convert_to_notebook(path)
-        except Exception as error:
-            self.set_status(400)
-            self.finish(str(error))
-        else:
+            log.debug("Notebook file path: {0}\n".format(dest_file))
             self.write(dest_file)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
 
 class DeleteFileAPIHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for removing files from remote user pod.
+    Handler for removing files and/or directoies from the User's file system.
     ##############################################################################
     '''
     async def get(self, path):
         '''
-        Send Get request for removing file from user file system.  This
-        method utilizes the kubernetes python api to invoke rm -R on target
-        file in remote user pod.
+        Removes a single file or recursively remove a directory and its contents.
 
         Attributes
         ----------
@@ -86,25 +94,38 @@ class DeleteFileAPIHandler(APIHandler):
             Path to removal target.
 
         '''
+        log.setLevel(logging.DEBUG)
+        log.debug("Path to the model/directory: {0}\n".format(path))
         file_path = os.path.join('/home/jovyan', path)
+        log.debug("Full path to the model/directory: {0}\n".format(file_path))
         try:
-            os.remove(file_path)
-        except OSError:
-            rmtree(file_path)
-        self.finish("{0} was successfully deleted.".format(path.split('/').pop()))
+            try:
+                os.remove(file_path)
+            except OSError:
+                rmtree(file_path)
+            self.write("The file {0} was successfully deleted.".format(path.split('/').pop()))
+        except FileNotFoundError as err:
+            self.set_status(404)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":"StochSS File Not Found","Message":"Could not find the file or directory: {0}".format(err)}
+            self.write(error)
+        except PermissionError as err:
+            self.set_status(403)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":"Permission Denied","Message":"You do not have permission to delete this file: {0}".format(err)}
+            self.write(error)
+        self.finish()
 
 
 class MoveFileAPIHandler(APIHandler):
     '''
     ##############################################################################
-    Handler moving file locations in remote user pod.
+    Handler moving file locations in the User's file system.
     ##############################################################################
     '''
     async def get(self, data):
         '''
-        Send Get request to change location of target file in remote user file
-        system.  This method utilizes the kubernetes python api to invoke mv on
-        target file in remote user pod.
+        Moves a file or a directory and its contents to a new location.
 
         Attributes
         ----------
@@ -112,83 +133,133 @@ class MoveFileAPIHandler(APIHandler):
             Data string containing old and new locations of target file.
 
         '''
+        log.setLevel(logging.DEBUG)
+        log.debug("File path and dest path: {0}\n".format(data))
         old_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/')[0]))
+        log.debug("Path to the file: {0}\n".format(old_path))
         new_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/').pop()))
-        if os.path.isdir(old_path):
-            move(old_path, new_path)
-        else:
-            os.rename(old_path, new_path)
-        self.write("Success! {0} was moved to {1}.")
+        log.debug("Destination path: {0}\n".format(new_path))
+        try:
+            if os.path.isdir(old_path):
+                move(old_path, new_path)
+            else:
+                os.rename(old_path, new_path)
+            self.write("Success! {0} was moved to {1}.".format(old_path, new_path))
+        except FileNotFoundError as err:
+            self.set_status(404)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":"StochSS File Not Found","Message":"Could not find the file or directory: {0}".format(err)}
+            self.write(error)
+        except PermissionError as err:
+            self.set_status(403)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":"Permission Denied","Message":"You do not have permission to move this file: {0}".format(err)}
+            self.write(error)
+        self.finish()
+        
 
  
 class DuplicateModelHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for creating model duplicates in user pod.
+    Handler for creating copies of a file.
     ##############################################################################
     '''
 
     async def get(self, path):
         '''
-        Send Get request for duplicating target file in user pod.  This method 
-        utilizes the kubernetes python api to invoke the duplicate.py module of
-        the user container (stored in [UserPod]:/usr/local/bin).
+        Creates a copy of a file with a unique name and stores it in the same 
+        directory as the original.
 
         Attributes
         ----------
         path : str
-            Path to target model within user pod container.
+            Path to target model.
 
         '''
-        resp = duplicate(path)
-        self.finish(resp)
+        log.setLevel(logging.DEBUG)
+        try:
+            log.debug("Path to the file: {0}\n".format(path))
+            resp = duplicate(path)
+            log.debug("Response message: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
 
 class DuplicateDirectoryHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for creating directory duplicates in user pod.
+    Handler for creating copies of a directory and its contents.
     ##############################################################################
     '''
 
     async def get(self, path):
         '''
-        Send Get request for duplicating target directory in user pod.  This method 
-        utilizes the kubernetes python api to invoke the duplicate.py module of
-        the user container (stored in [UserPod]:/usr/local/bin).
+        Creates a copy of a directory and its contents with a unique name and 
+        stores it in the same parent directory as the original.
 
         Attributes
         ----------
         path : str
-            Path to target directory within user pod container.
+            Path to target directory.
 
         '''
-        resp = duplicate(path, True)
-        self.finish(resp)
+        log.setLevel(logging.DEBUG)
+        try:
+            log.debug("Path to the file: {0}\n".format(path))
+            resp = duplicate(path, True)
+            log.debug("Response message: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
         
 class RenameAPIHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for renaming model files.
+    Handler for renaming files or directories.
     ##############################################################################
     '''
 
-    async def get(self, _path):
+    async def get(self, data):
         '''
-        Send Get request to rename target file in user pod.  This method
-        utilizes the kubernetes python api to invoke the rename.py module of
-        the user container (stored in [UserPod]:/usr/local/bin).
+        Rename a file or directory.  If the file or directory already exists
+        increment the file name using '(x)' naming convention to get a unique 
+        name.
 
         Attributes
         ----------
-        _path : str
+        data : str
             string of data containing rename information.
 
         '''
-        path, new_name = _path.split('/<--change-->/')
-        resp = rename(path, new_name)
-        self.finish(resp)
+        log.setLevel(logging.DEBUG)
+        log.debug("Original path and new name: {0}".format(data))
+        path, new_name = data.split('/<--change-->/')
+        log.debug("Path to the file or directory: {0}\n".format(path))
+        log.debug("New name: {0}\n".format(new_name))
+        self.set_header('Content-Type', 'application/json')
+        try:
+            resp = rename(path, new_name)
+            log.debug("Response message: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
 
 class ConvertToSpatialAPIHandler(APIHandler):

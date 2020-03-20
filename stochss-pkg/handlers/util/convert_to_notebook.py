@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import json
+from json.decoder import JSONDecodeError
 import nbformat
 from nbformat import v4 as nbf
 from os import path
 
 from .rename import get_unique_file_name
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
+from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError
 
 
 def convert_to_notebook(_model_path):
@@ -20,11 +22,10 @@ def convert_to_notebook(_model_path):
     try:
         with open(model_path, 'r') as json_file:
             json_data = json.loads(json_file.read())
-    except Exception as e:
-        if type(e) is FileNotFoundError:
-            raise FileNotFoundError('Could not read file: ' + str(e))
-        else:
-            raise TypeError('The data is not JSON decobable: ' + str(e))
+    except FileNotFoundError as e:
+        raise ModelNotFoundError('Could not read the file: ' + str(e))
+    except JSONDecodeError as e:
+        raise ModelNotJSONFormatError('The data is not JSON decobable: ' + str(e))
 
     # Create new notebook
     cells = []
@@ -50,8 +51,4 @@ def convert_to_notebook(_model_path):
         nbformat.write(nb, f, version=4)
     f.close()
 
-    print()
-
-    return '{0} successfully created'.format(dest_file)
-
-
+    return {"Message":'{0} successfully created'.format(dest_file),"File":dest_file.replace(user_dir+'/', "")}

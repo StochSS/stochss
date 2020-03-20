@@ -4,6 +4,7 @@ let xhr = require('xhr');
 let PageView = require('./base');
 let template = require('../templates/pages/fileBrowser.pug');
 let $ = require('jquery');
+let _ = require('underscore');
 let app = require('../app');
 //let bootstrap = require('bootstrap');
 
@@ -64,8 +65,10 @@ let treeSettings = {
         var oldPath = node.original._path
         var endpoint = path.join(app.getApiPath(), "/file/move", oldPath, '<--MoveTo-->', newDir, file)
         xhr({uri: endpoint}, function(err, response, body) {
-          if(body.startsWith("Success!")) {
+          if(response.statusCode < 400) {
             node.original._path = path.join(newDir, file)
+          }else{
+            body = JSON.parse(body)
             if(par.type === 'root'){
               $('#models-jstree').jstree().refresh()
             }else{
@@ -284,11 +287,15 @@ let FileBrowser = PageView.extend({
     yesBtn.addEventListener('click', function (e) {
       var endpoint = path.join(app.getApiPath(), "/file/delete", o.original._path)
       xhr({uri: endpoint}, function(err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(o.parent);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh();
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(o.parent);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh();
+          }else{
+            $('#models-jstree').jstree().refresh_node(node);
+          }
         }else{
-          $('#models-jstree').jstree().refresh_node(node);
+          body = JSON.parse(body)
         }
       })
       modal.modal('hide')
@@ -302,13 +309,16 @@ let FileBrowser = PageView.extend({
     }else{
       var endpoint = path.join(app.getApiPath(), "model/duplicate", o.original._path);
     }
-    xhr({uri: endpoint}, 
-      function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
+    xhr({uri: endpoint}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+        }else{
+          body = JSON.parse(body)
         }
       }
     );
@@ -354,6 +364,21 @@ let FileBrowser = PageView.extend({
       }
     );
   },
+  toNotebook: function (o) {
+    var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
+    xhr({ uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400){
+        var node = $('#models-jstree').jstree().get_node(o.parent)
+        if(node.type === 'root'){
+          $('#models-jstree').jstree().refresh();
+        }else{
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+        var notebookPath = path.join(app.getBasePath(), "notebooks", body.File)
+        window.open(notebookPath, '_blank')
+      }
+    });
+  },
   toSBML: function (o) {
     var self = this;
     var parentID = o.parent;
@@ -379,23 +404,30 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
         var endpoint = path.join(app.getApiPath(), "/file/rename", o.original._path, "<--change-->", node.text)
-        xhr({uri: endpoint}, function (err, response, body){
-          var resp = JSON.parse(body)
-          if(!resp.message.startsWith('Success!')) {
-            nameWarning.html(resp.message)
-            nameWarning.collapse('show');
-          }
-          node.original._path = resp._path
-          if(parent.type === "root"){
-            $('#models-jstree').jstree().refresh()
-          }else{          
-            $('#models-jstree').jstree().refresh_node(parent);
+        xhr({uri: endpoint, json: true}, function (err, response, body){
+          if(response.statusCode < 400) {
+            if(body.changed) {
+              nameWarning.text(body.message)
+              nameWarning.collapse('show');
+              window.scrollTo(0,0)
+              setTimeout(_.bind(self.hideNameWarning, self), 10000);
+            }
+            node.original._path = body._path
+          }else{
+            if(parent.type === "root"){
+              $('#models-jstree').jstree().refresh()
+            }else{          
+              $('#models-jstree').jstree().refresh_node(parent);
+            }
           }
         })
       }
       extensionWarning.collapse('hide');
       nameWarning.collapse('hide');
     });
+  },
+  hideNameWarning: function () {
+    $(this.queryByHook('rename-warning')).collapse('hide')
   },
   getJsonFileForExport: function (o) {
     var self = this;
@@ -736,20 +768,7 @@ let FileBrowser = PageView.extend({
                 "_disabled" : false,
                 "label" : "To Notebook",
                 "action" : function (data) {
-                  var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
-                  xhr({ uri: endpoint }, function (err, response, body) {
-                    if(response.statusCode === 200){
-                      var node = $('#models-jstree').jstree().get_node(o.parent)
-                      if(node.type === 'root'){
-                        $('#models-jstree').jstree().refresh();
-                      }else{
-                        $('#models-jstree').jstree().refresh_node(node);
-                      }
-                      var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-                      var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
-                      window.open(notebookPath, '_blank')
-                    }
-                  });
+                  self.toNotebook(o)
                 }
               },
               "Convert to SBML" : {
