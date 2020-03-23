@@ -10,11 +10,11 @@ import gillespy2
 
 
 def convert_to_gillespy_model(path):
-    try:
+    if os.path.exists(path):
         gpy_model, errors = convert(path)
         return gpy_model, errors
-    except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not find the sbml file: "+str(err))
+    else:
+        raise StochSSFileNotFoundError("Could not find the sbml file: "+path)
 
 
 def convert_to_stochss_model(stochss_model, gillespy_model, full_path):

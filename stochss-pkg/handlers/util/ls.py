@@ -3,6 +3,7 @@
 import os
 import json
 from os import path
+from .stochss_errors import StochSSFileNotFoundError
 
 
 def getFileSystemData(full_path, p_path):
@@ -18,7 +19,11 @@ def getFileSystemData(full_path, p_path):
     p_path : str
         Path from the user directory to the target directory.
     '''
-    _children = os.listdir(path=full_path)
+    try:
+        _children = os.listdir(path=full_path)
+    except FileNotFoundError as err:
+        raise StochSSFileNotFoundError("Could not find the directory: " + str(err))
+        
     if len(_children) == 0:
         return _children
     children = []

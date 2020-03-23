@@ -41,9 +41,17 @@ class ModelBrowserFileList(APIHandler):
         '''
         log.setLevel(logging.DEBUG)
         log.debug("Path to the directory: {0}\n".format(path))
-        output = ls(path)
-        log.debug("Contents of the directory: {0}\n".format(output))
-        self.finish(output)
+        try:
+            output = ls(path)
+            log.debug("Contents of the directory: {0}\n".format(output))
+            self.write(output)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()
 
   
 class ModelToNotebookHandler(APIHandler):
