@@ -242,12 +242,16 @@ let FileBrowser = PageView.extend({
   template: template,
   events: {
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
+    'click [data-hook=options-for-node]' : 'showContextMenuForNode',
+    'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
+    'click [data-hook=new-model]' : 'handleCreateModelClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(operationInfoModalHtml()).modal();
     },
   },
   render: function () {
     var self = this;
+    this.nodeForContextMenu = "";
     this.renderWithTemplate();
     this.setupJstree();
     setTimeout(function () {
@@ -469,27 +473,43 @@ let FileBrowser = PageView.extend({
     let modelName;
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
+        var parentPath = "/"
+        if(o && o.original){
+          parentPath = o.original._path
+        }
         if(isModel) {
           let modelName = input.value + '.mdl';
-          var parentPath = o.original._path
           var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit', parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
-          var parentPath = o.original._path;
           let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
-            var node = $('#models-jstree').jstree().get_node(o);
-            if(node.type === "root"){
+            if(o){
+              var node = $('#models-jstree').jstree().get_node(o);
+              if(node.type === "root"){
+                $('#models-jstree').jstree().refresh()
+              }else{          
+                $('#models-jstree').jstree().refresh_node(node);
+              }
+            }else{
               $('#models-jstree').jstree().refresh()
-            }else{          
-              $('#models-jstree').jstree().refresh_node(node);
             }
           });
           modal.modal('hide')
         }
       }
     });
+  },
+  handleCreateDirectoryClick: function (e) {
+    this.newModelOrDirectory(undefined, false, false);
+  },
+  handleCreateModelClick: function (e) {
+    let isSpatial = false
+    this.newModelOrDirectory(undefined, true, isSpatial);
+  },
+  showContextMenuForNode: function (e) {
+    $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
   },
   setupJstree: function () {
     var self = this;
@@ -1079,6 +1099,13 @@ let FileBrowser = PageView.extend({
       var node = $('#models-jstree').jstree().get_node(_node)
       if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node) && node.type === "folder"){
         $('#models-jstree').jstree().refresh_node(node)
+      }else{
+        let optionsButton = $(self.queryByHook("options-for-node"))
+        if(!self.nodeForContextMenu){
+          optionsButton.prop('disabled', false)
+        }
+        optionsButton.text("Options for " + node.original.text)
+        self.nodeForContextMenu = node;
       }
     });
     $('#models-jstree').on('dblclick.jstree', function(e) {
