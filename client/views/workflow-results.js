@@ -26,7 +26,7 @@ module.exports = View.extend({
     'click [data-hook=collapse-trajmean]' : function () {
       this.changeCollapseButtonText("collapse-trajmean");
     },
-    'click [data-hook=collapse-trajmean]' : function () {
+    'click [data-hook=collapse-psweep]' : function () {
        this.changeCollapseButtonText("collapse-psweep");
      },
     'click [data-hook=collapse]' : function () {
@@ -163,13 +163,12 @@ module.exports = View.extend({
       data['plt_data'] = "None"
     }
     var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
-    xhr({url: endpoint}, function (err, response, body){
-      if(body.startsWith("ERROR!")){
-        $(self.queryByHook(type)).html(body)
+    xhr({url: endpoint, json: true}, function (err, response, body){
+      if(response.statusCode >= 400){
+        $(self.queryByHook(type)).html(body.Message)
       }else{
-        var fig = JSON.parse(body)
-        self.plots[type] = fig
-        self.plotFigure(fig, type);
+        self.plots[type] = body
+        self.plotFigure(body, type);
       }
     });
   },

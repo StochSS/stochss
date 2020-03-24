@@ -40,3 +40,11 @@ class JSONFileNotModelError(StochSSAPIError):
         self.status_code = 406
         self.reason = "JSON File Not StochSS Model Format"
         self.message = msg
+
+
+class PlotNotAvailableError(StochSSAPIError):
+
+    def __init__(self, msg):
+        self.status_code = 406
+        self.reason = "Plot Figure Not Available"
+        self.message = msg

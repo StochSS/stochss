@@ -41,7 +41,7 @@ def convert_to_notebook(_model_path):
         # Model Run Cell
         cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
     except KeyError as err:
-        raise JSONFileNotModelError("Could not conver your model: " + str(err))
+        raise JSONFileNotModelError("Could not convert your model: " + str(err))
     # Plotting Cell
     cells.append(nbf.new_code_cell('results.plotplotly()'))
 
