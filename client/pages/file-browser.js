@@ -443,9 +443,10 @@ let FileBrowser = PageView.extend({
   getJsonFileForExport: function (o) {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "json-data", o.original._path);
-    xhr({uri: endpoint}, function (err, response, body) {
-      var resp = JSON.parse(body);
-      self.exportToJsonFile(resp, o.original.text);
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        self.exportToJsonFile(body, o.original.text);
+      }
     });
   },
   getFileForExport: function (o) {
@@ -527,11 +528,15 @@ let FileBrowser = PageView.extend({
           var parentPath = o.original._path;
           let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
-            var node = $('#models-jstree').jstree().get_node(o);
-            if(node.type === "root"){
-              $('#models-jstree').jstree().refresh()
-            }else{          
-              $('#models-jstree').jstree().refresh_node(node);
+            if(response.statusCode < 400){
+              var node = $('#models-jstree').jstree().get_node(o);
+              if(node.type === "root"){
+                $('#models-jstree').jstree().refresh()
+              }else{          
+                $('#models-jstree').jstree().refresh_node(node);
+              }
+            }else{
+              body = JSON.parse(body)
             }
           });
           modal.modal('hide')
