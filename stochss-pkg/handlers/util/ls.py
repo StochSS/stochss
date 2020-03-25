@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 
-import sys
-import json
 import os
-import argparse
+import json
 from os import path
-
-
-user_dir = '/home/jovyan/'
+from .stochss_errors import StochSSFileNotFoundError
 
 
 def getFileSystemData(full_path, p_path):
@@ -23,7 +19,11 @@ def getFileSystemData(full_path, p_path):
     p_path : str
         Path from the user directory to the target directory.
     '''
-    _children = os.listdir(path=full_path)
+    try:
+        _children = os.listdir(path=full_path)
+    except FileNotFoundError as err:
+        raise StochSSFileNotFoundError("Could not find the directory: " + str(err))
+        
     if len(_children) == 0:
         return _children
     children = []
@@ -93,6 +93,18 @@ def checkExtension(child, target):
 
 
 def ls(p_path):
+    '''
+    Format the path to the target directory to an absolute path.
+    Retreive the JSTree children nodes and add them to a root node
+    if the target directory is the User directory
+
+    Attributes
+    ----------
+    p_path : str
+        The path from the user directory to the target directory.
+    '''
+    user_dir = '/home/jovyan/'
+
     if p_path == "/":
         full_path = user_dir
     else:

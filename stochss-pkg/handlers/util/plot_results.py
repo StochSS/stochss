@@ -2,13 +2,8 @@
 
 
 import json
-import sys
-import plotly
-
 from os import path
-
-
-user_dir = "/home/jovyan"
+from .stochss_errors import StochSSFileNotFoundError, PlotNotAvailableError
 
 
 def read_plots_file(plots_file_path):
@@ -23,9 +18,9 @@ def read_plots_file(plots_file_path):
     try:
         with open(plots_file_path, 'r') as plt_file:
             plots = json.load(plt_file)
-    except FileNotFoundError as error:
-        return "ERROR! This plot is not available: {0}".format(error)
-    return plots
+        return plots
+    except FileNotFoundError as err:
+        raise StochSSFileNotFoundError("Could not find the plot file: {0}".format(err))
     
 
 def get_plot_fig(plots_file_path, plt_key):
@@ -42,8 +37,8 @@ def get_plot_fig(plots_file_path, plt_key):
     plots = read_plots_file(plots_file_path)
     try:
         return plots[plt_key]
-    except:
-        return plots
+    except KeyError as err:
+        raise PlotNotAvailableError("The plot is not available: "+str(err))
 
 
 def edit_plot_fig(plt_fig, plt_data):
@@ -68,6 +63,8 @@ def edit_plot_fig(plt_fig, plt_data):
 
 
 def plot_results(plots_path, plt_key, plt_data=None):
+    user_dir = "/home/jovyan"
+
     full_path = path.join(user_dir, plots_path)
     
     plt_fig = get_plot_fig(full_path, plt_key)
