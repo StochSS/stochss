@@ -339,3 +339,9 @@ span.checkbox {
 .big-tip {
   margin-left: .2em;
 }
+
+/*shadowing for buttons*/
+.box-shadow {
+  /*h-offset v-offset blur spread color*/
+  box-shadow: 6px 6px 10px 1px rgba(0, 0, 0, .2), 2.25px 2.25px 14px 2px rgba(0, 0, 0, .1), 3.75px 3.75px 5px -3px rgba(0, 0, 0, .4)
+}
