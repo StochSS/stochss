@@ -1,4 +1,6 @@
 node_modules/
+stochss-pkg/dist/*
+jupyterhub/static/stochss-home.bundle.js
 *.swp
 *.swo
 package-lock.json
