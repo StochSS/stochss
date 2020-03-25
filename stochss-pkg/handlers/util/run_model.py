@@ -611,8 +611,6 @@ if __name__ == "__main__":
                 print(fd.read())
             os.remove(outfile)
             os.remove(outfile + ".done")
-        else:
-            print("running->{0}".format(outfile))
     log_stream.close()
 
 

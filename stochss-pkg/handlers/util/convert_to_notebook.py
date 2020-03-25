@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
-import sys
-import ast
 import json
+from json.decoder import JSONDecodeError
 import nbformat
-import argparse
 from nbformat import v4 as nbf
 from os import path
 
 from .rename import get_unique_file_name
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
-
-
-user_dir = '/home/jovyan'
+from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
 def convert_to_notebook(_model_path):
+    user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
@@ -24,23 +21,27 @@ def convert_to_notebook(_model_path):
     # Collect .mdl Data
     try:
         with open(model_path, 'r') as json_file:
-            # json_data = ast.literal_eval(json_file.read())
             json_data = json.loads(json_file.read())
-    except Exception as e:
-        print('Could not read file: ' + e)
+    except FileNotFoundError as e:
+        raise ModelNotFoundError('Could not read the file: ' + str(e))
+    except JSONDecodeError as e:
+        raise ModelNotJSONFormatError('The data is not JSON decobable: ' + str(e))
 
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
-    # Create imports cell
-    cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
-    # Create Model Cell
-    cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
-    # Instantiate Model Cell
-    cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-    # Model Run Cell
-    cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
+    try:
+        # Create imports cell
+        cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
+        # Create Model Cell
+        cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
+        # Instantiate Model Cell
+        cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        # Model Run Cell
+        cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
+    except KeyError as err:
+        raise JSONFileNotModelError("Could not convert your model: " + str(err))
     # Plotting Cell
     cells.append(nbf.new_code_cell('results.plotplotly()'))
 
@@ -53,8 +54,4 @@ def convert_to_notebook(_model_path):
         nbformat.write(nb, f, version=4)
     f.close()
 
-    print('{0} successfully created'.format(dest_file))
-
-    return dest_file
-
-
+    return {"Message":'{0} successfully created'.format(dest_file),"File":dest_file.replace(user_dir+'/', "")}

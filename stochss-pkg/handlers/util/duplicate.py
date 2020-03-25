@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 from os import path
 from shutil import copyfile, copytree
+from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
 
 
 user_dir = '/home/jovyan'
@@ -62,9 +62,17 @@ def duplicate(file_path, is_directory=False):
     '''
     full_path = path.join(user_dir, file_path)
     unique_file_path = get_unique_file_name(full_path)
-    if is_directory:
-        copytree(full_path, unique_file_path)
-    else:
-        copyfile(full_path, unique_file_path)
-    return "The model {0} has been successfully copied as {1}".format(full_path, unique_file_path)
+    try:
+        if is_directory:
+            copytree(full_path, unique_file_path)
+        else:
+            copyfile(full_path, unique_file_path)
+    except FileNotFoundError as err:
+        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err))
+    except PermissionError as err:
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+
+    original = full_path.split('/').pop()
+    copy = unique_file_path.split('/').pop()
+    return "The model {0} has been successfully copied as {1}".format(original, copy)
 
