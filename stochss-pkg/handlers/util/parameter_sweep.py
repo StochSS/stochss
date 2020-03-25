@@ -320,6 +320,8 @@ class ParameterSweep():
         self.log_path = os.path.join(wkfl_path, 'logs.txt')
         self.wkfl_mdl_path = os.path.join(wkfl_path, self.mdl_file)
         self.res_path = os.path.join(wkfl_path, 'results')
+        wkfl_name_elements = wkfl_path.split('/').pop().split('.')[0].split('_')
+        self.wkfl_timestamp = '_'.join(["",wkfl_name_elements[-2],wkfl_name_elements[-1]])
 
 
     def run(self, gillespy2_model, stochss_model, verbose):
