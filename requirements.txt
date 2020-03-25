@@ -1,2 +1,2 @@
 python-libsbml==5.18.0
-https://github.com/GillesPy2/GillesPy2/tarball/develop#egg=gillespy2
+gillespy2==1.3.0
