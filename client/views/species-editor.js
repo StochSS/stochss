@@ -22,7 +22,7 @@ let renderDefaultModeModalHtml = () => {
       <div class="modal-dialog" role="document">
         <div class="modal-content info">
           <div class="modal-header">
-            <h5 class="modal-title">Default Species Mode</h5>
+            <h5 class="modal-title">Default Species Mode (required)</h5>
             <button type="button" class="close close-modal" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -33,17 +33,18 @@ let renderDefaultModeModalHtml = () => {
                 The default mode is used to set the mode of all species added to the model.  
                 The mode of a species is used to determine how it will be represented in a Hybrid simulation.
               </p>
+              <p>Select one of the following: </p>
             </div>
             <div class="default-mode">
-              <button type="button" class="btn btn-primary concentration-btn">Concentration</button>
+              <button type="button" class="btn btn-primary concentration-btn box-shadow">Concentration</button>
               <p style="margin-top: 5px;">${concentrationDesciption}</p>
             </div>
             <div class="default-mode">
-              <button type="button" class="btn btn-primary population-btn">Population</button>
+              <button type="button" class="btn btn-primary population-btn box-shadow">Population</button>
               <p style="margin-top: 5px;">${populationDescription}</p>
             </div>
             <div class="default-mode">
-              <button type="button" class="btn btn-primary hybrid-btn">Hybrid Concentration/Population</button>
+              <button type="button" class="btn btn-primary hybrid-btn box-shadow">Hybrid Concentration/Population</button>
               <p style="margin-top: 5px;">${hybridDescription}</p>
             </div>
           </div>

@@ -4,6 +4,7 @@ let xhr = require('xhr');
 let PageView = require('./base');
 let template = require('../templates/pages/fileBrowser.pug');
 let $ = require('jquery');
+let _ = require('underscore');
 let app = require('../app');
 //let bootstrap = require('bootstrap');
 
@@ -64,8 +65,10 @@ let treeSettings = {
         var oldPath = node.original._path
         var endpoint = path.join(app.getApiPath(), "/file/move", oldPath, '<--MoveTo-->', newDir, file)
         xhr({uri: endpoint}, function(err, response, body) {
-          if(body.startsWith("Success!")) {
+          if(response.statusCode < 400) {
             node.original._path = path.join(newDir, file)
+          }else{
+            body = JSON.parse(body)
             if(par.type === 'root'){
               $('#models-jstree').jstree().refresh()
             }else{
@@ -242,12 +245,16 @@ let FileBrowser = PageView.extend({
   template: template,
   events: {
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
+    'click [data-hook=options-for-node]' : 'showContextMenuForNode',
+    'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
+    'click [data-hook=new-model]' : 'handleCreateModelClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(operationInfoModalHtml()).modal();
     },
   },
   render: function () {
     var self = this;
+    this.nodeForContextMenu = "";
     this.renderWithTemplate();
     this.setupJstree();
     setTimeout(function () {
@@ -284,11 +291,15 @@ let FileBrowser = PageView.extend({
     yesBtn.addEventListener('click', function (e) {
       var endpoint = path.join(app.getApiPath(), "/file/delete", o.original._path)
       xhr({uri: endpoint}, function(err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(o.parent);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh();
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(o.parent);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh();
+          }else{
+            $('#models-jstree').jstree().refresh_node(node);
+          }
         }else{
-          $('#models-jstree').jstree().refresh_node(node);
+          body = JSON.parse(body)
         }
       })
       modal.modal('hide')
@@ -302,13 +313,16 @@ let FileBrowser = PageView.extend({
     }else{
       var endpoint = path.join(app.getApiPath(), "model/duplicate", o.original._path);
     }
-    xhr({uri: endpoint}, 
-      function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
+    xhr({uri: endpoint}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+        }else{
+          body = JSON.parse(body)
         }
       }
     );
@@ -319,11 +333,15 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getApiPath(), "/model/to-spatial", o.original._path);
     xhr({uri: endpoint}, 
       function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+        }else{
+          body = JSON.parse(body)
         }
       }
     );
@@ -336,23 +354,41 @@ let FileBrowser = PageView.extend({
     }else{
       var endpoint = path.join(app.getApiPath(), "sbml/to-model", o.original._path);
     }
-    xhr({uri: endpoint}, 
-      function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-        if(from === "SBML"){
-          var title = ""
-          var resp = JSON.parse(body)
-          var msg = resp.message
-          var errors = resp.errors
-          let modal = $(sbmlToModelHtml(msg, errors)).modal();
+    xhr({uri: endpoint}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+          if(from === "SBML"){
+            var title = ""
+            var resp = JSON.parse(body)
+            var msg = resp.message
+            var errors = resp.errors
+            let modal = $(sbmlToModelHtml(msg, errors)).modal();
+          }
+        }else{
+          body = JSON.parse(body)
         }
       }
     );
+  },
+  toNotebook: function (o) {
+    var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
+    xhr({ uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400){
+        var node = $('#models-jstree').jstree().get_node(o.parent)
+        if(node.type === 'root'){
+          $('#models-jstree').jstree().refresh();
+        }else{
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+        var notebookPath = path.join(app.getBasePath(), "notebooks", body.File)
+        window.open(notebookPath, '_blank')
+      }
+    });
   },
   toSBML: function (o) {
     var self = this;
@@ -360,11 +396,15 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getApiPath(), "model/to-sbml", o.original._path);
     xhr({uri: endpoint},
       function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
+        if(response.statusCode < 400) {
+          var node = $('#models-jstree').jstree().get_node(parentID);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh()
+          }else{          
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+        }else{
+          body = JSON.parse(body)
         }
       }
     );
@@ -379,17 +419,21 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
         var endpoint = path.join(app.getApiPath(), "/file/rename", o.original._path, "<--change-->", node.text)
-        xhr({uri: endpoint}, function (err, response, body){
-          var resp = JSON.parse(body)
-          if(!resp.message.startsWith('Success!')) {
-            nameWarning.html(resp.message)
-            nameWarning.collapse('show');
-          }
-          node.original._path = resp._path
-          if(parent.type === "root"){
-            $('#models-jstree').jstree().refresh()
-          }else{          
-            $('#models-jstree').jstree().refresh_node(parent);
+        xhr({uri: endpoint, json: true}, function (err, response, body){
+          if(response.statusCode < 400) {
+            if(body.changed) {
+              nameWarning.text(body.message)
+              nameWarning.collapse('show');
+              window.scrollTo(0,0)
+              setTimeout(_.bind(self.hideNameWarning, self), 10000);
+            }
+            node.original._path = body._path
+          }else{
+            if(parent.type === "root"){
+              $('#models-jstree').jstree().refresh()
+            }else{          
+              $('#models-jstree').jstree().refresh_node(parent);
+            }
           }
         })
       }
@@ -397,33 +441,42 @@ let FileBrowser = PageView.extend({
       nameWarning.collapse('hide');
     });
   },
+  hideNameWarning: function () {
+    $(this.queryByHook('rename-warning')).collapse('hide')
+  },
   getJsonFileForExport: function (o) {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "json-data", o.original._path);
-    xhr({uri: endpoint}, function (err, response, body) {
-      var resp = JSON.parse(body);
-      self.exportToJsonFile(resp, o.original.text);
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        self.exportToJsonFile(body, o.original.text);
+      }
     });
   },
   getFileForExport: function (o) {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "file/download", o.original._path);
     xhr({uri: endpoint}, function (err, response, body) {
-      self.exportToFile(body, o.original.text);
+      if(response.statusCode < 400){
+        self.exportToFile(body, o.original.text);
+      }else{
+        body = JSON.parse(body)
+      }
     });
   },
   getZipFileForExport: function (o) {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "file/download-zip/generate", o.original._path);
-    xhr({uri: endpoint}, function (err, response, body) {
-      var filePath = body.split('/home/jovyan').pop()
-      var node = $('#models-jstree').jstree().get_node(o.parent);
-      if(node.type === "root"){
-        $('#models-jstree').jstree().refresh();
-      }else{
-        $('#models-jstree').jstree().refresh_node(node);
+    xhr({uri: endpoint,json:true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        var node = $('#models-jstree').jstree().get_node(o.parent);
+        if(node.type === "root"){
+          $('#models-jstree').jstree().refresh();
+        }else{
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+        self.exportToZipFile(body.Path)
       }
-      self.exportToZipFile(filePath)
     });
   },
   exportToJsonFile: function (fileData, fileName) {
@@ -469,27 +522,44 @@ let FileBrowser = PageView.extend({
     let modelName;
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
+        var parentPath = "/"
+        if(o && o.original){
+          parentPath = o.original._path
+        }
         if(isModel) {
           let modelName = input.value + '.mdl';
-          var parentPath = o.original._path
           var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit', parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
-          var parentPath = o.original._path;
           let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
-            var node = $('#models-jstree').jstree().get_node(o);
-            if(node.type === "root"){
+            if(response.statusCode < 400){
+              var node = $('#models-jstree').jstree().get_node(o);
+              if(node.type === "root"){
+                $('#models-jstree').jstree().refresh()
+              }else{          
+                $('#models-jstree').jstree().refresh_node(node);
+              }
+            }else{
               $('#models-jstree').jstree().refresh()
-            }else{          
-              $('#models-jstree').jstree().refresh_node(node);
+              body = JSON.parse(body)
             }
           });
           modal.modal('hide')
         }
       }
     });
+  },
+  handleCreateDirectoryClick: function (e) {
+    this.newModelOrDirectory(undefined, false, false);
+  },
+  handleCreateModelClick: function (e) {
+    let isSpatial = false
+    this.newModelOrDirectory(undefined, true, isSpatial);
+  },
+  showContextMenuForNode: function (e) {
+    $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
   },
   setupJstree: function () {
     var self = this;
@@ -736,19 +806,7 @@ let FileBrowser = PageView.extend({
                 "_disabled" : false,
                 "label" : "To Notebook",
                 "action" : function (data) {
-                  var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
-                  xhr({ uri: endpoint },
-                        function (err, response, body) {
-                    var node = $('#models-jstree').jstree().get_node(o.parent)
-                    if(node.type === 'root'){
-                      $('#models-jstree').jstree().refresh();
-                    }else{
-                      $('#models-jstree').jstree().refresh_node(node);
-                    }
-                    var _path = body.split(' ')[0].split('/home/jovyan/').pop()
-                    var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
-                    window.open(notebookPath, '_blank')
-                  });
+                  self.toNotebook(o)
                 }
               },
               "Convert to SBML" : {
@@ -954,7 +1012,7 @@ let FileBrowser = PageView.extend({
             "label" : "Open File",
             "action" : function (data) {
               var filePath = o.original._path
-              window.open(path.join(app.getBasePath(), "lab/tree", filePath), '_blank')
+              window.open(path.join(app.getBasePath(), "edit", filePath), '_blank')
             }
           },
           "Convert" : {
@@ -1017,10 +1075,12 @@ let FileBrowser = PageView.extend({
           "Open" : {
             "separator_before" : false,
             "separator_after" : true,
-            "_disabled" : true,
+            "_disabled" : false,
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
+              var openPath = path.join(app.getBasePath(), "edit", o.original._path);
+              window.open(openPath, "_blank");
             }
           },
           "Download" : {
@@ -1079,6 +1139,13 @@ let FileBrowser = PageView.extend({
       var node = $('#models-jstree').jstree().get_node(_node)
       if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node) && node.type === "folder"){
         $('#models-jstree').jstree().refresh_node(node)
+      }else{
+        let optionsButton = $(self.queryByHook("options-for-node"))
+        if(!self.nodeForContextMenu){
+          optionsButton.prop('disabled', false)
+        }
+        optionsButton.text("Options for " + node.original.text)
+        self.nodeForContextMenu = node;
       }
     });
     $('#models-jstree').on('dblclick.jstree', function(e) {
@@ -1091,12 +1158,15 @@ let FileBrowser = PageView.extend({
         var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
         window.open(notebookPath, '_blank')
       }else if(file.endsWith('.sbml')){
-        var openPath = path.join(app.getBasePath(), "lab/tree", _path)
+        var openPath = path.join(app.getBasePath(), "edit", _path)
         window.open(openPath, '_blank')
       }else if(file.endsWith('.wkfl')){
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", _path);
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
+      }else if(node.type === "other"){
+        var openPath = path.join(app.getBasePath(), "edit", _path);
+        window.open(openPath, "_blank");
       }
     });
   }

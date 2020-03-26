@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-import sys
-import ast
 import json
 import nbformat
-import argparse
 from nbformat import v4 as nbf
 from os import path
 from .rename import get_unique_file_name
+from json.decoder import JSONDecodeError
+from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 # imports for modal notebook
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
@@ -14,10 +13,8 @@ from .generate_notebook_cells import generate_imports_cell, generate_model_cell,
 from .generate_notebook_cells import generate_feature_extraction_cell, generate_mean_std_aggregate_cell, generate_1D_parameter_sweep_class_cell, generate_1D_psweep_config_cell
 
 
-user_dir = '/home/jovyan'
-
-
 def convert_to_1d_psweep_nb(_model_path):
+    user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
@@ -27,33 +24,37 @@ def convert_to_1d_psweep_nb(_model_path):
     # Collect .mdl Data
     try:
         with open(model_path, 'r') as json_file:
-            # json_data = ast.literal_eval(json_file.read())
             json_data = json.loads(json_file.read())
-    except Exception as e:
-        print('Could not read file: ' + e)
-
+    except FileNotFoundError as err:
+        raise ModelNotFoundError('Could not find model file: ' + str(err))
+    except JSONDecodeError as err:
+        raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err))
+        
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
-    # Create imports cell
-    cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
-    # Create Model Cell
-    cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
-    # Instantiate Model Cell
-    cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-    # Model Run Cell
-    cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
-    # Plotting Cell
-    cells.append(nbf.new_code_cell('results.plotplotly()'))
-    # Feature Extraction cell
-    cells.append(nbf.new_code_cell(generate_feature_extraction_cell()))
-    # Feature Aggregate cell
-    cells.append(nbf.new_code_cell(generate_mean_std_aggregate_cell()))
-    # Parameter Sweep Class cell
-    cells.append(nbf.new_code_cell(generate_1D_parameter_sweep_class_cell(json_data)))
-    # Parameter Sweep Config cell
-    cells.append(nbf.new_code_cell(generate_1D_psweep_config_cell(json_data, name)))
+    try:
+        # Create imports cell
+        cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
+        # Create Model Cell
+        cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
+        # Instantiate Model Cell
+        cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        # Model Run Cell
+        cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
+        # Plotting Cell
+        cells.append(nbf.new_code_cell('results.plotplotly()'))
+        # Feature Extraction cell
+        cells.append(nbf.new_code_cell(generate_feature_extraction_cell()))
+        # Feature Aggregate cell
+        cells.append(nbf.new_code_cell(generate_mean_std_aggregate_cell()))
+        # Parameter Sweep Class cell
+        cells.append(nbf.new_code_cell(generate_1D_parameter_sweep_class_cell(json_data)))
+        # Parameter Sweep Config cell
+        cells.append(nbf.new_code_cell(generate_1D_psweep_config_cell(json_data, name)))
+    except KeyError as err:
+        raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err))
     # Parameter Sweep Execution cell
     cells.append(nbf.new_code_cell('ps = ParameterSweepConfig()\n%time ps.run()'))
     # Parameter Sweet Plot Cell
@@ -69,7 +70,5 @@ def convert_to_1d_psweep_nb(_model_path):
         nbformat.write(nb, f, version=4)
     f.close()
 
-    print('{0} successfully created'.format(dest_file))
-
-    return dest_file
+    return dest_file.replace(user_dir+'/', "")
 
