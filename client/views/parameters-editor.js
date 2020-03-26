@@ -1,4 +1,6 @@
 var $ = require('jquery');
+//support files
+var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var EditParameterView = require('./edit-parameter');
@@ -14,11 +16,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     var self = this;
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
-                     "expression":"A parameter value or a mathematical expression calculating the parameter value.",
-                     "annotation":"An optional note about a parameter.",
-                     "remove":"A parameter may only be removed if it is not used in any reaction, event assignment, or rule."
-                    }
+    this.tooltips = Tooltips.parametersEditor
     this.collection.on('update-parameters', function (compID, parameter) {
       self.collection.parent.reactions.map(function (reaction) {
         if(reaction.rate && reaction.rate.compID === compID){

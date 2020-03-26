@@ -1,4 +1,6 @@
 var $ = require('jquery');
+//support files
+var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var EditFunctionDefinition = require('./edit-function-definition');
@@ -17,7 +19,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = {"annotation":"An optional note about the Function Definition."}
+    this.tooltips = Tooltips.sbmlComponentsEditor
     this.functionDefinitions = attrs.functionDefinitions;
   },
   render: function () {

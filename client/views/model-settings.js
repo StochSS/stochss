@@ -1,5 +1,7 @@
-var tests = require('./tests');
 var $ = require('jquery');
+//support files
+var tests = require('./tests');
+var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -15,13 +17,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = {"previewSettings":"Preview Settings are applied to the model and are used for the model preview and all workflows.",
-                     "previewTime":"End time of simulation.",
-                     "timeUnits":"Save point increment for recording data.",
-                     "volume":"The volume of the system matters when converting to from population "+
-                                 "to concentration form. This will also set a parameter 'vol' for use "+
-                                 "in custom (i.e. non-mass-action) propensity functions."
-                    }
+    this.tooltips = Tooltips.modelSettings
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
