@@ -83,9 +83,11 @@ def get_models(full_path, name, wkfl_path):
 
     try:
         _model = ModelFactory(stochss_model) # build GillesPy2 model
+        gillespy2_model = _model.model
     except Exception as error:
-        log.error(str(error))
-    gillespy2_model = _model.model
+        log.error("GillesPy2 Model Errors: "+str(error))
+        gillespy2_model = None
+    
 
     return gillespy2_model, stochss_model
 

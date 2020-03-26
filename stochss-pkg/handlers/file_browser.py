@@ -471,10 +471,8 @@ class DownloadZipFileAPIHandler(APIHandler):
         else:
             self.set_header('Content-Type', 'application/json')
         
-        generate = not action == "download"
-        log.debug("Generate script arguement: {0}\n".format(generate))
         try:
-            resp = download_zip(path, generate)
+            resp = download_zip(path, action)
             log.debug("Response: {0}\n".format(resp))
             self.write(resp)
         except StochSSAPIError as err:

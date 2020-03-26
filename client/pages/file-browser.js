@@ -444,6 +444,33 @@ let FileBrowser = PageView.extend({
   hideNameWarning: function () {
     $(this.queryByHook('rename-warning')).collapse('hide')
   },
+  getExportData: function (o, isJSON, identifier, dataType) {
+    var self = this;
+    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        if(dataType === "json") {
+          self.exportToJsonFile(body, o.original.text);
+        }else if(dataType === "zip") {
+          var node = $('#models-jstree').jstree().get_node(o.parent);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh();
+          }else{
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+          self.exportToZipFile(body.Path)
+        }else if(dataType === "csv") {
+          self.exportToZipFile(body.Path)
+        }else{
+          self.exportToFile(body, o.original.text);
+        }
+      }else{
+        if(dataType === "plain-text") {
+          body = JSON.parse(body)
+        }
+      }
+    });
+  },
   getJsonFileForExport: function (o) {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "json-data", o.original._path);
@@ -927,9 +954,26 @@ let FileBrowser = PageView.extend({
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Download as .zip",
-            "action" : function (data) {
-              self.getZipFileForExport(o);
+            "label" : "Download",
+            "submenu" : {
+              "as_zip" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : false,
+                "label" : "as .zip",
+                "action" : function (data) {
+                  self.getZipFileForExport(o);
+                }
+              },
+              "csv_results" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_label" : false,
+                "label" : "Results csv as .zip",
+                "action" : function (data) {
+                  self.getExportData(o, true, "file/download-zip/resultscsv", "csv")
+                }
+              }
             }
           },
           "Rename" : {
