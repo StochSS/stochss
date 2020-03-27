@@ -741,7 +741,7 @@ let FileBrowser = PageView.extend({
           "New Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : false,
+            "_disabled" : true,
             "label" : "New Workflow",
             "action" : function (data) {
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
@@ -797,7 +797,7 @@ let FileBrowser = PageView.extend({
               "Convert to Spatial" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : false,
+                "_disabled" : true,
                 "label" : "To Spatial Model",
                 "action" : function (data) {
                   self.toSpatial(o)
