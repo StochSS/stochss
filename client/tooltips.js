@@ -118,6 +118,12 @@ module.exports = {
 
     algorithm:"The solver by which to simulate the model.",
 
+    tauLeaping: "This algorithm calculates multiple reactions in a single step over a given tau step size.  The change in propensities over this step are bounded "+
+        "by bounding the relative change in state, yielding greatly improved run-time performance with very little trade-off in accuracy",
+
+    hybrid: "This algorithm uses a root-finding interpretation of the direct SSA method, along with ODE solvers to simulate ODE and Stochastic systems interchangeably "+
+        "or simultaneously.",
+
     chooseForMe: "Hybrid will be chosen based on Event, Rules, and other SBML model components or if the model is represented as Concentration.  Tau Leaping will be "+
         "chosen if the Tau Tolerance is changed to a value other than 0.03.  SSA will be chosen if the model is represented as Population."
   },
