@@ -4,7 +4,7 @@ USER root
 
 WORKDIR /stochss
 
-RUN apt-get update && apt-get install -y zip
+RUN apt-get update && apt-get install -y zip vtk6
 
 RUN chown jovyan:users /stochss
 
