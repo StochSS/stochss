@@ -428,7 +428,8 @@ let FileBrowser = PageView.extend({
               setTimeout(_.bind(self.hideNameWarning, self), 10000);
             }
             node.original._path = body._path
-          }else{
+          }
+          if(text.split('.').pop() != node.text.split('.').pop()){
             if(parent.type === "root"){
               $('#models-jstree').jstree().refresh()
             }else{          
