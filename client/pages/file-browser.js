@@ -535,14 +535,17 @@ let FileBrowser = PageView.extend({
           let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
-              var node = $('#models-jstree').jstree().get_node(o);
-              if(node.type === "root"){
+              if(o){//directory was created with context menu option
+                var node = $('#models-jstree').jstree().get_node(o);
+                if(node.type === "root"){
+                  $('#models-jstree').jstree().refresh()
+                }else{          
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              }else{//directory was created with create directory button
                 $('#models-jstree').jstree().refresh()
-              }else{          
-                $('#models-jstree').jstree().refresh_node(node);
               }
-            }else{
-              $('#models-jstree').jstree().refresh()
+            }else{//new directory not created no need to refresh
               body = JSON.parse(body)
             }
           });
