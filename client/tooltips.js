@@ -118,6 +118,10 @@ module.exports = {
 
     algorithm:"The solver by which to simulate the model.",
 
+    ode: "This algorithm produces a deterministic continuous solution via ODE.",
+
+    ssa: "",
+
     tauLeaping: "This algorithm calculates multiple reactions in a single step over a given tau step size.  The change in propensities over this step are bounded "+
         "by bounding the relative change in state, yielding greatly improved run-time performance with very little trade-off in accuracy",
 
