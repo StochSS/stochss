@@ -122,6 +122,25 @@ module.exports = {
         "chosen if the Tau Tolerance is changed to a value other than 0.03.  SSA will be chosen if the model is represented as Population."
   },
   parameterSweepSettings: {
-    sweepType: ""
+    sweepType: "The number of parameters to sweep through.",
+
+    species: "The initial species to view sweep data for.",
+
+    variable: "The parameter(s) to sweep through.",
+    
+    value: "The current value for the parameter you with to sweep through.",
+    
+    min: "The initial value of the sweep range.  Defaults to half of the current value.",
+    
+    max: "The final value of the sweep range.  Defaults to 1.5 times the current value.",
+    
+    steps: "The number of steps used to determining the sweep values across the sweep range."
+  },
+  parameterSweepResults: {
+    species: "The species to view sweep data for",
+
+    mapper: "The feature of the species population/concentration data for each sweep value.",
+    
+    reducer: "The type of aggregator to be applied to the trajectories of the species feature data for each sweep value."
   },
 }
