@@ -6,9 +6,6 @@ from shutil import copyfile, copytree
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
 
 
-user_dir = '/home/jovyan'
-
-
 def get_unique_file_name(_path):
     '''
     Gets a unique name for a file to be copied.  Accounts for a copy
@@ -57,9 +54,11 @@ def duplicate(file_path, is_directory=False):
     ----------
     _path : str
         Path to the target file.
-    unique_file_name : str
-        File name to use for the copied file.
+    is_directory : bool
+        Flag for determining the type of object to be copied.
     '''
+    user_dir = '/home/jovyan'
+
     full_path = path.join(user_dir, file_path)
     unique_file_path = get_unique_file_name(full_path)
     try:
@@ -76,3 +75,30 @@ def duplicate(file_path, is_directory=False):
     copy = unique_file_path.split('/').pop()
     return "The model {0} has been successfully copied as {1}".format(original, copy)
 
+
+def duplicate_wkfl_as_new(path):
+    '''
+    Copies the target workflow as a new workflow in the same parent directory.
+    Copies the model of the target workflow in the same parent directory.
+
+    Attributes
+    ----------
+    path : str
+        Path to the target workflow.
+    '''
+    from .run_model import GillesPy2Workflow
+    from .parameter_sweep import ParameterSweep
+    from .run_workflow import save_new_workflow
+
+    # TODO: Get parent directory
+    # TODO: Get base name for new workflow name (current workflow name - timestamp)
+    # TODO: Get formatted timestamp for new workflow
+    # TODO: Make new workflow path in parent directory
+    # TODO: Read workflow info file for model path and workflow type
+    # TODO: Make new model path in parent directory
+    # TODO: Get unique path for the new model path
+    # TODO: Copy workflow model into parent directory
+
+    workflows = {"gillespy":GillesPy2Workflow,"psweep":ParameterSweep}
+    wkfl = worflows[wkfl_type](wkfl_path, mdl_path)
+    save_new_wkfl(wkfl, wkfl_type, True, False)
