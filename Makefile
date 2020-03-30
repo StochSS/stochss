@@ -81,7 +81,6 @@ kill_hub:
 	export AUTH_CLASS='' && \
 	export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose down && \
-	docker rm $(DOCKER_HUB_IMAGE)
 
 clean: clean_hub clean_notebook_server
 
