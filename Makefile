@@ -70,12 +70,12 @@ run_hub_dev:
 run_hub_staging: build_hub build check_files_staging kill_hub
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.staging.env' && \
-	cd ./jupyterhub && docker-compose up
+	cd ./jupyterhub && docker-compose up &
 
 run_hub_prod: build_hub build check_files_prod kill_hub
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.prod.env' && \
-	cd ./jupyterhub && docker-compose up
+	cd ./jupyterhub && docker-compose up &
 
 kill_hub:
 	export AUTH_CLASS='' && \
