@@ -100,7 +100,7 @@ clean_notebook_server:
 hub: build_hub build run_hub_dev
 
 build_clean: deps webpack
-	docker build -t --no-cache $(DOCKER_STOCHSS_IMAGE):latest .
+	docker build --no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 build:  deps webpack
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
