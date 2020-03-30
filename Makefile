@@ -62,17 +62,22 @@ build_hub: deps build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build
 
+build_hub_clean: deps build_home_page check-files network volumes
+	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
+	cd ./jupyterhub && docker-compose build --no-cache
+
+
 run_hub_dev:
 	export AUTH_CLASS='jupyterhub.auth.DummyAuthenticator' && \
 	export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose up
 
-run_hub_staging: build_hub build check_files_staging kill_hub
+run_hub_staging: build_hub_clean build_clean check_files_staging kill_hub
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.staging.env' && \
 	cd ./jupyterhub && docker-compose up &
 
-run_hub_prod: build_hub build check_files_prod kill_hub
+run_hub_prod: build_hub_clean build_clean check_files_prod kill_hub
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.prod.env' && \
 	cd ./jupyterhub && docker-compose up &
@@ -93,6 +98,9 @@ clean_notebook_server:
 	docker image prune
 
 hub: build_hub build run_hub_dev
+
+build_clean: deps webpack
+	docker build -t --no-cache $(DOCKER_STOCHSS_IMAGE):latest .
 
 build:  deps webpack
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
