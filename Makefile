@@ -80,7 +80,7 @@ run_hub_prod: build_hub build check_files_prod kill_hub
 kill_hub:
 	export AUTH_CLASS='' && \
 	export OAUTH_FILE='.oauth.dummy.env' && \
-	cd ./jupyterhub && docker-compose down && \
+	cd ./jupyterhub && docker-compose down
 
 clean: clean_hub clean_notebook_server
 
