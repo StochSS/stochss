@@ -520,3 +520,16 @@ class CreateDirectoryHandler(APIHandler):
             self.write(error)
         self.finish()
 
+
+class UploadFileAPIHandler(APIHandler):
+
+    async def post(self):
+        log.setLevel(logging.DEBUG)
+        storage = self.request.files['datafile'][0]
+        log.debug(storage)
+        file = storage['filename']
+        log.debug(file)
+        body = storage['body'].decode()
+        log.debug(body)
+        self.write("Got {0}, it contains: {1}".format(file, body))
+        self.finish()

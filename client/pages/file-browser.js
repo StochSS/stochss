@@ -248,6 +248,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
     'click [data-hook=new-model]' : 'handleCreateModelClick',
+    'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(operationInfoModalHtml()).modal();
     },
@@ -273,6 +274,21 @@ let FileBrowser = PageView.extend({
         self.refreshInitialJSTree();
       }, 3000);
     }
+  },
+  handleUploadFileClick: function (e) {
+    let file = this.queryByHook('file-for-upload').files[0]
+    let req = new XMLHttpRequest();
+    let formData = new FormData()
+    let endpoint = path.join(app.getApiPath(), 'file/upload');
+    
+    formData.append("datafile", file)
+    req.open("POST", endpoint)
+    req.onload = function (e) {
+      if(req.status < 400) {
+        console.log(req.response)
+      }
+    }
+    req.send(formData)
   },
   deleteFile: function (o) {
     var fileType = o.type
