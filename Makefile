@@ -38,9 +38,9 @@ jupyterhub/userlist:
 
 check-files: jupyterhub/userlist jupyterhub/secrets/.oauth.dummy.env jupyterhub/secrets/postgres.env
 
-check-files-staging: check-files jupyterhub/secrets/.oauth.staging.env
+check_files_staging: check-files jupyterhub/secrets/.oauth.staging.env
 
-check-files-prod: check-files jupyterhub/secrets/.oauth.prod.env
+check_files_prod: check-files jupyterhub/secrets/.oauth.prod.env
 
 cert:
 	@echo "Generating certificate..."
@@ -62,17 +62,22 @@ build_hub: deps build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build
 
-run_hub:
+build_hub_clean: deps build_home_page check-files network volumes
+	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
+	cd ./jupyterhub && docker-compose build --no-cache
+
+
+run_hub_dev:
 	export AUTH_CLASS='jupyterhub.auth.DummyAuthenticator' && \
 	export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose up
 
-run_hub_staging: kill_hub build_hub build check-files-staging
+run_hub_staging: build_hub_clean build_clean check_files_staging kill_hub
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.staging.env' && \
 	cd ./jupyterhub && docker-compose up &
 
-run_hub_prod: kill_hub build_hub build check-files-prod
+run_hub_prod: build_hub_clean build_clean check_files_prod kill_hub
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.prod.env' && \
 	cd ./jupyterhub && docker-compose up &
@@ -82,7 +87,20 @@ kill_hub:
 	export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose down
 
-hub: build_hub build run_hub
+clean: clean_hub clean_notebook_server
+
+clean_hub:
+	docker rmi $(DOCKER_HUB_IMAGE):latest && \
+	docker image prune
+
+clean_notebook_server:
+	docker rmi $(DOCKER_STOCHSS_IMAGE):latest
+	docker image prune
+
+hub: build_hub build run_hub_dev
+
+build_clean: deps webpack
+	docker build --no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 build:  deps webpack
 	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
