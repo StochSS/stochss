@@ -70,7 +70,6 @@ a.disabled {
 }
 
 ::-webkit-file-upload-button {
-  content: 'Choose a file';
   border-radius: 0.25rem;
   color: #007bff;
   background-color: #fff; 

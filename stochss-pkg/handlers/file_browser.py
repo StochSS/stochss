@@ -22,6 +22,7 @@ from .util.convert_to_smdl_mdl import convert_model
 from .util.convert_to_sbml import convert_to_sbml
 from .util.convert_sbml_to_model import convert_sbml_to_model
 from .util.generate_zip_file import download_zip
+from .util.upload_file import upload
 
 
 class ModelBrowserFileList(APIHandler):
@@ -522,18 +523,37 @@ class CreateDirectoryHandler(APIHandler):
 
 
 class UploadFileAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for uploading files.
+    ##############################################################################
+    '''
 
     async def post(self):
+        '''
+        Uploads the target file to the target directory.  If the intended file
+        type is a StochSS Model or SBML Model, the original file is uploaded 
+        with a converted model.  If the file can't be uploaded to the intended
+        type no conversion is made and errors are sent to the user.
+
+        Attributes
+        ----------
+        
+        '''
         log.setLevel(logging.DEBUG)
         file_data = self.request.files['datafile'][0]
         file_info = json.loads(self.request.body_arguments['fileinfo'][0].decode())
         log.debug(file_info['type'])
+        log.debug(file_info['path'])
         if file_info['name']:
             log.debug(file_info['name'])
         else:
             log.debug("No name given")
         file_name = file_data['filename']
         log.debug(file_name)
-        body = file_data['body'].decode()
-        self.write("Got {0}, it contains: {1}".format(file_name, body))
+        log.debug(type(file_data['body']))
+        body = file_data['body']
+        resp = upload(file_data, file_info)
+        log.debug(resp)
+        self.write(json.dumps(resp))
         self.finish()

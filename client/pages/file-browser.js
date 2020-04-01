@@ -357,7 +357,7 @@ let FileBrowser = PageView.extend({
       let req = new XMLHttpRequest();
       req.open("POST", endpoint)
       req.onload = function (e) {
-        resp = JSON.parse(req.response)
+        var resp = JSON.parse(req.response)
         if(req.status < 400) {
           console.log(resp)
           if(o){
