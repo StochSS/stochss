@@ -525,11 +525,15 @@ class UploadFileAPIHandler(APIHandler):
 
     async def post(self):
         log.setLevel(logging.DEBUG)
-        storage = self.request.files['datafile'][0]
-        log.debug(storage)
-        file = storage['filename']
-        log.debug(file)
-        body = storage['body'].decode()
-        log.debug(body)
-        self.write("Got {0}, it contains: {1}".format(file, body))
+        file_data = self.request.files['datafile'][0]
+        file_info = json.loads(self.request.body_arguments['fileinfo'][0].decode())
+        log.debug(file_info['type'])
+        if file_info['name']:
+            log.debug(file_info['name'])
+        else:
+            log.debug("No name given")
+        file_name = file_data['filename']
+        log.debug(file_name)
+        body = file_data['body'].decode()
+        self.write("Got {0}, it contains: {1}".format(file_name, body))
         self.finish()
