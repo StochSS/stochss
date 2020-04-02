@@ -779,7 +779,7 @@ let FileBrowser = PageView.extend({
               },
               "SBML" : {
                 "label" : "SBML Model",
-                "_disabled" : true,
+                "_disabled" : false,
                 "separator_before" : false,
                 "separator_after" : false,
                 "action" : function (data) {

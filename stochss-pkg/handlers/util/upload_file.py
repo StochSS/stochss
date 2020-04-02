@@ -3,6 +3,7 @@
 import os
 import json
 from .rename import get_unique_file_name
+from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
 
 
 def validate_model(body, file_name):
@@ -25,6 +26,17 @@ def validate_model(body, file_name):
     if len(test_keys):
         return False, "The following keys are missing from {0}: {1}".format(file_name, ', '.join(test_keys))
     return True, ""
+
+
+def validate_sbml(path, file_name):
+    try:
+        model, errors = convert_to_gillespy_model(path)
+    except AttributeError:
+        return False, "The file {0} is not in SBML format.".format(file_name), None
+    errors = list(map(lambda error: error[0], errors))
+    if len(errors):
+        return False, errors, None
+    return True, "", model
 
 
 def upload_file(path, body, is_valid, original_file, file_type):
@@ -77,16 +89,28 @@ def upload(file_data, file_info):
         if not file_type == "model":
             file_type = "model"
     elif (file_type == "sbml" and ext in exts[file_type]) or ext == 'sbml':
-        # TODO
+        sbml_file_name = '.'.join([name,"sbml"])
+        sbml_path = get_unique_file_name(sbml_file_name, dir_path)[0]
         if not file_type == "sbml":
             file_type = "sbml"
+        resp = upload_file(sbml_path, body, True, file_name, file_type)
+        is_valid, errors, model = validate_sbml(sbml_path, file_name)
+        resp['errors'] = errors
+        if is_valid:
+            template_path = "/stochss/model_templates/nonSpatialModelTemplate.json"
+            with open(template_path, "r") as template_file:
+                template = json.load(template_file)
+            convert_to_stochss_model(template, model, sbml_path)
+            return resp
+        os.remove(sbml_path)
+        file_name = sbml_file_name.replace('sbml','xml')
     elif (file_type == "zip" and ext in exts[file_type]) or ext == 'zip':
         # TODO
         if not file_type == "zip":
             file_type = "zip"
     else:
         is_valid = file_type == "file"
-        errors = "" if is_valid else "{0} was not a {1} file and could not be validated."
+        errors = "" if is_valid else "{0} was not a {1} file and could not be validated.".format(file_name, file_type)
         file_name = '.'.join([name, ext])
 
     full_path = get_unique_file_name(file_name, dir_path)[0]
