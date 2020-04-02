@@ -62,7 +62,7 @@ class JsonFileAPIHandler(APIHandler):
                 full_path = full_path.replace(" ", "\ ")
                 log.debug("Full path with escape char spaces: {0}\n".format(full_path))
                 with open(full_path, 'w') as f:
-                    json.dumps(template, f)
+                    json.dump(template, f)
                 self.write(template)
             except FileNotFoundError as err:
                 self.set_status(404)

@@ -770,7 +770,7 @@ let FileBrowser = PageView.extend({
             "submenu" : {
               "Model" : {
                 "label" : "StochSS Model",
-                "_disabled" : true,
+                "_disabled" : false,
                 "separator_before" : false,
                 "separator_after" : false,
                 "action" : function (data) {
@@ -786,13 +786,13 @@ let FileBrowser = PageView.extend({
                   self.uploadFile(o, "sbml")
                 }
               },
-              "Notebook" : {
-                "label" : "Notebook",
+              "zip" : {
+                "label" : "Zip",
                 "_disabled" : true,
                 "separator_before" : false,
                 "separator_after" : false,
                 "action" : function (data) {
-                  self.uploadFile(o, "notebook")
+                  self.uploadFile(o, "zip")
                 }
               },
               "File" : {
