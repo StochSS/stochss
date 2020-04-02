@@ -16,6 +16,7 @@ let workflowSelection = PageView.extend({
   events: {
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
+    "click [data-hook=sciope-parameter-estimation]" : "notebookWorkflow",
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -39,6 +40,7 @@ let workflowSelection = PageView.extend({
     if(this.model.parameters.length < 1 || this.model.species.length < 1){
       $(this.queryByHook('oned-parameter-sweep')).addClass('disabled')
       $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
+      $(this.queryByHook('sciope-parameter-estimation')).addClass('disabled')
     }else if(this.model.parameters.length < 2){
       $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
     }
