@@ -431,3 +431,22 @@ class ParameterSweepConfig(ParameterSweep2D):
 '''.format(p1['name'], p2['name'], soi, model_name)
     return psweep_config_cell
 
+def generate_sciope_wrapper_cell(json_data):
+    settings = json_data['simulationSettings']
+    algorithm = settings['algorithm']
+    soi = [species['name'] for species in json_data['species']]
+
+    # Select Solver
+    solver_map = {
+        'SSA': '',
+        'Tau-Leaping': 'BasicTauLeapingSolver, ',
+        'Hybrid-Tau-Leaping': 'BasicTauHybridSolver, ',
+        'ODE': 'BasicODESolver, '
+        }
+    sciope_wrapper_cell = '''from sciope.utilities.gillespy2 import wrapper
+
+    settings = {"solver":{}, "number_of_trajectories":10, "show_labels":True}
+    simulator = wrapper.get_simulator(gillespy_model=model, run_settings=settings, species_of_interest={})
+
+    expression_array = wrapper.get_parameter_expression_array(model)'''.format(solver_map[algorithm], soi)
+    return sciope_wrapper_cell
