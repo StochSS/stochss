@@ -346,9 +346,11 @@ let FileBrowser = PageView.extend({
       var fileinfo = {"type":type,"name":"","path":"/"}
       if(o && o.original){
         fileinfo.path = o.original._path
+        console.log(fileinfo.path, o.original._path)
       }
       if(Boolean(input.value)){
         fileinfo.name = input.value
+        console.log(fileinfo.name, input.value)
       }
       let formData = new FormData()
       formData.append("datafile", file)
@@ -713,6 +715,41 @@ let FileBrowser = PageView.extend({
               } 
             }
           },
+          "Upload" : {
+            "label" : "Upload File",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "submenu" : {
+              "Model" : {
+                "label" : "StochSS Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "model")
+                }
+              },
+              "SBML" : {
+                "label" : "SBML Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "sbml")
+                }
+              },
+              "File" : {
+                "label" : "File",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "file")
+                }
+              }
+            }
+          },
         }
       }
       else if (o.type ===  'folder') {
@@ -784,15 +821,6 @@ let FileBrowser = PageView.extend({
                 "separator_after" : false,
                 "action" : function (data) {
                   self.uploadFile(o, "sbml")
-                }
-              },
-              "zip" : {
-                "label" : "Zip",
-                "_disabled" : true,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "zip")
                 }
               },
               "File" : {

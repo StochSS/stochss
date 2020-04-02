@@ -65,7 +65,13 @@ def upload(file_data, file_info):
     if not ext == 'zip':
         body = body.decode()
     # build the directory path
-    dir_path = os.path.join(user_dir, file_info['path'], os.path.dirname(file_info['name']))
+    parent_dir = file_info['path']
+    if parent_dir.startswith('/'):
+        parent_dir = parent_dir[1:]
+    target_dir = os.path.dirname(file_info['name'])
+    if target_dir.startswith('/'):
+        target_dir = target_dir[1:]
+    dir_path = os.path.join(user_dir, parent_dir, target_dir)
     # make the directoies if they don't exist
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
@@ -104,10 +110,6 @@ def upload(file_data, file_info):
             return resp
         os.remove(sbml_path)
         file_name = sbml_file_name.replace('sbml','xml')
-    elif (file_type == "zip" and ext in exts[file_type]) or ext == 'zip':
-        # TODO
-        if not file_type == "zip":
-            file_type = "zip"
     else:
         is_valid = file_type == "file"
         errors = "" if is_valid else "{0} was not a {1} file and could not be validated.".format(file_name, file_type)
@@ -116,6 +118,14 @@ def upload(file_data, file_info):
     full_path = get_unique_file_name(file_name, dir_path)[0]
     resp = upload_file(full_path, body, is_valid, file_data['filename'], file_type)
     resp['errors'] = errors
+
+    if ext == "zip":
+        import zipfile
+        import shutil
+
+        with zipfile.ZipFile(full_path, "r") as zip_file:
+            zip_file.extractall(dir_path)
+        shutil.rmtree(os.path.join(dir_path, "__MACOSX"))
     
     return resp
 
