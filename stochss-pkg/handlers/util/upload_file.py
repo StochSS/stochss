@@ -60,7 +60,7 @@ def upload(file_data, file_info):
     user_dir = "/home/jovyan"
 
     file_name = file_data['filename']
-    ext = file_name.split('.').pop()
+    ext = file_name.split('.').pop() if '.' in file_name else ""
     body = file_data['body']
     try:
         body = body.decode()
@@ -115,7 +115,7 @@ def upload(file_data, file_info):
     else:
         is_valid = file_type == "file"
         errors = "" if is_valid else "{0} was not a {1} file and could not be validated.".format(file_name, file_type)
-        file_name = '.'.join([name, ext])
+        file_name = '.'.join([name, ext]) if ext else name
 
     full_path = get_unique_file_name(file_name, dir_path)[0]
     resp = upload_file(full_path, body, is_valid, file_data['filename'], file_type)
