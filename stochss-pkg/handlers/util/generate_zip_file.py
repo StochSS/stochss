@@ -10,17 +10,9 @@ def generate_zip_file(file_path, file_directory, target):
     file_name = file_path.split('/').pop().split('.')[0]
     target = target.split('/').pop()
 
-    # zip_file = os.popen("cd '{0}' && zip -r '{1}' '{2}'".format(file_directory, file_name, target), 'r', 1)
     shutil.make_archive(os.path.join(file_directory, file_name), 'zip', file_directory, target)
 
-    # done = file_name in os.listdir(file_directory)
-    # while not done:
-    #     done = file_name in os.listdir(file_directory)
-
-    # if done:
-    #     zip_file.close()
-
-
+    
 def get_zip_file_data(file_path):
     with open(file_path, "rb") as zip_file:
         data = zip_file.read()
