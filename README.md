@@ -1,64 +1,81 @@
+# StochSS: The Stochastic Simulation Service
 
-**NOTE: ONLY MACOS AND LINUX ARE SUPPORTED DEVELOPMENT ENVIRONMENTS!**
+StochSS is a platform for simulating biochemical systems supporting both continuous ODE and discrete stochastic simulations with [GillesPy2](https://github.com/GillesPy2/GillesPy2). 
 
-# Local development with minikube
+At the moment StochSS development on Windows is not supported. You can try using [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm), but this is untested!
 
-### Install tools
+## Requirements
 
-Install [VirtualBox](https://www.virtualbox.org/)
+- [Nodejs](https://nodejs.org/)
 
-Install [Docker Desktop](https://www.docker.com/products/docker-desktop) for macOS, or Docker Engine for Linux.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) (Windows and Mac) or [Docker Engine](https://docs.docker.com/install/) (Linux, Mac, and Windows)
 
-Install [minikube](https://github.com/kubernetes/minikube) 
+- [Docker Compose](https://docs.docker.com/compose/install/) (Only required if you want to run StochSS with [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#))
 
-Install [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) v1.11.10. (This is the version of kubernetes used by the Jetstream OpenStack Magnum API.)
+## Quickstart
 
-Install [Helm v2.16.1](https://github.com/helm/helm/releases/tag/v2.16.1),  the package manager for kubernetes.
+- Build and run the stochss notebook server: `make`
 
-Install [nodejs](https://nodejs.org/) and [npm](https://www.npmjs.com/), the package manager for nodejs.
+- Once your terminal calms down you'll see a link to your server that looks something like this: `127.0.0.1:8888/?token=X8dSfd...`
 
-We want this repository to be mounted into our minikube VM so edits to the source will show up in real time. The easiest way to make this happen is to put the stochss repository in a subfolder that is mounted into minikube by default. NOTE: the host directories are mounted to different directories in the VM! See [this page](https://minikube.sigs.k8s.io/docs/tasks/mount/) for more on this.
 
-The default mounts for the VirtualBox driver are: 
+- Navigate to that link and get started!
 
-- Linux: `/home` mounts to `/hosthome`
-- macOS: `/Users` mounts to `/Users`
-- Windows: `C://Users` mounts to  `/c/Users`
+## Setup
 
-Clone this repository in a subfolder that lives under one of the default mounted directories. It doesn't need to be a direct subfolder. As long as the repo lives somewhere under the default mount location, you're good to go.
+- Build the docker container: `make build`.
 
-### Start New Minikube VM
+- Run the container: `make run`.
 
-Let's boot up a VM with minikube!
+- Rebuild frontend static assets on changes to files in /client:  `make watch`.
+
+- Upon changing backend code in stochss-pkg/handlers you can update a running StochSS notebook server  with `make update`.
+
+### Add a python dependency
+
+Use requirements.txt to add Python dependencies that will be installed into the StochSS docker container.
+
+## JupyterHub
+
+JupyterHub is a multi-user system for spawning Jupyter notebook servers. We use JupyterHub to serve the StochSS home page and spawn StochSS notebook servers.
+
+### Setup
+
+- [Optional] To set admins for JupyterHub, make a file called `userlist` in the `jupyterhub/` directory. On each line of this file place a username followed by the word 'admin'. For example: `myuser admin`. If using Google OAuth, the uesrname will be a gmail address. Navigate to `/hub/admin` to use the JupyterHub admin interface.
+
+### Run Locally
+
+- To run JupyterHub locally run `make hub` and go to 127.0.0.1:8888.
+
+### Setup Staging Server
+
+To setup the staging environment you'll need the correct Google OAuth setup in `jupyterhub/secrets/.oauth.staging.env`. Do not wrap these environment variables in quotes!
+
+Example oauth file:
+
+```bash
+OAUTH_CALLBACK=https://staging.stochss.org/hub/oauth_callback
+CLIENT_ID=8432438242-32432ada3ff23f248sf7ds.apps.googleusercontent.com
+CLIENT_SECRET=adfsaf2327f2f7taafdsa34
 ```
-./minikube_bootstrap.sh
+
+After your oauth credentials are setup, run these commands:
+
+```bash
+make build
+make build_hub
+make run_hub_staging
 ```
 
-Minikube will create a new kubectl context called 'minikube' and set your current context to it. See `kubectl config` for more on this.
+### Setup Production Server
 
+Similar to staging, except you'll need the correct Google OAuth credentials set in `jupyterhub/secrets/.oauth.prod.env`.
 
-**IMPORTANT FOR LINUX USERS:** The Default mount for VirtualBox on Linux is /hosthome, so you will need to run `./minikube_install_jhub /hosthome/path-to-stochss` 
+Then:
 
-At this point you run `kubectl get pods -n jhub` in a terminal and you see a list of pods returned that are either running or being created. If they're not all in the `Running` state, run the same `get pods` command again until you see that they're all running. If they're in an `Error` state or `CrashLoopBackOff` state, something went wrong!
-
-**IMPORTANT:** If you need to start up your minikube VM from a "stopped" state, you MUST use the `--kubernetes-version v1.11.10` flag or else minikube will automatically upgrade your kubernetes version! You can use `make run` as a shortcut.
-
-### Reflecting changes
-
-Docker images used by our kubernetes cluster need to be built within the minikube VM itself. Luckily we can use use a handy minikube command to point our local docker command to the minikube VM's docker daemon:
-```
-eval $(minikube docker-env)
+```bash
+make build
+make build_hub
+make run_hub_prod
 ```
 
-You'll notice this command is used in the utility scripts to rebuild the docker images, `minikube_rebuild_hub.sh` and `minikube_rebuild_singleuser.sh`. You can use these when you make changes to handler files, singleuser scripts, etc to see changes reflected in the application.
-
-Changes to `config.yaml` are reflected a little differently. You can use the script `minikube_install_jhub.sh` to reinstall jupyterhub using the new configuration. Make sure your kubectl context is set to minikube!
-
-### More help
-
-You can find a list of useful commands in the document [COMMANDS.md](./COMMANDS.md).
-
-
-### References
-- [Minikube docs](https://minikube.sigs.k8s.io/docs/)
-- [Zero to Jupyterhub Guide](https://zero-to-jupyterhub.readthedocs.io/en/latest/index.html)

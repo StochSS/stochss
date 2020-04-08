@@ -1,5 +1,7 @@
 {
 	"is_spatial": false,
+	"defaultID": 1,
+	"defaultMode": "discrete",
 	"simulationSettings": {
 		"isAutomatic": true,
 		"relativeTol": 1e-3,
@@ -16,6 +18,18 @@
 		"volume": 1,
 		"realizations": 1
 	},
+	"parameterSweepSettings":{
+		"is1D":true,
+		"p1Min":0,
+		"p1Max":0,
+		"p1Steps":11,
+		"p2Min":0,
+		"p2Max":0,
+		"p2Steps":11,
+		"parameterOne": {},
+		"parameterTwo": {},
+		"speciesOfInterest": {}
+	},
 	"meshSettings": {
 		"count": 2
 	},
@@ -24,5 +38,6 @@
 	"parameters": [],
 	"reactions": [],
 	"rules": [],
-	"eventsCollection": []
+	"eventsCollection": [],
+	"functionDefinitions": []
 }

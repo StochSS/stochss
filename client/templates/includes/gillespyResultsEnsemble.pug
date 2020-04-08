@@ -1,0 +1,72 @@
+div#workflow-results-ensemble.card.card-body
+
+  div
+
+    h3.inline Results
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", data-hook="collapse", disabled) +
+
+  div.collapse(id="collapse-results", data-hook="workflow-results")
+
+    div.collapse(data-hook="edit-plot-args")
+
+      table.table
+        thead
+          tr
+            th(scope="col") Title
+            th(scope="col") X-axis Label
+            th(scope="col") Y-axis Label
+
+        tbody
+          tr
+            td: div(data-hook="title")
+            td: div(data-hook="xaxis")
+            td: div(data-hook="yaxis")
+
+    div
+
+      h5.inline Plot Standard Deviation Range
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-stddevrange", data-hook="collapse-stddevrange") -
+
+    div.collapse(class="show", id="collapse-stddevrange")
+
+      div(data-hook="stddevran")
+      button.btn.btn-primary.box-shadow(id="stddevran" data-hook="plot") Edit Plot
+      button.btn.btn-primary.box-shadow(id="stddevran" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary.box-shadow(id="stddevran" data-hook="download-json" disabled) Download JSON
+
+    div
+
+      h5.inline Plot Trajectories
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") +
+
+    div.collapse(id="collapse-trajectories")
+
+      div(data-hook="trajectories")
+      button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Plot
+      button.btn.btn-primary.box-shadow(data-hook="plot-multiple", disabled) Multiple Plots
+      button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-json" disabled) Download JSON
+
+    div
+
+      h5.inline Plot Standard Deviation
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-stddev", data-hook="collapse-stddev") +
+
+    div.collapse(id="collapse-stddev")
+
+      div(data-hook="stddev")
+      button.btn.btn-primary.box-shadow(id="stddev" data-hook="plot") Plot
+      button.btn.btn-primary.box-shadow(id="stddev" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary.box-shadow(id="stddev" data-hook="download-json" disabled) Download JSON
+
+    div
+
+      h5.inline Plot Trajectory Mean
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajmean", data-hook="collapse-trajmean") +
+
+    div.collapse(id="collapse-trajmean")
+
+      div(data-hook="avg")
+      button.btn.btn-primary.box-shadow(id="avg" data-hook="plot") Plot
+      button.btn.btn-primary.box-shadow(id="avg" data-hook="download-png-custom" disabled) Download PNG
+      button.btn.btn-primary.box-shadow(id="avg" data-hook="download-json" disabled) Download JSON

@@ -1,6 +1,7 @@
 var $ = require('jquery');
 var path = require('path');
 var xhr = require('xhr');
+var app = require('../app');
 //views
 var View = require('ampersand-view');
 //tempates
@@ -18,14 +19,19 @@ module.exports = View.extend({
     var self = this
     this.listOfWarnings = [];
     this.listOfErrors = [];
-    var endpoint = path.join("/stochss/api/workflow/workflow-logs", this.logsPath)
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(body){
-        var logs = body.split("\n")
-        logs.forEach(self.parseLogs, self)
-        self.expandLogContainers();
-      }
-    });
+    this.listOfNotes = [];
+    if(this.status === 'complete' || this.status === 'error'){
+      var endpoint = path.join(app.getApiPath(), "/workflow/workflow-logs", this.logsPath)
+      xhr({uri: endpoint}, function (err, response, body) {
+        if(response.statusCode < 400){
+          var logs = body.split("\n")
+          logs.forEach(self.parseLogs, self)
+          self.expandLogContainers();
+        }else{
+          body = JSON.parse(body)
+        }
+      });
+    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -43,6 +49,8 @@ module.exports = View.extend({
       this.listOfErrors.push(message.split("ERROR").pop())
     }else if(message.startsWith("CRITICAL")){
       this.listOfErrors.push(message.split("CRITICAL").pop())
+    }else{
+      this.listOfNotes.push(message)
     }
   },
   enableCollapseButton: function () {
@@ -63,6 +71,11 @@ module.exports = View.extend({
       $(this.queryByHook('workflow-errors')).collapse('show');
       var listOfErrors = "<p>" + this.listOfErrors.join('<br>') + "</p>";
       $(this.queryByHook('list-of-errors')).html(listOfErrors);
+    }
+    if(this.listOfNotes.length) {
+      $(this.queryByHook('workflow-statistics')).collapse('show');
+      var listOfNotes = "<p>" + this.listOfNotes.join('<br>') + "</p>";
+      $(this.queryByHook('list-of-notes')).html(listOfNotes);
     }
   },
   changeCollapseButtonText: function () {

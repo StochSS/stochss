@@ -1,9 +1,10 @@
 body
-  nav.navbar.navbar-expand-lg.navbar-dark.bg-dark.fixed-top
-    a.navbar-brand(href="/stochss") StochSS
+  nav.navbar.navbar-expand-lg.p-1.navbar-light.bg-light.fixed-top
+    a.navbar-brand(href="/stochss")
+      img(style="height: 38px;margin-left: -1.2em;" src="static/stochss-logo.png")
 
-    div#navbar.collapse.navbar-collapse
-      ul.nav.navbar-nav
+    div#navbar.collapse.navbar-collapse.justify-content-end
+      ul.navbar-nav.float-right
         li.nav-item: a.nav-link(href="http://www.stochss.org", target="_blank")
           | About
 
@@ -16,29 +17,33 @@ body
         li.nav-item: a.nav-link(href="https://github.com/StochSS/stochss/issues/new", target="_blank")
           | Report Issue
 
-    div#navbar.collapse.navbar-collapse.justify-content-end
-      ul.navbar-nav.float-right
         li.nav-item: a.nav-link(href="/logout")
           | Sign Out
 
   div.container-fluid
     div.row.flex-nowrap
-      div.col-md-2.tools: div.card.card-body.bg-light
-        ul.nav.flex-column
-          li.nav-item: i.icon-flask Tools
+      div.col-md-2
+        nav.sidebar.d-md-block
+          div.sidebar-sticky.tools
+            ul.nav.flex-column
+              li.nav-item: h5.icon-flask Tools
 
-          li.nav-item: a.nav-link(href="/stochss/models", title="Create/Import models")
-            | File Browser
+              li.nav-item: a.nav-link(href="stochss/models", title="Explore your StochSS models")
+                | Browser
 
-          li.nav-item: a.nav-link(target="_blank", href="/hub/spawn", title="File System")
-            | Jupyter Hub
-          
-          li.nav-item: i.icon-flask Information
+              li.nav-item: a.nav-link(target="_blank", href="tree", title="Browse your files in a Jupyter interface")
+                | Jupyter
 
-          button.btn.information-btn(data-hook="file-system-information-main") Working with the File Browser
+              //li.nav-item: a.nav-link(data-hook="general-help-link", target="_blank", href="#", title="Help")
+               // | Help
+             
+              
+              //li.nav-item: h5.icon-flask Information
 
-          button.btn.information-btn(data-hook="create-model-information-main") Working with Models
+              //button.btn.information-btn(data-hook="file-system-information-main") Working with the File Browser
 
-          button.btn.information-btn(data-hook="create-workflow-information-main") Working with Workflows
+              //button.btn.information-btn(data-hook="create-model-information-main") Working with Models
 
-      div.col-md-10.body: div.container-fluid(data-hook="page-container")
+              //button.btn.information-btn(data-hook="create-workflow-information-main") Working with Workflows
+
+      main.col-md-10.body(role="main"): div.container-fluid(data-hook="page-container")

@@ -21,8 +21,10 @@ div#workflow-status.card.card-body
           td=this.startTime
           td=this.status
 
-    button.btn.btn-outline-primary(data-hook="stop-workflow", type="button", disabled)
-      | Stop Workflow
+    div(style="display: none;")
 
-    button.btn.btn-outline-primary(data-hook="restart-workflow", type="button", disabled)
-      | Restart Workflow
+      button.btn.btn-outline-primary.box-shadow(data-hook="stop-workflow", type="button", disabled)
+        | Stop Workflow
+
+      button.btn.btn-outline-primary.box-shadow(data-hook="restart-workflow", type="button", disabled)
+        | Restart Workflow

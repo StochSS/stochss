@@ -4,8 +4,9 @@ var tests = require('../views/tests');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
-var SimSettingsView = require('../views/simulation-settings');
-var WorkflowStateButtonsView = require('../views/workflow-state-buttons');
+var SimSettingsView = require('./simulation-settings');
+var ParamSweepSettingsView = require('./parameter-sweep-settings');
+var WorkflowStateButtonsView = require('./workflow-state-buttons');
 //models
 var Model = require('../models/model');
 //templates
@@ -54,13 +55,45 @@ module.exports = View.extend({
       parent: this,
       model: this.model.simulationSettings,
     });
+    this.settingsViews.parameterSweep = new ParamSweepSettingsView({
+      parent: this,
+      model: this.model.parameterSweepSettings,
+    });
     var workflowStateButtons = new WorkflowStateButtonsView({
       model: this.model
     });
     this.registerRenderSubview(inputName, "model-name-container");
-    this.registerRenderSubview(this.settingsViews[this.type], 'sim-settings-container');
+    this.registerRenderSubview(this.settingsViews['gillespy'], 'sim-settings-container');
+    if(this.type === "parameterSweep"){
+      var species = this.model.species;
+      var parameters = this.model.parameters;
+      var parameterOne = this.model.parameterSweepSettings.parameterOne
+      var parameterTwo = this.model.parameterSweepSettings.parameterTwo
+      var speciesOfInterest = this.model.parameterSweepSettings.speciesOfInterest
+      var p1Exists = parameters.filter(function (param) { if(parameterOne.compID && parameterOne.compID === param.compID) return param}).length
+      var p2Exists = parameters.filter(function (param) { if(parameterTwo.compID && parameterTwo.compID === param.compID) return param}).length
+      var speciesOfInterestExists = species.filter(function (specie) { if(speciesOfInterest.compID && speciesOfInterest.compID === specie.compID) return species}).length
+      if(!parameterOne.name || !p1Exists){
+        this.model.parameterSweepSettings.parameterOne = parameters.at(0)
+        var val = eval(this.model.parameterSweepSettings.parameterOne.expression)
+        this.model.parameterSweepSettings.p1Min = val * 0.5
+        this.model.parameterSweepSettings.p1Max = val * 1.5
+      }
+      if(parameters.at(1) && (!parameterTwo.name || !p2Exists)) {
+        this.model.parameterSweepSettings.parameterTwo = parameters.at(1)
+        var val = eval(this.model.parameterSweepSettings.parameterTwo.expression)
+        this.model.parameterSweepSettings.p2Min = val * 0.5
+        this.model.parameterSweepSettings.p2Max = val * 1.5
+      }
+      if(!this.model.parameterSweepSettings.speciesOfInterest.name || !speciesOfInterestExists){
+        this.model.parameterSweepSettings.speciesOfInterest = species.at(0)
+      }
+      this.registerRenderSubview(this.settingsViews['parameterSweep'], 'param-sweep-settings-container');
+    }
     this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
     this.parent.trajectories = this.model.simulationSettings.realizations
+    this.parent.species = this.model.species
+    this.parent.speciesOfInterest = this.model.parameterSweepSettings.speciesOfInterest
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

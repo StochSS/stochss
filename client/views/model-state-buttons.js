@@ -1,4 +1,4 @@
-var app = require('ampersand-app');
+var app = require('../app');
 var xhr = require('xhr');
 var path = require('path');
 var Plotly = require('../lib/plotly');
@@ -31,12 +31,13 @@ module.exports = View.extend({
   },
   clickRunHandler: function (e) {
     $(this.parent.queryByHook('model-run-error-container')).collapse('hide');
+    $(this.parent.queryByHook('model-timeout-message')).collapse('hide');
     var el = this.parent.queryByHook('model-run-container');
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
   clickStartWorkflowHandler: function (e) {
-    window.location.href = path.join("/hub/stochss/workflow/selection", this.model.directory);
+    window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", this.model.directory);
   },
   togglePreviewWorkflowBtn: function () {
     var numSpecies = this.model.species.length;
@@ -89,11 +90,11 @@ module.exports = View.extend({
     this.running();
     var el = this.parent.queryByHook('model-run-container')
     var model = this.model
-    var endpoint = path.join('/stochss/api/models/run/', 'start', 'none', model.directory);
+    var endpoint = path.join(app.getApiPath(), '/models/run/', 'start', 'none', model.directory);
     var self = this;
-    xhr({ uri: endpoint }, function (err, response, body) {
-      self.outfile = body.split('->').pop()
-      self.getResults(body)
+    xhr({ uri: endpoint, json: true}, function (err, response, body) {
+      self.outfile = body.Outfile
+      self.getResults()
     });
   },
   running: function () {
@@ -115,25 +116,24 @@ module.exports = View.extend({
     }
     spinner.style.display = "none";
   },
-  getResults: function (data) {
+  getResults: function () {
     var self = this;
     var model = this.model;
     setTimeout(function () {
-      endpoint = path.join('/stochss/api/models/run/', 'read', self.outfile, model.directory);
-      xhr({ uri: endpoint }, function (err, response, body) {
-        if(!body.startsWith('running')){
-          var data = JSON.parse(body);
+      endpoint = path.join(app.getApiPath(), '/models/run/', 'read', self.outfile, model.directory);
+      xhr({ uri: endpoint, json: true}, function (err, response, body) {
+        var data = body.Results;
+        if(response.statusCode >= 400){
+          self.ran(false);
+          $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
+        }
+        else if(!body.Running){
           if(data.timeout){
             $(self.parent.queryByHook('model-timeout-message')).collapse('show');
           }
-          if(data.results){
-            self.plotResults(data.results);
-          }else{
-            self.ran(false);
-            $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
-          }
+          self.plotResults(data.results);
         }else{
-          self.getResults(body);
+          self.getResults();
         }
       });
     }, 2000);

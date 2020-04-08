@@ -7,8 +7,7 @@ module.exports = RestCollection.extend({
   model: Model,
   url: function () { 
     return path.join(
-      app.config.routePrefix,
-      app.config.apiUrl,
+      app.getApiPath(),
       'models',
       String(app.me.name)
     ) 

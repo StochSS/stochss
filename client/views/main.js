@@ -11,8 +11,6 @@ var path = require('path');
 var headTemplate = require('!pug-loader!../templates/head.pug');
 var bodyTemplate = require('!pug-loader!../templates/body.pug');
 
-var config = app.config;
-
 let operationInfoModalHtml = (infoKey) => {
   let fileBrowserInfo = `
     <p>In StochSS we use custom file extensions for a number of files we work with.  Here is a list of our extentions with the files they are associated with:</p>
@@ -110,6 +108,9 @@ module.exports = View.extend({
         app.currentPage = newView;
       }
     });
+
+    var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/models"
+    $(this.queryByHook("home-link")).prop('href', homePath);
 
     return this;
   },

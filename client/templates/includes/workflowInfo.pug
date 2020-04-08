@@ -7,9 +7,11 @@ div#workflow-info-view.card.card-body
 
   div.collapse(id="collapse-info", data-hook="workflow-info")
 
-    div.collapse
+    div.collapse(data-hook="workflow-statistics")
 
       h5.inline Statistics
+
+      div(data-hook="list-of-notes")
 
     div.collapse(data-hook="workflow-warnings")
 
