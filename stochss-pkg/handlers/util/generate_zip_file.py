@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 
 import os
+import shutil
 from .rename import get_unique_file_name
 from .stochss_errors import StochSSFileNotFoundError, StochSSWorkflowError, StochSSWorkflowNotCompleteError
 
 
 def generate_zip_file(file_path, file_directory, target):
-    file_name = file_path.split('/').pop()
+    file_name = file_path.split('/').pop().split('.')[0]
     target = target.split('/').pop()
 
-    zip_file = os.popen("cd '{0}' && zip -r '{1}' '{2}'".format(file_directory, file_name, target), 'r', 1)
+    # zip_file = os.popen("cd '{0}' && zip -r '{1}' '{2}'".format(file_directory, file_name, target), 'r', 1)
+    shutil.make_archive(os.path.join(file_directory, file_name), 'zip', file_directory, target)
 
-    done = file_name in os.listdir(file_directory)
-    while not done:
-        done = file_name in os.listdir(file_directory)
+    # done = file_name in os.listdir(file_directory)
+    # while not done:
+    #     done = file_name in os.listdir(file_directory)
 
-    if done:
-        zip_file.close()
+    # if done:
+    #     zip_file.close()
 
 
 def get_zip_file_data(file_path):
