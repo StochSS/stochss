@@ -150,7 +150,7 @@ let operationInfoModalHtml = () => {
             <p> ${fileBrowserHelpMessage} </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -179,8 +179,8 @@ let renderCreateModalHtml = (isModel, isSpatial) => {
             <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
 	        </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn">OK</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -211,7 +211,7 @@ let sbmlToModelHtml = (title, errors) => {
             <p> ${errors.join("<br>")} </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -231,8 +231,39 @@ let deleteFileHtml = (fileType) => {
             </button>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary yes-modal-btn">Yes</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+            <button type="button" class="btn btn-primary yes-modal-btn box-shadow">Yes</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+let uploadFileHtml = (type) => {
+  return `
+    <div id="uploadFileModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Upload a ${type} </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="verticle-space">
+              <span class="inline" for="datafile">Please specify a file to import: </span>
+              <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" required>
+            </div>
+            <div class="verticle-space">
+              <span class="inline" for="fileNameInput">New file name (optional): </span>
+              <input type="text" id="fileNameInput" name="fileNameInput" size="30">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary box-shadow upload-modal-btn" disabled>Upload</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
           </div>
         </div>
       </div>
@@ -248,6 +279,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
     'click [data-hook=new-model]' : 'handleCreateModelClick',
+    'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(operationInfoModalHtml()).modal();
     },
@@ -279,6 +311,75 @@ let FileBrowser = PageView.extend({
         self.refreshInitialJSTree();
       }, 3000);
     }
+  },
+  handleUploadFileClick: function (e) {
+    let file = this.queryByHook('file-for-upload').files[0]
+    let req = new XMLHttpRequest();
+    let formData = new FormData()
+    let endpoint = path.join(app.getApiPath(), 'file/upload');
+    var fileinfo = {"type":"","name":""}
+    if(file.name.endsWith('.ipynb')){
+      fileinfo.type = "Notebook"
+    }
+    formData.append("datafile", file)
+    formData.append("fileinfo", JSON.stringify(fileinfo))
+    req.open("POST", endpoint)
+    req.onload = function (e) {
+      if(req.status < 400) {
+        console.log(req.response)
+      }
+    }
+    req.send(formData)
+  },
+  uploadFile: function (o, type) {
+    var self = this
+    if(document.querySelector('#uploadFileModal')) {
+      document.querySelector('#uploadFileModal').remove()
+    }
+    let modal = $(uploadFileHtml(type)).modal();
+    let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
+    let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
+    let input = document.querySelector('#uploadFileModal #fileNameInput');
+    fileInput.addEventListener('change', function (e) {
+      if(fileInput.files.length){
+        uploadBtn.disabled = false
+      }else{
+        uploadBtn.disabled = true
+      }
+    })
+    uploadBtn.addEventListener('click', function (e) {
+      let file = fileInput.files[0]
+      var fileinfo = {"type":type,"name":"","path":"/"}
+      if(o && o.original){
+        fileinfo.path = o.original._path
+      }
+      if(Boolean(input.value)){
+        fileinfo.name = input.value
+      }
+      let formData = new FormData()
+      formData.append("datafile", file)
+      formData.append("fileinfo", JSON.stringify(fileinfo))
+      let endpoint = path.join(app.getApiPath(), 'file/upload');
+      let req = new XMLHttpRequest();
+      req.open("POST", endpoint)
+      req.onload = function (e) {
+        var resp = JSON.parse(req.response)
+        if(req.status < 400) {
+          if(o){
+            var node = $('#models-jstree').jstree().get_node(o.parent);
+            if(node.type === "root" || node.type === "#"){
+              $('#models-jstree').jstree().refresh();
+            }else{
+              $('#models-jstree').jstree().refresh_node(node);
+            }
+          }else{
+            $('#models-jstree').jstree().refresh();
+          }
+        }
+      }
+      req.send(formData)
+      modal.modal('hide')
+    })
   },
   deleteFile: function (o) {
     var fileType = o.type
@@ -629,6 +730,41 @@ let FileBrowser = PageView.extend({
               } 
             }
           },
+          "Upload" : {
+            "label" : "Upload File",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "submenu" : {
+              "Model" : {
+                "label" : "StochSS Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "model")
+                }
+              },
+              "SBML" : {
+                "label" : "SBML Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "sbml")
+                }
+              },
+              "File" : {
+                "label" : "File",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "file")
+                }
+              }
+            }
+          },
         }
       }
       else if (o.type ===  'folder') {
@@ -676,6 +812,41 @@ let FileBrowser = PageView.extend({
                   self.newModelOrDirectory(o, true, false);
                 }
               } 
+            }
+          },
+          "Upload" : {
+            "label" : "Upload File",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "submenu" : {
+              "Model" : {
+                "label" : "StochSS Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "model")
+                }
+              },
+              "SBML" : {
+                "label" : "SBML Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "sbml")
+                }
+              },
+              "File" : {
+                "label" : "File",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "file")
+                }
+              }
             }
           },
           "Download" : {
