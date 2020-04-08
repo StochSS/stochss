@@ -62,8 +62,10 @@ def upload(file_data, file_info):
     file_name = file_data['filename']
     ext = file_name.split('.').pop()
     body = file_data['body']
-    if not ext == 'zip':
+    try:
         body = body.decode()
+    except:
+        pass
     # build the directory path
     parent_dir = file_info['path']
     if parent_dir.startswith('/'):
