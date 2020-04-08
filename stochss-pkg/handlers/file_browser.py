@@ -16,7 +16,7 @@ log = logging.getLogger()
 from .util.stochss_errors import StochSSAPIError
 from .util.ls import ls
 from .util.convert_to_notebook import convert_to_notebook
-from .util.duplicate import duplicate
+from .util.duplicate import duplicate, duplicate_wkfl_as_new
 from .util.rename import rename
 from .util.convert_to_smdl_mdl import convert_model
 from .util.convert_to_sbml import convert_to_sbml
@@ -39,7 +39,8 @@ class ModelBrowserFileList(APIHandler):
         path : str
             Path from the user directory to the target directory.
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the directory: {0}\n".format(path))
         try:
             output = ls(path)
@@ -71,7 +72,8 @@ class ModelToNotebookHandler(APIHandler):
         path : str
             Path from the user directory to the target model.
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         self.set_header('Content-Type', 'application/json')
         try:
             log.debug("Path to the model file: {0}\n".format(path))
@@ -102,7 +104,8 @@ class DeleteFileAPIHandler(APIHandler):
             Path to removal target.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the model/directory: {0}\n".format(path))
         file_path = os.path.join('/home/jovyan', path)
         log.debug("Full path to the model/directory: {0}\n".format(file_path))
@@ -141,7 +144,8 @@ class MoveFileAPIHandler(APIHandler):
             Data string containing old and new locations of target file.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("File path and dest path: {0}\n".format(data))
         old_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/')[0]))
         log.debug("Path to the file: {0}\n".format(old_path))
@@ -185,7 +189,8 @@ class DuplicateModelHandler(APIHandler):
             Path to target model.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         try:
             log.debug("Path to the file: {0}\n".format(path))
             resp = duplicate(path)
@@ -218,7 +223,8 @@ class DuplicateDirectoryHandler(APIHandler):
             Path to target directory.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         try:
             log.debug("Path to the file: {0}\n".format(path))
             resp = duplicate(path, True)
@@ -252,7 +258,8 @@ class RenameAPIHandler(APIHandler):
             string of data containing rename information.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Original path and new name: {0}".format(data))
         path, new_name = data.split('/<--change-->/')
         log.debug("Path to the file or directory: {0}\n".format(path))
@@ -288,7 +295,8 @@ class ConvertToSpatialAPIHandler(APIHandler):
             Path from the user directory to the model.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the model: {0}\n".format(path))
         try:
             resp = convert_model(path, to_spatial=True)
@@ -321,7 +329,8 @@ class ConvertToModelAPIHandler(APIHandler):
             Path from the user directory to the spatial model.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the model: {0}\n".format(path))
         try:
             resp = convert_model(path, to_spatial=False)
@@ -354,7 +363,8 @@ class ModelToSBMLAPIHandler(APIHandler):
             Path from the user directory to the target model file.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the model: {0}\n".format(path))
         try:
             resp = convert_to_sbml(path)
@@ -387,7 +397,8 @@ class SBMLToModelAPIHandler(APIHandler):
             Path from the user directory to the target sbml file.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the model: {0}\n".format(path))
         template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
         log.debug("Path to the model template: {0}\n".format(template_path))
@@ -424,7 +435,8 @@ class DownloadAPIHandler(APIHandler):
             Path from the user directory to the target sbml file.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the model: {0}\n".format(path))
         full_path = os.path.join("/home/jovyan", path)
         log.debug("Full path to the model: {0}\n".format(full_path))
@@ -460,7 +472,8 @@ class DownloadZipFileAPIHandler(APIHandler):
             Path from the user directory to the target file or directory.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the model: {0}\n".format(path))
         log.debug("Action: {0}\n".format(action))
         if action == "download":
@@ -505,7 +518,8 @@ class CreateDirectoryHandler(APIHandler):
             Directory or path of directories to be created if needed.
 
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path of directories: {0}\n".format(directories))
         full_path = os.path.join("/home/jovyan", directories)
         log.debug("Full path of directories: {0}\n".format(full_path))
@@ -520,3 +534,40 @@ class CreateDirectoryHandler(APIHandler):
             self.write(error)
         self.finish()
 
+
+class DuplicateWorkflowAsNewHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for duplicating a workflow as new and a workflows model.
+    ##############################################################################
+    '''
+
+    async def get(self, target, path):
+        '''
+        Creates a duplicate of the model in the target workflow in its parent
+        directory.  Creates a new workflow that uses the same model and has 
+        the same type as the target workflow in its parent directory.
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the target workflow.
+
+        '''
+        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.WARNING)
+        log.debug("Path to the workflow: {0}\n".format(path))
+        log.debug("The {0} is being copied\n".format(target))
+        only_model = target == "wkfl_model"
+        log.debug("only_model flag: {0}\n".format(only_model))
+        self.set_header('Content-Type', 'application/json')
+        try:
+            resp = duplicate_wkfl_as_new(path, only_model)
+            log.debug("Response: {0}\n".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            error = {"Reason":err.reason,"Message":err.message}
+            log.error("Exception information: {0}\n".format(error))
+            self.write(error)
+        self.finish()

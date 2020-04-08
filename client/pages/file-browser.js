@@ -305,16 +305,24 @@ let FileBrowser = PageView.extend({
       modal.modal('hide')
     });
   },
-  duplicateFileOrDirectory: function(o, isDirectory) {
+  duplicateFileOrDirectory: function(o, type) {
     var self = this;
     var parentID = o.parent;
-    if(isDirectory){
-      var endpoint = path.join(app.getApiPath(), "directory/duplicate", o.original._path);
+    if(type === "directory"){
+      var identifier = "directory/duplicate"
+    }else if(type === "workflow"){
+      var identifier = path.join("workflow/duplicate", type)
+    }else if(type === "wkfl_model"){
+      var identifier = path.join("workflow/duplicate", type)
     }else{
-      var endpoint = path.join(app.getApiPath(), "model/duplicate", o.original._path);
+      var identifier = "model/duplicate"
     }
+    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
     xhr({uri: endpoint}, function (err, response, body) {
         if(response.statusCode < 400) {
+          if(type === "workflow"){
+            body = JSON.parse(body)
+          }
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
             $('#models-jstree').jstree().refresh()
@@ -688,7 +696,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, true)
+              self.duplicateFileOrDirectory(o, "directory")
             }
           },
           "Delete" : {
@@ -763,7 +771,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "model")
             }
           },
           "Delete" : {
@@ -857,7 +865,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "model")
             }
           },
           "Delete" : {
@@ -919,10 +927,10 @@ let FileBrowser = PageView.extend({
               "Duplicate" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : true,
+                "_disabled" : false,
                 "label" : "Duplicate",
                 "action" : function (data) {
-
+                  self.duplicateFileOrDirectory(o, "wkfl_model")
                 }
               }
             }
@@ -943,6 +951,15 @@ let FileBrowser = PageView.extend({
             "label" : "Rename",
             "action" : function (data) {
               self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate as new",
+            "action" : function (data) {
+              self.duplicateFileOrDirectory(o, "workflow")
             }
           },
           "Delete" : {
@@ -992,7 +1009,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {
@@ -1060,7 +1077,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {
@@ -1115,7 +1132,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {

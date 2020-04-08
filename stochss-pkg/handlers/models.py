@@ -36,7 +36,8 @@ class JsonFileAPIHandler(APIHandler):
         model_path : str
             Path to json file from the user directory.
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the file: {0}\n".format(file_path))
         full_path = os.path.join('/home/jovyan', file_path)
         log.debug("Full path to the file: {0}\n".format(full_path))
@@ -86,7 +87,8 @@ class JsonFileAPIHandler(APIHandler):
         model_path : str
             Path to target  model within user pod container.
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the model: {0}\n".format(model_path))
         model_path = model_path.replace(" ", "\ ")
         log.debug("Path with escape char spaces: {0}\n".format(model_path))
@@ -120,7 +122,8 @@ class RunModelAPIHandler(APIHandler):
         model_path : str
             Path to target model within user pod container.
         '''
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Run command sent to the script: {0}\n".format(run_cmd))
         log.debug("Path to the model: {0}\n".format(model_path))
         self.set_header('Content-Type', 'application/json')
