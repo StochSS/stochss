@@ -17,12 +17,15 @@ def convert_to_gillespy_model(path):
         raise StochSSFileNotFoundError("Could not find the sbml file: "+path)
 
 
-def convert_to_stochss_model(stochss_model, gillespy_model, full_path):
+def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None):
     comp_id = 1
     errors = []
     if type(gillespy_model) is gillespy2.core.gillespy2.Model:
         sbml_model_file = full_path.split('/').pop()
-        stochss_model_file = gillespy_model.name + '.mdl'
+        if name is None:
+            stochss_model_file = gillespy_model.name + '.mdl'
+        else:
+            stochss_model_file = name + '.mdl'
         stochss_model_path = get_unique_file_name(stochss_model_file, full_path.split(sbml_model_file)[0])[0]
 
         species = gillespy_model.get_all_species()

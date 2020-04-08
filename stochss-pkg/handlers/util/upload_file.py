@@ -106,7 +106,7 @@ def upload(file_data, file_info):
             template_path = "/stochss/model_templates/nonSpatialModelTemplate.json"
             with open(template_path, "r") as template_file:
                 template = json.load(template_file)
-            convert_to_stochss_model(template, model, sbml_path)
+            convert_to_stochss_model(template, model, sbml_path, name)
             return resp
         os.remove(sbml_path)
         file_name = sbml_file_name.replace('sbml','xml')
