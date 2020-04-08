@@ -61,7 +61,7 @@ class JsonFileAPIHandler(APIHandler):
                 except FileExistsError:
                     log.debug("The directories in the path to the model already exists.")
                 with open(full_path, 'w') as f:
-                    json.dumps(template, f)
+                    json.dump(template, f)
                 self.write(template)
             except FileNotFoundError as err:
                 self.set_status(404)
