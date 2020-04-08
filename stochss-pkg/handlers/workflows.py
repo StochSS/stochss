@@ -37,6 +37,7 @@ class WorkflowInfoAPIHandler(APIHandler):
             Path to selected workflows info file.
         '''
         # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the info file: {0}\n".format(info_path))
         full_path = os.path.join("/home/jovyan", info_path)
         log.debug("Full path to the info file: {0}\n".format(full_path))
@@ -81,6 +82,7 @@ class RunWorkflowAPIHandler(APIHandler):
             Path to selected workflows model file and name or path of workflow.
         '''
         # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Model path and workflow name or path: {0}\n".format(data))
         log.debug("Actions for the workflow: {0}\n".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
@@ -118,6 +120,7 @@ class SaveWorkflowAPIHandler(APIHandler):
             Path to selected workflows model file and name or path of workflow.
         '''
         # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Model path and workflow name or path: {0}\n".format(data))
         log.debug("Actions for the workflow: {0}\n".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
@@ -155,6 +158,7 @@ class WorkflowStatusAPIHandler(APIHandler):
             Path to selected workflow directory.
         '''
         # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug('Getting the status of the workflow\n')
         status = get_status(workflow_path)
         log.debug('The status of the workflow is: {0}\n'.format(status))
@@ -179,6 +183,7 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             Path to selected workflow directory.
         '''
         # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("The path to the workflow: {0}\n".format(workflow_path))
         body = json.loads(self.get_query_argument(name='data'))
         log.debug("Plot args passed to the plot: {0}\n".format(body))
@@ -220,6 +225,7 @@ class WorkflowLogsAPIHandler(APIHandler):
             Path to the workflow logs file.
         '''
         # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Path to the workflow logs file: {0}\n".format(logs_path))
         full_path = os.path.join("/home/jovyan/", logs_path)
         log.debug("Full path to the workflow logs file: {0}\n".format(full_path))
@@ -261,6 +267,7 @@ class WorkflowNotebookHandler(APIHandler):
             Path to target model within User's file system.
         '''
         # log.setLevel(logging.DEBUG)
+        log.setLevel(logging.WARNING)
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
         workflows = {"1d_parameter_sweep":convert_to_1d_psweep_nb, "2d_parameter_sweep":convert_to_2d_psweep_nb}

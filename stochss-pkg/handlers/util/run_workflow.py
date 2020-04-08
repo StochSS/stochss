@@ -9,13 +9,15 @@ import plotly
 import argparse
 import logging
 
+from shutil import copyfile
+from datetime import datetime, timezone, timedelta
 from gillespy2.core import log
 
-from parameter_sweep import ParameterSweep
-
-from shutil import copyfile
-from run_model import GillesPy2Workflow, ModelFactory, run_solver
-from datetime import datetime, timezone, timedelta
+try:
+    from parameter_sweep import ParameterSweep
+    from run_model import GillesPy2Workflow, ModelFactory, run_solver
+except ModuleNotFoundError:
+    pass
 
 
 user_dir = "/home/jovyan"
