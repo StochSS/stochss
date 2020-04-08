@@ -346,11 +346,9 @@ let FileBrowser = PageView.extend({
       var fileinfo = {"type":type,"name":"","path":"/"}
       if(o && o.original){
         fileinfo.path = o.original._path
-        console.log(fileinfo.path, o.original._path)
       }
       if(Boolean(input.value)){
         fileinfo.name = input.value
-        console.log(fileinfo.name, input.value)
       }
       let formData = new FormData()
       formData.append("datafile", file)
@@ -361,10 +359,9 @@ let FileBrowser = PageView.extend({
       req.onload = function (e) {
         var resp = JSON.parse(req.response)
         if(req.status < 400) {
-          console.log(resp)
           if(o){
             var node = $('#models-jstree').jstree().get_node(o.parent);
-            if(node.type === "root"){
+            if(node.type === "root" || node.type === "#"){
               $('#models-jstree').jstree().refresh();
             }else{
               $('#models-jstree').jstree().refresh_node(node);
