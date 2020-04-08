@@ -428,7 +428,8 @@ let FileBrowser = PageView.extend({
               setTimeout(_.bind(self.hideNameWarning, self), 10000);
             }
             node.original._path = body._path
-          }else{
+          }
+          if(text.split('.').pop() != node.text.split('.').pop()){
             if(parent.type === "root"){
               $('#models-jstree').jstree().refresh()
             }else{          
@@ -535,14 +536,17 @@ let FileBrowser = PageView.extend({
           let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
-              var node = $('#models-jstree').jstree().get_node(o);
-              if(node.type === "root"){
+              if(o){//directory was created with context menu option
+                var node = $('#models-jstree').jstree().get_node(o);
+                if(node.type === "root"){
+                  $('#models-jstree').jstree().refresh()
+                }else{          
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              }else{//directory was created with create directory button
                 $('#models-jstree').jstree().refresh()
-              }else{          
-                $('#models-jstree').jstree().refresh_node(node);
               }
-            }else{
-              $('#models-jstree').jstree().refresh()
+            }else{//new directory not created no need to refresh
               body = JSON.parse(body)
             }
           });
@@ -738,7 +742,7 @@ let FileBrowser = PageView.extend({
           "New Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : false,
+            "_disabled" : true,
             "label" : "New Workflow",
             "action" : function (data) {
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
@@ -794,7 +798,7 @@ let FileBrowser = PageView.extend({
               "Convert to Spatial" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : false,
+                "_disabled" : true,
                 "label" : "To Spatial Model",
                 "action" : function (data) {
                   self.toSpatial(o)

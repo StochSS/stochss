@@ -79,7 +79,7 @@ module.exports = View.extend({
         this.model.parameterSweepSettings.p1Min = val * 0.5
         this.model.parameterSweepSettings.p1Max = val * 1.5
       }
-      if(parameters.at(1) && (!parameterTwo.name) || !p2Exists) {
+      if(parameters.at(1) && (!parameterTwo.name || !p2Exists)) {
         this.model.parameterSweepSettings.parameterTwo = parameters.at(1)
         var val = eval(this.model.parameterSweepSettings.parameterTwo.expression)
         this.model.parameterSweepSettings.p2Min = val * 0.5
