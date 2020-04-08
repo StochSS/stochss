@@ -288,6 +288,12 @@ let FileBrowser = PageView.extend({
     var self = this;
     this.nodeForContextMenu = "";
     this.renderWithTemplate();
+    window.addEventListener('pageshow', function (e) {
+      var navType = window.performance.navigation.type
+      if(navType === 2){
+        window.location.reload()
+      }
+    });
     this.setupJstree();
     setTimeout(function () {
       self.refreshInitialJSTree();
