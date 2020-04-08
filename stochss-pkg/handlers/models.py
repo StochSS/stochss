@@ -36,8 +36,8 @@ class JsonFileAPIHandler(APIHandler):
         model_path : str
             Path to json file from the user directory.
         '''
-        # log.setLevel(logging.DEBUG)
-        log.setLevel(logging.WARNING)
+        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.WARNING)
         log.debug("Path to the file: {0}\n".format(file_path))
         full_path = os.path.join('/home/jovyan', file_path)
         log.debug("Full path to the file: {0}\n".format(full_path))
@@ -60,8 +60,6 @@ class JsonFileAPIHandler(APIHandler):
                     os.makedirs(directories)
                 except FileExistsError:
                     log.debug("The directories in the path to the model already exists.")
-                full_path = full_path.replace(" ", "\ ")
-                log.debug("Full path with escape char spaces: {0}\n".format(full_path))
                 with open(full_path, 'w') as f:
                     json.dumps(template, f)
                 self.write(template)
