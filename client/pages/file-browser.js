@@ -409,16 +409,24 @@ let FileBrowser = PageView.extend({
       modal.modal('hide')
     });
   },
-  duplicateFileOrDirectory: function(o, isDirectory) {
+  duplicateFileOrDirectory: function(o, type) {
     var self = this;
     var parentID = o.parent;
-    if(isDirectory){
-      var endpoint = path.join(app.getApiPath(), "directory/duplicate", o.original._path);
+    if(type === "directory"){
+      var identifier = "directory/duplicate"
+    }else if(type === "workflow"){
+      var identifier = path.join("workflow/duplicate", type)
+    }else if(type === "wkfl_model"){
+      var identifier = path.join("workflow/duplicate", type)
     }else{
-      var endpoint = path.join(app.getApiPath(), "model/duplicate", o.original._path);
+      var identifier = "model/duplicate"
     }
+    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
     xhr({uri: endpoint}, function (err, response, body) {
         if(response.statusCode < 400) {
+          if(type === "workflow"){
+            body = JSON.parse(body)
+          }
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
             $('#models-jstree').jstree().refresh()
@@ -532,7 +540,8 @@ let FileBrowser = PageView.extend({
               setTimeout(_.bind(self.hideNameWarning, self), 10000);
             }
             node.original._path = body._path
-          }else{
+          }
+          if(text.split('.').pop() != node.text.split('.').pop()){
             if(parent.type === "root"){
               $('#models-jstree').jstree().refresh()
             }else{          
@@ -639,14 +648,17 @@ let FileBrowser = PageView.extend({
           let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
-              var node = $('#models-jstree').jstree().get_node(o);
-              if(node.type === "root"){
+              if(o){//directory was created with context menu option
+                var node = $('#models-jstree').jstree().get_node(o);
+                if(node.type === "root"){
+                  $('#models-jstree').jstree().refresh()
+                }else{          
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              }else{//directory was created with create directory button
                 $('#models-jstree').jstree().refresh()
-              }else{          
-                $('#models-jstree').jstree().refresh_node(node);
               }
-            }else{
-              $('#models-jstree').jstree().refresh()
+            }else{//new directory not created no need to refresh
               body = JSON.parse(body)
             }
           });
@@ -858,7 +870,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, true)
+              self.duplicateFileOrDirectory(o, "directory")
             }
           },
           "Delete" : {
@@ -912,7 +924,7 @@ let FileBrowser = PageView.extend({
           "New Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : false,
+            "_disabled" : true,
             "label" : "New Workflow",
             "action" : function (data) {
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
@@ -933,7 +945,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "model")
             }
           },
           "Delete" : {
@@ -968,7 +980,7 @@ let FileBrowser = PageView.extend({
               "Convert to Spatial" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : false,
+                "_disabled" : true,
                 "label" : "To Spatial Model",
                 "action" : function (data) {
                   self.toSpatial(o)
@@ -1027,7 +1039,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "model")
             }
           },
           "Delete" : {
@@ -1089,10 +1101,10 @@ let FileBrowser = PageView.extend({
               "Duplicate" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : true,
+                "_disabled" : false,
                 "label" : "Duplicate",
                 "action" : function (data) {
-
+                  self.duplicateFileOrDirectory(o, "wkfl_model")
                 }
               }
             }
@@ -1113,6 +1125,15 @@ let FileBrowser = PageView.extend({
             "label" : "Rename",
             "action" : function (data) {
               self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate as new",
+            "action" : function (data) {
+              self.duplicateFileOrDirectory(o, "workflow")
             }
           },
           "Delete" : {
@@ -1162,7 +1183,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {
@@ -1230,7 +1251,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {
@@ -1285,7 +1306,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {
