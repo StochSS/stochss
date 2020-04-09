@@ -1294,7 +1294,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              var openPath = path.join(app.getBasePath(), "edit", o.original._path);
+              var openPath = path.join(app.getBasePath(), "view", o.original._path);
               window.open(openPath, "_blank");
             }
           },
