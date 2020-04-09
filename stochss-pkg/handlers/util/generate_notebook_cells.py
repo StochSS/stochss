@@ -439,14 +439,12 @@ def generate_sciope_wrapper_cell(json_data):
     # Select Solver
     solver_map = {
         'SSA': '',
-        'Tau-Leaping': 'BasicTauLeapingSolver, ',
-        'Hybrid-Tau-Leaping': 'BasicTauHybridSolver, ',
-        'ODE': 'BasicODESolver, '
+        'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
+        'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, ',
+        'ODE': 'solver=BasicODESolver, '
         }
     sciope_wrapper_cell = '''from sciope.utilities.gillespy2 import wrapper
-
-    settings = {"solver":{}, "number_of_trajectories":10, "show_labels":True}
-    simulator = wrapper.get_simulator(gillespy_model=model, run_settings=settings, species_of_interest={})
-
-    expression_array = wrapper.get_parameter_expression_array(model)'''.format(solver_map[algorithm], soi)
+settings = {{"solver":{}, "number_of_trajectories":10, "show_labels":True}}
+simulator = wrapper.get_simulator(gillespy_model=model, run_settings=settings, species_of_interest={})
+expression_array = wrapper.get_parameter_expression_array(model)'''.format(solver_map[algorithm], soi)
     return sciope_wrapper_cell
