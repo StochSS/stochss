@@ -66,6 +66,8 @@ let WorkflowManager = PageView.extend({
     var self = this;
     var url = decodeURI(document.URL)
     this.type = url.split('/workflow/edit/').pop().split('/')[0];
+    var types = {"gillespy":"Ensemble Simulation","parameterSweep":"Parameter Sweep"}
+    this.titleType = types[this.type]
     this.directory = url.split('/workflow/edit/' + this.type).pop();
     if(this.directory.endsWith('.mdl')){
       var modelFile = this.directory.split('/').pop();
