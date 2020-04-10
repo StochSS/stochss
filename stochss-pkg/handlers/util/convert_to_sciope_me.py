@@ -10,7 +10,7 @@ from .generate_notebook_cells import *
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
-def convert_to_sciope_pest(_model_path):
+def convert_to_sciope_me(_model_path):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
@@ -65,7 +65,7 @@ def convert_to_sciope_pest(_model_path):
     nb = nbf.new_notebook(cells=cells)
 
     # Open and write to file
-    dest_file = get_unique_file_name('{}_Sciope_PEst.ipynb'.format(name), dest_path)[0]
+    dest_file = get_unique_file_name('{}_Sciope_ME.ipynb'.format(name), dest_path)[0]
     with open(dest_file, 'w') as f:
         nbformat.write(nb, f, version=4)
     f.close()
