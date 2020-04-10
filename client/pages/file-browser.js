@@ -150,7 +150,7 @@ let operationInfoModalHtml = () => {
             <p> ${fileBrowserHelpMessage} </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -179,8 +179,8 @@ let renderCreateModalHtml = (isModel, isSpatial) => {
             <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
 	        </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn">OK</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -211,7 +211,7 @@ let sbmlToModelHtml = (title, errors) => {
             <p> ${errors.join("<br>")} </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -231,8 +231,39 @@ let deleteFileHtml = (fileType) => {
             </button>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary yes-modal-btn">Yes</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+            <button type="button" class="btn btn-primary yes-modal-btn box-shadow">Yes</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+let uploadFileHtml = (type) => {
+  return `
+    <div id="uploadFileModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Upload a ${type} </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="verticle-space">
+              <span class="inline" for="datafile">Please specify a file to import: </span>
+              <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" required>
+            </div>
+            <div class="verticle-space">
+              <span class="inline" for="fileNameInput">New file name (optional): </span>
+              <input type="text" id="fileNameInput" name="fileNameInput" size="30">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary box-shadow upload-modal-btn" disabled>Upload</button>
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
           </div>
         </div>
       </div>
@@ -248,6 +279,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
     'click [data-hook=new-model]' : 'handleCreateModelClick',
+    'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(operationInfoModalHtml()).modal();
     },
@@ -256,6 +288,12 @@ let FileBrowser = PageView.extend({
     var self = this;
     this.nodeForContextMenu = "";
     this.renderWithTemplate();
+    window.addEventListener('pageshow', function (e) {
+      var navType = window.performance.navigation.type
+      if(navType === 2){
+        window.location.reload()
+      }
+    });
     this.setupJstree();
     setTimeout(function () {
       self.refreshInitialJSTree();
@@ -273,6 +311,75 @@ let FileBrowser = PageView.extend({
         self.refreshInitialJSTree();
       }, 3000);
     }
+  },
+  handleUploadFileClick: function (e) {
+    let file = this.queryByHook('file-for-upload').files[0]
+    let req = new XMLHttpRequest();
+    let formData = new FormData()
+    let endpoint = path.join(app.getApiPath(), 'file/upload');
+    var fileinfo = {"type":"","name":""}
+    if(file.name.endsWith('.ipynb')){
+      fileinfo.type = "Notebook"
+    }
+    formData.append("datafile", file)
+    formData.append("fileinfo", JSON.stringify(fileinfo))
+    req.open("POST", endpoint)
+    req.onload = function (e) {
+      if(req.status < 400) {
+        console.log(req.response)
+      }
+    }
+    req.send(formData)
+  },
+  uploadFile: function (o, type) {
+    var self = this
+    if(document.querySelector('#uploadFileModal')) {
+      document.querySelector('#uploadFileModal').remove()
+    }
+    let modal = $(uploadFileHtml(type)).modal();
+    let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
+    let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
+    let input = document.querySelector('#uploadFileModal #fileNameInput');
+    fileInput.addEventListener('change', function (e) {
+      if(fileInput.files.length){
+        uploadBtn.disabled = false
+      }else{
+        uploadBtn.disabled = true
+      }
+    })
+    uploadBtn.addEventListener('click', function (e) {
+      let file = fileInput.files[0]
+      var fileinfo = {"type":type,"name":"","path":"/"}
+      if(o && o.original){
+        fileinfo.path = o.original._path
+      }
+      if(Boolean(input.value)){
+        fileinfo.name = input.value
+      }
+      let formData = new FormData()
+      formData.append("datafile", file)
+      formData.append("fileinfo", JSON.stringify(fileinfo))
+      let endpoint = path.join(app.getApiPath(), 'file/upload');
+      let req = new XMLHttpRequest();
+      req.open("POST", endpoint)
+      req.onload = function (e) {
+        var resp = JSON.parse(req.response)
+        if(req.status < 400) {
+          if(o){
+            var node = $('#models-jstree').jstree().get_node(o.parent);
+            if(node.type === "root" || node.type === "#"){
+              $('#models-jstree').jstree().refresh();
+            }else{
+              $('#models-jstree').jstree().refresh_node(node);
+            }
+          }else{
+            $('#models-jstree').jstree().refresh();
+          }
+        }
+      }
+      req.send(formData)
+      modal.modal('hide')
+    })
   },
   deleteFile: function (o) {
     var fileType = o.type
@@ -305,16 +412,24 @@ let FileBrowser = PageView.extend({
       modal.modal('hide')
     });
   },
-  duplicateFileOrDirectory: function(o, isDirectory) {
+  duplicateFileOrDirectory: function(o, type) {
     var self = this;
     var parentID = o.parent;
-    if(isDirectory){
-      var endpoint = path.join(app.getApiPath(), "directory/duplicate", o.original._path);
+    if(type === "directory"){
+      var identifier = "directory/duplicate"
+    }else if(type === "workflow"){
+      var identifier = path.join("workflow/duplicate", type)
+    }else if(type === "wkfl_model"){
+      var identifier = path.join("workflow/duplicate", type)
     }else{
-      var endpoint = path.join(app.getApiPath(), "model/duplicate", o.original._path);
+      var identifier = "model/duplicate"
     }
+    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
     xhr({uri: endpoint}, function (err, response, body) {
         if(response.statusCode < 400) {
+          if(type === "workflow"){
+            body = JSON.parse(body)
+          }
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
             $('#models-jstree').jstree().refresh()
@@ -428,7 +543,8 @@ let FileBrowser = PageView.extend({
               setTimeout(_.bind(self.hideNameWarning, self), 10000);
             }
             node.original._path = body._path
-          }else{
+          }
+          if(text.split('.').pop() != node.text.split('.').pop()){
             if(parent.type === "root"){
               $('#models-jstree').jstree().refresh()
             }else{          
@@ -535,14 +651,17 @@ let FileBrowser = PageView.extend({
           let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
-              var node = $('#models-jstree').jstree().get_node(o);
-              if(node.type === "root"){
+              if(o){//directory was created with context menu option
+                var node = $('#models-jstree').jstree().get_node(o);
+                if(node.type === "root"){
+                  $('#models-jstree').jstree().refresh()
+                }else{          
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              }else{//directory was created with create directory button
                 $('#models-jstree').jstree().refresh()
-              }else{          
-                $('#models-jstree').jstree().refresh_node(node);
               }
-            }else{
-              $('#models-jstree').jstree().refresh()
+            }else{//new directory not created no need to refresh
               body = JSON.parse(body)
             }
           });
@@ -611,6 +730,41 @@ let FileBrowser = PageView.extend({
               } 
             }
           },
+          "Upload" : {
+            "label" : "Upload File",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "submenu" : {
+              "Model" : {
+                "label" : "StochSS Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "model")
+                }
+              },
+              "SBML" : {
+                "label" : "SBML Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "sbml")
+                }
+              },
+              "File" : {
+                "label" : "File",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "file")
+                }
+              }
+            }
+          },
         }
       }
       else if (o.type ===  'folder') {
@@ -660,6 +814,41 @@ let FileBrowser = PageView.extend({
               } 
             }
           },
+          "Upload" : {
+            "label" : "Upload File",
+            "_disabled" : false,
+            "separator_before" : false,
+            "separator_after" : false,
+            "submenu" : {
+              "Model" : {
+                "label" : "StochSS Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "model")
+                }
+              },
+              "SBML" : {
+                "label" : "SBML Model",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "sbml")
+                }
+              },
+              "File" : {
+                "label" : "File",
+                "_disabled" : false,
+                "separator_before" : false,
+                "separator_after" : false,
+                "action" : function (data) {
+                  self.uploadFile(o, "file")
+                }
+              }
+            }
+          },
           "Download" : {
             "separator_before" : false,
             "separator_after" : false,
@@ -684,7 +873,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, true)
+              self.duplicateFileOrDirectory(o, "directory")
             }
           },
           "Delete" : {
@@ -738,7 +927,7 @@ let FileBrowser = PageView.extend({
           "New Workflow" : {
             "separator_before" : false,
             "separator_after" : false,
-            "_disabled" : false,
+            "_disabled" : true,
             "label" : "New Workflow",
             "action" : function (data) {
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
@@ -759,7 +948,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "model")
             }
           },
           "Delete" : {
@@ -794,7 +983,7 @@ let FileBrowser = PageView.extend({
               "Convert to Spatial" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : false,
+                "_disabled" : true,
                 "label" : "To Spatial Model",
                 "action" : function (data) {
                   self.toSpatial(o)
@@ -853,7 +1042,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "model")
             }
           },
           "Delete" : {
@@ -915,10 +1104,10 @@ let FileBrowser = PageView.extend({
               "Duplicate" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : true,
+                "_disabled" : false,
                 "label" : "Duplicate",
                 "action" : function (data) {
-
+                  self.duplicateFileOrDirectory(o, "wkfl_model")
                 }
               }
             }
@@ -939,6 +1128,15 @@ let FileBrowser = PageView.extend({
             "label" : "Rename",
             "action" : function (data) {
               self.renameNode(o);
+            }
+          },
+          "Duplicate" : {
+            "separator_before" : false,
+            "separator_after" : false,
+            "_disabled" : false,
+            "label" : "Duplicate as new",
+            "action" : function (data) {
+              self.duplicateFileOrDirectory(o, "workflow")
             }
           },
           "Delete" : {
@@ -988,7 +1186,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {
@@ -1056,7 +1254,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {
@@ -1111,7 +1309,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Duplicate",
             "action" : function (data) {
-              self.duplicateFileOrDirectory(o, false)
+              self.duplicateFileOrDirectory(o, "file")
             }
           },
           "Delete" : {

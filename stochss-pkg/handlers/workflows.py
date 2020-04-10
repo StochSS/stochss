@@ -4,6 +4,7 @@ the base API handler has some logic that prevents
 requests without a referrer field
 '''
 
+import logging
 import json
 import os
 import subprocess
@@ -17,8 +18,7 @@ from .util.convert_to_2d_param_sweep_notebook import convert_to_2d_psweep_nb
 from .util.convert_to_sciope_me import convert_to_sciope_me
 from .util.stochss_errors import StochSSAPIError
 
-import logging
-log = logging.getLogger()
+log = logging.getLogger('stochss')
 
 
 class WorkflowInfoAPIHandler(APIHandler):
@@ -37,25 +37,24 @@ class WorkflowInfoAPIHandler(APIHandler):
         info_path : str
             Path to selected workflows info file.
         '''
-        log.setLevel(logging.DEBUG)
-        log.debug("Path to the info file: {0}\n".format(info_path))
+        log.debug("Path to the info file: {0}".format(info_path))
         full_path = os.path.join("/home/jovyan", info_path)
-        log.debug("Full path to the info file: {0}\n".format(full_path))
+        log.debug("Full path to the info file: {0}".format(full_path))
         self.set_header('Content-Type', 'application/json')
         try:
             with open(full_path, 'r') as info_file:
                 data = json.load(info_file)
-            log.debug("Contents of the info file: {0}\n".format(data))
+            log.debug("Contents of the info file: {0}".format(data))
             self.write(data)
         except FileNotFoundError as err:
             self.set_status(404)
             error = {"Reason":"Info File Not Found","Message":"Could not find the workflow info file: "+str(err)}
-            log.error("Exception information: {0}\n".format(error))
+            log.error("Exception information: {0}".format(error))
             self.write(error)
         except JSONDecodeError as err:
             self.set_status(406)
             error = {"Reason":"File Not JSON Format","Message":"The workflow info file is not JSON decodable: "+str(err)}
-            log.error("Exception information: {0}\n".format(error))
+            log.error("Exception information: {0}".format(error))
             self.write(error)
         self.finish()
 
@@ -81,9 +80,8 @@ class RunWorkflowAPIHandler(APIHandler):
         data : str
             Path to selected workflows model file and name or path of workflow.
         '''
-        log.setLevel(logging.DEBUG)
-        log.debug("Model path and workflow name or path: {0}\n".format(data))
-        log.debug("Actions for the workflow: {0}\n".format(opt_type))
+        log.debug("Model path and workflow name or path: {0}".format(data))
+        log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         log.debug("Path to the model: {0}".format(model_path))
@@ -118,9 +116,8 @@ class SaveWorkflowAPIHandler(APIHandler):
         data : str
             Path to selected workflows model file and name or path of workflow.
         '''
-        log.setLevel(logging.DEBUG)
-        log.debug("Model path and workflow name or path: {0}\n".format(data))
-        log.debug("Actions for the workflow: {0}\n".format(opt_type))
+        log.debug("Model path and workflow name or path: {0}".format(data))
+        log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         log.debug("Path to the model: {0}".format(model_path))
@@ -155,8 +152,7 @@ class WorkflowStatusAPIHandler(APIHandler):
         workflow_path : str
             Path to selected workflow directory.
         '''
-        log.setLevel(logging.DEBUG)
-        log.debug('Getting the status of the workflow\n')
+        log.debug('Getting the status of the workflow')
         status = get_status(workflow_path)
         log.debug('The status of the workflow is: {0}\n'.format(status))
         self.write(status)
@@ -179,7 +175,6 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         workflow_path : str
             Path to selected workflow directory.
         '''
-        log.setLevel(logging.DEBUG)
         log.debug("The path to the workflow: {0}\n".format(workflow_path))
         body = json.loads(self.get_query_argument(name='data'))
         log.debug("Plot args passed to the plot: {0}\n".format(body))
@@ -220,7 +215,6 @@ class WorkflowLogsAPIHandler(APIHandler):
         logs_path : str
             Path to the workflow logs file.
         '''
-        log.setLevel(logging.DEBUG)
         log.debug("Path to the workflow logs file: {0}\n".format(logs_path))
         full_path = os.path.join("/home/jovyan/", logs_path)
         log.debug("Full path to the workflow logs file: {0}\n".format(full_path))
@@ -261,7 +255,6 @@ class WorkflowNotebookHandler(APIHandler):
         path : str
             Path to target model within User's file system.
         '''
-        log.setLevel(logging.DEBUG)
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
         workflows = {"1d_parameter_sweep":convert_to_1d_psweep_nb,

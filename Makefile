@@ -103,7 +103,9 @@ build_clean: deps webpack
 	docker build --no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 build:  deps webpack
-	docker build -t $(DOCKER_STOCHSS_IMAGE):latest .
+	docker build \
+	  --build-arg STOCHSS_PIP_EDITABLE=-e \
+	  -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 run:    
 	docker run --rm \

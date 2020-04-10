@@ -8,7 +8,10 @@ import numpy as np
 import pickle
 import plotly
 
-from run_model import run_solver
+try:
+    from run_model import run_solver
+except ModuleNotFoundError:
+    pass
 
 
 def setup_species_results(c, is_2d):
