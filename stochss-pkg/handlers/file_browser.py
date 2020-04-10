@@ -179,14 +179,14 @@ class DuplicateModelHandler(APIHandler):
             Path to target model.
 
         '''
+        self.set_header('Content-Type', 'application/json')
+        log.debug("Copying file: {0}".format(path))
         try:
-            log.debug("Copying file: {0}".format(path))
             resp = duplicate(path)
             log.debug("Response message: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -211,14 +211,14 @@ class DuplicateDirectoryHandler(APIHandler):
             Path to target directory.
 
         '''
+        self.set_header('Content-Type', 'application/json')
+        log.debug("Path to the file: {0}".format(path))
         try:
-            log.debug("Path to the file: {0}".format(path))
             resp = duplicate(path, True)
             log.debug("Response message: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -280,13 +280,13 @@ class ConvertToSpatialAPIHandler(APIHandler):
 
         '''
         log.debug("Converting non-spatial model to spatial model: {0}".format(path))
+        self.set_header('Content-Type', 'application/json')
         try:
             resp = convert_model(path, to_spatial=True)
             log.debug("Response: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -312,13 +312,13 @@ class ConvertToModelAPIHandler(APIHandler):
 
         '''
         log.debug("Converting spatial model to non-spatial model: {0}".format(path))
+        self.set_header('Content-Type', 'application/json')
         try:
             resp = convert_model(path, to_spatial=False)
             log.debug("Response: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -343,6 +343,7 @@ class ModelToSBMLAPIHandler(APIHandler):
             Path from the user directory to the target model file.
 
         '''
+        self.set_header('Content-Type', 'application/json')
         log.debug("Converting to SBML: {0}".format(path))
         try:
             resp = convert_to_sbml(path)
@@ -350,7 +351,6 @@ class ModelToSBMLAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)

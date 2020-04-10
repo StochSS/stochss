@@ -73,7 +73,7 @@ def duplicate(file_path, is_directory=False):
 
     original = full_path.split('/').pop()
     copy = unique_file_path.split('/').pop()
-    return "The model {0} has been successfully copied as {1}".format(original, copy)
+    return {"Message":"The file {0} has been successfully copied as {1}".format(original, copy),"File":copy}
 
 
 def duplicate_wkfl_as_new(wkfl_path, only_model):

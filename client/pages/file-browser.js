@@ -312,6 +312,22 @@ let FileBrowser = PageView.extend({
       }, 3000);
     }
   },
+  selectNode: function (node, fileName) {
+    let self = this
+    if(!$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
+      setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
+    }else{
+      node = $('#models-jstree').jstree().get_node(node)
+      var child = ""
+      for(var i = 0; i < node.children.length; i++) {
+        var child = $('#models-jstree').jstree().get_node(node.children[i])
+        if(child.original.text === fileName) {
+          $('#models-jstree').jstree().select_node(node.children[i])
+          break
+        }
+      }
+    }
+  },
   handleUploadFileClick: function (e) {
     let file = this.queryByHook('file-for-upload').files[0]
     let req = new XMLHttpRequest();
@@ -425,19 +441,15 @@ let FileBrowser = PageView.extend({
       var identifier = "model/duplicate"
     }
     var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
-    xhr({uri: endpoint}, function (err, response, body) {
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
-          if(type === "workflow"){
-            body = JSON.parse(body)
-          }
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
             $('#models-jstree').jstree().refresh()
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
-        }else{
-          body = JSON.parse(body)
+          self.selectNode(node, body.File)
         }
       }
     );
@@ -446,7 +458,7 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     var endpoint = path.join(app.getApiPath(), "/model/to-spatial", o.original._path);
-    xhr({uri: endpoint}, 
+    xhr({uri: endpoint, json: true}, 
       function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
@@ -455,8 +467,7 @@ let FileBrowser = PageView.extend({
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
-        }else{
-          body = JSON.parse(body)
+          self.selectNode(node, body.File)
         }
       }
     );
@@ -469,7 +480,7 @@ let FileBrowser = PageView.extend({
     }else{
       var endpoint = path.join(app.getApiPath(), "sbml/to-model", o.original._path);
     }
-    xhr({uri: endpoint}, function (err, response, body) {
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
@@ -477,20 +488,19 @@ let FileBrowser = PageView.extend({
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
-          if(from === "SBML"){
+          self.selectNode(node, body.File)
+          if(from === "SBML" && body.errors.length > 0){
             var title = ""
-            var resp = JSON.parse(body)
-            var msg = resp.message
-            var errors = resp.errors
+            var msg = body.message
+            var errors = body.errors
             let modal = $(sbmlToModelHtml(msg, errors)).modal();
           }
-        }else{
-          body = JSON.parse(body)
         }
       }
     );
   },
   toNotebook: function (o) {
+    let self = this
     var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400){
@@ -500,7 +510,8 @@ let FileBrowser = PageView.extend({
         }else{
           $('#models-jstree').jstree().refresh_node(node);
         }
-        var notebookPath = path.join(app.getBasePath(), "notebooks", body.File)
+        var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
+        self.selectNode(node, body.File)
         window.open(notebookPath, '_blank')
       }
     });
@@ -509,20 +520,17 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     var endpoint = path.join(app.getApiPath(), "model/to-sbml", o.original._path);
-    xhr({uri: endpoint},
-      function (err, response, body) {
-        if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(parentID);
-          if(node.type === "root"){
-            $('#models-jstree').jstree().refresh()
-          }else{          
-            $('#models-jstree').jstree().refresh_node(node);
-          }
-        }else{
-          body = JSON.parse(body)
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          $('#models-jstree').jstree().refresh_node(node);
         }
+        self.selectNode(node, body.File)
       }
-    );
+    });
   },
   renameNode: function (o) {
     var self = this
