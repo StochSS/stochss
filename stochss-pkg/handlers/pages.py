@@ -1,6 +1,8 @@
 import os
 from notebook.base.handlers import IPythonHandler
-from logging import getLogger
+import logging
+
+log = logging.getLogger('stochss')
 
 class PageHandler(IPythonHandler):
   '''
@@ -14,7 +16,6 @@ class PageHandler(IPythonHandler):
     return self.settings['config']['NotebookApp']['extra_static_paths'][0]
 
   def get_server_path(self):
-    log = getLogger()
     try:
         server_path = os.environ['JUPYTERHUB_SERVICE_PREFIX']
     except:

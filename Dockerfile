@@ -1,5 +1,7 @@
 FROM jupyter/minimal-notebook:latest
 
+ARG STOCHSS_PIP_EDITABLE
+
 USER root
 
 WORKDIR /stochss
@@ -26,7 +28,7 @@ COPY --chown=jovyan:users custom.css /home/jovyan/.jupyter/custom/custom.css
 
 COPY --chown=jovyan:users jupyter_notebook_config.py /home/jovyan/.jupyter/jupyter_notebook_config.py
 
-RUN python -m pip --no-cache-dir install -e .
+RUN python -m pip --no-cache-dir install $STOCHSS_PIP_EDITABLE .
 
 RUN rm -r /home/jovyan/work
 
