@@ -91,8 +91,15 @@ class JsonFileAPIHandler(APIHandler):
         log.debug("Full path to the model: {0}".format(full_path))
         data = self.request.body.decode()
         log.debug("Model data to be saved: {0}".format(data))
-        with open(full_path, 'w') as f:
-            f.write(data)
+        if os.path.exists(full_path):
+            with open(full_path, 'w') as f:
+                f.write(data)
+            log.debug("Saved the model: {0}".format(full_path.split('/').pop().split('.')[0]))
+        else:
+            self.set_status(404)
+            error = {"Reason":"Model Not Found","Message":"Could not find the model file: {0}".format(model_path)}
+            log.error("Exception information: {0}".format(error))
+            self.write(error)
         self.finish()
 
 
