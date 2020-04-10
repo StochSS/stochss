@@ -45,7 +45,7 @@ module.exports = View.extend({
       required: true,
       name: 'name',
       label: 'Model Path: ',
-      tests: tests.nameTests,
+      tests: "",
       modelKey: 'directory',
       valueType: 'string',
       value: this.model.directory,
