@@ -1,9 +1,10 @@
 from notebook.utils import url_path_join
+import logging
 from .pages import *
 from .file_browser import *
 from .models import *
 from .workflows import *
-
+from .log import init_log
 
 def get_page_handlers(route_start):
     handlers = [
@@ -59,4 +60,4 @@ def load_jupyter_server_extension(nb_server_app):
     host_pattern = '.*$'
     page_handlers = get_page_handlers(web_app.settings['base_url'])
     web_app.add_handlers(host_pattern, page_handlers)
-
+    init_log()
