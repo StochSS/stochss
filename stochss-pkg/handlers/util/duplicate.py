@@ -77,12 +77,17 @@ def duplicate(file_path, is_directory=False):
 
 
 def extract_wkfl_model(only_model, model_file, mdl_parent_path, data):
+    from .rename import get_unique_file_name
+
     # Get unique path for the new model path
     if only_model:
-        model_path = get_unique_file_name(model_file, mdl_parent_dir)[0]
+        model_path, changed = get_unique_file_name(model_file, mdl_parent_path)
+    if changed:
+        model_file = model_path.split('/').pop()
     # Copy workflow model into parent directory
     try:
         copyfile(data['model'], model_path)
+        return model_file
     except FileNotFoundError as err:
         raise ModelNotFoundError("Could not read the StochSS model file: " + str(err))
     except PermissionError as err:
@@ -125,7 +130,6 @@ def duplicate_wkfl_as_new(wkfl_path, only_model):
     import json
     from json.decoder import JSONDecodeError
     from datetime import datetime
-    from .rename import get_unique_file_name
     from .run_model import GillesPy2Workflow
     from .parameter_sweep import ParameterSweep
     from .run_workflow import save_new_workflow
@@ -147,14 +151,14 @@ def duplicate_wkfl_as_new(wkfl_path, only_model):
     # Get model file from wkfl info
     model_file = data['model'].split('/').pop()
     # Set model parent path
-    mdl_parent_dir = get_wkfl_model_parent_path(parent_dir, only_model, data, only_model)
+    mdl_parent_dir = get_wkfl_model_parent_path(parent_dir, only_model, data)
     # Make new model path in model parent directory
-    model_path = get_model_path(parent_dir, mdl_parent_dir, model_file)
+    model_path = get_model_path(parent_dir, mdl_parent_dir, model_file, only_model)
     if only_model or not path.exists(model_path):
         # copy wkfl model if user only wants the model or if the model can't be found in original dir or wkfl dir
-        extract_wkfl_model(only_model, model_file, mdl_parent_path, data)
+        model_file = extract_wkfl_model(only_model, model_file, mdl_parent_dir, data)
     if only_model:
-        resp = {"message":"A copy of the model in {0} has been created".format(wkfl_path),"mdlPath":model_path}
+        resp = {"message":"A copy of the model in {0} has been created".format(wkfl_path),"mdlPath":model_path,"File":model_file}
     else:
         # Get base name for new workflow name (current workflow name - timestamp)
         wkfl_base_name = '_'.join(full_path.split('/').pop().split('_')[:-2])
@@ -162,12 +166,18 @@ def duplicate_wkfl_as_new(wkfl_path, only_model):
         today = datetime.now()
         time_stamp = today.strftime("_%m%d%Y_%H%M%S")
         # Make new workflow path in parent directory
-        new_wkfl_path = path.join(parent_dir, ''.join([wkfl_base_name, time_stamp, ".wkfl"]))
+        new_wkfl_dir = ''.join([wkfl_base_name, time_stamp, ".wkfl"])
+        new_wkfl_path = path.join(parent_dir, new_wkfl_dir)
 
         workflows = {"gillespy":GillesPy2Workflow,"psweep":ParameterSweep}
         wkfl = workflows[data['type']](new_wkfl_path, model_path)
         os.mkdir(new_wkfl_path)
         save_new_workflow(wkfl, data['type'], True, False)
 
-        resp = {"message":"A new workflow has been created from {0}".format(wkfl_path),"wkflPath":new_wkfl_path,"mdlPath":model_path}
+        resp = {"message":"A new workflow has been created from {0}".format(wkfl_path),
+                "wkflPath":new_wkfl_path.replace(user_dir, ""),
+                "mdlPath":model_path.replace(user_dir, ""),
+                "File":new_wkfl_dir,
+                "mdl_file":model_file}
     return resp
+

@@ -271,6 +271,29 @@ let uploadFileHtml = (type) => {
   `
 }
 
+let duplicateWorkflowHtml = (wkflFile, mdlPath) => {
+  return `
+    <div id="duplicateWorkflowModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Model for ${wkflFile} </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> The model for <b>${wkflFile}</b> is located here: <b>${mdlPath}</b> </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
   template: template,
@@ -448,6 +471,9 @@ let FileBrowser = PageView.extend({
             $('#models-jstree').jstree().refresh()
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
+          }
+          if(type === "workflow"){
+            let modal = $(duplicateWorkflowHtml(body.File, body.mdlPath)).modal()
           }
           self.selectNode(node, body.File)
         }
