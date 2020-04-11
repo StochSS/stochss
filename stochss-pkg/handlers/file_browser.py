@@ -559,7 +559,7 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
     ##############################################################################
     '''
 
-    async def get(self, target, path):
+    async def get(self, target, time_stamp, path):
         '''
         Creates a duplicate of the model in the target workflow in its parent
         directory.  Creates a new workflow that uses the same model and has 
@@ -573,11 +573,15 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
         '''
         log.debug("Path to the workflow: {0}".format(path))
         log.debug("The {0} is being copied".format(target))
+        if time_stamp == "None":
+            time_stamp = None
+        else:
+            log.debug("The time stamp for the new workflow: {0}".format(time_stamp))
         only_model = target == "wkfl_model"
         log.debug("only_model flag: {0}".format(only_model))
         self.set_header('Content-Type', 'application/json')
         try:
-            resp = duplicate_wkfl_as_new(path, only_model)
+            resp = duplicate_wkfl_as_new(path, only_model, time_stamp)
             log.debug("Response: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:

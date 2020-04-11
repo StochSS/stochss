@@ -17,7 +17,7 @@ def get_unique_file_name(_path):
         Path to the file being copied.
     '''
     file = _path.split('/').pop()
-    dir_path = _path.split(file)[0]
+    dir_path = path.dirname(_path)
     ext = '.' + file.split('.').pop()
     if '-copy' in file:
         name = file.split('-copy')[0]
@@ -32,7 +32,7 @@ def get_unique_file_name(_path):
         copy_file = ''.join([name, '-copy', ext])
         # Check a copy exist with '-copy' in the name
         if copy_file not in os.listdir(dir_path):
-            return _path.replace(file, copy_file)
+            return path.join(dir_path, copy_file)
 
     i = 2
     copy_file = ''.join([name, '-copy({0})'.format(i), ext])
@@ -42,7 +42,7 @@ def get_unique_file_name(_path):
         i += 1
         copy_file = ''.join([name, '-copy({0})'.format(i), ext])
 
-    return _path.replace(file, copy_file)
+    return path.join(dir_path, copy_file)
 
 
 def duplicate(file_path, is_directory=False):
@@ -117,7 +117,7 @@ def get_model_path(wkfl_parent_path, mdl_parent_path, mdl_file, only_model):
     return path.join(mdl_parent_path, mdl_file)
 
 
-def duplicate_wkfl_as_new(wkfl_path, only_model):
+def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
     '''
     Copies the target workflow as a new workflow in the same parent directory.
     Copies the model of the target workflow in the same parent directory.
@@ -162,9 +162,6 @@ def duplicate_wkfl_as_new(wkfl_path, only_model):
     else:
         # Get base name for new workflow name (current workflow name - timestamp)
         wkfl_base_name = '_'.join(full_path.split('/').pop().split('_')[:-2])
-        # Get formatted timestamp for new workflow
-        today = datetime.now()
-        time_stamp = today.strftime("_%m%d%Y_%H%M%S")
         # Make new workflow path in parent directory
         new_wkfl_dir = ''.join([wkfl_base_name, time_stamp, ".wkfl"])
         new_wkfl_path = path.join(parent_dir, new_wkfl_dir)

@@ -457,9 +457,10 @@ let FileBrowser = PageView.extend({
     if(type === "directory"){
       var identifier = "directory/duplicate"
     }else if(type === "workflow"){
-      var identifier = path.join("workflow/duplicate", type)
+      let timeStamp = this.getTimeStamp()
+      var identifier = path.join("workflow/duplicate", type, timeStamp)
     }else if(type === "wkfl_model"){
-      var identifier = path.join("workflow/duplicate", type)
+      var identifier = path.join("workflow/duplicate", type, "None")
     }else{
       var identifier = "model/duplicate"
     }
@@ -479,6 +480,31 @@ let FileBrowser = PageView.extend({
         }
       }
     );
+  },
+  getTimeStamp: function () {
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    if(month < 10){
+      month = "0" + month
+    }
+    var day = date.getDate();
+    if(day < 10){
+      day = "0" + day
+    }
+    var hours = date.getHours();
+    if(hours < 10){
+      hours = "0" + hours
+    }
+    var minutes = date.getMinutes();
+    if(minutes < 10){
+      minutes = "0" + minutes
+    }
+    var seconds = date.getSeconds();
+    if(seconds < 10){
+      seconds = "0" + seconds
+    }
+    return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
   toSpatial: function (o) {
     var self = this;
