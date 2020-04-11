@@ -76,6 +76,42 @@ def duplicate(file_path, is_directory=False):
     return {"Message":"The file {0} has been successfully copied as {1}".format(original, copy),"File":copy}
 
 
+def extract_wkfl_model(only_model, model_file, mdl_parent_path, data):
+    # Get unique path for the new model path
+    if only_model:
+        model_path = get_unique_file_name(model_file, mdl_parent_dir)[0]
+    # Copy workflow model into parent directory
+    try:
+        copyfile(data['model'], model_path)
+    except FileNotFoundError as err:
+        raise ModelNotFoundError("Could not read the StochSS model file: " + str(err))
+    except PermissionError as err:
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+
+
+def get_wkfl_model_parent_path(wkfl_parent_path, model_only, data):
+    if model_only:
+        return wkfl_parent_path
+    if "source_model" in data.keys():
+        mdl_parent_dir = path.dirname(data['source_model'])
+    else:
+        mdl_parent_dir = path.dirname(data['model'])
+    if not path.exists(mdl_parent_dir):
+        return wkfl_parent_path
+    return mdl_parent_dir
+
+
+def get_model_path(wkfl_parent_path, mdl_parent_path, mdl_file, only_model):
+    model_path = path.join(wkfl_parent_path, mdl_file)
+    if only_model:
+        return model_path
+    if wkfl_parent_path == mdl_parent_path:
+        return model_path
+    if mdl_file in os.listdir(path=wkfl_parent_path):
+        return model_path
+    return path.join(mdl_parent_path, mdl_file)
+
+
 def duplicate_wkfl_as_new(wkfl_path, only_model):
     '''
     Copies the target workflow as a new workflow in the same parent directory.
@@ -108,18 +144,15 @@ def duplicate_wkfl_as_new(wkfl_path, only_model):
         raise StochSSFileNotFoundError("Could not read the workflow info file: " + str(err))
     except JSONDecodeError as err:
         raise FileNotJSONFormatError("The workflow info file is not JSON decodable: "+str(err))
-    # Make new model path in parent directory
+    # Get model file from wkfl info
     model_file = data['model'].split('/').pop()
-    model_path = path.join(parent_dir, model_file)
-    # Get unique path for the new model path
-    model_path = get_unique_file_name(model_file, parent_dir)[0]
-    # Copy workflow model into parent directory
-    try:
-        copyfile(data['model'], model_path)
-    except FileNotFoundError as err:
-        raise ModelNotFoundError("Could not read the StochSS model file: " + str(err))
-    except PermissionError as err:
-        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+    # Set model parent path
+    mdl_parent_dir = get_wkfl_model_parent_path(parent_dir, only_model, data, only_model)
+    # Make new model path in model parent directory
+    model_path = get_model_path(parent_dir, mdl_parent_dir, model_file)
+    if only_model or not path.exists(model_path):
+        # copy wkfl model if user only wants the model or if the model can't be found in original dir or wkfl dir
+        extract_wkfl_model(only_model, model_file, mdl_parent_path, data)
     if only_model:
         resp = {"message":"A copy of the model in {0} has been created".format(wkfl_path),"mdlPath":model_path}
     else:
