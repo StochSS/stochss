@@ -102,6 +102,7 @@ def update_info_file(info_path, wkfl_mdl_path):
     with open(info_path, 'r') as info_file:
         info_data = json.loads(info_file.read())
 
+    info_data['source_model'] = info_data['model'] # preserve path to source model
     info_data['start_time'] = str_datetime # add start time to workflow info
     info_data['model'] = wkfl_mdl_path # Update the location of the model
 

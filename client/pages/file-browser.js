@@ -1109,11 +1109,11 @@ let FileBrowser = PageView.extend({
 
                 }
               },
-              "Duplicate" : {
+              "Extract" : {
                 "separator_before" : false,
                 "separator_after" : false,
                 "_disabled" : false,
-                "label" : "Duplicate",
+                "label" : "Extract",
                 "action" : function (data) {
                   self.duplicateFileOrDirectory(o, "wkfl_model")
                 }

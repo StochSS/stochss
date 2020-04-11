@@ -136,14 +136,25 @@ class MoveFileAPIHandler(APIHandler):
             Data string containing old and new locations of target file.
 
         '''
+        user_dir = "/home/jovyan/"
         log.debug("File path and dest path: {0}".format(data))
-        old_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/')[0]))
+        old_path = os.path.join(user_dir, "{0}".format(data.split('/<--MoveTo-->/')[0]))
         log.debug("Path to the file: {0}".format(old_path))
-        new_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/').pop()))
+        new_path = os.path.join(user_dir, "{0}".format(data.split('/<--MoveTo-->/').pop()))
         log.debug("Destination path: {0}".format(new_path))
         try:
             if os.path.isdir(old_path):
                 move(old_path, new_path)
+                # If directory is wkfl and has been started, update wkfl model path
+                if old_path.endswith('.wkfl') and "RUNNING" in os.listdir(path=new_path):
+                    old_parent_dir = os.path.dirname(old_path)
+                    new_parent_dir = os.path.dirname(new_path)
+                    with open(os.path.join(new_path, "info.json"), "r+") as info_file:
+                        info = json.load(info_file)
+                        info['model'] = info['model'].replace(old_parent_dir, new_parent_dir)
+                        info_file.seek(0)
+                        json.dump(info, info_file)
+                        info_file.truncate()
             else:
                 os.rename(old_path, new_path)
             self.write("Success! {0} was moved to {1}.".format(old_path, new_path))
