@@ -14,6 +14,9 @@ var template = require('../templates/includes/workflowEditor.pug');
 
 module.exports = View.extend({
   template: template,
+  events: {
+    'change [data-hook=model-name-container]' : 'updateWorkflowEditor',
+  },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.type = attrs.type;
@@ -28,10 +31,14 @@ module.exports = View.extend({
       directory: directory,
       is_spatial: isSpatial,
       isPreview: false,
+      for: "wkfl",
     });
     this.model.fetch({
       success: function (model, response, options) {
         self.renderSubviews();
+      },
+      error: function (e) {
+        self.renderModelPathInputView()
       }
     });
   },
@@ -39,17 +46,19 @@ module.exports = View.extend({
   },
   updateValid: function (e) {
   },
-  renderSubviews: function() {
-    var inputName = new InputView({
-      parent: this,
-      required: true,
-      name: 'name',
-      label: 'Model Path: ',
-      tests: "",
-      modelKey: 'directory',
-      valueType: 'string',
-      value: this.model.directory,
+  updateWorkflowEditor: function (e) {
+    let self = this;
+    this.model.fetch({
+      success: function (model, response, options) {
+        self.renderSubviews();
+      },
+      error: function (e) {
+        self.renderModelPathInputView()
+      }
     });
+  },
+  renderSubviews: function() {
+    this.renderModelPathInputView()
     //initialize the settings views and add it to the dictionary of settings views
     this.settingsViews.gillespy = new SimSettingsView({
       parent: this,
@@ -62,7 +71,6 @@ module.exports = View.extend({
     var workflowStateButtons = new WorkflowStateButtonsView({
       model: this.model
     });
-    this.registerRenderSubview(inputName, "model-name-container");
     this.registerRenderSubview(this.settingsViews['gillespy'], 'sim-settings-container');
     if(this.type === "parameterSweep"){
       var species = this.model.species;
@@ -94,6 +102,22 @@ module.exports = View.extend({
     this.parent.trajectories = this.model.simulationSettings.realizations
     this.parent.species = this.model.species
     this.parent.speciesOfInterest = this.model.parameterSweepSettings.speciesOfInterest
+  },
+  renderModelPathInputView: function () {
+    if(this.modelPathInput){
+      this.modelPathInput.remove()
+    }
+    this.modelPathInput = new InputView({
+      parent: this,
+      required: true,
+      name: 'name',
+      label: 'Model Path: ',
+      tests: "",
+      modelKey: 'directory',
+      valueType: 'string',
+      value: this.model.directory,
+    });
+    this.registerRenderSubview(this.modelPathInput, "model-name-container");
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

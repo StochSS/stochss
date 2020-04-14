@@ -20,7 +20,7 @@ def get_page_handlers(route_start):
         ## API Handlers
         #
         ("/stochss/models/browser-list(.+)\/?", ModelBrowserFileList), # TODO: /api, not /models
-        ("/stochss/api/json-data/(.+)\/?", JsonFileAPIHandler),
+        ("/stochss/api/json-data/(\w+)/(.+)\/?", JsonFileAPIHandler),
         ("/stochss/api/models/run/(\w+)/(\w+)?\/?(.+)\/?", RunModelAPIHandler),
         ("/stochss/api/model/duplicate/(.+)\/?", DuplicateModelHandler),
         ("/stochss/api/models/to-notebook/(.+)\/?", ModelToNotebookHandler),

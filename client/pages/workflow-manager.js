@@ -108,10 +108,6 @@ let WorkflowManager = PageView.extend({
   updateValid: function () {
   },
   renderSubviews: function () {
-    var workflowEditor = new WorkflowEditorView({
-      directory: this.modelDirectory,
-      type: this.type,
-    });
     var inputName = new InputView({
       parent: this,
       required: true,
@@ -122,8 +118,8 @@ let WorkflowManager = PageView.extend({
       valueType: 'string',
       value: this.workflowName,
     });
-    this.workflowEditorView = this.registerRenderSubview(workflowEditor, 'workflow-editor-container');
     this.registerRenderSubview(inputName, 'workflow-name');
+    this.renderWorkflowEditor();
     this.renderWorkflowStatusView();
     this.updateTrajectories();
     this.renderModelViewer();
@@ -178,6 +174,16 @@ let WorkflowManager = PageView.extend({
   },
   disableWorkflowNameInput: function() {
     $(this.queryByHook("workflow-name")).find('input').prop('disabled', true);
+  },
+  renderWorkflowEditor: function () {
+    if(this.workflowEditorView){
+      this.workflowEditorView.remove()
+    }
+    var workflowEditor = new WorkflowEditorView({
+      directory: this.modelDirectory,
+      type: this.type,
+    });
+    this.workflowEditorView = this.registerRenderSubview(workflowEditor, 'workflow-editor-container');
   },
   renderWorkflowStatusView: function () {
     if(this.workflowStatusView){

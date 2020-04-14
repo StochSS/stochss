@@ -26,7 +26,7 @@ class JsonFileAPIHandler(APIHandler):
     downloading json formatted files.
     ########################################################################
     '''
-    async def get(self, file_path):
+    async def get(self, purpose, file_path):
         '''
         Retrieve model data from User's file system if it exists and 
         create new models using a model template if they don't.  Also
@@ -46,7 +46,7 @@ class JsonFileAPIHandler(APIHandler):
                 data = json.load(f)
             log.debug("Contents of the json file: {0}".format(data))
             self.write(data)
-        else:
+        elif purpose == "edit":
             new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
             log.debug("Path to the model template: {0}".format(new_path))
             try:
@@ -72,10 +72,15 @@ class JsonFileAPIHandler(APIHandler):
                 error = {"Reason":"Template Data Not JSON Format","Message":"Template data is not JSON decodeable: "+str(err)}
                 log.error("Exception information: {0}".format(error))
                 self.write(error)
+        else:
+            self.set_status(404)
+            error = {"Reason":"Model Not Found","Message":"Could not find the model file: "+file_path}
+            log.error("Exception information: {0}".format(error))
+            self.write(error)
         self.finish()
 
 
-    async def post(self, model_path):
+    async def post(self, purpose, model_path):
         '''
         Send/Save model data to user container.
 
@@ -85,7 +90,7 @@ class JsonFileAPIHandler(APIHandler):
             Path to target  model within user pod container.
         '''
         log.debug("Path to the model: {0}".format(model_path))
-        model_path = model_path.replace(" ", "\ ")
+        # model_path = model_path.replace(" ", "\ ")
         log.debug("Path with escape char spaces: {0}".format(model_path))
         full_path = os.path.join('/home/jovyan', model_path)
         log.debug("Full path to the model: {0}".format(full_path))

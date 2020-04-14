@@ -271,7 +271,7 @@ let uploadFileHtml = (type) => {
   `
 }
 
-let duplicateWorkflowHtml = (wkflFile, mdlPath) => {
+let duplicateWorkflowHtml = (wkflFile, body) => {
   return `
     <div id="duplicateWorkflowModal" class="modal" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
@@ -283,7 +283,7 @@ let duplicateWorkflowHtml = (wkflFile, mdlPath) => {
             </button>
           </div>
           <div class="modal-body">
-            <p> The model for <b>${wkflFile}</b> is located here: <b>${mdlPath}</b> </p>
+            <p> ${body} </p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
@@ -474,7 +474,13 @@ let FileBrowser = PageView.extend({
             $('#models-jstree').jstree().refresh_node(node);
           }
           if(type === "workflow"){
-            let modal = $(duplicateWorkflowHtml(body.File, body.mdlPath)).modal()
+            var message = ""
+            if(body.error){
+              message = body.error
+            }else{
+              message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>"
+            }
+            let modal = $(duplicateWorkflowHtml(body.File, message)).modal()
           }
           self.selectNode(node, body.File)
         }
@@ -622,7 +628,7 @@ let FileBrowser = PageView.extend({
   },
   getJsonFileForExport: function (o) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "json-data", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "json-data/export", o.original._path);
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         self.exportToJsonFile(body, o.original.text);

@@ -88,6 +88,7 @@ let ModelEditor = PageView.extend({
       directory: directory,
       is_spatial: isSpatial,
       isPreview: true,
+      for: 'edit',
     });
     this.model.fetch({
       success: function (model, response, options) {
