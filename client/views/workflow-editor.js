@@ -138,6 +138,7 @@ module.exports = View.extend({
     console.log(title, message)
     let modal = $(modelNotFoundHtml(title, message)).modal()
     this.renderModelPathInputView(true)
+    $(this.queryByHook("model-name-container")).find('input').prop('autofocus', true)
   },
   renderModelPathInputView: function (mdlNotFound) {
     if(this.modelPathInput){
@@ -154,7 +155,6 @@ module.exports = View.extend({
       value: this.model.directory,
     });
     this.registerRenderSubview(this.modelPathInput, "model-name-container");
-    $(this.queryByHook("model-name-container")).find('input').prop('autofocus', true)
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

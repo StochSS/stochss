@@ -746,6 +746,20 @@ let FileBrowser = PageView.extend({
   showContextMenuForNode: function (e) {
     $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
   },
+  editWorkflowModel: function (o) {
+    let endpoint = path.join(app.getApiPath(), "workflow/edit-model", o.original._path)
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        if(body.error){
+          let title = o.text + " Not Found"
+          let message = body.error
+          let modal = $(duplicateWorkflowHtml(title, message)).modal()
+        }else{
+          window.location.href = path.join(app.routePrefix, "models/edit", body.file)
+        }
+      }
+    });
+  },
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -1123,6 +1137,7 @@ let FileBrowser = PageView.extend({
 	      }
       }
       else if (o.type === 'workflow') {
+        var disabled = !(o.original._status === "ready")
         return {
           "Open" : {
             "separator_before" : false,
@@ -1161,10 +1176,10 @@ let FileBrowser = PageView.extend({
               "Edit" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : true,
+                "_disabled" : disabled,
                 "label" : " Edit",
                 "action" : function (data) {
-
+                  self.editWorkflowModel(o)
                 }
               },
               "Extract" : {

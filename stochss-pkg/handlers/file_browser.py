@@ -590,3 +590,55 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
             log.error("Exception information: {0}".format(error))
             self.write(error)
         self.finish()
+
+
+class GetWorkflowModelPathAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for getting the path to the workflow model.
+    ##############################################################################
+    '''
+
+    async def get(self, path):
+        '''
+        Returns the path to the model used for the workflow to allow the user 
+        to edit the model.  If the model doesn't exist a 404 response is sent.
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the target workflow.
+
+        '''
+        from json.decoder import JSONDecodeError
+
+        user_dir = "/home/jovyan"
+
+        self.set_header('Content-Type', 'application/json')
+        log.debug("The path to the workflow: {0}".format(path))
+        full_path = os.path.join(user_dir, path, "info.json")
+        log.debug("The full path to the workflow's info file: {0}".format(full_path))
+        try:
+            with open(full_path, "r") as info_file:
+                info = json.load(info_file)
+            log.debug("Workflow info: {0}".format(info))
+            model_path = info['model']
+            log.debug("Path to the workflow's model: {0}".format(model_path))
+            resp = {"file":model_path.replace(user_dir + "/", "")}
+            if not os.path.exists(os.path.join(user_dir, model_path)):
+                mdl_file = model_path.split('/').pop()
+                resp['error'] = "The model file {0} could not be found.  To edit the model you will need to extract the model from the workflow or open the workflow and update the path to the model.".format(mdl_file)
+            log.debug("Response: {0}".format(resp))
+            self.write(resp)
+        except FileNotFoundError as err:
+            self.set_status(404)
+            error = {"Reason":"Workflow Info File Not Found","Message":"Could not find the workflow's info file: "+str(err)}
+            log.error(error)
+            self.write(error)
+        except JSONDecodeError as err:
+            self.set_status(404)
+            error = {"Reason":"Workflow Info File Not JSON Format","Message":"The workflow info file is not JSON decodable: "+str(err)}
+            log.error(error)
+            self.write(error)
+        self.finish()
+
