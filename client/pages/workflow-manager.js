@@ -82,6 +82,7 @@ let WorkflowManager = PageView.extend({
         if(response.statusCode < 400) {
           self.modelDirectory = body.model.split('/home/jovyan').pop();
           self.type = body.type;
+          self.titleType = types[self.type]
           self.startTime = body.start_time;
           var workflowDir = self.directory.split('/').pop();
           self.workflowName = workflowDir.split('.')[0];
@@ -108,6 +109,7 @@ let WorkflowManager = PageView.extend({
   updateValid: function () {
   },
   renderSubviews: function () {
+    $(this.queryByHook("page-title")).text('Workflow: '+this.titleType)
     var inputName = new InputView({
       parent: this,
       required: true,
