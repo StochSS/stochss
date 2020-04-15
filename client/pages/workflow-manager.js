@@ -130,7 +130,7 @@ let WorkflowManager = PageView.extend({
       this.disableWorkflowNameInput();
     }
     if(this.status !== 'new' && this.status !== 'ready'){
-      workflowEditor.collapseContainer();
+      this.workflowEditor.collapseContainer();
     }
     if(this.status === 'running'){
       this.getWorkflowStatus();
@@ -181,11 +181,11 @@ let WorkflowManager = PageView.extend({
     if(this.workflowEditorView){
       this.workflowEditorView.remove()
     }
-    var workflowEditor = new WorkflowEditorView({
+    this.workflowEditor = new WorkflowEditorView({
       directory: this.modelDirectory,
       type: this.type,
     });
-    this.workflowEditorView = this.registerRenderSubview(workflowEditor, 'workflow-editor-container');
+    this.workflowEditorView = this.registerRenderSubview(this.workflowEditor, 'workflow-editor-container');
   },
   renderWorkflowStatusView: function () {
     if(this.workflowStatusView){
