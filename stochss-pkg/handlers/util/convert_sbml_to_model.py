@@ -243,7 +243,7 @@ def get_events(events, stochss_species, stochss_parameters, comp_id):
                         }
 
         assignments = event.assignments
-        stochss_assignments = get_event_assignments(assignments, stochss_species, stochss_parameters)
+        stochss_assignments = get_event_assignment(assignments, stochss_species, stochss_parameters)
         stochss_event['eventAssignment'].extend(stochss_assignments)
 
         stochss_events.append(stochss_event)
