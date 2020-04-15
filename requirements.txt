@@ -1,5 +1,5 @@
 python-libsbml==5.18.0
-gillespy2==1.3.3
+gillespy2==1.3.4
 vtk
 pygmsh==5.0.2
 meshio==2.3.10
