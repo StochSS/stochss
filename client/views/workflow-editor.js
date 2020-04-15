@@ -12,13 +12,43 @@ var Model = require('../models/model');
 //templates
 var template = require('../templates/includes/workflowEditor.pug');
 
+let modelNotFoundHtml = (title, message) => {
+  return `
+    <div id="duplicateWorkflowModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> ${title} </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${message} </p>
+            <p> Please correct the model path and press enter to reset the workflow. </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
 module.exports = View.extend({
   template: template,
+  events: {
+    'change [data-hook=model-name-container]' : 'updateWorkflowEditor',
+  },
   initialize: function (attrs, options) {
+    var self = this;
+    $(document).on('hidden.bs.modal', function (e) {
+      $(self.queryByHook("model-name-container")).find('input').focus();
+    });
     View.prototype.initialize.apply(this, arguments);
     this.type = attrs.type;
     this.settingsViews = {};
-    var self = this;
     var directory = attrs.directory
     var modelFile = directory.split('/').pop();
     var name = modelFile.split('.')[0];
@@ -28,10 +58,15 @@ module.exports = View.extend({
       directory: directory,
       is_spatial: isSpatial,
       isPreview: false,
+      for: "wkfl",
     });
     this.model.fetch({
+      json: true,
       success: function (model, response, options) {
         self.renderSubviews();
+      },
+      error: function (model, response, options) {
+        self.modelNotFound(response.body)
       }
     });
   },
@@ -39,17 +74,20 @@ module.exports = View.extend({
   },
   updateValid: function (e) {
   },
-  renderSubviews: function() {
-    var inputName = new InputView({
-      parent: this,
-      required: true,
-      name: 'name',
-      label: 'Model Path: ',
-      tests: tests.nameTests,
-      modelKey: 'directory',
-      valueType: 'string',
-      value: this.model.directory,
+  updateWorkflowEditor: function (e) {
+    let self = this;
+    this.model.fetch({
+      json: true,
+      success: function (model, response, options) {
+        self.renderSubviews();
+      },
+      error: function (model, response, options) {
+        self.modelNotFound(response.body)
+      }
     });
+  },
+  renderSubviews: function() {
+    this.renderModelPathInputView(false)
     //initialize the settings views and add it to the dictionary of settings views
     this.settingsViews.gillespy = new SimSettingsView({
       parent: this,
@@ -62,7 +100,6 @@ module.exports = View.extend({
     var workflowStateButtons = new WorkflowStateButtonsView({
       model: this.model
     });
-    this.registerRenderSubview(inputName, "model-name-container");
     this.registerRenderSubview(this.settingsViews['gillespy'], 'sim-settings-container');
     if(this.type === "parameterSweep"){
       var species = this.model.species;
@@ -94,6 +131,30 @@ module.exports = View.extend({
     this.parent.trajectories = this.model.simulationSettings.realizations
     this.parent.species = this.model.species
     this.parent.speciesOfInterest = this.model.parameterSweepSettings.speciesOfInterest
+  },
+  modelNotFound: function (error) {
+    let title = error.Reason
+    let message = error.Message
+    console.log(title, message)
+    let modal = $(modelNotFoundHtml(title, message)).modal()
+    this.renderModelPathInputView(true)
+    $(this.queryByHook("model-name-container")).find('input').prop('autofocus', true)
+  },
+  renderModelPathInputView: function (mdlNotFound) {
+    if(this.modelPathInput){
+      this.modelPathInput.remove()
+    }
+    this.modelPathInput = new InputView({
+      parent: this,
+      required: true,
+      name: 'name',
+      label: 'Model Path: ',
+      tests: "",
+      modelKey: 'directory',
+      valueType: 'string',
+      value: this.model.directory,
+    });
+    this.registerRenderSubview(this.modelPathInput, "model-name-container");
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

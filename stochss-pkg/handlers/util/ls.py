@@ -3,6 +3,7 @@
 import os
 import json
 from os import path
+from .workflow_status import get_status
 from .stochss_errors import StochSSFileNotFoundError
 
 
@@ -67,6 +68,9 @@ def buildChild(text, f_type, p_path):
         _path = path.join(p_path, text) # The child is in a sub-leve of the tree
     child = { 'text' : text, 'type' : f_type, '_path' : _path }
     child['children'] = f_type == "folder"
+    if f_type == "workflow":
+        status = get_status(_path)
+        child['_status'] = status
     return child
 
 

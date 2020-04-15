@@ -21,6 +21,7 @@ module.exports = Model.extend({
     return path.join(
       app.getApiPath(),
       "json-data",
+      this.for,
       String(this.directory)
     );
   },
@@ -55,6 +56,7 @@ module.exports = Model.extend({
     selectedReaction: 'object',
     directory: 'string',
     isPreview: 'boolean',
+    for: 'string',
   },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);

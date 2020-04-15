@@ -15,7 +15,9 @@ def convert_to_sbml(_path):
     model_file = path.split('/').pop()
     model_name = model_file.split('.')[0]
     sbml_file = model_name + ".sbml"
-    sbml_path = get_unique_file_name(sbml_file, path.split(model_file)[0])[0]
+    sbml_path, changed  = get_unique_file_name(sbml_file, path.split(model_file)[0])
+    if changed:
+        sbml_file = sbml_path.split('/').pop()
     
     model = get_stochss_model(path)
     model['name'] = model_name
@@ -60,7 +62,7 @@ def convert_to_sbml(_path):
 
     write_sbml_to_file(sbml_path, document)
 
-    return "{0} was successfully converted to {1}".format(model_file, sbml_file)
+    return {"Message":"{0} was successfully converted to {1}".format(model_file, sbml_file),"File":sbml_file}
     
 
 def is_valid_rate_rule(rule):

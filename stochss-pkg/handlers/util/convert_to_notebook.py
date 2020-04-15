@@ -54,4 +54,4 @@ def convert_to_notebook(_model_path):
         nbformat.write(nb, f, version=4)
     f.close()
 
-    return {"Message":'{0} successfully created'.format(dest_file),"File":dest_file.replace(user_dir+'/', "")}
+    return {"Message":'{0} successfully created'.format(dest_file),"FilePath":dest_file.replace(user_dir+'/', ""),"File":dest_file.split('/').pop()}
