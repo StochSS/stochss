@@ -227,8 +227,8 @@ def build_summary_element(stoich_specie):
 def get_events(events, stochss_species, stochss_parameters, comp_id):
     stochss_events = []
 
-    for name in events.keys():
-        event = events['name']
+    for name, events in events.items():
+        
 
         stochss_event = {"compID":comp_id,
                          "name": event.name,
