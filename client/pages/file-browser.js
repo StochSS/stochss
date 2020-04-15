@@ -645,13 +645,8 @@ let FileBrowser = PageView.extend({
   },
   getExportData: function (o, isJSON, identifier, dataType) {
     var self = this;
-<<<<<<< HEAD
-    var endpoint = path.join(app.getApiPath(), "json-data/export", o.original._path);
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-=======
     var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
     xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
->>>>>>> 8c0e99adeeb26068421210bd44fa49b77028d5d1
       if(response.statusCode < 400) {
         if(dataType === "json") {
           self.exportToJsonFile(body, o.original.text);
