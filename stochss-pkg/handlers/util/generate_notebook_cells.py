@@ -440,3 +440,8 @@ def set_model_parameters(params, model):
     for e, (pname, p) in enumerate(model.lostOfParameters.items()):
         model.get_parameter(pname).set_expression(params[e])
     return model
+
+# Here we use the GillesPy2 NumPy Solver
+def simulator
+    '''
+
