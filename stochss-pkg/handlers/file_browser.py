@@ -562,7 +562,7 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, target, path):
+    async def get(self, target, time_stamp, path):
         '''
         Creates a duplicate of the model in the target workflow in its parent
         directory.  Creates a new workflow that uses the same model and has 
