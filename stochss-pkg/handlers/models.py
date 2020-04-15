@@ -28,7 +28,7 @@ class JsonFileAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, file_path):
+    async def get(self, purpose, file_path):
         '''
         Retrieve model data from User's file system if it exists and 
         create new models using a model template if they don't.  Also
@@ -83,7 +83,7 @@ class JsonFileAPIHandler(APIHandler):
 
         
     @web.authenticated
-    async def post(self, model_path):
+    async def post(self, purpose, model_path):
         '''
         Send/Save model data to user container.
 
