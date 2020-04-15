@@ -9,6 +9,7 @@ Use finish() for json, write() for text
 from notebook.base.handlers import APIHandler
 import json, os
 import logging
+from tornado import web
 from shutil import move, rmtree
 from .util.stochss_errors import StochSSAPIError
 from .util.ls import ls
@@ -29,6 +30,7 @@ class ModelBrowserFileList(APIHandler):
     Handler for interacting with the User's File Browser
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, path):
         '''
         Reads the content of a directory and returns a jstree dictionary. 
@@ -59,6 +61,7 @@ class ModelToNotebookHandler(APIHandler):
     (.ipynb) file.
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, path):
         '''
         Runs the convert_to_notebook function from the convert_to_notebook script
@@ -89,6 +92,7 @@ class DeleteFileAPIHandler(APIHandler):
     Handler for removing files and/or directoies from the User's file system.
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, path):
         '''
         Removes a single file or recursively remove a directory and its contents.
@@ -126,6 +130,7 @@ class MoveFileAPIHandler(APIHandler):
     Handler moving file locations in the User's file system.
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, data):
         '''
         Moves a file or a directory and its contents to a new location.
@@ -178,7 +183,7 @@ class DuplicateModelHandler(APIHandler):
     Handler for creating copies of a file.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Creates a copy of a file with a unique name and stores it in the same 
@@ -210,7 +215,7 @@ class DuplicateDirectoryHandler(APIHandler):
     Handler for creating copies of a directory and its contents.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Creates a copy of a directory and its contents with a unique name and 
@@ -242,7 +247,7 @@ class RenameAPIHandler(APIHandler):
     Handler for renaming files or directories.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, data):
         '''
         Rename a file or directory.  If the file or directory already exists
@@ -278,7 +283,7 @@ class ConvertToSpatialAPIHandler(APIHandler):
     Handler for converting a model to a spatial model.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Creates a spatial model file with a unique name from a model file and 
@@ -310,7 +315,7 @@ class ConvertToModelAPIHandler(APIHandler):
     Handler for converting a spatial model to a model.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Creates a model file with a unique name from a spatial model file and 
@@ -342,7 +347,7 @@ class ModelToSBMLAPIHandler(APIHandler):
     Handler for converting a StochSS model to a SBML model.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Create a SBML Model file with a unique name from a model file and 
@@ -411,7 +416,7 @@ class DownloadAPIHandler(APIHandler):
     Handler for downloading plain text files to the users download directory.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Read and return plain text files.
@@ -439,13 +444,13 @@ class DownloadAPIHandler(APIHandler):
 
 
 class DownloadZipFileAPIHandler(APIHandler):
-     '''
-     ##############################################################################
-     Handler for downloading zip files to the users download directory.
-     ##############################################################################
-     '''
-
-     async def get(self, action, path):
+    '''
+    ##############################################################################
+    Handler for downloading zip files to the users download directory.
+    ##############################################################################
+    '''
+    @web.authenticated
+    async def get(self, action, path):
         '''
         Read and download a zip file or generate a zip file from a directory or 
         file and then download.  Generated zip files are stored in the targets 
@@ -467,11 +472,9 @@ class DownloadZipFileAPIHandler(APIHandler):
         else:
             self.set_header('Content-Type', 'application/json')
         
-        generate = not action == "download"
-        log.debug("Generate script arguement: {0}".format(generate))
         try:
-            resp = download_zip(path, generate)
-            log.debug("Response: {0}".format(resp))
+            resp = download_zip(path, action)
+            log.debug("Response: {0}\n".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
@@ -489,7 +492,7 @@ class CreateDirectoryHandler(APIHandler):
     Handler for creating a new directory or path of directories.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, directories):
         '''
         Creates a single directory or if the path od directories contains other
@@ -522,7 +525,7 @@ class UploadFileAPIHandler(APIHandler):
     Handler for uploading files.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def post(self):
         '''
         Uploads the target file to the target directory.  If the intended file
@@ -558,8 +561,8 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
     Handler for duplicating a workflow as new and a workflows model.
     ##############################################################################
     '''
-
-    async def get(self, target, time_stamp, path):
+    @web.authenticated
+    async def get(self, target, path):
         '''
         Creates a duplicate of the model in the target workflow in its parent
         directory.  Creates a new workflow that uses the same model and has 
