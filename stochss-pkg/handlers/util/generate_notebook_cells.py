@@ -431,3 +431,12 @@ class ParameterSweepConfig(ParameterSweep2D):
 '''.format(p1['name'], p2['name'], soi, model_name)
     return psweep_config_cell
 
+
+def generate_mdl_inf_simulator_cell():
+    mdl_inf_simulator_cell = '''# Define simulator function
+def set_model_parameters(params, model):
+    """para,s - array, need to have the same order as
+    model.listOfParameters """
+    for e, (pname, p) in enumerate(model.lostOfParameters.items()):
+        model.get_parameter(pname).set_expression(params[e])
+    return model
