@@ -20,7 +20,7 @@ def get_page_handlers(route_start):
         ## API Handlers
         #
         ("/stochss/models/browser-list(.+)\/?", ModelBrowserFileList), # TODO: /api, not /models
-        ("/stochss/api/json-data/(.+)\/?", JsonFileAPIHandler),
+        ("/stochss/api/json-data/(\w+)/(.+)\/?", JsonFileAPIHandler),
         ("/stochss/api/models/run/(\w+)/(\w+)?\/?(.+)\/?", RunModelAPIHandler),
         ("/stochss/api/model/duplicate/(.+)\/?", DuplicateModelHandler),
         ("/stochss/api/models/to-notebook/(.+)\/?", ModelToNotebookHandler),
@@ -35,8 +35,9 @@ def get_page_handlers(route_start):
         ("/stochss/api/workflow/workflow-status/(.+)\/?", WorkflowStatusAPIHandler),
         ("/stochss/api/workflow/workflow-logs/(.+)\/?", WorkflowLogsAPIHandler),
         ("/stochss/api/workflow/plot-results/(.+)\/?", PlotWorkflowResultsAPIHandler),
+        ("/stochss/api/workflow/duplicate/(\w+)/(\w+)/(.+)\/?", DuplicateWorkflowAsNewHandler),
+        ("/stochss/api/workflow/edit-model/(.+)\/?", GetWorkflowModelPathAPIHandler),
         ("/stochss/api/file/upload\/?", UploadFileAPIHandler),
-        ("/stochss/api/workflow/duplicate/(\w+)/(.+)\/?", DuplicateWorkflowAsNewHandler),
         ("/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
         ("/stochss/api/file/delete/(.+)\/?", DeleteFileAPIHandler),
         ("/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
