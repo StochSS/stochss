@@ -90,7 +90,6 @@ module.exports = View.extend({
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
       self.parent.collapseContainer();
-      self.parent.parent.updateWorkflowStatus();
       if(document.URL.endsWith('.mdl')){
         setTimeout(function () {
           let pathname = window.location.pathname.split('/');
@@ -99,6 +98,8 @@ module.exports = View.extend({
           workflowpath = path.join(pathname, self.parent.parent.workflowName + '.wkfl')
           window.location.href = workflowpath;
         }, 3000);        
+      }else{
+        self.parent.parent.updateWorkflowStatus();
       }
     });
   },
