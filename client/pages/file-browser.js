@@ -219,6 +219,34 @@ let sbmlToModelHtml = (title, errors) => {
   `
 }
 
+let uploadFileErrorsHtml = (file, type, message, errors) => {
+  for(var i = 0; i < errors.length; i++) {
+    errors[i] = "<b>Error</b>: " + errors[i]
+  }
+
+  return `
+    <div id="sbmlToModelModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Errors uploading ${file} as a ${type} file</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${errors.join("<br>")} </p>
+            <p> <b>Upload status</b>: ${message} </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
 let deleteFileHtml = (fileType) => {
   return `
     <div id="deleteFileModal" class="modal" tabindex="-1" role="dialog">
@@ -313,23 +341,8 @@ let FileBrowser = PageView.extend({
     }
   },
   handleUploadFileClick: function (e) {
-    let file = this.queryByHook('file-for-upload').files[0]
-    let req = new XMLHttpRequest();
-    let formData = new FormData()
-    let endpoint = path.join(app.getApiPath(), 'file/upload');
-    var fileinfo = {"type":"","name":""}
-    if(file.name.endsWith('.ipynb')){
-      fileinfo.type = "Notebook"
-    }
-    formData.append("datafile", file)
-    formData.append("fileinfo", JSON.stringify(fileinfo))
-    req.open("POST", endpoint)
-    req.onload = function (e) {
-      if(req.status < 400) {
-        console.log(req.response)
-      }
-    }
-    req.send(formData)
+    let type = e.target.dataset.type
+    this.uploadFile(undefined, type)
   },
   uploadFile: function (o, type) {
     var self = this
@@ -365,6 +378,7 @@ let FileBrowser = PageView.extend({
       req.onload = function (e) {
         var resp = JSON.parse(req.response)
         if(req.status < 400) {
+          console.log(file)
           if(o){
             var node = $('#models-jstree').jstree().get_node(o.parent);
             if(node.type === "root" || node.type === "#"){
@@ -374,6 +388,9 @@ let FileBrowser = PageView.extend({
             }
           }else{
             $('#models-jstree').jstree().refresh();
+          }
+          if(resp.errors.length > 0){
+            let errorModal = $(uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
           }
         }
       }
@@ -1301,7 +1318,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              var openPath = path.join(app.getBasePath(), "edit", o.original._path);
+              var openPath = path.join(app.getBasePath(), "view", o.original._path);
               window.open(openPath, "_blank");
             }
           },

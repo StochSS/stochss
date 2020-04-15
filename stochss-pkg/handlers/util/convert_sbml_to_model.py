@@ -227,8 +227,8 @@ def build_summary_element(stoich_specie):
 def get_events(events, stochss_species, stochss_parameters, comp_id):
     stochss_events = []
 
-    for name in events.keys():
-        event = events['name']
+    for name, event in events.items():
+        
 
         stochss_event = {"compID":comp_id,
                          "name": event.name,
@@ -243,7 +243,7 @@ def get_events(events, stochss_species, stochss_parameters, comp_id):
                         }
 
         assignments = event.assignments
-        stochss_assignments = get_event_assignments(assignments, stochss_species, stochss_parameters)
+        stochss_assignments = get_event_assignment(assignments, stochss_species, stochss_parameters)
         stochss_event['eventAssignment'].extend(stochss_assignments)
 
         stochss_events.append(stochss_event)

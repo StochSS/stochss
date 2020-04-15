@@ -131,7 +131,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model):
         # Make new workflow path in parent directory
         new_wkfl_path = path.join(parent_dir, ''.join([wkfl_base_name, time_stamp, ".wkfl"]))
 
-        workflows = {"gillespy":GillesPy2Workflow,"psweep":ParameterSweep}
+        workflows = {"gillespy":GillesPy2Workflow,"parameterSweep":ParameterSweep}
         wkfl = workflows[data['type']](new_wkfl_path, model_path)
         os.mkdir(new_wkfl_path)
         save_new_workflow(wkfl, data['type'], True, False)
