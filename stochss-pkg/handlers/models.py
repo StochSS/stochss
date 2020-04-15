@@ -8,6 +8,7 @@ import os
 import subprocess
 
 from notebook.base.handlers import APIHandler
+from tornado import web
 
 import ast # for eval_literal to use with kube response
 import uuid
@@ -26,7 +27,8 @@ class JsonFileAPIHandler(APIHandler):
     downloading json formatted files.
     ########################################################################
     '''
-    async def get(self, purpose, file_path):
+    @web.authenticated
+    async def get(self, file_path):
         '''
         Retrieve model data from User's file system if it exists and 
         create new models using a model template if they don't.  Also
@@ -79,8 +81,9 @@ class JsonFileAPIHandler(APIHandler):
             self.write(error)
         self.finish()
 
-
-    async def post(self, purpose, model_path):
+        
+    @web.authenticated
+    async def post(self, model_path):
         '''
         Send/Save model data to user container.
 
@@ -114,6 +117,7 @@ class RunModelAPIHandler(APIHandler):
     Handler for running a model from the model editor.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, run_cmd, outfile, model_path):
         '''
         Run the model with a 5 second timeout.  Results are sent to the 
