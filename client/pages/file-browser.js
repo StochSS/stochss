@@ -577,23 +577,30 @@ let FileBrowser = PageView.extend({
   hideNameWarning: function () {
     $(this.queryByHook('rename-warning')).collapse('hide')
   },
-  getJsonFileForExport: function (o) {
+  getExportData: function (o, isJSON, identifier, dataType) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "json-data", o.original._path);
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
+    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
       if(response.statusCode < 400) {
-        self.exportToJsonFile(body, o.original.text);
-      }
-    });
-  },
-  getFileForExport: function (o) {
-    var self = this;
-    var endpoint = path.join(app.getApiPath(), "file/download", o.original._path);
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(response.statusCode < 400){
-        self.exportToFile(body, o.original.text);
+        if(dataType === "json") {
+          self.exportToJsonFile(body, o.original.text);
+        }else if(dataType === "zip") {
+          var node = $('#models-jstree').jstree().get_node(o.parent);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh();
+          }else{
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+          self.exportToZipFile(body.Path)
+        }else if(dataType === "csv") {
+          self.exportToZipFile(body.Path)
+        }else{
+          self.exportToFile(body, o.original.text);
+        }
       }else{
-        body = JSON.parse(body)
+        if(dataType === "plain-text") {
+          body = JSON.parse(body)
+        }
       }
     });
   },
@@ -872,7 +879,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download as .zip",
             "action" : function (data) {
-              self.getZipFileForExport(o);
+              self.getExportData(o, true, "file/download-zip/generate", "zip");
             }
           },
           "Rename" : {
@@ -1041,7 +1048,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getJsonFileForExport(o);
+              self.getExportData(o, true, "json-data", "json");
             }
           },
           "Rename" : {
@@ -1133,9 +1140,26 @@ let FileBrowser = PageView.extend({
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Download as .zip",
-            "action" : function (data) {
-              self.getZipFileForExport(o);
+            "label" : "Download",
+            "submenu" : {
+              "as_zip" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : false,
+                "label" : "as .zip",
+                "action" : function (data) {
+                  self.getExportData(o, true, "file/download-zip/generate", "zip");
+                }
+              },
+              "csv_results" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_label" : false,
+                "label" : "Results csv as .zip",
+                "action" : function (data) {
+                  self.getExportData(o, true, "file/download-zip/resultscsv", "csv")
+                }
+              }
             }
           },
           "Rename" : {
@@ -1185,7 +1209,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getJsonFileForExport(o);
+              self.getExportData(o, true, "json-data", "json");
       	    }
       	  },
           "Rename" : {
@@ -1253,7 +1277,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getFileForExport(o);
+              self.getExportData(o, false, "file/download", "plain-text");
             }
           },
           "Rename" : {
@@ -1307,7 +1331,7 @@ let FileBrowser = PageView.extend({
               if(o.original.text.endsWith('.zip')){
                 self.exportToZipFile(o);
               }else{
-                self.getZipFileForExport(o)
+                self.getExportData(o, true, "file/download-zip/generate", "zip")
               }
             }
           },
