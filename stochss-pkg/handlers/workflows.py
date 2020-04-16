@@ -263,7 +263,6 @@ class WorkflowNotebookHandler(APIHandler):
         path : str
             Path to target model within User's file system.
         '''
-        log.setLevel(logging.DEBUG)
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
         workflows = {"1d_parameter_sweep":convert_to_1d_psweep_nb, "2d_parameter_sweep":convert_to_2d_psweep_nb, "model_inference":convert_to_mdl_inference_nb}
@@ -277,5 +276,4 @@ class WorkflowNotebookHandler(APIHandler):
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}\n".format(error))
             self.write(error)
-        log.setLevel(logging.WARNING)
         self.finish()
