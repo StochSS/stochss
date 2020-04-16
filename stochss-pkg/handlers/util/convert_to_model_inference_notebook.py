@@ -11,7 +11,8 @@ from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFil
 # imports for modal notebook
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
 # imports for model inference workflow
-
+from .generate_notebook_cells import generate_mdl_inf_simulator_cell, generate_mdl_inf_prior_cell, generate_mdl_inf_fixed_data_cell, generate_mdl_inf_reshape_data_cell
+from .generate_notebook_cells import generate_mdl_inf_summary_stats_cell, generate_mdl_inf_import_cell
 def convert_to_mdl_inference_nb(model_path):
     user_dir = "/home/jovyan"
 
@@ -40,8 +41,26 @@ def convert_to_mdl_inference_nb(model_path):
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        # Create model inference import cell
+        cells.append(nbf.new_code_cell(generate_mdl_inf_import_cell()))
         # Create simulator cell
-        cells.append(nbf.new_code_cell(generate_mdl_inf_simulator_cell()))
+        cells.append(nbf.new_code_cell(generate_mdl_inf_simulator_cell(json_data)))
+        # Create prior cell
+        cells.append(nbf.new_code_cell(generate_mdl_inf_prior_cell()))
+        # Create fixed data cell
+        cells.append(nbf.new_code_cell(generate_mdl_inf_fixed_data_cell(json_data)))
+        # Create reshape data cell
+        cells.append(nbf.new_code_cell(generate_mdl_inf_reshape_data_cell()))
+        # Create summary statistics cell
+        cells.append(nbf.new_code_cell(generate_mdl_inf_summary_stats_cell()))
+        # Create local dask client cell
+        cells.append(nbf.new_code_cell("c = Client()\nc"))
+        # Create compute fixed mean cell
+        cells.append(nbf.new_code_cell("# First compute the fixed(observed) mean\nabc.compute_fixed_mean(chunk_size=2)"))
+        # Create run model inference cell
+        cells.append(nbf.new_code_cell("# Run in multiprocessing mode\nres = abc.infer(num_samples=100, batch_size=10, chunk_size=2)"))
+        # Create absolute error cell
+        cells.append(nbf.new_code_cell('mae_inference = mean_absolute_error(bound, abc.results["inferred_parameters"])'))
     except KeyError as err:
         raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err))
 
