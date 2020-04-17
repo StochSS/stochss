@@ -341,10 +341,11 @@ def convert_sbml_to_model(path, model_template):
     user_dir = "/home/jovyan"
     
     full_path = os.path.join(user_dir, path)
+    name = full_path.split('/').pop().split('.')[0]
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)
     sbml_errors = list(map(lambda error: error[0], sbml_errors))
-    msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path)
+    msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path, name=name)
     sbml_errors.extend(errors)
     resp = {"message":msg,"errors":sbml_errors,"File":stochss_model_path.split('/').pop()}
     return resp
