@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: {
+    quickStart: './client/pages/quick-start.js',
     browser: './client/pages/file-browser.js',
     editor: './client/pages/model-editor.js',
     workflowSelection: './client/pages/workflow-selection.js',
@@ -15,6 +16,13 @@ module.exports = {
   },
   devtool: 'inline-source-map',
   plugins: [
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Quick Start',
+      filename: 'stochss-quick-start.html',
+      template: 'page_template.pug',
+      name: 'quickStart',
+      inject: false
+    }),
     new HtmlWebpackPlugin({
       title: 'StochSS | Model Browser',
       filename: 'stochss-file-browser.html',
