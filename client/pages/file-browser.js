@@ -669,21 +669,6 @@ let FileBrowser = PageView.extend({
       }
     });
   },
-  getZipFileForExport: function (o) {
-    var self = this;
-    var endpoint = path.join(app.getApiPath(), "file/download-zip/generate", o.original._path);
-    xhr({uri: endpoint,json:true}, function (err, response, body) {
-      if(response.statusCode < 400) {
-        var node = $('#models-jstree').jstree().get_node(o.parent);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh();
-        }else{
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-        self.exportToZipFile(body.Path)
-      }
-    });
-  },
   exportToJsonFile: function (fileData, fileName) {
     let dataStr = JSON.stringify(fileData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
@@ -1220,26 +1205,9 @@ let FileBrowser = PageView.extend({
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Download",
-            "submenu" : {
-              "as_zip" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "as .zip",
-                "action" : function (data) {
-                  self.getExportData(o, true, "file/download-zip/generate", "zip");
-                }
-              },
-              "csv_results" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_label" : false,
-                "label" : "Results csv as .zip",
-                "action" : function (data) {
-                  self.getExportData(o, true, "file/download-zip/resultscsv", "csv")
-                }
-              }
+            "label" : "Download Full Workflow",
+            "action" : function (data) {
+              self.getExportData(o, true, "file/download-zip/generate", "zip");
             }
           },
           "Rename" : {
