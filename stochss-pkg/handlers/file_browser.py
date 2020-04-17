@@ -391,7 +391,6 @@ class SBMLToModelAPIHandler(APIHandler):
             Path from the user directory to the target sbml file.
 
         '''
-        log.setLevel(logging.DEBUG)
         log.debug("Converting SBML: {0}".format(path))
         template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
         log.debug("Using model template: {0}".format(template_path))
@@ -408,7 +407,6 @@ class SBMLToModelAPIHandler(APIHandler):
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
-        log.setLevel(logging.WARNING)
         self.finish()
 
         
@@ -539,7 +537,6 @@ class UploadFileAPIHandler(APIHandler):
         ----------
         
         '''
-        log.setLevel(logging.DEBUG)
         file_data = self.request.files['datafile'][0]
         file_info = json.loads(self.request.body_arguments['fileinfo'][0].decode())
         log.debug(file_info['type'])
@@ -555,7 +552,6 @@ class UploadFileAPIHandler(APIHandler):
         resp = upload(file_data, file_info)
         log.debug(resp)
         self.write(json.dumps(resp))
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
