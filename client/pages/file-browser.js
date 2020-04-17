@@ -1463,7 +1463,7 @@ let FileBrowser = PageView.extend({
         if(!self.nodeForContextMenu){
           optionsButton.prop('disabled', false)
         }
-        optionsButton.text("Options for " + node.original.text)
+        optionsButton.text("Actions for " + node.original.text)
         self.nodeForContextMenu = node;
       }
     });
