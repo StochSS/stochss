@@ -417,7 +417,6 @@ let FileBrowser = PageView.extend({
       req.onload = function (e) {
         var resp = JSON.parse(req.response)
         if(req.status < 400) {
-          console.log(file)
           if(o){
             var node = $('#models-jstree').jstree().get_node(o.parent);
             if(node.type === "root" || node.type === "#"){
