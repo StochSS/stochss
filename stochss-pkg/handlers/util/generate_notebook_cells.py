@@ -473,8 +473,7 @@ def generate_sciope_psweep_run_cell():
     return sciope_psweep_run_cell
 
 def generate_sciope_res_conf_cell():
-    sciope_res_conf_cell = '''
-#First lets add some appropiate information about the model and features
+    sciope_res_conf_cell = '''#First lets add some appropiate information about the model and features
 met.data.configurations['listOfParameters'] = list(model.listOfParameters.keys())
 met.data.configurations['listOfSpecies'] = list(model.listOfSpecies.keys())
 met.data.configurations['listOfSummaries'] = met.summaries.features

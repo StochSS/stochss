@@ -46,6 +46,8 @@ def convert_to_sciope_me(_model_path):
         cells.append(nbf.new_code_cell(generate_sciope_stochmet_cell()))
         # Sciope Parameter Sweep Run Cell
         cells.append(nbf.new_code_cell(generate_sciope_psweep_run_cell()))
+        # Sciope Configure MET DATA
+        cells.append(nbf.new_code_cell(generate_sciope_res_conf_cell()))
         # Sciope MET Explore Cell
         cells.append(nbf.new_code_cell(generate_sciope_met_explore_cell()))
         # Sciope Supervised Training Cell
