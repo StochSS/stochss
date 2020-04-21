@@ -21,6 +21,61 @@ from .util.stochss_errors import StochSSAPIError
 log = logging.getLogger('stochss')
 
 
+class LoadWorkflowAPIHandler(APIHandler):
+    '''
+    ########################################################################
+    Handler for getting the Workflow's status, info, type, model for the 
+    Workflow manager page.
+    ########################################################################
+    '''
+    @web.authenticated
+    async def get(self, stamp, wkfl_type, path):
+        '''
+        Retrieve workflow's status, info, and model from User's file system.
+
+        Attributes
+        ----------
+        stamp : str
+            Time stamp when the workflow was loaded.
+        type : str
+            Type of the workflow
+        path : str
+            Path to a new workflow's source model or an existing workflow.
+        '''
+        log.setLevel(logging.DEBUG)
+        self.set_header('Content-Type', 'application/json')
+        user_dir = "/home/jovyan"
+        log.debug("Time stamp of the workflow: {0}".format(stamp))
+        log.debug("The type of the workflow: {0}".format(wkfl_type))
+        log.debug("The path to the workflow/model: {0}".format(path))
+        title_types = {"gillespy":"Ensemble Simulation","parameterSweep":"Parameter Sweep"}
+        if path.endswith('.mdl'):
+            resp = {"mdlPath":path,"timeStamp":stamp,"type":wkfl_type,
+                    "status":"new","titleType":title_types[wkfl_type]}
+            name = path.split('/').pop().split('.')[0]
+            resp["wkflName"] = name + stamp
+            resp["wkflDir"] = resp['wkflName'] + ".wkfl"
+            resp["startTime"] = None
+        elif path.endswith('.wkfl'):
+            resp = {"wkflDir":path}
+            resp["status"] = get_status(path)
+            with open(os.path.join(user_dir, path, "info.json"), "r") as info_file:
+                info = json.load(info_file)
+            resp["type"] = info['type']
+            resp["startTime"] = info['start_time']
+            resp["mdlPath"] = info['source_model'] if resp['status'] == "ready" else info['wkfl_model']
+            resp["titleType"] = title_types[info['type']]
+            name = path.split('/').pop().split('.')[0]
+            resp["wkflName"] = name
+            resp["timeStamp"] = "_"+"_".join(name.split('_')[2:])
+        with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
+            resp["model"] = json.load(model_file)
+        log.debug("Response: {0}".format(resp))
+        self.write(resp)
+        log.setLevel(logging.WARNING)
+        self.finish()
+
+
 class WorkflowInfoAPIHandler(APIHandler):
     '''
     ########################################################################

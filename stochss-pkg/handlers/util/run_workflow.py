@@ -42,7 +42,8 @@ def save_new_workflow(wkfl, wkfl_type, is_new, verbose):
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"model":"{0}".format(wkfl.mdl_path), "type":"{0}".format(wkfl_type)} # workflow info
+    model_info = {"source_model":"{0}".format(wkfl.mdl_path.replace(user_dir+'/',"")), "wkfl_model":None,
+                  "type":"{0}".format(wkfl_type), "start_time":None} # workflow info
     with open(wkfl.info_path, "w") as info_file:
         info_file.write(json.dumps(model_info)) # write the workflow info file
     print(model_info)
@@ -67,7 +68,8 @@ def save_existing_workflow(wkfl, wkfl_type, is_new, verbose):
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the new model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"model":"{0}".format(wkfl.mdl_path), "type":"{0}".format(wkfl_type)} # updated workflow info
+    model_info = {"source_model":"{0}".format(wkfl.mdl_path.replace(user_dir+'/',"")), "wkfl_model":None,
+                  "type":"{0}".format(wkfl_type), "start_time":None} # updated workflow info
     with open(wkfl.info_path, "w") as info_file:
         info_file.write(json.dumps(model_info)) # update the workflow info file
     print(model_info)
@@ -104,9 +106,8 @@ def update_info_file(info_path, wkfl_mdl_path):
     with open(info_path, 'r') as info_file:
         info_data = json.loads(info_file.read())
 
-    info_data['source_model'] = info_data['model'] # preserve path to source model
     info_data['start_time'] = str_datetime # add start time to workflow info
-    info_data['model'] = wkfl_mdl_path # Update the location of the model
+    info_data['wkfl_model'] = wkfl_mdl_path.replace(user_dir+'/',"") # Update the location of the model
 
     # Update the workflow info file
     with open(info_path, "w") as info_file:

@@ -12,6 +12,8 @@ var WorkflowResultsView = require('../views/workflow-results');
 var ModelViewer = require('../views/model-viewer');
 var InfoView = require('../views/workflow-info');
 var InputView = require('../views/input');
+//models
+var Model = require('../models/model')
 //templates
 var template = require('../templates/pages/workflowManager.pug');
 
@@ -65,44 +67,28 @@ let WorkflowManager = PageView.extend({
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
     var url = decodeURI(document.URL)
-    this.type = url.split('/workflow/edit/').pop().split('/')[0];
-    var types = {"gillespy":"Ensemble Simulation","parameterSweep":"Parameter Sweep"}
-    this.titleType = types[this.type]
-    this.directory = url.split('/workflow/edit/' + this.type).pop();
-    if(this.directory.endsWith('.mdl')){
-      var modelFile = this.directory.split('/').pop();
-      var name = modelFile.split('.')[0];
-      this.modelDirectory = this.directory;
-      this.workflowDate = this.getCurrentDate();
-      this.workflowName = name + this.workflowDate;
-      this.status = 'new';
-    }else{
-      var endpoint = path.join(app.getApiPath(), "/workflow/workflow-info", this.directory, "/info.json");
-      xhr({uri: endpoint, json: true}, function (err, response, body){
-        if(response.statusCode < 400) {
-          self.modelDirectory = body.model.split('/home/jovyan').pop();
-          self.type = body.type;
-          self.titleType = types[self.type]
-          self.startTime = body.start_time;
-          var workflowDir = self.directory.split('/').pop();
-          self.workflowName = workflowDir.split('.')[0];
-          var statusEndpoint = path.join(app.getApiPath(), "/workflow/workflow-status", self.directory);
-          xhr({uri: statusEndpoint}, function (err, response, body) {
-            self.status = body;
-            if(self.status === 'complete' || self.status === 'error'){
-              self.modelDirectory = path.join(self.directory, self.modelDirectory.split('/').pop());
-            }
-            self.renderSubviews();
-          });
-        }
-      });
-    }
-  },
-  render: function () {
-    PageView.prototype.render.apply(this, arguments);
-    if(this.modelDirectory){
-      this.renderSubviews()
-    }
+    var typeAndPath = url.split('/workflow/edit/').pop()
+    var stamp = this.getCurrentDate();
+    var endpoint = path.join(app.getApiPath(), "workflow/load-workflow", stamp, typeAndPath)
+    xhr({uri: endpoint, json: true}, function (err, resp, body) {
+      if(resp.statusCode < 400) {
+        self.type = body.type
+        self.titleType = body.titleType
+        self.modelDirectory = body.mdlPath
+        self.wkflDirectory = body.wkflDir
+        self.workflowDate = body.timeStamp
+        self.workflowName = body.wkflName
+        self.status = body.status
+        self.startTime = body.startTime
+        self.model = new Model(body.model);
+        self.model.name = self.modelDirectory.split('/').pop().split('.')[0]
+        self.model.directory = self.modelDirectory
+        self.model.is_spatial = self.modelDirectory.endsWith(".smdl")
+        self.model.isPreview = false
+        self.model.for = "wkfl"
+        self.renderSubviews();
+      }
+    });
   },
   update: function () {
   },
@@ -199,7 +185,7 @@ let WorkflowManager = PageView.extend({
   },
   getWorkflowInfo: function (cb) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "/workflow/workflow-info", this.directory, "/info.json");
+    var endpoint = path.join(app.getApiPath(), "/workflow/workflow-info", this.wkflDirectory, "/info.json");
     xhr({uri: endpoint, json: true}, function (err, response, body){
       self.startTime = body.start_time;
       cb();
@@ -207,7 +193,7 @@ let WorkflowManager = PageView.extend({
   },
   getWorkflowStatus: function () {
     var self = this;
-    var statusEndpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.directory);
+    var statusEndpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.wkflDirectory);
     xhr({uri: statusEndpoint}, function (err, response, body) {
       if(self.status !== body ){
         self.status = body;
@@ -260,7 +246,7 @@ let WorkflowManager = PageView.extend({
     }
     this.infoView = new InfoView({
       status: this.status,
-      logsPath: path.join(this.directory, "logs.txt")
+      logsPath: path.join(this.wkflDirectory, "logs.txt")
     });
     this.registerRenderSubview(this.infoView, 'workflow-info-container')
   },

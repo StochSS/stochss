@@ -162,7 +162,7 @@ module.exports = View.extend({
     }else{
       data['plt_data'] = "None"
     }
-    var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
+    var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.wkflDirectory, '?data=' + JSON.stringify(data));
     xhr({url: endpoint, json: true}, function (err, response, body){
       if(response.statusCode >= 400){
         $(self.queryByHook(type)).html(body.Message)

@@ -49,7 +49,7 @@ module.exports = View.extend({
     var model = this.model
     var wkflType = this.parent.parent.type;
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
-    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
+    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.wkflDirectory
     this.saveModel(function () {
       var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
       xhr({uri: endpoint}, function (err, response, body) {
@@ -121,7 +121,7 @@ module.exports = View.extend({
     var model = this.model;
     var wkflType = this.parent.parent.type;
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
-    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
+    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.wkflDirectory
     var endpoint = path.join(app.getApiPath(), '/workflow/run-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
