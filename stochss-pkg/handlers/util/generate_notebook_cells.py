@@ -482,8 +482,7 @@ met.data.configurations['timepoints'] = model.tspan'''
     return sciope_res_conf_cell
 
 def generate_sciope_met_explore_cell():
-    sciope_met_explore_cell = '''
-# Here we use UMAP for dimension reduction
+    sciope_met_explore_cell = '''# Here we use UMAP for dimension reduction
 met.explore(dr_method='umap')'''
     return sciope_met_explore_cell
 
