@@ -6,7 +6,7 @@ section.page
 
     h4 Getting Started
 
-    p.pl-3 The <a href="/stochss/models">File Browser</a> is where you'll find all of your StochSS models and workflows, 
+    p.pl-3.mt-3 The <a href="/stochss/models">File Browser</a> is where you'll find all of your StochSS models and workflows, 
       Jupyter notebooks, <a href="http://sbml.org/Main_Page">SBML</a> models, and more.  (Click the question mark icon to see more info)
 
     p.pl-3 There are a number of example projects to help you get started.  Let's start with the Michaelis Menten model.  This model is characterized
@@ -14,17 +14,44 @@ section.page
       on the model file(the one ending in .mdl) to open it in the model editor.  (You can also right-click on files to see a full set of 
       options or click the "Actions for..." button.)
 
-    p.mx-auto(src="" style="display: block; width: 550px") [Screenshot of the file browswer with Michaelis_Menten.mdl selected]
+    p.text-info.mx-auto(style="display: block; width: 550px") [Screenshot of the file browswer with Michaelis_Menten.mdl selected]
     img(src="")
 
   div.col-md-11.mt-4
 
     h4 The Model Editor
 
-    p.pl-3 TODO
+    p.pl-3.mt-3 From the model editor page we can change the attributes of our StochSS model, preview the results, and create a new workflow based on 
+      the model.  For general help, click on the question moark icon next to the page title.  There's also tooltips for most of the attributes that 
+      provide more detailed information about different aspects of the editor.
+
+    p.text-info.mx-auto(style="display: block; width: 690px") [What is a little task we can get them to do?  Add a reaction?  Change the value of something?]
+
+    p.text-info.mx-auto(style="display: block; width: 400px") [Screenshot of the task we have them do]
+    img(src="")
+
+    p.pl-3 Click the "Run Preview" button at the bottom to run a simulation for 5 seconds and show the preliminary results data in a timeseries.
+
+    p.pl-3 Now let's do a full simulation of the Michaelis Menten model.  Click the "New Workflow" button at the bottom to open the workflow 
+      selection page.  You might want to save your model first.  Once you're on the workflow selection page, select Ensemble Simulation to create a 
+      new workflow.
 
   div.col-md-11.mt-4
 
     h4 Workflows
 
-    p.pl-3 TODO
+    p.text-info.mx-auto.mt-3(style="display: block; width: 400px") [Screenshot of the Workflow Manager page]
+    img(src="")
+
+    p.pl-3 A StochSS Workflow is a way to interrogate, simulate, and interact with your StochSS models.  In the case we're running a basic simulation 
+      of our model <span class="text-info">[Is there a better way to summarize this?  I'm not sure what the right words are]</span>.  You can choose 
+      from a variety of algorithms like ODE and discrete stochastic <span class="text-info">[clean up this sentance]</span>.  Since we're using the 
+      Stochastic Simulation Service, let's use the SSA algorithm (Stochastic Simulation Algorithm).  In the Stochastic Settings section, change the 
+      trajectories to 5 so we can compare the results of several stochastic simulations.
+
+    p.pl-3 Go ahead and save your workflow and then head back to the File Browser.  If you open up the Michaelis Menten project folder you'll see 
+      your new workflow file ending in .wkfl.  Open up your workflow again to get back to the workflow manager.  Check your settings one more time 
+      and then click "Start Workflow" when you're ready.
+
+    p.pl-3 At this point the Workflow Status section will expand.  Notice the "running" status.  After a few seconds the container will refresh and 
+      the status will be "complete."
