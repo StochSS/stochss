@@ -39,6 +39,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.type = attrs.type
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -47,7 +48,7 @@ module.exports = View.extend({
     this.saving();
     var self = this;
     var model = this.model
-    var wkflType = this.parent.parent.type;
+    var wkflType = this.type;
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
     var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.wkflDirectory
     this.saveModel(function () {
@@ -55,12 +56,7 @@ module.exports = View.extend({
       xhr({uri: endpoint}, function (err, response, body) {
         self.saved();
         if(document.URL.endsWith('.mdl')){
-          setTimeout(function () {
-            var dirname = window.location.pathname.split('/')
-            dirname.pop()
-            dirname = dirname.join('/')
-            window.location.href = path.join(dirname, self.parent.parent.workflowName + '.wkfl')
-          }, 3000); 
+          self.parent.parent.reloadWkfl(); 
         }
       });
     });
@@ -126,17 +122,9 @@ module.exports = View.extend({
     var self = this;
     xhr({ uri: endpoint },function (err, response, body) {
       self.parent.collapseContainer();
-      if(document.URL.endsWith('.mdl')){
-        setTimeout(function () {
-          let pathname = window.location.pathname.split('/');
-          pathname.pop()
-          pathname = pathname.join('/')
-          workflowpath = path.join(pathname, self.parent.parent.workflowName + '.wkfl')
-          window.location.href = workflowpath;
-        }, 3000);        
-      }else{
-        self.parent.parent.updateWorkflowStatus();
-      }
+      setTimeout(function () {
+        self.parent.parent.reloadWkfl();
+      }, 2000)
     });
   },
 });

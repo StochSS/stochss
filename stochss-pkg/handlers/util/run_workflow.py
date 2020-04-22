@@ -226,7 +226,8 @@ if __name__ == "__main__":
         dir_path = model_path.split(model_file)[0]
         if len(args.workflow.split('/')) > 1:
             dir_path = os.path.join(dir_path, args.workflow.split(workflow_name)[0])
-            os.makedirs(dir_path)
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
         i = 2
         exists = _workflow_dir in os.listdir(path=dir_path)
         while exists:

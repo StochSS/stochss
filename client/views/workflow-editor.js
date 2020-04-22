@@ -53,7 +53,8 @@ module.exports = View.extend({
   },
   renderWorkflowStateButtons: function () {
     let workflowStateButtons = new WorkflowStateButtonsView({
-      model: this.model
+      model: this.model,
+      type: this.type,
     });
     this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
   },

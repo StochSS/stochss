@@ -95,8 +95,8 @@ let WorkflowManager = PageView.extend({
       if(e.target.id === "modelNotFoundModal")
         $(self.queryByHook("model-path")).find('input').focus();
     });
-    var url = decodeURI(document.URL)
-    var typeAndPath = url.split('/workflow/edit/').pop()
+    this.url = decodeURI(document.URL)
+    var typeAndPath = this.url.split('/workflow/edit/').pop()
     var stamp = this.getCurrentDate();
     var endpoint = path.join(app.getApiPath(), "workflow/load-workflow", stamp, typeAndPath)
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
@@ -109,6 +109,7 @@ let WorkflowManager = PageView.extend({
         self.workflowName = body.wkflName
         self.status = body.status
         self.startTime = body.startTime
+        console.log(self.startTime, self.status)
         self.buildWkflModel(body)
         self.renderSubviews();
       }
@@ -166,15 +167,9 @@ let WorkflowManager = PageView.extend({
     // this.updateTrajectories();
     // this.renderModelViewer();
     // this.renderInfoView();
-    // if(this.status !== 'new'){
-    //   this.disableWorkflowNameInput();
-    // }
-    // if(this.status !== 'new' && this.status !== 'ready'){
-    //   this.workflowEditor.collapseContainer();
-    // }
-    // if(this.status === 'running'){
-    //   this.getWorkflowStatus();
-    // }
+    if(this.status === 'running'){
+      this.getWorkflowStatus();
+    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -223,6 +218,22 @@ let WorkflowManager = PageView.extend({
     });
     this.workflowEditorView = this.registerRenderSubview(this.workflowEditor, 'workflow-editor-container');
   },
+  getWorkflowStatus: function () {
+    var self = this;
+    var endpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.wkflDirectory);
+    xhr({uri: endpoint}, function (err, response, body) {
+      if(self.status !== body )
+        self.status = body;
+      console.log(self.status)
+      if(self.status !== 'error' && self.status !== 'complete')
+        setTimeout(_.bind(self.getWorkflowStatus, self), 1000);
+      // else if(self.status === 'complete') {
+      //   self.renderResultsView();
+      //   self.renderModelViewer();
+      //   self.renderInfoView();
+      // }
+    });
+  },
   setWorkflowName: function(e) {
     var newWorkflowName = e.target.value.trim();
     if(newWorkflowName.endsWith(this.workflowDate)){
@@ -231,6 +242,7 @@ let WorkflowManager = PageView.extend({
       this.workflowName = newWorkflowName + this.workflowDate
       e.target.value = this.workflowName
     }
+    this.wkflDirectory = this.workflowName + ".wkfl"
   },
   updateWkflModel: function (e) {
     let self = this;
@@ -245,6 +257,21 @@ let WorkflowManager = PageView.extend({
       }
     });
   },
+  reloadWkfl: function () {
+    let self = this;
+    if(self.status === 'new')
+      window.location.href = self.url.replace(self.modelDirectory.split('/').pop(), self.wkflDirectory)
+    else
+      window.location.reload()
+  },
+  // updateWkflStatus: function () {
+  //   var self = this;
+  //   setTimeout(function () {  
+  //     self.getWorkflowInfo(function () {
+  //       self.getWorkflowStatus();
+  //     });
+  //   }, 3000);
+  // },
   // renderWorkflowStatusView: function () {
   //   if(this.workflowStatusView){
   //     this.workflowStatusView.remove();
@@ -262,31 +289,6 @@ let WorkflowManager = PageView.extend({
   //     self.startTime = body.start_time;
   //     cb();
   //   });
-  // },
-  // getWorkflowStatus: function () {
-  //   var self = this;
-  //   var statusEndpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.wkflDirectory);
-  //   xhr({uri: statusEndpoint}, function (err, response, body) {
-  //     if(self.status !== body ){
-  //       self.status = body;
-  //       self.renderWorkflowStatusView();
-  //     }
-  //     if(self.status !== 'error' && self.status !== 'complete'){
-  //       setTimeout(_.bind(self.getWorkflowStatus, self), 1000);
-  //     }else if(self.status === 'complete') {
-  //       self.renderResultsView();
-  //       self.renderModelViewer();
-  //       self.renderInfoView();
-  //     }
-  //   });
-  // },
-  // updateWorkflowStatus: function () {
-  //   var self = this;
-  //   setTimeout(function () {  
-  //     self.getWorkflowInfo(function () {
-  //       self.getWorkflowStatus();
-  //     });
-  //   }, 3000);
   // },
   // renderResultsView: function () {
   //   if(this.workflowResultsView){
