@@ -28,7 +28,7 @@ COPY --chown=jovyan:users custom.css /home/jovyan/.jupyter/custom/custom.css
 
 COPY --chown=jovyan:users jupyter_notebook_config.py /home/jovyan/.jupyter/jupyter_notebook_config.py
 
-RUN python -m pip --no-cache-dir install $STOCHSS_PIP_EDITABLE .
+RUN pip install --no-cache-dir -e .
 
 RUN rm -r /home/jovyan/work
 

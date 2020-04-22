@@ -60,5 +60,5 @@ def convert_model(path, to_spatial):
 
     old_model = path.split('/').pop()
     new_model = model_path.split('/').pop()
-    return "{0} was successfully convert to {1}!".format(old_model, new_model)
+    return {"Message":"{0} was successfully convert to {1}!".format(old_model, new_model),"File":new_model}
 

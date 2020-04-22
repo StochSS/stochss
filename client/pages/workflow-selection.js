@@ -29,6 +29,7 @@ let workflowSelection = PageView.extend({
       directory: this.modelDir,
       is_spatial: isSpatial,
       isPreview: false,
+      for: "wkfl",
     });
     this.model.fetch({
       success: function (model, response, options) {

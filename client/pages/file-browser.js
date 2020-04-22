@@ -219,6 +219,34 @@ let sbmlToModelHtml = (title, errors) => {
   `
 }
 
+let uploadFileErrorsHtml = (file, type, message, errors) => {
+  for(var i = 0; i < errors.length; i++) {
+    errors[i] = "<b>Error</b>: " + errors[i]
+  }
+
+  return `
+    <div id="sbmlToModelModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Errors uploading ${file} as a ${type} file</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${errors.join("<br>")} </p>
+            <p> <b>Upload status</b>: ${message} </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
 let deleteFileHtml = (fileType) => {
   return `
     <div id="deleteFileModal" class="modal" tabindex="-1" role="dialog">
@@ -271,6 +299,29 @@ let uploadFileHtml = (type) => {
   `
 }
 
+let duplicateWorkflowHtml = (wkflFile, body) => {
+  return `
+    <div id="duplicateWorkflowModal" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content info">
+          <div class="modal-header">
+            <h5 class="modal-title"> Model for ${wkflFile} </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p> ${body} </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
   template: template,
@@ -312,24 +363,25 @@ let FileBrowser = PageView.extend({
       }, 3000);
     }
   },
-  handleUploadFileClick: function (e) {
-    let file = this.queryByHook('file-for-upload').files[0]
-    let req = new XMLHttpRequest();
-    let formData = new FormData()
-    let endpoint = path.join(app.getApiPath(), 'file/upload');
-    var fileinfo = {"type":"","name":""}
-    if(file.name.endsWith('.ipynb')){
-      fileinfo.type = "Notebook"
-    }
-    formData.append("datafile", file)
-    formData.append("fileinfo", JSON.stringify(fileinfo))
-    req.open("POST", endpoint)
-    req.onload = function (e) {
-      if(req.status < 400) {
-        console.log(req.response)
+  selectNode: function (node, fileName) {
+    let self = this
+    if(!$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
+      setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
+    }else{
+      node = $('#models-jstree').jstree().get_node(node)
+      var child = ""
+      for(var i = 0; i < node.children.length; i++) {
+        var child = $('#models-jstree').jstree().get_node(node.children[i])
+        if(child.original.text === fileName) {
+          $('#models-jstree').jstree().select_node(node.children[i])
+          break
+        }
       }
     }
-    req.send(formData)
+  },
+  handleUploadFileClick: function (e) {
+    let type = e.target.dataset.type
+    this.uploadFile(undefined, type)
   },
   uploadFile: function (o, type) {
     var self = this
@@ -365,6 +417,7 @@ let FileBrowser = PageView.extend({
       req.onload = function (e) {
         var resp = JSON.parse(req.response)
         if(req.status < 400) {
+          console.log(file)
           if(o){
             var node = $('#models-jstree').jstree().get_node(o.parent);
             if(node.type === "root" || node.type === "#"){
@@ -374,6 +427,9 @@ let FileBrowser = PageView.extend({
             }
           }else{
             $('#models-jstree').jstree().refresh();
+          }
+          if(resp.errors.length > 0){
+            let errorModal = $(uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
           }
         }
       }
@@ -418,35 +474,66 @@ let FileBrowser = PageView.extend({
     if(type === "directory"){
       var identifier = "directory/duplicate"
     }else if(type === "workflow"){
-      var identifier = path.join("workflow/duplicate", type)
+      let timeStamp = this.getTimeStamp()
+      var identifier = path.join("workflow/duplicate", type, timeStamp)
     }else if(type === "wkfl_model"){
-      var identifier = path.join("workflow/duplicate", type)
+      var identifier = path.join("workflow/duplicate", type, "None")
     }else{
       var identifier = "model/duplicate"
     }
     var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
-    xhr({uri: endpoint}, function (err, response, body) {
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
-          if(type === "workflow"){
-            body = JSON.parse(body)
-          }
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
             $('#models-jstree').jstree().refresh()
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
-        }else{
-          body = JSON.parse(body)
+          if(type === "workflow"){
+            var message = ""
+            if(body.error){
+              message = body.error
+            }else{
+              message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>"
+            }
+            let modal = $(duplicateWorkflowHtml(body.File, message)).modal()
+          }
+          self.selectNode(node, body.File)
         }
       }
     );
+  },
+  getTimeStamp: function () {
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    if(month < 10){
+      month = "0" + month
+    }
+    var day = date.getDate();
+    if(day < 10){
+      day = "0" + day
+    }
+    var hours = date.getHours();
+    if(hours < 10){
+      hours = "0" + hours
+    }
+    var minutes = date.getMinutes();
+    if(minutes < 10){
+      minutes = "0" + minutes
+    }
+    var seconds = date.getSeconds();
+    if(seconds < 10){
+      seconds = "0" + seconds
+    }
+    return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
   toSpatial: function (o) {
     var self = this;
     var parentID = o.parent;
     var endpoint = path.join(app.getApiPath(), "/model/to-spatial", o.original._path);
-    xhr({uri: endpoint}, 
+    xhr({uri: endpoint, json: true}, 
       function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
@@ -455,8 +542,7 @@ let FileBrowser = PageView.extend({
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
-        }else{
-          body = JSON.parse(body)
+          self.selectNode(node, body.File)
         }
       }
     );
@@ -469,7 +555,7 @@ let FileBrowser = PageView.extend({
     }else{
       var endpoint = path.join(app.getApiPath(), "sbml/to-model", o.original._path);
     }
-    xhr({uri: endpoint}, function (err, response, body) {
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
@@ -477,20 +563,19 @@ let FileBrowser = PageView.extend({
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
-          if(from === "SBML"){
+          self.selectNode(node, body.File)
+          if(from === "SBML" && body.errors.length > 0){
             var title = ""
-            var resp = JSON.parse(body)
-            var msg = resp.message
-            var errors = resp.errors
+            var msg = body.message
+            var errors = body.errors
             let modal = $(sbmlToModelHtml(msg, errors)).modal();
           }
-        }else{
-          body = JSON.parse(body)
         }
       }
     );
   },
   toNotebook: function (o) {
+    let self = this
     var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400){
@@ -500,7 +585,8 @@ let FileBrowser = PageView.extend({
         }else{
           $('#models-jstree').jstree().refresh_node(node);
         }
-        var notebookPath = path.join(app.getBasePath(), "notebooks", body.File)
+        var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
+        self.selectNode(node, body.File)
         window.open(notebookPath, '_blank')
       }
     });
@@ -509,20 +595,17 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     var endpoint = path.join(app.getApiPath(), "model/to-sbml", o.original._path);
-    xhr({uri: endpoint},
-      function (err, response, body) {
-        if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(parentID);
-          if(node.type === "root"){
-            $('#models-jstree').jstree().refresh()
-          }else{          
-            $('#models-jstree').jstree().refresh_node(node);
-          }
-        }else{
-          body = JSON.parse(body)
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
+          $('#models-jstree').jstree().refresh()
+        }else{          
+          $('#models-jstree').jstree().refresh_node(node);
         }
+        self.selectNode(node, body.File)
       }
-    );
+    });
   },
   renameNode: function (o) {
     var self = this
@@ -560,23 +643,30 @@ let FileBrowser = PageView.extend({
   hideNameWarning: function () {
     $(this.queryByHook('rename-warning')).collapse('hide')
   },
-  getJsonFileForExport: function (o) {
+  getExportData: function (o, isJSON, identifier, dataType) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "json-data", o.original._path);
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
+    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
       if(response.statusCode < 400) {
-        self.exportToJsonFile(body, o.original.text);
-      }
-    });
-  },
-  getFileForExport: function (o) {
-    var self = this;
-    var endpoint = path.join(app.getApiPath(), "file/download", o.original._path);
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(response.statusCode < 400){
-        self.exportToFile(body, o.original.text);
+        if(dataType === "json") {
+          self.exportToJsonFile(body, o.original.text);
+        }else if(dataType === "zip") {
+          var node = $('#models-jstree').jstree().get_node(o.parent);
+          if(node.type === "root"){
+            $('#models-jstree').jstree().refresh();
+          }else{
+            $('#models-jstree').jstree().refresh_node(node);
+          }
+          self.exportToZipFile(body.Path)
+        }else if(dataType === "csv") {
+          self.exportToZipFile(body.Path)
+        }else{
+          self.exportToFile(body, o.original.text);
+        }
       }else{
-        body = JSON.parse(body)
+        if(dataType === "plain-text") {
+          body = JSON.parse(body)
+        }
       }
     });
   },
@@ -679,6 +769,20 @@ let FileBrowser = PageView.extend({
   },
   showContextMenuForNode: function (e) {
     $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
+  },
+  editWorkflowModel: function (o) {
+    let endpoint = path.join(app.getApiPath(), "workflow/edit-model", o.original._path)
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        if(body.error){
+          let title = o.text + " Not Found"
+          let message = body.error
+          let modal = $(duplicateWorkflowHtml(title, message)).modal()
+        }else{
+          window.location.href = path.join(app.routePrefix, "models/edit", body.file)
+        }
+      }
+    });
   },
   setupJstree: function () {
     var self = this;
@@ -855,7 +959,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download as .zip",
             "action" : function (data) {
-              self.getZipFileForExport(o);
+              self.getExportData(o, true, "file/download-zip/generate", "zip");
             }
           },
           "Rename" : {
@@ -1024,7 +1128,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getJsonFileForExport(o);
+              self.getExportData(o, true, "json-data", "json");
             }
           },
           "Rename" : {
@@ -1057,6 +1161,7 @@ let FileBrowser = PageView.extend({
 	      }
       }
       else if (o.type === 'workflow') {
+        var disabled = !(o.original._status === "ready")
         return {
           "Open" : {
             "separator_before" : false,
@@ -1095,17 +1200,17 @@ let FileBrowser = PageView.extend({
               "Edit" : {
                 "separator_before" : false,
                 "separator_after" : false,
-                "_disabled" : true,
+                "_disabled" : disabled,
                 "label" : " Edit",
                 "action" : function (data) {
-
+                  self.editWorkflowModel(o)
                 }
               },
-              "Duplicate" : {
+              "Extract" : {
                 "separator_before" : false,
                 "separator_after" : false,
                 "_disabled" : false,
-                "label" : "Duplicate",
+                "label" : "Extract",
                 "action" : function (data) {
                   self.duplicateFileOrDirectory(o, "wkfl_model")
                 }
@@ -1116,9 +1221,26 @@ let FileBrowser = PageView.extend({
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Download as .zip",
-            "action" : function (data) {
-              self.getZipFileForExport(o);
+            "label" : "Download",
+            "submenu" : {
+              "as_zip" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_disabled" : false,
+                "label" : "as .zip",
+                "action" : function (data) {
+                  self.getExportData(o, true, "file/download-zip/generate", "zip");
+                }
+              },
+              "csv_results" : {
+                "separator_before" : false,
+                "separator_after" : false,
+                "_label" : false,
+                "label" : "Results csv as .zip",
+                "action" : function (data) {
+                  self.getExportData(o, true, "file/download-zip/resultscsv", "csv")
+                }
+              }
             }
           },
           "Rename" : {
@@ -1168,7 +1290,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getJsonFileForExport(o);
+              self.getExportData(o, true, "json-data", "json");
       	    }
       	  },
           "Rename" : {
@@ -1236,7 +1358,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getFileForExport(o);
+              self.getExportData(o, false, "file/download", "plain-text");
             }
           },
           "Rename" : {
@@ -1277,7 +1399,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              var openPath = path.join(app.getBasePath(), "edit", o.original._path);
+              var openPath = path.join(app.getBasePath(), "view", o.original._path);
               window.open(openPath, "_blank");
             }
           },
@@ -1290,7 +1412,7 @@ let FileBrowser = PageView.extend({
               if(o.original.text.endsWith('.zip')){
                 self.exportToZipFile(o);
               }else{
-                self.getZipFileForExport(o)
+                self.getExportData(o, true, "file/download-zip/generate", "zip")
               }
             }
           },
