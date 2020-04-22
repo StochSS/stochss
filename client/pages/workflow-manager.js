@@ -109,7 +109,6 @@ let WorkflowManager = PageView.extend({
         self.workflowName = body.wkflName
         self.status = body.status
         self.startTime = body.startTime
-        console.log(self.startTime, self.status)
         self.buildWkflModel(body)
         self.renderSubviews();
       }
@@ -268,7 +267,6 @@ let WorkflowManager = PageView.extend({
     xhr({uri: endpoint}, function (err, response, body) {
       if(self.status !== body )
         self.status = body;
-      console.log(self.status)
       if(self.status === 'running')
         setTimeout(_.bind(self.getWorkflowStatus, self), 1000);
       else{
@@ -296,7 +294,6 @@ let WorkflowManager = PageView.extend({
     this.model.fetch({
       json: true,
       success: function (model, response, options) {
-        console.log("Model Found", self.model)
         self.renderWorkflowEditor()
       },
       error: function (model, response, options) {

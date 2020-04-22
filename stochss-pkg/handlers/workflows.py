@@ -42,7 +42,6 @@ class LoadWorkflowAPIHandler(APIHandler):
         path : str
             Path to a new workflow's source model or an existing workflow.
         '''
-        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         user_dir = "/home/jovyan"
         log.debug("Time stamp of the workflow: {0}".format(stamp))
@@ -87,46 +86,6 @@ class LoadWorkflowAPIHandler(APIHandler):
             resp["error"] = {"Reason":"Model Not Found","Message":"Could not find the model file: "+resp['mdlPath']}
         log.debug("Response: {0}".format(resp))
         self.write(resp)
-        log.setLevel(logging.WARNING)
-        self.finish()
-
-
-class WorkflowInfoAPIHandler(APIHandler):
-    '''
-    ########################################################################
-    Handler for getting Workflow Info including start date tine and path to the 
-    model at the last workflow save.
-    ########################################################################
-    '''
-    @web.authenticated
-    async def get(self, info_path):
-        '''
-        Retrieve workflow info from User's file system.
-
-        Attributes
-        ----------
-        info_path : str
-            Path to selected workflows info file.
-        '''
-        log.debug("Path to the info file: {0}".format(info_path))
-        full_path = os.path.join("/home/jovyan", info_path)
-        log.debug("Full path to the info file: {0}".format(full_path))
-        self.set_header('Content-Type', 'application/json')
-        try:
-            with open(full_path, 'r') as info_file:
-                data = json.load(info_file)
-            log.debug("Contents of the info file: {0}".format(data))
-            self.write(data)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            error = {"Reason":"Info File Not Found","Message":"Could not find the workflow info file: "+str(err)}
-            log.error("Exception information: {0}".format(error))
-            self.write(error)
-        except JSONDecodeError as err:
-            self.set_status(406)
-            error = {"Reason":"File Not JSON Format","Message":"The workflow info file is not JSON decodable: "+str(err)}
-            log.error("Exception information: {0}".format(error))
-            self.write(error)
         self.finish()
 
 
