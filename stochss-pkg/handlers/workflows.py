@@ -59,17 +59,32 @@ class LoadWorkflowAPIHandler(APIHandler):
         elif path.endswith('.wkfl'):
             resp = {"wkflDir":path}
             resp["status"] = get_status(path)
-            with open(os.path.join(user_dir, path, "info.json"), "r") as info_file:
-                info = json.load(info_file)
-            resp["type"] = info['type']
-            resp["startTime"] = info['start_time']
-            resp["mdlPath"] = info['source_model'] if resp['status'] == "ready" else info['wkfl_model']
-            resp["titleType"] = title_types[info['type']]
             name = path.split('/').pop().split('.')[0]
             resp["wkflName"] = name
             resp["timeStamp"] = "_"+"_".join(name.split('_')[2:])
-        with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
-            resp["model"] = json.load(model_file)
+            try:
+                with open(os.path.join(user_dir, path, "info.json"), "r") as info_file:
+                    info = json.load(info_file)
+                resp["type"] = info['type']
+                resp["startTime"] = info['start_time']
+                resp["mdlPath"] = info['source_model'] if resp['status'] == "ready" else info['wkfl_model']
+                resp["titleType"] = title_types[info['type']]
+            except FileNotFoundError as err:
+                self.set_status(404)
+                error = {"Reason":"Info File Not Found","Message":"Could not find the workflow info file: "+str(err)}
+                log.error("Exception information: {0}".format(error))
+                self.write(error)
+            except JSONDecodeError as err:
+                self.set_status(406)
+                error = {"Reason":"File Not JSON Format","Message":"The workflow info file is not JSON decodable: "+str(err)}
+                log.error("Exception information: {0}".format(error))
+                self.write(error)
+        try:
+            with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
+                resp["model"] = json.load(model_file)
+        except:
+            resp["model"] = None
+            resp["error"] = {"Reason":"Model Not Found","Message":"Could not find the model file: "+resp['mdlPath']}
         log.debug("Response: {0}".format(resp))
         self.write(resp)
         log.setLevel(logging.WARNING)
