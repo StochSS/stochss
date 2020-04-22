@@ -66,6 +66,8 @@ let WorkflowManager = PageView.extend({
     var self = this;
     var url = decodeURI(document.URL)
     this.type = url.split('/workflow/edit/').pop().split('/')[0];
+    var types = {"gillespy":"Ensemble Simulation","parameterSweep":"Parameter Sweep"}
+    this.titleType = types[this.type]
     this.directory = url.split('/workflow/edit/' + this.type).pop();
     if(this.directory.endsWith('.mdl')){
       var modelFile = this.directory.split('/').pop();
@@ -80,6 +82,7 @@ let WorkflowManager = PageView.extend({
         if(response.statusCode < 400) {
           self.modelDirectory = body.model.split('/home/jovyan').pop();
           self.type = body.type;
+          self.titleType = types[self.type]
           self.startTime = body.start_time;
           var workflowDir = self.directory.split('/').pop();
           self.workflowName = workflowDir.split('.')[0];
@@ -106,10 +109,7 @@ let WorkflowManager = PageView.extend({
   updateValid: function () {
   },
   renderSubviews: function () {
-    var workflowEditor = new WorkflowEditorView({
-      directory: this.modelDirectory,
-      type: this.type,
-    });
+    $(this.queryByHook("page-title")).text('Workflow: '+this.titleType)
     var inputName = new InputView({
       parent: this,
       required: true,
@@ -120,8 +120,8 @@ let WorkflowManager = PageView.extend({
       valueType: 'string',
       value: this.workflowName,
     });
-    this.workflowEditorView = this.registerRenderSubview(workflowEditor, 'workflow-editor-container');
     this.registerRenderSubview(inputName, 'workflow-name');
+    this.renderWorkflowEditor();
     this.renderWorkflowStatusView();
     this.updateTrajectories();
     this.renderModelViewer();
@@ -130,7 +130,7 @@ let WorkflowManager = PageView.extend({
       this.disableWorkflowNameInput();
     }
     if(this.status !== 'new' && this.status !== 'ready'){
-      workflowEditor.collapseContainer();
+      this.workflowEditor.collapseContainer();
     }
     if(this.status === 'running'){
       this.getWorkflowStatus();
@@ -153,14 +153,39 @@ let WorkflowManager = PageView.extend({
     var date = new Date();
     var year = date.getFullYear();
     var month = date.getMonth() + 1;
+    if(month < 10){
+      month = "0" + month
+    }
     var day = date.getDate();
+    if(day < 10){
+      day = "0" + day
+    }
     var hours = date.getHours();
+    if(hours < 10){
+      hours = "0" + hours
+    }
     var minutes = date.getMinutes();
+    if(minutes < 10){
+      minutes = "0" + minutes
+    }
     var seconds = date.getSeconds();
+    if(seconds < 10){
+      seconds = "0" + seconds
+    }
     return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
   disableWorkflowNameInput: function() {
     $(this.queryByHook("workflow-name")).find('input').prop('disabled', true);
+  },
+  renderWorkflowEditor: function () {
+    if(this.workflowEditorView){
+      this.workflowEditorView.remove()
+    }
+    this.workflowEditor = new WorkflowEditorView({
+      directory: this.modelDirectory,
+      type: this.type,
+    });
+    this.workflowEditorView = this.registerRenderSubview(this.workflowEditor, 'workflow-editor-container');
   },
   renderWorkflowStatusView: function () {
     if(this.workflowStatusView){

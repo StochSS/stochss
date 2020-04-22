@@ -10,6 +10,7 @@ import os
 import subprocess
 from notebook.base.handlers import APIHandler
 from json.decoder import JSONDecodeError
+from tornado import web
 
 from .util.workflow_status import get_status
 from .util.plot_results import plot_results
@@ -28,6 +29,7 @@ class WorkflowInfoAPIHandler(APIHandler):
     model at the last workflow save.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, info_path):
         '''
         Retrieve workflow info from User's file system.
@@ -65,6 +67,7 @@ class RunWorkflowAPIHandler(APIHandler):
     Handler for running workflows.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, wkfl_type, opt_type, data):
         '''
         Start running a workflow and record the time in UTC in the workflow_info file.
@@ -102,6 +105,7 @@ class SaveWorkflowAPIHandler(APIHandler):
     Handler for saving workflows.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, wkfl_type, opt_type, data):
         '''
         Start saving the workflow.  Creates the workflow directory and workflow_info file if
@@ -143,6 +147,7 @@ class WorkflowStatusAPIHandler(APIHandler):
     Handler for getting Workflow Status (checking for RUNNING and COMPLETE files.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, workflow_path):
         '''
         Retrieve workflow status based on status files.
@@ -165,6 +170,7 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
     Handler for getting result plots based on plot type.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, workflow_path):
         '''
         Retrieve a plot figure of the workflow results based on the plot type 
@@ -206,6 +212,7 @@ class WorkflowLogsAPIHandler(APIHandler):
     Handler for getting Workflow logs.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, logs_path):
         '''
         Retrieve workflow logs from User's file system.
@@ -244,6 +251,7 @@ class WorkflowNotebookHandler(APIHandler):
     (.ipynb) file for notebook workflows.
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, workflow_type, path):
         '''
         Create a jupyter notebook workflow using a stochss model.

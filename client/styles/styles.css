@@ -256,7 +256,19 @@ input[type="file"]::-ms-browse {
   display: inline-block;
 }
 
-.saving-status, .saved-status {
+@keyframes spinner-grow {
+ 0% {
+      -webkit-transform: scale(0);
+      transform: scale(0);
+ }
+ 50% {
+     opacity: 1; 
+     -webkit-transform: scale(1);
+      transform: scale(1);
+ }
+}
+
+.saving-status, .saved-status, .save-error-status {
   display: none;
   margin: 15px;
   vertical-align: middle;
@@ -268,6 +280,10 @@ input[type="file"]::-ms-browse {
 
 .saved-status {
   color: #1e7e34;
+}
+
+.save-error-status {
+  color: #dc3545;
 }
 
 .right-justify {

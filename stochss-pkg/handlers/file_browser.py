@@ -9,6 +9,7 @@ Use finish() for json, write() for text
 from notebook.base.handlers import APIHandler
 import json, os
 import logging
+from tornado import web
 from shutil import move, rmtree
 from .util.stochss_errors import StochSSAPIError
 from .util.ls import ls
@@ -29,6 +30,7 @@ class ModelBrowserFileList(APIHandler):
     Handler for interacting with the User's File Browser
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, path):
         '''
         Reads the content of a directory and returns a jstree dictionary. 
@@ -59,6 +61,7 @@ class ModelToNotebookHandler(APIHandler):
     (.ipynb) file.
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, path):
         '''
         Runs the convert_to_notebook function from the convert_to_notebook script
@@ -89,6 +92,7 @@ class DeleteFileAPIHandler(APIHandler):
     Handler for removing files and/or directoies from the User's file system.
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, path):
         '''
         Removes a single file or recursively remove a directory and its contents.
@@ -126,6 +130,7 @@ class MoveFileAPIHandler(APIHandler):
     Handler moving file locations in the User's file system.
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, data):
         '''
         Moves a file or a directory and its contents to a new location.
@@ -136,14 +141,25 @@ class MoveFileAPIHandler(APIHandler):
             Data string containing old and new locations of target file.
 
         '''
+        user_dir = "/home/jovyan/"
         log.debug("File path and dest path: {0}".format(data))
-        old_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/')[0]))
+        old_path = os.path.join(user_dir, "{0}".format(data.split('/<--MoveTo-->/')[0]))
         log.debug("Path to the file: {0}".format(old_path))
-        new_path = os.path.join("/home/jovyan/", "{0}".format(data.split('/<--MoveTo-->/').pop()))
+        new_path = os.path.join(user_dir, "{0}".format(data.split('/<--MoveTo-->/').pop()))
         log.debug("Destination path: {0}".format(new_path))
         try:
             if os.path.isdir(old_path):
                 move(old_path, new_path)
+                # If directory is wkfl and has been started, update wkfl model path
+                if old_path.endswith('.wkfl') and "RUNNING" in os.listdir(path=new_path):
+                    old_parent_dir = os.path.dirname(old_path)
+                    new_parent_dir = os.path.dirname(new_path)
+                    with open(os.path.join(new_path, "info.json"), "r+") as info_file:
+                        info = json.load(info_file)
+                        info['model'] = info['model'].replace(old_parent_dir, new_parent_dir)
+                        info_file.seek(0)
+                        json.dump(info, info_file)
+                        info_file.truncate()
             else:
                 os.rename(old_path, new_path)
             self.write("Success! {0} was moved to {1}.".format(old_path, new_path))
@@ -167,7 +183,7 @@ class DuplicateModelHandler(APIHandler):
     Handler for creating copies of a file.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Creates a copy of a file with a unique name and stores it in the same 
@@ -179,14 +195,14 @@ class DuplicateModelHandler(APIHandler):
             Path to target model.
 
         '''
+        self.set_header('Content-Type', 'application/json')
+        log.debug("Copying file: {0}".format(path))
         try:
-            log.debug("Copying file: {0}".format(path))
             resp = duplicate(path)
             log.debug("Response message: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -199,7 +215,7 @@ class DuplicateDirectoryHandler(APIHandler):
     Handler for creating copies of a directory and its contents.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Creates a copy of a directory and its contents with a unique name and 
@@ -211,14 +227,14 @@ class DuplicateDirectoryHandler(APIHandler):
             Path to target directory.
 
         '''
+        self.set_header('Content-Type', 'application/json')
+        log.debug("Path to the file: {0}".format(path))
         try:
-            log.debug("Path to the file: {0}".format(path))
             resp = duplicate(path, True)
             log.debug("Response message: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -231,7 +247,7 @@ class RenameAPIHandler(APIHandler):
     Handler for renaming files or directories.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, data):
         '''
         Rename a file or directory.  If the file or directory already exists
@@ -267,7 +283,7 @@ class ConvertToSpatialAPIHandler(APIHandler):
     Handler for converting a model to a spatial model.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Creates a spatial model file with a unique name from a model file and 
@@ -280,13 +296,13 @@ class ConvertToSpatialAPIHandler(APIHandler):
 
         '''
         log.debug("Converting non-spatial model to spatial model: {0}".format(path))
+        self.set_header('Content-Type', 'application/json')
         try:
             resp = convert_model(path, to_spatial=True)
             log.debug("Response: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -299,7 +315,7 @@ class ConvertToModelAPIHandler(APIHandler):
     Handler for converting a spatial model to a model.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Creates a model file with a unique name from a spatial model file and 
@@ -312,13 +328,13 @@ class ConvertToModelAPIHandler(APIHandler):
 
         '''
         log.debug("Converting spatial model to non-spatial model: {0}".format(path))
+        self.set_header('Content-Type', 'application/json')
         try:
             resp = convert_model(path, to_spatial=False)
             log.debug("Response: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -331,7 +347,7 @@ class ModelToSBMLAPIHandler(APIHandler):
     Handler for converting a StochSS model to a SBML model.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Create a SBML Model file with a unique name from a model file and 
@@ -343,6 +359,7 @@ class ModelToSBMLAPIHandler(APIHandler):
             Path from the user directory to the target model file.
 
         '''
+        self.set_header('Content-Type', 'application/json')
         log.debug("Converting to SBML: {0}".format(path))
         try:
             resp = convert_to_sbml(path)
@@ -350,7 +367,6 @@ class ModelToSBMLAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}".format(error))
             self.write(error)
@@ -400,7 +416,7 @@ class DownloadAPIHandler(APIHandler):
     Handler for downloading plain text files to the users download directory.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, path):
         '''
         Read and return plain text files.
@@ -428,13 +444,13 @@ class DownloadAPIHandler(APIHandler):
 
 
 class DownloadZipFileAPIHandler(APIHandler):
-     '''
-     ##############################################################################
-     Handler for downloading zip files to the users download directory.
-     ##############################################################################
-     '''
-
-     async def get(self, action, path):
+    '''
+    ##############################################################################
+    Handler for downloading zip files to the users download directory.
+    ##############################################################################
+    '''
+    @web.authenticated
+    async def get(self, action, path):
         '''
         Read and download a zip file or generate a zip file from a directory or 
         file and then download.  Generated zip files are stored in the targets 
@@ -456,11 +472,9 @@ class DownloadZipFileAPIHandler(APIHandler):
         else:
             self.set_header('Content-Type', 'application/json')
         
-        generate = not action == "download"
-        log.debug("Generate script arguement: {0}".format(generate))
         try:
-            resp = download_zip(path, generate)
-            log.debug("Response: {0}".format(resp))
+            resp = download_zip(path, action)
+            log.debug("Response: {0}\n".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
@@ -478,7 +492,7 @@ class CreateDirectoryHandler(APIHandler):
     Handler for creating a new directory or path of directories.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def get(self, directories):
         '''
         Creates a single directory or if the path od directories contains other
@@ -511,7 +525,7 @@ class UploadFileAPIHandler(APIHandler):
     Handler for uploading files.
     ##############################################################################
     '''
-
+    @web.authenticated
     async def post(self):
         '''
         Uploads the target file to the target directory.  If the intended file
@@ -547,8 +561,8 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
     Handler for duplicating a workflow as new and a workflows model.
     ##############################################################################
     '''
-
-    async def get(self, target, path):
+    @web.authenticated
+    async def get(self, target, time_stamp, path):
         '''
         Creates a duplicate of the model in the target workflow in its parent
         directory.  Creates a new workflow that uses the same model and has 
@@ -562,11 +576,15 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
         '''
         log.debug("Path to the workflow: {0}".format(path))
         log.debug("The {0} is being copied".format(target))
+        if time_stamp == "None":
+            time_stamp = None
+        else:
+            log.debug("The time stamp for the new workflow: {0}".format(time_stamp))
         only_model = target == "wkfl_model"
         log.debug("only_model flag: {0}".format(only_model))
         self.set_header('Content-Type', 'application/json')
         try:
-            resp = duplicate_wkfl_as_new(path, only_model)
+            resp = duplicate_wkfl_as_new(path, only_model, time_stamp)
             log.debug("Response: {0}".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
@@ -575,3 +593,55 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
             log.error("Exception information: {0}".format(error))
             self.write(error)
         self.finish()
+
+
+class GetWorkflowModelPathAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for getting the path to the workflow model.
+    ##############################################################################
+    '''
+
+    async def get(self, path):
+        '''
+        Returns the path to the model used for the workflow to allow the user 
+        to edit the model.  If the model doesn't exist a 404 response is sent.
+
+        Attributes
+        ----------
+        path : str
+            Path from the user directory to the target workflow.
+
+        '''
+        from json.decoder import JSONDecodeError
+
+        user_dir = "/home/jovyan"
+
+        self.set_header('Content-Type', 'application/json')
+        log.debug("The path to the workflow: {0}".format(path))
+        full_path = os.path.join(user_dir, path, "info.json")
+        log.debug("The full path to the workflow's info file: {0}".format(full_path))
+        try:
+            with open(full_path, "r") as info_file:
+                info = json.load(info_file)
+            log.debug("Workflow info: {0}".format(info))
+            model_path = info['model']
+            log.debug("Path to the workflow's model: {0}".format(model_path))
+            resp = {"file":model_path.replace(user_dir + "/", "")}
+            if not os.path.exists(os.path.join(user_dir, model_path)):
+                mdl_file = model_path.split('/').pop()
+                resp['error'] = "The model file {0} could not be found.  To edit the model you will need to extract the model from the workflow or open the workflow and update the path to the model.".format(mdl_file)
+            log.debug("Response: {0}".format(resp))
+            self.write(resp)
+        except FileNotFoundError as err:
+            self.set_status(404)
+            error = {"Reason":"Workflow Info File Not Found","Message":"Could not find the workflow's info file: "+str(err)}
+            log.error(error)
+            self.write(error)
+        except JSONDecodeError as err:
+            self.set_status(404)
+            error = {"Reason":"Workflow Info File Not JSON Format","Message":"The workflow info file is not JSON decodable: "+str(err)}
+            log.error(error)
+            self.write(error)
+        self.finish()
+
