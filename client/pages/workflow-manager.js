@@ -160,13 +160,13 @@ let WorkflowManager = PageView.extend({
   },
   renderSubviews: function () {
     $(this.queryByHook("page-title")).text('Workflow: '+this.titleType)
-    this.renderWkflNameInputView()
-    this.renderMdlPathInputView()
+    this.renderWkflNameInputView();
+    this.renderMdlPathInputView();
     this.renderWorkflowEditor();
-    // this.renderWorkflowStatusView();
-    // this.updateTrajectories();
-    // this.renderModelViewer();
-    // this.renderInfoView();
+    this.renderWorkflowStatusView();
+    this.renderResultsView();
+    this.renderInfoView();
+    this.renderModelViewer();
     if(this.status === 'running'){
       this.getWorkflowStatus();
     }
@@ -218,6 +218,50 @@ let WorkflowManager = PageView.extend({
     });
     this.workflowEditorView = this.registerRenderSubview(this.workflowEditor, 'workflow-editor-container');
   },
+  renderWorkflowStatusView: function () {
+    if(this.workflowStatusView){
+      this.workflowStatusView.remove();
+    }
+    var statusView = new WorkflowStatusView({
+      startTime: this.startTime,
+      status: this.status,
+    });
+    this.workflowStatusView = this.registerRenderSubview(statusView, 'workflow-status-container');
+  },
+  renderResultsView: function () {
+    if(this.workflowResultsView){
+      this.workflowResultsView.remove();
+    }
+    var resultsView = new WorkflowResultsView({
+      trajectories: this.model.simulationSettings.realizations,
+      status: this.status,
+      species: this.model.species,
+      type: this.type,
+      speciesOfInterest: this.model.parameterSweepSettings.speciesOfInterest.name
+    });
+    this.workflowResultsView = this.registerRenderSubview(resultsView, 'workflow-results-container');
+  },
+  renderInfoView: function () {
+    if(this.infoView){
+      this.infoView.remove();
+    }
+    this.infoView = new InfoView({
+      status: this.status,
+      logsPath: path.join(this.wkflDirectory, "logs.txt")
+    });
+    this.registerRenderSubview(this.infoView, 'workflow-info-container')
+  },
+  renderModelViewer: function (){
+    if(this.modelViewer){
+      this.modelViewer.remove();
+    }
+    this.modelViewer = new ModelViewer({
+      model: this.model,
+      status: this.status,
+      type: this.type
+    });
+    this.registerRenderSubview(this.modelViewer, 'model-viewer-container')
+  },
   getWorkflowStatus: function () {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.wkflDirectory);
@@ -225,13 +269,16 @@ let WorkflowManager = PageView.extend({
       if(self.status !== body )
         self.status = body;
       console.log(self.status)
-      if(self.status !== 'error' && self.status !== 'complete')
+      if(self.status === 'running')
         setTimeout(_.bind(self.getWorkflowStatus, self), 1000);
-      // else if(self.status === 'complete') {
-      //   self.renderResultsView();
-      //   self.renderModelViewer();
-      //   self.renderInfoView();
-      // }
+      else{
+        self.renderWorkflowStatusView()
+        self.renderInfoView();
+      }
+      if(self.status === 'complete') {
+        self.renderResultsView();
+        self.renderModelViewer();
+      }
     });
   },
   setWorkflowName: function(e) {
@@ -264,78 +311,6 @@ let WorkflowManager = PageView.extend({
     else
       window.location.reload()
   },
-  // updateWkflStatus: function () {
-  //   var self = this;
-  //   setTimeout(function () {  
-  //     self.getWorkflowInfo(function () {
-  //       self.getWorkflowStatus();
-  //     });
-  //   }, 3000);
-  // },
-  // renderWorkflowStatusView: function () {
-  //   if(this.workflowStatusView){
-  //     this.workflowStatusView.remove();
-  //   }
-  //   var statusView = new WorkflowStatusView({
-  //     startTime: this.startTime,
-  //     status: this.status,
-  //   });
-  //   this.workflowStatusView = this.registerRenderSubview(statusView, 'workflow-status-container');
-  // },
-  // getWorkflowInfo: function (cb) {
-  //   var self = this;
-  //   var endpoint = path.join(app.getApiPath(), "/workflow/workflow-info", this.wkflDirectory, "/info.json");
-  //   xhr({uri: endpoint, json: true}, function (err, response, body){
-  //     self.startTime = body.start_time;
-  //     cb();
-  //   });
-  // },
-  // renderResultsView: function () {
-  //   if(this.workflowResultsView){
-  //     this.workflowResultsView.remove();
-  //   }
-  //   var resultsView = new WorkflowResultsView({
-  //     trajectories: this.trajectories,
-  //     status: this.status,
-  //     species: this.species,
-  //     type: this.type,
-  //     speciesOfInterest: this.speciesOfInterest.name
-  //   });
-  //   this.workflowResultsView = this.registerRenderSubview(resultsView, 'workflow-results-container');
-  // },
-  // renderModelViewer: function (){
-  //   if(this.modelViewer){
-  //     this.modelViewer.remove();
-  //   }
-  //   this.modelViewer = new ModelViewer({
-  //     directory: this.modelDirectory,
-  //     status: this.status,
-  //     type: this.type
-  //   });
-  //   this.registerRenderSubview(this.modelViewer, 'model-viewer-container')
-  // },
-  // renderInfoView: function () {
-  //   if(this.infoView){
-  //     this.infoView.remove();
-  //   }
-  //   this.infoView = new InfoView({
-  //     status: this.status,
-  //     logsPath: path.join(this.wkflDirectory, "logs.txt")
-  //   });
-  //   this.registerRenderSubview(this.infoView, 'workflow-info-container')
-  // },
-  // updateTrajectories: function () {
-  //   var self = this
-  //   if(this.trajectories === undefined){
-  //     setTimeout(function () {
-  //       self.updateTrajectories()
-  //     }, 1000);
-  //   }
-  //   else{
-  //     this.trajectories = this.workflowEditorView.model.simulationSettings.algorithm !== "ODE" ? this.trajectories : 1
-  //     this.renderResultsView()
-  //   }
-  // },
 });
 
 initPage(WorkflowManager);
