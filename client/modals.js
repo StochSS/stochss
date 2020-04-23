@@ -153,5 +153,11 @@ module.exports = {
         let title = `Model for ${wkflFile}`
 
         return templates.message(modalID, title, body)
+    },
+    modelNotFoundHtml : (title, errorMessage) => {
+        let modalID = "modelNotFoundModal"
+        let message = `<p>${errorMessage}</p><p>Please correct the model path and press enter to reset the workflow.</p>`
+
+        return templates.message(modalID, title, message)
     }
 }
