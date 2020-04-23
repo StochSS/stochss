@@ -1,4 +1,6 @@
 var $ = require('jquery');
+//support files
+var modals = require('../modals');
 //views
 var View = require('ampersand-view');
 var EditNonspatialSpecieView = require('./edit-specie');
@@ -7,52 +9,6 @@ var EditAdvancedSpecie = require('./edit-advanced-specie');
 //templates
 var nonspatialSpecieTemplate = require('../templates/includes/speciesEditor.pug');
 var spatialSpecieTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
-
-let renderDefaultModeModalHtml = () => {
-  let concentrationDesciption = `Species will only be represented deterministically.`;
-  let populationDescription = `Species will only be represented stochastically.`;
-  let hybridDescription = `Allows a species to be represented deterministically and/or stochastically.  
-                            This allow you to customize the mode of individual species and set the switching 
-                            tolerance or minimum value for switching."`;
-
-  return `
-    <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title">Default Species Mode (required)</h5>
-            <button type="button" class="close close-modal" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div>
-              <p>
-                The default mode is used to set the mode of all species added to the model.  
-                The mode of a species is used to determine how it will be represented in a Hybrid simulation.
-              </p>
-              <p>Select one of the following: </p>
-            </div>
-            <div class="default-mode">
-              <button type="button" class="btn btn-primary concentration-btn box-shadow">Concentration</button>
-              <p style="margin-top: 5px;">${concentrationDesciption}</p>
-            </div>
-            <div class="default-mode">
-              <button type="button" class="btn btn-primary population-btn box-shadow">Population</button>
-              <p style="margin-top: 5px;">${populationDescription}</p>
-            </div>
-            <div class="default-mode">
-              <button type="button" class="btn btn-primary hybrid-btn box-shadow">Hybrid Concentration/Population</button>
-              <p style="margin-top: 5px;">${hybridDescription}</p>
-            </div>
-          </div>
-          <div class="modal-footer">
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
 
 module.exports = View.extend({
   events: {
@@ -150,7 +106,7 @@ module.exports = View.extend({
     if(document.querySelector('#defaultModeModal')) {
       document.querySelector('#defaultModeModal').remove()
     }
-    let modal = $(renderDefaultModeModalHtml()).modal();
+    let modal = $(modals.renderDefaultModeModalHtml()).modal();
     let continuous = document.querySelector('#defaultModeModal .concentration-btn');
     let discrete = document.querySelector('#defaultModeModal .population-btn');
     let dynamic = document.querySelector('#defaultModeModal .hybrid-btn');

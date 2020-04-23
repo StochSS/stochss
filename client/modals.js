@@ -1,20 +1,20 @@
 let help = require('./page-help')
 
 let templates = {
-        input : (modalID, inputID, title) => {
+        input : (modalID, inputID, title, label, value) => {
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <h5 class="modal-title">New ${title}</h5>
+                        <h5 class="modal-title">${title}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                           <span aria-hidden="true">&times;</span>
                         </button>
                       </div>
                       <div class="modal-body">
-                        <label for=${inputID}>Name:</label>
-                        <input type="text" id=${inputID} name=${inputID} size="30" autofocus>
+                        <label for=${inputID}>${label}</label>
+                        <input type="text" id=${inputID} name=${inputID} size="30" autofocus value="${value}">
                         </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
@@ -114,10 +114,13 @@ module.exports = {
         if(isModel){
             title = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
         }
+        title = "New " + title
         let modalID = "newModalModel"
         let inputID = "modelNameInput"
+        let label = "Name:"
+        let value = ""
         
-        return templates.input(modalID, inputID, title)
+        return templates.input(modalID, inputID, title, label, value)
     },
     sbmlToModelHtml : (title, errors) => {
         let modalID = "sbmlToModelModal"
@@ -160,5 +163,61 @@ module.exports = {
 
         return templates.message(modalID, title, message)
     },
-    
+    annotationModalHtml : (type, name, annotation) => {
+        let modalID = `${type}AnnotationModal`
+        let inputID = `${type}AnnotationInput`
+        let title = `Annotation for ${name}`
+        let label = "Annotation:"
+
+        return templates.input(modalID, inputID, title, label, annotation)
+    },
+    modelSaveErrorHtml : (title, error) => {
+        let modalID = "modelSaveErrorModal"
+
+        return templates.message(modalID, title, error)
+    },
+    renderDefaultModeModalHtml : () => {
+        let concentrationDesciption = `Species will only be represented deterministically.`;
+        let populationDescription = `Species will only be represented stochastically.`;
+        let hybridDescription = `Allows a species to be represented deterministically and/or stochastically.  
+                                  This allow you to customize the mode of individual species and set the switching 
+                                  tolerance or minimum value for switching."`;
+
+        return `
+            <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content info">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Default Species Mode (required)</h5>
+                    <button type="button" class="close close-modal" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div>
+                      <p>
+                        The default mode is used to set the mode of all species added to the model.  
+                        The mode of a species is used to determine how it will be represented in a Hybrid simulation.
+                      </p>
+                      <p>Select one of the following: </p>
+                    </div>
+                    <div class="default-mode">
+                      <button type="button" class="btn btn-primary concentration-btn box-shadow">Concentration</button>
+                      <p style="margin-top: 5px;">${concentrationDesciption}</p>
+                    </div>
+                    <div class="default-mode">
+                      <button type="button" class="btn btn-primary population-btn box-shadow">Population</button>
+                      <p style="margin-top: 5px;">${populationDescription}</p>
+                    </div>
+                    <div class="default-mode">
+                      <button type="button" class="btn btn-primary hybrid-btn box-shadow">Hybrid Concentration/Population</button>
+                      <p style="margin-top: 5px;">${hybridDescription}</p>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                  </div>
+                </div>
+              </div>
+            </div>`
+    }
 }
