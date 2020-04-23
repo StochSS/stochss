@@ -159,5 +159,6 @@ module.exports = {
         let message = `<p>${errorMessage}</p><p>Please correct the model path and press enter to reset the workflow.</p>`
 
         return templates.message(modalID, title, message)
-    }
+    },
+    
 }
