@@ -1,6 +1,9 @@
 import os
+from tornado import web
 from notebook.base.handlers import IPythonHandler
-from logging import getLogger
+import logging
+
+log = logging.getLogger('stochss')
 
 class PageHandler(IPythonHandler):
   '''
@@ -14,7 +17,6 @@ class PageHandler(IPythonHandler):
     return self.settings['config']['NotebookApp']['extra_static_paths'][0]
 
   def get_server_path(self):
-    log = getLogger()
     try:
         server_path = os.environ['JUPYTERHUB_SERVICE_PREFIX']
     except:
@@ -24,26 +26,31 @@ class PageHandler(IPythonHandler):
 
 
 class HomeHandler(PageHandler):
+  @web.authenticated
   async def get(self):
     self.render("stochss-home.html", server_path=self.get_server_path())
 
 
 class ModelBrowserHandler(PageHandler):
+  @web.authenticated
   async def get(self):
     self.render("stochss-file-browser.html", server_path=self.get_server_path())
 
 
 class ModelEditorHandler(PageHandler):
+  @web.authenticated
   async def get(self, model_name):
     self.render("stochss-model-editor.html", server_path=self.get_server_path())
 
 
 class WorkflowSelectionHandler(PageHandler):
+  @web.authenticated
   async def get(self, model_name):
     self.render("stochss-workflow-selection.html", server_path=self.get_server_path())
 
 
 class WorkflowEditorHandler(PageHandler):
+  @web.authenticated
   async def get(self, model_name):
     self.render("stochss-workflow-manager.html", server_path=self.get_server_path())
 

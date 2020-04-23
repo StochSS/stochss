@@ -1,9 +1,10 @@
 from notebook.utils import url_path_join
+import logging
 from .pages import *
 from .file_browser import *
 from .models import *
 from .workflows import *
-
+from .log import init_log
 
 def get_page_handlers(route_start):
     handlers = [
@@ -19,7 +20,7 @@ def get_page_handlers(route_start):
         ## API Handlers
         #
         ("/stochss/models/browser-list(.+)\/?", ModelBrowserFileList), # TODO: /api, not /models
-        ("/stochss/api/json-data/(.+)\/?", JsonFileAPIHandler),
+        ("/stochss/api/json-data/(\w+)/(.+)\/?", JsonFileAPIHandler),
         ("/stochss/api/models/run/(\w+)/(\w+)?\/?(.+)\/?", RunModelAPIHandler),
         ("/stochss/api/model/duplicate/(.+)\/?", DuplicateModelHandler),
         ("/stochss/api/models/to-notebook/(.+)\/?", ModelToNotebookHandler),
@@ -34,6 +35,9 @@ def get_page_handlers(route_start):
         ("/stochss/api/workflow/workflow-status/(.+)\/?", WorkflowStatusAPIHandler),
         ("/stochss/api/workflow/workflow-logs/(.+)\/?", WorkflowLogsAPIHandler),
         ("/stochss/api/workflow/plot-results/(.+)\/?", PlotWorkflowResultsAPIHandler),
+        ("/stochss/api/workflow/duplicate/(\w+)/(\w+)/(.+)\/?", DuplicateWorkflowAsNewHandler),
+        ("/stochss/api/workflow/edit-model/(.+)\/?", GetWorkflowModelPathAPIHandler),
+        ("/stochss/api/file/upload\/?", UploadFileAPIHandler),
         ("/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
         ("/stochss/api/file/delete/(.+)\/?", DeleteFileAPIHandler),
         ("/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
@@ -57,4 +61,4 @@ def load_jupyter_server_extension(nb_server_app):
     host_pattern = '.*$'
     page_handlers = get_page_handlers(web_app.settings['base_url'])
     web_app.add_handlers(host_pattern, page_handlers)
-
+    init_log()

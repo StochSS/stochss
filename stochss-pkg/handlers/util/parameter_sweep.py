@@ -8,7 +8,10 @@ import numpy as np
 import pickle
 import plotly
 
-from run_model import run_solver
+try:
+    from run_model import run_solver
+except ModuleNotFoundError:
+    pass
 
 
 def setup_species_results(c, is_2d):
@@ -109,18 +112,32 @@ def get_data_for_plot(c, keys):
         species_of_interest = list(c.list_of_species)[0]
         mapper_key = "final"
         reducer_key = "avg"
+    elif c.number_of_trajectories > 1:
+        species_of_interest, mapper_key, reducer_key = keys.split('-')
     else:
-        try:
-            species_of_interest, mapper_key, reducer_key = keys.split('-')
-        except:
-            species_of_interest, mapper_key = keys.split('-')
-
-    if c.number_of_trajectories > 1:
-        data = c.data[species_of_interest][mapper_key][reducer_key]
-    else:
+        species_of_interest, mapper_key = keys.split('-')
         data = c.data[species_of_interest][mapper_key]
+        return data, species_of_interest
 
+    data = c.data[species_of_interest][mapper_key][reducer_key]
     return data, species_of_interest
+
+
+def get_data_for_csv(c, keys):
+    data_list = []
+    if keys is None:
+        mapper_key = "final"
+        reducer_key = "avg"
+    elif c.number_of_trajectories > 1:
+        mapper_key, reducer_key = keys.split('-')
+    else:
+        for species in c.list_of_species:
+            data_list.append(c.data[species][keys])
+        return data_list
+
+    for species in c.list_of_species:
+        data_list.append(c.data[species][mapper_key][reducer_key])
+    return data_list
 
 
 class ParameterSweep1D():
@@ -145,6 +162,33 @@ class ParameterSweep1D():
                     feature_extraction(i, species_results, results[species], species, verbose=verbose)
         c.data = results
         return results
+
+
+    def to_csv(c, path='.', nametag='results_csv', stamp=None, keys=None):
+        from datetime import datetime
+        import csv
+
+        if stamp is None:
+            now = datetime.now()
+            stamp = datetime.timestamp(now)
+        directory = os.path.join(path, nametag + stamp)
+        filename = os.path.join(directory, keys+".csv")
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+
+        data_list= get_data_for_csv(c, keys)
+        field_names = [c.p1]
+        for species in c.list_of_species:
+            field_names.extend([species, species + "-stddev"])
+        
+        with open(filename, "w", newline="") as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(field_names)
+            for i, step in enumerate(c.p1_range):
+                line = [step]
+                for data in data_list:
+                    line.extend([data[i,0], data[i,1]])
+                csv_writer.writerow(line)
 
         
     def plot(c, keys=None):
@@ -235,6 +279,33 @@ class ParameterSweep2D():
         c.data = results
         return results
 
+
+    def to_csv(c, path='.', nametag='results_csv', stamp=None, keys=None):
+        from datetime import datetime
+        import csv
+
+        if stamp is None:
+            now = datetime.now()
+            stamp = datetime.timestamp(now)
+        directory = os.path.join(path, nametag + stamp)
+        filename = os.path.join(directory, keys+".csv")
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+
+        data_list = get_data_for_csv(c, keys)
+        field_names = [c.p1, c.p2]
+        field_names.extend(list(c.list_of_species))
+        
+        with open(filename, "w", newline="") as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(field_names)
+            for i, p1_step in enumerate(c.p1_range):
+                for j, p2_step in enumerate(c.p2_range):
+                    line = [p1_step, p2_step]
+                    for data in data_list:
+                        line.append(data[i,j])
+                    csv_writer.writerow(line)
+
         
     def plot(c, keys=None):
         from matplotlib import pyplot as plt
@@ -320,6 +391,8 @@ class ParameterSweep():
         self.log_path = os.path.join(wkfl_path, 'logs.txt')
         self.wkfl_mdl_path = os.path.join(wkfl_path, self.mdl_file)
         self.res_path = os.path.join(wkfl_path, 'results')
+        wkfl_name_elements = wkfl_path.split('/').pop().split('.')[0].split('_')
+        self.wkfl_timestamp = '_'.join(["",wkfl_name_elements[-2],wkfl_name_elements[-1]])
 
 
     def run(self, gillespy2_model, stochss_model, verbose):
@@ -335,18 +408,26 @@ class ParameterSweep():
         ps.configure(gillespy2_model, ps_settings, trajectories)
         results = ps.run(sim_settings, verbose=verbose)
         self.store_results(results)
+        self.store_csv_results(ps)
         self.store_plots(ps)
 
 
     def store_results(self, results):
         if not 'results' in os.listdir(path=self.wkfl_path):
             os.mkdir(self.res_path)
+
         with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
             pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
 
-
         with open(os.path.join(self.res_path, 'results.json'), 'w') as json_file:
             json_file.write(json.dumps(str(results)))
+
+
+    def store_csv_results(self, ps):
+        data_keys = self.get_csv_keys(ps)
+
+        for key in data_keys:
+            ps.to_csv(path=self.res_path, nametag="results_csv", stamp=self.wkfl_timestamp, keys=key)
 
 
     def store_plots(self, ps):
@@ -359,6 +440,22 @@ class ParameterSweep():
 
         with open(os.path.join(self.res_path, 'plots.json'), 'w') as plots_file:
             json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
+
+
+    def get_csv_keys(self, ps):
+        from itertools import product
+
+        mappers = ["min","max","avg","var","final"]
+        reducers = ["min","max","avg","var"]
+
+        if ps.number_of_trajectories <= 1:
+            return mappers
+
+        csv_keys = list(product(mappers, reducers))
+        for i in range(len(csv_keys)):
+            key = "-".join(list(csv_keys[i]))
+            csv_keys[i] = key
+        return csv_keys
 
 
     def get_plot_keys(self, ps):

@@ -4,11 +4,13 @@ the base API handler has some logic that prevents
 requests without a referrer field
 '''
 
+import logging
 import json
 import os
 import subprocess
 from notebook.base.handlers import APIHandler
 from json.decoder import JSONDecodeError
+from tornado import web
 
 from .util.workflow_status import get_status
 from .util.plot_results import plot_results
@@ -16,8 +18,7 @@ from .util.convert_to_1d_param_sweep_notebook import convert_to_1d_psweep_nb
 from .util.convert_to_2d_param_sweep_notebook import convert_to_2d_psweep_nb
 from .util.stochss_errors import StochSSAPIError
 
-import logging
-log = logging.getLogger()
+log = logging.getLogger('stochss')
 
 
 class WorkflowInfoAPIHandler(APIHandler):
@@ -27,6 +28,7 @@ class WorkflowInfoAPIHandler(APIHandler):
     model at the last workflow save.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, info_path):
         '''
         Retrieve workflow info from User's file system.
@@ -36,25 +38,24 @@ class WorkflowInfoAPIHandler(APIHandler):
         info_path : str
             Path to selected workflows info file.
         '''
-        log.setLevel(logging.DEBUG)
-        log.debug("Path to the info file: {0}\n".format(info_path))
+        log.debug("Path to the info file: {0}".format(info_path))
         full_path = os.path.join("/home/jovyan", info_path)
-        log.debug("Full path to the info file: {0}\n".format(full_path))
+        log.debug("Full path to the info file: {0}".format(full_path))
         self.set_header('Content-Type', 'application/json')
         try:
             with open(full_path, 'r') as info_file:
                 data = json.load(info_file)
-            log.debug("Contents of the info file: {0}\n".format(data))
+            log.debug("Contents of the info file: {0}".format(data))
             self.write(data)
         except FileNotFoundError as err:
             self.set_status(404)
             error = {"Reason":"Info File Not Found","Message":"Could not find the workflow info file: "+str(err)}
-            log.error("Exception information: {0}\n".format(error))
+            log.error("Exception information: {0}".format(error))
             self.write(error)
         except JSONDecodeError as err:
             self.set_status(406)
             error = {"Reason":"File Not JSON Format","Message":"The workflow info file is not JSON decodable: "+str(err)}
-            log.error("Exception information: {0}\n".format(error))
+            log.error("Exception information: {0}".format(error))
             self.write(error)
         self.finish()
 
@@ -65,6 +66,7 @@ class RunWorkflowAPIHandler(APIHandler):
     Handler for running workflows.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, wkfl_type, opt_type, data):
         '''
         Start running a workflow and record the time in UTC in the workflow_info file.
@@ -80,9 +82,8 @@ class RunWorkflowAPIHandler(APIHandler):
         data : str
             Path to selected workflows model file and name or path of workflow.
         '''
-        log.setLevel(logging.DEBUG)
-        log.debug("Model path and workflow name or path: {0}\n".format(data))
-        log.debug("Actions for the workflow: {0}\n".format(opt_type))
+        log.debug("Model path and workflow name or path: {0}".format(data))
+        log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         log.debug("Path to the model: {0}".format(model_path))
@@ -103,6 +104,7 @@ class SaveWorkflowAPIHandler(APIHandler):
     Handler for saving workflows.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, wkfl_type, opt_type, data):
         '''
         Start saving the workflow.  Creates the workflow directory and workflow_info file if
@@ -117,9 +119,8 @@ class SaveWorkflowAPIHandler(APIHandler):
         data : str
             Path to selected workflows model file and name or path of workflow.
         '''
-        log.setLevel(logging.DEBUG)
-        log.debug("Model path and workflow name or path: {0}\n".format(data))
-        log.debug("Actions for the workflow: {0}\n".format(opt_type))
+        log.debug("Model path and workflow name or path: {0}".format(data))
+        log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
         model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         log.debug("Path to the model: {0}".format(model_path))
@@ -145,6 +146,7 @@ class WorkflowStatusAPIHandler(APIHandler):
     Handler for getting Workflow Status (checking for RUNNING and COMPLETE files.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, workflow_path):
         '''
         Retrieve workflow status based on status files.
@@ -154,8 +156,7 @@ class WorkflowStatusAPIHandler(APIHandler):
         workflow_path : str
             Path to selected workflow directory.
         '''
-        log.setLevel(logging.DEBUG)
-        log.debug('Getting the status of the workflow\n')
+        log.debug('Getting the status of the workflow')
         status = get_status(workflow_path)
         log.debug('The status of the workflow is: {0}\n'.format(status))
         self.write(status)
@@ -168,6 +169,7 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
     Handler for getting result plots based on plot type.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, workflow_path):
         '''
         Retrieve a plot figure of the workflow results based on the plot type 
@@ -178,7 +180,6 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         workflow_path : str
             Path to selected workflow directory.
         '''
-        log.setLevel(logging.DEBUG)
         log.debug("The path to the workflow: {0}\n".format(workflow_path))
         body = json.loads(self.get_query_argument(name='data'))
         log.debug("Plot args passed to the plot: {0}\n".format(body))
@@ -210,6 +211,7 @@ class WorkflowLogsAPIHandler(APIHandler):
     Handler for getting Workflow logs.
     ########################################################################
     '''
+    @web.authenticated
     async def get(self, logs_path):
         '''
         Retrieve workflow logs from User's file system.
@@ -219,7 +221,6 @@ class WorkflowLogsAPIHandler(APIHandler):
         logs_path : str
             Path to the workflow logs file.
         '''
-        log.setLevel(logging.DEBUG)
         log.debug("Path to the workflow logs file: {0}\n".format(logs_path))
         full_path = os.path.join("/home/jovyan/", logs_path)
         log.debug("Full path to the workflow logs file: {0}\n".format(full_path))
@@ -249,6 +250,7 @@ class WorkflowNotebookHandler(APIHandler):
     (.ipynb) file for notebook workflows.
     ##############################################################################
     '''
+    @web.authenticated
     async def get(self, workflow_type, path):
         '''
         Create a jupyter notebook workflow using a stochss model.
@@ -260,7 +262,6 @@ class WorkflowNotebookHandler(APIHandler):
         path : str
             Path to target model within User's file system.
         '''
-        log.setLevel(logging.DEBUG)
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
         workflows = {"1d_parameter_sweep":convert_to_1d_psweep_nb, "2d_parameter_sweep":convert_to_2d_psweep_nb}

@@ -1,5 +1,7 @@
 {
 	"is_spatial": false,
+	"defaultID": 1,
+	"defaultMode": "",
 	"simulationSettings": {
 		"isAutomatic": true,
 		"relativeTol": 1e-3,

@@ -9,13 +9,15 @@ import plotly
 import argparse
 import logging
 
+from shutil import copyfile
+from datetime import datetime, timezone, timedelta
 from gillespy2.core import log
 
-from parameter_sweep import ParameterSweep
-
-from shutil import copyfile
-from run_model import GillesPy2Workflow, ModelFactory, run_solver
-from datetime import datetime, timezone, timedelta
+try:
+    from parameter_sweep import ParameterSweep
+    from run_model import GillesPy2Workflow, ModelFactory, run_solver
+except ModuleNotFoundError:
+    pass
 
 
 user_dir = "/home/jovyan"
@@ -83,9 +85,11 @@ def get_models(full_path, name, wkfl_path):
 
     try:
         _model = ModelFactory(stochss_model) # build GillesPy2 model
+        gillespy2_model = _model.model
     except Exception as error:
-        log.error(str(error))
-    gillespy2_model = _model.model
+        log.error("GillesPy2 Model Errors: "+str(error))
+        gillespy2_model = None
+    
 
     return gillespy2_model, stochss_model
 
@@ -100,6 +104,7 @@ def update_info_file(info_path, wkfl_mdl_path):
     with open(info_path, 'r') as info_file:
         info_data = json.loads(info_file.read())
 
+    info_data['source_model'] = info_data['model'] # preserve path to source model
     info_data['start_time'] = str_datetime # add start time to workflow info
     info_data['model'] = wkfl_mdl_path # Update the location of the model
 

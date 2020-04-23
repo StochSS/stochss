@@ -43,6 +43,8 @@ class GillesPy2Workflow():
             self.log_path = os.path.join(wkfl_path, 'logs.txt')
             self.wkfl_mdl_path = os.path.join(wkfl_path, self.mdl_file)
             self.res_path = os.path.join(wkfl_path, 'results')
+            wkfl_name_elements = wkfl_path.split('/').pop().split('.')[0].split('_')
+            self.wkfl_timestamp = '_'.join(["",wkfl_name_elements[-2],wkfl_name_elements[-1]])
 
 
     def run_preview(self, gillespy2_model, stochss_model):
@@ -81,6 +83,8 @@ class GillesPy2Workflow():
             os.mkdir(self.res_path)
         with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
             pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
+
+        results.to_csv(path=self.res_path, nametag="results_csv", stamp=self.wkfl_timestamp)
         
 
     def plot_results(self, results, trajectories, is_stochastic):
