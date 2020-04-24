@@ -68,7 +68,7 @@ def convert_to_mdl_inference_nb(model_path):
     nb = nbf.new_notebook(cells=cells)
 
     # Open and write to file
-    dest_file = get_unique_file_name('{}2dParamSweep.ipynb'.format(name), dest_path)[0]
+    dest_file = get_unique_file_name('{}SciopeMI.ipynb'.format(name), dest_path)[0]
     with open(dest_file, 'w') as f:
         nbformat.write(nb, f, version=4)
     f.close()
