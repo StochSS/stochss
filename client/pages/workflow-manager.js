@@ -109,6 +109,7 @@ let WorkflowManager = PageView.extend({
         self.workflowName = body.wkflName
         self.status = body.status
         self.startTime = body.startTime
+        console.log(self.status, self.startTime)
         self.buildWkflModel(body)
         self.renderSubviews();
       }

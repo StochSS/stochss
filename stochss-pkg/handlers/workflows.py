@@ -60,7 +60,7 @@ class LoadWorkflowAPIHandler(APIHandler):
             resp["status"] = get_status(path)
             name = path.split('/').pop().split('.')[0]
             resp["wkflName"] = name
-            resp["timeStamp"] = "_"+"_".join(name.split('_')[2:])
+            resp["timeStamp"] = "_"+"_".join(name.split('_')[-2:])
             try:
                 with open(os.path.join(user_dir, path, "info.json"), "r") as info_file:
                     info = json.load(info_file)

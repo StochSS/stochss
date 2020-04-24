@@ -23,7 +23,7 @@ except ModuleNotFoundError:
 user_dir = "/home/jovyan"
 
 
-def save_new_workflow(wkfl, wkfl_type, is_new, verbose):
+def save_new_workflow(wkfl, wkfl_type, initialize):
     '''
     Create and save a new workflow in the same directory as the model 
     used for it.
@@ -42,14 +42,15 @@ def save_new_workflow(wkfl, wkfl_type, is_new, verbose):
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"source_model":"{0}".format(wkfl.mdl_path.replace(user_dir+'/',"")), "wkfl_model":None,
-                  "type":"{0}".format(wkfl_type), "start_time":None} # workflow info
-    with open(wkfl.info_path, "w") as info_file:
-        info_file.write(json.dumps(model_info)) # write the workflow info file
-    print(model_info)
+    # Update workflow info file with start time and permanent model file location
+    update_info_file(wkfl, wkfl_type, initialize)
+    if initialize:
+        # Update workflow status to running
+        open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
+    return "Successfully saved the new workflow: {0}".format(wkfl.wkfl_path)
+    
 
-
-def save_existing_workflow(wkfl, wkfl_type, is_new, verbose):
+def save_existing_workflow(wkfl, wkfl_type, initialize):
     '''
     Save an existing workflow.
 
@@ -68,12 +69,13 @@ def save_existing_workflow(wkfl, wkfl_type, is_new, verbose):
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the new model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    model_info = {"source_model":"{0}".format(wkfl.mdl_path.replace(user_dir+'/',"")), "wkfl_model":None,
-                  "type":"{0}".format(wkfl_type), "start_time":None} # updated workflow info
-    with open(wkfl.info_path, "w") as info_file:
-        info_file.write(json.dumps(model_info)) # update the workflow info file
-    print(model_info)
-
+    # Update workflow info file with start time and permanent model file location
+    update_info_file(wkfl, wkfl_type, initialize)
+    if initialize:
+        # Update workflow status to running
+        open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
+    return "Successfully saved the existing workflow: {0}".format(wkfl.wkfl_path)
+    
 
 def get_models(full_path, name, wkfl_path):
     try:
@@ -84,7 +86,6 @@ def get_models(full_path, name, wkfl_path):
         log.critical("Failed to copy the model into the directory: {0}".format(error))
         open(os.path.join(wkfl_path, 'ERROR'), 'w').close() # update status to error
     
-
     try:
         _model = ModelFactory(stochss_model) # build GillesPy2 model
         gillespy2_model = _model.model
@@ -92,29 +93,29 @@ def get_models(full_path, name, wkfl_path):
         log.error("GillesPy2 Model Errors: "+str(error))
         gillespy2_model = None
     
-
     return gillespy2_model, stochss_model
 
 
-def update_info_file(info_path, wkfl_mdl_path):
-    today = datetime.now() # workflow run start time
-    # If this format is not something Javascript's Date.parse() method
-    # understands then the workflow status page will be unable to correctly create a
-    # Date object from the datestring parsed from the workflow's info.json file
-    str_datetime = today.strftime("%b %d, %Y  %I:%M %p UTC") # format timestamp
+def update_info_file(wkfl, wkfl_type, initialize):
+    info_data = {"source_model":"{0}".format(wkfl.mdl_path.replace(user_dir+'/',"")), "wkfl_model":None,
+                  "type":"{0}".format(wkfl_type), "start_time":None} # updated workflow info
     
-    with open(info_path, 'r') as info_file:
-        info_data = json.loads(info_file.read())
-
-    info_data['start_time'] = str_datetime # add start time to workflow info
-    info_data['wkfl_model'] = wkfl_mdl_path.replace(user_dir+'/',"") # Update the location of the model
+    if initialize:
+        today = datetime.now() # workflow run start time
+        # If this format is not something Javascript's Date.parse() method
+        # understands then the workflow status page will be unable to correctly create a
+        # Date object from the datestring parsed from the workflow's info.json file
+        str_datetime = today.strftime("%b %d, %Y  %I:%M %p UTC") # format timestamp
+        
+        info_data['start_time'] = str_datetime # add start time to workflow info
+        info_data['wkfl_model'] = wkfl.wkfl_mdl_path.replace(user_dir+'/',"") # Update the location of the model
 
     # Update the workflow info file
-    with open(info_path, "w") as info_file:
+    with open(wkfl.info_path, "w") as info_file:
         info_file.write(json.dumps(info_data))
     
 
-def run_workflow(wkfl, wkfl_type, is_new, verbose):
+def run_workflow(wkfl, verbose):
     '''
     Run the workflow and return the results, number of trajectories, and is_stochastic.
     Records when the workflow was start and updates the model path in the workflow info file.
@@ -125,22 +126,11 @@ def run_workflow(wkfl, wkfl_type, is_new, verbose):
     ----------
     wkfl : StochSS Workflow
         The workflow object being worked with.
-    wkfl_type : str
-        The type of workflow to be used.
-    is_new : boolean
-        Represents whether the workflow is new or not.
+    verbose : boolean
+        Print progress statements.
     '''
-    # save the workflow
-    if is_new:
-        save_new_workflow(wkfl, wkfl_type, is_new, verbose)
-    else:
-        save_existing_workflow(wkfl, wkfl_type, is_new, verbose)
     # Get the model data from the file and create the model object
     gillespy2_model, stochss_model = get_models(wkfl.wkfl_mdl_path, wkfl.mdl_file.split('.')[0], wkfl.wkfl_path)
-    # Update workflow info file with start time and permanent model file location
-    update_info_file(wkfl.info_path, wkfl.wkfl_mdl_path)
-    # Update workflow status to running
-    open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
     # run the workflow
     try:
         wkfl.run(gillespy2_model, stochss_model, verbose)
@@ -196,7 +186,7 @@ def get_parsed_args():
     parser.add_argument('-n', '--new', action="store_true", help="Specifies a new workflow.")
     parser.add_argument('-e', '--existing', action="store_true", help="Specifies an existing workflow.")
     parser.add_argument('-s', '--save', action="store_true", help="Save the workflow.")
-    parser.add_argument('-r', '--run', action="store_true", help="Run the workflow.")
+    parser.add_argument('-r', '--run', action="store_true", help="Run/initialize the workflow.")
     parser.add_argument('-v', '--verbose', action="store_true", help="Print results as the are stored.")
     args = parser.parse_args()
     if not (args.new or args.existing):
@@ -210,15 +200,7 @@ if __name__ == "__main__":
     args = get_parsed_args()
     model_path = os.path.join(user_dir, args.model_path)
     wkfl_type = args.type
-    opt_type = ""
-    if args.save:
-        opt_type += 's'
-    else:
-        opt_type += 'r'
-    if args.new:
-        opt_type += 'n'
-    else:
-        opt_type += 'e'
+    
     if args.new:
         workflow_name = args.workflow.split('/').pop()
         _workflow_dir = "{0}.wkfl".format(workflow_name)
@@ -246,13 +228,18 @@ if __name__ == "__main__":
     if not workflow_name in os.listdir(path=dir_path):
         os.mkdir(workflow_path) # make the workflow directory
 
-    opts = { "sn":save_new_workflow, "rn":run_workflow, "se":save_existing_workflow, "re":run_workflow }
     workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
 
     workflow = workflows[wkfl_type](workflow_path, model_path)
 
     setup_logger(workflow.log_path)
 
-    opts[opt_type](workflow, wkfl_type, args.new, args.verbose)
-    
-    
+    if args.save and args.new:
+        resp = save_new_workflow(workflow, wkfl_type, args.run)
+        print(resp)
+    elif args.save and args.existing:
+        resp = save_existing_workflow(workflow, wkfl_type, args.run)
+        print(resp)
+    else:
+        run_workflow(workflow, args.verbose)    
+

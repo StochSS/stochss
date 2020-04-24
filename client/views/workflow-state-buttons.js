@@ -114,17 +114,23 @@ module.exports = View.extend({
     saveError.style.display = "inline-block";
   },
   runWorkflow: function () {
+    var self = this;
     var model = this.model;
     var wkflType = this.parent.parent.type;
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
     var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.wkflDirectory
-    var endpoint = path.join(app.getApiPath(), '/workflow/run-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
-    var self = this;
-    xhr({ uri: endpoint },function (err, response, body) {
-      self.parent.collapseContainer();
-      setTimeout(function () {
-        self.parent.parent.reloadWkfl();
-      }, 2000)
+    var initEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow/', wkflType, "s"+optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+    var runEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+    this.saving()
+    xhr({uri: initEndpoint}, function (err, response, body) {
+      if(response.statusCode < 400){
+        self.saved()
+        xhr({uri: runEndpoint}, function (err, response, body) {
+          self.parent.parent.reloadWkfl();
+        })
+      }else{
+        self.saveError()
+      }
     });
   },
 });
