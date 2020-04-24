@@ -39,14 +39,17 @@ div#workflow-results.card.card-body
         span.inline(for="ensemble-aggragator") Ensemble Aggragator: 
         div.inline(id="ensemble-aggragator" data-hook="ensemble-aggragator-list")
 
-    div
+    div.card.card-body
+      div
 
-      h5.inline Parameter Sweep
-      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-psweep", data-hook="collapse-psweep") -
+        h5.inline Parameter Sweep
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-psweep", data-hook="collapse-psweep") -
 
-    div.collapse(class="show", id="collapse-psweep")
+      div.collapse(class="show", id="collapse-psweep")
 
-      div(data-hook="psweep")
-      button.btn.btn-primary.box-shadow(id="psweep" data-hook="plot") Edit Plot
-      button.btn.btn-primary.box-shadow(id="psweep" data-hook="download-png-custom" disabled) Download PNG
-      button.btn.btn-primary.box-shadow(id="psweep" data-hook="download-json" disabled) Download JSON 
+        div(data-hook="psweep")
+        button.btn.btn-primary.box-shadow(id="psweep" data-hook="plot") Edit Plot
+        button.btn.btn-primary.box-shadow(id="psweep" data-hook="download-png-custom" disabled) Download PNG
+        button.btn.btn-primary.box-shadow(id="psweep" data-hook="download-json" disabled) Download JSON 
+
+    button.btn.btn-primary.box-shadow(data-hook="download-results-csv") Download Results as .csv

@@ -10,7 +10,8 @@ def generate_imports_cell(json_data):
     else:
         # Non-Spatial
         imports += 'import gillespy2\n'
-        imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule\n'
+        imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
+        imports += 'from gillespy2.core.events import EventAssignment, EventTrigger, Event\n'
         algorithm = json_data['simulationSettings']['algorithm']
         algorithm_map = {
                 'SSA': '',
@@ -106,7 +107,7 @@ def create_function_definition_string(json_data, padding):
     if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
         fd_string += '\n' + padding + '# Function Definitions\n'
         for fd in json_data['functionDefinitions']:
-            fd_string += padding + 'self.add_function_definition(FunctionDefintion(name={0}, function={1}, args={2}))\n'.format(
+            fd_string += padding + 'self.add_function_definition(FunctionDefinition(name={0}, function={1}, args={2}))\n'.format(
                     fd['name'],
                     fd['expression'],
                     fd['variables'].split(', '))
@@ -148,56 +149,63 @@ def generate_model_cell(json_data, name):
 
 
 def generate_run_cell(json_data):
-    run_cell = ''
     if json_data['is_spatial']:
         # Spatial
         raise Exception('Spatial not yet implemented.')
     else:
         # Non-Spatial
-        run_cell += 'results = model.run('
-        
         settings = json_data['simulationSettings']
-        algorithm = settings['algorithm']
-
-        # Select Solver
-        solver_map = {
-                'SSA': '',
-                'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
-                'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, ',
-                'ODE': 'solver=BasicODESolver, '
-                }
-        run_cell += '{0}'.format(solver_map[algorithm])
-
-        # Append Settings
-        if settings['seed'] == -1:
-            settings['seed'] = None
-
-        # GillesPy requires snake case, remap camelCase from json data to
-        # snake case for notebook
-        ode_settings = { "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] }) }
-        ssa_settings = { "number_of_trajectories":settings['realizations'], "seed":settings['seed'] }
-        tau_leaping_settings = { "number_of_trajectories":settings['realizations'], 
-                                 "seed":settings['seed'], 
-                                 "tau_tol":settings['tauTol']}
-        hybrid_settings = { "number_of_trajectories":settings['realizations'], 
-                            "seed":settings['seed'], 
-                            "tau_tol":settings['tauTol'], 
-                            "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] })
-                          }
-        settings_map = {'ODE':ode_settings, 
-                        'SSA':ssa_settings, 
-                        'Tau-Leaping':tau_leaping_settings, 
-                        'Hybrid-Tau-Leaping':hybrid_settings
-                       }
         
-        #Parse settings for algorithm
-        
-        algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings_map[algorithm].items()]
-        algorithm_settings = ', '.join(algorithm_settings)
-        run_cell += algorithm_settings
+        run_settings = get_run_settings(settings)
 
-        run_cell += ')'
+        run_cell = 'results = model.run({0})'.format(run_settings)
+        
     return run_cell
+
+
+def get_run_settings(settings, show_labels=True, is_mdl_inf=False):
+    algorithm = settings['algorithm']
+
+    # Map algorithm for GillesPy2
+    solver_map = {"SSA":"",
+                  "ODE":"solver=BasicODESolver",
+                  "Tau-Leaping":"solver=BasicTauLeapingSolver",
+                  "Hybrid-Tau-Leaping":"solver=BasicTauHybridSolver"}
+
+    # Map seed for GillesPy2
+    if settings['seed'] == -1:
+        settings['seed'] = None
+
+    # Map number_of_trajectories for model inference
+    if is_mdl_inf and settings['realizations'] < 30:
+        settings['realizations'] = 100
+
+    # Map algorithm settings for GillesPy2. GillesPy2 requires snake case, remap camelCase
+    ode_settings = { "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] }) }
+    ssa_settings = { "number_of_trajectories":settings['realizations'], "seed":settings['seed'] }
+    tau_leaping_settings = { "number_of_trajectories":settings['realizations'], 
+                             "seed":settings['seed'], 
+                             "tau_tol":settings['tauTol']}
+    hybrid_settings = { "number_of_trajectories":settings['realizations'], 
+                        "seed":settings['seed'], 
+                        "tau_tol":settings['tauTol'], 
+                        "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] })
+                      }
+    settings_map = {'ODE':ode_settings, 
+                    'SSA':ssa_settings, 
+                    'Tau-Leaping':tau_leaping_settings, 
+                    'Hybrid-Tau-Leaping':hybrid_settings
+                   }
+
+    #Parse settings for algorithm    
+    run_settings = [solver_map[algorithm]] if not algorithm == "SSA" else []
+    if not show_labels:
+        run_settings.append("show_labels=False")
+    algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings_map[algorithm].items()]
+    run_settings.extend(algorithm_settings)
+    run_settings = ', '.join(run_settings)
+
+    return run_settings
 
 
 def generate_feature_extraction_cell():
@@ -430,4 +438,97 @@ class ParameterSweepConfig(ParameterSweep2D):
     ensemble_aggragator = average_of_ensemble
 '''.format(p1['name'], p2['name'], soi, model_name)
     return psweep_config_cell
+
+
+def generate_mdl_inf_import_cell():
+    import_cell = '''from tsfresh.feature_extraction.settings import MinimalFCParameters
+from sciope.utilities.priors import uniform_prior
+from sciope.utilities.summarystats import auto_tsfresh
+from sciope.utilities.distancefunctions import naive_squared
+from sciope.inference.abc_inference import ABC
+from sklearn.metrics import mean_absolute_error
+from dask.distributed import Client'''
+
+    return import_cell
+
+
+def generate_mdl_inf_simulator_cell(json_data):
+    settings = json_data['simulationSettings']
+    
+    run_settings = get_run_settings(settings, show_labels=False)
+
+    simulator_cell = '''# Define simulator function
+def set_model_parameters(params, model):
+    """para,s - array, need to have the same order as
+    model.listOfParameters """
+    for e, (pname, p) in enumerate(model.listOfParameters.items()):
+        model.get_parameter(pname).set_expression(params[e])
+    return model
+
+# Here we use the GillesPy2 Solver
+def simulator(params, model):
+    model_update = set_model_parameters(params, model)
+    num_trajectories = 1
+
+    res = model_update.run({0})
+    tot_res = np.asarray([x.T for x in res]) # reshape to (N, S, T)
+    tot_res = tot_res[:,1:, :] # should not contain timepoints
+
+    return tot_res
+
+# Wrapper, simulator function to abc should should only take one argument (the parameter point)
+def simulator2(x):
+    return simulator(x, model=model)'''.format(run_settings)
+    return simulator_cell
+
+
+def generate_mdl_inf_prior_cell():
+    prior_cell = '''# Set up the prior
+default_param = np.array(list(model.listOfParameters.items()))[:,1] # take default from mode 1 as reference
+
+bound = []
+for exp in default_param:
+    bound.append(float(exp.expression))
+
+# Set the bounds
+bound = np.array(bound)
+dmin = bound * 0.1
+dmax = bound * 2.0
+
+# Here we use uniform prior
+uni_prior = uniform_prior.UniformPrior(dmin, dmax)'''
+    return prior_cell
+
+
+def generate_mdl_inf_fixed_data_cell(json_data):
+    settings = json_data['simulationSettings']
+
+    run_settings = get_run_settings(settings, show_labels=False, is_mdl_inf=True)
+
+    fixed_data_cell = '''# generate some fixed(observed) data based on default parameters of the model
+# the minimum number of trajectoies needs to be at least 30
+fixed_data = model.run({0})'''.format(run_settings)
+
+    return fixed_data_cell
+
+
+def generate_mdl_inf_reshape_data_cell():
+    reshape_data_cell = '''# Reshape the dat to (n_points,n_species,n_timepoints) and remove timepoints array
+fixed_data = np.asarray([x.T for x in fixed_data])
+fixed_data = fixed_data[:,1:, :]'''
+
+    return reshape_data_cell
+
+
+def generate_mdl_inf_summary_stats_cell():
+    summary_stats_cell = '''# Function to generate summary statistics
+summ_func = auto_tsfresh.SummariesTSFRESH()
+
+# Distance
+ns = naive_squared.NaiveSquaredDistance()
+
+# Start abc instance
+abc = ABC(fixed_data, sim=simulator2, prior_function=uni_prior, summaries_function=summ_func.compute, distance_function=ns)'''
+
+    return summary_stats_cell
 
