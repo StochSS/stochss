@@ -115,11 +115,13 @@ module.exports = View.extend({
   runWorkflow: function () {
     var self = this;
     var model = this.model;
-    var wkflType = this.parent.parent.type;
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
-    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.wkflDirectory
-    var initEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow/', wkflType, "s"+optType, model.directory, "<--GillesPy2Workflow-->", workflow);
-    var runEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+    var query = {"type":this.type,"optType":"s"+optType,"mdlPath":model.directory,"wkflPath":self.parent.parent.wkflPath}
+    let initQuery = JSON.stringify(query)
+    var initEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow') + "?data=" + initQuery;
+    query.optType = optType
+    let runQuery = JSON.stringify(query)
+    var runEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow') + "?data=" + runQuery;
     this.saving()
     xhr({uri: initEndpoint}, function (err, response, body) {
       if(response.statusCode < 400){

@@ -101,7 +101,7 @@ class RunWorkflowAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, wkfl_type, opt_type, data):
+    async def get(self):
         '''
         Start running a workflow and record the time in UTC in the workflow_info file.
         Creates workflow directory and workflow_info file if running a new workflow.  Copys 
@@ -116,13 +116,17 @@ class RunWorkflowAPIHandler(APIHandler):
         data : str
             Path to selected workflows model file and name or path of workflow.
         '''
-        log.debug("Model path and workflow name or path: {0}".format(data))
+        data = json.loads(self.get_query_argument(name="data"))
+        log.debug("Handler query string: {0}".format(data))
+        opt_type = data['optType']
+        wkfl_type = data['type']
+        model_path = data['mdlPath']
+        workflow_path = data['wkflPath']
         log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
-        model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         log.debug("Path to the model: {0}".format(model_path))
-        log.debug("Name of workflow or workflow path: {0}".format(workflow_name))
-        exec_cmd = ["/stochss/stochss-pkg/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        log.debug("Path to the workflow: {0}".format(workflow_path))
+        exec_cmd = ["/stochss/stochss-pkg/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_path), "{0}".format(wkfl_type) ] # Script commands
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.debug("Exec command sent to the subprocess: {0}".format(exec_cmd))
@@ -156,7 +160,7 @@ class SaveWorkflowAPIHandler(APIHandler):
         log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
         log.debug("Path to the model: {0}".format(model_path))
-        log.debug("Name of workflow or workflow path: {0}".format(workflow_path))
+        log.debug("Path to the workflow: {0}".format(workflow_path))
         exec_cmd = [ "/stochss/stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_path), "{0}".format(wkfl_type) ] # Script commands
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
