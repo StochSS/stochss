@@ -51,6 +51,9 @@ let WorkflowManager = PageView.extend({
         self.workflowName = body.wkflName
         self.status = body.status
         self.startTime = body.startTime
+        self.wkflParPath = body.wkflParPath
+        self.wkflPath = path.join(self.wkflParPath, self.wkflDirectory)
+        console.log(self.status, self.startTime)
         self.buildWkflModel(body)
         self.renderSubviews();
       }
@@ -188,7 +191,7 @@ let WorkflowManager = PageView.extend({
     }
     this.infoView = new InfoView({
       status: this.status,
-      logsPath: path.join(this.wkflDirectory, "logs.txt")
+      logsPath: path.join(this.wkflPath, "logs.txt")
     });
     this.registerRenderSubview(this.infoView, 'workflow-info-container')
   },
@@ -205,7 +208,7 @@ let WorkflowManager = PageView.extend({
   },
   getWorkflowStatus: function () {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.wkflDirectory);
+    var endpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.wkflPath);
     xhr({uri: endpoint}, function (err, response, body) {
       if(self.status !== body )
         self.status = body;
@@ -230,6 +233,8 @@ let WorkflowManager = PageView.extend({
       e.target.value = this.workflowName
     }
     this.wkflDirectory = this.workflowName + ".wkfl"
+    this.wkflPath = path.join(this.wkflParPath, this.wkflDirectory)
+    console.log(this.wkflPath)
   },
   updateWkflModel: function (e) {
     let self = this;

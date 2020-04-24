@@ -173,12 +173,13 @@ def convert_events(sbml_model, events):
         e.setId(event['name'])
         e.setUseValuesFromTriggerTime(event['useValuesFromTriggerTime'])
 
-        delay = event['delay'].replace('and', '&&').replace('or', '||')
-        d = e.createDelay()
-        try:
-            d.setMath(libsbml.parseL3Formula(delay))
-        except Exception as error:
-            raise Exception('libsbml threw an error when parsing delay equation "{0}" for event "{1}"'.format(delay, event['name']))
+        if event['delay']:
+            delay = event['delay'].replace('and', '&&').replace('or', '||')
+            d = e.createDelay()
+            try:
+                d.setMath(libsbml.parseL3Formula(delay))
+            except Exception as error:
+                raise Exception('libsbml threw an error when parsing delay equation "{0}" for event "{1}"'.format(delay, event['name']))
 
         priority = event['priority'].replace('and', '&&').replace('or', '||')
         p = e.createPriority()

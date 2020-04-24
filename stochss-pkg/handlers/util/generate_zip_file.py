@@ -19,8 +19,9 @@ def get_zip_file_data(file_path):
     return data
 
 
-def get_results_csv_dir(file):
-    if "results_csv" in file:
+def get_results_csv_dir(file, path):
+    file_path = os.path.join(path, file)
+    if "results_csv" in file and os.path.isdir(file_path):
         return file
 
 
@@ -52,7 +53,7 @@ def download_zip(path, action):
 
         results_path = os.path.join(target, "results")
         try:
-            csv_results_dir = list(filter(lambda file: get_results_csv_dir(file), os.listdir(results_path)))[0]
+            csv_results_dir = list(filter(lambda file: get_results_csv_dir(file, results_path), os.listdir(results_path)))[0]
         except IndexError as err:
             raise StochSSFileNotFoundError("Could not find the workflow results csv directory: " + str(err))
         
