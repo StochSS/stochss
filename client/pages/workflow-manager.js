@@ -109,6 +109,8 @@ let WorkflowManager = PageView.extend({
         self.workflowName = body.wkflName
         self.status = body.status
         self.startTime = body.startTime
+        self.wkflParPath = body.wkflParPath
+        self.wkflPath = path.join(self.wkflParPath, self.wkflDirectory)
         console.log(self.status, self.startTime)
         self.buildWkflModel(body)
         self.renderSubviews();
@@ -289,6 +291,8 @@ let WorkflowManager = PageView.extend({
       e.target.value = this.workflowName
     }
     this.wkflDirectory = this.workflowName + ".wkfl"
+    this.wkflPath = path.join(this.wkflParPath, this.wkflDirectory)
+    console.log(this.wkflPath)
   },
   updateWkflModel: function (e) {
     let self = this;

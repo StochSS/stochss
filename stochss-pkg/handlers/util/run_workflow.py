@@ -181,7 +181,7 @@ def get_parsed_args():
     description = "Run and/or Save (-r or -s) a new or existing (-n or -e) workflow.\n Creates a workflow directory with a model, info, logs, and status files and a directory for results."
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('model_path', help="The path from the user directory to the  model.")
-    parser.add_argument('workflow', help="The name of a new workflow or the path from the user directory to an existing workflow.")
+    parser.add_argument('workflow_path', help="The path from the user directory to the workflow.")
     parser.add_argument('type', help="The type of the workflow.")
     parser.add_argument('-n', '--new', action="store_true", help="Specifies a new workflow.")
     parser.add_argument('-e', '--existing', action="store_true", help="Specifies an existing workflow.")
@@ -199,46 +199,29 @@ def get_parsed_args():
 if __name__ == "__main__":
     args = get_parsed_args()
     model_path = os.path.join(user_dir, args.model_path)
-    wkfl_type = args.type
-    
+    workflow_path = os.path.join(user_dir, args.workflow_path)
+    workflow_name = workflow_path.split('/').pop()
+    dir_path = os.path.dirname(workflow_path)
     if args.new:
-        workflow_name = args.workflow.split('/').pop()
-        _workflow_dir = "{0}.wkfl".format(workflow_name)
-        model_file = model_path.split('/').pop()
-        dir_path = model_path.split(model_file)[0]
-        if len(args.workflow.split('/')) > 1:
-            dir_path = os.path.join(dir_path, args.workflow.split(workflow_name)[0])
-            if not os.path.exists(dir_path):
-                os.makedirs(dir_path)
-        i = 2
-        exists = _workflow_dir in os.listdir(path=dir_path)
-        while exists:
-            workflow_dir = '({0}).'.format(i).join(_workflow_dir.split('.'))
-            exists = workflow_dir in os.listdir(path=dir_path)
-            i += 1
-        try:
-            workflow_path = os.path.join(dir_path, workflow_dir)
-        except:
-            workflow_path = os.path.join(dir_path, _workflow_dir)
-    else:
-        workflow_path = os.path.join(user_dir, args.workflow)
-        workflow_name = workflow_path.split('/').pop()
-        dir_path = workflow_path.split(workflow_name)[0]
-        
+        from rename import get_unique_file_name
+        workflow_path, changed = get_unique_file_name(workflow_name, dir_path)
+        if changed:
+             workflow_name = workflow_path.split('/').pop()
+    
     if not workflow_name in os.listdir(path=dir_path):
         os.mkdir(workflow_path) # make the workflow directory
 
     workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
 
-    workflow = workflows[wkfl_type](workflow_path, model_path)
+    workflow = workflows[args.type](workflow_path, model_path)
 
     setup_logger(workflow.log_path)
 
     if args.save and args.new:
-        resp = save_new_workflow(workflow, wkfl_type, args.run)
+        resp = save_new_workflow(workflow, args.type, args.run)
         print(resp)
     elif args.save and args.existing:
-        resp = save_existing_workflow(workflow, wkfl_type, args.run)
+        resp = save_existing_workflow(workflow, args.type, args.run)
         print(resp)
     else:
         run_workflow(workflow, args.verbose)    

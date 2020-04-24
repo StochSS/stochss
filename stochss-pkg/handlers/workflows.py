@@ -48,19 +48,24 @@ class LoadWorkflowAPIHandler(APIHandler):
         log.debug("The type of the workflow: {0}".format(wkfl_type))
         log.debug("The path to the workflow/model: {0}".format(path))
         title_types = {"gillespy":"Ensemble Simulation","parameterSweep":"Parameter Sweep"}
+        parent_path = os.path.dirname(path)
         if path.endswith('.mdl'):
             resp = {"mdlPath":path,"timeStamp":stamp,"type":wkfl_type,
-                    "status":"new","titleType":title_types[wkfl_type]}
+                    "status":"new","titleType":title_types[wkfl_type],
+                    "wkflParPath": parent_path}
             name = path.split('/').pop().split('.')[0]
             resp["wkflName"] = name + stamp
             resp["wkflDir"] = resp['wkflName'] + ".wkfl"
             resp["startTime"] = None
         elif path.endswith('.wkfl'):
-            resp = {"wkflDir":path}
+            resp = {"wkflDir":path.split('/').pop(), "wkflParPath":parent_path}
             resp["status"] = get_status(path)
             name = path.split('/').pop().split('.')[0]
             resp["wkflName"] = name
-            resp["timeStamp"] = "_"+"_".join(name.split('_')[-2:])
+            try:
+                resp["timeStamp"] = "_"+"_".join(name.split('_')[-2:])
+            except:
+                resp["timeStamp"] = None
             try:
                 with open(os.path.join(user_dir, path, "info.json"), "r") as info_file:
                     info = json.load(info_file)
@@ -134,27 +139,25 @@ class SaveWorkflowAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, wkfl_type, opt_type, data):
+    async def get(self):
         '''
         Start saving the workflow.  Creates the workflow directory and workflow_info file if
         saving a new workflow.  Copys model into the workflow directory.
 
         Attributes
         ----------
-        wkfl_type : str
-            Type of workflow being run
-        opt_type : str
-            State of workflow being run (rn) for new workflow (re) for existing workflow.
-        data : str
-            Path to selected workflows model file and name or path of workflow.
         '''
-        log.debug("Model path and workflow name or path: {0}".format(data))
+        data = json.loads(self.get_query_argument(name="data"))
+        log.debug("Handler query string: {0}".format(data))
+        opt_type = data['optType']
+        wkfl_type = data['type']
+        model_path = data['mdlPath']
+        workflow_path = data['wkflPath']
         log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
-        model_path, workflow_name = data.split('/<--GillesPy2Workflow-->/') # get model path and workflow name from data
         log.debug("Path to the model: {0}".format(model_path))
-        log.debug("Name of workflow or workflow path: {0}".format(workflow_name))
-        exec_cmd = [ "/stochss/stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_name), "{0}".format(wkfl_type) ] # Script commands
+        log.debug("Name of workflow or workflow path: {0}".format(workflow_path))
+        exec_cmd = [ "/stochss/stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_path), "{0}".format(wkfl_type) ] # Script commands
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.debug("Exec command sent to the subprocess: {0}".format(exec_cmd))

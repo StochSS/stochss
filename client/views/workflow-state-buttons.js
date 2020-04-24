@@ -48,11 +48,10 @@ module.exports = View.extend({
     this.saving();
     var self = this;
     var model = this.model
-    var wkflType = this.type;
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
-    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.wkflDirectory
     this.saveModel(function () {
-      var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+      let query = JSON.stringify({"type":self.type,"optType":optType,"mdlPath":model.directory,"wkflPath":self.parent.parent.wkflPath})
+      var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow') + "?data=" + query;
       xhr({uri: endpoint}, function (err, response, body) {
         self.saved();
         if(document.URL.endsWith('.mdl')){
