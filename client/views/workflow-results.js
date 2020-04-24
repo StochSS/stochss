@@ -163,7 +163,7 @@ module.exports = View.extend({
     }else{
       data['plt_data'] = "None"
     }
-    var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.wkflDirectory, '?data=' + JSON.stringify(data));
+    var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.wkflPath, '?data=' + JSON.stringify(data));
     xhr({url: endpoint, json: true}, function (err, response, body){
       if(response.statusCode >= 400){
         $(self.queryByHook(type)).html(body.Message)
@@ -199,7 +199,7 @@ module.exports = View.extend({
     linkElement.click();
   },
   handlerDownloadResultsCsvClick: function (e) {
-    let path = this.parent.directory
+    let path = this.parent.wkflPath
     this.getExportData(path)
   },
   getExportData: function (wkflPath) {

@@ -118,11 +118,12 @@ module.exports = View.extend({
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
     var query = {"type":this.type,"optType":"s"+optType,"mdlPath":model.directory,"wkflPath":self.parent.parent.wkflPath}
     let initQuery = JSON.stringify(query)
-    var initEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow') + "?data=" + initQuery;
+    var initEndpoint = path.join(app.getApiPath(), '/workflow/save-workflow') + "?data=" + initQuery;
     query.optType = optType
     let runQuery = JSON.stringify(query)
     var runEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow') + "?data=" + runQuery;
     this.saving()
+    console.log(initQuery, runQuery, typeof query)
     xhr({uri: initEndpoint}, function (err, response, body) {
       if(response.statusCode < 400){
         self.saved()

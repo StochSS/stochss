@@ -249,7 +249,7 @@ let WorkflowManager = PageView.extend({
     }
     this.infoView = new InfoView({
       status: this.status,
-      logsPath: path.join(this.wkflDirectory, "logs.txt")
+      logsPath: path.join(this.wkflPath, "logs.txt")
     });
     this.registerRenderSubview(this.infoView, 'workflow-info-container')
   },

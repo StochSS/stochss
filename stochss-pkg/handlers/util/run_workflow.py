@@ -17,10 +17,8 @@ try:
     from parameter_sweep import ParameterSweep
     from run_model import GillesPy2Workflow, ModelFactory, run_solver
 except ModuleNotFoundError:
-    pass
-
-
-user_dir = "/home/jovyan"
+    from .parameter_sweep import ParameterSweep
+    from .run_model import GillesPy2Workflow, ModelFactory, run_solver
 
 
 def save_new_workflow(wkfl, wkfl_type, initialize):
@@ -97,6 +95,8 @@ def get_models(full_path, name, wkfl_path):
 
 
 def update_info_file(wkfl, wkfl_type, initialize):
+    user_dir = "/home/jovyan"
+
     info_data = {"source_model":"{0}".format(wkfl.mdl_path.replace(user_dir+'/',"")), "wkfl_model":None,
                   "type":"{0}".format(wkfl_type), "start_time":None} # updated workflow info
     
@@ -196,14 +196,15 @@ def get_parsed_args():
     return args
 
 
-if __name__ == "__main__":
-    args = get_parsed_args()
-    model_path = os.path.join(user_dir, args.model_path)
-    workflow_path = os.path.join(user_dir, args.workflow_path)
+def initialize(mdl_path, wkfl_path, wkfl_type, new=False, existing=False, save=False, run=False, verbose=False):
+    user_dir = "/home/jovyan"
+
+    model_path = os.path.join(user_dir, mdl_path)
+    workflow_path = os.path.join(user_dir, wkfl_path)
     workflow_name = workflow_path.split('/').pop()
     dir_path = os.path.dirname(workflow_path)
-    if args.new:
-        from rename import get_unique_file_name
+    if new:
+        from .rename import get_unique_file_name
         workflow_path, changed = get_unique_file_name(workflow_name, dir_path)
         if changed:
              workflow_name = workflow_path.split('/').pop()
@@ -213,16 +214,21 @@ if __name__ == "__main__":
 
     workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
 
-    workflow = workflows[args.type](workflow_path, model_path)
+    workflow = workflows[wkfl_type](workflow_path, model_path)
 
     setup_logger(workflow.log_path)
 
-    if args.save and args.new:
-        resp = save_new_workflow(workflow, args.type, args.run)
-        print(resp)
-    elif args.save and args.existing:
-        resp = save_existing_workflow(workflow, args.type, args.run)
-        print(resp)
+    if save and new:
+        resp = save_new_workflow(workflow, wkfl_type, run)
+        return resp
+    elif save and existing:
+        resp = save_existing_workflow(workflow, wkfl_type, run)
+        return resp
     else:
-        run_workflow(workflow, args.verbose)    
+        run_workflow(workflow, verbose)    
 
+
+if __name__ == "__main__":
+    args = get_parsed_args()
+    initialize(args.model_path, args.workflow_path, args.type, run=args.run, verbose=args.verbose)
+    
