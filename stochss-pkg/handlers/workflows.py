@@ -17,6 +17,7 @@ from .util.plot_results import plot_results
 from .util.convert_to_1d_param_sweep_notebook import convert_to_1d_psweep_nb
 from .util.convert_to_2d_param_sweep_notebook import convert_to_2d_psweep_nb
 from .util.convert_to_sciope_me import convert_to_sciope_me
+from .util.convert_to_model_inference_notebook import convert_to_mdl_inference_nb
 from .util.stochss_errors import StochSSAPIError
 
 log = logging.getLogger('stochss')
@@ -266,8 +267,9 @@ class WorkflowNotebookHandler(APIHandler):
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
         workflows = {"1d_parameter_sweep":convert_to_1d_psweep_nb,
-        "2d_parameter_sweep":convert_to_2d_psweep_nb,
-        "sciope_model_exploration":convert_to_sciope_me}
+                    "2d_parameter_sweep":convert_to_2d_psweep_nb,
+                    "sciope_model_exploration":convert_to_sciope_me,
+                    "model_inference":convert_to_mdl_inference_nb}
         try:
             resp = workflows[workflow_type](path)
             log.debug("Response: {0}\n".format(resp))

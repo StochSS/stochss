@@ -26,6 +26,8 @@ section.page.col-md-10
       tr
         td: li.nav-item: button.btn.information-btn.nav-link(data-hook="sciope-model-exploration" data-type="sciope_model_exploration")
               | Sciope Model Exploration
+        td: li.nav-item: button.btn.information-btn.nav-link(data-hook="model-inference" data-type="model_inference")
+              | Sciope Model Inference
 
   table.table
     thead
@@ -35,3 +37,5 @@ section.page.col-md-10
       tr
         td: li.nav-item: a.nav-link.disabled(href="stochss/workflow/edit/parameter_estimation" + this.modelDir)
               | Sciope Parameter Estimation
+        td: li.nav-item: a.nav-link.disabled(href="stochss/workflow/edit/model_exploration" + this.modelDir)
+              | Sciope Model Exploration

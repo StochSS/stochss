@@ -17,6 +17,7 @@ let workflowSelection = PageView.extend({
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=sciope-model-exploration]" : "notebookWorkflow",
+    "click [data-hook=model-inference]" : "notebookWorkflow",
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);

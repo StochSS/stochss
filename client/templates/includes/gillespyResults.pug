@@ -21,16 +21,18 @@ div#workflow-results.card.card-body
             td: div(data-hook="title")
             td: div(data-hook="xaxis")
             td: div(data-hook="yaxis")
+    div.card.card-body
+      div
 
-    div
+        h5.inline Plot Trajectories
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") -
 
-      h5.inline Plot Trajectories
-      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") -
+      div.collapse(class="show", id="collapse-trajectories")
 
-    div.collapse(class="show", id="collapse-trajectories")
+        div(data-hook="trajectories")
+        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Edit Plot
+        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-png-custom" disabled) Download PNG
+        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-json" disabled) Download JSON
 
-      div(data-hook="trajectories")
-      button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Edit Plot
-      button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-png-custom" disabled) Download PNG
-      button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-json" disabled) Download JSON
+    button.btn.btn-primary.box-shadow(data-hook="download-results-csv") Download Results as .csv
       
