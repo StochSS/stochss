@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 
-def generate_imports_cell(json_data):
+def generate_imports_cell(json_data, interactive_backend=False):
+
+    imports = ''
+    if interactive_backend:
+        imports += '%matplotlib notebook\n'
     # Imports cell
-    imports = 'import numpy as np\n'
+    imports += 'import numpy as np\n'
     if json_data['is_spatial']:
         # Spatial
         imports += 'import spatialPy\n'

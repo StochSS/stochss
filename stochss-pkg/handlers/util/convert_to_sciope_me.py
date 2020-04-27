@@ -33,7 +33,8 @@ def convert_to_sciope_me(_model_path):
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
     try:
         # Create imports cell
-        cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
+        cells.append(nbf.new_code_cell(
+                    generate_imports_cell(json_data, interactive_backend=True)))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
@@ -60,9 +61,6 @@ def convert_to_sciope_me(_model_path):
         cells.append(nbf.new_code_cell(generate_sciope_set_labels_cell()))
     except KeyError as err:
         raise JSONFileNotModelError("Could not convert your model {}: {}".format(json_data, str(err)))
-    # Plotting Cell
-    cells.append(nbf.new_code_cell('results.plotplotly()'))
-
     # Append cells to worksheet
     nb = nbf.new_notebook(cells=cells)
 
