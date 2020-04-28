@@ -1,7 +1,9 @@
 var $ = require('jquery');
 var xhr = require('xhr');
 var path = require('path');
+//support files
 var app = require('../app');
+var Tooltips = require('../tooltips');
 //models
 var Model = require('../models/model');
 //views
@@ -21,6 +23,14 @@ let workflowSelection = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this
+    this.tooltips = Tooltips.workflowSelection
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
     this.modelDir = decodeURI(document.URL.split('/workflow/selection').pop());
     this.modelFile = this.modelDir.split('/').pop().split('.').shift();
     var isSpatial = this.modelDir.endsWith('.smdl');
