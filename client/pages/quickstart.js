@@ -1,7 +1,7 @@
 // views
 var PageView = require('./base');
 // templates
-var template = require('../templates/pages/quickStart.pug');
+var template = require('../templates/pages/quickstart.pug');
 
 import initPage from './page.js';
 

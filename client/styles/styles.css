@@ -2,6 +2,12 @@ body {
 
 }
 
+.quickstart.screenshot {
+  border: .5px solid black;
+  display: block;
+  margin: auto;
+}
+
 .page {
   padding-bottom: 150px;
 }
