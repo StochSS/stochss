@@ -211,7 +211,7 @@ let WorkflowManager = PageView.extend({
   },
   getWorkflowStatus: function () {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.wkflPath);
+    var endpoint = path.join(app.getApiPath(), "workflow/workflow-status")+"?path="+this.wkflPath;
     xhr({uri: endpoint}, function (err, response, body) {
       if(self.status !== body )
         self.status = body;

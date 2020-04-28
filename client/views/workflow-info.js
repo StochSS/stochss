@@ -21,7 +21,7 @@ module.exports = View.extend({
     this.listOfErrors = [];
     this.listOfNotes = [];
     if(this.status === 'complete' || this.status === 'error'){
-      var endpoint = path.join(app.getApiPath(), "/workflow/workflow-logs", this.logsPath)
+      var endpoint = path.join(app.getApiPath(), "/workflow/workflow-logs")+"?path="+this.logsPath
       xhr({uri: endpoint}, function (err, response, body) {
         if(response.statusCode < 400){
           var logs = body.split("\n")

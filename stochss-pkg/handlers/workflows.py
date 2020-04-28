@@ -31,18 +31,12 @@ class LoadWorkflowAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, stamp, wkfl_type, path):
+    async def get(self):
         '''
         Retrieve workflow's status, info, and model from User's file system.
 
         Attributes
         ----------
-        stamp : str
-            Time stamp when the workflow was loaded.
-        type : str
-            Type of the workflow
-        path : str
-            Path to a new workflow's source model or an existing workflow.
         '''
         stamp = self.get_query_argument(name="stamp")
         wkfl_type = self.get_query_argument(name="type")
@@ -115,12 +109,6 @@ class RunWorkflowAPIHandler(APIHandler):
 
         Attributes
         ----------
-        wkfl_type : str
-            Type of workflow being run
-        opt_type : str
-            State of workflow being run (rn) for new workflow (re) for existing workflow.
-        data : str
-            Path to selected workflows model file and name or path of workflow.
         '''
         log.setLevel(logging.DEBUG)
         data = json.loads(self.get_query_argument(name="data"))
@@ -178,14 +166,7 @@ class SaveWorkflowAPIHandler(APIHandler):
         if 'r' in opt_type:
             kwargs['run'] = True
         resp = initialize(model_path, workflow_path, wkfl_type, **kwargs)
-        # exec_cmd = [ "/stochss/stochss-pkg/handlers/util/run_workflow.py", "{0}".format(model_path), "{0}".format(workflow_path), "{0}".format(wkfl_type) ] # Script commands
-        # opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
-        # exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
-        # log.debug("Exec command sent to the subprocess: {0}".format(exec_cmd))
-        # pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
-        # resp, errors = pipe.communicate()
         log.debug("Response to the command: {0}".format(resp))
-        # log.error("Errors thrown: {0}".format(errors))
         if resp:
             self.write(resp)
         else:
@@ -201,15 +182,14 @@ class WorkflowStatusAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, workflow_path):
+    async def get(self):
         '''
         Retrieve workflow status based on status files.
 
         Attributes
         ----------
-        workflow_path : str
-            Path to selected workflow directory.
         '''
+        workflow_path = self.get_query_argument(name="path")
         log.debug('Getting the status of the workflow')
         status = get_status(workflow_path)
         log.debug('The status of the workflow is: {0}\n'.format(status))
@@ -224,16 +204,15 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, workflow_path):
+    async def get(self):
         '''
         Retrieve a plot figure of the workflow results based on the plot type 
         in the request body.
 
         Attributes
         ----------
-        workflow_path : str
-            Path to selected workflow directory.
         '''
+        workflow_path = self.get_query_argument(name="path")
         log.debug("The path to the workflow: {0}\n".format(workflow_path))
         body = json.loads(self.get_query_argument(name='data'))
         log.debug("Plot args passed to the plot: {0}\n".format(body))
@@ -266,15 +245,14 @@ class WorkflowLogsAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, logs_path):
+    async def get(self):
         '''
         Retrieve workflow logs from User's file system.
 
         Attributes
         ----------
-        logs_path : str
-            Path to the workflow logs file.
         '''
+        logs_path = self.get_query_argument(name="path")
         log.debug("Path to the workflow logs file: {0}\n".format(logs_path))
         full_path = os.path.join("/home/jovyan/", logs_path)
         log.debug("Full path to the workflow logs file: {0}\n".format(full_path))
@@ -305,17 +283,15 @@ class WorkflowNotebookHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, workflow_type, path):
+    async def get(self):
         '''
         Create a jupyter notebook workflow using a stochss model.
 
         Attributes
         ----------
-        type : str
-            Type of notebook template to use for conversion.
-        path : str
-            Path to target model within User's file system.
         '''
+        workflow_type = self.get_query_argument(name="type")
+        path = self.get_query_argument(name="path")
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
         workflows = {"1d_parameter_sweep":convert_to_1d_psweep_nb, "2d_parameter_sweep":convert_to_2d_psweep_nb, "model_inference":convert_to_mdl_inference_nb}

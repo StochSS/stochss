@@ -40,6 +40,8 @@ class JsonFileAPIHandler(APIHandler):
         purpose = self.get_query_argument(name="for")
         file_path = self.get_query_argument(name="path")
         log.debug("Path to the file: {0}".format(file_path))
+        if file_path.startswith('/'):
+            file_path = file_path.replace('/', '', 1)
         full_path = os.path.join('/home/jovyan', file_path)
         log.debug("Full path to the file: {0}".format(full_path))
         self.set_header('Content-Type', 'application/json')
@@ -89,11 +91,11 @@ class JsonFileAPIHandler(APIHandler):
 
         Attributes
         ----------
-        model_path : str
-            Path to target  model within user pod container.
         '''
         purpose = self.get_query_argument(name="for")
         model_path = self.get_query_argument(name="path")
+        if model_path.startswith('/'):
+            model_path = model_path.replace('/', '', 1)
         log.debug("Path to the model: {0}".format(model_path))
         log.debug("Path with escape char spaces: {0}".format(model_path))
         full_path = os.path.join('/home/jovyan', model_path)
@@ -126,13 +128,6 @@ class RunModelAPIHandler(APIHandler):
 
         Attributes
         ----------
-        run_cmd : str
-            command to be executed by the run model script (start) for running
-            a model, (read) for reading the results of a model run.
-        outfile : str
-            The temporary file for the results
-        model_path : str
-            Path to target model within user pod container.
         '''
         run_cmd = self.get_query_argument(name="cmd")
         outfile = self.get_query_argument(name="outfile")

@@ -60,7 +60,7 @@ let workflowSelection = PageView.extend({
     this.toNotebook(type);
   },
   toNotebook: function (type) {
-    var endpoint = path.join(app.getApiPath(), "/workflow/notebook", type, this.modelDir)
+    var endpoint = path.join(app.getApiPath(), "/workflow/notebook")+"?type="+type+"&path="+this.modelDir
     xhr({uri:endpoint}, function (err, response, body) {
       if(response.statusCode < 400){
         var notebookPath = path.join(app.getBasePath(), "notebooks", body)
