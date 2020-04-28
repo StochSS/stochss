@@ -445,7 +445,7 @@ let FileBrowser = PageView.extend({
   },
   getExportData: function (o, isJSON, identifier, dataType) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    var endpoint = path.join(app.getApiPath(), identifier)+"?for=None&path="+o.original._path
     xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(dataType === "json") {
