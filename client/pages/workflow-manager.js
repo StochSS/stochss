@@ -302,7 +302,7 @@ let WorkflowManager = PageView.extend({
         self.renderWorkflowEditor()
       },
       error: function (model, response, options) {
-        self.modelNotFound(response.body)
+        self.wkflModelNotFound(response.body)
       }
     });
   },
