@@ -2,7 +2,10 @@
 
 import os
 import shutil
-from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
+try:
+    from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
+except:
+    from stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
 
 
 def get_unique_file_name(new_name, dir_path):

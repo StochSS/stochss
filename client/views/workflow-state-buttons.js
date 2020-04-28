@@ -39,6 +39,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.type = attrs.type
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -47,20 +48,14 @@ module.exports = View.extend({
     this.saving();
     var self = this;
     var model = this.model
-    var wkflType = this.parent.parent.type;
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
-    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
     this.saveModel(function () {
-      var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
+      let query = JSON.stringify({"type":self.type,"optType":optType,"mdlPath":model.directory,"wkflPath":self.parent.parent.wkflPath})
+      var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow') + "?data=" + query;
       xhr({uri: endpoint}, function (err, response, body) {
         self.saved();
         if(document.URL.endsWith('.mdl')){
-          setTimeout(function () {
-            var dirname = window.location.pathname.split('/')
-            dirname.pop()
-            dirname = dirname.join('/')
-            window.location.href = path.join(dirname, self.parent.parent.workflowName + '.wkfl')
-          }, 3000); 
+          self.parent.parent.reloadWkfl(); 
         }
       });
     });
@@ -118,24 +113,25 @@ module.exports = View.extend({
     saveError.style.display = "inline-block";
   },
   runWorkflow: function () {
-    var model = this.model;
-    var wkflType = this.parent.parent.type;
-    var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
-    var workflow = document.URL.endsWith(".mdl") ? this.parent.parent.workflowName : this.parent.parent.directory
-    var endpoint = path.join(app.getApiPath(), '/workflow/run-workflow/', wkflType, optType, model.directory, "<--GillesPy2Workflow-->", workflow);
     var self = this;
-    xhr({ uri: endpoint },function (err, response, body) {
-      self.parent.collapseContainer();
-      if(document.URL.endsWith('.mdl')){
-        setTimeout(function () {
-          let pathname = window.location.pathname.split('/');
-          pathname.pop()
-          pathname = pathname.join('/')
-          workflowpath = path.join(pathname, self.parent.parent.workflowName + '.wkfl')
-          window.location.href = workflowpath;
-        }, 3000);        
+    var model = this.model;
+    var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
+    var query = {"type":this.type,"optType":"s"+optType,"mdlPath":model.directory,"wkflPath":self.parent.parent.wkflPath}
+    let initQuery = JSON.stringify(query)
+    var initEndpoint = path.join(app.getApiPath(), '/workflow/save-workflow') + "?data=" + initQuery;
+    query.optType = optType
+    let runQuery = JSON.stringify(query)
+    var runEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow') + "?data=" + runQuery;
+    this.saving()
+    console.log(initQuery, runQuery, typeof query)
+    xhr({uri: initEndpoint}, function (err, response, body) {
+      if(response.statusCode < 400){
+        self.saved()
+        xhr({uri: runEndpoint}, function (err, response, body) {
+          self.parent.parent.reloadWkfl();
+        })
       }else{
-        self.parent.parent.updateWorkflowStatus();
+        self.saveError()
       }
     });
   },

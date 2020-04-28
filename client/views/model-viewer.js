@@ -24,25 +24,9 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.status = attrs.status;
     this.wkflType = attrs.type;
-    var self = this;
-    var directory = attrs.directory
-    var modelFile = directory.split('/').pop();
-    var name = modelFile.split('.')[0];
-    var isSpatial = modelFile.split('.').pop().startsWith('s');
-    this.model = new Model({
-      name: name,
-      directory: directory,
-      is_spatial: isSpatial,
-      isPreview: false,
-      for: "wkfl"
-    });
-    this.model.fetch({
-      success: function (model, response, options) {
-        self.renderSubviews();
-      }
-    });
   },
-  renderSubviews: function () {
+  render: function () {
+    View.prototype.render.apply(this, arguments);
     var speciesViewer = new SpeciesViewer({
       collection: this.model.species,
     });
