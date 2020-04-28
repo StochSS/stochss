@@ -1,34 +1,13 @@
-let app = require('../app');
 var $ = require('jquery');
 var xhr = require('xhr');
 var path = require('path');
+//support file
+let app = require('../app');
+let modals = require('../modals');
 //views
 var View = require('ampersand-view');
 //templates
 var template = require('../templates/includes/workflowStateButtons.pug');
-
-let modelSaveErrorHtml = (title, error) => {
-  return `
-    <div id="modelSaveErrorModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> ${title} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${error} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
 
 module.exports = View.extend({
   template: template,
@@ -85,7 +64,7 @@ module.exports = View.extend({
           self.saveError()
           let title = response.body.Reason
           let error = response.body.Message
-          var saveErrorModal = $(modelSaveErrorHtml(title, error)).modal()
+          var saveErrorModal = $(modals.modelSaveErrorHtml(title, error)).modal()
         },
       });
     } else {

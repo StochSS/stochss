@@ -11,8 +11,11 @@ import gillespy2
 
 def convert_to_gillespy_model(path):
     if os.path.exists(path):
-        gpy_model, errors = convert(path)
-        return gpy_model, errors
+        try:
+            gpy_model, errors = convert(path)
+            return gpy_model, errors
+        except:
+            return None, None
     else:
         raise StochSSFileNotFoundError("Could not find the sbml file: "+path)
 
@@ -65,7 +68,7 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
     
         return "The SBML Model was successfully converted to a StochSS Model.", errors, stochss_model_path
     else:
-        return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", [], stochss_model_path
+        return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", [], ""
 
 
 def get_species(species, comp_id):
@@ -344,7 +347,10 @@ def convert_sbml_to_model(path, model_template):
     name = full_path.split('/').pop().split('.')[0]
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)
-    sbml_errors = list(map(lambda error: error[0], sbml_errors))
+    if gillespy_model is None and sbml_errors is None:
+        sbml_errors = ["Error: could not convert the SBML Model to a StochSS Model"]
+    else:
+        sbml_errors = list(map(lambda error: error[0], sbml_errors))
     msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path, name=name)
     sbml_errors.extend(errors)
     resp = {"message":msg,"errors":sbml_errors,"File":stochss_model_path.split('/').pop()}

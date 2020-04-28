@@ -1,12 +1,15 @@
 let jstree = require('jstree');
 let path = require('path');
 let xhr = require('xhr');
-let PageView = require('./base');
-let template = require('../templates/pages/fileBrowser.pug');
 let $ = require('jquery');
 let _ = require('underscore');
+//support files
 let app = require('../app');
-//let bootstrap = require('bootstrap');
+let modals = require('../modals');
+//views
+let PageView = require('./base');
+//templates
+let template = require('../templates/pages/fileBrowser.pug');
 
 import initPage from './page.js';
 
@@ -116,212 +119,6 @@ let treeSettings = {
   },  
 }
 
-let operationInfoModalHtml = () => {
-  let fileBrowserHelpMessage = `
-    <p><b>Open/Edit a File</b>: Double-click on a file or right-click on a file and click Open/Edit.  
-    <b>Note</b>: Some files will open in a new tab so you may want to turn off the pop-up blocker.</p>
-    <p><b>Open Directory</b>: Click on the arrow next to the directory or double-click on the directory.</p>
-    <p><b>Create a Directory/Model</b>: Right-click on a directory, click New Directory/New Model, and enter the name of directory/model or path.  
-    For models you will need to click on the type of model you wish to create before entering the name or path.</p>
-    <p><b>Create a Workflow</b>: Right-click on a model and click New Workflow, this takes you to the workflow selection page.  
-    From the workflow selection page, click on one of the listed workflows.</p>
-    <p><b>Convert a File</b>: Right-click on a Model/SBML, click Convert, and click on the desired Convert to option.  
-    Model files can be converted to Spatial Models, Notebooks, or SBML files.  
-    Spatial Models and SBML file can be converted to Models.  
-    <b>Note</b>: Notebooks will open in a new tab so you may want to turn off the pop-up blocker.</p>
-    <p><b>Move File or Directory</b>: Click and drag the file or directory to the new location.  
-    You can only move an item to a directory if there isn't a file or directory with the same name in that location.</p>
-    <p><b>Download a Model/Notebook/SBML File</b>: Right-click on the file and click download.</p>
-    <p><b>Rename File/Directory</b>: Right-click on a file/directory, click rename, and enter the new name.</p>
-    <p><b>Duplicate/Delete A File/Directory</b>: Right-click on the file/directory and click Duplicate/Delete.</p>
-  `;
-  
-  return `
-    <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Help </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${fileBrowserHelpMessage} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  ` 
-}
-
-// Using a bootstrap modal to input model names for now
-let renderCreateModalHtml = (isModel, isSpatial) => {
-  var titleText = 'Directory';
-  if(isModel){
-    titleText = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
-  }
-  return `
-    <div id="newModalModel" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">New ${titleText}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <label for="modelNameInput">Name:</label>
-            <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
-	        </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let sbmlToModelHtml = (title, errors) => {
-  for(var i = 0; i < errors.length; i++) {
-    if(errors[i].startsWith("SBML Error") || errors[i].startsWith("Error")){
-      errors[i] = "<b>Error</b>: " + errors[i]
-    }else{
-      errors[i] = "<b>Warning</b>: " + errors[i]
-    }
-  }
-
-  return `
-    <div id="sbmlToModelModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> ${title} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${errors.join("<br>")} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let uploadFileErrorsHtml = (file, type, message, errors) => {
-  for(var i = 0; i < errors.length; i++) {
-    errors[i] = "<b>Error</b>: " + errors[i]
-  }
-
-  return `
-    <div id="sbmlToModelModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Errors uploading ${file} as a ${type} file</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${errors.join("<br>")} </p>
-            <p> <b>Upload status</b>: ${message} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let deleteFileHtml = (fileType) => {
-  return `
-    <div id="deleteFileModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Permanently delete this ${fileType}? </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary yes-modal-btn box-shadow">Yes</button>
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">No</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let uploadFileHtml = (type) => {
-  return `
-    <div id="uploadFileModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Upload a ${type} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="verticle-space">
-              <span class="inline" for="datafile">Please specify a file to import: </span>
-              <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" required>
-            </div>
-            <div class="verticle-space">
-              <span class="inline" for="fileNameInput">New file name (optional): </span>
-              <input type="text" id="fileNameInput" name="fileNameInput" size="30">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary box-shadow upload-modal-btn" disabled>Upload</button>
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let duplicateWorkflowHtml = (wkflFile, body) => {
-  return `
-    <div id="duplicateWorkflowModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Model for ${wkflFile} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${body} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
   template: template,
@@ -332,7 +129,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=new-model]' : 'handleCreateModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
-      let modal = $(operationInfoModalHtml()).modal();
+      let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
   },
   render: function () {
@@ -392,7 +189,7 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#uploadFileModal')) {
       document.querySelector('#uploadFileModal').remove()
     }
-    let modal = $(uploadFileHtml(type)).modal();
+    let modal = $(modals.uploadFileHtml(type)).modal();
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
@@ -432,7 +229,7 @@ let FileBrowser = PageView.extend({
             self.refreshJSTree();
           }
           if(resp.errors.length > 0){
-            let errorModal = $(uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
+            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
           }
         }
       }
@@ -452,7 +249,7 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#deleteFileModal')) {
       document.querySelector('#deleteFileModal').remove()
     }
-    let modal = $(deleteFileHtml(fileType)).modal();
+    let modal = $(modals.deleteFileHtml(fileType)).modal();
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       var endpoint = path.join(app.getApiPath(), "/file/delete", o.original._path)
@@ -500,7 +297,7 @@ let FileBrowser = PageView.extend({
             }else{
               message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>"
             }
-            let modal = $(duplicateWorkflowHtml(body.File, message)).modal()
+            let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal()
           }
           self.selectNode(node, body.File)
         }
@@ -571,7 +368,7 @@ let FileBrowser = PageView.extend({
             var title = ""
             var msg = body.message
             var errors = body.errors
-            let modal = $(sbmlToModelHtml(msg, errors)).modal();
+            let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
           }
         }
       }
@@ -704,7 +501,7 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#newModalModel')) {
       document.querySelector('#newModalModel').remove()
     }
-    let modal = $(renderCreateModalHtml(isModel, isSpatial)).modal();
+    let modal = $(modals.renderCreateModalHtml(isModel, isSpatial)).modal();
     let okBtn = document.querySelector('#newModalModel .ok-model-btn');
     let input = document.querySelector('#newModalModel #modelNameInput');
     input.addEventListener("keyup", function (event) {
@@ -765,7 +562,7 @@ let FileBrowser = PageView.extend({
         if(body.error){
           let title = o.text + " Not Found"
           let message = body.error
-          let modal = $(duplicateWorkflowHtml(title, message)).modal()
+          let modal = $(modals.duplicateWorkflowHtml(title, message)).modal()
         }else{
           window.location.href = path.join(app.routePrefix, "models/edit", body.file)
         }

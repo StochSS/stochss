@@ -1,5 +1,7 @@
-var tests = require('./tests');
 var $ = require('jquery');
+//support files
+var tests = require('./tests');
+var modals = require('../modals');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -76,7 +78,7 @@ module.exports = View.extend({
     if(document.querySelector('#eventAnnotationModal')) {
       document.querySelector('#eventAnnotationModal').remove();
     }
-    let modal = $(eventAnnotationModalHtml(name, annotation)).modal();
+    let modal = $(annotationModalHtml("event", name, annotation)).modal();
     let okBtn = document.querySelector('#eventAnnotationModal .ok-model-btn');
     let input = document.querySelector('#eventAnnotationModal #eventAnnotationInput');
     input.addEventListener("keyup", function (event) {

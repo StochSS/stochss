@@ -1,9 +1,11 @@
 var _ = require('underscore');
 var $ = require('jquery');
-var tests = require('../views/tests');
 var path = require('path');
 var xhr = require('xhr');
+//support files
 var app = require('../app');
+var tests = require('../views/tests');
+var modals = require('../modals')
 //views
 var PageView = require('./base');
 var WorkflowEditorView = require('../views/workflow-editor');
@@ -19,73 +21,13 @@ var template = require('../templates/pages/workflowManager.pug');
 
 import initPage from './page.js';
 
-let operationInfoModalHtml = () => {
-  let editWorkflowMessage = `
-    <p><b>Workflow Name/Path</b>: You may edit the name/path of the workflow as long as the workflow has not been saved.  
-    Workflow Names always end with a time stamp.</p>
-    <p><b>Model Path</b>: If you move or rename the model make sure to update this path.</p>
-    <p><b>Settings</b>: This is where you can customize the settings for your workflow.
-    If you need to edit other part of you model click on the edit model button.  
-    The settings are only available for workflows that have not been run.</p>
-    <p><b>Status</b>: This section displays the status and start time of the Workflow.  If the workflow hasn't been sarted this section is closed.</p>
-    <p><b>Results</b>: You may change the title, x-axis label, and y-axis label by clicking on the edit plot button then enter the name in the correct field.</p>
-    <p><b>Info</b>: This section displays any warnings and/or error that are logged by the running workflow.</p>
-    <p><b>Model</b>: This section lets you view the model that was used when you ran the workflow.</p>
-  `;
-
-  return `
-    <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Workflow Manager Help </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${editWorkflowMessage} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  ` 
-}
-
-let modelNotFoundHtml = (title, message) => {
-  return `
-    <div id="modelNotFoundModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> ${title} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${message} </p>
-            <p> Please correct the model path and press enter to reset the workflow. </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
 let WorkflowManager = PageView.extend({
   template: template,
   events: {
     'change [data-hook=workflow-name]' : 'setWorkflowName',
     'change [data-hook=model-path]' : 'updateWkflModel',
     'click [data-hook=edit-workflow-help]' : function () {
-      let modal = $(operationInfoModalHtml()).modal();
+      let modal = $(modals.operationInfoModalHtml('wkfl-manager')).modal();
     },
   },
   initialize: function (attrs, options) {
@@ -129,7 +71,7 @@ let WorkflowManager = PageView.extend({
       this.wkflModelNotFound(data.error)
   },
   wkflModelNotFound: function (error) {
-    let modal = $(modelNotFoundHtml(error.Reason, error.Message)).modal()
+    let modal = $(modals.modelNotFoundHtml(error.Reason, error.Message)).modal()
   },
   update: function () {
   },
