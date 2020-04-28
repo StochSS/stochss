@@ -141,7 +141,7 @@ module.exports = {
     
     max: "The final value of the sweep range.  Defaults to 1.5 times the current value.",
     
-    steps: "The number of steps used to determining the sweep values across the sweep range."
+    steps: "The number of steps used to determine the sweep values across the sweep range."
   },
   parameterSweepResults: {
     species: "The species to view sweep data for",
