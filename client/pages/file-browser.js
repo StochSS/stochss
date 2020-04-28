@@ -339,6 +339,7 @@ let FileBrowser = PageView.extend({
     var self = this;
     this.nodeForContextMenu = "";
     this.renderWithTemplate();
+    this.jstreeIsLoaded = false
     window.addEventListener('pageshow', function (e) {
       var navType = window.performance.navigation.type
       if(navType === 2){
@@ -351,6 +352,8 @@ let FileBrowser = PageView.extend({
     }, 3000);
   },
   refreshJSTree: function () {
+    this.jstreeIsLoaded = false
+    $('#models-jstree').jstree().deselect_all(true)
     $('#models-jstree').jstree().refresh()
   },
   refreshInitialJSTree: function () {
@@ -365,7 +368,8 @@ let FileBrowser = PageView.extend({
   },
   selectNode: function (node, fileName) {
     let self = this
-    if(!$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
+    console.log(Boolean(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)))
+    if(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
       setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
     }else{
       node = $('#models-jstree').jstree().get_node(node)
@@ -417,16 +421,15 @@ let FileBrowser = PageView.extend({
       req.onload = function (e) {
         var resp = JSON.parse(req.response)
         if(req.status < 400) {
-          console.log(file)
           if(o){
             var node = $('#models-jstree').jstree().get_node(o.parent);
             if(node.type === "root" || node.type === "#"){
-              $('#models-jstree').jstree().refresh();
+              self.refreshJSTree();
             }else{
               $('#models-jstree').jstree().refresh_node(node);
             }
           }else{
-            $('#models-jstree').jstree().refresh();
+            self.refreshJSTree();
           }
           if(resp.errors.length > 0){
             let errorModal = $(uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
@@ -457,7 +460,7 @@ let FileBrowser = PageView.extend({
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(o.parent);
           if(node.type === "root"){
-            $('#models-jstree').jstree().refresh();
+            self.refreshJSTree();
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
@@ -486,7 +489,7 @@ let FileBrowser = PageView.extend({
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
-            $('#models-jstree').jstree().refresh()
+            self.refreshJSTree()
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
@@ -538,7 +541,7 @@ let FileBrowser = PageView.extend({
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
-            $('#models-jstree').jstree().refresh()
+            self.refreshJSTree()
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
@@ -559,7 +562,7 @@ let FileBrowser = PageView.extend({
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
           if(node.type === "root"){
-            $('#models-jstree').jstree().refresh()
+            self.refreshJSTree()
           }else{          
             $('#models-jstree').jstree().refresh_node(node);
           }
@@ -581,7 +584,7 @@ let FileBrowser = PageView.extend({
       if(response.statusCode < 400){
         var node = $('#models-jstree').jstree().get_node(o.parent)
         if(node.type === 'root'){
-          $('#models-jstree').jstree().refresh();
+          self.refreshJSTree();
         }else{
           $('#models-jstree').jstree().refresh_node(node);
         }
@@ -599,7 +602,7 @@ let FileBrowser = PageView.extend({
       if(response.statusCode < 400) {
         var node = $('#models-jstree').jstree().get_node(parentID);
         if(node.type === "root"){
-          $('#models-jstree').jstree().refresh()
+          self.refreshJSTree()
         }else{          
           $('#models-jstree').jstree().refresh_node(node);
         }
@@ -629,7 +632,7 @@ let FileBrowser = PageView.extend({
           }
           if(text.split('.').pop() != node.text.split('.').pop()){
             if(parent.type === "root"){
-              $('#models-jstree').jstree().refresh()
+              self.refreshJSTree()
             }else{          
               $('#models-jstree').jstree().refresh_node(parent);
             }
@@ -653,7 +656,7 @@ let FileBrowser = PageView.extend({
         }else if(dataType === "zip") {
           var node = $('#models-jstree').jstree().get_node(o.parent);
           if(node.type === "root"){
-            $('#models-jstree').jstree().refresh();
+            self.refreshJSTree();
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
@@ -667,21 +670,6 @@ let FileBrowser = PageView.extend({
         if(dataType === "plain-text") {
           body = JSON.parse(body)
         }
-      }
-    });
-  },
-  getZipFileForExport: function (o) {
-    var self = this;
-    var endpoint = path.join(app.getApiPath(), "file/download-zip/generate", o.original._path);
-    xhr({uri: endpoint,json:true}, function (err, response, body) {
-      if(response.statusCode < 400) {
-        var node = $('#models-jstree').jstree().get_node(o.parent);
-        if(node.type === "root"){
-          $('#models-jstree').jstree().refresh();
-        }else{
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-        self.exportToZipFile(body.Path)
       }
     });
   },
@@ -744,12 +732,12 @@ let FileBrowser = PageView.extend({
               if(o){//directory was created with context menu option
                 var node = $('#models-jstree').jstree().get_node(o);
                 if(node.type === "root"){
-                  $('#models-jstree').jstree().refresh()
+                  self.refreshJSTree()
                 }else{          
                   $('#models-jstree').jstree().refresh_node(node);
                 }
               }else{//directory was created with create directory button
-                $('#models-jstree').jstree().refresh()
+                self.refreshJSTree()
               }
             }else{//new directory not created no need to refresh
               body = JSON.parse(body)
@@ -796,7 +784,7 @@ let FileBrowser = PageView.extend({
             "separator_before" : false,
             "separator_after" : true,
             "action" : function (data) {
-              $('#models-jstree').jstree().refresh();
+              self.refreshJSTree();
             }
           },
           "New_Directory" : {
@@ -1221,26 +1209,9 @@ let FileBrowser = PageView.extend({
             "separator_before" : false,
             "separator_after" : false,
             "_disabled" : false,
-            "label" : "Download",
-            "submenu" : {
-              "as_zip" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "as .zip",
-                "action" : function (data) {
-                  self.getExportData(o, true, "file/download-zip/generate", "zip");
-                }
-              },
-              "csv_results" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_label" : false,
-                "label" : "Results csv as .zip",
-                "action" : function (data) {
-                  self.getExportData(o, true, "file/download-zip/resultscsv", "csv")
-                }
-              }
+            "label" : "Download Full Workflow",
+            "action" : function (data) {
+              self.getExportData(o, true, "file/download-zip/generate", "zip");
             }
           },
           "Rename" : {
@@ -1452,7 +1423,11 @@ let FileBrowser = PageView.extend({
     $(document).on('dnd_start.vakata', function (data, element, helper, event) {
       $('#models-jstree').jstree().load_all()
     });
-    $('#models-jstree').jstree(treeSettings)
+    $('#models-jstree').jstree(treeSettings).bind("loaded.jstree", function (event, data) {
+      self.jstreeIsLoaded = true
+    }).bind("refresh.jstree", function (event, data) {
+      self.jstreeIsLoaded = true
+    });
     $('#models-jstree').on('click.jstree', function(e) {
       var parent = e.target.parentElement
       var _node = parent.children[parent.children.length - 1]
@@ -1464,7 +1439,7 @@ let FileBrowser = PageView.extend({
         if(!self.nodeForContextMenu){
           optionsButton.prop('disabled', false)
         }
-        optionsButton.text("Options for " + node.original.text)
+        optionsButton.text("Actions for " + node.original.text)
         self.nodeForContextMenu = node;
       }
     });
