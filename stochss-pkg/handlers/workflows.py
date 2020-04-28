@@ -44,6 +44,9 @@ class LoadWorkflowAPIHandler(APIHandler):
         path : str
             Path to a new workflow's source model or an existing workflow.
         '''
+        stamp = self.get_query_argument(name="stamp")
+        wkfl_type = self.get_query_argument(name="type")
+        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
         user_dir = "/home/jovyan"
         log.debug("Time stamp of the workflow: {0}".format(stamp))

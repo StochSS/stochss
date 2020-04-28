@@ -29,7 +29,7 @@ def get_page_handlers(route_start):
         ("/stochss/api/spatial/to-model/(.+)\/?", ConvertToModelAPIHandler),
         ("/stochss/api/sbml/to-model/(.+)\/?", SBMLToModelAPIHandler),
         ("/stochss/api/workflow/notebook/(\w+)/(.+)\/?", WorkflowNotebookHandler),
-        ("/stochss/api/workflow/load-workflow/(\w+)/(\w+)/(.+)\/?", LoadWorkflowAPIHandler),
+        ("/stochss/api/workflow/load-workflow\/?", LoadWorkflowAPIHandler),
         ("/stochss/api/workflow/save-workflow\/?", SaveWorkflowAPIHandler),
         ("/stochss/api/workflow/run-workflow\/?", RunWorkflowAPIHandler),
         ("/stochss/api/workflow/workflow-status/(.+)\/?", WorkflowStatusAPIHandler),

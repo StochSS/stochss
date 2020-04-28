@@ -42,7 +42,8 @@ let WorkflowManager = PageView.extend({
     let type = urlParams.get('type');
     let wkflPath = urlParams.get('path');
     var stamp = this.getCurrentDate();
-    var endpoint = path.join(app.getApiPath(), "workflow/load-workflow", stamp, type, wkflPath)
+    let queryStr = "?stamp="+stamp+"&type="+type+"&path="+wkflPath
+    var endpoint = path.join(app.getApiPath(), "workflow/load-workflow")+queryStr
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       if(resp.statusCode < 400) {
         self.type = body.type
