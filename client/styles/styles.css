@@ -53,6 +53,10 @@ a.disabled {
   display: inline-block;
 }
 
+.dropdown-menu li:hover {
+    cursor: pointer;
+}
+
 .name {
   width: 8rem;
 }
