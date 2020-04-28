@@ -177,11 +177,9 @@ module.exports = {
         return templates.message(modalID, title, error)
     },
     renderDefaultModeModalHtml : () => {
-        let concentrationDesciption = `Species will only be represented deterministically.`;
-        let populationDescription = `Species will only be represented stochastically.`;
-        let hybridDescription = `Allows a species to be represented deterministically and/or stochastically.  
-                                  This allow you to customize the mode of individual species and set the switching 
-                                  tolerance or minimum value for switching."`;
+        let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;
+        let populationDescription = `Population - Species will only be represented using discrete (integer count) values.`;
+        let hybridDescription = `Allows a species to be represented using continuous and/or discrete values.`;
 
         return `
             <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">

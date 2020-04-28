@@ -1,8 +1,10 @@
 var $ = require('jquery');
 var path = require('path');
 var xhr = require('xhr');
+//support files
 var Plotly = require('../lib/plotly');
 var app = require('../app');
+var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -59,6 +61,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = Tooltips.parameterSweepResults
     this.trajectories = attrs.trajectories;
     this.status = attrs.status;
     this.species = attrs.species;
@@ -114,6 +117,13 @@ module.exports = View.extend({
         $(this.queryByHook('ensemble-aggragator-list')).find('select').prop('disabled', true);
       }
     }
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   update: function () {
   },

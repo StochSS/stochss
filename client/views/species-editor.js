@@ -1,6 +1,7 @@
 var $ = require('jquery');
 //support files
 var modals = require('../modals');
+var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var EditNonspatialSpecieView = require('./edit-specie');
@@ -22,26 +23,7 @@ module.exports = View.extend({
     var self = this;
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.collection.parent;
-    this.tooltips = {"name":"Names for species, parameters, reactions, events, and rules must be unique.",
-                     "initialValue":"Initial population of a species.",
-                     "annotation":"An optional note about the species.",
-                     "remove":"A species may only be removed if it is not a part of any reaction, event assignment, or rule.",
-                     "speciesMode":"Concentration - Species will only be represented as deterministic.<br>" + 
-                            "Population - Species will only be represented as stochastic.<br>" + 
-                            "Hybrid Concentration/Population - Allows a species to be represented " + 
-                            "as either deterministic or stochastic. This allow you to customize the "+
-                            "mode of individual species and set the switching tolerance or minimum "+
-                            "value for switching.",
-                     "mode":"Concentration - Species will only be represented as deterministic.<br>" + 
-                            "Population - Species will only be represented as stochastic.<br>" + 
-                            "Hybrid Concentration/Population - Allows a species to be represented " + 
-                            "deterministically and/or stochastically.",
-                     "switchValue":"Switching Tolerance - Tolerance level for considering a dynamic species "+
-                            "deterministically, value is compared to an estimated sd/mean population of a "+
-                            "species after a given time step. This value will be used if a switch_min is not "+
-                            "provided.<br>Minimum Value For Switching - Minimum population value at which "+
-                            "species will be represented as Concentration."
-                    }
+    this.tooltips = Tooltips.speciesEditor
     this.collection.on('update-species', function (compID, specie, isNameUpdate) {
       self.collection.parent.reactions.map(function (reaction) {
         reaction.reactants.map(function (reactant) {
