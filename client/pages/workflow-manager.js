@@ -38,9 +38,11 @@ let WorkflowManager = PageView.extend({
         $(self.queryByHook("model-path")).find('input').focus();
     });
     this.url = decodeURI(document.URL)
-    var typeAndPath = this.url.split('/workflow/edit/').pop()
+    let urlParams = new URLSearchParams(window.location.search)
+    let type = urlParams.get('type');
+    let wkflPath = urlParams.get('path');
     var stamp = this.getCurrentDate();
-    var endpoint = path.join(app.getApiPath(), "workflow/load-workflow", stamp, typeAndPath)
+    var endpoint = path.join(app.getApiPath(), "workflow/load-workflow", stamp, type, wkflPath)
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       if(resp.statusCode < 400) {
         self.type = body.type

@@ -45,7 +45,7 @@ module.exports = View.extend({
   clickEditModelHandler: function (e) {
     var self = this
     this.saveModel(function () {
-      window.location.href = path.join(app.getBasePath(), "stochss/models/edit", self.model.directory);
+      window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+self.model.directory;
     });
   },
   saveModel: function (cb) {

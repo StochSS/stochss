@@ -519,7 +519,7 @@ let FileBrowser = PageView.extend({
         }
         if(isModel) {
           let modelName = input.value + '.mdl';
-          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit', parentPath, modelName);
+          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+path.join(parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
@@ -564,7 +564,7 @@ let FileBrowser = PageView.extend({
           let message = body.error
           let modal = $(modals.duplicateWorkflowHtml(title, message)).modal()
         }else{
-          window.location.href = path.join(app.routePrefix, "models/edit", body.file)
+          window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file
         }
       }
     });
@@ -785,7 +785,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
             }
           },
           "Convert" : {
@@ -819,7 +819,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : true,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
             }
           },
           "Rename" : {
@@ -860,7 +860,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
             }
           },
           "Convert" : {
@@ -904,7 +904,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
             }
           },
           "Download" : {
@@ -955,7 +955,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
             }
           },
           "Start/Restart Workflow" : {
@@ -1245,7 +1245,7 @@ let FileBrowser = PageView.extend({
       var node = $('#models-jstree').jstree().get_node(e.target)
       var _path = node.original._path;
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-        window.location.href = path.join(app.getBasePath(), "stochss/models/edit", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
       }else if(file.endsWith('.ipynb')){
         var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
         window.open(notebookPath, '_blank')
@@ -1253,7 +1253,7 @@ let FileBrowser = PageView.extend({
         var openPath = path.join(app.getBasePath(), "edit", _path)
         window.open(openPath, '_blank')
       }else if(file.endsWith('.wkfl')){
-        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }else if(node.type === "other"){

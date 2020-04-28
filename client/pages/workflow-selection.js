@@ -21,7 +21,7 @@ let workflowSelection = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this
-    this.modelDir = decodeURI(document.URL.split('/workflow/selection').pop());
+    this.modelDir = (new URLSearchParams(window.location.search)).get('path');
     this.modelFile = this.modelDir.split('/').pop().split('.').shift();
     var isSpatial = this.modelDir.endsWith('.smdl');
     this.model = new Model({
