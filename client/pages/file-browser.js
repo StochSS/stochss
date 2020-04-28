@@ -1257,7 +1257,7 @@ let FileBrowser = PageView.extend({
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }else if(node.type === "other"){
-        var openPath = path.join(app.getBasePath(), "edit", _path);
+        var openPath = path.join(app.getBasePath(), "view", _path);
         window.open(openPath, "_blank");
       }
     });
