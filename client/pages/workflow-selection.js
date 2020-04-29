@@ -16,6 +16,7 @@ import initPage from './page.js';
 let workflowSelection = PageView.extend({
   template: template,
   events: {
+    "click [data-hook=ensemble-simulation]" : "notebookWorkflow",
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=model-inference]" : "notebookWorkflow",
@@ -63,7 +64,12 @@ let workflowSelection = PageView.extend({
     var endpoint = path.join(app.getApiPath(), "/workflow/notebook")+"?type="+type+"&path="+this.modelDir
     xhr({uri:endpoint}, function (err, response, body) {
       if(response.statusCode < 400){
-        var notebookPath = path.join(app.getBasePath(), "notebooks", body)
+        if(type === "gillespy"){
+          body = JSON.parse(body)
+          var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
+        }else{
+          var notebookPath = path.join(app.getBasePath(), "notebooks", body)
+        }
         window.open(notebookPath, "_blank")
       }else{
         body = JSON.parse(body)
