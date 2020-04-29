@@ -543,6 +543,7 @@ let FileBrowser = PageView.extend({
               }
             }else{//new directory not created no need to refresh
               body = JSON.parse(body)
+              let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
             }
           });
           modal.modal('hide')

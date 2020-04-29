@@ -222,6 +222,7 @@ let WorkflowManager = PageView.extend({
         self.renderInfoView();
       }
       if(self.status === 'complete') {
+        self.renderWorkflowEditor();
         self.renderResultsView();
         self.renderModelViewer();
       }
