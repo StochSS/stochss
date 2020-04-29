@@ -216,7 +216,6 @@ module.exports = View.extend({
   getExportData: function (wkflPath) {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "file/download-zip")+"?path="+wkflPath+"&action=resultscsv"
-    console.log(endpoint)
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         self.exportToZipFile(body.Path)
@@ -225,8 +224,6 @@ module.exports = View.extend({
   },
   exportToZipFile: function (resultsPath) {
     var endpoint = path.join("files", resultsPath);
-    // console.log(endpoint)
-    // console.log("http://127.0.0.1:8888/edit/Examples/Michaelis_Menten/Michaelis_Menten_04172020_121031.wkfl/results/results_csv_04172020_121031.zip")
     window.location.href = endpoint
   },
   expandContainer: function () {

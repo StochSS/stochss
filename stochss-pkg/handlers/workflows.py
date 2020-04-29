@@ -111,7 +111,6 @@ class RunWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         data = json.loads(self.get_query_argument(name="data"))
         log.debug("Handler query string: {0}".format(data))
         opt_type = data['optType']
@@ -129,7 +128,6 @@ class RunWorkflowAPIHandler(APIHandler):
         log.debug('Sending the workflow run cmd')
         pipe = subprocess.Popen(exec_cmd)
         log.debug('The workflow has started')
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -148,7 +146,6 @@ class SaveWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         data = json.loads(self.get_query_argument(name="data"))
         log.debug("Handler query string: {0}".format(data))
         opt_type = data['optType']
@@ -172,7 +169,6 @@ class SaveWorkflowAPIHandler(APIHandler):
             self.write(resp)
         else:
             self.write(errors)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
