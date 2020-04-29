@@ -16,9 +16,9 @@ import initPage from './page.js';
 let ajaxData = {
   "url" : function (node) {
     if(node.parent === null){
-      return "stochss/models/browser-list/"
+      return path.join(app.getApiPath(), "file/browser-list")+"?path=none"
     }
-    return "stochss/models/browser-list" + node.original._path
+    return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
   },
   "dataType" : "json",
   "data" : function (node) {
@@ -66,7 +66,8 @@ let treeSettings = {
         var newDir = par.original._path
         var file = node.original._path.split('/').pop()
         var oldPath = node.original._path
-        var endpoint = path.join(app.getApiPath(), "/file/move", oldPath, '<--MoveTo-->', newDir, file)
+        let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
+        var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
         xhr({uri: endpoint}, function(err, response, body) {
           if(response.statusCode < 400) {
             node.original._path = path.join(newDir, file)
@@ -165,7 +166,6 @@ let FileBrowser = PageView.extend({
   },
   selectNode: function (node, fileName) {
     let self = this
-    console.log(Boolean(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)))
     if(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
       setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
     }else{
@@ -252,7 +252,7 @@ let FileBrowser = PageView.extend({
     let modal = $(modals.deleteFileHtml(fileType)).modal();
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
-      var endpoint = path.join(app.getApiPath(), "/file/delete", o.original._path)
+      var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
       xhr({uri: endpoint}, function(err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(o.parent);
@@ -271,17 +271,17 @@ let FileBrowser = PageView.extend({
   duplicateFileOrDirectory: function(o, type) {
     var self = this;
     var parentID = o.parent;
+    var queryStr = "?path="+o.original._path
     if(type === "directory"){
       var identifier = "directory/duplicate"
-    }else if(type === "workflow"){
-      let timeStamp = this.getTimeStamp()
-      var identifier = path.join("workflow/duplicate", type, timeStamp)
-    }else if(type === "wkfl_model"){
-      var identifier = path.join("workflow/duplicate", type, "None")
+    }else if(type === "workflow" || type === "wkfl_model"){
+      var timeStamp = type === "workflow" ? this.getTimeStamp() : "None"
+      var identifier = "workflow/duplicate"
+      queryStr = queryStr.concat("&target="+type+"&stamp="+timeStamp)
     }else{
-      var identifier = "model/duplicate"
+      var identifier = "file/duplicate"
     }
-    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
@@ -332,7 +332,7 @@ let FileBrowser = PageView.extend({
   toSpatial: function (o) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "/model/to-spatial", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "model/to-spatial")+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, 
       function (err, response, body) {
         if(response.statusCode < 400) {
@@ -351,10 +351,11 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     if(from === "Spatial"){
-      var endpoint = path.join(app.getApiPath(), "/spatial/to-model", o.original._path);
+      var identifier = "spatial/to-model"
     }else{
-      var endpoint = path.join(app.getApiPath(), "sbml/to-model", o.original._path);
+      var identifier = "sbml/to-model"
     }
+    let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
@@ -376,7 +377,7 @@ let FileBrowser = PageView.extend({
   },
   toNotebook: function (o) {
     let self = this
-    var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
+    var endpoint = path.join(app.getApiPath(), "model/to-notebook")+"?path="+o.original._path
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400){
         var node = $('#models-jstree').jstree().get_node(o.parent)
@@ -394,7 +395,7 @@ let FileBrowser = PageView.extend({
   toSBML: function (o) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "model/to-sbml", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         var node = $('#models-jstree').jstree().get_node(parentID);
@@ -416,7 +417,7 @@ let FileBrowser = PageView.extend({
     extensionWarning.collapse('show')
     $('#models-jstree').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
-        var endpoint = path.join(app.getApiPath(), "/file/rename", o.original._path, "<--change-->", node.text)
+        var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+node.text
         xhr({uri: endpoint, json: true}, function (err, response, body){
           if(response.statusCode < 400) {
             if(body.changed) {
@@ -443,9 +444,15 @@ let FileBrowser = PageView.extend({
   hideNameWarning: function () {
     $(this.queryByHook('rename-warning')).collapse('hide')
   },
-  getExportData: function (o, isJSON, identifier, dataType) {
+  getExportData: function (o, isJSON, identifier, action, dataType) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), identifier)+"?for=None&path="+o.original._path
+    var queryStr = "?path="+o.original._path
+    if(dataType === "json"){
+      queryStr = queryStr.concat("&for=None")
+    }else if(dataType === "zip"){
+      queryStr = queryStr.concat("&action="+action)
+    }
+    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(dataType === "json") {
@@ -457,8 +464,6 @@ let FileBrowser = PageView.extend({
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
-          self.exportToZipFile(body.Path)
-        }else if(dataType === "csv") {
           self.exportToZipFile(body.Path)
         }else{
           self.exportToFile(body, o.original.text);
@@ -523,7 +528,7 @@ let FileBrowser = PageView.extend({
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
-          let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
+          let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
               if(o){//directory was created with context menu option
@@ -556,7 +561,7 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
   },
   editWorkflowModel: function (o) {
-    let endpoint = path.join(app.getApiPath(), "workflow/edit-model", o.original._path)
+    let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(body.error){
@@ -744,7 +749,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download as .zip",
             "action" : function (data) {
-              self.getExportData(o, true, "file/download-zip/generate", "zip");
+              self.getExportData(o, true, "file/download-zip", "generate", "zip");
             }
           },
           "Rename" : {
@@ -913,7 +918,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getExportData(o, true, "json-data", "json");
+              self.getExportData(o, true, "file/json-data", null, "json");
             }
           },
           "Rename" : {
@@ -1008,7 +1013,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download Full Workflow",
             "action" : function (data) {
-              self.getExportData(o, true, "file/download-zip/generate", "zip");
+              self.getExportData(o, true, "file/download-zip", "generate", "zip");
             }
           },
           "Rename" : {
@@ -1058,7 +1063,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getExportData(o, true, "json-data", "json");
+              self.getExportData(o, true, "file/json-data", null, "json");
       	    }
       	  },
           "Rename" : {
@@ -1126,7 +1131,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getExportData(o, false, "file/download", "plain-text");
+              self.getExportData(o, false, "file/download", null, "plain-text");
             }
           },
           "Rename" : {
@@ -1180,7 +1185,7 @@ let FileBrowser = PageView.extend({
               if(o.original.text.endsWith('.zip')){
                 self.exportToZipFile(o);
               }else{
-                self.getExportData(o, true, "file/download-zip/generate", "zip")
+                self.getExportData(o, true, "file/download-zip", "generate", "zip")
               }
             }
           },

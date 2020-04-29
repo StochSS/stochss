@@ -168,7 +168,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
 
         new_wkfl = workflows[data['type']](new_wkfl_path, model_path)
         os.mkdir(new_wkfl_path)
-        save_new_workflow(new_wkfl, data['type'], True, False)
+        save_new_workflow(new_wkfl, data['type'], False)
         if not path.exists(new_wkfl.wkfl_mdl_path):
             copyfile(org_wkfl.wkfl_mdl_path, new_wkfl.wkfl_mdl_path)
 

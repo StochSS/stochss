@@ -19,15 +19,23 @@ def get_page_handlers(route_start):
         #
         ## API Handlers
         #
-        ("/stochss/models/browser-list(.+)\/?", ModelBrowserFileList), # TODO: /api, not /models
-        ("/stochss/api/json-data\/?", JsonFileAPIHandler),
+        ("/stochss/api/file/browser-list\/?", ModelBrowserFileList),
+        ("/stochss/api/file/upload\/?", UploadFileAPIHandler),
+        ("/stochss/api/file/move\/?", MoveFileAPIHandler),
+        ("/stochss/api/file/delete\/?", DeleteFileAPIHandler),
+        ("/stochss/api/file/rename\/?", RenameAPIHandler),
+        ("/stochss/api/file/download\/?", DownloadAPIHandler),
+        ("/stochss/api/file/download-zip\/?", DownloadZipFileAPIHandler),
+        ("/stochss/api/file/json-data\/?", JsonFileAPIHandler),
+        ("/stochss/api/file/duplicate\/?", DuplicateModelHandler),
+        ("/stochss/api/directory/duplicate\/?", DuplicateDirectoryHandler),
+        ("/stochss/api/directory/create\/?", CreateDirectoryHandler),
+        ("/stochss/api/spatial/to-model\/?", ConvertToModelAPIHandler),
+        ("/stochss/api/sbml/to-model\/?", SBMLToModelAPIHandler),
+        ("/stochss/api/model/to-notebook\/?", ModelToNotebookHandler),
+        ("/stochss/api/model/to-spatial\/?", ConvertToSpatialAPIHandler),
+        ("/stochss/api/model/to-sbml\/?", ModelToSBMLAPIHandler),
         ("/stochss/api/model/run\/?", RunModelAPIHandler),
-        ("/stochss/api/model/duplicate/(.+)\/?", DuplicateModelHandler),
-        ("/stochss/api/models/to-notebook/(.+)\/?", ModelToNotebookHandler),
-        ("/stochss/api/model/to-spatial/(.+)\/?", ConvertToSpatialAPIHandler),
-        ("/stochss/api/model/to-sbml/(.+)\/?", ModelToSBMLAPIHandler),
-        ("/stochss/api/spatial/to-model/(.+)\/?", ConvertToModelAPIHandler),
-        ("/stochss/api/sbml/to-model/(.+)\/?", SBMLToModelAPIHandler),
         ("/stochss/api/workflow/notebook\/?", WorkflowNotebookHandler),
         ("/stochss/api/workflow/load-workflow\/?", LoadWorkflowAPIHandler),
         ("/stochss/api/workflow/save-workflow\/?", SaveWorkflowAPIHandler),
@@ -35,16 +43,8 @@ def get_page_handlers(route_start):
         ("/stochss/api/workflow/workflow-status\/?", WorkflowStatusAPIHandler),
         ("/stochss/api/workflow/workflow-logs\/?", WorkflowLogsAPIHandler),
         ("/stochss/api/workflow/plot-results\/?", PlotWorkflowResultsAPIHandler),
-        ("/stochss/api/workflow/duplicate/(\w+)/(\w+)/(.+)\/?", DuplicateWorkflowAsNewHandler),
-        ("/stochss/api/workflow/edit-model/(.+)\/?", GetWorkflowModelPathAPIHandler),
-        ("/stochss/api/file/upload\/?", UploadFileAPIHandler),
-        ("/stochss/api/file/move/(.+)\/?", MoveFileAPIHandler),
-        ("/stochss/api/file/delete/(.+)\/?", DeleteFileAPIHandler),
-        ("/stochss/api/file/rename/(.+)\/?", RenameAPIHandler),
-        ("/stochss/api/file/download/(.+)\/?", DownloadAPIHandler),
-        ("/stochss/api/file/download-zip/(\w+)/(.+)\/?", DownloadZipFileAPIHandler),
-        ("/stochss/api/directory/duplicate/(.+)\/?", DuplicateDirectoryHandler),
-        ("/stochss/api/directory/create/(.+)\/?", CreateDirectoryHandler)
+        ("/stochss/api/workflow/duplicate\/?", DuplicateWorkflowAsNewHandler),
+        ("/stochss/api/workflow/edit-model\/?", GetWorkflowModelPathAPIHandler),
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers

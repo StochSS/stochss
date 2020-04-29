@@ -214,7 +214,7 @@ module.exports = View.extend({
   },
   getExportData: function (wkflPath) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "file/download-zip/resultscsv", wkflPath)
+    var endpoint = path.join(app.getApiPath(), "file/download-zip")+"?path="+wkflPath+"&action=resultscsv"
     console.log(endpoint)
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
