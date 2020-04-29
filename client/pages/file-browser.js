@@ -513,8 +513,8 @@ let FileBrowser = PageView.extend({
     let modelName;
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
-        var parentPath = "/"
-        if(o && o.original){
+        var parentPath = ""
+        if(o && o.original && o.original.type !== "root"){
           parentPath = o.original._path
         }
         if(isModel) {
