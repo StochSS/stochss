@@ -114,14 +114,15 @@ module.exports = View.extend({
       this.registerRenderSubview(featureExtractorView, 'feature-extraction-list');
       this.registerRenderSubview(ensembleAggragatorView, 'ensemble-aggragator-list');
       if(this.trajectories <= 1){
-        $(this.queryByHook('ensemble-aggragator-list')).find('select').prop('disabled', true);
+        $(this.queryByHook('ensemble-aggragator-container')).collapse()
+      }else{
+        $(this.queryByHook('ensemble-aggragator-container')).addClass("inline")
       }
     }
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
-
        });
     });
   },
