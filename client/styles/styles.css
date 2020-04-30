@@ -59,6 +59,10 @@ a.disabled {
   display: inline-block;
 }
 
+.nav-link {
+  padding: 0.5rem 0.25rem 0.5rem 1rem;
+}
+
 .name {
   width: 8rem;
 }

@@ -1,35 +1,12 @@
-var tests = require('./tests');
 var $ = require('jquery');
+//support files
+var tests = require('./tests');
+var modals = require('../modals')
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
 var template = require('../templates/includes/editReactionVar.pug');
-
-let parameterAnnotationModalHtml = (parameterName, annotation) => {
-  return `
-    <div id="parameterAnnotationModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Annotation for ${parameterName}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <span for="parameterAnnotationInput">Annotation: </span>
-            <input type="text" id="parameterAnnotationInput" name="parameterAnnotationInput" size="30" autofocus value="${annotation}">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn">OK</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
 
 module.exports = View.extend({
   template: template,
@@ -72,7 +49,7 @@ module.exports = View.extend({
     if(document.querySelector('#parameterAnnotationModal')) {
       document.querySelector('#parameterAnnotationModal').remove();
     }
-    let modal = $(parameterAnnotationModalHtml(name, annotation)).modal();
+    let modal = $(annotationModalHtml("parameter", name, annotation)).modal();
     let okBtn = document.querySelector('#parameterAnnotationModal .ok-model-btn');
     let input = document.querySelector('#parameterAnnotationModal #parameterAnnotationInput');
     input.addEventListener("keyup", function (event) {

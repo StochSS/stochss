@@ -1,8 +1,10 @@
 var $ = require('jquery');
 var path = require('path');
 var xhr = require('xhr');
+//support files
 var Plotly = require('../lib/plotly');
 var app = require('../app');
+var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -54,10 +56,12 @@ module.exports = View.extend({
     'click [data-hook=download-json]' : function (e) {
       var type = e.target.id;
       this.exportToJsonFile(this.plots[type], type)
-    }
+    },
+    'click [data-hook=download-results-csv]' : 'handlerDownloadResultsCsvClick',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = Tooltips.parameterSweepResults
     this.trajectories = attrs.trajectories;
     this.status = attrs.status;
     this.species = attrs.species;
@@ -113,6 +117,13 @@ module.exports = View.extend({
         $(this.queryByHook('ensemble-aggragator-list')).find('select').prop('disabled', true);
       }
     }
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   update: function () {
   },
@@ -162,7 +173,7 @@ module.exports = View.extend({
     }else{
       data['plt_data'] = "None"
     }
-    var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
+    var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.wkflPath, '?data=' + JSON.stringify(data));
     xhr({url: endpoint, json: true}, function (err, response, body){
       if(response.statusCode >= 400){
         $(self.queryByHook(type)).html(body.Message)
@@ -196,6 +207,26 @@ module.exports = View.extend({
     linkElement.setAttribute('href', dataURI);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
+  },
+  handlerDownloadResultsCsvClick: function (e) {
+    let path = this.parent.wkflPath
+    this.getExportData(path)
+  },
+  getExportData: function (wkflPath) {
+    var self = this;
+    var endpoint = path.join(app.getApiPath(), "file/download-zip/resultscsv", wkflPath)
+    console.log(endpoint)
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        self.exportToZipFile(body.Path)
+      }
+    });
+  },
+  exportToZipFile: function (resultsPath) {
+    var endpoint = path.join("files", resultsPath);
+    // console.log(endpoint)
+    // console.log("http://127.0.0.1:8888/edit/Examples/Michaelis_Menten/Michaelis_Menten_04172020_121031.wkfl/results/results_csv_04172020_121031.zip")
+    window.location.href = endpoint
   },
   expandContainer: function () {
     $(this.queryByHook('workflow-results')).collapse('show');

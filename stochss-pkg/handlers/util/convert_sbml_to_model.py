@@ -11,8 +11,11 @@ import gillespy2
 
 def convert_to_gillespy_model(path):
     if os.path.exists(path):
-        gpy_model, errors = convert(path)
-        return gpy_model, errors
+        try:
+            gpy_model, errors = convert(path)
+            return gpy_model, errors
+        except:
+            return None, None
     else:
         raise StochSSFileNotFoundError("Could not find the sbml file: "+path)
 
@@ -65,7 +68,7 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
     
         return "The SBML Model was successfully converted to a StochSS Model.", errors, stochss_model_path
     else:
-        return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", [], stochss_model_path
+        return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", [], ""
 
 
 def get_species(species, comp_id):
@@ -73,15 +76,14 @@ def get_species(species, comp_id):
     mode = "dynamic"
     algorithm = "SSA"
 
-    for name in species.keys():
-        if not species[name].mode == "dynamic":
+    for name, specie in species.items():
+        if not specie.mode == "dynamic":
             mode = "continuous"
             algorithm = "Hybrid-Tau-Leaping"
             break
 
-    for name in species.keys():
-        specie = species[name]
-
+    for name, specie in species.items():
+        
         stochss_specie = {"compID":comp_id,
                           "name":specie.name,
                           "value":specie.initial_value,
@@ -105,9 +107,8 @@ def get_species(species, comp_id):
 def get_parameters(parameters, comp_id):
     stochss_parameters = []
 
-    for name in parameters.keys():
-        parameter = parameters[name]
-
+    for name, parameter in parameters.items():
+        
         stochss_parameter = {"compID":comp_id,
                              "name":parameter.name,
                              "expression":str(parameter.expression),
@@ -123,9 +124,8 @@ def get_parameters(parameters, comp_id):
 def get_reactions(reactions, stochss_species, comp_id):
     stochss_reactions = []
 
-    for name in reactions.keys():
-        reaction = reactions[name]
-
+    for name, reaction in reactions.items():
+        
         stochss_reaction = {"compID":comp_id,
                             "name":reaction.name,
                             "reactionType": "custom-propensity",
@@ -161,8 +161,7 @@ def get_reactions(reactions, stochss_species, comp_id):
 def get_reactants(reactants, stochss_species):
     stochss_reactants = []
 
-    for specie in reactants.keys():
-        ratio = reactants[specie]
+    for specie, ratio in reactants.items():
         stoich_species = get_specie(stochss_species, specie.name)
 
         stochss_reactant = {"ratio":ratio,"specie":stoich_species}
@@ -174,8 +173,7 @@ def get_reactants(reactants, stochss_species):
 def get_products(products, stochss_species):
     stochss_products = []
 
-    for specie in products.keys():
-        ratio = products[specie]
+    for specie, ratio in products.items():
         stoich_species = get_specie(stochss_species, specie.name)
 
         stochss_product = {"ratio":ratio,"specie":stoich_species}
@@ -228,7 +226,6 @@ def get_events(events, stochss_species, stochss_parameters, comp_id):
     stochss_events = []
 
     for name, event in events.items():
-        
 
         stochss_event = {"compID":comp_id,
                          "name": event.name,
@@ -239,12 +236,12 @@ def get_events(events, stochss_species, stochss_parameters, comp_id):
                          "initialValue": event.trigger.value,
                          "persistent": event.trigger.persistent,
                          "useValuesFromTriggerTime": event.use_values_from_trigger_time,
-                         "eventAssignment": []
+                         "eventAssignments": []
                         }
 
         assignments = event.assignments
         stochss_assignments = get_event_assignment(assignments, stochss_species, stochss_parameters)
-        stochss_event['eventAssignment'].extend(stochss_assignments)
+        stochss_event['eventAssignments'].extend(stochss_assignments)
 
         stochss_events.append(stochss_event)
         comp_id += 1
@@ -273,9 +270,8 @@ def get_event_assignment(assignments, stochss_species, stochss_parameters):
 def get_rate_rules(rate_rules, stochss_species, stochss_parameters, comp_id):
     stochss_rate_rules = []
 
-    for name in rate_rules.keys():
-        rate_rule = rate_rules[name]
-
+    for name, rate_rule in rate_rules.items():
+        
         try:
             variable = get_specie(stochss_species, rate_rule.species.name)
         except:
@@ -298,9 +294,8 @@ def get_rate_rules(rate_rules, stochss_species, stochss_parameters, comp_id):
 def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, comp_id):
     stochss_assignment_rules = []
 
-    for name in assignment_rules.keys():
-        assignment_rule = assignment_rules[name]
-
+    for name, assignment_rule in assignment_rules.items():
+        
         try:
             variable = get_specie(stochss_species, assignment_rule.variable.name)
         except:
@@ -323,9 +318,8 @@ def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, 
 def get_function_definitions(function_definitions, comp_id):
     stochss_function_definitions = []
 
-    for name in function_definitions.keys():
-        function_definition = function_definitions[name]
-
+    for name, function_definition in function_definitions.items():
+        
         function_elements = function_definition.function.split(': ')
         expression = function_elements.pop()
         variables = function_elements[0].split('lambda ').pop()
@@ -350,10 +344,14 @@ def convert_sbml_to_model(path, model_template):
     user_dir = "/home/jovyan"
     
     full_path = os.path.join(user_dir, path)
+    name = full_path.split('/').pop().split('.')[0]
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)
-    sbml_errors = list(map(lambda error: error[0], sbml_errors))
-    msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path)
+    if gillespy_model is None and sbml_errors is None:
+        sbml_errors = ["Error: could not convert the SBML Model to a StochSS Model"]
+    else:
+        sbml_errors = list(map(lambda error: error[0], sbml_errors))
+    msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path, name=name)
     sbml_errors.extend(errors)
     resp = {"message":msg,"errors":sbml_errors,"File":stochss_model_path.split('/').pop()}
     return resp

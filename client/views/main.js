@@ -79,15 +79,6 @@ module.exports = View.extend({
       this.listenTo(app, 'page', this.handleNewPage);
   },
   events: {
-    'click [data-hook=file-system-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('File Browser')).modal();
-    },
-    'click [data-hook=create-model-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Models')).modal();
-    },
-    'click [data-hook=create-workflow-information-main]' : function () {
-      let modal = $(operationInfoModalHtml('Workflows')).modal();
-    },
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
     //'click a[href]': 'handleLinkClick'
   },

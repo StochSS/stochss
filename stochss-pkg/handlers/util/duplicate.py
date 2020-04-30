@@ -147,7 +147,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
     except JSONDecodeError as err:
         raise FileNotJSONFormatError("The workflow info file is not JSON decodable: "+str(err))
     workflows = {"gillespy":GillesPy2Workflow,"psweep":ParameterSweep}
-    model_path = data['source_model'] if "RUNNING" in os.listdir(path=full_path) else data['model']
+    model_path = data['source_model']
     org_wkfl = workflows[data['type']](full_path, model_path)
     # Get model file from wkfl info
     model_file = org_wkfl.mdl_file

@@ -156,7 +156,7 @@ class MoveFileAPIHandler(APIHandler):
                     new_parent_dir = os.path.dirname(new_path)
                     with open(os.path.join(new_path, "info.json"), "r+") as info_file:
                         info = json.load(info_file)
-                        info['model'] = info['model'].replace(old_parent_dir, new_parent_dir)
+                        info['wkfl_model'] = info['wkfl_model'].replace(old_parent_dir, new_parent_dir)
                         info_file.seek(0)
                         json.dump(info, info_file)
                         info_file.truncate()
