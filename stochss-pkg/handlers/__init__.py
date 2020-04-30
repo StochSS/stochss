@@ -13,6 +13,7 @@ def get_page_handlers(route_start):
         #
         #('/stochss\/?$', HomeHandler), #TODO: move to hub
         ('/stochss/models\/?$', ModelBrowserHandler),
+        ('/stochss/quickstart\/?', QuickstartHandler),
         ('/stochss/models/edit\/?(.+)?\/?', ModelEditorHandler),
         ('/stochss/workflow/selection\/?(.+)?\/?', WorkflowSelectionHandler),
         ('/stochss/workflow/edit\/?(.+)?\/?', WorkflowEditorHandler),
