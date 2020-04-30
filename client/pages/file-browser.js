@@ -38,6 +38,9 @@ let treeSettings = {
     'multiple' : false,
     'animation': 0,
     'check_callback': function (op, node, par, pos, more) {
+      if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
+        return false
+      }
       if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
         return false
       }
@@ -63,7 +66,7 @@ let treeSettings = {
         return false
       }
       if(op === 'move_node' && more && more.core) {
-        var newDir = par.original._path
+        var newDir = par.type !== "root" ? par.original._path : ""
         var file = node.original._path.split('/').pop()
         var oldPath = node.original._path
         let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
@@ -272,6 +275,13 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     var queryStr = "?path="+o.original._path
+    if(!type && o.original.type === 'folder'){
+      type = "directory"
+    }else if(!type && o.original.type === 'workflow'){
+      type = "workflow"
+    }else if(!type){
+      type = "file"
+    }
     if(type === "directory"){
       var identifier = "directory/duplicate"
     }else if(type === "workflow" || type === "wkfl_model"){
@@ -444,13 +454,25 @@ let FileBrowser = PageView.extend({
   hideNameWarning: function () {
     $(this.queryByHook('rename-warning')).collapse('hide')
   },
-  getExportData: function (o, isJSON, identifier, action, dataType) {
+  getExportData: function (o, asZip) {
     var self = this;
+    let nodeType = o.original.type
+    let isJSON = nodeType === "sbml-model" ? false : true
+    if(nodeType === "sbml-model"){
+      var dataType = "plain-text"
+      var identifier = "file/download"
+    }else if(asZip) {
+      var dataType = "zip"
+      var identifier = "file/download-zip"
+    }else{
+      var dataType = "json"
+      var identifier = "file/json-data"
+    }
     var queryStr = "?path="+o.original._path
     if(dataType === "json"){
       queryStr = queryStr.concat("&for=None")
     }else if(dataType === "zip"){
-      queryStr = queryStr.concat("&action="+action)
+      queryStr = queryStr.concat("&action=generate")
     }
     var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
@@ -578,646 +600,337 @@ let FileBrowser = PageView.extend({
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
-      if (o.type === 'root'){
-        return {
-          "Refresh" : {
-            "label" : "Refresh",
-            "_disabled" : false,
-            "_class" : "font-weight-bold",
-            "separator_before" : false,
-            "separator_after" : true,
-            "action" : function (data) {
-              self.refreshJSTree();
+      let nodeType = o.original.type
+      let asZip = (nodeType === "workflow" || nodeType === "folder" || nodeType === "other" || nodeType === "mesh")
+      // common to all type except root
+      let common = {
+        "Download" : {
+          "label" : asZip ? "Download as .zip" : "Download",
+          "_disabled" : false,
+          "separator_before" : true,
+          "separator_after" : false,
+          "action" : function (data) {
+            if(o.original.text.endsWith('.zip')){
+              self.exportToZipFile(o);
+            }else{
+              self.getExportData(o, asZip)
             }
-          },
-          "New_Directory" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "New Directory",
-            "action" : function (data) {
-              self.newModelOrDirectory(o, false, false);
-            }
-          },
-          "New_model" : {
-            "label" : "New Model",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "spatial" : {
-                "label" : "Spatial",
-                "_disabled" : true,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-
-                }
-              },
-              "nonspatial" : { 
-                "label" : "Non-Spatial",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.newModelOrDirectory(o, true, false);
-                }
-              } 
-            }
-          },
-          "Upload" : {
-            "label" : "Upload File",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "submenu" : {
-              "Model" : {
-                "label" : "StochSS Model",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "model")
-                }
-              },
-              "SBML" : {
-                "label" : "SBML Model",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "sbml")
-                }
-              },
-              "File" : {
-                "label" : "File",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "file")
-                }
-              }
-            }
-          },
+          }
+        },
+        "Rename" : {
+          "label" : "Rename",
+          "_disabled" : (o.type === "workflow" && o.original._status === "running"),
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.renameNode(o);
+          }
+        },
+        "Duplicate" : {
+          "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.duplicateFileOrDirectory(o, null)
+          }
+        },
+        "Delete" : {
+          "label" : "Delete",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.deleteFile(o);
+          }
         }
       }
-      else if (o.type ===  'folder') {
-        return {
-          "Refresh" : {
-            "label" : "Refresh",
-            "_disabled" : false,
-            "_class" : "font-weight-bold",
-            "separator_before" : false,
-            "separator_after" : true,
-            "action" : function (data) {
+      // common to root and folders
+      let folder = {
+        "Refresh" : {
+          "label" : "Refresh",
+          "_disabled" : false,
+          "_class" : "font-weight-bold",
+          "separator_before" : false,
+          "separator_after" : true,
+          "action" : function (data) {
+            if(nodeType === "root"){
+              self.refreshJSTree();
+            }else{
               $('#models-jstree').jstree().refresh_node(o);
             }
-          },
-          "New_Directory" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "New Directory",
-            "action" : function (data) {
-              self.newModelOrDirectory(o, false, false);
-            }
-          },
-          "New_model" : {
-            "label" : "New Model",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "spatial" : {
-                "label" : "Spatial",
-                "_disabled" : true,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-
-                }
-              },
-              "nonspatial" : { 
-                "label" : "Non-Spatial",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.newModelOrDirectory(o, true, false);
-                }
-              } 
-            }
-          },
-          "Upload" : {
-            "label" : "Upload File",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "submenu" : {
-              "Model" : {
-                "label" : "StochSS Model",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "model")
-                }
-              },
-              "SBML" : {
-                "label" : "SBML Model",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "sbml")
-                }
-              },
-              "File" : {
-                "label" : "File",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "file")
-                }
+          }
+        },
+        "New_Directory" : {
+          "label" : "New Directory",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newModelOrDirectory(o, false, false);
+          }
+        },
+        "New_model" : {
+          "label" : "New Model",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "spatial" : {
+              "label" : "Spatial",
+              "_disabled" : true,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                console.log("Spatial Models Coming Soon!")
+              }
+            },
+            "nonspatial" : { 
+              "label" : "Non-Spatial",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.newModelOrDirectory(o, true, false);
+              }
+            } 
+          }
+        },
+        "Upload" : {
+          "label" : "Upload File",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Model" : {
+              "label" : "StochSS Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.uploadFile(o, "model")
+              }
+            },
+            "SBML" : {
+              "label" : "SBML Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.uploadFile(o, "sbml")
+              }
+            },
+            "File" : {
+              "label" : "File",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.uploadFile(o, "file")
               }
             }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download as .zip",
-            "action" : function (data) {
-              self.getExportData(o, true, "file/download-zip", "generate", "zip");
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "directory")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
+          }
         }
       }
-      else if (o.type === 'spatial') {
-        return {
-          "Edit" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : true,
-            "_class" : "font-weight-bolder",
-            "label" : "Edit",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
-            }
-          },
-          "Convert" : {
-            "label" : "Convert",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "Convert to Model" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "Convert to Non Spatial",
-                "action" : function (data) {
-                  self.toModel(o, "Spatial");
-                }
-              },
-              "Convert to Notebook" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : true,
-                "label" : "Convert to Notebook",
-                "action" : function (data) {
-                }
-              },
-            }
-          },
-          "New Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "New Workflow",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "model")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
+      // common to both spatial and non-spatial models
+      let model = {
+        "Edit" : {
+          "label" : "Edit",
+          "_disabled" : (nodeType === "spatial") ? true : false,
+          "_class" : "font-weight-bolder",
+          "separator_before" : false,
+          "separator_after" : true,
+          "action" : function (data) {
+            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
+          }
+        },
+        "New Workflow" : {
+          "label" : "New Workflow",
+          "_disabled" : (nodeType === "spatial") ? true : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
+          }
         }
       }
-      else if (o.type === 'nonspatial') {
-         return {
-          "Edit" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Edit",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
+      // convert options for spatial models
+      let spatialConvert = {
+        "Convert" : {
+          "label" : "Convert",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Convert to Model" : {
+              "label" : "Convert to Non Spatial",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toModel(o, "Spatial");
+              }
+            },
+            "Convert to Notebook" : {
+              "label" : "Convert to Notebook",
+              "_disabled" : true,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+              }
             }
-          },
-          "Convert" : {
-            "label" : "Convert",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "Convert to Spatial" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : true,
-                "label" : "To Spatial Model",
-                "action" : function (data) {
-                  self.toSpatial(o)
-                }
-              },
-              "Convert to Notebook" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "To Notebook",
-                "action" : function (data) {
-                  self.toNotebook(o)
-                }
-              },
-              "Convert to SBML" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "To SBML Model",
-                "action" : function (data) {
-                  self.toSBML(o)
-                }
-              },
-            }
-          },
-          "New Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "New Workflow",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
-            }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download",
-            "action" : function (data) {
-              self.getExportData(o, true, "file/json-data", null, "json");
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "model")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
-	      }
+          }
+        }
       }
-      else if (o.type === 'workflow') {
-        var disabled = !(o.original._status === "ready")
-        return {
-          "Open" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open",
-            "action" : function (data) {
+      // convert options for non-spatial models
+      let modelConvert = {
+        "Convert" : {
+          "label" : "Convert",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Convert to Spatial" : {
+              "label" : "To Spatial Model",
+              "_disabled" : true,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toSpatial(o)
+              }
+            },
+            "Convert to Notebook" : {
+              "label" : "To Notebook",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toNotebook(o)
+              }
+            },
+            "Convert to SBML" : {
+              "label" : "To SBML Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toSBML(o)
+              }
+            }
+          }
+        }
+      }
+      // For notebooks, workflows, sbml models, and other files
+      let open = {
+        "Open" : {
+          "label" : "Open",
+          "_disabled" : false,
+          "_class" : "font-weight-bolder",
+          "separator_before" : false,
+          "separator_after" : true,
+          "action" : function (data) {
+            if(nodeType === "workflow"){
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
-            }
-          },
-          "Start/Restart Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "Start/Restart Workflow",
-            "action" : function (data) {
-
-            }
-          },
-          "Stop Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "Stop Workflow",
-            "action" : function (data) {
-
-            }
-          },
-          "Model" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "label" : "Model",
-            "_disabled" : false,
-            "submenu" : {
-              "Edit" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : disabled,
-                "label" : " Edit",
-                "action" : function (data) {
-                  self.editWorkflowModel(o)
-                }
-              },
-              "Extract" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "Extract",
-                "action" : function (data) {
-                  self.duplicateFileOrDirectory(o, "wkfl_model")
-                }
-              }
-            }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download Full Workflow",
-            "action" : function (data) {
-              self.getExportData(o, true, "file/download-zip", "generate", "zip");
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate as new",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "workflow")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
-        }
-      }
-      else if (o.type === 'notebook') {
-        return {
-          "Open" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open",
-            "action" : function (data) {
-              window.open(path.join(app.getBasePath(), "notebooks", o.original._path));
-            }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download",
-            "action" : function (data) {
-              self.getExportData(o, true, "file/json-data", null, "json");
-      	    }
-      	  },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "file")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
-        }
-      }
-      else if (o.type === 'sbml-model') {
-        return {
-          "Open" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open File",
-            "action" : function (data) {
-              var filePath = o.original._path
-              window.open(path.join(app.getBasePath(), "edit", filePath), '_blank')
-            }
-          },
-          "Convert" : {
-            "label" : "Convert",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "Convert to Model" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "To Model",
-                "action" : function (data) {
-                  self.toModel(o, "SBML");
-                }
-              },
-            }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download",
-            "action" : function (data) {
-              self.getExportData(o, false, "file/download", null, "plain-text");
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "file")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
-        }
-      }
-      else {
-        return {
-          "Open" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open",
-            "action" : function (data) {
-              var openPath = path.join(app.getBasePath(), "view", o.original._path);
-              window.open(openPath, "_blank");
-            }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download as .zip",
-            "action" : function (data) {
-              if(o.original.text.endsWith('.zip')){
-                self.exportToZipFile(o);
+            }else{
+              if(nodeType === "notebook") {
+                var identifier = "notebooks"
+              }else if(nodeType === "sbml-model") {
+                var identifier = "edit"
               }else{
-                self.getExportData(o, true, "file/download-zip", "generate", "zip")
+                var identifier = "view"
+              }
+              window.open(path.join(app.getBasePath(), identifier, o.original._path));
+            }
+          }
+        }
+      }
+      // specific to workflows
+      let workflow = {
+        "Start/Restart Workflow" : {
+          "label" : (o.original._status === "ready") ? "Start Workflow" : "Restart Workflow",
+          "_disabled" : true,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+
+          }
+        },
+        "Stop Workflow" : {
+          "label" : "Stop Workflow",
+          "_disabled" : true,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+
+          }
+        },
+        "Model" : {
+          "label" : "Model",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Edit" : {
+              "label" : " Edit",
+              "_disabled" : !(o.original._status === "ready"),
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.editWorkflowModel(o)
+              }
+            },
+            "Extract" : {
+              "label" : "Extract",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.duplicateFileOrDirectory(o, "wkfl_model")
               }
             }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "file")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
+          }
         }
+      }
+      // Specific to sbml files
+      let sbml = {
+        "Convert" : {
+          "label" : "Convert",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Convert to Model" : {
+              "label" : "To Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toModel(o, "SBML");
+              }
+            }
+          }
+        }
+      }
+      if (o.type === 'root'){
+        return folder
+      }
+      if (o.type ===  'folder') {
+        return $.extend(folder, common)
+      }
+      if (o.type === 'spatial') {
+        return $.extend(model, spatialConvert, common)
+      }
+      if (o.type === 'nonspatial') {
+         return $.extend(model, modelConvert, common)
+      }
+      if (o.type === 'workflow') {
+        return $.extend(open, workflow, common)
+      }
+      if (o.type === 'notebook' || o.type === "other") {
+        return $.extend(open, common)
+      }
+      if (o.type === 'sbml-model') {
+        return $.extend(open, sbml, common)
       }
     }
     $(document).on('shown.bs.modal', function (e) {

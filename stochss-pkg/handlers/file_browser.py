@@ -135,23 +135,31 @@ class MoveFileAPIHandler(APIHandler):
         ----------
         '''
         user_dir = "/home/jovyan"
-        old_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
-        log.debug("Path to the file: {0}".format(old_path))
-        new_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
-        log.debug("Destination path: {0}".format(new_path))
+        src_path = self.get_query_argument(name="srcPath")
+        log.debug("Path to the file: {0}".format(src_path))
+        old_path = os.path.join(user_dir, src_path)
+        log.debug("Full path to the file: {0}".format(old_path))
+        dst_path = self.get_query_argument(name="dstPath")
+        log.debug("Destination path: {0}".format(dst_path))
+        new_path = os.path.join(user_dir, dst_path)
+        log.debug("Full destination path: {0}".format(new_path))
         try:
             if os.path.isdir(old_path):
-                move(old_path, new_path)
                 # If directory is wkfl and has been started, update wkfl model path
-                if old_path.endswith('.wkfl') and "RUNNING" in os.listdir(path=new_path):
-                    old_parent_dir = os.path.dirname(old_path)
-                    new_parent_dir = os.path.dirname(new_path)
-                    with open(os.path.join(new_path, "info.json"), "r+") as info_file:
+                if old_path.endswith('.wkfl') and "RUNNING" in os.listdir(path=old_path):
+                    old_parent_dir = os.path.dirname(src_path)
+                    log.debug("Old parent directory: {0}".format(old_parent_dir))
+                    new_parent_dir = os.path.dirname(dst_path)
+                    log.debug("New parent directory: {0}".format(new_parent_dir))
+                    with open(os.path.join(old_path, "info.json"), "r+") as info_file:
                         info = json.load(info_file)
+                        log.debug("Old wkfl info: {0}".format(info))
                         info['wkfl_model'] = info['wkfl_model'].replace(old_parent_dir, new_parent_dir)
                         info_file.seek(0)
+                        log.debug("New wkfl info: {0}".format(info))
                         json.dump(info, info_file)
                         info_file.truncate()
+                move(old_path, new_path)
             else:
                 os.rename(old_path, new_path)
             self.write("Success! {0} was moved to {1}.".format(old_path, new_path))

@@ -393,7 +393,11 @@ class ParameterSweep():
         self.res_path = os.path.join(wkfl_path, 'results')
         wkfl_name_elements = wkfl_path.split('/').pop().split('.')[0].split('_')
         try:
-            self.wkfl_timestamp = '_'.join(["",wkfl_name_elements[-2],wkfl_name_elements[-1]])
+            date, time = wkfl_name_elements[-2:]
+            if date.isdigit() and time.isdigit():
+                self.wkfl_timestamp = '_'.join(["",date,time])
+            else:
+                self.wkfl_timestamp = None
         except:
             self.wkfl_timestamp = None
 

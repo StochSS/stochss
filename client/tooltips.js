@@ -125,8 +125,9 @@ module.exports = {
     hybrid: "This hybrid deterministic-stochastic will produce a solution that is 'discrete-stochastic' for small population sizes and 'continuous-deterministic' "+
         "for large population sizes.",
 
-    chooseForMe: "Hybrid will be chosen based on Event, Rules, and other SBML model components or if the model is represented as Concentration.  Tau Leaping will be "+
-        "chosen if the Tau Tolerance is changed to a value other than 0.03.  SSA will be chosen if the model is represented as Population."
+    chooseForMe: "Hybrid will be selected based on Event, Rules, and other SBML model components or if the model is represented as Concentration or Hybrid "+
+        "Concentration/Population.  If the model is represented as population, the SSA will be selected.  This can be modified to a Tau-Leaping algorithm by "+
+        "changing the au-tolerance value from the default of 0.03."
   },
   parameterSweepSettings: {
     sweepType: "The number of parameters to sweep through.",

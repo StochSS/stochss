@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import json
 import shutil
 try:
     from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
@@ -82,7 +83,15 @@ def rename(path, new_name):
     old_name = old_name.replace('/','')
     new_name = new_name.replace('/','')
     new_path = new_path.replace(user_dir + '/', '')
-    
+
+    if path.endswith('.wkfl') and "RUNNING" in os.listdir(path=new_path):
+        with open(os.path.join(new_path, "info.json"), 'r+') as info_file:
+            info = json.load(info_file)
+            info['wkfl_model'] = info['wkfl_model'].replace(path, new_path)
+            info_file.seek(0)
+            json.dump(info, info_file)
+            info_file.truncate()
+
     if changed:
         message = "A file already exists with that name, {0} was renamed to {1} in order to prevent a file from being overwriten.".format(old_path.split('/').pop(), new_name)
     else:
