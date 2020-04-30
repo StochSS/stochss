@@ -10,13 +10,13 @@
 		"algorithm": "SSA",
 		"seed": -1,
 		"tauTol": 0.03,
-		"switchTol": 0.03
 	},
 	"modelSettings": {
 		"endSim": 20,
 		"timeStep": 0.05,
 		"volume": 1,
-		"realizations": 1
+		"realizations": 1,
+		"algorithm": ""
 	},
 	"parameterSweepSettings":{
 		"is1D":true,
