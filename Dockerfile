@@ -20,8 +20,6 @@ COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
 COPY --chown=jovyan:users . /stochss
 
-USER jovyan
-
 COPY --chown=jovyan:users stochss-logo.png /home/jovyan/.jupyter/custom/logo.png
 
 COPY --chown=jovyan:users custom.css /home/jovyan/.jupyter/custom/custom.css

@@ -2,10 +2,11 @@ body {
 
 }
 
-.quickstart.screenshot {
+img.quickstart {
   border: .5px solid black;
   display: block;
-  margin: auto;
+  padding: 10px;
+  margin: 2em auto;
 }
 
 .page {
