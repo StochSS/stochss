@@ -24,7 +24,7 @@
     "clientconfig": "^1.0.0",
     "domready": "^1.0.8",
     "getconfig": "^2.1.0",
-    "jquery": "^2.1.4",
+    "jquery": "^3.5.0",
     "katex": "^0.1.1",
     "three": "^0.71.0",
     "three-orbit-controls": "^69.0.4",
