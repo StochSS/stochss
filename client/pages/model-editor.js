@@ -32,7 +32,7 @@ let ModelEditor = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    var directory = document.URL.split('/models/edit').pop();
+    var directory = (new URLSearchParams(window.location.search)).get('path');
     var modelFile = directory.split('/').pop();
     var name = decodeURI(modelFile.split('.')[0]);
     var isSpatial = modelFile.split('.').pop().startsWith('s');

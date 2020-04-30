@@ -18,12 +18,7 @@ var FunctionDefinitions = require('./function-definitions');
 
 module.exports = Model.extend({
   url: function () {
-    return path.join(
-      app.getApiPath(),
-      "json-data",
-      this.for,
-      String(this.directory)
-    );
+    return path.join(app.getApiPath(), "file/json-data")+"?for="+this.for+"&path="+this.directory;
   },
   props: {
     is_spatial: 'boolean',

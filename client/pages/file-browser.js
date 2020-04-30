@@ -16,9 +16,9 @@ import initPage from './page.js';
 let ajaxData = {
   "url" : function (node) {
     if(node.parent === null){
-      return "stochss/models/browser-list/"
+      return path.join(app.getApiPath(), "file/browser-list")+"?path=none"
     }
-    return "stochss/models/browser-list" + node.original._path
+    return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
   },
   "dataType" : "json",
   "data" : function (node) {
@@ -66,7 +66,8 @@ let treeSettings = {
         var newDir = par.original._path
         var file = node.original._path.split('/').pop()
         var oldPath = node.original._path
-        var endpoint = path.join(app.getApiPath(), "/file/move", oldPath, '<--MoveTo-->', newDir, file)
+        let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
+        var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
         xhr({uri: endpoint}, function(err, response, body) {
           if(response.statusCode < 400) {
             node.original._path = path.join(newDir, file)
@@ -165,7 +166,6 @@ let FileBrowser = PageView.extend({
   },
   selectNode: function (node, fileName) {
     let self = this
-    console.log(Boolean(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)))
     if(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
       setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
     }else{
@@ -252,7 +252,7 @@ let FileBrowser = PageView.extend({
     let modal = $(modals.deleteFileHtml(fileType)).modal();
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
-      var endpoint = path.join(app.getApiPath(), "/file/delete", o.original._path)
+      var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
       xhr({uri: endpoint}, function(err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(o.parent);
@@ -271,17 +271,17 @@ let FileBrowser = PageView.extend({
   duplicateFileOrDirectory: function(o, type) {
     var self = this;
     var parentID = o.parent;
+    var queryStr = "?path="+o.original._path
     if(type === "directory"){
       var identifier = "directory/duplicate"
-    }else if(type === "workflow"){
-      let timeStamp = this.getTimeStamp()
-      var identifier = path.join("workflow/duplicate", type, timeStamp)
-    }else if(type === "wkfl_model"){
-      var identifier = path.join("workflow/duplicate", type, "None")
+    }else if(type === "workflow" || type === "wkfl_model"){
+      var timeStamp = type === "workflow" ? this.getTimeStamp() : "None"
+      var identifier = "workflow/duplicate"
+      queryStr = queryStr.concat("&target="+type+"&stamp="+timeStamp)
     }else{
-      var identifier = "model/duplicate"
+      var identifier = "file/duplicate"
     }
-    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
@@ -332,7 +332,7 @@ let FileBrowser = PageView.extend({
   toSpatial: function (o) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "/model/to-spatial", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "model/to-spatial")+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, 
       function (err, response, body) {
         if(response.statusCode < 400) {
@@ -351,10 +351,11 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     if(from === "Spatial"){
-      var endpoint = path.join(app.getApiPath(), "/spatial/to-model", o.original._path);
+      var identifier = "spatial/to-model"
     }else{
-      var endpoint = path.join(app.getApiPath(), "sbml/to-model", o.original._path);
+      var identifier = "sbml/to-model"
     }
+    let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
@@ -376,7 +377,7 @@ let FileBrowser = PageView.extend({
   },
   toNotebook: function (o) {
     let self = this
-    var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
+    var endpoint = path.join(app.getApiPath(), "model/to-notebook")+"?path="+o.original._path
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400){
         var node = $('#models-jstree').jstree().get_node(o.parent)
@@ -394,7 +395,7 @@ let FileBrowser = PageView.extend({
   toSBML: function (o) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "model/to-sbml", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         var node = $('#models-jstree').jstree().get_node(parentID);
@@ -416,7 +417,7 @@ let FileBrowser = PageView.extend({
     extensionWarning.collapse('show')
     $('#models-jstree').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
-        var endpoint = path.join(app.getApiPath(), "/file/rename", o.original._path, "<--change-->", node.text)
+        var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+node.text
         xhr({uri: endpoint, json: true}, function (err, response, body){
           if(response.statusCode < 400) {
             if(body.changed) {
@@ -443,9 +444,15 @@ let FileBrowser = PageView.extend({
   hideNameWarning: function () {
     $(this.queryByHook('rename-warning')).collapse('hide')
   },
-  getExportData: function (o, isJSON, identifier, dataType) {
+  getExportData: function (o, isJSON, identifier, action, dataType) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    var queryStr = "?path="+o.original._path
+    if(dataType === "json"){
+      queryStr = queryStr.concat("&for=None")
+    }else if(dataType === "zip"){
+      queryStr = queryStr.concat("&action="+action)
+    }
+    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(dataType === "json") {
@@ -457,8 +464,6 @@ let FileBrowser = PageView.extend({
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
-          self.exportToZipFile(body.Path)
-        }else if(dataType === "csv") {
           self.exportToZipFile(body.Path)
         }else{
           self.exportToFile(body, o.original.text);
@@ -513,17 +518,17 @@ let FileBrowser = PageView.extend({
     let modelName;
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
-        var parentPath = "/"
-        if(o && o.original){
+        var parentPath = ""
+        if(o && o.original && o.original.type !== "root"){
           parentPath = o.original._path
         }
         if(isModel) {
           let modelName = input.value + '.mdl';
-          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit', parentPath, modelName);
+          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+path.join(parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
-          let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
+          let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
               if(o){//directory was created with context menu option
@@ -538,6 +543,7 @@ let FileBrowser = PageView.extend({
               }
             }else{//new directory not created no need to refresh
               body = JSON.parse(body)
+              let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
             }
           });
           modal.modal('hide')
@@ -556,7 +562,7 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
   },
   editWorkflowModel: function (o) {
-    let endpoint = path.join(app.getApiPath(), "workflow/edit-model", o.original._path)
+    let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(body.error){
@@ -564,7 +570,7 @@ let FileBrowser = PageView.extend({
           let message = body.error
           let modal = $(modals.duplicateWorkflowHtml(title, message)).modal()
         }else{
-          window.location.href = path.join(app.routePrefix, "models/edit", body.file)
+          window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file
         }
       }
     });
@@ -744,7 +750,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download as .zip",
             "action" : function (data) {
-              self.getExportData(o, true, "file/download-zip/generate", "zip");
+              self.getExportData(o, true, "file/download-zip", "generate", "zip");
             }
           },
           "Rename" : {
@@ -785,7 +791,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
             }
           },
           "Convert" : {
@@ -819,7 +825,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : true,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
             }
           },
           "Rename" : {
@@ -860,7 +866,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Edit",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
             }
           },
           "Convert" : {
@@ -904,7 +910,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "New Workflow",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
             }
           },
           "Download" : {
@@ -913,7 +919,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getExportData(o, true, "json-data", "json");
+              self.getExportData(o, true, "file/json-data", null, "json");
             }
           },
           "Rename" : {
@@ -955,7 +961,7 @@ let FileBrowser = PageView.extend({
             "_class" : "font-weight-bolder",
             "label" : "Open",
             "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", o.original._path);
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
             }
           },
           "Start/Restart Workflow" : {
@@ -1008,7 +1014,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download Full Workflow",
             "action" : function (data) {
-              self.getExportData(o, true, "file/download-zip/generate", "zip");
+              self.getExportData(o, true, "file/download-zip", "generate", "zip");
             }
           },
           "Rename" : {
@@ -1058,7 +1064,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getExportData(o, true, "json-data", "json");
+              self.getExportData(o, true, "file/json-data", null, "json");
       	    }
       	  },
           "Rename" : {
@@ -1126,7 +1132,7 @@ let FileBrowser = PageView.extend({
             "_disabled" : false,
             "label" : "Download",
             "action" : function (data) {
-              self.getExportData(o, false, "file/download", "plain-text");
+              self.getExportData(o, false, "file/download", null, "plain-text");
             }
           },
           "Rename" : {
@@ -1180,7 +1186,7 @@ let FileBrowser = PageView.extend({
               if(o.original.text.endsWith('.zip')){
                 self.exportToZipFile(o);
               }else{
-                self.getExportData(o, true, "file/download-zip/generate", "zip")
+                self.getExportData(o, true, "file/download-zip", "generate", "zip")
               }
             }
           },
@@ -1245,7 +1251,7 @@ let FileBrowser = PageView.extend({
       var node = $('#models-jstree').jstree().get_node(e.target)
       var _path = node.original._path;
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-        window.location.href = path.join(app.getBasePath(), "stochss/models/edit", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
       }else if(file.endsWith('.ipynb')){
         var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
         window.open(notebookPath, '_blank')
@@ -1253,11 +1259,11 @@ let FileBrowser = PageView.extend({
         var openPath = path.join(app.getBasePath(), "edit", _path)
         window.open(openPath, '_blank')
       }else if(file.endsWith('.wkfl')){
-        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }else if(node.type === "other"){
-        var openPath = path.join(app.getBasePath(), "edit", _path);
+        var openPath = path.join(app.getBasePath(), "view", _path);
         window.open(openPath, "_blank");
       }
     });

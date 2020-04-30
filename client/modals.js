@@ -176,6 +176,11 @@ module.exports = {
 
         return templates.message(modalID, title, error)
     },
+    newDirectoryErrorHtml : (title, error) => {
+        let modalID = "newDirectoryErrorModal"
+
+        return templates.message(modalID, title, error)
+    },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;
         let populationDescription = `Population - Species will only be represented using discrete (integer count) values.`;

@@ -38,9 +38,12 @@ let WorkflowManager = PageView.extend({
         $(self.queryByHook("model-path")).find('input').focus();
     });
     this.url = decodeURI(document.URL)
-    var typeAndPath = this.url.split('/workflow/edit/').pop()
+    let urlParams = new URLSearchParams(window.location.search)
+    let type = urlParams.get('type');
+    let wkflPath = urlParams.get('path');
     var stamp = this.getCurrentDate();
-    var endpoint = path.join(app.getApiPath(), "workflow/load-workflow", stamp, typeAndPath)
+    let queryStr = "?stamp="+stamp+"&type="+type+"&path="+wkflPath
+    var endpoint = path.join(app.getApiPath(), "workflow/load-workflow")+queryStr
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       if(resp.statusCode < 400) {
         self.type = body.type
@@ -53,7 +56,6 @@ let WorkflowManager = PageView.extend({
         self.startTime = body.startTime
         self.wkflParPath = body.wkflParPath
         self.wkflPath = path.join(self.wkflParPath, self.wkflDirectory)
-        console.log(self.status, self.startTime)
         self.buildWkflModel(body)
         self.renderSubviews();
       }
@@ -208,7 +210,7 @@ let WorkflowManager = PageView.extend({
   },
   getWorkflowStatus: function () {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "/workflow/workflow-status", this.wkflPath);
+    var endpoint = path.join(app.getApiPath(), "workflow/workflow-status")+"?path="+this.wkflPath;
     xhr({uri: endpoint}, function (err, response, body) {
       if(self.status !== body )
         self.status = body;
@@ -219,6 +221,7 @@ let WorkflowManager = PageView.extend({
         self.renderInfoView();
       }
       if(self.status === 'complete') {
+        self.renderWorkflowEditor();
         self.renderResultsView();
         self.renderModelViewer();
       }
@@ -234,7 +237,6 @@ let WorkflowManager = PageView.extend({
     }
     this.wkflDirectory = this.workflowName + ".wkfl"
     this.wkflPath = path.join(this.wkflParPath, this.wkflDirectory)
-    console.log(this.wkflPath)
   },
   updateWkflModel: function (e) {
     let self = this;
