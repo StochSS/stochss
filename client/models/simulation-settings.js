@@ -16,13 +16,24 @@ module.exports = State.extend({
   },
   letUsChooseForYou: function () {
     var defaultMode = this.parent.defaultMode;
+    if(defaultMode === "dynamic"){
+      var species = this.parent.species
+      var discreteSpecies = species.filter(function (specie) {
+        console.log(specie.mode)
+        if(specie.mode === "discrete")
+          return specie
+      });
+      if(discreteSpecies.length === species.length)
+        defaultMode = "discrete"
+    }
     var numEvents = this.parent.eventsCollection.length;
     var numRules = this.parent.rules.length;
+    var numFuncDef = this.parent.functionDefinitions.length;
     var tTol = this.tauTol
     var aTol = this.absoluteTol
     var rTol = this.relativeTol
 
-    if(numEvents || numRules || defaultMode !== 'discrete' || rTol !== 0.03 || aTol !== 0.03){
+    if(numEvents || numRules || numFuncDef || rTol !== 1e-3 || aTol !== 1e-6 || defaultMode !== 'discrete'){
       this.algorithm = "Hybrid-Tau-Leaping";
     }else if(tTol !== 0.03){
       this.algorithm = "Tau-Leaping";

@@ -923,14 +923,11 @@ let FileBrowser = PageView.extend({
       if (o.type === 'workflow') {
         return $.extend(open, workflow, common)
       }
-      if (o.type === 'notebook') {
+      if (o.type === 'notebook' || o.type === "other") {
         return $.extend(open, common)
       }
       if (o.type === 'sbml-model') {
         return $.extend(open, sbml, common)
-      }
-      if (o.type === "other") {
-        return $.extend(open, common)
       }
     }
     $(document).on('shown.bs.modal', function (e) {
