@@ -37,7 +37,7 @@ module.exports = View.extend({
     this.saveModel(this.runModel.bind(this));
   },
   clickStartWorkflowHandler: function (e) {
-    window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", this.model.directory);
+    window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+this.model.directory;
   },
   togglePreviewWorkflowBtn: function () {
     var numSpecies = this.model.species.length;
@@ -90,7 +90,8 @@ module.exports = View.extend({
     this.running();
     var el = this.parent.queryByHook('model-run-container')
     var model = this.model
-    var endpoint = path.join(app.getApiPath(), '/models/run/', 'start', 'none', model.directory);
+    let queryStr = "?cmd=start&outfile=none&path="+model.directory
+    var endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
     var self = this;
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       self.outfile = body.Outfile
@@ -120,7 +121,8 @@ module.exports = View.extend({
     var self = this;
     var model = this.model;
     setTimeout(function () {
-      endpoint = path.join(app.getApiPath(), '/models/run/', 'read', self.outfile, model.directory);
+      let queryStr = "?cmd=read&outfile="+self.outfile+"&path="+model.directory
+      endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
       xhr({ uri: endpoint, json: true}, function (err, response, body) {
         var data = body.Results;
         if(response.statusCode >= 400){

@@ -62,7 +62,7 @@ def buildChild(text, f_type, p_path):
     p_path : str
         Path from the user directory to the child's parent
     '''
-    if p_path == "/": # The child in the top level pf the JSTree
+    if p_path == "none": # The child in the top level of the JSTree
         _path = text
     else:
         _path = path.join(p_path, text) # The child is in a sub-leve of the tree
@@ -107,14 +107,14 @@ def ls(p_path):
     p_path : str
         The path from the user directory to the target directory.
     '''
-    user_dir = '/home/jovyan/'
+    user_dir = '/home/jovyan'
 
-    if p_path == "/":
+    if p_path == "none":
         full_path = user_dir
     else:
         full_path = path.join(user_dir, p_path)
     data = getFileSystemData(full_path, p_path)
-    if p_path == "/":
+    if p_path == "none":
         data = buildRoot(data)
     return json.dumps(data)
     

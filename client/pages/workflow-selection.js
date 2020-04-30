@@ -16,6 +16,7 @@ import initPage from './page.js';
 let workflowSelection = PageView.extend({
   template: template,
   events: {
+    "click [data-hook=ensemble-simulation]" : "notebookWorkflow",
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=model-inference]" : "notebookWorkflow",
@@ -23,6 +24,7 @@ let workflowSelection = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this
+    this.modelDir = (new URLSearchParams(window.location.search)).get('path');
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -31,7 +33,6 @@ let workflowSelection = PageView.extend({
 
        });
     });
-    this.modelDir = decodeURI(document.URL.split('/workflow/selection').pop());
     this.modelFile = this.modelDir.split('/').pop().split('.').shift();
     var isSpatial = this.modelDir.endsWith('.smdl');
     this.model = new Model({
@@ -60,10 +61,15 @@ let workflowSelection = PageView.extend({
     this.toNotebook(type);
   },
   toNotebook: function (type) {
-    var endpoint = path.join(app.getApiPath(), "/workflow/notebook", type, this.modelDir)
+    var endpoint = path.join(app.getApiPath(), "/workflow/notebook")+"?type="+type+"&path="+this.modelDir
     xhr({uri:endpoint}, function (err, response, body) {
       if(response.statusCode < 400){
-        var notebookPath = path.join(app.getBasePath(), "notebooks", body)
+        if(type === "gillespy"){
+          body = JSON.parse(body)
+          var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
+        }else{
+          var notebookPath = path.join(app.getBasePath(), "notebooks", body)
+        }
         window.open(notebookPath, "_blank")
       }else{
         body = JSON.parse(body)

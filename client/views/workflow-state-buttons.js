@@ -45,7 +45,7 @@ module.exports = View.extend({
   clickEditModelHandler: function (e) {
     var self = this
     this.saveModel(function () {
-      window.location.href = path.join(app.getBasePath(), "stochss/models/edit", self.model.directory);
+      window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+self.model.directory;
     });
   },
   saveModel: function (cb) {
@@ -102,7 +102,6 @@ module.exports = View.extend({
     let runQuery = JSON.stringify(query)
     var runEndpoint = path.join(app.getApiPath(), '/workflow/run-workflow') + "?data=" + runQuery;
     this.saving()
-    console.log(initQuery, runQuery, typeof query)
     xhr({uri: initEndpoint}, function (err, response, body) {
       if(response.statusCode < 400){
         self.saved()

@@ -28,7 +28,7 @@ class JsonFileAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, purpose, file_path):
+    async def get(self):
         '''
         Retrieve model data from User's file system if it exists and 
         create new models using a model template if they don't.  Also
@@ -36,10 +36,12 @@ class JsonFileAPIHandler(APIHandler):
 
         Attributes
         ----------
-        model_path : str
-            Path to json file from the user directory.
         '''
+        purpose = self.get_query_argument(name="for")
+        file_path = self.get_query_argument(name="path")
         log.debug("Path to the file: {0}".format(file_path))
+        if file_path.startswith('/'):
+            file_path = file_path.replace('/', '', 1)
         full_path = os.path.join('/home/jovyan', file_path)
         log.debug("Full path to the file: {0}".format(full_path))
         self.set_header('Content-Type', 'application/json')
@@ -83,17 +85,18 @@ class JsonFileAPIHandler(APIHandler):
 
         
     @web.authenticated
-    async def post(self, purpose, model_path):
+    async def post(self):
         '''
         Send/Save model data to user container.
 
         Attributes
         ----------
-        model_path : str
-            Path to target  model within user pod container.
         '''
+        purpose = self.get_query_argument(name="for")
+        model_path = self.get_query_argument(name="path")
+        if model_path.startswith('/'):
+            model_path = model_path.replace('/', '', 1)
         log.debug("Path to the model: {0}".format(model_path))
-        # model_path = model_path.replace(" ", "\ ")
         log.debug("Path with escape char spaces: {0}".format(model_path))
         full_path = os.path.join('/home/jovyan', model_path)
         log.debug("Full path to the model: {0}".format(full_path))
@@ -118,21 +121,17 @@ class RunModelAPIHandler(APIHandler):
     ########################################################################
     '''
     @web.authenticated
-    async def get(self, run_cmd, outfile, model_path):
+    async def get(self):
         '''
         Run the model with a 5 second timeout.  Results are sent to the 
         client as a JSON object.
 
         Attributes
         ----------
-        run_cmd : str
-            command to be executed by the run model script (start) for running
-            a model, (read) for reading the results of a model run.
-        outfile : str
-            The temporary file for the results
-        model_path : str
-            Path to target model within user pod container.
         '''
+        run_cmd = self.get_query_argument(name="cmd")
+        outfile = self.get_query_argument(name="outfile")
+        model_path = self.get_query_argument(name="path")
         log.debug("Run command sent to the script: {0}".format(run_cmd))
         log.debug("Path to the model: {0}".format(model_path))
         self.set_header('Content-Type', 'application/json')

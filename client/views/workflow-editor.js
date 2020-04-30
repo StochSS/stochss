@@ -4,7 +4,9 @@ var $ = require('jquery');
 var View = require('ampersand-view');
 var InputView = require('./input');
 var SimSettingsView = require('./simulation-settings');
+var SimulationSettingsViewer = require('./simulation-settings-viewer');
 var ParamSweepSettingsView = require('./parameter-sweep-settings');
+var ParameterSweepSettingsViewer = require('./parameter-sweep-settings-viewer');
 var WorkflowStateButtonsView = require('./workflow-state-buttons');
 //templates
 var template = require('../templates/includes/workflowEditor.pug');
@@ -12,6 +14,7 @@ var template = require('../templates/includes/workflowEditor.pug');
 module.exports = View.extend({
   template: template,
   events: {
+    'click [data-hook=collapse-settings]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -31,6 +34,16 @@ module.exports = View.extend({
         this.renderParameterSweepSettingsView()
       }
       this.renderWorkflowStateButtons()
+    }else{
+      this.collapseContainer()
+      $(this.queryByHook('collapse-settings')).prop('disabled', true);
+      this.renderSimulationSettingViewer()
+      if(this.type === "parameterSweep"){
+        this.renderParameterSweepSettingsViewer()
+      }
+    }
+    if(this.status === "complete"){
+      this.enableCollapseButton();
     }
   },
   registerRenderSubview: function (view, hook) {
@@ -43,6 +56,20 @@ module.exports = View.extend({
       model: this.model.simulationSettings,
     });
     this.registerRenderSubview(simulationSettingsView, 'sim-settings-container');
+  },
+  renderSimulationSettingViewer: function () {
+    let simulationSettingsViewer = new SimulationSettingsViewer({
+      parent: this,
+      model: this.model.simulationSettings,
+    })
+    this.registerRenderSubview(simulationSettingsViewer, 'sim-settings-container');
+  },
+  renderParameterSweepSettingsViewer: function () {
+    let parameterSweepSettingsViewer = new ParameterSweepSettingsViewer({
+      parent: this,
+      model: this.model.parameterSweepSettings,
+    });
+    this.registerRenderSubview(parameterSweepSettingsViewer, 'param-sweep-settings-container');
   },
   renderParameterSweepSettingsView: function () {
     let parameterSweepSettingsView = new ParamSweepSettingsView({
@@ -92,7 +119,15 @@ module.exports = View.extend({
     }).length) // if true child exits within the model
     return exists
   },
+  changeCollapseButtonText: function () {
+    var text = $(this.queryByHook('collapse-settings')).text();
+    text === '+' ? $(this.queryByHook('collapse-settings')).text('-') : $(this.queryByHook('collapse-settings')).text('+');
+  },
   collapseContainer: function () {
-    $(this.queryByHook("workflow-editor-container")).collapse();
+    $(this.queryByHook("workflow-editor-container")).collapse()
+    this.changeCollapseButtonText()
+  },
+  enableCollapseButton: function () {
+    $(this.queryByHook('collapse-settings')).prop('disabled', false);
   },
 });

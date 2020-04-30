@@ -31,6 +31,12 @@ class HomeHandler(PageHandler):
     self.render("stochss-home.html", server_path=self.get_server_path())
 
 
+class QuickstartHandler(PageHandler):
+  @web.authenticated
+  async def get(self):
+    self.render("stochss-quickstart.html", server_path=self.get_server_path())
+
+
 class ModelBrowserHandler(PageHandler):
   @web.authenticated
   async def get(self):
@@ -39,19 +45,19 @@ class ModelBrowserHandler(PageHandler):
 
 class ModelEditorHandler(PageHandler):
   @web.authenticated
-  async def get(self, model_name):
+  async def get(self):
     self.render("stochss-model-editor.html", server_path=self.get_server_path())
 
 
 class WorkflowSelectionHandler(PageHandler):
   @web.authenticated
-  async def get(self, model_name):
+  async def get(self):
     self.render("stochss-workflow-selection.html", server_path=self.get_server_path())
 
 
 class WorkflowEditorHandler(PageHandler):
   @web.authenticated
-  async def get(self, model_name):
+  async def get(self):
     self.render("stochss-workflow-manager.html", server_path=self.get_server_path())
 
 

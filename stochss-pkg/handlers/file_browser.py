@@ -31,15 +31,14 @@ class ModelBrowserFileList(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Reads the content of a directory and returns a jstree dictionary. 
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the target directory.
         '''
+        path = self.get_query_argument(name="path")
         log.info("Path to the directory: {0}".format(path))
         try:
             output = ls(path)
@@ -62,16 +61,15 @@ class ModelToNotebookHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Runs the convert_to_notebook function from the convert_to_notebook script
         to build a Jupyter Notebook version of the model and write it to a file.
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the target model.
         '''
+        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
         try:
             log.debug("Path to the model file: {0}".format(path))
@@ -93,16 +91,14 @@ class DeleteFileAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Removes a single file or recursively remove a directory and its contents.
 
         Attributes
         ----------
-        path : str
-            Path to removal target.
-
         '''
+        path = self.get_query_argument(name="path")
         file_path = os.path.join('/home/jovyan', path)
         log.debug("Deleting  path: {0}".format(file_path))
         try:
@@ -131,35 +127,39 @@ class MoveFileAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, data):
+    async def get(self):
         '''
         Moves a file or a directory and its contents to a new location.
 
         Attributes
         ----------
-        data : str
-            Data string containing old and new locations of target file.
-
         '''
-        user_dir = "/home/jovyan/"
-        log.debug("File path and dest path: {0}".format(data))
-        old_path = os.path.join(user_dir, "{0}".format(data.split('/<--MoveTo-->/')[0]))
-        log.debug("Path to the file: {0}".format(old_path))
-        new_path = os.path.join(user_dir, "{0}".format(data.split('/<--MoveTo-->/').pop()))
-        log.debug("Destination path: {0}".format(new_path))
+        user_dir = "/home/jovyan"
+        src_path = self.get_query_argument(name="srcPath")
+        log.debug("Path to the file: {0}".format(src_path))
+        old_path = os.path.join(user_dir, src_path)
+        log.debug("Full path to the file: {0}".format(old_path))
+        dst_path = self.get_query_argument(name="dstPath")
+        log.debug("Destination path: {0}".format(dst_path))
+        new_path = os.path.join(user_dir, dst_path)
+        log.debug("Full destination path: {0}".format(new_path))
         try:
             if os.path.isdir(old_path):
-                move(old_path, new_path)
                 # If directory is wkfl and has been started, update wkfl model path
-                if old_path.endswith('.wkfl') and "RUNNING" in os.listdir(path=new_path):
-                    old_parent_dir = os.path.dirname(old_path)
-                    new_parent_dir = os.path.dirname(new_path)
-                    with open(os.path.join(new_path, "info.json"), "r+") as info_file:
+                if old_path.endswith('.wkfl') and "RUNNING" in os.listdir(path=old_path):
+                    old_parent_dir = os.path.dirname(src_path)
+                    log.debug("Old parent directory: {0}".format(old_parent_dir))
+                    new_parent_dir = os.path.dirname(dst_path)
+                    log.debug("New parent directory: {0}".format(new_parent_dir))
+                    with open(os.path.join(old_path, "info.json"), "r+") as info_file:
                         info = json.load(info_file)
+                        log.debug("Old wkfl info: {0}".format(info))
                         info['wkfl_model'] = info['wkfl_model'].replace(old_parent_dir, new_parent_dir)
                         info_file.seek(0)
+                        log.debug("New wkfl info: {0}".format(info))
                         json.dump(info, info_file)
                         info_file.truncate()
+                move(old_path, new_path)
             else:
                 os.rename(old_path, new_path)
             self.write("Success! {0} was moved to {1}.".format(old_path, new_path))
@@ -184,17 +184,15 @@ class DuplicateModelHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Creates a copy of a file with a unique name and stores it in the same 
         directory as the original.
 
         Attributes
         ----------
-        path : str
-            Path to target model.
-
         '''
+        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
         log.debug("Copying file: {0}".format(path))
         try:
@@ -216,17 +214,15 @@ class DuplicateDirectoryHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Creates a copy of a directory and its contents with a unique name and 
         stores it in the same parent directory as the original.
 
         Attributes
         ----------
-        path : str
-            Path to target directory.
-
         '''
+        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
         log.debug("Path to the file: {0}".format(path))
         try:
@@ -248,7 +244,7 @@ class RenameAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, data):
+    async def get(self):
         '''
         Rename a file or directory.  If the file or directory already exists
         increment the file name using '(x)' naming convention to get a unique 
@@ -256,12 +252,9 @@ class RenameAPIHandler(APIHandler):
 
         Attributes
         ----------
-        data : str
-            string of data containing rename information.
-
         '''
-        log.debug("Renaming file: {0}".format(data))
-        path, new_name = data.split('/<--change-->/')
+        path = self.get_query_argument(name="path")
+        new_name = self.get_query_argument(name="name")
         log.debug("Path to the file or directory: {0}".format(path))
         log.debug("New filename: {0}".format(new_name))
         self.set_header('Content-Type', 'application/json')
@@ -284,17 +277,15 @@ class ConvertToSpatialAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Creates a spatial model file with a unique name from a model file and 
         stores it in the same directory as the original.
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the model.
-
         '''
+        path = self.get_query_argument(name="path")
         log.debug("Converting non-spatial model to spatial model: {0}".format(path))
         self.set_header('Content-Type', 'application/json')
         try:
@@ -316,17 +307,15 @@ class ConvertToModelAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Creates a model file with a unique name from a spatial model file and 
         stores it in the same directory as the original.
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the spatial model.
-
         '''
+        path = self.get_query_argument(name="path")
         log.debug("Converting spatial model to non-spatial model: {0}".format(path))
         self.set_header('Content-Type', 'application/json')
         try:
@@ -348,17 +337,15 @@ class ModelToSBMLAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Create a SBML Model file with a unique name from a model file and 
         store it in the same directory as the original.
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the target model file.
-
         '''
+        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
         log.debug("Converting to SBML: {0}".format(path))
         try:
@@ -380,17 +367,15 @@ class SBMLToModelAPIHandler(APIHandler):
     ##############################################################################
     '''
 
-    async def get(self, path):
+    async def get(self):
         '''
         Creates a StochSS model with a unique name from an sbml model and 
         store it in the same directory as the original.
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the target sbml file.
-
         '''
+        path = self.get_query_argument(name="path")
         log.debug("Converting SBML: {0}".format(path))
         template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
         log.debug("Using model template: {0}".format(template_path))
@@ -417,16 +402,14 @@ class DownloadAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, path):
+    async def get(self):
         '''
         Read and return plain text files.
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the target sbml file.
-
         '''
+        path = self.get_query_argument(name="path")
         log.debug("Path to the model: {0}".format(path))
         full_path = os.path.join("/home/jovyan", path)
         log.debug("Path to the model on disk: {0}".format(full_path))
@@ -450,7 +433,7 @@ class DownloadZipFileAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, action, path):
+    async def get(self):
         '''
         Read and download a zip file or generate a zip file from a directory or 
         file and then download.  Generated zip files are stored in the targets 
@@ -458,10 +441,9 @@ class DownloadZipFileAPIHandler(APIHandler):
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the target file or directory.
-
         '''
+        path = self.get_query_argument(name="path")
+        action = self.get_query_argument(name="action")
         log.debug("Path to the model: {0}".format(path))
         log.debug("Action: {0}".format(action))
         if action == "download":
@@ -493,17 +475,15 @@ class CreateDirectoryHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, directories):
+    async def get(self):
         '''
         Creates a single directory or if the path od directories contains other
         directories that do not exist, a path of directories.
 
         Attributes
         ----------
-        directories : str
-            Directory or path of directories to be created if needed.
-
         '''
+        directories = self.get_query_argument(name="path")
         log.debug("Path of directories: {0}".format(directories))
         full_path = os.path.join("/home/jovyan", directories)
         log.debug("Full path of directories: {0}".format(full_path))
@@ -562,18 +542,17 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    async def get(self, target, time_stamp, path):
+    async def get(self):
         '''
-        Creates a duplicate of the model in the target workflow in its parent
-        directory.  Creates a new workflow that uses the same model and has 
+        Creates a new workflow that uses the same model and has 
         the same type as the target workflow in its parent directory.
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the target workflow.
-
         '''
+        path = self.get_query_argument(name="path")
+        target = self.get_query_argument(name="target")
+        time_stamp = self.get_query_argument(name="stamp")
         log.debug("Path to the workflow: {0}".format(path))
         log.debug("The {0} is being copied".format(target))
         if time_stamp == "None":
@@ -602,21 +581,19 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
     ##############################################################################
     '''
 
-    async def get(self, path):
+    async def get(self):
         '''
         Returns the path to the model used for the workflow to allow the user 
         to edit the model.  If the model doesn't exist a 404 response is sent.
 
         Attributes
         ----------
-        path : str
-            Path from the user directory to the target workflow.
-
         '''
         from json.decoder import JSONDecodeError
 
         user_dir = "/home/jovyan"
 
+        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
         log.debug("The path to the workflow: {0}".format(path))
         full_path = os.path.join(user_dir, path, "info.json")
@@ -625,7 +602,7 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
             with open(full_path, "r") as info_file:
                 info = json.load(info_file)
             log.debug("Workflow info: {0}".format(info))
-            model_path = info['model']
+            model_path = info['source_model']
             log.debug("Path to the workflow's model: {0}".format(model_path))
             resp = {"file":model_path.replace(user_dir + "/", "")}
             if not os.path.exists(os.path.join(user_dir, model_path)):

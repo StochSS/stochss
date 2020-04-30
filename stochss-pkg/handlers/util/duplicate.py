@@ -161,14 +161,20 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
         resp = {"message":"A copy of the model in {0} has been created".format(wkfl_path),"mdlPath":model_path,"File":model_file}
     else:
         # Get base name for new workflow name (current workflow name - timestamp)
-        wkfl_base_name = '_'.join(full_path.split('/').pop().split('_')[:-2])
+        wkfl_base_name = full_path.split('/').pop().split('.')[0]
+        try:
+            date, time = wkfl_base_name.split('_')[-2:]
+            if date.isdigit() and time.isdigit():
+                wkfl_base_name = '_'.join(wkfl_base_name.split('_')[:-2])
+        except:
+            pass
         # Make new workflow path in parent directory
         new_wkfl_dir = ''.join([wkfl_base_name, time_stamp, ".wkfl"])
         new_wkfl_path = path.join(parent_dir, new_wkfl_dir)
 
         new_wkfl = workflows[data['type']](new_wkfl_path, model_path)
         os.mkdir(new_wkfl_path)
-        save_new_workflow(new_wkfl, data['type'], True, False)
+        save_new_workflow(new_wkfl, data['type'], False)
         if not path.exists(new_wkfl.wkfl_mdl_path):
             copyfile(org_wkfl.wkfl_mdl_path, new_wkfl.wkfl_mdl_path)
 
