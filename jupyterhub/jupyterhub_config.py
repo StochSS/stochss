@@ -118,6 +118,15 @@ c.JupyterHub.hub_ip = os.environ.get('DOCKER_HUB_IMAGE')
 #  See also `hub_ip` for the ip and `hub_bind_url` for setting the full bind URL.
 c.JupyterHub.hub_port = 8080
 
+## Services managed by JupyterHub
+c.JupyterHub.services = [
+    {
+        'name': 'cull-idle',
+        'admin': True,
+        'command': [sys.executable, '/srv/jupyterhub/cull_idle_servers.py', '--timeout=1'],
+    }
+]
+
 #------------------------------------------------------------------------------
 # Dockerspawner configuration
 #------------------------------------------------------------------------------
@@ -183,7 +192,7 @@ c.Spawner.default_url = '/stochss/models'
 #  limit to work.** The default spawner, `LocalProcessSpawner`, does **not**
 #  implement this support. A custom spawner **must** add support for this setting
 #  for it to be enforced.
-c.Spawner.mem_limit = 1G
+c.Spawner.mem_limit = '1G'
 
 ## Maximum number of cpu-cores a single-user notebook server is allowed to use.
 #  
