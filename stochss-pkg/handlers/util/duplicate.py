@@ -164,7 +164,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
         wkfl_base_name = full_path.split('/').pop().split('.')[0]
         try:
             date, time = wkfl_base_name.split('_')[-2:]
-            if date.isDigit() and time.isDigit():
+            if date.isdigit() and time.isdigit():
                 wkfl_base_name = '_'.join(wkfl_base_name.split('_')[:-2])
         except:
             pass
