@@ -11,7 +11,7 @@ module.exports = {
   },
   output: {
     filename: 'stochss-[name].bundle.js',
-    path: path.resolve(__dirname, "stochss-pkg/dist")
+    path: path.resolve(__dirname, "stochss/dist")
   },
   devtool: 'inline-source-map',
   plugins: [

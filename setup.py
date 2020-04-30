@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="stochss-pkg",
+    name="stochss",
     version="0.0.1",
     author="Matthew Geiger",
     author_email="mgeiger@unca.edu",

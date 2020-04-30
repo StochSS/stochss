@@ -43,7 +43,7 @@ import os.path
 #  be used to enable and disable the loading ofthe extensions. The extensions
 #  will be loaded in alphabetical order.
 c.NotebookApp.nbserver_extensions = {
-    'stochss-pkg.handlers' : True
+    'stochss' : True
 }
 
 ## Extra paths to search for serving static files.
@@ -54,7 +54,7 @@ c.NotebookApp.nbserver_extensions = {
 # This is also where we put stochss page bundles
 c.NotebookApp.extra_static_paths = [
     # This entry comes first
-    os.path.realpath('/stochss/stochss-pkg/dist')
+    os.path.realpath('/stochss/stochss/dist')
 ]
 
 ## Disable cross-site-request-forgery protection
