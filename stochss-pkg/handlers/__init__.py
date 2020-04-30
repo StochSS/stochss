@@ -16,6 +16,7 @@ def get_page_handlers(route_start):
         ('/stochss/models/edit\/?', ModelEditorHandler),
         ('/stochss/workflow/selection\/?', WorkflowSelectionHandler),
         ('/stochss/workflow/edit\/?', WorkflowEditorHandler),
+        ('/stochss/quickstart\/?', QuickstartHandler),
         #
         ## API Handlers
         #
