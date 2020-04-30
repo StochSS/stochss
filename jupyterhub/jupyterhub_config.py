@@ -192,7 +192,7 @@ c.Spawner.default_url = '/stochss/models'
 #  limit to work.** The default spawner, `LocalProcessSpawner`, does **not**
 #  implement this support. A custom spawner **must** add support for this setting
 #  for it to be enforced.
-c.Spawner.mem_limit = '1G'
+c.Spawner.mem_limit = '4G'
 
 ## Maximum number of cpu-cores a single-user notebook server is allowed to use.
 #  
@@ -239,7 +239,7 @@ c.Spawner.cpu_limit = 2
 #  limit to work.** The default spawner, `LocalProcessSpawner`, does **not**
 #  implement this support. A custom spawner **must** add support for this setting
 #  for it to be enforced.
-#c.Spawner.cpu_guarantee = None
+c.Spawner.cpu_guarantee = 1
 
 ## Minimum number of bytes a single-user notebook server is guaranteed to have
 #  available.
@@ -254,7 +254,7 @@ c.Spawner.cpu_limit = 2
 #  limit to work.** The default spawner, `LocalProcessSpawner`, does **not**
 #  implement this support. A custom spawner **must** add support for this setting
 #  for it to be enforced.
-#c.Spawner.mem_guarantee = None
+c.Spawner.mem_guarantee = '2G'
 
 #------------------------------------------------------------------------------
 # Authenticator(LoggingConfigurable) configuration
