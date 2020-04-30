@@ -19,7 +19,6 @@ module.exports = State.extend({
     if(defaultMode === "dynamic"){
       var species = this.parent.species
       var discreteSpecies = species.filter(function (specie) {
-        console.log(specie.mode)
         if(specie.mode === "discrete")
           return specie
       });

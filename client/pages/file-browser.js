@@ -38,6 +38,9 @@ let treeSettings = {
     'multiple' : false,
     'animation': 0,
     'check_callback': function (op, node, par, pos, more) {
+      if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
+        return false
+      }
       if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
         return false
       }
@@ -63,7 +66,7 @@ let treeSettings = {
         return false
       }
       if(op === 'move_node' && more && more.core) {
-        var newDir = par.original._path
+        var newDir = par.type !== "root" ? par.original._path : ""
         var file = node.original._path.split('/').pop()
         var oldPath = node.original._path
         let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
@@ -616,7 +619,7 @@ let FileBrowser = PageView.extend({
         },
         "Rename" : {
           "label" : "Rename",
-          "_disabled" : false,
+          "_disabled" : (o.type === "workflow" && o.original._status === "running"),
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
