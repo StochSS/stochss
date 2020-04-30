@@ -1,10 +1,6 @@
 node_modules/
-stochss-home.bundle.js
-stochss-browser.bundle.js
-stochss-common.bundle.js
-stochss-editor.bundle.js
-stochss-workflowEditor.bundle.js
-stochss-workflowSelection.bundle.js
+*.bundle.js
+stochss-quickstart.html
 stochss-file-browser.html
 stochss-model-editor.html
 stochss-workflow-manager.html

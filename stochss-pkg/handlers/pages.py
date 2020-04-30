@@ -31,6 +31,12 @@ class HomeHandler(PageHandler):
     self.render("stochss-home.html", server_path=self.get_server_path())
 
 
+class QuickstartHandler(PageHandler):
+  @web.authenticated
+  async def get(self):
+    self.render("stochss-quickstart.html", server_path=self.get_server_path())
+
+
 class ModelBrowserHandler(PageHandler):
   @web.authenticated
   async def get(self):
