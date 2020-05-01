@@ -9,7 +9,7 @@
 		"realizations": 1,
 		"algorithm": "SSA",
 		"seed": -1,
-		"tauTol": 0.03,
+		"tauTol": 0.03
 	},
 	"modelSettings": {
 		"endSim": 20,

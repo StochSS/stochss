@@ -4,10 +4,7 @@ var Subdomains = require('./subdomains');
 
 module.exports = State.extend({
   props: {
-    count: {
-      type: 'number',
-      default: 2,
-    },
+    count: 'number'
   },
   derived: {
     uniqueSubdomains: {

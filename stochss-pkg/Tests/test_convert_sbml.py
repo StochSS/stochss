@@ -10,7 +10,7 @@ from handlers.util.convert_sbml_to_model import convert_sbml_to_model, convert_t
 
 class TestConvertSBMLToModel(unittest.TestCase):
 
-    def test_sbml_to_gillespy(self):
+    def test_sbml_to_gillespy_success(self):
         try:
             from urllib2 import urlopen
         except ImportError:
@@ -25,5 +25,10 @@ class TestConvertSBMLToModel(unittest.TestCase):
         os.remove(tmp.name)
         results1 = gillespy2_model.run(solver=BasicODESolver)
 
-    def test_sbml_conversion(self):
+
+    def test_sbml_to_gillespy_convert_error(self):
         self.assertTrue(True)
+
+
+    def test_sbml_to_gillespy_file_not_found_error(self):
+        
