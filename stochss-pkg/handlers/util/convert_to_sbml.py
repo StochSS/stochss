@@ -89,7 +89,7 @@ def convert_parameters(sbml_model, parameters):
         p = sbml_model.createParameter()
         p.initDefaults()
         p.setId(parameter['name'])
-        p.setValue(float(parameter['expression']))
+        p.setValue(eval(parameter['expression']))
         
 
 def convert_reactions(sbml_model, reactions):
@@ -246,11 +246,12 @@ def convert_assignment_rules(sbml_model, rules):
 def convert_function_definitions(sbml_model, function_definitions):
     for function_definition in function_definitions:
         fd = sbml_model.createFunctionDefinition()
-        fd.setId(function_definition['name '])
+        fd.setId(function_definition['name'])
         function = function_definition['function'].replace("and", "&&").replace("or", "||").replace("**", "^")
 
         try:
-            fd.setMath(libsbml.parseL3Formula(function))
+            node = libsbml.parseL3Formula(function)
+            fd.setMath(node)
         except:
             raise Exception('libsbml threw an error when parsing function "{0}" for function definition "{1}"'.format(function, function_definition['name']))
 
