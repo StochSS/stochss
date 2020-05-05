@@ -7,7 +7,7 @@ module.exports = State.extend({
     compID: 'number',
     name: 'string',
     expression: 'string',
-    annotation: 'string',
+    annotation: 'string'
   },
   session: {
     inUse: {
