@@ -353,15 +353,15 @@ class ModelFactory():
         parameter : list
             List of GillesPy2 parameters.
         '''
-        name = args['name']
+        name = args['name'].strip()
         variable = list(filter(lambda s: s.name == args['variable']['name'], species))
         if not len(variable):
             variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
-        expression = args['expression']
-        return RateRule(name=name, variable=variable[0], expression=expression)
+        expression = args['expression'].strip()
+        return RateRule(name=name, variable=variable[0].name, formula=expression)
 
 
-    def build_assignment_rule(self, args, species, parameters):
+    def build_assignment_rules(self, args, species, parameters):
         '''
         Build a GillesPy2 assignment rule.
 
@@ -374,12 +374,12 @@ class ModelFactory():
         parameter : list
             List of GillesPy2 parameters.
         '''
-        name = args['name']
+        name = args['name'].strip()
         variable = list(filter(lambda s: s.name == args['variable']['name'], species))
         if not len(variable):
             variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
-        expression = args['expression']
-        return AssignmentRule(name=name, variable=variable[0], expression=expression)
+        expression = args['expression'].strip()
+        return AssignmentRule(name=name, variable=variable[0].name, formula=expression)
 
 
     def build_stoich_species_dict(self, args):
