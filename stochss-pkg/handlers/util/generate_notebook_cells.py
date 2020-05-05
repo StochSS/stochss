@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-def generate_imports_cell(json_data):
+def generate_imports_cell(json_data, is_ssa=False):
     # Imports cell
     imports = 'import numpy as np\n'
     if json_data['is_spatial']:
@@ -12,9 +12,10 @@ def generate_imports_cell(json_data):
         imports += 'import gillespy2\n'
         imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
         imports += 'from gillespy2.core.events import EventAssignment, EventTrigger, Event\n'
-        algorithm = json_data['simulationSettings']['algorithm']
+        algorithm = "V-SSA" if is_ssa else json_data['simulationSettings']['algorithm']
         algorithm_map = {
                 'SSA': '',
+                'V-SSA': 'from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver',
                 'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver',
                 'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver',
                 'ODE': 'from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver'
@@ -163,11 +164,12 @@ def generate_run_cell(json_data):
     return run_cell
 
 
-def get_run_settings(settings, show_labels=True, is_mdl_inf=False):
-    algorithm = settings['algorithm']
+def get_run_settings(settings, show_labels=True, is_mdl_inf=False, is_ssa=False):
+    algorithm = "V-SSA" if is_ssa else settings['algorithm']
 
     # Map algorithm for GillesPy2
     solver_map = {"SSA":"",
+                  "V-SSA":"solver=solver",
                   "ODE":"solver=BasicODESolver",
                   "Tau-Leaping":"solver=BasicTauLeapingSolver",
                   "Hybrid-Tau-Leaping":"solver=BasicTauHybridSolver"}
@@ -193,6 +195,7 @@ def get_run_settings(settings, show_labels=True, is_mdl_inf=False):
                       }
     settings_map = {'ODE':ode_settings, 
                     'SSA':ssa_settings, 
+                    'V-SSA':ssa_settings,
                     'Tau-Leaping':tau_leaping_settings, 
                     'Hybrid-Tau-Leaping':hybrid_settings
                    }
@@ -204,7 +207,7 @@ def get_run_settings(settings, show_labels=True, is_mdl_inf=False):
     algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings_map[algorithm].items()]
     run_settings.extend(algorithm_settings)
     run_settings = ', '.join(run_settings)
-
+    
     return run_settings
 
 
@@ -241,17 +244,35 @@ def average_of_ensemble(c,data):
     return average_aggregate_cell
 
 
-def generate_1D_parameter_sweep_class_cell(json_data):
-    algorithm = json_data['simulationSettings']['algorithm']
-    solver_map = {
-                'SSA': '',
-                'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
-                'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, ',
-                'ODE': 'solver=BasicODESolver, '
-                }
-    solver_str = solver_map[algorithm]
+def generate_1D_parameter_sweep_class_cell(json_data, is_ssa):
+    settings = json_data['simulationSettings']
 
-    psweep_class_cell ='''class ParameterSweep1D():
+    run_settings = get_run_settings(settings, is_ssa=is_ssa)
+
+    if is_ssa:
+        psweep_class_cell ='''class ParameterSweep1D():
+    
+    def run(c, verbose=False):
+        c.verbose = verbose
+        fn = c.feature_extraction
+        ag = c.ensemble_aggragator
+        data = np.zeros((len(c.p1_range),2)) # mean and std
+        for i,v1 in enumerate(c.p1_range):
+            if verbose: print("running {0}={1}".format(c.p1,v1))
+            #if verbose: print("\t{0}".format(["{0}={1},".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))\n'''
+
+        variable_string = "variables={c.p1:v1}" 
+        psweep_class_cell += '''            if(c.number_of_trajectories > 1):
+                tmp_results = model.run({0}, {1})
+                (m,s) = ag([fn(x) for x in tmp_results])
+                data[i,0] = m
+                data[i,1] = s
+            else:
+                tmp_result = model.run({0}, {1})
+                data[i,0] = c.feature_extraction(tmp_result)
+        c.data = data\n'''.format(run_settings, variable_string)
+    else:
+        psweep_class_cell ='''class ParameterSweep1D():
     
     def run(c, verbose=False):
         c.verbose = verbose
@@ -264,15 +285,16 @@ def generate_1D_parameter_sweep_class_cell(json_data):
             if verbose: print("running {0}={1}".format(c.p1,v1))
             #if verbose: print("\t{0}".format(["{0}={1},".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))\n'''
 
-    psweep_class_cell += '''            if(c.number_of_trajectories > 1):
-                tmp_results = tmp_model.run({0}number_of_trajectories=c.number_of_trajectories)
+        psweep_class_cell += '''            if(c.number_of_trajectories > 1):
+                tmp_results = tmp_model.run({0})
                 (m,s) = ag([fn(x) for x in tmp_results])
                 data[i,0] = m
                 data[i,1] = s
             else:
                 tmp_result = tmp_model.run({0})
                 data[i,0] = c.feature_extraction(tmp_result)
-        c.data = data\n'''.format(solver_str)
+        c.data = data\n'''.format(run_settings, variable_string)
+
 
     psweep_class_cell += '''
     def plot(c):
@@ -315,6 +337,7 @@ def generate_1D_parameter_sweep_class_cell(json_data):
 def generate_1D_psweep_config_cell(json_data, model_name):
     p1 = json_data['parameters'][0]
     soi = json_data['species'][0]['name']
+    trajectories = json_data['simulationSettings']['realizations']
     psweep_config_cell = '''# Configuration for the Parameter Sweep
 class ParameterSweepConfig(ParameterSweep1D):
     # What class defines the GillesPy2 model
@@ -325,27 +348,44 @@ class ParameterSweepConfig(ParameterSweep1D):
     p1_min = 0.5 * float(eval(model.get_parameter(p1).expression))
     p1_max = 1.5 * float(eval(model.get_parameter(p1).expression))
     p1_range = np.linspace(p1_min,p1_max,11) # ENTER RANGE FOR PARAMETER HERE
-    number_of_trajectories = 10
+    number_of_trajectories = {3}
     species_of_interest = "{2}" # ENTER SPECIES OF INTEREST HERE
     # What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
     # for number_of_trajectories > 1: how do we aggreggate the values
     ensemble_aggragator = mean_std_of_ensemble
-'''.format(model_name, p1['name'], soi)
+'''.format(model_name, p1['name'], soi, trajectories)
     return psweep_config_cell
 
 
-def generate_2D_parameter_sweep_class_cell(json_data):
-    algorithm = json_data['simulationSettings']['algorithm']
-    solver_map = {
-                'SSA': '',
-                'Tau-Leaping': 'solver=BasicTauLeapingSolver, ',
-                'Hybrid-Tau-Leaping': 'solver=BasicTauHybridSolver, ',
-                'ODE': 'solver=BasicODESolver, '
-                }
-    solver_str = solver_map[algorithm]
+def generate_2D_parameter_sweep_class_cell(json_data, is_ssa):
+    settings = json_data['simulationSettings']
+    
+    run_settings = get_run_settings(settings, is_ssa=is_ssa)
 
-    psweep_class_cell ='''class ParameterSweep2D():
+    if is_ssa:
+        psweep_class_cell ='''class ParameterSweep2D():
+    
+    def run(c, verbose=False):
+        c.verbose = verbose
+        fn = c.feature_extraction
+        ag = c.ensemble_aggragator
+        data = np.zeros((len(c.p1_range),len(c.p2_range)))
+        for i,v1 in enumerate(c.p1_range):
+            for j,v2 in enumerate(c.p2_range):
+                if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
+                #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))\n'''
+    
+        variable_string = "variables={c.p1:v1, c.p2:v2}"
+        psweep_class_cell += '''                if(c.number_of_trajectories > 1):
+                    tmp_results = model.run({0}, {1})
+                    data[i,j] = ag([fn(x) for x in tmp_results])
+                else:
+                    tmp_result = model.run({0}, {1})
+                    data[i,j] = c.feature_extraction(tmp_result)
+        c.data = data\n'''.format(run_settings, variable_string)
+    else:
+        psweep_class_cell ='''class ParameterSweep2D():
     
     def run(c, verbose=False):
         c.verbose = verbose
@@ -360,13 +400,14 @@ def generate_2D_parameter_sweep_class_cell(json_data):
                 if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
                 #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))\n'''
     
-    psweep_class_cell += '''                if(c.number_of_trajectories > 1):
-                    tmp_results = tmp_model.run({0}number_of_trajectories=c.number_of_trajectories)
+        psweep_class_cell += '''                if(c.number_of_trajectories > 1):
+                    tmp_results = tmp_model.run({0})
                     data[i,j] = ag([fn(x) for x in tmp_results])
                 else:
                     tmp_result = tmp_model.run({0})
                     data[i,j] = c.feature_extraction(tmp_result)
-        c.data = data\n'''.format(solver_str)
+        c.data = data\n'''.format(run_settings)
+    
 
     psweep_class_cell += '''
     def plot(c):
@@ -417,6 +458,7 @@ def generate_2D_psweep_config_cell(json_data, model_name):
     p1 = json_data['parameters'][0]
     p2 = json_data['parameters'][1]
     soi = json_data['species'][0]['name']
+    trajectories = json_data['simulationSettings']['realizations']
     psweep_config_cell = '''# Configuration for the Parameter Sweep
 class ParameterSweepConfig(ParameterSweep2D):
     # What class defines the GillesPy2 model
@@ -431,12 +473,12 @@ class ParameterSweepConfig(ParameterSweep2D):
     p2_max = 1.5 * float(eval(model.get_parameter(p2).expression))
     p2_range = np.linspace(p2_min,p2_max,11) # ENTER RANGE FOR P2 HERE
     species_of_interest = "{2}" # ENTER SPECIES OF INTEREST HERE
-    number_of_trajectories = 10
+    number_of_trajectories = {4}
     # What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
     # for number_of_trajectories > 1: how do we aggreggate the values
     ensemble_aggragator = average_of_ensemble
-'''.format(p1['name'], p2['name'], soi, model_name)
+'''.format(p1['name'], p2['name'], soi, model_name, trajectories)
     return psweep_config_cell
 
 
