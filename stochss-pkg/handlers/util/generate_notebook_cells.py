@@ -293,7 +293,7 @@ def generate_1D_parameter_sweep_class_cell(json_data, is_ssa):
             else:
                 tmp_result = tmp_model.run({0})
                 data[i,0] = c.feature_extraction(tmp_result)
-        c.data = data\n'''.format(run_settings, variable_string)
+        c.data = data\n'''.format(run_settings)
 
 
     psweep_class_cell += '''

@@ -21,8 +21,6 @@ def convert_to_1d_psweep_nb(_model_path):
     name = file.split('.')[0].replace('-', '_')
     dest_path = model_path.split(file)[0]
     
-    is_ssa = get_best_ssa_solver().name == "SSACSolver"
-
     # Collect .mdl Data
     try:
         with open(model_path, 'r') as json_file:
@@ -32,6 +30,8 @@ def convert_to_1d_psweep_nb(_model_path):
     except JSONDecodeError as err:
         raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err))
         
+    is_ssa = json_data['simulationSettings']['algorithm'] == "SSA" and get_best_ssa_solver().name == "SSACSolver"
+
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
