@@ -423,8 +423,8 @@ class ParameterSweep():
         if not 'results' in os.listdir(path=self.wkfl_path):
             os.mkdir(self.res_path)
 
-        with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
-            pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
+        #     pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
 
         with open(os.path.join(self.res_path, 'results.json'), 'w') as json_file:
             json_file.write(json.dumps(str(results)))

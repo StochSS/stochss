@@ -88,8 +88,8 @@ class GillesPy2Workflow():
     def store_results(self, results):
         if not 'results' in os.listdir(path=self.wkfl_path):
             os.mkdir(self.res_path)
-        with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
-            pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
+        #     pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
 
         results.to_csv(path=self.res_path, nametag="results_csv", stamp=self.wkfl_timestamp)
         
