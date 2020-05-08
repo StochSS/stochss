@@ -77,8 +77,8 @@ def create_rate_rule_strings(json_data, padding):
     if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
         rr_string += '\n' + padding + '# Rate Rules\n'
         for rr in json_data['rules']:
-            if rr['type'] == "Rate Rules":
-                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable={2}))\n'.format(
+            if rr['type'] == "Rate Rule":
+                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}""))\n'.format(
                         rr['name'], 
                         rr['expression'], 
                         rr['variable']['name'])
@@ -93,7 +93,7 @@ def create_assignment_rule_string(json_data, padding):
         ar_string += '\n' + padding + '# Assignment Rules\n'
         for ar in json_data['rules']:
             if ar['type'] == "Assignment Rule":
-                ar_string += padding + 'self.add_assignment_rule(AssignmentRule(name={0}, formula={1}, variable={2}))\n'.format(
+                ar_string += padding + 'self.add_assignment_rule(AssignmentRule(name="{0}", formula="{1}", variable="{2}"))\n'.format(
                         ar['name'],
                         ar['expression'],
                         ar['variable']['name'])
@@ -107,7 +107,7 @@ def create_function_definition_string(json_data, padding):
     if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
         fd_string += '\n' + padding + '# Function Definitions\n'
         for fd in json_data['functionDefinitions']:
-            fd_string += padding + 'self.add_function_definition(FunctionDefinition(name={0}, function={1}, args={2}))\n'.format(
+            fd_string += padding + 'self.add_function_definition(FunctionDefinition(name="{0}", function="{1}", args={2}))\n'.format(
                     fd['name'],
                     fd['expression'],
                     fd['variables'].split(', '))

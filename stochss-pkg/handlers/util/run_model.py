@@ -88,8 +88,8 @@ class GillesPy2Workflow():
     def store_results(self, results):
         if not 'results' in os.listdir(path=self.wkfl_path):
             os.mkdir(self.res_path)
-        with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
-            pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
+        #     pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
 
         results.to_csv(path=self.res_path, nametag="results_csv", stamp=self.wkfl_timestamp)
         
@@ -353,15 +353,15 @@ class ModelFactory():
         parameter : list
             List of GillesPy2 parameters.
         '''
-        name = args['name']
+        name = args['name'].strip()
         variable = list(filter(lambda s: s.name == args['variable']['name'], species))
         if not len(variable):
             variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
-        expression = args['expression']
-        return RateRule(name=name, variable=variable[0], expression=expression)
+        expression = args['expression'].strip()
+        return RateRule(name=name, variable=variable[0].name, formula=expression)
 
 
-    def build_assignment_rule(self, args, species, parameters):
+    def build_assignment_rules(self, args, species, parameters):
         '''
         Build a GillesPy2 assignment rule.
 
@@ -374,12 +374,12 @@ class ModelFactory():
         parameter : list
             List of GillesPy2 parameters.
         '''
-        name = args['name']
+        name = args['name'].strip()
         variable = list(filter(lambda s: s.name == args['variable']['name'], species))
         if not len(variable):
             variable = list(filter(lambda p: p.name == args['variable']['name'], parameters))
-        expression = args['expression']
-        return AssignmentRule(name=name, variable=variable[0], expression=expression)
+        expression = args['expression'].strip()
+        return AssignmentRule(name=name, variable=variable[0].name, formula=expression)
 
 
     def build_stoich_species_dict(self, args):

@@ -53,6 +53,10 @@ module.exports = View.extend({
   },
   handleSelectSimulationAlgorithmClick: function (e) {
     var value = e.target.dataset.name;
+    if(value === "ODE"){
+      this.model.realizations = 1
+      $(this.queryByHook("trajectories")).find("input").val("1")
+    }
     this.setSimulationAlgorithm(value)
   },
   setSimulationAlgorithm: function (value) {

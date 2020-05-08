@@ -13,10 +13,10 @@ module.exports = State.extend({
     triggerExpression: 'string',
     initialValue: 'boolean',
     persistent: 'boolean',
-    useValuesFromTriggerTime: 'boolean',
+    useValuesFromTriggerTime: 'boolean'
   },
   collections: {
-    eventAssignments: EventAssignments,
+    eventAssignments: EventAssignments
   },
   session: {
     selected: {

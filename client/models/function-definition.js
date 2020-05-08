@@ -9,6 +9,6 @@ module.exports = State.extend({
     expression: 'string',
     variables: 'string',
     signature: 'string',
-    annotation: 'string',
+    annotation: 'string'
   }
 });

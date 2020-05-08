@@ -5,10 +5,10 @@ var Specie = require('./specie');
 
 module.exports = State.extend({
   props: {
-    ratio: 'number',
+    ratio: 'number'
   },
   children: {
-    specie: Specie,
+    specie: Specie
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);

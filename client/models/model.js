@@ -22,14 +22,8 @@ module.exports = Model.extend({
   },
   props: {
     is_spatial: 'boolean',
-    defaultID: {
-      type: 'number',
-      default: 1,
-    },
-    defaultMode: {
-      type: 'string',
-      default: '',
-    },
+    defaultID: 'number',
+    defaultMode: 'string'
   },
   collections: {
     species: Species,
@@ -38,7 +32,7 @@ module.exports = Model.extend({
     reactions: Reactions,
     rules: Rules,
     eventsCollection: Events,
-    functionDefinitions: FunctionDefinitions,
+    functionDefinitions: FunctionDefinitions
   },
   children: {
     modelSettings: ModelSettings,

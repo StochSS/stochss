@@ -7,7 +7,7 @@ module.exports = State.extend({
     timeStep: 'number',
     volume: 'number',
     algorithm: 'string',
-    realizations: 'number',
+    realizations: 'number'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)

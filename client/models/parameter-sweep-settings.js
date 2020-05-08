@@ -11,7 +11,7 @@ module.exports = State.extend({
     p1Steps: 'number',
     p2Min: 'number',
     p2Max: 'number',
-    p2Steps: 'number',
+    p2Steps: 'number'
   },
   children: {
     parameterOne: Parameter,
