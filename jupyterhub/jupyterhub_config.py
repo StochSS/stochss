@@ -19,7 +19,7 @@
 # JupyterHub(Application) configuration
 #------------------------------------------------------------------------------
 
-import sys, os.path, shutil
+import sys, os, os.path, shutil
 
 ## Class for authenticating users.
 #  
@@ -147,8 +147,6 @@ c.DockerSpawner.network_name = network_name
 # Pass cpu limit as extra config since dockerspawner does not natively support it
 c.DockerSpawner.extra_host_config = {
   'network_mode': network_name,
-  'cpu_period': 100000,
-  'cpu_quota': 200000
 }
 # Explicitly set notebook directory because we'll be mounting a host volume to
 # it.  Most jupyter/docker-stacks *-notebook images run the Notebook server as
@@ -168,6 +166,42 @@ c.DockerSpawner.debug = True
 #------------------------------------------------------------------------------
 # Spawner(LoggingConfigurable) configuration
 #------------------------------------------------------------------------------
+
+reserved = 2 if os.cpu_count() > 2 else 0
+user_cpus = os.cpu_count() - reserved
+
+c.StochSS.user_palloc = [0] * user_cpus
+
+from logging import getLogger
+
+def pre_spawn_hook(spawner):
+  log = getLogger()
+  palloc = c.StochSS.user_palloc
+  log.warn('PALLOC')
+  log.warn(palloc)
+  cpu1_index = palloc.index(min(palloc))
+  palloc[cpu1_index] += 1
+  cpu2_index = palloc.index(min(palloc))
+  palloc[cpu2_index] += 1
+  spawner.extra_host_config['cpuset_cpus'] = '{},{}'.format(cpu1_index, cpu2_index)
+  log.warn('PALLOC')
+  log.warn(palloc)
+
+
+def post_stop_hook(spawner):
+  palloc = c.StochSS.user_palloc
+  log = getLogger()
+  log.warn('SHUTTING DOWN -- CPUSET COUNT BELOW')
+  log.warn(spawner.extra_host_config['cpuset_cpus'])
+  cpu1_index, cpu2_index = spawner.extra_host_config['cpuset_cpus'].split(',')
+  palloc[int(cpu1_index)] -= 1
+  palloc[int(cpu2_index)] -= 1
+  log.warn('PALLOC')
+  log.warn(palloc)
+
+c.Spawner.pre_spawn_hook = pre_spawn_hook
+
+c.Spawner.post_stop_hook = post_stop_hook
 
 ## The URL the single-user server should start in.
 #  
