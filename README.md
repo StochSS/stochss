@@ -29,7 +29,7 @@ At the moment StochSS development on Windows is not supported. You can try using
 
 - Rebuild frontend static assets on changes to files in /client:  `make watch`.
 
-- Upon changing backend code in stochss-pkg/handlers you can update a running StochSS notebook server  with `make update`.
+- Upon changing backend code in stochss/handlers you can update a running StochSS notebook server  with `make update`.
 
 ### Add a python dependency
 
