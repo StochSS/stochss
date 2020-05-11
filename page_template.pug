@@ -6,6 +6,12 @@ html
     meta(charset="UTF-8")
     link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css")
     base(href="{{ server_path }}")
+    script(async, src="https://www.googletagmanager.com/gtag/js?id=UA-165145103-1")
+    script.
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date())
+      gtag('config', 'UA-165145103-1')
   body
     script(type="text/javascript", src=bundleUrl)
     script(type="text/javascript", src=commonBundleUrl)

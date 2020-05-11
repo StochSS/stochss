@@ -392,7 +392,14 @@ class ParameterSweep():
         self.wkfl_mdl_path = os.path.join(wkfl_path, self.mdl_file)
         self.res_path = os.path.join(wkfl_path, 'results')
         wkfl_name_elements = wkfl_path.split('/').pop().split('.')[0].split('_')
-        self.wkfl_timestamp = '_'.join(["",wkfl_name_elements[-2],wkfl_name_elements[-1]])
+        try:
+            date, time = wkfl_name_elements[-2:]
+            if date.isdigit() and time.isdigit():
+                self.wkfl_timestamp = '_'.join(["",date,time])
+            else:
+                self.wkfl_timestamp = None
+        except:
+            self.wkfl_timestamp = None
 
 
     def run(self, gillespy2_model, stochss_model, verbose):
@@ -416,8 +423,8 @@ class ParameterSweep():
         if not 'results' in os.listdir(path=self.wkfl_path):
             os.mkdir(self.res_path)
 
-        with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
-            pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open(os.path.join(self.res_path, 'results.p'), 'wb') as results_file:
+        #     pickle.dump(results, results_file, protocol=pickle.HIGHEST_PROTOCOL)
 
         with open(os.path.join(self.res_path, 'results.json'), 'w') as json_file:
             json_file.write(json.dumps(str(results)))

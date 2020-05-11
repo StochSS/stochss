@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 
+import os
 import json
+import pickle
 from os import path
 from .stochss_errors import StochSSFileNotFoundError, PlotNotAvailableError
 
@@ -15,10 +17,16 @@ def read_plots_file(plots_file_path):
     plots_file_path : str
         Path to the plots file.
     '''
+    with open(plots_file_path, 'r') as plt_file:
+        plots = json.load(plt_file)
+    return plots
+
+
+def read_pickled_results(pickle_path):
     try:
-        with open(plots_file_path, 'r') as plt_file:
-            plots = json.load(plt_file)
-        return plots
+        with open(pickle_path, 'rb') as pickle_file:
+            results = pickle.load(pickle_file)
+        return results
     except FileNotFoundError as err:
         raise StochSSFileNotFoundError("Could not find the plot file: {0}".format(err))
     
@@ -34,11 +42,39 @@ def get_plot_fig(plots_file_path, plt_key):
     plt_key : str
         The key that the target plot is stored under.
     '''
-    plots = read_plots_file(plots_file_path)
-    try:
-        return plots[plt_key]
-    except KeyError as err:
-        raise PlotNotAvailableError("The plot is not available: "+str(err))
+    pickle_path = os.path.join(os.path.dirname(plots_file_path), "results.p")
+    if os.path.exists(plots_file_path):
+        plots = read_plots_file(plots_file_path)
+        try:
+            return plots[plt_key]
+        except KeyError as err:
+            if os.path.exists(pickle_path):
+                results = read_pickled_results(pickle_path)
+                return get_plot_fig_from_results(results, plt_key)
+            else:
+                raise PlotNotAvailableError("The plot is not available: "+str(err))
+    else:
+        results = read_pickled_results(pickle_path)
+        return get_plot_fig_from_results(results, plt_key)
+
+
+def get_plot_fig_from_results(results, plt_key):
+    es_keys = ["stddevran","trajectories","stddev","avg"]
+
+    if plt_key == "stddevran":
+        plt_fig = results.plotplotly_std_dev_range(return_plotly_figure=True)
+    elif plt_key in es_keys:
+        if plt_key == "stddev":
+            results = results.stddev_ensemble()
+        elif plt_key == "avg":
+            results = results.average_ensemble()
+        plt_fig = results.plotplotly(return_plotly_figure=True)
+    else:
+        plt_fig = results.plotplotly(keys=plt_key)
+
+    if plt_key in es_keys:
+        plt_fig["config"] = {"responsive": True,}
+    return plt_fig
 
 
 def edit_plot_fig(plt_fig, plt_data):

@@ -1,33 +1,10 @@
 var $ = require('jquery');
+//support files
+var modals = require('../modals');
 //views
 var View = require('ampersand-view');
 //templates
 var template = require('../templates/includes/editFunctionDefinition.pug');
-
-let functionDefinitionAnnotationModalHtml = (functionDefinitionName, annotation) => {
-  return `
-    <div id="functionDefinitionAnnotationModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Annotation for ${functionDefinitionName}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <span for="functionDefinitionAnnotationInput">Annotation: </span>
-            <input type="text" id="functionDefinitionAnnotationInput" name="functionDefinitionAnnotationInput" size="30" autofocus value="${annotation}">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn">OK</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
 
 module.exports = View.extend({
   template: template,
@@ -48,7 +25,7 @@ module.exports = View.extend({
     if(document.querySelector('#functionDefinitionAnnotationModal')) {
       document.querySelector('#functionDefinitionAnnotationModal').remove();
     }
-    let modal = $(functionDefinitionAnnotationModalHtml(name, annotation)).modal();
+    let modal = $(modals.annotationModalHtml("functionDefinition", name, annotation)).modal();
     let okBtn = document.querySelector('#functionDefinitionAnnotationModal .ok-model-btn');
     let input = document.querySelector('#functionDefinitionAnnotationModal #functionDefinitionAnnotationInput');
     input.addEventListener("keyup", function (event) {

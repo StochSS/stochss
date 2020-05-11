@@ -1,8 +1,10 @@
 var $ = require('jquery');
 var path = require('path');
 var xhr = require('xhr');
+//support files
 var Plotly = require('../lib/plotly');
 var app = require('../app');
+var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -59,6 +61,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = Tooltips.parameterSweepResults
     this.trajectories = attrs.trajectories;
     this.status = attrs.status;
     this.species = attrs.species;
@@ -111,9 +114,17 @@ module.exports = View.extend({
       this.registerRenderSubview(featureExtractorView, 'feature-extraction-list');
       this.registerRenderSubview(ensembleAggragatorView, 'ensemble-aggragator-list');
       if(this.trajectories <= 1){
-        $(this.queryByHook('ensemble-aggragator-list')).find('select').prop('disabled', true);
+        $(this.queryByHook('ensemble-aggragator-container')).collapse()
+      }else{
+        $(this.queryByHook('ensemble-aggragator-container')).addClass("inline")
       }
     }
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+       });
+    });
   },
   update: function () {
   },
@@ -163,7 +174,7 @@ module.exports = View.extend({
     }else{
       data['plt_data'] = "None"
     }
-    var endpoint = path.join(app.getApiPath(), "/workflow/plot-results", this.parent.directory, '?data=' + JSON.stringify(data));
+    var endpoint = path.join(app.getApiPath(), "workflow/plot-results")+"?path="+this.parent.wkflPath+"&data="+JSON.stringify(data);
     xhr({url: endpoint, json: true}, function (err, response, body){
       if(response.statusCode >= 400){
         $(self.queryByHook(type)).html(body.Message)
@@ -199,13 +210,12 @@ module.exports = View.extend({
     linkElement.click();
   },
   handlerDownloadResultsCsvClick: function (e) {
-    let path = this.parent.directory
+    let path = this.parent.wkflPath
     this.getExportData(path)
   },
   getExportData: function (wkflPath) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), "file/download-zip/resultscsv", wkflPath)
-    console.log(endpoint)
+    var endpoint = path.join(app.getApiPath(), "file/download-zip")+"?path="+wkflPath+"&action=resultscsv"
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         self.exportToZipFile(body.Path)
@@ -214,8 +224,6 @@ module.exports = View.extend({
   },
   exportToZipFile: function (resultsPath) {
     var endpoint = path.join("files", resultsPath);
-    // console.log(endpoint)
-    // console.log("http://127.0.0.1:8888/edit/Examples/Michaelis_Menten/Michaelis_Menten_04172020_121031.wkfl/results/results_csv_04172020_121031.zip")
     window.location.href = endpoint
   },
   expandContainer: function () {

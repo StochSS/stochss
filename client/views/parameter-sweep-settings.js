@@ -1,5 +1,7 @@
 var $ = require('jquery');
+//support files
 var tests = require('./tests');
+var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -19,7 +21,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = {"sweepType":""}
+    this.tooltips = Tooltips.parameterSweepSettings
   },
   render: function () {
     View.prototype.render.apply(this, arguments);

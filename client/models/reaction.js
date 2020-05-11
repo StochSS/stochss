@@ -14,17 +14,14 @@ module.exports = State.extend({
     massaction: 'boolean',
     propensity: 'string',
     annotation: 'string',
-    subdomains: {
-      type: 'object',
-      default: function () {return []; },
-    },
+    subdomains: 'object'
   },
   children: {
-    rate: Parameter,
+    rate: Parameter
   },
   collections: {
     reactants: StoichSpecies,
-    products: StoichSpecies,
+    products: StoichSpecies
   },
   session: {
     selected: {

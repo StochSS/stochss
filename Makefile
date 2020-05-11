@@ -106,6 +106,15 @@ build:  deps webpack
 	docker build \
 	  -t $(DOCKER_STOCHSS_IMAGE):latest .
 
+test:   build
+	docker run --rm \
+		--name $(DOCKER_STOCHSS_IMAGE) \
+		--env-file .env \
+		-v $(PWD):/stochss \
+		-p 8888:8888 \
+		$(DOCKER_STOCHSS_IMAGE):latest \
+                /stochss/stochss-pkg/tests/run_tests.py
+
 run:    
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \

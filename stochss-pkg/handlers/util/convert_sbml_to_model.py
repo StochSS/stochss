@@ -5,16 +5,36 @@ import json
 from .rename import get_unique_file_name
 from .stochss_errors import StochSSFileNotFoundError
 # from run_model import ModelFactory
-from gillespy2.sbml.SBMLimport import convert
+from gillespy2.sbml.SBMLimport import convert, __read_sbml_model, __get_math
 import gillespy2
 
 
 def convert_to_gillespy_model(path):
     if os.path.exists(path):
-        gpy_model, errors = convert(path)
-        return gpy_model, errors
+        try:
+            gpy_model, errors = convert(path)
+            return gpy_model, errors
+        except:
+            return None, []
     else:
         raise StochSSFileNotFoundError("Could not find the sbml file: "+path)
+
+
+def get_sbml_function_definitions(path):
+    sbml_model = __read_sbml_model(path)[0]
+    function_definitions = []
+
+    for i in range(sbml_model.getNumFunctionDefinitions()):
+        function = sbml_model.getFunctionDefinition(i)
+        function_name = function.getId()
+        function_tree = function.getMath()
+        num_nodes = function_tree.getNumChildren()
+        function_args = [function_tree.getChild(i).getName() for i in range(num_nodes-1)]
+        function_string = __get_math(function_tree.getChild(num_nodes-1))
+        fd = {"name":function_name, "function":function_string, "args":function_args}
+        function_definitions.append(fd)
+
+    return function_definitions
 
 
 def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None):
@@ -54,9 +74,10 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
         stochss_assignment_rules, comp_id = get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, comp_id)
         stochss_model['rules'].extend(stochss_assignment_rules)
         
-        function_definitions = gillespy_model.listOfFunctionDefinitions
-        stochss_function_definitions, comp_id = get_function_definitions(function_definitions, comp_id)
-        stochss_model['functionDefinitions'].extend(stochss_function_definitions)
+        if gillespy_model.listOfFunctionDefinitions:
+            function_definitions = get_sbml_function_definitions(full_path)
+            stochss_function_definitions, comp_id = get_function_definitions(function_definitions, comp_id)
+            stochss_model['functionDefinitions'].extend(stochss_function_definitions)
 
         stochss_model['defaultID'] = comp_id
 
@@ -65,7 +86,7 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
     
         return "The SBML Model was successfully converted to a StochSS Model.", errors, stochss_model_path
     else:
-        return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", [], stochss_model_path
+        return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", [], ""
 
 
 def get_species(species, comp_id):
@@ -270,13 +291,13 @@ def get_rate_rules(rate_rules, stochss_species, stochss_parameters, comp_id):
     for name, rate_rule in rate_rules.items():
         
         try:
-            variable = get_specie(stochss_species, rate_rule.species.name)
+            variable = get_specie(stochss_species, rate_rule.variable)
         except:
-            variable = get_parameter(stochss_parameters, rate_rule.species.name)
+            variable = get_parameter(stochss_parameters, rate_rule.variable)
 
         stochss_rate_rule = {"compID":comp_id,
                              "name":rate_rule.name,
-                             "expression":rate_rule.expression,
+                             "expression":rate_rule.formula,
                              "type":"Rate Rule",
                              "variable":variable,
                              "annotation": ""
@@ -294,13 +315,13 @@ def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, 
     for name, assignment_rule in assignment_rules.items():
         
         try:
-            variable = get_specie(stochss_species, assignment_rule.variable.name)
+            variable = get_specie(stochss_species, assignment_rule.variable)
         except:
-            variable = get_parameter(stochss_parameters, assignment_rule.variable.name)
+            variable = get_parameter(stochss_parameters, assignment_rule.variable)
 
         stochss_assignment_rule = {"compID":comp_id,
                                    "name":assignment_rule.name,
-                                   "expression":assignment_rule.expression,
+                                   "expression":assignment_rule.formula,
                                    "type":"Assignment Rule",
                                    "variable":variable,
                                    "annotation": ""
@@ -315,16 +336,17 @@ def get_assignment_rules(assignment_rules, stochss_species, stochss_parameters, 
 def get_function_definitions(function_definitions, comp_id):
     stochss_function_definitions = []
 
-    for name, function_definition in function_definitions.items():
+    for function_definition in function_definitions:
         
-        function_elements = function_definition.function.split(': ')
-        expression = function_elements.pop()
-        variables = function_elements[0].split('lambda ').pop()
-        signature = "{0}({1})".format(function_definition.name, variables)
+        name = function_definition["name"]
+        variables = ', '.join(function_definition["args"])
+        expression = function_definition["function"]
+        function = "lambda({0}, {1})".format(variables, expression)
+        signature = "{0}({1})".format(name, variables)
 
         stochss_function_definition = {"compID":comp_id,
-                                       "name":function_defintion.name,
-                                       "function":function_definition.function,
+                                       "name":name,
+                                       "function":function,
                                        "expression":expression,
                                        "variables":variables,
                                        "signature":signature,
@@ -344,7 +366,10 @@ def convert_sbml_to_model(path, model_template):
     name = full_path.split('/').pop().split('.')[0]
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)
-    sbml_errors = list(map(lambda error: error[0], sbml_errors))
+    if gillespy_model is not None:
+        sbml_errors = list(map(lambda error: error[0], sbml_errors))
+    else:
+        sbml_errors.append("Error: could not convert the SBML Model to a StochSS Model")
     msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path, name=name)
     sbml_errors.extend(errors)
     resp = {"message":msg,"errors":sbml_errors,"File":stochss_model_path.split('/').pop()}

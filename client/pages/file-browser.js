@@ -1,21 +1,24 @@
 let jstree = require('jstree');
 let path = require('path');
 let xhr = require('xhr');
-let PageView = require('./base');
-let template = require('../templates/pages/fileBrowser.pug');
 let $ = require('jquery');
 let _ = require('underscore');
+//support files
 let app = require('../app');
-//let bootstrap = require('bootstrap');
+let modals = require('../modals');
+//views
+let PageView = require('./base');
+//templates
+let template = require('../templates/pages/fileBrowser.pug');
 
 import initPage from './page.js';
 
 let ajaxData = {
   "url" : function (node) {
     if(node.parent === null){
-      return "stochss/models/browser-list/"
+      return path.join(app.getApiPath(), "file/browser-list")+"?path=none"
     }
-    return "stochss/models/browser-list" + node.original._path
+    return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
   },
   "dataType" : "json",
   "data" : function (node) {
@@ -35,6 +38,9 @@ let treeSettings = {
     'multiple' : false,
     'animation': 0,
     'check_callback': function (op, node, par, pos, more) {
+      if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
+        return false
+      }
       if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
         return false
       }
@@ -60,10 +66,11 @@ let treeSettings = {
         return false
       }
       if(op === 'move_node' && more && more.core) {
-        var newDir = par.original._path
+        var newDir = par.type !== "root" ? par.original._path : ""
         var file = node.original._path.split('/').pop()
         var oldPath = node.original._path
-        var endpoint = path.join(app.getApiPath(), "/file/move", oldPath, '<--MoveTo-->', newDir, file)
+        let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
+        var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
         xhr({uri: endpoint}, function(err, response, body) {
           if(response.statusCode < 400) {
             node.original._path = path.join(newDir, file)
@@ -116,212 +123,6 @@ let treeSettings = {
   },  
 }
 
-let operationInfoModalHtml = () => {
-  let fileBrowserHelpMessage = `
-    <p><b>Open/Edit a File</b>: Double-click on a file or right-click on a file and click Open/Edit.  
-    <b>Note</b>: Some files will open in a new tab so you may want to turn off the pop-up blocker.</p>
-    <p><b>Open Directory</b>: Click on the arrow next to the directory or double-click on the directory.</p>
-    <p><b>Create a Directory/Model</b>: Right-click on a directory, click New Directory/New Model, and enter the name of directory/model or path.  
-    For models you will need to click on the type of model you wish to create before entering the name or path.</p>
-    <p><b>Create a Workflow</b>: Right-click on a model and click New Workflow, this takes you to the workflow selection page.  
-    From the workflow selection page, click on one of the listed workflows.</p>
-    <p><b>Convert a File</b>: Right-click on a Model/SBML, click Convert, and click on the desired Convert to option.  
-    Model files can be converted to Spatial Models, Notebooks, or SBML files.  
-    Spatial Models and SBML file can be converted to Models.  
-    <b>Note</b>: Notebooks will open in a new tab so you may want to turn off the pop-up blocker.</p>
-    <p><b>Move File or Directory</b>: Click and drag the file or directory to the new location.  
-    You can only move an item to a directory if there isn't a file or directory with the same name in that location.</p>
-    <p><b>Download a Model/Notebook/SBML File</b>: Right-click on the file and click download.</p>
-    <p><b>Rename File/Directory</b>: Right-click on a file/directory, click rename, and enter the new name.</p>
-    <p><b>Duplicate/Delete A File/Directory</b>: Right-click on the file/directory and click Duplicate/Delete.</p>
-  `;
-  
-  return `
-    <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Help </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${fileBrowserHelpMessage} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  ` 
-}
-
-// Using a bootstrap modal to input model names for now
-let renderCreateModalHtml = (isModel, isSpatial) => {
-  var titleText = 'Directory';
-  if(isModel){
-    titleText = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
-  }
-  return `
-    <div id="newModalModel" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">New ${titleText}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <label for="modelNameInput">Name:</label>
-            <input type="text" id="modelNameInput" name="modelNameInput" size="30" autofocus>
-	        </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let sbmlToModelHtml = (title, errors) => {
-  for(var i = 0; i < errors.length; i++) {
-    if(errors[i].startsWith("SBML Error") || errors[i].startsWith("Error")){
-      errors[i] = "<b>Error</b>: " + errors[i]
-    }else{
-      errors[i] = "<b>Warning</b>: " + errors[i]
-    }
-  }
-
-  return `
-    <div id="sbmlToModelModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> ${title} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${errors.join("<br>")} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let uploadFileErrorsHtml = (file, type, message, errors) => {
-  for(var i = 0; i < errors.length; i++) {
-    errors[i] = "<b>Error</b>: " + errors[i]
-  }
-
-  return `
-    <div id="sbmlToModelModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Errors uploading ${file} as a ${type} file</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${errors.join("<br>")} </p>
-            <p> <b>Upload status</b>: ${message} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let deleteFileHtml = (fileType) => {
-  return `
-    <div id="deleteFileModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Permanently delete this ${fileType}? </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary yes-modal-btn box-shadow">Yes</button>
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">No</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let uploadFileHtml = (type) => {
-  return `
-    <div id="uploadFileModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Upload a ${type} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="verticle-space">
-              <span class="inline" for="datafile">Please specify a file to import: </span>
-              <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" required>
-            </div>
-            <div class="verticle-space">
-              <span class="inline" for="fileNameInput">New file name (optional): </span>
-              <input type="text" id="fileNameInput" name="fileNameInput" size="30">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary box-shadow upload-modal-btn" disabled>Upload</button>
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
-let duplicateWorkflowHtml = (wkflFile, body) => {
-  return `
-    <div id="duplicateWorkflowModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Model for ${wkflFile} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${body} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
-
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
   template: template,
@@ -332,7 +133,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=new-model]' : 'handleCreateModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
-      let modal = $(operationInfoModalHtml()).modal();
+      let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
   },
   render: function () {
@@ -368,7 +169,6 @@ let FileBrowser = PageView.extend({
   },
   selectNode: function (node, fileName) {
     let self = this
-    console.log(Boolean(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)))
     if(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
       setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
     }else{
@@ -392,7 +192,7 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#uploadFileModal')) {
       document.querySelector('#uploadFileModal').remove()
     }
-    let modal = $(uploadFileHtml(type)).modal();
+    let modal = $(modals.uploadFileHtml(type)).modal();
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
@@ -432,7 +232,7 @@ let FileBrowser = PageView.extend({
             self.refreshJSTree();
           }
           if(resp.errors.length > 0){
-            let errorModal = $(uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
+            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
           }
         }
       }
@@ -452,10 +252,10 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#deleteFileModal')) {
       document.querySelector('#deleteFileModal').remove()
     }
-    let modal = $(deleteFileHtml(fileType)).modal();
+    let modal = $(modals.deleteFileHtml(fileType)).modal();
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
-      var endpoint = path.join(app.getApiPath(), "/file/delete", o.original._path)
+      var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
       xhr({uri: endpoint}, function(err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(o.parent);
@@ -474,17 +274,24 @@ let FileBrowser = PageView.extend({
   duplicateFileOrDirectory: function(o, type) {
     var self = this;
     var parentID = o.parent;
+    var queryStr = "?path="+o.original._path
+    if(!type && o.original.type === 'folder'){
+      type = "directory"
+    }else if(!type && o.original.type === 'workflow'){
+      type = "workflow"
+    }else if(!type){
+      type = "file"
+    }
     if(type === "directory"){
       var identifier = "directory/duplicate"
-    }else if(type === "workflow"){
-      let timeStamp = this.getTimeStamp()
-      var identifier = path.join("workflow/duplicate", type, timeStamp)
-    }else if(type === "wkfl_model"){
-      var identifier = path.join("workflow/duplicate", type, "None")
+    }else if(type === "workflow" || type === "wkfl_model"){
+      var timeStamp = type === "workflow" ? this.getTimeStamp() : "None"
+      var identifier = "workflow/duplicate"
+      queryStr = queryStr.concat("&target="+type+"&stamp="+timeStamp)
     }else{
-      var identifier = "model/duplicate"
+      var identifier = "file/duplicate"
     }
-    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
@@ -500,7 +307,7 @@ let FileBrowser = PageView.extend({
             }else{
               message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>"
             }
-            let modal = $(duplicateWorkflowHtml(body.File, message)).modal()
+            let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal()
           }
           self.selectNode(node, body.File)
         }
@@ -535,7 +342,7 @@ let FileBrowser = PageView.extend({
   toSpatial: function (o) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "/model/to-spatial", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "model/to-spatial")+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, 
       function (err, response, body) {
         if(response.statusCode < 400) {
@@ -554,10 +361,11 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     if(from === "Spatial"){
-      var endpoint = path.join(app.getApiPath(), "/spatial/to-model", o.original._path);
+      var identifier = "spatial/to-model"
     }else{
-      var endpoint = path.join(app.getApiPath(), "sbml/to-model", o.original._path);
+      var identifier = "sbml/to-model"
     }
+    let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree').jstree().get_node(parentID);
@@ -571,7 +379,7 @@ let FileBrowser = PageView.extend({
             var title = ""
             var msg = body.message
             var errors = body.errors
-            let modal = $(sbmlToModelHtml(msg, errors)).modal();
+            let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
           }
         }
       }
@@ -579,7 +387,7 @@ let FileBrowser = PageView.extend({
   },
   toNotebook: function (o) {
     let self = this
-    var endpoint = path.join(app.getApiPath(), "/models/to-notebook", o.original._path)
+    var endpoint = path.join(app.getApiPath(), "model/to-notebook")+"?path="+o.original._path
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400){
         var node = $('#models-jstree').jstree().get_node(o.parent)
@@ -597,7 +405,7 @@ let FileBrowser = PageView.extend({
   toSBML: function (o) {
     var self = this;
     var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "model/to-sbml", o.original._path);
+    var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         var node = $('#models-jstree').jstree().get_node(parentID);
@@ -619,7 +427,7 @@ let FileBrowser = PageView.extend({
     extensionWarning.collapse('show')
     $('#models-jstree').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
-        var endpoint = path.join(app.getApiPath(), "/file/rename", o.original._path, "<--change-->", node.text)
+        var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+node.text
         xhr({uri: endpoint, json: true}, function (err, response, body){
           if(response.statusCode < 400) {
             if(body.changed) {
@@ -646,9 +454,27 @@ let FileBrowser = PageView.extend({
   hideNameWarning: function () {
     $(this.queryByHook('rename-warning')).collapse('hide')
   },
-  getExportData: function (o, isJSON, identifier, dataType) {
+  getExportData: function (o, asZip) {
     var self = this;
-    var endpoint = path.join(app.getApiPath(), identifier, o.original._path)
+    let nodeType = o.original.type
+    let isJSON = nodeType === "sbml-model" ? false : true
+    if(nodeType === "sbml-model"){
+      var dataType = "plain-text"
+      var identifier = "file/download"
+    }else if(asZip) {
+      var dataType = "zip"
+      var identifier = "file/download-zip"
+    }else{
+      var dataType = "json"
+      var identifier = "file/json-data"
+    }
+    var queryStr = "?path="+o.original._path
+    if(dataType === "json"){
+      queryStr = queryStr.concat("&for=None")
+    }else if(dataType === "zip"){
+      queryStr = queryStr.concat("&action=generate")
+    }
+    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(dataType === "json") {
@@ -660,8 +486,6 @@ let FileBrowser = PageView.extend({
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
-          self.exportToZipFile(body.Path)
-        }else if(dataType === "csv") {
           self.exportToZipFile(body.Path)
         }else{
           self.exportToFile(body, o.original.text);
@@ -704,7 +528,7 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#newModalModel')) {
       document.querySelector('#newModalModel').remove()
     }
-    let modal = $(renderCreateModalHtml(isModel, isSpatial)).modal();
+    let modal = $(modals.renderCreateModalHtml(isModel, isSpatial)).modal();
     let okBtn = document.querySelector('#newModalModel .ok-model-btn');
     let input = document.querySelector('#newModalModel #modelNameInput');
     input.addEventListener("keyup", function (event) {
@@ -716,17 +540,17 @@ let FileBrowser = PageView.extend({
     let modelName;
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
-        var parentPath = "/"
-        if(o && o.original){
+        var parentPath = ""
+        if(o && o.original && o.original.type !== "root"){
           parentPath = o.original._path
         }
         if(isModel) {
           let modelName = input.value + '.mdl';
-          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit', parentPath, modelName);
+          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+path.join(parentPath, modelName);
           window.location.href = modelPath;
         }else{
           let dirName = input.value;
-          let endpoint = path.join(app.getApiPath(), "/directory/create", parentPath, dirName);
+          let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
               if(o){//directory was created with context menu option
@@ -741,6 +565,7 @@ let FileBrowser = PageView.extend({
               }
             }else{//new directory not created no need to refresh
               body = JSON.parse(body)
+              let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
             }
           });
           modal.modal('hide')
@@ -759,15 +584,15 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
   },
   editWorkflowModel: function (o) {
-    let endpoint = path.join(app.getApiPath(), "workflow/edit-model", o.original._path)
+    let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(body.error){
           let title = o.text + " Not Found"
           let message = body.error
-          let modal = $(duplicateWorkflowHtml(title, message)).modal()
+          let modal = $(modals.duplicateWorkflowHtml(title, message)).modal()
         }else{
-          window.location.href = path.join(app.routePrefix, "models/edit", body.file)
+          window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file
         }
       }
     });
@@ -775,646 +600,337 @@ let FileBrowser = PageView.extend({
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
-      if (o.type === 'root'){
-        return {
-          "Refresh" : {
-            "label" : "Refresh",
-            "_disabled" : false,
-            "_class" : "font-weight-bold",
-            "separator_before" : false,
-            "separator_after" : true,
-            "action" : function (data) {
-              self.refreshJSTree();
+      let nodeType = o.original.type
+      let asZip = (nodeType === "workflow" || nodeType === "folder" || nodeType === "other" || nodeType === "mesh")
+      // common to all type except root
+      let common = {
+        "Download" : {
+          "label" : asZip ? "Download as .zip" : "Download",
+          "_disabled" : false,
+          "separator_before" : true,
+          "separator_after" : false,
+          "action" : function (data) {
+            if(o.original.text.endsWith('.zip')){
+              self.exportToZipFile(o);
+            }else{
+              self.getExportData(o, asZip)
             }
-          },
-          "New_Directory" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "New Directory",
-            "action" : function (data) {
-              self.newModelOrDirectory(o, false, false);
-            }
-          },
-          "New_model" : {
-            "label" : "New Model",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "spatial" : {
-                "label" : "Spatial",
-                "_disabled" : true,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-
-                }
-              },
-              "nonspatial" : { 
-                "label" : "Non-Spatial",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.newModelOrDirectory(o, true, false);
-                }
-              } 
-            }
-          },
-          "Upload" : {
-            "label" : "Upload File",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "submenu" : {
-              "Model" : {
-                "label" : "StochSS Model",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "model")
-                }
-              },
-              "SBML" : {
-                "label" : "SBML Model",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "sbml")
-                }
-              },
-              "File" : {
-                "label" : "File",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "file")
-                }
-              }
-            }
-          },
+          }
+        },
+        "Rename" : {
+          "label" : "Rename",
+          "_disabled" : (o.type === "workflow" && o.original._status === "running"),
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.renameNode(o);
+          }
+        },
+        "Duplicate" : {
+          "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.duplicateFileOrDirectory(o, null)
+          }
+        },
+        "Delete" : {
+          "label" : "Delete",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.deleteFile(o);
+          }
         }
       }
-      else if (o.type ===  'folder') {
-        return {
-          "Refresh" : {
-            "label" : "Refresh",
-            "_disabled" : false,
-            "_class" : "font-weight-bold",
-            "separator_before" : false,
-            "separator_after" : true,
-            "action" : function (data) {
+      // common to root and folders
+      let folder = {
+        "Refresh" : {
+          "label" : "Refresh",
+          "_disabled" : false,
+          "_class" : "font-weight-bold",
+          "separator_before" : false,
+          "separator_after" : true,
+          "action" : function (data) {
+            if(nodeType === "root"){
+              self.refreshJSTree();
+            }else{
               $('#models-jstree').jstree().refresh_node(o);
             }
-          },
-          "New_Directory" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "New Directory",
-            "action" : function (data) {
-              self.newModelOrDirectory(o, false, false);
-            }
-          },
-          "New_model" : {
-            "label" : "New Model",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "spatial" : {
-                "label" : "Spatial",
-                "_disabled" : true,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-
-                }
-              },
-              "nonspatial" : { 
-                "label" : "Non-Spatial",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.newModelOrDirectory(o, true, false);
-                }
-              } 
-            }
-          },
-          "Upload" : {
-            "label" : "Upload File",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "submenu" : {
-              "Model" : {
-                "label" : "StochSS Model",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "model")
-                }
-              },
-              "SBML" : {
-                "label" : "SBML Model",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "sbml")
-                }
-              },
-              "File" : {
-                "label" : "File",
-                "_disabled" : false,
-                "separator_before" : false,
-                "separator_after" : false,
-                "action" : function (data) {
-                  self.uploadFile(o, "file")
-                }
+          }
+        },
+        "New_Directory" : {
+          "label" : "New Directory",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newModelOrDirectory(o, false, false);
+          }
+        },
+        "New_model" : {
+          "label" : "New Model",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "spatial" : {
+              "label" : "Spatial",
+              "_disabled" : true,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                console.log("Spatial Models Coming Soon!")
+              }
+            },
+            "nonspatial" : { 
+              "label" : "Non-Spatial",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.newModelOrDirectory(o, true, false);
+              }
+            } 
+          }
+        },
+        "Upload" : {
+          "label" : "Upload File",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Model" : {
+              "label" : "StochSS Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.uploadFile(o, "model")
+              }
+            },
+            "SBML" : {
+              "label" : "SBML Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.uploadFile(o, "sbml")
+              }
+            },
+            "File" : {
+              "label" : "File",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.uploadFile(o, "file")
               }
             }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download as .zip",
-            "action" : function (data) {
-              self.getExportData(o, true, "file/download-zip/generate", "zip");
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "directory")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
+          }
         }
       }
-      else if (o.type === 'spatial') {
-        return {
-          "Edit" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : true,
-            "_class" : "font-weight-bolder",
-            "label" : "Edit",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
-            }
-          },
-          "Convert" : {
-            "label" : "Convert",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "Convert to Model" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "Convert to Non Spatial",
-                "action" : function (data) {
-                  self.toModel(o, "Spatial");
-                }
-              },
-              "Convert to Notebook" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : true,
-                "label" : "Convert to Notebook",
-                "action" : function (data) {
-                }
-              },
-            }
-          },
-          "New Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "New Workflow",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "model")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
+      // common to both spatial and non-spatial models
+      let model = {
+        "Edit" : {
+          "label" : "Edit",
+          "_disabled" : (nodeType === "spatial") ? true : false,
+          "_class" : "font-weight-bolder",
+          "separator_before" : false,
+          "separator_after" : true,
+          "action" : function (data) {
+            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
+          }
+        },
+        "New Workflow" : {
+          "label" : "New Workflow",
+          "_disabled" : (nodeType === "spatial") ? true : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
+          }
         }
       }
-      else if (o.type === 'nonspatial') {
-         return {
-          "Edit" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Edit",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/models/edit", o.original._path);
-            }
-          },
-          "Convert" : {
-            "label" : "Convert",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "Convert to Spatial" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : true,
-                "label" : "To Spatial Model",
-                "action" : function (data) {
-                  self.toSpatial(o)
-                }
-              },
-              "Convert to Notebook" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "To Notebook",
-                "action" : function (data) {
-                  self.toNotebook(o)
-                }
-              },
-              "Convert to SBML" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "To SBML Model",
-                "action" : function (data) {
-                  self.toSBML(o)
-                }
-              },
-            }
-          },
-          "New Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "New Workflow",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection", o.original._path);
-            }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download",
-            "action" : function (data) {
-              self.getExportData(o, true, "json-data", "json");
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "model")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
-	      }
-      }
-      else if (o.type === 'workflow') {
-        var disabled = !(o.original._status === "ready")
-        return {
-          "Open" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open",
-            "action" : function (data) {
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", o.original._path);
-            }
-          },
-          "Start/Restart Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "Start/Restart Workflow",
-            "action" : function (data) {
-
-            }
-          },
-          "Stop Workflow" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : true,
-            "label" : "Stop Workflow",
-            "action" : function (data) {
-
-            }
-          },
-          "Model" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "label" : "Model",
-            "_disabled" : false,
-            "submenu" : {
-              "Edit" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : disabled,
-                "label" : " Edit",
-                "action" : function (data) {
-                  self.editWorkflowModel(o)
-                }
-              },
-              "Extract" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "Extract",
-                "action" : function (data) {
-                  self.duplicateFileOrDirectory(o, "wkfl_model")
-                }
+      // convert options for spatial models
+      let spatialConvert = {
+        "Convert" : {
+          "label" : "Convert",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Convert to Model" : {
+              "label" : "Convert to Non Spatial",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toModel(o, "Spatial");
+              }
+            },
+            "Convert to Notebook" : {
+              "label" : "Convert to Notebook",
+              "_disabled" : true,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
               }
             }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download Full Workflow",
-            "action" : function (data) {
-              self.getExportData(o, true, "file/download-zip/generate", "zip");
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate as new",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "workflow")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
+          }
         }
       }
-      else if (o.type === 'notebook') {
-        return {
-          "Open" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open",
-            "action" : function (data) {
-              window.open(path.join(app.getBasePath(), "notebooks", o.original._path));
+      // convert options for non-spatial models
+      let modelConvert = {
+        "Convert" : {
+          "label" : "Convert",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Convert to Spatial" : {
+              "label" : "To Spatial Model",
+              "_disabled" : true,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toSpatial(o)
+              }
+            },
+            "Convert to Notebook" : {
+              "label" : "To Notebook",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toNotebook(o)
+              }
+            },
+            "Convert to SBML" : {
+              "label" : "To SBML Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toSBML(o)
+              }
             }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download",
-            "action" : function (data) {
-              self.getExportData(o, true, "json-data", "json");
-      	    }
-      	  },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "file")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
+          }
         }
       }
-      else if (o.type === 'sbml-model') {
-        return {
-          "Open" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open File",
-            "action" : function (data) {
-              var filePath = o.original._path
-              window.open(path.join(app.getBasePath(), "edit", filePath), '_blank')
-            }
-          },
-          "Convert" : {
-            "label" : "Convert",
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "submenu" : {
-              "Convert to Model" : {
-                "separator_before" : false,
-                "separator_after" : false,
-                "_disabled" : false,
-                "label" : "To Model",
-                "action" : function (data) {
-                  self.toModel(o, "SBML");
-                }
-              },
-            }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download",
-            "action" : function (data) {
-              self.getExportData(o, false, "file/download", "plain-text");
-            }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "file")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
-        }
-      }
-      else {
-        return {
-          "Open" : {
-            "separator_before" : false,
-            "separator_after" : true,
-            "_disabled" : false,
-            "_class" : "font-weight-bolder",
-            "label" : "Open",
-            "action" : function (data) {
-              var openPath = path.join(app.getBasePath(), "view", o.original._path);
-              window.open(openPath, "_blank");
-            }
-          },
-          "Download" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Download as .zip",
-            "action" : function (data) {
-              if(o.original.text.endsWith('.zip')){
-                self.exportToZipFile(o);
+      // For notebooks, workflows, sbml models, and other files
+      let open = {
+        "Open" : {
+          "label" : "Open",
+          "_disabled" : false,
+          "_class" : "font-weight-bolder",
+          "separator_before" : false,
+          "separator_after" : true,
+          "action" : function (data) {
+            if(nodeType === "workflow"){
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
+            }else{
+              if(nodeType === "notebook") {
+                var identifier = "notebooks"
+              }else if(nodeType === "sbml-model") {
+                var identifier = "edit"
               }else{
-                self.getExportData(o, true, "file/download-zip/generate", "zip")
+                var identifier = "view"
+              }
+              window.open(path.join(app.getBasePath(), identifier, o.original._path));
+            }
+          }
+        }
+      }
+      // specific to workflows
+      let workflow = {
+        "Start/Restart Workflow" : {
+          "label" : (o.original._status === "ready") ? "Start Workflow" : "Restart Workflow",
+          "_disabled" : true,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+
+          }
+        },
+        "Stop Workflow" : {
+          "label" : "Stop Workflow",
+          "_disabled" : true,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+
+          }
+        },
+        "Model" : {
+          "label" : "Model",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Edit" : {
+              "label" : " Edit",
+              "_disabled" : !(o.original._status === "ready"),
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.editWorkflowModel(o)
+              }
+            },
+            "Extract" : {
+              "label" : "Extract",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.duplicateFileOrDirectory(o, "wkfl_model")
               }
             }
-          },
-          "Rename" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Rename",
-            "action" : function (data) {
-              self.renameNode(o);
-            }
-          },
-          "Duplicate" : {
-            "separator_before" : false,
-            "separator_after" : false,
-            "_disabled" : false,
-            "label" : "Duplicate",
-            "action" : function (data) {
-              self.duplicateFileOrDirectory(o, "file")
-            }
-          },
-          "Delete" : {
-            "label" : "Delete",
-            "_disabled" : false,
-            "separator_before" : false,
-            "separator_after" : false,
-            "action" : function (data) {
-              self.deleteFile(o);
-            }
-          },
+          }
         }
+      }
+      // Specific to sbml files
+      let sbml = {
+        "Convert" : {
+          "label" : "Convert",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "Convert to Model" : {
+              "label" : "To Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toModel(o, "SBML");
+              }
+            }
+          }
+        }
+      }
+      if (o.type === 'root'){
+        return folder
+      }
+      if (o.type ===  'folder') {
+        return $.extend(folder, common)
+      }
+      if (o.type === 'spatial') {
+        return $.extend(model, spatialConvert, common)
+      }
+      if (o.type === 'nonspatial') {
+         return $.extend(model, modelConvert, common)
+      }
+      if (o.type === 'workflow') {
+        return $.extend(open, workflow, common)
+      }
+      if (o.type === 'notebook' || o.type === "other") {
+        return $.extend(open, common)
+      }
+      if (o.type === 'sbml-model') {
+        return $.extend(open, sbml, common)
       }
     }
     $(document).on('shown.bs.modal', function (e) {
@@ -1448,7 +964,7 @@ let FileBrowser = PageView.extend({
       var node = $('#models-jstree').jstree().get_node(e.target)
       var _path = node.original._path;
       if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-        window.location.href = path.join(app.getBasePath(), "stochss/models/edit", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
       }else if(file.endsWith('.ipynb')){
         var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
         window.open(notebookPath, '_blank')
@@ -1456,11 +972,11 @@ let FileBrowser = PageView.extend({
         var openPath = path.join(app.getBasePath(), "edit", _path)
         window.open(openPath, '_blank')
       }else if(file.endsWith('.wkfl')){
-        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit/none", _path);
+        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }else if(node.type === "other"){
-        var openPath = path.join(app.getBasePath(), "edit", _path);
+        var openPath = path.join(app.getBasePath(), "view", _path);
         window.open(openPath, "_blank");
       }
     });

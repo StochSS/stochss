@@ -51,15 +51,14 @@ def upload_model_file(dir_path, _file_name, name, body):
 
 
 def validate_sbml(path, file_name):
-    try:
-        model, errors = convert_to_gillespy_model(path)
-    except AttributeError:
+    model, errors = convert_to_gillespy_model(path)
+    if model is None:
         return False, "The file {0} is not in SBML format.".format(file_name), None
     errors = list(map(lambda error: error[0], errors))
     if len(errors):
         return False, errors, None
     return True, "", model
-
+    
 
 def upload_sbml_file(dir_path, _file_name, name, body):
     errors = []
@@ -80,7 +79,7 @@ def upload_sbml_file(dir_path, _file_name, name, body):
         os.rename(sbml_path, xml_path)
         message = "{0} could not be validated as a SBML file and was uploaded as {1} to {2}".format(_file_name, file_name, dir_path.replace("/home/jovyan", ""))
         if isinstance(error, list):
-            errors.extent(error)
+            errors.extend(error)
         else:
             errors.append(error)
     full_path = sbml_path if is_valid else xml_path
