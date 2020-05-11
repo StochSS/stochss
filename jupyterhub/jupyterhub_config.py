@@ -144,7 +144,12 @@ network_name = os.environ['DOCKER_NETWORK_NAME']
 c.DockerSpawner.use_internal_ip = True
 c.DockerSpawner.network_name = network_name
 # Pass the network name as argument to spawned containers
-c.DockerSpawner.extra_host_config = { 'network_mode': network_name }
+# Pass cpu limit as extra config since dockerspawner does not natively support it
+c.DockerSpawner.extra_host_config = {
+  'network_mode': network_name,
+  'cpu_period': 100000,
+  'cpu_quota': 200000
+}
 # Explicitly set notebook directory because we'll be mounting a host volume to
 # it.  Most jupyter/docker-stacks *-notebook images run the Notebook server as
 # user `jovyan`, and set the notebook directory to `/home/jovyan/work`.
@@ -207,7 +212,7 @@ c.Spawner.mem_limit = '4G'
 #  limit to work.** The default spawner, `LocalProcessSpawner`, does **not**
 #  implement this support. A custom spawner **must** add support for this setting
 #  for it to be enforced.
-c.Spawner.cpu_limit = 2
+#c.Spawner.cpu_limit = 2
 
 ## Extra arguments to be passed to the single-user server.
 #  
@@ -239,7 +244,8 @@ c.Spawner.cpu_limit = 2
 #  limit to work.** The default spawner, `LocalProcessSpawner`, does **not**
 #  implement this support. A custom spawner **must** add support for this setting
 #  for it to be enforced.
-c.Spawner.cpu_guarantee = 1
+## Not supported by dockerspawner yet
+#c.Spawner.cpu_guarantee = 1
 
 ## Minimum number of bytes a single-user notebook server is guaranteed to have
 #  available.
