@@ -292,7 +292,8 @@ class WorkflowNotebookHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
-        workflows = {"1d_parameter_sweep":convert_to_1d_psweep_nb,
+        workflows = {"gillespy":convert_to_notebook,
+                    "1d_parameter_sweep":convert_to_1d_psweep_nb,
                     "2d_parameter_sweep":convert_to_2d_psweep_nb,
                     "sciope_model_exploration":convert_to_sciope_me,
                     "model_inference":convert_to_mdl_inference_nb}
