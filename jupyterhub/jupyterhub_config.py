@@ -167,21 +167,24 @@ c.DockerSpawner.debug = True
 # Spawner(LoggingConfigurable) configuration
 #------------------------------------------------------------------------------
 
-reserved = 2 if os.cpu_count() > 2 else 0
-user_cpus = os.cpu_count() - reserved
-
-c.StochSS.user_palloc = [0] * user_cpus
+c.StochSS.user_palloc = [0] * os.cpu_count()
 
 from logging import getLogger
 
 def pre_spawn_hook(spawner):
   log = getLogger()
   palloc = c.StochSS.user_palloc
+  div = len(palloc) // 2
+  reserved = 1 if len(palloc) > 2 else 0
+  log.warn('RESERVED CPUS: ')
+  log.warn(reserved)
   log.warn('PALLOC')
   log.warn(palloc)
-  cpu1_index = palloc.index(min(palloc))
+  log.warn('AVAILABLE')
+  log.warn(palloc[reserved:div])
+  cpu1_index = palloc[reserved:div].index(min(palloc[reserved:div]))+reserved
   palloc[cpu1_index] += 1
-  cpu2_index = palloc.index(min(palloc))
+  cpu2_index = cpu1_index+div
   palloc[cpu2_index] += 1
   spawner.extra_host_config['cpuset_cpus'] = '{},{}'.format(cpu1_index, cpu2_index)
   log.warn('PALLOC')
