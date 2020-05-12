@@ -139,7 +139,7 @@ class RunModelAPIHandler(APIHandler):
         if outfile == 'none':
             outfile = str(uuid.uuid4()).replace("-", "_")
         log.debug("Temporary outfile: {0}".format(outfile))
-        exec_cmd = ['/stochss/stochss-pkg/handlers/util/run_model.py', '{0}'.format(model_path), '{}.tmp'.format(outfile)] # Script commands for read run_cmd
+        exec_cmd = ['/stochss/stochss/handlers/util/run_model.py', '{0}'.format(model_path), '{}.tmp'.format(outfile)] # Script commands for read run_cmd
         exec_cmd.append(''.join(['--', run_cmd]))
         log.debug("Exec command sent to the subprocess: {0}".format(exec_cmd))
         resp = {"Running":False,"Outfile":outfile,"Results":""}
