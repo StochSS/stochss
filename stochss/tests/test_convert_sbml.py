@@ -13,14 +13,14 @@ from handlers.util.stochss_errors import StochSSAPIError, StochSSFileNotFoundErr
 class TestConvertSBMLToModel(unittest.TestCase):
 
     def test_sbml_to_gillespy_success_with_stochss_model(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
         self.assertIsInstance(gillespy2_model, Model)
         self.assertIsInstance(errors, list)
         
 
     def test_sbml_to_gillespy_convert_error(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test2.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test2.sbml"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
         self.assertIsNone(gillespy2_model)
         self.assertIsInstance(errors, list)
@@ -28,7 +28,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
     def test_sbml_to_gillespy_file_not_found_error(self):
         expected = StochSSFileNotFoundError("")
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test3.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test3.sbml"
 
         try:
             resp = convert_to_gillespy_model(sbml_file)
@@ -40,7 +40,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_species_from_gillespy_species(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/specie.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -56,7 +56,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_parameter_from_gillespy_parameter(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/parameter.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -72,7 +72,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_reaction_from_gillespy_reaction(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/reaction.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -93,7 +93,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_reactant_from_gillespy_reactant(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/stoich-specie.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -112,7 +112,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_product_from_gillespy_product(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/stoich-specie.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -131,7 +131,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_event_from_gillespy_event(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/event.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -151,7 +151,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_event_assignment_from_gillespy_event_assignment(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/event-assignment.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -169,7 +169,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_rate_rule_from_gillespy_rate_rule(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/rule.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -187,7 +187,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_assignment_rule_from_gillespy_assignment_rule(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/rule.js"
         gillespy2_model, errors = convert_to_gillespy_model(sbml_file)
 
@@ -205,7 +205,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
 
     def test_build_stochss_function_definition_from_sbml_function_definition(self):
-        sbml_file = "stochss-pkg/tests/mock_file_sys/sbml_files/test1.sbml"
+        sbml_file = "stochss/tests/mock_file_sys/sbml_files/test1.sbml"
         model_path = "client/models/function-definition.js"
         function_definitions = get_sbml_function_definitions(sbml_file)
 

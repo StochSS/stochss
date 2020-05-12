@@ -113,7 +113,7 @@ test:   build
 		-v $(PWD):/stochss \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-                /stochss/stochss-pkg/tests/run_tests.py
+                /stochss/stochss/tests/run_tests.py
 
 run:    
 	docker run --rm \
