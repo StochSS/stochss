@@ -7,6 +7,40 @@ import numpy as np
 from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
 
 
+def get_outputs(experiment, data_generators):
+    outputs = {}
+    for i in range(experiment.getNumOutputs()):
+        output = experiment.getOutput(i)
+        if output.getTypeCode() == libsedml.SEDML_OUTPUT_PLOT2D:
+            curves = get_2d_output_curves(output, data_generators)
+            outputs[output.getId()] = curves
+    return outputs
+
+
+def get_2d_output_curves(output, data_generators):
+    curves = []
+    for i in range(output.getNumCurves()):
+        curve = output.getCurve(i)
+        curves.append(data_generators[curve.getYDataReference()])
+    return curves
+
+
+def get_data_generators(experiment):
+    data_generators = {}
+    for i in range(experiment.getNumDataGenerators()):
+        data_generator = experiment.getDataGenerator(i)
+        data_generators[data_generator.getId()] = libsedml.formulaToString(data_generator.getMath())
+    return data_generators
+
+
+def get_tasks(experiment):
+    tasks = {}
+    for i in range(experiment.getNumTasks()):
+        task = experiment.getTask(i)
+        tasks[task.getId()] = {"model":task.getModelReference(),"simulation":task.getSimulationReference()}
+    return tasks
+
+
 def get_models(experiment. parent_path):
     models = {}
 
@@ -78,11 +112,12 @@ def execute_sedml_change_attributes(model, changes):
         prop = target.split('@').pop() if "@" in target.split(']').pop() else None
         
         if component == "parameter":
-            change_parameter(model, name, value)
+            change_parameter(model['parameters'], name, value)
 
 
-def change_parameter(model, name, value):
-    model.listOfParameters[name].set_expression(value)
+def change_parameter(parameters, name, value):
+    param = list(filter(lambda parameter: parameter['name'] == name))[0]
+    param['expression'] = value
 
 
 def get_simulations(experiment):
@@ -159,13 +194,15 @@ def build_experiment(experiment, path):
     parent_path = os.path.dirname(path)
     name = path.split('/').pop().split('.')[0]
 
-    os.mkdir(os.path.join(parent_path, name))
+    # os.mkdir(os.path.join(parent_path, name))
 
     simulations = get_simulations(experiment)
     models = get_models(experiment, parent_path)
     tasks = get_tasks(experiment)
     data_generators = get_data_generators(experiment)
     outputs = getoutputs(experiment, data_generator)
+
+    return [simulations, models, tasks, data_generator, outputs]
 
 
 def read_sedml_doc(path):
@@ -190,4 +227,4 @@ def get_experiment(path):
     experiment, errors = read_sedml_doc(path)
 
     if experiment is not None:
-        build_experiment(experiment, path)
+        return build_experiment(experiment, path)
