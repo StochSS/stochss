@@ -3,7 +3,7 @@
 import os
 import json
 from .rename import get_unique_file_name
-from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
+from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model, write_stochss_model
 
 
 def validate_model(body, file_name):
@@ -71,7 +71,8 @@ def upload_sbml_file(dir_path, _file_name, name, body):
         template_path = "/stochss/model_templates/nonSpatialModelTemplate.json"
         with open(template_path, "r") as template_file:
             template = json.load(template_file)
-        convert_to_stochss_model(template, model, sbml_path, name)
+        mdl, msg, errs, path = convert_to_stochss_model(template, model, sbml_path, name)
+        write_stochss_model(mdl, path)
         message = "{0} was successfully uploaded to {1}".format(file_name, dir_path.replace("/home/jovyan", ""))
     else:
         file_name = '.'.join([name,"xml"])

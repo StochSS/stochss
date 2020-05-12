@@ -80,13 +80,10 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
             stochss_model['functionDefinitions'].extend(stochss_function_definitions)
 
         stochss_model['defaultID'] = comp_id
-
-        with open(stochss_model_path, "w") as stochss_file:
-            json.dump(stochss_model, stochss_file)
     
-        return "The SBML Model was successfully converted to a StochSS Model.", errors, stochss_model_path
+        return stochss_model, "The SBML Model was successfully converted to a StochSS Model.", errors, stochss_model_path
     else:
-        return "ERROR! We were unable to convert the SBML Model into a StochSS Model.", [], ""
+        return None, "ERROR! We were unable to convert the SBML Model into a StochSS Model.", [], ""
 
 
 def get_species(species, comp_id):
@@ -359,6 +356,11 @@ def get_function_definitions(function_definitions, comp_id):
     return stochss_function_definitions, comp_id
 
 
+def write_stochss_model(model, path):
+    with open(path, "w") as stochss_file:
+        json.dump(model, stochss_file)
+
+
 def convert_sbml_to_model(path, model_template):
     user_dir = "/home/jovyan"
     
@@ -370,7 +372,9 @@ def convert_sbml_to_model(path, model_template):
         sbml_errors = list(map(lambda error: error[0], sbml_errors))
     else:
         sbml_errors.append("Error: could not convert the SBML Model to a StochSS Model")
-    msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path, name=name)
+    model, msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path, name=name)
+    if model is not None:
+        write_stochss_model(model, stochss_model_path)
     sbml_errors.extend(errors)
     resp = {"message":msg,"errors":sbml_errors,"File":stochss_model_path.split('/').pop()}
     return resp
