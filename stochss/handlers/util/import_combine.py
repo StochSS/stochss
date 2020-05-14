@@ -19,9 +19,22 @@ def get_outputs(experiment, data_generators):
     outputs = {}
     for i in range(experiment.getNumOutputs()):
         output = experiment.getOutput(i)
+        errors = []
+        
         if output.getTypeCode() == libsedml.SEDML_OUTPUT_PLOT2D:
             curves = get_2d_output_curves(output, data_generators)
-            outputs[output.getId()] = curves
+            output_data = {"curves":curves, "errors":errors}
+        elif output.getTypeCode() == libsedml.SEDML_OUTPUT_PLOT3D:
+            errors.append("Error! StochSS does not support 3D Plots.")
+            output_data = {"curves":None, "errors":errors}
+        elif output.getTypeCode() == libsedml.SEDML_OUTPUT_REPORT:
+            errors.append("Error! StochSS does not support Reports.")
+            output_data = {"curves":None, "errors":errors}
+        else:
+            errors.append("Error! StochSS encountered an unknown output type: {0}".format(output.getId()))
+        
+        outputs[output.getId()] = output_data
+    
     return outputs
 
 
@@ -29,16 +42,70 @@ def get_2d_output_curves(output, data_generators):
     curves = []
     for i in range(output.getNumCurves()):
         curve = output.getCurve(i)
-        curves.append(data_generators[curve.getYDataReference()])
+        if not (curve.getLogX() or curve.getLogY()):
+            errors = []
+            
+            x_data = data_generators[curve.getXDataReference()]
+            if len(x_data['variables']) == 1 and x_data['variables'][0]['target'] == "time":
+                x_data_ref = x_data['variables'][0]['target']
+            else:
+                errors.append("Error! StochSS does not support output processing for x-axes data.")
+                x_data_ref = None
+            
+            y_data = data_generators[curve.getYDataReference()]
+            if len(y_data['variables']) == 1:
+                y_data_ref = y_data['variables'][0]['target']
+            else:
+                errors.append("Error! StochSS does not support output processing for y-axes data.")
+                y_data_ref = None
+            
+            if y_data['variables'][0]['task'] == x_data['variables'][0]['task']:
+                task = y_data['variables'][0]['task']
+            else:
+                errors.append("Error! The variables for this curve are from different tasks.")
+                task = None
+
+            curve_data = {"x_data_ref":x_data_ref, "y_data_ref":y_data_ref, "task":task, "errors":errors}
+        else:
+            error = "Error! StochSS does not support logarithmic plotting."
+            curve_data = {"x_data_ref":None, "y_data_ref":None, "task":None, "errors":[error]}
+
+        curves.append(curve_data)
     return curves
 
 
 def get_data_generators(experiment):
     data_generators = {}
+    
     for i in range(experiment.getNumDataGenerators()):
         data_generator = experiment.getDataGenerator(i)
-        data_generators[data_generator.getId()] = libsedml.formulaToString(data_generator.getMath())
+        variables = get_data_variables(data_generator)
+        math = libsedml.formulaToString(data_generator.getMath())
+        
+        data_vars = []
+        for key, var in variables.items():
+            if key in math:
+                data_vars.append(var)
+
+        data_generators[data_generator.getId()] = {"math":math, "variables":data_vars, "parameters":{}}
+    
     return data_generators
+
+
+def get_data_variables(data_generator):
+    variables = {}
+
+    for i in range(data_generator.getNumVariables()):
+        variable = data_generator.getVariable(i)
+        if variable.isSetTarget():
+            target = variable.getTarget().split("@id='").pop().split("']")[0]
+        elif variable.isSetSymbol():
+            target = variable.getSymbol().split(":").pop()
+        stochss_var = {"task":variable.getTaskReference(), "target":target}
+
+        variables[variable.getId()] = stochss_var
+
+    return variables
 
 
 def get_tasks(experiment):
@@ -236,10 +303,12 @@ def build_experiment(experiment, path, project_path):
             model = model['model']
             set_model_settings(model['modelSettings'], simulation)
             set_simulation_settings(model['simulationSettings'], simulation)
+            model['resultsSettings'] = {"outputs":{}}
+            set_results_settings(model['resultsSettings'], outputs, name)
             wkfl_path = os.path.join(experiment_path, ''.join([name,"_05132020_110609",".wkfl"]))
             mdl_file = task['model']+".mdl"
             wkfls.append({"model":model, "path":wkfl_path, "mdl_file":mdl_file, "type":task['type']})
-
+    
     stochss_experiment = {"workflows":wkfls, "path":experiment_path}
     return stochss_experiment, errors
 
@@ -257,6 +326,29 @@ def set_simulation_settings(settings, simulation):
     settings['isAutomatic'] = False
     for name, value in algorithm_params.items():
         settings[name] = value
+
+
+def set_results_settings(settings, outputs, task_name):
+    for name, output in outputs.items():
+        curves = []
+        for curve in output['curves']:
+            if validate_curve(curve, task_name):
+                curves.append(curve['y_data_ref'])
+
+        if len(curves):
+            settings["outputs"][name] = curves
+
+
+def validate_curve(curve, task_name):
+    if curve['x_data_ref'] is None:
+        return False
+    if curve['y_data_ref'] is None:
+        return False
+    if curve['task'] is None:
+        return False
+    if not curve['task'] == task_name:
+        return False
+    return True
 
 
 def read_sedml_doc(path):
@@ -364,10 +456,11 @@ def import_combine_archive(path):
 
     with zipfile.ZipFile(path, "r") as zip_file:
         zip_file.extractall(tmp.name)
+        shutil.rmtree(os.path.join(tmp.name, "__MACOSX"))
 
     cmb_dir = os.listdir(tmp.name)[0]
     cmb_path = os.path.join(tmp.name, cmb_dir)
-
+    
     if os.path.isdir(cmb_path) and "manifest.xml" in os.listdir(cmb_path):
         project, errors = build_project(cmb_path, project_path)
         errs = write_project(project, project_path)
@@ -375,8 +468,7 @@ def import_combine_archive(path):
     else:
         errors = ["Error! {0} does not conform to the COMBINE archive standards.".format(path.split('/').pop())]
 
-    if os.path.exists(tmp.name):
-        shutil.rmtree(tmp.name)
+    tmp.cleanup()
 
     return errors
 
