@@ -4,6 +4,7 @@ import os
 import json
 from .rename import get_unique_file_name
 from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model, write_stochss_model
+from .import_combine import import_combine_archive
 
 
 def validate_model(body, file_name):
@@ -115,6 +116,8 @@ def upload_file(dir_path, file_name, name, ext, body, file_type, exts):
             file.write(body)
     if ext == "zip":
         unzip_file(full_path, dir_path)
+    elif ext == "omex":
+        import_combine_archive(full_path)
     dir_path = dir_path.replace("/home/jovyan", "")
     if is_valid:
         message = "{0} was successfully uploaded to {1}".format(file_name, dir_path)

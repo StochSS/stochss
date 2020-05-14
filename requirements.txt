@@ -1,6 +1,6 @@
 python-libsbml==5.18.0
 python-libsedml==2.0.9
-gillespy2==1.3.4
+https://github.com/gillespy2/gillespy2/tarball/develop
 vtk
 pygmsh==5.0.2
 meshio==2.3.10
