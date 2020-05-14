@@ -117,7 +117,8 @@ def upload_file(dir_path, file_name, name, ext, body, file_type, exts):
     if ext == "zip":
         unzip_file(full_path, dir_path)
     elif ext == "omex":
-        import_combine_archive(full_path)
+        errs = import_combine_archive(full_path)
+        errors.extend(errs)
     dir_path = dir_path.replace("/home/jovyan", "")
     if is_valid:
         message = "{0} was successfully uploaded to {1}".format(file_name, dir_path)

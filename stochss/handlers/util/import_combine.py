@@ -9,7 +9,7 @@ import subprocess
 import numpy as np
 import xml.etree.ElementTree as ET
 
-from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
+from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model, convert_sbml_to_model
 from .parameter_sweep import ParameterSweep
 from .run_model import GillesPy2Workflow
 from .run_workflow import save_new_workflow
@@ -61,8 +61,7 @@ def get_models(experiment, parent_path):
 
             if source.endswith(".xml") or source.endswith(".sbml"):
                 source = os.path.join(parent_path, source.replace(".\\", ""))
-                with open("/stochss/model_templates/nonSpatialModelTemplate.json", "r") as template_file:
-                    template = json.load(template_file)
+                template = get_model_template()
                 
                 gillespy_model, gillespy_errors = convert_to_gillespy_model(source)
                 errors = list(map(lambda error: error[0], gillespy_errors))
@@ -88,6 +87,11 @@ def get_models(experiment, parent_path):
         models[mdl.getId()] = model
 
     return models
+
+
+def get_model_template():
+    with open("/stochss/model_templates/nonSpatialModelTemplate.json", "r") as template_file:
+        return json.load(template_file)
 
 
 def process_model_changes(mdl, model):
@@ -283,10 +287,12 @@ def build_project(path, project_path):
     for child in root.getchildren():
         if "master" in child.keys() and child.get(key="master") == "true":
             if child.get(key="format").endswith("sbml"):
-                print("TODO: Write SBML file to project")
+                template = get_model_template()
+                source = os.path.join(path, child.get(key="location").replace("./",""))
+                errors = convert_sbml_to_model(source, template)['errors']
+                proj_errors.extend(errors)
             elif child.get(key="format").endswith("sed-ml"):
                 source = os.path.join(path, child.get(key="location").replace("./",""))
-                print(source)
                 experiment, errors = read_sedml_doc(source)
                 proj_errors.extend(errors)
                 
@@ -295,45 +301,61 @@ def build_project(path, project_path):
                     proj_errors.extend(errors)
                     experiments.append(stochss_experiment)
             else:
-                print("TODO: Handle unsupported StochSS language")
+                file = child.get(key="location")
+                file_format = child.get(key="format")
+                proj_errors.append("Error! {0} is in a format that is not supported by StochSS: {1}".format(file, file_format))
 
-    return experiments, errors
+    return experiments, proj_errors
 
 
-def write_workflow(workflow):
-    os.mkdir(workflow['path'])
+def write_workflow(workflow, exp_path):
+    if not os.path.exists(workflow['path']):
+        os.mkdir(workflow['path'])
 
-    tmp = tempfile.NamedTemporaryFile(mode="w", delete=False)
-    tmp.write(json.dumps(workflow['model']))
-    tmp.close()
+        tmp = tempfile.NamedTemporaryFile(mode="w", delete=False)
+        tmp.write(json.dumps(workflow['model']))
+        tmp.close()
 
-    workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
-    wkfl = workflows[workflow['type']](workflow['path'], tmp.name)
-    wkfl.wkfl_mdl_path = wkfl.wkfl_mdl_path.replace(tmp.name.split('/').pop(), workflow['mdl_file'])
+        workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
+        wkfl = workflows[workflow['type']](workflow['path'], tmp.name)
+        wkfl.wkfl_mdl_path = wkfl.wkfl_mdl_path.replace(tmp.name.split('/').pop(), workflow['mdl_file'])
 
-    save_new_workflow(wkfl, workflow['type'], True)
-    
-    exec_cmd = ["/stochss/stochss/handlers/util/run_workflow.py", 
-                "{0}".format(wkfl.wkfl_mdl_path), 
-                "{0}".format(workflow['path']), 
-                "{0}".format(workflow['type']),
-                "-rn" ] # Script commands
-    pipe = subprocess.Popen(exec_cmd)
-    os.remove(tmp.name)
+        save_new_workflow(wkfl, workflow['type'], True)
+        
+        exec_cmd = ["/stochss/stochss/handlers/util/run_workflow.py", 
+                    "{0}".format(wkfl.wkfl_mdl_path), 
+                    "{0}".format(workflow['path']), 
+                    "{0}".format(workflow['type']),
+                    "-rn" ] # Script commands
+        pipe = subprocess.Popen(exec_cmd)
+        os.remove(tmp.name)
+    else:
+        return "Error! {0} already exists in {1}".format(workflow['path'].split('/').pop(), exp_path.split('/').pop())
 
 
 def write_experiment(experiment):
-    os.mkdir(experiment['path'])
+    if not os.path.exists(experiment['path']):
+        os.mkdir(experiment['path'])
 
+    errors = []
     for workflow in experiment['workflows']:
-        write_workflow(workflow)
+        err = write_workflow(workflow, experiment['path'])
+        if err is not None:
+            errors.append(err)
+
+    return errors
 
 
 def write_project(project, project_path):
-    os.mkdir(project_path)
+    if not os.path.exists(project_path):
+        os.mkdir(project_path)
 
+    errors = []
     for experiment in project:
-        write_experiment(experiment)
+        errs = write_experiment(experiment)
+        errors.extend(errs)
+
+    return errors
     
 
 def import_combine_archive(path):
@@ -346,10 +368,15 @@ def import_combine_archive(path):
     cmb_dir = os.listdir(tmp.name)[0]
     cmb_path = os.path.join(tmp.name, cmb_dir)
 
-    project, errors = build_project(cmb_path, project_path)
-
-    write_project(project, project_path)
+    if os.path.isdir(cmb_path) and "manifest.xml" in os.listdir(cmb_path):
+        project, errors = build_project(cmb_path, project_path)
+        errs = write_project(project, project_path)
+        errors.extend(errs)
+    else:
+        errors = ["Error! {0} does not conform to the COMBINE archive standards.".format(path.split('/').pop())]
 
     if os.path.exists(tmp.name):
         shutil.rmtree(tmp.name)
+
+    return errors
 
