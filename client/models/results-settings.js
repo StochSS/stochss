@@ -11,6 +11,6 @@ module.exports = State.extend({
     speciesOfInterest: "string",
     type: "string",
     status: "string",
-    realizations: "string"
+    realizations: "number"
   }
 });
