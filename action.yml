@@ -1,0 +1,12 @@
+# action.yml
+name: 'StochSS Continuous Testing'
+description: 'StochSS Continuous Testing'
+inputs:
+  testin:
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.testin }}
+    
