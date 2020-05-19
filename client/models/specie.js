@@ -13,10 +13,7 @@ module.exports = State.extend({
     isSwitchTol: 'boolean',
     annotation: 'string',
     diffusionCoeff: 'number',
-    subdomains: {
-      type: 'object',
-      default: function() {return []; }
-    },
+    subdomains: 'object'
   },
   session: {
     inUse: {

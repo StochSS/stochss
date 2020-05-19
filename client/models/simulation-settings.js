@@ -9,7 +9,7 @@ module.exports = State.extend({
     realizations: 'number',
     algorithm: 'string',
     seed: 'number',
-    tauTol: 'number',
+    tauTol: 'number'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
