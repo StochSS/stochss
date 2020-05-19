@@ -24,6 +24,7 @@ from gillespy2.core.events import EventAssignment, EventTrigger, Event
 from gillespy2.core.gillespyError import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
 from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
 from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
+from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver
 
 import warnings
 warnings.simplefilter("ignore")
@@ -452,7 +453,7 @@ def run_model(model_path):
     return results
 
 
-def run_solver(model, data, run_timeout):
+def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, rate2=None):
     '''
     Choose the solver based on the algorithm and is_stochastic.
 
@@ -466,11 +467,13 @@ def run_solver(model, data, run_timeout):
         Number of seconds until the simulation times out.
     '''
     # print("Selecting the algorithm")
-    algorithm = data['algorithm']
+    algorithm = "V-SSA" if is_ssa else data['algorithm']
     if(algorithm == "ODE"):
         return basicODESolver(model, data, run_timeout)
     if(algorithm == "SSA"):
         return ssaSolver(model, data, run_timeout)
+    if(algorithm == "V-SSA"):
+        return v_ssa_solver(model, data, run_timeout, solver, rate1, rate2)
     if(algorithm == "Tau-Leaping"):
         return basicTauLeapingSolver(model, data, run_timeout)
     if(algorithm == "Hybrid-Tau-Leaping"):
@@ -512,7 +515,7 @@ def ssaSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    # print("running ssa solver")
+    print("running ssa solver")
     seed = data['seed']
     if(seed == -1):
         seed = None
@@ -520,6 +523,24 @@ def ssaSolver(model, data, run_timeout):
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed
+    )
+    return results
+
+
+def v_ssa_solver(model, data, run_timeout, solver, rate1, rate2):
+    print("running variable ssa c solver")
+    seed = data['seed']
+    if seed == -1:
+        seed = None
+    variables = {rate1[0]:rate1[1]}
+    if rate2 is not None:
+        variables[rate2[0]] = rate2[1]
+    results = model.run(
+        solver = solver,
+        timeout = run_timeout,
+        number_of_trajectories = data['realizations'],
+        seed = seed,
+        variables = variables
     )
     return results
 
