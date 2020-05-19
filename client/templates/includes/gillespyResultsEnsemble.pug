@@ -22,13 +22,22 @@ div#workflow-results-ensemble.card.card-body
             td: div(data-hook="xaxis")
             td: div(data-hook="yaxis")
 
+    div.card.card-body.collapse(data-hook="sedml-plots-container")
+
+      div
+
+        h5.inline Sed-ML Plots
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-sedml-plots", data-hook="collapse-sedml-plots") -
+
+      div.collapse(class="show" id="collapse-sedml-plots" data-hook="sed-ml-plots-view")
+
     div.card.card-body
       div
 
         h5.inline Plot Standard Deviation Range
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-stddevrange", data-hook="collapse-stddevrange") -
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-stddevrange", data-hook="collapse-stddevrange") +
 
-      div.collapse(class="show", id="collapse-stddevrange")
+      div.collapse(id="collapse-stddevrange"  data-hook="default-plot")
 
         div(data-hook="stddevran")
         button.btn.btn-primary.box-shadow(id="stddevran" data-hook="plot") Edit Plot

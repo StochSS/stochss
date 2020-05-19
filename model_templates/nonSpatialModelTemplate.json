@@ -33,7 +33,7 @@
 	"resultsSettings":{
 		"mapper": "final",
 		"reducer": "avg",
-		"outputs": {}
+		"outputs": []
 	},
 	"meshSettings": {
 		"count": 2

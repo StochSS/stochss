@@ -21,13 +21,23 @@ div#workflow-results.card.card-body
             td: div(data-hook="title")
             td: div(data-hook="xaxis")
             td: div(data-hook="yaxis")
+    
+    div.card.card-body.collapse(data-hook="sedml-plots-container")
+
+      div
+
+        h5.inline Sed-ML Plots
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-sedml-plots", data-hook="collapse-sedml-plots") -
+
+      div.collapse(class="show" id="collapse-sedml-plots" data-hook="sed-ml-plots-view")
+
     div.card.card-body
       div
 
         h5.inline Plot Trajectories
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") -
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") +
 
-      div.collapse(class="show", id="collapse-trajectories")
+      div.collapse(id="collapse-trajectories" data-hook="default-plot")
 
         div(data-hook="trajectories")
         button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Edit Plot

@@ -5,9 +5,14 @@ var xhr = require('xhr');
 var Plotly = require('../lib/plotly');
 var app = require('../app');
 var Tooltips = require('../tooltips');
+//collections
+var Collection = require('ampersand-collection');
+//models
+var SedMLPlot = require('../models/sed-ml-plot');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
+var SedMLPlotView = require('./sed-ml-plot');
 var SelectView = require('ampersand-select-view');
 //templates
 var gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
@@ -16,24 +21,13 @@ var parameterSweepResultsTemplate = require('../templates/includes/parameterSwee
 
 module.exports = View.extend({
   events: {
-    'click [data-hook=collapse-stddevrange]' : function () {
-      this.changeCollapseButtonText("collapse-stddevrange");
-    },
-    'click [data-hook=collapse-trajectories]' : function () {
-      this.changeCollapseButtonText("collapse-trajectories");
-    },
-    'click [data-hook=collapse-stddev]' : function () {
-      this.changeCollapseButtonText("collapse-stddev");
-    },
-    'click [data-hook=collapse-trajmean]' : function () {
-      this.changeCollapseButtonText("collapse-trajmean");
-    },
-    'click [data-hook=collapse-psweep]' : function () {
-       this.changeCollapseButtonText("collapse-psweep");
-     },
-    'click [data-hook=collapse]' : function () {
-      this.changeCollapseButtonText("collapse");
-    },
+    'click [data-hook=collapse-stddevrange]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-trajectories]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-stddev]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-trajmean]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-psweep]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-sedml-plots]' : 'changeCollapseButtonText',
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
@@ -124,9 +118,21 @@ module.exports = View.extend({
   },
   updateValid: function () {
   },
-  changeCollapseButtonText: function (source) {
+  changeCollapseButtonText: function (e) {
+    var source = Boolean(e.target) ? e.target.dataset.hook : e
     var text = $(this.queryByHook(source)).text();
     text === '+' ? $(this.queryByHook(source)).text('-') : $(this.queryByHook(source)).text('+');
+  },
+  renderSedmlPlots: function () {
+    if(this.sedmlPlotsView){
+      this.sedmlPlotsView.remove()
+    }
+    var outputs = new Collection(this.model.outputs, {model: SedMLPlot})
+    this.sedmlPlotsView = this.renderCollection(
+      outputs,
+      SedMLPlotView,
+      this.queryByHook("sed-ml-plots-view")
+    )
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
@@ -224,10 +230,20 @@ module.exports = View.extend({
     $(this.queryByHook('workflow-results')).collapse('show');
     $(this.queryByHook('collapse')).prop('disabled', false);
     this.changeCollapseButtonText("collapse")
-    if(this.model.type === "parameterSweep"){
+    if(this.model.outputs.length > 0){
+      $(this.queryByHook("sedml-plots-container")).collapse("show")
+      this.renderSedmlPlots();
+    }else if(this.model.type === "parameterSweep"){
       this.getPlot("psweep")
     }else{
-      this.model.realizations > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
+      $(this.queryByHook("default-plot")).collapse("show")
+      if(this.model.realizations > 1) {
+        this.getPlot("stddevran") 
+        this.changeCollapseButtonText("collapse-stddevrange")
+      }else{
+        this.getPlot("trajectories")
+        this.changeCollapseButtonText("collapse-trajectories")
+      }
     }
   },
   registerRenderSubview: function (view, hook) {

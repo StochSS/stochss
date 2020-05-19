@@ -1,0 +1,10 @@
+div#sed-ml-plot-view.card.card-body
+
+    div
+        
+        h5.inline=this.model.name
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-"+this.model.name, data-hook="collapse-sedml-plot") -
+
+    div.collapse(class="show" id="collapse-"+this.model.name)
+
+        p="Plot for "+this.model.name

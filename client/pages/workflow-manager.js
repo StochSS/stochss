@@ -179,6 +179,7 @@ let WorkflowManager = PageView.extend({
       this.workflowResultsView.remove();
     }
     var resultsSettings = this.model.resultsSettings;
+    console.log(resultsSettings)
     resultsSettings.speciesOfInterest = this.model.parameterSweepSettings.speciesOfInterest.name;
     resultsSettings.realizations = this.model.simulationSettings.realizations;
     resultsSettings.status = this.status;

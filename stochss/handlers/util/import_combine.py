@@ -303,7 +303,6 @@ def build_experiment(experiment, path, project_path):
             model = model['model']
             set_model_settings(model['modelSettings'], simulation)
             set_simulation_settings(model['simulationSettings'], simulation)
-            model['resultsSettings'] = {"outputs":{}}
             set_results_settings(model['resultsSettings'], outputs, name)
             wkfl_path = os.path.join(experiment_path, ''.join([name,"_05132020_110609",".wkfl"]))
             mdl_file = task['model']+".mdl"
@@ -336,7 +335,7 @@ def set_results_settings(settings, outputs, task_name):
                 curves.append(curve['y_data_ref'])
 
         if len(curves):
-            settings["outputs"][name] = curves
+            settings.append({"name":name,"curves":curves})
 
 
 def validate_curve(curve, task_name):
