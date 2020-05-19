@@ -15,6 +15,8 @@ import uuid
 import json
 from json.decoder import JSONDecodeError
 
+from .util.update_model_version import update_model_version
+
 import logging
 
 log = logging.getLogger('stochss')
@@ -58,6 +60,7 @@ class JsonFileAPIHandler(APIHandler):
             with open(full_path, 'r') as f:
                 data = json.load(f)
             log.debug("Contents of the json file: {0}".format(data))
+            update_model_version(data)
             self.write(data)
         elif purpose == "edit":
             directories = os.path.dirname(full_path)
