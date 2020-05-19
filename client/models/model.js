@@ -6,6 +6,7 @@ var Model = require('ampersand-model');
 var ModelSettings = require('./model-settings');
 var SimulationSettings = require('./simulation-settings');
 var ParameterSweepSettings = require('./parameter-sweep-settings');
+var ResultsSettings = require('./results-settings');
 var MeshSettings = require('./mesh-settings');
 //collections
 var Species = require('./species');
@@ -38,6 +39,7 @@ module.exports = Model.extend({
     modelSettings: ModelSettings,
     simulationSettings: SimulationSettings,
     parameterSweepSettings: ParameterSweepSettings,
+    resultsSettings: ResultsSettings,
     meshSettings: MeshSettings
   },
   session: {
