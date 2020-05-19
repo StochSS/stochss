@@ -38,44 +38,37 @@ class JsonFileAPIHandler(APIHandler):
         ----------
         '''
         purpose = self.get_query_argument(name="for")
+        
         file_path = self.get_query_argument(name="path")
         log.debug("Path to the file: {0}".format(file_path))
         if file_path.startswith('/'):
             file_path = file_path.replace('/', '', 1)
         full_path = os.path.join('/home/jovyan', file_path)
         log.debug("Full path to the file: {0}".format(full_path))
+        
+        template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
+        log.debug("Path to the model template: {0}".format(template_path))
+        with open(template_path, 'r') as json_file:
+            template = json.load(json_file)
+        log.debug("Contents of the model template: {0}".format(template))
+        
         self.set_header('Content-Type', 'application/json')
+        
         if os.path.exists(full_path):
             with open(full_path, 'r') as f:
                 data = json.load(f)
             log.debug("Contents of the json file: {0}".format(data))
             self.write(data)
         elif purpose == "edit":
-            new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
-            log.debug("Path to the model template: {0}".format(new_path))
+            directories = os.path.dirname(full_path)
+            log.debug("Path of parent directories: {0}".format(directories))
             try:
-                with open(new_path, 'r') as json_file:
-                    template = json.load(json_file)
-                log.debug("Contents of the model template: {0}".format(template))
-                directories = os.path.dirname(full_path)
-                log.debug("Path of parent directories: {0}".format(directories))
-                try:
-                    os.makedirs(directories)
-                except FileExistsError:
-                    log.debug("The directories in the path to the model already exists.")
-                with open(full_path, 'w') as f:
-                    json.dump(template, f)
-                self.write(template)
-            except FileNotFoundError as err:
-                self.set_status(404)
-                error = {"Reason":"Model Template Not Found","Message":"Could not find the model template file: "+str(err)}
-                log.error("Exception information: {0}".format(error))
-                self.write(error)
-            except JSONDecodeError as err:
-                self.set_status(406)
-                error = {"Reason":"Template Data Not JSON Format","Message":"Template data is not JSON decodeable: "+str(err)}
-                log.error("Exception information: {0}".format(error))
-                self.write(error)
+                os.makedirs(directories)
+            except FileExistsError:
+                log.debug("The directories in the path to the model already exists.")
+            with open(full_path, 'w') as f:
+                json.dump(template, f)
+            self.write(template)
         else:
             self.set_status(404)
             error = {"Reason":"Model Not Found","Message":"Could not find the model file: "+file_path}
