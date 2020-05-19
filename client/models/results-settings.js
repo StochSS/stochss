@@ -7,4 +7,10 @@ module.exports = State.extend({
     reducer: "string",
     outputs: "object"
   },
+  session: {
+    speciesOfInterest: "string",
+    type: "string",
+    status: "string",
+    realizations: "string"
+  }
 });

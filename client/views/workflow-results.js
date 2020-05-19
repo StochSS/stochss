@@ -62,24 +62,18 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.parameterSweepResults
-    this.trajectories = attrs.trajectories;
-    this.status = attrs.status;
     this.species = attrs.species;
-    this.type = attrs.type;
-    this.speciesOfInterest = attrs.speciesOfInterest;
-    this.featureExtractor = "final";
-    this.ensembleAggragator = "avg";
     this.plots = {}
     this.plotArgs = {}
   },
   render: function () {
-    if(this.type === "parameterSweep"){
+    if(this.model.type === "parameterSweep"){
       this.template = parameterSweepResultsTemplate
     }else{
-      this.template = this.trajectories > 1 ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate
+      this.template = this.model.realizations > 1 ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate
     }
     View.prototype.render.apply(this, arguments);
-    if(this.status === 'complete'){
+    if(this.model.status === 'complete'){
       this.expandContainer()
     }
     var speciesNames = this.species.map(function (specie) { return specie.name});
@@ -91,7 +85,7 @@ module.exports = View.extend({
       required: true,
       idAttribute: 'cid',
       options: speciesNames,
-      value: this.speciesOfInterest
+      value: this.model.speciesOfInterest
     });
     var featureExtractorView = new SelectView({
       label: '',
@@ -109,11 +103,11 @@ module.exports = View.extend({
       options: ensembleAggragators,
       value: "Average of ensemble"
     });
-    if(this.type === "parameterSweep"){
+    if(this.model.type === "parameterSweep"){
       this.registerRenderSubview(speciesOfInterestView, 'specie-of-interest-list');
       this.registerRenderSubview(featureExtractorView, 'feature-extraction-list');
       this.registerRenderSubview(ensembleAggragatorView, 'ensemble-aggragator-list');
-      if(this.trajectories <= 1){
+      if(this.model.realizations <= 1){
         $(this.queryByHook('ensemble-aggragator-container')).collapse()
       }else{
         $(this.queryByHook('ensemble-aggragator-container')).addClass("inline")
@@ -230,10 +224,10 @@ module.exports = View.extend({
     $(this.queryByHook('workflow-results')).collapse('show');
     $(this.queryByHook('collapse')).prop('disabled', false);
     this.changeCollapseButtonText("collapse")
-    if(this.type === "parameterSweep"){
+    if(this.model.type === "parameterSweep"){
       this.getPlot("psweep")
     }else{
-      this.trajectories > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
+      this.model.realizations > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
     }
   },
   registerRenderSubview: function (view, hook) {
@@ -241,7 +235,7 @@ module.exports = View.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   getPlotForSpecies: function (e) {
-    this.speciesOfInterest = e.target.selectedOptions.item(0).text;
+    this.model.speciesOfInterest = e.target.selectedOptions.item(0).text;
     this.getPlot('psweep')
   },
   getPlotForFeatureExtractor: function (e) {
@@ -251,7 +245,7 @@ module.exports = View.extend({
                              "Variance of population":"var", 
                              "Population at last time point":"final"}
     var value = e.target.selectedOptions.item(0).text;
-    this.featureExtractor = featureExtractors[value]
+    this.model.mapper = featureExtractors[value]
     this.getPlot('psweep')
   },
   getPlotForEnsembleAggragator: function (e) {
@@ -260,13 +254,13 @@ module.exports = View.extend({
                                "Average of ensemble":"avg", 
                                "Variance of ensemble":"var"}
     var value = e.target.selectedOptions.item(0).text;
-    this.ensembleAggragator = ensembleAggragators[value]
+    this.model.reducer = ensembleAggragators[value]
     this.getPlot('psweep')
   },
   getPsweepKey: function () {
-    let key = this.speciesOfInterest + "-" + this.featureExtractor
-    if(this.trajectories > 1){
-      key += ("-" + this.ensembleAggragator)
+    let key = this.model.speciesOfInterest + "-" + this.model.mapper
+    if(this.model.realizations > 1){
+      key += ("-" + this.model.reducer)
     }
     return key
   },
