@@ -13,6 +13,9 @@ try:
 except ModuleNotFoundError:
     pass
 
+from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
+from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver
+
 
 def setup_species_results(c, is_2d):
     results = {}
@@ -142,21 +145,23 @@ def get_data_for_csv(c, keys):
 
 class ParameterSweep1D():
 
-    def run(c, settings, verbose=False):
+    def run(c, settings, verbose=False, is_ssa=False, solver=None):
         if not c.ps_model:
             raise Exception("The parameter sweep has not been configured!")
         c.verbose = verbose
         results = setup_results(c)
         for i,v1 in enumerate(c.p1_range):
-            tmp_model = copy.deepcopy(c.ps_model)
-            tmp_model.listOfParameters[c.p1].set_expression(v1)
+            tmp_model = c.ps_model if is_ssa else copy.deepcopy(c.ps_model)
+            rate1 = [c.p1, v1]
+            if not is_ssa:
+                tmp_model.listOfParameters[c.p1].set_expression(v1)
             if verbose: print("running {0}={1}".format(c.p1,v1))
             if(c.number_of_trajectories > 1):
-                tmp_results = run_solver(tmp_model, settings, 0)
+                tmp_results = run_solver(tmp_model, settings, 0, is_ssa=is_ssa, solver=solver, rate1=rate1)
                 for species in c.list_of_species:
                     ensemble_feature_extraction(i, tmp_results, results[species], species, verbose=verbose)
             else:
-                tmp_result = run_solver(tmp_model, settings, 0)
+                tmp_result = run_solver(tmp_model, settings, 0, is_ssa=is_ssa, solver=solver, rate1=rate1)
                 for species in c.list_of_species:
                     species_results = tmp_result[species]
                     feature_extraction(i, species_results, results[species], species, verbose=verbose)
@@ -256,23 +261,26 @@ class ParameterSweepConfig1D(ParameterSweep1D):
 
 class ParameterSweep2D():
 
-    def run(c, settings, verbose=False):
+    def run(c, settings, verbose=False, is_ssa=False, solver=None):
         if not c.ps_model:
             raise Exception("The parameter sweep has not been configured!")
         c.verbose = verbose
         results = setup_results(c, is_2d=True)
         for i,v1 in enumerate(c.p1_range):
             for j,v2 in enumerate(c.p2_range):
-                tmp_model = copy.deepcopy(c.ps_model)
-                tmp_model.listOfParameters[c.p1].set_expression(v1)
-                tmp_model.listOfParameters[c.p2].set_expression(v2)
+                tmp_model = c.ps_model if is_ssa else copy.deepcopy(c.ps_model)
+                rate1 = [c.p1, v1]
+                rate2 = [c.p2, v2]
+                if not is_ssa:
+                    tmp_model.listOfParameters[c.p1].set_expression(v1)
+                    tmp_model.listOfParameters[c.p2].set_expression(v2)
                 if verbose: print("running {0}={1}, {2}={3}".format(c.p1,v1,c.p2,v2))
                 if(c.number_of_trajectories > 1):
-                    tmp_results = run_solver(tmp_model, settings, 0)
+                    tmp_results = run_solver(tmp_model, settings, 0, is_ssa=is_ssa, solver=solver, rate1=rate1, rate2=rate2)
                     for species in c.list_of_species:
                         ensemble_feature_extraction(i, tmp_results, results[species], species, j=j, is_1d=False, verbose=verbose)
                 else:
-                    tmp_result = run_solver(tmp_model, settings, 0)
+                    tmp_result = run_solver(tmp_model, settings, 0, is_ssa=is_ssa, solver=solver, rate1=rate1, rate2=rate2)
                     for species in c.list_of_species:
                         species_results = tmp_result[species]
                         feature_extraction(i, species_results, results[species], species, j=j, verbose=verbose)
@@ -406,6 +414,8 @@ class ParameterSweep():
         ps_settings = stochss_model['parameterSweepSettings']
         sim_settings = stochss_model['simulationSettings']
         trajectories = sim_settings['realizations']
+        is_ssa = sim_settings['algorithm'] == "SSA" and get_best_ssa_solver().name == "SSACSolver"
+        solver = VariableSSACSolver(model=gillespy2_model)
 
         if ps_settings['is1D']:
             ps = ParameterSweepConfig1D()
@@ -413,7 +423,7 @@ class ParameterSweep():
             ps = ParameterSweepConfig2D()
 
         ps.configure(gillespy2_model, ps_settings, trajectories)
-        results = ps.run(sim_settings, verbose=verbose)
+        results = ps.run(sim_settings, verbose=verbose, is_ssa=is_ssa, solver=solver)
         self.store_results(results)
         self.store_csv_results(ps)
         self.store_plots(ps)
