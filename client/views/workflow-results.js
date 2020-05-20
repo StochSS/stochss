@@ -38,6 +38,8 @@ module.exports = View.extend({
       var type = e.target.id
       if(this.plots[type]) {
         $(this.queryByHook("edit-plot-args")).collapse("show");
+        var offset = this.queryByHook("edit-plot-args").offsetTop
+        window.scroll(0, offset+350)
       }else{
         this.getPlot(type);
         e.target.innerText = "Edit Plot"
@@ -237,6 +239,7 @@ module.exports = View.extend({
       this.getPlot("psweep")
     }else{
       $(this.queryByHook("default-plot")).collapse("show")
+      $(this.queryByHook("default-plot")).find('button')[0].innerText = "Edit Plot"
       if(this.model.realizations > 1) {
         this.getPlot("stddevran") 
         this.changeCollapseButtonText("collapse-stddevrange")

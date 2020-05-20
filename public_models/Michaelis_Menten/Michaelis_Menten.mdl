@@ -54,11 +54,6 @@
             ]
         }
     },
-    "resultsSettings":{
-        "mapper": "final",
-        "reducer": "avg",
-        "outputs": {}
-    },
     "meshSettings": {
         "count": 2
     },

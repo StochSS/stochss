@@ -7,4 +7,7 @@ div#sed-ml-plot-view.card.card-body
 
     div.collapse(class="show" id="collapse-"+this.model.name)
 
-        p="Plot for "+this.model.name
+        div(data-hook=this.model.name)
+        button.btn.btn-primary.box-shadow(id=this.model.name data-hook="sedml-plot") Edit Plot
+        button.btn.btn-primary.box-shadow(id=this.model.name data-hook="sedml-download-png-custom" disabled) Download PNG
+        button.btn.btn-primary.box-shadow(id=this.model.name data-hook="sedml-download-json" disabled) Download JSON
