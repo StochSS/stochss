@@ -192,20 +192,51 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#uploadFileModal')) {
       document.querySelector('#uploadFileModal').remove()
     }
+    if(document.querySelector('#runCombineArchiveNowModal')) {
+      document.querySelector('#runCombineArchiveNowModal').remove()
+    }
     let modal = $(modals.uploadFileHtml(type)).modal();
+    let confirmBtn = document.querySelector('#uploadFileModal .confirm-modal-btn');
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
     fileInput.addEventListener('change', function (e) {
       if(fileInput.files.length){
-        uploadBtn.disabled = false
+        confirmBtn.disabled = false
       }else{
-        uploadBtn.disabled = true
+        confirmBtn.disabled = true
       }
     })
+
+    var runCombine = false
+    confirmBtn.addEventListener('click', function (e) {
+      modal.modal('hide')
+      
+      if(fileInput.files[0].name.endsWith(".omex")) {
+        let title = "Would you like to run this archive now?"
+        let confirmModel = $(modals.runCombineArchiveNowHtml(title)).modal();
+        let yesBtn = document.querySelector('#runCombineArchiveNowModal .yes-modal-btn');
+        let noBtn = document.querySelector('#runCombineArchiveNowModal .no-modal-btn');
+        yesBtn.addEventListener('click', function (e) {
+          runCombine = true
+          confirmModel.modal('hide')
+          console.log(runCombine)
+          uploadBtn.click()
+        })
+        noBtn.addEventListener('click', function (e) {
+          console.log(runCombine)
+          uploadBtn.click()
+        })
+      }else{
+        console.log(runCombine)
+        uploadBtn.click()
+      }
+    })
+
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
-      var fileinfo = {"type":type,"name":"","path":"/"}
+      
+      var fileinfo = {"type":type,"name":"","path":"/","run":runCombine}
       if(o && o.original){
         fileinfo.path = o.original._path
       }
@@ -237,7 +268,6 @@ let FileBrowser = PageView.extend({
         }
       }
       req.send(formData)
-      modal.modal('hide')
     })
   },
   deleteFile: function (o) {

@@ -58,7 +58,7 @@ let templates = {
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary yes-modal-btn box-shadow">Yes</button>
-                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">No</button>
+                        <button type="button" class="btn btn-secondary box-shadow no-modal-btn" data-dismiss="modal">No</button>
                       </div>
                     </div>
                   </div>
@@ -86,7 +86,8 @@ let templates = {
                         </div>
                       </div>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-primary box-shadow upload-modal-btn" disabled>Upload</button>
+                        <button type="button" class="btn btn-primary box-shadow upload-modal-btn" style="display: none;">Upload</button>
+                        <button type="button" class="btn btn-primary box-shadow confirm-modal-btn" disabled>Upload</button>
                         <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
                       </div>
                     </div>
@@ -180,6 +181,11 @@ module.exports = {
         let modalID = "newDirectoryErrorModal"
 
         return templates.message(modalID, title, error)
+    },
+    runCombineArchiveNowHtml : (title) => {
+      let modalID = "runCombineArchiveNowModal"
+
+      return templates.confirmation(modalID, title)
     },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;

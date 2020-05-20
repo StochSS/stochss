@@ -99,7 +99,7 @@ def unzip_file(full_path, dir_path):
     shutil.rmtree(os.path.join(dir_path, "__MACOSX"))
     
 
-def upload_file(dir_path, file_name, name, ext, body, file_type, exts):
+def upload_file(dir_path, file_name, name, ext, body, file_type, exts, run):
     errors = []
     is_valid = file_type == "file"
     if not is_valid:
@@ -117,7 +117,7 @@ def upload_file(dir_path, file_name, name, ext, body, file_type, exts):
     if ext == "zip":
         unzip_file(full_path, dir_path)
     elif ext == "omex":
-        errs = import_combine_archive(full_path)
+        errs = import_combine_archive(full_path, run)
         errors.extend(errs)
     dir_path = dir_path.replace("/home/jovyan", "")
     if is_valid:
@@ -169,7 +169,7 @@ def upload(file_data, file_info):
     elif ext == 'sbml' or (file_type == "sbml" and ext in exts[file_type]):
         resp = upload_sbml_file(dir_path, file_name, name, body)
     else:
-        resp = upload_file(dir_path, file_name, name, ext, body, file_type, exts)
+        resp = upload_file(dir_path, file_name, name, ext, body, file_type, exts, file_info['run'])
     
     return resp
 

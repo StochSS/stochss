@@ -400,7 +400,7 @@ def build_project(path, project_path):
     return experiments, proj_errors
 
 
-def write_workflow(workflow, exp_path):
+def write_workflow(workflow, exp_path, run):
     if not os.path.exists(workflow['path']):
         os.mkdir(workflow['path'])
 
@@ -412,45 +412,47 @@ def write_workflow(workflow, exp_path):
         wkfl = workflows[workflow['type']](workflow['path'], tmp.name)
         wkfl.wkfl_mdl_path = wkfl.wkfl_mdl_path.replace(tmp.name.split('/').pop(), workflow['mdl_file'])
 
-        save_new_workflow(wkfl, workflow['type'], True)
+        save_new_workflow(wkfl, workflow['type'], run)
         
-        exec_cmd = ["/stochss/stochss/handlers/util/run_workflow.py", 
-                    "{0}".format(wkfl.wkfl_mdl_path), 
-                    "{0}".format(workflow['path']), 
-                    "{0}".format(workflow['type']),
-                    "-rn" ] # Script commands
-        pipe = subprocess.Popen(exec_cmd)
+        if run:
+            exec_cmd = ["/stochss/stochss/handlers/util/run_workflow.py", 
+                        "{0}".format(wkfl.wkfl_mdl_path), 
+                        "{0}".format(workflow['path']), 
+                        "{0}".format(workflow['type']),
+                        "-rn" ] # Script commands
+            pipe = subprocess.Popen(exec_cmd)
+        
         os.remove(tmp.name)
     else:
         return "Error! {0} already exists in {1}".format(workflow['path'].split('/').pop(), exp_path.split('/').pop())
 
 
-def write_experiment(experiment):
+def write_experiment(experiment, run):
     if not os.path.exists(experiment['path']):
         os.mkdir(experiment['path'])
 
     errors = []
     for workflow in experiment['workflows']:
-        err = write_workflow(workflow, experiment['path'])
+        err = write_workflow(workflow, experiment['path'], run)
         if err is not None:
             errors.append(err)
 
     return errors
 
 
-def write_project(project, project_path):
+def write_project(project, project_path, run):
     if not os.path.exists(project_path):
         os.mkdir(project_path)
 
     errors = []
     for experiment in project:
-        errs = write_experiment(experiment)
+        errs = write_experiment(experiment, run)
         errors.extend(errs)
 
     return errors
     
 
-def import_combine_archive(path):
+def import_combine_archive(path, run=False):
     project_path = path.replace(".omex",".proj")
     tmp = tempfile.TemporaryDirectory()
 
@@ -463,7 +465,7 @@ def import_combine_archive(path):
     
     if os.path.isdir(cmb_path) and "manifest.xml" in os.listdir(cmb_path):
         project, errors = build_project(cmb_path, project_path)
-        errs = write_project(project, project_path)
+        errs = write_project(project, project_path, run)
         errors.extend(errs)
     else:
         errors = ["Error! {0} does not conform to the COMBINE archive standards.".format(path.split('/').pop())]
