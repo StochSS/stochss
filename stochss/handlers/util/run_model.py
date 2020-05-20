@@ -3,6 +3,7 @@
 import os
 import sys
 import json
+import copy
 import argparse
 import logging
 import pickle
@@ -80,10 +81,14 @@ class GillesPy2Workflow():
         sim_settings = stochss_model['simulationSettings']
         trajectories = sim_settings['realizations']
         is_stochastic = not sim_settings['algorithm'] == "ODE"
+        if "resultsSettings" in stochss_model.keys():
+            outputs = stochss_model['resultsSettings']['outputs']
+        else:
+            outputs = None
 
         results = run_solver(gillespy2_model, sim_settings, 0)
         self.store_results(results)
-        self.plot_results(results, trajectories, is_stochastic)
+        self.plot_results(results, trajectories, is_stochastic, outputs)
 
 
     def store_results(self, results):
@@ -95,7 +100,7 @@ class GillesPy2Workflow():
         results.to_csv(path=self.res_path, nametag="results_csv", stamp=self.wkfl_timestamp)
         
 
-    def plot_results(self, results, trajectories, is_stochastic):
+    def plot_results(self, results, trajectories, is_stochastic, outputs):
         '''
         Create the set of result plots and write them to file in the results directory.
 
@@ -128,6 +133,14 @@ class GillesPy2Workflow():
         plot = results.plotplotly(return_plotly_figure=True)
         plot["config"] = {"responsive": True,}
         plots['trajectories'] = plot
+
+        if outputs is not None:
+            for output in outputs:
+                output_plot = copy.deepcopy(plot)
+                for trace in output_plot['data']:
+                    if not trace['name'] in output['curves']:
+                        trace['visible'] = "legendonly"
+                plots[output['name']] = output_plot
 
         with open(os.path.join(self.res_path, 'plots.json'), 'w') as plots_file:
             json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder)

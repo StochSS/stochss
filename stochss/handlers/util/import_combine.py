@@ -328,6 +328,7 @@ def set_simulation_settings(settings, simulation):
 
 
 def set_results_settings(settings, outputs, task_name):
+    stochss_outputs = settings['outputs']
     for name, output in outputs.items():
         curves = []
         for curve in output['curves']:
@@ -335,7 +336,7 @@ def set_results_settings(settings, outputs, task_name):
                 curves.append(curve['y_data_ref'])
 
         if len(curves):
-            settings.append({"name":name,"curves":curves})
+            stochss_outputs.append({"name":name,"curves":curves})
 
 
 def validate_curve(curve, task_name):
