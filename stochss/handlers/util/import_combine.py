@@ -402,16 +402,16 @@ def build_project(path, project_path):
 
 def write_workflow(workflow, exp_path, run):
     if not os.path.exists(workflow['path']):
+        mdl_path = os.path.join(exp_path, workflow['mdl_file'])
+
+        with open(mdl_path, "w") as mdl_file:
+            json.dump(workflow['model'], mdl_file)
+
         os.mkdir(workflow['path'])
 
-        tmp = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        tmp.write(json.dumps(workflow['model']))
-        tmp.close()
-
         workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
-        wkfl = workflows[workflow['type']](workflow['path'], tmp.name)
-        wkfl.wkfl_mdl_path = wkfl.wkfl_mdl_path.replace(tmp.name.split('/').pop(), workflow['mdl_file'])
-
+        wkfl = workflows[workflow['type']](workflow['path'], mdl_path)
+        
         save_new_workflow(wkfl, workflow['type'], run)
         
         if run:
@@ -422,7 +422,6 @@ def write_workflow(workflow, exp_path, run):
                         "-rn" ] # Script commands
             pipe = subprocess.Popen(exec_cmd)
         
-        os.remove(tmp.name)
     else:
         return "Error! {0} already exists in {1}".format(workflow['path'].split('/').pop(), exp_path.split('/').pop())
 
