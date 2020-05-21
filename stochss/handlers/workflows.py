@@ -86,7 +86,10 @@ class LoadWorkflowAPIHandler(APIHandler):
                 self.write(error)
         try:
             with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
-                resp["model"] = json.load(model_file)
+                model = json.load(model_file)
+                if not "resultsSettings" in model.keys() or not list(model['resultsSettings'].keys()):
+                    model["resultsSettings"] = {"mapper":"final","reducer":"avg","outputs":[]}
+                resp['model'] = model
         except:
             resp["model"] = None
             resp["error"] = {"Reason":"Model Not Found","Message":"Could not find the model file: "+resp['mdlPath']}
