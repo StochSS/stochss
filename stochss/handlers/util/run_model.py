@@ -56,11 +56,19 @@ class GillesPy2Workflow():
 
 
     def run_preview(self, gillespy2_model, stochss_model):
-        sim_settings = stochss_model['simulationSettings']
-        model_settings = stochss_model['modelSettings']
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            sim_settings = json.load(template_file)['simulationSettings']
 
-        sim_settings['realizations'] = model_settings['realizations']
-        sim_settings['algorithm'] = model_settings['algorithm']
+        if stochss_model['eventsCollection'] or stochss_model['rules'] or stochss_model['functionDefinitions']:
+            algorithm = "Hybrid-Tau-Leaping"
+        elif stochss_model['defaultMode'] == "dynamic":
+            algorithm = "Hybrid-Tau-Leaping"
+        elif stochss_model['defaultMode'] == "discrete":
+            algorithm = "SSA"
+        else:
+            algorithm = "ODE"
+
+        sim_settings['algorithm'] = algorithm
 
         _results = run_solver(gillespy2_model, sim_settings, 5)
         results = _results[0]
