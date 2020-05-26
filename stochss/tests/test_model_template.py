@@ -4,7 +4,7 @@ import os
 
 os.chdir('/stochss')
 
-template_path = "model_templates/nonSpatialModelTemplate.json"
+template_path = "stochss_templates/nonSpatialModelTemplate.json"
 
 
 class TestNonSpatialModelTemplate(unittest.TestCase):
