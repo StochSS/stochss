@@ -368,9 +368,8 @@ def convert_sbml_to_model(path, model_template):
     name = full_path.split('/').pop().split('.')[0]
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)
-    if gillespy_model is not None:
-        sbml_errors = list(map(lambda error: error[0], sbml_errors))
-    else:
+    sbml_errors = list(map(lambda error: error[0], sbml_errors))
+    if gillespy_model is None:
         sbml_errors.append("Error: could not convert the SBML Model to a StochSS Model")
     model, msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path, name=name)
     if model is not None:
