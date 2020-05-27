@@ -18,6 +18,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.settings = attrs.settings;
     this.type = attrs.type;
     this.status = attrs.status;
   },

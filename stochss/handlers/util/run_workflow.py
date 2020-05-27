@@ -40,8 +40,10 @@ def save_new_workflow(wkfl, wkfl_type, initialize):
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    # Update workflow info file with start time and permanent model file location
+    # Update the workflow info file
     update_info_file(wkfl, wkfl_type, initialize)
+    # Update workflow settings file
+    wkfl.save()
     if initialize:
         # Update workflow status to running
         open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
@@ -67,8 +69,10 @@ def save_existing_workflow(wkfl, wkfl_type, initialize):
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the new model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    # Update workflow info file with start time and permanent model file location
+    # Update the workflow info file
     update_info_file(wkfl, wkfl_type, initialize)
+    # Update workflow settings file
+    wkfl.save()
     if initialize:
         # Update workflow status to running
         open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
@@ -101,6 +105,7 @@ def update_info_file(wkfl, wkfl_type, initialize):
                   "type":"{0}".format(wkfl_type), "start_time":None} # updated workflow info
     
     if initialize:
+        # Update workflow info file with start time and permanent model file location
         today = datetime.now() # workflow run start time
         # If this format is not something Javascript's Date.parse() method
         # understands then the workflow status page will be unable to correctly create a
@@ -196,7 +201,7 @@ def get_parsed_args():
     return args
 
 
-def initialize(mdl_path, wkfl_path, wkfl_type, new=False, existing=False, save=False, run=False, verbose=False):
+def initialize(mdl_path, wkfl_path, wkfl_type, settings=None, new=False, existing=False, save=False, run=False, verbose=False):
     user_dir = "/home/jovyan"
 
     model_path = os.path.join(user_dir, mdl_path)
@@ -214,7 +219,7 @@ def initialize(mdl_path, wkfl_path, wkfl_type, new=False, existing=False, save=F
 
     workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
 
-    workflow = workflows[wkfl_type](workflow_path, model_path)
+    workflow = workflows[wkfl_type](workflow_path, model_path, settings)
 
     setup_logger(workflow.log_path)
 

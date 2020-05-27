@@ -391,9 +391,10 @@ class ParameterSweepConfig2D(ParameterSweep2D):
 
 class ParameterSweep():
 
-    def __init__(self, wkfl_path, mdl_path):
+    def __init__(self, wkfl_path, mdl_path, settings=None):
         self.wkfl_path = wkfl_path
         self.mdl_path = mdl_path
+        self.settings = settings
         self.mdl_file = mdl_path.split('/').pop()
         self.info_path = os.path.join(wkfl_path, 'info.json')
         self.log_path = os.path.join(wkfl_path, 'logs.txt')
@@ -408,6 +409,36 @@ class ParameterSweep():
                 self.wkfl_timestamp = None
         except:
             self.wkfl_timestamp = None
+
+
+    def get_settings(self):
+        settings_path = os.path.join(self.wkfl_path, "settings.json")
+
+        if os.path.exists(settings_path):
+            with open(settings_path, "r") as settings_file:
+                return json.load(settings_file)
+
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            settings_template = json.load(template_file)
+        
+        if os.path.exists(self.wkfl_mdl_path):
+            with open(self.wkfl_mdl_path, "r") as mdl_file:
+                mdl = json.load(mdl_file)
+                try:
+                    settings = {"simulationSettings":mdl['simulationSettings'],
+                                "parameterSweepSettings":mdl['parameterSweepSettings'],
+                                "resultsSettings":settings_template['resultsSettings']}
+                    return settings
+                except:
+                    return settings_template
+        else:
+            return settings_template
+
+
+    def save(self):
+        settings_path = os.path.join(self.wkfl_path, "settings.json")
+        with open(settings_path, "w") as settings_file:
+            json.dump(self.settings, settings_file)
 
 
     def run(self, gillespy2_model, stochss_model, verbose):

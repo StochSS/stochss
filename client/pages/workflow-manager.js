@@ -46,6 +46,7 @@ let WorkflowManager = PageView.extend({
     var endpoint = path.join(app.getApiPath(), "workflow/load-workflow")+queryStr
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       if(resp.statusCode < 400) {
+        self.settings = body.settings
         self.type = body.type
         self.titleType = body.titleType
         self.modelDirectory = body.mdlPath
@@ -159,6 +160,7 @@ let WorkflowManager = PageView.extend({
     }
     this.workflowEditor = new WorkflowEditorView({
       model: this.model,
+      settings: this.settings,
       type: this.type,
       status: this.status,
     });

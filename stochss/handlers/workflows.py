@@ -50,6 +50,8 @@ class LoadWorkflowAPIHandler(APIHandler):
         title_types = {"gillespy":"Ensemble Simulation","parameterSweep":"Parameter Sweep"}
         name_types = {"gillespy":"_ES","parameterSweep":"_PS"}
         parent_path = os.path.dirname(path)
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as tmp_file:
+            settings = json.load(tmp_file)
         if path.endswith('.mdl'):
             resp = {"mdlPath":path,"timeStamp":stamp,"type":wkfl_type,
                     "status":"new","titleType":title_types[wkfl_type],
@@ -90,6 +92,7 @@ class LoadWorkflowAPIHandler(APIHandler):
         except:
             resp["model"] = None
             resp["error"] = {"Reason":"Model Not Found","Message":"Could not find the model file: "+resp['mdlPath']}
+        resp['settings'] = settings
         log.debug("Response: {0}".format(resp))
         self.write(resp)
         self.finish()
@@ -152,11 +155,12 @@ class SaveWorkflowAPIHandler(APIHandler):
         wkfl_type = data['type']
         model_path = data['mdlPath']
         workflow_path = data['wkflPath']
+        settings = data['settings']
         log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
         log.debug("Path to the model: {0}".format(model_path))
         log.debug("Path to the workflow: {0}".format(workflow_path))
-        kwargs = {"save":True}
+        kwargs = {"save":True,"settings":settings}
         if 'n' in opt_type:
             kwargs['new'] = True
         else:
