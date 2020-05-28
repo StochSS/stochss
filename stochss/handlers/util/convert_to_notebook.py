@@ -6,8 +6,9 @@ from nbformat import v4 as nbf
 from os import path
 
 from .rename import get_unique_file_name
-from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
+from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell, generate_configure_simulation_cell, get_algorithm
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
+from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 
 def convert_to_notebook(_model_path):
@@ -27,6 +28,8 @@ def convert_to_notebook(_model_path):
     except JSONDecodeError as e:
         raise ModelNotJSONFormatError('The data is not JSON decobable: ' + str(e))
 
+    is_ssa_c = get_best_ssa_solver().name == "SSACSolver"
+
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
@@ -38,6 +41,11 @@ def convert_to_notebook(_model_path):
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        if get_algorithm(json_data) == "SSA" and is_ssa_c:
+            # Instantiate Solver Cell
+            cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
+        # Configure Simulation Cell
+        cells.append(nbf.new_code_cell(generate_configure_simulation_cell(json_data)))
         # Model Run Cell
         cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
     except KeyError as err:

@@ -30,7 +30,7 @@ def convert_to_2d_psweep_nb(_model_path):
     except JSONDecodeError as err:
         raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err))
 
-    is_ssa = json_data['simulationSettings']['algorithm'] == "SSA" and get_best_ssa_solver().name == "SSACSolver"
+    is_ssa_c = get_best_ssa_solver().name == "SSACSolver"
 
     # Create new notebook
     cells = []
@@ -38,7 +38,7 @@ def convert_to_2d_psweep_nb(_model_path):
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
     try:
         # Create imports cell
-        cells.append(nbf.new_code_cell(generate_imports_cell(json_data, is_ssa=is_ssa)))
+        cells.append(nbf.new_code_cell(generate_imports_cell(json_data, is_ssa_c=is_ssa_c)))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell

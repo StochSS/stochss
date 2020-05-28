@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+import json
+
+from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 
-def generate_imports_cell(json_data, is_ssa=False):
+def generate_imports_cell(json_data, is_ssa_c=False):
     # Imports cell
     imports = 'import numpy as np\n'
     if json_data['is_spatial']:
@@ -12,15 +15,27 @@ def generate_imports_cell(json_data, is_ssa=False):
         imports += 'import gillespy2\n'
         imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
         imports += 'from gillespy2.core.events import EventAssignment, EventTrigger, Event\n'
-        algorithm = "V-SSA" if is_ssa else json_data['simulationSettings']['algorithm']
+        algorithm = get_algorithm(json_data, is_ssa_c)
+        if algorithm == "SSA" and get_best_ssa_solver().name == "SSACSolver":
+            ssa = 'from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver\n'
+        else:
+            ssa = '# To run a simulation using the SSA Solver simply omit the solver argument from model.run().\n'
         algorithm_map = {
-                'SSA': '',
-                'V-SSA': 'from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver',
-                'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver',
-                'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver',
+                'SSA': ssa,
+                'V-SSA': 'from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver\n',
+                'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver\n',
+                'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver\n',
                 'ODE': 'from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver'
                 }
-        imports += algorithm_map[algorithm]
+
+        for name, algorithm_import in algorithm_map.items():
+            if name == algorithm or name == "SSA":
+                imports += algorithm_import
+            else:
+                algorithm_import = "# " + algorithm_import
+                imports += algorithm_import
+
+        # imports += algorithm_map[algorithm]
     
     return imports
 
@@ -71,41 +86,75 @@ def create_reaction_strings(json_data, padding):
 
     return reaction_string
 
+
+def create_events_string(json_data, padding):
+    event_string = ''
+    if json_data['eventsCollection']:
+        event_string += '\n' + padding + '# Events'
+        for event in json_data['eventsCollection']:
+            event_string += '\n' + padding + '{0}t = EventTrigger(expression="{1}", initial_value={2}, persistent={3})\n'.format(
+                event['name'],
+                event['triggerExpression'],
+                event['initialValue'],
+                event['persistent'])
+
+            assignment_names = []
+            for i, assignment in enumerate(event['eventAssignments']):
+                assignment_name = '{0}a{1}'.format(event['name'], i+1)
+                assignment_names.append(assignment_name)
+                event_string += padding + '{0} = EventAssignment(variable="{1}", expression="{2}")\n'.format(
+                    assignment_name,
+                    assignment['variable']['name'],
+                    assignment['expression'])
+
+            if event['delay']:
+                e = 'self.add_event(Event(name="{0}", trigger={0}t, assignments=[{1}], delay="{2}", priority="{3}", use_values_from_trigger_time={4}))\n'.format(
+                    event['name'],
+                    ", ".join(assignment_names),
+                    event['delay'],
+                    event['priority'],
+                    event['useValuesFromTriggerTime'])
+            else:
+                e = 'self.add_event(Event(name="{0}", trigger={0}t, assignments=[{1}], delay=None, priority="{2}", use_values_from_trigger_time={3}))\n'.format(
+                        event['name'],
+                        ", ".join(assignment_names),
+                        event['priority'],
+                        event['useValuesFromTriggerTime'])
+            
+            event_string += padding + e
+
+    return event_string
+
+
 def create_rate_rule_strings(json_data, padding):
     rr_string = ''
-    algorithm = json_data['simulationSettings']['algorithm']
-    is_stochastic = not algorithm == "ODE"
-    if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
+    rate_rules = list(filter(lambda rule: rule['type'] == "Rate Rule", json_data['rules']))
+    if rate_rules:
         rr_string += '\n' + padding + '# Rate Rules\n'
-        for rr in json_data['rules']:
-            if rr['type'] == "Rate Rule":
-                rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}""))\n'.format(
-                        rr['name'], 
-                        rr['expression'], 
-                        rr['variable']['name'])
+        for rr in rate_rules:
+            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}""))\n'.format(
+                    rr['name'], 
+                    rr['expression'], 
+                    rr['variable']['name'])
     return rr_string
 
 
 def create_assignment_rule_string(json_data, padding):
     ar_string = ''
-    algorithm = json_data['simulationSettings']['algorithm']
-    is_stochastic = not algorithm == "ODE"
-    if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
+    assignment_rules = list(filter(lambda rule: rule['type'] == "Assignment Rule", json_data['rules']))
+    if assignment_rules:
         ar_string += '\n' + padding + '# Assignment Rules\n'
-        for ar in json_data['rules']:
-            if ar['type'] == "Assignment Rule":
-                ar_string += padding + 'self.add_assignment_rule(AssignmentRule(name="{0}", formula="{1}", variable="{2}"))\n'.format(
-                        ar['name'],
-                        ar['expression'],
-                        ar['variable']['name'])
+        for ar in assignment_rules:
+            ar_string += padding + 'self.add_assignment_rule(AssignmentRule(name="{0}", formula="{1}", variable="{2}"))\n'.format(
+                    ar['name'],
+                    ar['expression'],
+                    ar['variable']['name'])
     return ar_string
 
 
 def create_function_definition_string(json_data, padding):
     fd_string = ''
-    algorithm = json_data['simulationSettings']['algorithm']
-    is_stochastic = not algorithm == "ODE"
-    if is_stochastic and algorithm == 'Hybrid-Tau-Leaping':
+    if json_data['functionDefinitions']:
         fd_string += '\n' + padding + '# Function Definitions\n'
         for fd in json_data['functionDefinitions']:
             fd_string += padding + 'self.add_function_definition(FunctionDefinition(name="{0}", function="{1}", args={2}))\n'.format(
@@ -134,6 +183,7 @@ def generate_model_cell(json_data, name):
         model_cell += create_parameter_strings(json_data, padding)
         model_cell += create_species_strings(json_data, padding)
         model_cell += create_reaction_strings(json_data, padding)
+        model_cell += create_events_string(json_data, padding)
         model_cell += create_rate_rule_strings(json_data, padding)
         model_cell += create_assignment_rule_string(json_data, padding)
         model_cell += create_function_definition_string(json_data, padding)
@@ -149,30 +199,78 @@ def generate_model_cell(json_data, name):
     return model_cell
 
 
+def generate_configure_simulation_cell(json_data, is_ssa_c=False):
+    padding = '    '
+    algorithm = get_algorithm(json_data, is_ssa_c)
+
+    # Get stochss simulation settings
+    with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as tmp_file:
+        settings = json.load(tmp_file)['simulationSettings']
+
+    # Get settings for model.run()
+    settings = get_run_settings(settings, algorithm=algorithm)
+
+    settings_lists = {"ODE":['"solver"','"integrator_options"'],
+                      "SSA":['"seed"','"number_of_trajectories"'],
+                      "V-SSA":['"solver"','"seed"','"number_of_trajectories"'],
+                      "Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"'],
+                      "Hybrid_Tau_Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"']
+                     }
+
+    if get_best_ssa_solver().name == "SSACSolver":
+        settings_lists['SSA'].append('"solver"')
+
+    settings_map = []
+    for setting in settings:
+        if setting.split(':')[0] not in settings_lists[algorithm]:
+            settings_map.append(padding*2 + "# " + setting)
+        else:
+            settings_map.append(padding*2 + setting)
+    
+    config_string = 'def configure_simulation():\n'
+
+    config_string += padding + 'kwargs = {\n'
+    config_string += ",\n".join(settings_map) + "\n"
+    config_string += padding + "}\n"
+    config_string += padding + "return kwargs"
+
+    return config_string
+
+
 def generate_run_cell(json_data):
     if json_data['is_spatial']:
         # Spatial
         raise Exception('Spatial not yet implemented.')
     else:
         # Non-Spatial
-        settings = json_data['simulationSettings']
-        
-        run_settings = get_run_settings(settings)
-
-        run_cell = 'results = model.run({0})'.format(run_settings)
+        run_cell = 'kwargs = configure_simulation()\n'
+        run_cell += 'results = model.run(**kwargs)'
         
     return run_cell
 
 
-def get_run_settings(settings, show_labels=True, is_mdl_inf=False, is_ssa=False):
-    algorithm = "V-SSA" if is_ssa else settings['algorithm']
+def get_algorithm(json_data, is_ssa_c=False):
+    if json_data['eventsCollection'] or json_data['rules'] or json_data['functionDefinitions']:
+        return "Hybrid-Tau-Leaping"
+    if json_data['defaultMode'] == "dynamic":
+        return "Hybrid-Tau-Leaping"
+    if json_data['defaultMode'] == "continuous":
+        return "ODE"
+    if json_data['defaultMode'] == "discrete" and is_ssa_c:
+        return "V-SSA"
+    return "SSA"
 
+
+def get_run_settings(settings, show_labels=True, is_mdl_inf=False, algorithm=None):
     # Map algorithm for GillesPy2
     solver_map = {"SSA":"",
-                  "V-SSA":"solver=solver",
-                  "ODE":"solver=BasicODESolver",
-                  "Tau-Leaping":"solver=BasicTauLeapingSolver",
-                  "Hybrid-Tau-Leaping":"solver=BasicTauHybridSolver"}
+                  "V-SSA":'"solver":solver',
+                  "ODE":'"solver":BasicODESolver',
+                  "Tau-Leaping":'"solver":BasicTauLeapingSolver',
+                  "Hybrid-Tau-Leaping":'"solver":BasicTauHybridSolver'}
+
+    if get_best_ssa_solver().name == "SSACSolver":
+        solver_map['SSA'] = '"solver":solver'
 
     # Map seed for GillesPy2
     if settings['seed'] == -1:
@@ -183,30 +281,18 @@ def get_run_settings(settings, show_labels=True, is_mdl_inf=False, is_ssa=False)
         settings['realizations'] = 100
 
     # Map algorithm settings for GillesPy2. GillesPy2 requires snake case, remap camelCase
-    ode_settings = { "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] }) }
-    ssa_settings = { "number_of_trajectories":settings['realizations'], "seed":settings['seed'] }
-    tau_leaping_settings = { "number_of_trajectories":settings['realizations'], 
-                             "seed":settings['seed'], 
-                             "tau_tol":settings['tauTol']}
-    hybrid_settings = { "number_of_trajectories":settings['realizations'], 
-                        "seed":settings['seed'], 
-                        "tau_tol":settings['tauTol'], 
-                        "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] })
-                      }
-    settings_map = {'ODE':ode_settings, 
-                    'SSA':ssa_settings, 
-                    'V-SSA':ssa_settings,
-                    'Tau-Leaping':tau_leaping_settings, 
-                    'Hybrid-Tau-Leaping':hybrid_settings
+    settings_map = { "number_of_trajectories":settings['realizations'], 
+                     "seed":settings['seed'], 
+                     "tau_tol":settings['tauTol'], 
+                     "integrator_options" : str({ "rtol":settings['relativeTol'], "atol":settings['absoluteTol'] })
                    }
-
-    #Parse settings for algorithm    
-    run_settings = [solver_map[algorithm]] if not algorithm == "SSA" else []
+    
+    #Parse settings for algorithm
+    run_settings = [solver_map[algorithm]] if algorithm == "V-SSA" or (algorithm == "SSA" and not solver_map['SSA'] == "") else []
     if not show_labels:
-        run_settings.append("show_labels=False")
-    algorithm_settings =  ['{0}={1}'.format(key, val) for key, val in settings_map[algorithm].items()]
+        run_settings.append('"show_labels":False')
+    algorithm_settings =  ['"{0}":{1}'.format(key, val) for key, val in settings_map.items()]
     run_settings.extend(algorithm_settings)
-    run_settings = ', '.join(run_settings)
     
     return run_settings
 
@@ -244,15 +330,13 @@ def average_of_ensemble(c,data):
     return average_aggregate_cell
 
 
-def generate_1D_parameter_sweep_class_cell(json_data, is_ssa):
-    settings = json_data['simulationSettings']
-
-    run_settings = get_run_settings(settings, is_ssa=is_ssa)
-
-    if is_ssa:
+def generate_1D_parameter_sweep_class_cell(json_data, is_ssa_c):
+    if is_ssa_c:
         psweep_class_cell ='''class ParameterSweep1D():
     
     def run(c, verbose=False):
+        kwargs = configure_simulation()
+
         c.verbose = verbose
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
@@ -263,18 +347,20 @@ def generate_1D_parameter_sweep_class_cell(json_data, is_ssa):
 
         variable_string = "variables={c.p1:v1}" 
         psweep_class_cell += '''            if(c.number_of_trajectories > 1):
-                tmp_results = model.run({0}, {1})
+                tmp_results = model.run(**kwargs, {0})
                 (m,s) = ag([fn(x) for x in tmp_results])
                 data[i,0] = m
                 data[i,1] = s
             else:
-                tmp_result = model.run({0}, {1})
+                tmp_result = model.run(**kwargs, {0})
                 data[i,0] = c.feature_extraction(tmp_result)
-        c.data = data\n'''.format(run_settings, variable_string)
+        c.data = data\n'''.format(variable_string)
     else:
         psweep_class_cell ='''class ParameterSweep1D():
     
     def run(c, verbose=False):
+        kwargs = configure_simulation()
+
         c.verbose = verbose
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
@@ -286,14 +372,14 @@ def generate_1D_parameter_sweep_class_cell(json_data, is_ssa):
             #if verbose: print("\t{0}".format(["{0}={1},".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))\n'''
 
         psweep_class_cell += '''            if(c.number_of_trajectories > 1):
-                tmp_results = tmp_model.run({0})
+                tmp_results = tmp_model.run(**kwargs)
                 (m,s) = ag([fn(x) for x in tmp_results])
                 data[i,0] = m
                 data[i,1] = s
             else:
-                tmp_result = tmp_model.run({0})
+                tmp_result = tmp_model.run(**kwargs)
                 data[i,0] = c.feature_extraction(tmp_result)
-        c.data = data\n'''.format(run_settings)
+        c.data = data\n'''
 
 
     psweep_class_cell += '''
@@ -361,7 +447,7 @@ class ParameterSweepConfig(ParameterSweep1D):
 def generate_2D_parameter_sweep_class_cell(json_data, is_ssa):
     settings = json_data['simulationSettings']
     
-    run_settings = get_run_settings(settings, is_ssa=is_ssa)
+    run_settings = get_run_settings(settings)
 
     if is_ssa:
         psweep_class_cell ='''class ParameterSweep2D():
