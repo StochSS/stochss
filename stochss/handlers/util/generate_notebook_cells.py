@@ -199,22 +199,32 @@ def generate_model_cell(json_data, name):
     return model_cell
 
 
-def generate_configure_simulation_cell(json_data, is_ssa_c=False):
+def get_settings(path=None):
+    if path is None:
+        path = "/stochss/stochss_templates/workflowSettingsTemplate.json"
+
+    with open(path, "r") as file:
+        settings = json.load(file)['simulationSettings']
+
+    return settings
+
+
+def generate_configure_simulation_cell(json_data, is_ssa_c=False, is_mdl_inf=False, show_labels=True, settings=None):
     padding = '    '
     algorithm = get_algorithm(json_data, is_ssa_c)
 
     # Get stochss simulation settings
-    with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as tmp_file:
-        settings = json.load(tmp_file)['simulationSettings']
+    if settings is None:
+        settings = get_settings()
 
     # Get settings for model.run()
-    settings = get_run_settings(settings, algorithm=algorithm)
+    settings = get_run_settings(settings, show_labels, is_mdl_inf, algorithm)
 
-    settings_lists = {"ODE":['"solver"','"integrator_options"'],
-                      "SSA":['"seed"','"number_of_trajectories"'],
-                      "V-SSA":['"solver"','"seed"','"number_of_trajectories"'],
-                      "Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"'],
-                      "Hybrid_Tau_Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"']
+    settings_lists = {"ODE":['"solver"','"integrator_options"','"show_labels"'],
+                      "SSA":['"seed"','"number_of_trajectories"','"show_labels"'],
+                      "V-SSA":['"solver"','"seed"','"number_of_trajectories"','"show_labels"'],
+                      "Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"show_labels"'],
+                      "Hybrid_Tau_Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"','"show_labels"']
                      }
 
     if get_best_ssa_solver().name == "SSACSolver":
@@ -228,6 +238,9 @@ def generate_configure_simulation_cell(json_data, is_ssa_c=False):
             settings_map.append(padding*2 + setting)
     
     config_string = 'def configure_simulation():\n'
+
+    if is_mdl_inf:
+        config_string += "# the minimum number of trajectoies needs to be at least 30\n"
 
     config_string += padding + 'kwargs = {\n'
     config_string += ",\n".join(settings_map) + "\n"
@@ -261,7 +274,7 @@ def get_algorithm(json_data, is_ssa_c=False):
     return "SSA"
 
 
-def get_run_settings(settings, show_labels=True, is_mdl_inf=False, algorithm=None):
+def get_run_settings(settings, show_labels, is_mdl_inf, algorithm):
     # Map algorithm for GillesPy2
     solver_map = {"SSA":"",
                   "V-SSA":'"solver":solver',
@@ -334,9 +347,7 @@ def generate_1D_parameter_sweep_class_cell(json_data, is_ssa_c):
     if is_ssa_c:
         psweep_class_cell ='''class ParameterSweep1D():
     
-    def run(c, verbose=False):
-        kwargs = configure_simulation()
-
+    def run(c, kwargs, verbose=False):
         c.verbose = verbose
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
@@ -358,9 +369,7 @@ def generate_1D_parameter_sweep_class_cell(json_data, is_ssa_c):
     else:
         psweep_class_cell ='''class ParameterSweep1D():
     
-    def run(c, verbose=False):
-        kwargs = configure_simulation()
-
+    def run(c, kwargs, verbose=False):
         c.verbose = verbose
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
@@ -423,7 +432,6 @@ def generate_1D_parameter_sweep_class_cell(json_data, is_ssa_c):
 def generate_1D_psweep_config_cell(json_data, model_name):
     p1 = json_data['parameters'][0]
     soi = json_data['species'][0]['name']
-    trajectories = json_data['simulationSettings']['realizations']
     psweep_config_cell = '''# Configuration for the Parameter Sweep
 class ParameterSweepConfig(ParameterSweep1D):
     # What class defines the GillesPy2 model
@@ -431,28 +439,25 @@ class ParameterSweepConfig(ParameterSweep1D):
     model = ps_class()
     # What is the first parameter we will vary
     p1 = "{1}" # ENTER PARAMETER HERE
-    p1_min = 0.5 * float(eval(model.get_parameter(p1).expression))
-    p1_max = 1.5 * float(eval(model.get_parameter(p1).expression))
-    p1_range = np.linspace(p1_min,p1_max,11) # ENTER RANGE FOR PARAMETER HERE
-    number_of_trajectories = {3}
+    p1_min = 0.5 * float(eval(model.get_parameter(p1).expression)) # ENTER START VALUE FOR PARAMETER RANGE HERE
+    p1_max = 1.5 * float(eval(model.get_parameter(p1).expression)) # ENTER END VALUE FOR PARAMETER RANGE HERE
+    steps = 11 # ENTER THE NUMBER OF STEPS HERE
+    p1_range = np.linspace(p1_min,p1_max,steps)
+    number_of_trajectories = 1
     species_of_interest = "{2}" # ENTER SPECIES OF INTEREST HERE
     # What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
     # for number_of_trajectories > 1: how do we aggreggate the values
     ensemble_aggragator = mean_std_of_ensemble
-'''.format(model_name, p1['name'], soi, trajectories)
+'''.format(model_name, p1['name'], soi)
     return psweep_config_cell
 
 
-def generate_2D_parameter_sweep_class_cell(json_data, is_ssa):
-    settings = json_data['simulationSettings']
-    
-    run_settings = get_run_settings(settings)
-
-    if is_ssa:
+def generate_2D_parameter_sweep_class_cell(json_data, is_ssa_c):
+    if is_ssa_c:
         psweep_class_cell ='''class ParameterSweep2D():
     
-    def run(c, verbose=False):
+    def run(c, kwargs, verbose=False):
         c.verbose = verbose
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
@@ -464,16 +469,16 @@ def generate_2D_parameter_sweep_class_cell(json_data, is_ssa):
     
         variable_string = "variables={c.p1:v1, c.p2:v2}"
         psweep_class_cell += '''                if(c.number_of_trajectories > 1):
-                    tmp_results = model.run({0}, {1})
+                    tmp_results = model.run(**kwargs, {0})
                     data[i,j] = ag([fn(x) for x in tmp_results])
                 else:
-                    tmp_result = model.run({0}, {1})
+                    tmp_result = model.run(**kwargs, {0})
                     data[i,j] = c.feature_extraction(tmp_result)
-        c.data = data\n'''.format(run_settings, variable_string)
+        c.data = data\n'''.format(variable_string)
     else:
         psweep_class_cell ='''class ParameterSweep2D():
     
-    def run(c, verbose=False):
+    def run(c, kwargs, verbose=False):
         c.verbose = verbose
         fn = c.feature_extraction
         ag = c.ensemble_aggragator
@@ -487,12 +492,12 @@ def generate_2D_parameter_sweep_class_cell(json_data, is_ssa):
                 #if verbose: print("\t{0}".format(["{0}={1}, ".format(k,v.value) for k,v in tmp_model.listOfParameters.items()]))\n'''
     
         psweep_class_cell += '''                if(c.number_of_trajectories > 1):
-                    tmp_results = tmp_model.run({0})
+                    tmp_results = tmp_model.run(**kwargs)
                     data[i,j] = ag([fn(x) for x in tmp_results])
                 else:
-                    tmp_result = tmp_model.run({0})
+                    tmp_result = tmp_model.run(**kwargs)
                     data[i,j] = c.feature_extraction(tmp_result)
-        c.data = data\n'''.format(run_settings)
+        c.data = data\n'''
     
 
     psweep_class_cell += '''
@@ -544,7 +549,6 @@ def generate_2D_psweep_config_cell(json_data, model_name):
     p1 = json_data['parameters'][0]
     p2 = json_data['parameters'][1]
     soi = json_data['species'][0]['name']
-    trajectories = json_data['simulationSettings']['realizations']
     psweep_config_cell = '''# Configuration for the Parameter Sweep
 class ParameterSweepConfig(ParameterSweep2D):
     # What class defines the GillesPy2 model
@@ -552,20 +556,34 @@ class ParameterSweepConfig(ParameterSweep2D):
     model = ps_class()
     p1 = "{0}" # ENTER PARAMETER 1 HERE
     p2 = "{1}" # ENTER PARAMETER 2 HERE
-    p1_min = 0.5 * float(eval(model.get_parameter(p1).expression))
-    p1_max = 1.5 * float(eval(model.get_parameter(p1).expression))
-    p1_range = np.linspace(p1_min,p1_max,11) # ENTER RANGE FOR P1 HERE
-    p2_min = 0.5 * float(eval(model.get_parameter(p2).expression))
-    p2_max = 1.5 * float(eval(model.get_parameter(p2).expression))
-    p2_range = np.linspace(p2_min,p2_max,11) # ENTER RANGE FOR P2 HERE
+    p1_min = 0.5 * float(eval(model.get_parameter(p1).expression)) # ENTER START VALUE FOR P1 RANGE HERE
+    p1_max = 1.5 * float(eval(model.get_parameter(p1).expression)) # ENTER END VALUE FOR P1 RANGE HERE
+    p1_steps = 11 # ENTER THE NUMBER OF STEPS FOR P1 HERE
+    p1_range = np.linspace(p1_min,p1_max,p1_steps)
+    p2_min = 0.5 * float(eval(model.get_parameter(p2).expression)) # ENTER START VALUE FOR P2 RANGE HERE
+    p2_max = 1.5 * float(eval(model.get_parameter(p2).expression)) # ENTER END VALUE FOR P2 RANGE HERE
+    p2_steps = 11 # ENTER THE NUMBER OF STEPS FOR P2 HERE
+    p2_range = np.linspace(p2_min,p2_max,p2_steps)
     species_of_interest = "{2}" # ENTER SPECIES OF INTEREST HERE
-    number_of_trajectories = {4}
+    number_of_trajectories = 1
     # What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
     # for number_of_trajectories > 1: how do we aggreggate the values
     ensemble_aggragator = average_of_ensemble
-'''.format(p1['name'], p2['name'], soi, model_name, trajectories)
+'''.format(p1['name'], p2['name'], soi, model_name)
     return psweep_config_cell
+
+
+def generate_parameter_sweep_run_cell(algorithm):
+    run_cell = '''kwargs = configure_simulation()
+ps = ParameterSweepConfig()
+'''
+    
+    if not algorithm == "ODE":
+        run_cell += "ps.number_of_trajectories = kwargs['number_of_trajectories']\n"
+    run_cell += '%time ps.run(kwargs)'
+    
+    return run_cell
 
 
 def generate_mdl_inf_import_cell():
@@ -580,12 +598,10 @@ from dask.distributed import Client'''
     return import_cell
 
 
-def generate_mdl_inf_simulator_cell(json_data):
-    settings = json_data['simulationSettings']
-    
-    run_settings = get_run_settings(settings, show_labels=False)
+def generate_mdl_inf_simulator_cell():
+    simulator_cell = '''kwargs = configure_simulation()
 
-    simulator_cell = '''# Define simulator function
+# Define simulator function
 def set_model_parameters(params, model):
     """para,s - array, need to have the same order as
     model.listOfParameters """
@@ -596,9 +612,8 @@ def set_model_parameters(params, model):
 # Here we use the GillesPy2 Solver
 def simulator(params, model):
     model_update = set_model_parameters(params, model)
-    num_trajectories = 1
-
-    res = model_update.run({0})
+    
+    res = model_update.run(**kwargs)
     tot_res = np.asarray([x.T for x in res]) # reshape to (N, S, T)
     tot_res = tot_res[:,1:, :] # should not contain timepoints
 
@@ -606,7 +621,7 @@ def simulator(params, model):
 
 # Wrapper, simulator function to abc should should only take one argument (the parameter point)
 def simulator2(x):
-    return simulator(x, model=model)'''.format(run_settings)
+    return simulator(x, model=model)'''
     return simulator_cell
 
 
@@ -628,20 +643,15 @@ uni_prior = uniform_prior.UniformPrior(dmin, dmax)'''
     return prior_cell
 
 
-def generate_mdl_inf_fixed_data_cell(json_data):
-    settings = json_data['simulationSettings']
-
-    run_settings = get_run_settings(settings, show_labels=False, is_mdl_inf=True)
-
+def generate_mdl_inf_fixed_data_cell():
     fixed_data_cell = '''# generate some fixed(observed) data based on default parameters of the model
-# the minimum number of trajectoies needs to be at least 30
-fixed_data = model.run({0})'''.format(run_settings)
+fixed_data = model.run(**kwargs)'''
 
     return fixed_data_cell
 
 
 def generate_mdl_inf_reshape_data_cell():
-    reshape_data_cell = '''# Reshape the dat to (n_points,n_species,n_timepoints) and remove timepoints array
+    reshape_data_cell = '''# Reshape the data to (n_points,n_species,n_timepoints) and remove timepoints array
 fixed_data = np.asarray([x.T for x in fixed_data])
 fixed_data = fixed_data[:,1:, :]'''
 

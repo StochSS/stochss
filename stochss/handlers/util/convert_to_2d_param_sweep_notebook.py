@@ -8,9 +8,9 @@ from json.decoder import JSONDecodeError
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 # imports for modal notebook
-from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
+from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_configure_simulation_cell, get_algorithm
 # imports for parameter sweep workflow
-from .generate_notebook_cells import generate_feature_extraction_cell, generate_average_aggregate_cell, generate_2D_parameter_sweep_class_cell, generate_2D_psweep_config_cell
+from .generate_notebook_cells import generate_feature_extraction_cell, generate_average_aggregate_cell, generate_2D_parameter_sweep_class_cell, generate_2D_psweep_config_cell, generate_parameter_sweep_run_cell
 from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 def convert_to_2d_psweep_nb(_model_path):
@@ -43,25 +43,23 @@ def convert_to_2d_psweep_nb(_model_path):
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-        if is_ssa:
+        if get_algorithm(json_data, is_ssa_c) == "V-SSA":
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = VariableSSACSolver(model=model)'))
-        # Model Run Cell
-        cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
-        # Plotting Cell
-        cells.append(nbf.new_code_cell('results.plotplotly()'))
+        # Configure Simulation Cell
+        cells.append(nbf.new_code_cell(generate_configure_simulation_cell(json_data, is_ssa_c)))
         # Feature Extraction cell
         cells.append(nbf.new_code_cell(generate_feature_extraction_cell()))
         # Feature Aggregate cell
         cells.append(nbf.new_code_cell(generate_average_aggregate_cell()))
         # Parameter Sweep Class cell
-        cells.append(nbf.new_code_cell(generate_2D_parameter_sweep_class_cell(json_data, is_ssa)))
+        cells.append(nbf.new_code_cell(generate_2D_parameter_sweep_class_cell(json_data, is_ssa_c)))
         # Parameter Sweep Config cell
         cells.append(nbf.new_code_cell(generate_2D_psweep_config_cell(json_data, name)))
     except KeyError as err:
         raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err))
     # Parameter Sweep Execution cell
-    cells.append(nbf.new_code_cell('ps = ParameterSweepConfig()\n%time ps.run()'))
+    cells.append(nbf.new_code_cell(generate_parameter_sweep_run_cell(get_algorithm(json_data, is_ssa_c))))
     # Parameter Sweet Plot Cell
     cells.append(nbf.new_code_cell('ps.plot()'))
     # Parameter Sweet Plotly Cell

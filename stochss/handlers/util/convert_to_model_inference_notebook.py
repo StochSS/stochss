@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import json
 import nbformat
 from nbformat import v4 as nbf
@@ -9,10 +8,12 @@ from json.decoder import JSONDecodeError
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 # imports for modal notebook
-from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell
+from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_configure_simulation_cell
 # imports for model inference workflow
 from .generate_notebook_cells import generate_mdl_inf_simulator_cell, generate_mdl_inf_prior_cell, generate_mdl_inf_fixed_data_cell, generate_mdl_inf_reshape_data_cell
-from .generate_notebook_cells import generate_mdl_inf_summary_stats_cell, generate_mdl_inf_import_cell
+from .generate_notebook_cells import generate_mdl_inf_summary_stats_cell, generate_mdl_inf_import_cell, get_algorithm
+from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
+
 def convert_to_mdl_inference_nb(model_path):
     user_dir = "/home/jovyan"
 
@@ -30,6 +31,8 @@ def convert_to_mdl_inference_nb(model_path):
     except JSONDecodeError as err:
         raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err))
 
+    is_ssa_c = get_best_ssa_solver().name == "SSACSolver"
+
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
@@ -41,14 +44,19 @@ def convert_to_mdl_inference_nb(model_path):
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        if get_algorithm(json_data) == "SSA" and is_ssa_c:
+            # Instantiate Solver Cell
+            cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
+        # Configure Simulation Cell
+        cells.append(nbf.new_code_cell(generate_configure_simulation_cell(json_data, is_mdl_inf=True, show_labels=False)))
         # Create model inference import cell
         cells.append(nbf.new_code_cell(generate_mdl_inf_import_cell()))
         # Create simulator cell
-        cells.append(nbf.new_code_cell(generate_mdl_inf_simulator_cell(json_data)))
+        cells.append(nbf.new_code_cell(generate_mdl_inf_simulator_cell()))
         # Create prior cell
         cells.append(nbf.new_code_cell(generate_mdl_inf_prior_cell()))
         # Create fixed data cell
-        cells.append(nbf.new_code_cell(generate_mdl_inf_fixed_data_cell(json_data)))
+        cells.append(nbf.new_code_cell(generate_mdl_inf_fixed_data_cell()))
         # Create reshape data cell
         cells.append(nbf.new_code_cell(generate_mdl_inf_reshape_data_cell()))
         # Create summary statistics cell
@@ -58,7 +66,7 @@ def convert_to_mdl_inference_nb(model_path):
         # Create compute fixed mean cell
         cells.append(nbf.new_code_cell("# First compute the fixed(observed) mean\nabc.compute_fixed_mean(chunk_size=2)"))
         # Create run model inference cell
-        cells.append(nbf.new_code_cell("# Run in multiprocessing mode\nres = abc.infer(num_samples=100, batch_size=10, chunk_size=2)"))
+        cells.append(nbf.new_code_cell("res = abc.infer(num_samples=100, batch_size=10, chunk_size=2)"))
         # Create absolute error cell
         cells.append(nbf.new_code_cell('mae_inference = mean_absolute_error(bound, abc.results["inferred_parameters"])'))
     except KeyError as err:
