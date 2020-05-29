@@ -566,7 +566,6 @@ def ssaSolver(model, data, run_timeout):
 
 
 def v_ssa_solver(model, data, run_timeout, solver, rate1, rate2):
-    print("running variable ssa c solver")
     seed = data['seed']
     if seed == -1:
         seed = None

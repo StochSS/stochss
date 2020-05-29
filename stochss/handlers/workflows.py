@@ -50,8 +50,6 @@ class LoadWorkflowAPIHandler(APIHandler):
         title_types = {"gillespy":"Ensemble Simulation","parameterSweep":"Parameter Sweep"}
         name_types = {"gillespy":"_ES","parameterSweep":"_PS"}
         parent_path = os.path.dirname(path)
-        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as tmp_file:
-            settings = json.load(tmp_file)
         if path.endswith('.mdl'):
             resp = {"mdlPath":path,"timeStamp":stamp,"type":wkfl_type,
                     "status":"new","titleType":title_types[wkfl_type],
@@ -92,10 +90,34 @@ class LoadWorkflowAPIHandler(APIHandler):
         except:
             resp["model"] = None
             resp["error"] = {"Reason":"Model Not Found","Message":"Could not find the model file: "+resp['mdlPath']}
-        resp['settings'] = settings
+        resp["settings"] = self.get_settings(os.path.join(resp['wkflParPath'], resp['wkflDir']), resp['mdlPath'])
         log.debug("Response: {0}".format(resp))
         self.write(resp)
         self.finish()
+
+
+    def get_settings(self, wkfl_path, mdl_path):
+        settings_path = os.path.join(wkfl_path, "settings.json")
+        
+        if os.path.exists(settings_path):
+            with open(settings_path, "r") as settings_file:
+                return json.load(settings_file)
+
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            settings_template = json.load(template_file)
+        
+        if os.path.exists(mdl_path):
+            with open(mdl_path, "r") as mdl_file:
+                mdl = json.load(mdl_file)
+                try:
+                    settings = {"simulationSettings":mdl['simulationSettings'],
+                                "parameterSweepSettings":mdl['parameterSweepSettings'],
+                                "resultsSettings":settings_template['resultsSettings']}
+                    return settings
+                except:
+                    return settings_template
+        else:
+            return settings_template
 
 
 class RunWorkflowAPIHandler(APIHandler):
