@@ -394,7 +394,7 @@ class ParameterSweep():
     def __init__(self, wkfl_path, mdl_path, settings=None):
         self.wkfl_path = wkfl_path
         self.mdl_path = mdl_path
-        self.settings = settings
+        self.settings = self.get_settings() if settings is None else settings
         self.mdl_file = mdl_path.split('/').pop()
         self.info_path = os.path.join(wkfl_path, 'info.json')
         self.log_path = os.path.join(wkfl_path, 'logs.txt')
@@ -441,9 +441,9 @@ class ParameterSweep():
             json.dump(self.settings, settings_file)
 
 
-    def run(self, gillespy2_model, stochss_model, verbose):
-        ps_settings = stochss_model['parameterSweepSettings']
-        sim_settings = stochss_model['simulationSettings']
+    def run(self, gillespy2_model, verbose):
+        ps_settings = self.settings['parameterSweepSettings']
+        sim_settings = self.settings['simulationSettings']
         trajectories = sim_settings['realizations']
         is_ssa = sim_settings['algorithm'] == "SSA" and get_best_ssa_solver().name == "SSACSolver"
         solver = VariableSSACSolver(model=gillespy2_model)

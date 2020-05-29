@@ -181,11 +181,11 @@ let WorkflowManager = PageView.extend({
       this.workflowResultsView.remove();
     }
     var resultsView = new WorkflowResultsView({
-      trajectories: this.model.simulationSettings.realizations,
+      trajectories: this.settings.simulationSettings.realizations,
       status: this.status,
       species: this.model.species,
       type: this.type,
-      speciesOfInterest: this.model.parameterSweepSettings.speciesOfInterest.name
+      speciesOfInterest: this.settings.parameterSweepSettings.speciesOfInterest.name
     });
     this.workflowResultsView = this.registerRenderSubview(resultsView, 'workflow-results-container');
   },

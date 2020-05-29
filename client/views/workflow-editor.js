@@ -1,5 +1,7 @@
 var _ = require('underscore');
 var $ = require('jquery');
+//models
+var Model = require('../models/settings');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -18,7 +20,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.settings = attrs.settings;
+    this.settings = new Model(attrs.settings);
     this.type = attrs.type;
     this.status = attrs.status;
   },
@@ -54,28 +56,30 @@ module.exports = View.extend({
   renderSimulationSettingView: function () {
     let simulationSettingsView = new SimSettingsView({
       parent: this,
-      model: this.model.simulationSettings,
+      model: this.settings.simulationSettings,
+      stochssModel: this.model
     });
     this.registerRenderSubview(simulationSettingsView, 'sim-settings-container');
   },
   renderSimulationSettingViewer: function () {
     let simulationSettingsViewer = new SimulationSettingsViewer({
       parent: this,
-      model: this.model.simulationSettings,
+      model: this.settings.simulationSettings,
     })
     this.registerRenderSubview(simulationSettingsViewer, 'sim-settings-container');
   },
   renderParameterSweepSettingsViewer: function () {
     let parameterSweepSettingsViewer = new ParameterSweepSettingsViewer({
       parent: this,
-      model: this.model.parameterSweepSettings,
+      model: this.settings.parameterSweepSettings,
     });
     this.registerRenderSubview(parameterSweepSettingsViewer, 'param-sweep-settings-container');
   },
   renderParameterSweepSettingsView: function () {
     let parameterSweepSettingsView = new ParamSweepSettingsView({
       parent: this,
-      model: this.model.parameterSweepSettings,
+      model: this.settings.parameterSweepSettings,
+      stochssModel: this.model
     });
     this.registerRenderSubview(parameterSweepSettingsView, 'param-sweep-settings-container');
   },
@@ -88,26 +92,26 @@ module.exports = View.extend({
   },
   validatePsweep: function () {
     let species = this.model.species;
-    var valid = this.validatePsweepChild(species, this.model.parameterSweepSettings.speciesOfInterest)
+    var valid = this.validatePsweepChild(species, this.settings.parameterSweepSettings.speciesOfInterest)
     if(!valid) // if true update species of interest
-      this.model.parameterSweepSettings.speciesOfInterest = species.at(0)
+      this.settings.parameterSweepSettings.speciesOfInterest = species.at(0)
     var parameters = this.model.parameters;
-    var valid = this.validatePsweepChild(parameters, this.model.parameterSweepSettings.parameterOne)
+    var valid = this.validatePsweepChild(parameters, this.settings.parameterSweepSettings.parameterOne)
     if(!valid) { // if true update parameter one
       let param = parameters.at(0)
-      this.model.parameterSweepSettings.parameterOne = param
+      this.settings.parameterSweepSettings.parameterOne = param
       let val = eval(param.expression)
-      this.model.parameterSweepSettings.p1Min = val * 0.5
-      this.model.parameterSweepSettings.p1Max = val * 1.5
+      this.settings.parameterSweepSettings.p1Min = val * 0.5
+      this.settings.parameterSweepSettings.p1Max = val * 1.5
     }
     if(parameters.at(1)){ // is there more than one parameter
-      var valid = this.validatePsweepChild(parameters, this.model.parameterSweepSettings.parameterTwo)
+      var valid = this.validatePsweepChild(parameters, this.settings.parameterSweepSettings.parameterTwo)
       if(!valid){ // if true update parameter 2
         let param = parameters.at(1)
-        this.model.parameterSweepSettings.parameterTwo = param
+        this.settings.parameterSweepSettings.parameterTwo = param
         let val = eval(param.expression)
-        this.model.parameterSweepSettings.p2Min = val * 0.5
-        this.model.parameterSweepSettings.p2Max = val * 1.5
+        this.settings.parameterSweepSettings.p2Min = val * 0.5
+        this.settings.parameterSweepSettings.p2Max = val * 1.5
       }
     }
   },

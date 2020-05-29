@@ -39,7 +39,7 @@ class GillesPy2Workflow():
         self.wkfl_path = wkfl_path
         self.mdl_path = mdl_path
         if wkfl_path:
-            self.settings = settings
+            self.settings = self.get_settings() if settings is None else settings
             self.mdl_file = mdl_path.split('/').pop()
             self.info_path = os.path.join(wkfl_path, 'info.json')
             self.log_path = os.path.join(wkfl_path, 'logs.txt')
@@ -115,8 +115,8 @@ class GillesPy2Workflow():
         return results
 
 
-    def run(self, gillespy2_model, stochss_model, verbose):
-        sim_settings = stochss_model['simulationSettings']
+    def run(self, gillespy2_model, verbose):
+        sim_settings = self.settings['simulationSettings']
         trajectories = sim_settings['realizations']
         is_stochastic = not sim_settings['algorithm'] == "ODE"
 
@@ -228,7 +228,7 @@ class ModelFactory():
     Build the individual components of a model.
     ##############################################################################
     '''
-    def __init__(self, data):
+    def __init__(self, data, is_ode):
         '''
         Initialize and build a GillesPy2 model.
 
@@ -242,7 +242,6 @@ class ModelFactory():
         timeStep = (data['modelSettings']['timeStep'])
         endSim = data['modelSettings']['endSim']
         volume = data['modelSettings']['volume']
-        is_ode = data['simulationSettings']['algorithm'] == "ODE"
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))

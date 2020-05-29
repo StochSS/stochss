@@ -14,10 +14,10 @@ module.exports = State.extend({
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
-  letUsChooseForYou: function () {
-    var defaultMode = this.parent.defaultMode;
+  letUsChooseForYou: function (model) {
+    var defaultMode = model.defaultMode;
     if(defaultMode === "dynamic"){
-      var species = this.parent.species
+      var species = model.species
       var discreteSpecies = species.filter(function (specie) {
         if(specie.mode === "discrete")
           return specie
@@ -25,9 +25,9 @@ module.exports = State.extend({
       if(discreteSpecies.length === species.length)
         defaultMode = "discrete"
     }
-    var numEvents = this.parent.eventsCollection.length;
-    var numRules = this.parent.rules.length;
-    var numFuncDef = this.parent.functionDefinitions.length;
+    var numEvents = model.eventsCollection.length;
+    var numRules = model.rules.length;
+    var numFuncDef = model.functionDefinitions.length;
     var tTol = this.tauTol
     var aTol = this.absoluteTol
     var rTol = this.relativeTol

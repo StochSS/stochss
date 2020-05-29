@@ -79,7 +79,7 @@ def save_existing_workflow(wkfl, wkfl_type, initialize):
     return "Successfully saved the existing workflow: {0}".format(wkfl.wkfl_path)
     
 
-def get_models(full_path, name, wkfl_path):
+def get_models(full_path, name, wkfl_path, is_ode):
     try:
         with open(full_path, "r") as model_file:
             stochss_model = json.loads(model_file.read())
@@ -89,7 +89,7 @@ def get_models(full_path, name, wkfl_path):
         open(os.path.join(wkfl_path, 'ERROR'), 'w').close() # update status to error
     
     try:
-        _model = ModelFactory(stochss_model) # build GillesPy2 model
+        _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
         gillespy2_model = _model.model
     except Exception as error:
         log.error("GillesPy2 Model Errors: "+str(error))
@@ -134,11 +134,12 @@ def run_workflow(wkfl, verbose):
     verbose : boolean
         Print progress statements.
     '''
+    is_ode = wkfl.settings['simulationSettings']['algorithm'] == "ODE"
     # Get the model data from the file and create the model object
-    gillespy2_model, stochss_model = get_models(wkfl.wkfl_mdl_path, wkfl.mdl_file.split('.')[0], wkfl.wkfl_path)
+    gillespy2_model, stochss_model = get_models(wkfl.wkfl_mdl_path, wkfl.mdl_file.split('.')[0], wkfl.wkfl_path, is_ode)
     # run the workflow
     try:
-        wkfl.run(gillespy2_model, stochss_model, verbose)
+        wkfl.run(gillespy2_model, verbose)
     except Exception as error:
         # update workflow status to error if GillesPy2 throws an exception
         log.error("Workflow errors: {0}".format(error))

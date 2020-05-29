@@ -21,6 +21,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.model = attrs.model;
+    this.stochssModel = attrs.stochssModel
     this.tooltips = Tooltips.simulationSettings
   },
   render: function () {
@@ -32,7 +33,7 @@ module.exports = View.extend({
       $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
     }else{
       $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic);
-      this.model.letUsChooseForYou();
+      this.model.letUsChooseForYou(this.stochssModel);
     }
     this.disableInputFieldByAlgorithm();
     $(document).ready(function () {
@@ -64,7 +65,7 @@ module.exports = View.extend({
     if(!this.model.isAutomatic){
       this.model.algorithm = value;
     }else{
-      this.model.letUsChooseForYou();
+      this.model.letUsChooseForYou(this.stochssModel);
     }
     this.disableInputFieldByAlgorithm();
   },

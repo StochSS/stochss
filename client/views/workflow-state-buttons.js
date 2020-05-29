@@ -56,8 +56,8 @@ module.exports = View.extend({
   saveModel: function (cb) {
     // this.model is a ModelVersion, the parent of the collection is Model
     let self = this
-    if(this.model.simulationSettings.isAutomatic){
-      this.model.simulationSettings.letUsChooseForYou();
+    if(this.parent.settings.simulationSettings.isAutomatic){
+      this.parent.settings.simulationSettings.letUsChooseForYou(this.model);
     }
     var model = this.model;
     if (cb) {
