@@ -301,8 +301,8 @@ class WorkflowLogsAPIHandler(APIHandler):
 class WorkflowNotebookHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for handling conversions from model (.mdl) file to Jupyter Notebook
-    (.ipynb) file for notebook workflows.
+    Handler for handling conversions from model (.mdl) file or workflows (.wkfl) 
+    to Jupyter Notebook (.ipynb) file for notebook workflows.
     ##############################################################################
     '''
     @web.authenticated
@@ -313,14 +313,29 @@ class WorkflowNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         workflow_type = self.get_query_argument(name="type")
         path = self.get_query_argument(name="path")
+        settings = None
+
+        if path.endswith('.wkfl'):
+            name = path.split('/').pop().split('.')[0].replace('-', '_')
+            with open(os.path.join(path, "info.json"), "r") as info_file:
+                info = json.load(info_file)
+                workflow_type = info['type']
+            with open(os.path.join(path, "settings.json"), "r") as settings_file:
+                settings = json.load(settings_file)
+            if workflow_type == "parameterSweep":
+                workflow_type = "1d_parameter_sweep" if settings['parameterSweepSettings']['is1D'] else "2d_parameter_sweep"
+            path = info['source_model'] if info['wkfl_model'] is None else info['wkfl_model']
+            log.debug("Name for the notebook: {0}".format(name))
+
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
         workflows = {"gillespy":convert_to_notebook, "1d_parameter_sweep":convert_to_1d_psweep_nb, "2d_parameter_sweep":convert_to_2d_psweep_nb, 
                      "model_inference":convert_to_mdl_inference_nb}
         try:
-            resp = workflows[workflow_type](path)
+            resp = workflows[workflow_type](path, name=name, settings=settings) if settings is not None else workflows[workflow_type](path)
             log.debug("Response: {0}\n".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
@@ -329,4 +344,6 @@ class WorkflowNotebookHandler(APIHandler):
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}\n".format(error))
             self.write(error)
+        log.setLevel(logging.WARNING)
         self.finish()
+

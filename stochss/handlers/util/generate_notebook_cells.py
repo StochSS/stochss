@@ -4,7 +4,7 @@ import json
 from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 
-def generate_imports_cell(json_data, is_ssa_c=False):
+def generate_imports_cell(json_data, is_ssa_c=False, settings=None):
     # Imports cell
     imports = 'import numpy as np\n'
     if json_data['is_spatial']:
@@ -15,7 +15,7 @@ def generate_imports_cell(json_data, is_ssa_c=False):
         imports += 'import gillespy2\n'
         imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
         imports += 'from gillespy2.core.events import EventAssignment, EventTrigger, Event\n'
-        algorithm = get_algorithm(json_data, is_ssa_c)
+        algorithm = get_algorithm(json_data, is_ssa_c) if settings is None or settings['isAutomatic'] else get_algorithm(json_data, is_ssa_c, algorithm=settings['algorithm'])
         if algorithm == "SSA" and get_best_ssa_solver().name == "SSACSolver":
             ssa = 'from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver\n'
         else:
@@ -211,11 +211,15 @@ def get_settings(path=None):
 
 def generate_configure_simulation_cell(json_data, is_ssa_c=False, is_mdl_inf=False, show_labels=True, settings=None):
     padding = '    '
-    algorithm = get_algorithm(json_data, is_ssa_c)
-
+    
     # Get stochss simulation settings
     if settings is None:
         settings = get_settings()
+        algorithm = get_algorithm(json_data, is_ssa_c)
+    elif settings['isAutomatic']:
+        algorithm = get_algorithm(json_data, is_ssa_c)
+    else:
+        algorithm = get_algorithm(json_data, is_ssa_c, algorithm=settings['algorithm'])
 
     # Get settings for model.run()
     settings = get_run_settings(settings, show_labels, is_mdl_inf, algorithm)
@@ -224,7 +228,7 @@ def generate_configure_simulation_cell(json_data, is_ssa_c=False, is_mdl_inf=Fal
                       "SSA":['"seed"','"number_of_trajectories"','"show_labels"'],
                       "V-SSA":['"solver"','"seed"','"number_of_trajectories"','"show_labels"'],
                       "Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"show_labels"'],
-                      "Hybrid_Tau_Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"','"show_labels"']
+                      "Hybrid-Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"','"show_labels"']
                      }
 
     if get_best_ssa_solver().name == "SSACSolver":
@@ -262,14 +266,31 @@ def generate_run_cell(json_data):
     return run_cell
 
 
-def get_algorithm(json_data, is_ssa_c=False):
+def get_algorithm(json_data, is_ssa_c=False, algorithm=None):
+    if algorithm is not None:
+        if algorithm == "SSA" and is_ssa_c:
+            return "V-SSA"
+        return algorithm
+
     if json_data['eventsCollection'] or json_data['rules'] or json_data['functionDefinitions']:
         return "Hybrid-Tau-Leaping"
-    if json_data['defaultMode'] == "dynamic":
+    
+    mode = json_data['defaultMode']
+    
+    if mode == "dynamic":
+        is_discrete = not boolean(list(filter(lambda species: not species['mode'] == "discrete", json_data['species'])))
+        is_continuous = not boolean(list(filter(lambda species: not species['mode'] == "continuous", json_data['species'])))
+
+        if is_discrete:
+            mode = "discrete"
+        elif is_continuous:
+            mode = "continuous"
+
+    if mode == "dynamic":
         return "Hybrid-Tau-Leaping"
-    if json_data['defaultMode'] == "continuous":
+    if mode == "continuous":
         return "ODE"
-    if json_data['defaultMode'] == "discrete" and is_ssa_c:
+    if mode == "discrete" and is_ssa_c:
         return "V-SSA"
     return "SSA"
 
@@ -301,7 +322,7 @@ def get_run_settings(settings, show_labels, is_mdl_inf, algorithm):
                    }
     
     #Parse settings for algorithm
-    run_settings = [solver_map[algorithm]] if algorithm == "V-SSA" or (algorithm == "SSA" and not solver_map['SSA'] == "") else []
+    run_settings = [solver_map[algorithm]] if solver_map[algorithm] else []
     if not show_labels:
         run_settings.append('"show_labels":False')
     algorithm_settings =  ['"{0}":{1}'.format(key, val) for key, val in settings_map.items()]
@@ -343,8 +364,8 @@ def average_of_ensemble(c,data):
     return average_aggregate_cell
 
 
-def generate_1D_parameter_sweep_class_cell(json_data, is_ssa_c):
-    if is_ssa_c:
+def generate_1D_parameter_sweep_class_cell(json_data, algorithm):
+    if algorithm == "V-SSA":
         psweep_class_cell ='''class ParameterSweep1D():
     
     def run(c, kwargs, verbose=False):
@@ -429,32 +450,47 @@ def generate_1D_parameter_sweep_class_cell(json_data, is_ssa_c):
     return psweep_class_cell
 
 
-def generate_1D_psweep_config_cell(json_data, model_name):
-    p1 = json_data['parameters'][0]
-    soi = json_data['species'][0]['name']
+def generate_1D_psweep_config_cell(json_data, model_name, settings=None):
+    padding = '    '
+    if settings is None:
+        num_traj = 1
+        p1 = json_data['parameters'][0]['name']
+        p1_min = "0.5 * float(eval(model.get_parameter(p1).expression))"
+        p1_max = "1.5 * float(eval(model.get_parameter(p1).expression))"
+        p1_steps = "11"
+        soi = json_data['species'][0]['name']
+    else:
+        num_traj = settings['simulationSettings']['realizations']
+        settings = settings['parameterSweepSettings']
+        p1 = settings['parameterOne']['name']
+        p1_min = settings['p1Min']
+        p1_max = settings['p1Max']
+        p1_steps = settings['p1Steps']
+        soi = settings['speciesOfInterest']['name']
+
     psweep_config_cell = '''# Configuration for the Parameter Sweep
 class ParameterSweepConfig(ParameterSweep1D):
     # What class defines the GillesPy2 model
     ps_class = {0}
     model = ps_class()
-    # What is the first parameter we will vary
-    p1 = "{1}" # ENTER PARAMETER HERE
-    p1_min = 0.5 * float(eval(model.get_parameter(p1).expression)) # ENTER START VALUE FOR PARAMETER RANGE HERE
-    p1_max = 1.5 * float(eval(model.get_parameter(p1).expression)) # ENTER END VALUE FOR PARAMETER RANGE HERE
-    steps = 11 # ENTER THE NUMBER OF STEPS HERE
-    p1_range = np.linspace(p1_min,p1_max,steps)
-    number_of_trajectories = 1
-    species_of_interest = "{2}" # ENTER SPECIES OF INTEREST HERE
-    # What feature of the simulation are we examining
+'''.format(model_name)
+    psweep_config_cell += padding + 'p1 = "{0}" # ENTER PARAMETER 1 HERE\n'.format(p1)
+    psweep_config_cell += padding + 'p1_min = {0} # ENTER START VALUE FOR P1 RANGE HERE\n'.format(p1_min)
+    psweep_config_cell += padding + 'p1_max = {0} # ENTER END VALUE FOR P1 RANGE HERE\n'.format(p1_max)
+    psweep_config_cell += padding + 'p1_steps = {0} # ENTER THE NUMBER OF STEPS FOR P1 HERE\n'.format(p1_steps)
+    psweep_config_cell += padding + 'p1_range = np.linspace(p1_min,p1_max,p1_steps)\n'
+    psweep_config_cell += padding + 'species_of_interest = "{0}" # ENTER SPECIES OF INTEREST HERE\n'.format(soi)
+    psweep_config_cell += padding + 'number_of_trajectories = {0}\n'.format(num_traj)
+    psweep_config_cell += padding + '''# What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
     # for number_of_trajectories > 1: how do we aggreggate the values
     ensemble_aggragator = mean_std_of_ensemble
-'''.format(model_name, p1['name'], soi)
+'''
     return psweep_config_cell
 
 
-def generate_2D_parameter_sweep_class_cell(json_data, is_ssa_c):
-    if is_ssa_c:
+def generate_2D_parameter_sweep_class_cell(json_data, algorithm):
+    if algorithm == "V-SSA":
         psweep_class_cell ='''class ParameterSweep2D():
     
     def run(c, kwargs, verbose=False):
@@ -545,32 +581,55 @@ def generate_2D_parameter_sweep_class_cell(json_data, is_ssa_c):
     return psweep_class_cell
 
 
-def generate_2D_psweep_config_cell(json_data, model_name):
-    p1 = json_data['parameters'][0]
-    p2 = json_data['parameters'][1]
-    soi = json_data['species'][0]['name']
+def generate_2D_psweep_config_cell(json_data, model_name, settings=None):
+    padding = '    '
+    if settings is None:
+        num_traj = 1
+        p1 = json_data['parameters'][0]['name']
+        p1_min = "0.5 * float(eval(model.get_parameter(p1).expression))"
+        p1_max = "1.5 * float(eval(model.get_parameter(p1).expression))"
+        p1_steps = "11"
+        p2 = json_data['parameters'][1]['name']
+        p2_min = "0.5 * float(eval(model.get_parameter(p2).expression))"
+        p2_max = "1.5 * float(eval(model.get_parameter(p2).expression))"
+        p2_steps = "11"
+        soi = json_data['species'][0]['name']
+    else:
+        num_traj = settings['simulationSettings']['realizations']
+        settings = settings['parameterSweepSettings']
+        p1 = settings['parameterOne']['name']
+        p1_min = settings['p1Min']
+        p1_max = settings['p1Max']
+        p1_steps = settings['p1Steps']
+        p2 = settings['parameterTwo']['name']
+        p2_min = settings['p2Min']
+        p2_max = settings['p2Max']
+        p2_steps = settings['p2Steps']
+        soi = settings['speciesOfInterest']['name']
+
     psweep_config_cell = '''# Configuration for the Parameter Sweep
 class ParameterSweepConfig(ParameterSweep2D):
     # What class defines the GillesPy2 model
-    ps_class = {3}
+    ps_class = {0}
     model = ps_class()
-    p1 = "{0}" # ENTER PARAMETER 1 HERE
-    p2 = "{1}" # ENTER PARAMETER 2 HERE
-    p1_min = 0.5 * float(eval(model.get_parameter(p1).expression)) # ENTER START VALUE FOR P1 RANGE HERE
-    p1_max = 1.5 * float(eval(model.get_parameter(p1).expression)) # ENTER END VALUE FOR P1 RANGE HERE
-    p1_steps = 11 # ENTER THE NUMBER OF STEPS FOR P1 HERE
-    p1_range = np.linspace(p1_min,p1_max,p1_steps)
-    p2_min = 0.5 * float(eval(model.get_parameter(p2).expression)) # ENTER START VALUE FOR P2 RANGE HERE
-    p2_max = 1.5 * float(eval(model.get_parameter(p2).expression)) # ENTER END VALUE FOR P2 RANGE HERE
-    p2_steps = 11 # ENTER THE NUMBER OF STEPS FOR P2 HERE
-    p2_range = np.linspace(p2_min,p2_max,p2_steps)
-    species_of_interest = "{2}" # ENTER SPECIES OF INTEREST HERE
-    number_of_trajectories = 1
-    # What feature of the simulation are we examining
+'''.format(model_name)
+    psweep_config_cell += padding + 'p1 = "{0}" # ENTER PARAMETER 1 HERE\n'.format(p1)
+    psweep_config_cell += padding + 'p2 = "{0}" # ENTER PARAMETER 2 HERE\n'.format(p2)
+    psweep_config_cell += padding + 'p1_min = {0} # ENTER START VALUE FOR P1 RANGE HERE\n'.format(p1_min)
+    psweep_config_cell += padding + 'p1_max = {0} # ENTER END VALUE FOR P1 RANGE HERE\n'.format(p1_max)
+    psweep_config_cell += padding + 'p1_steps = {0} # ENTER THE NUMBER OF STEPS FOR P1 HERE\n'.format(p1_steps)
+    psweep_config_cell += padding + 'p1_range = np.linspace(p1_min,p1_max,p1_steps)\n'
+    psweep_config_cell += padding + 'p2_min = {0} # ENTER START VALUE FOR P2 RANGE HERE\n'.format(p2_min)
+    psweep_config_cell += padding + 'p2_max = {0} # ENTER END VALUE FOR P2 RANGE HERE\n'.format(p2_max)
+    psweep_config_cell += padding + 'p2_steps = {0} # ENTER THE NUMBER OF STEPS FOR P2 HERE\n'.format(p2_steps)
+    psweep_config_cell += padding + 'p2_range = np.linspace(p2_min,p2_max,p2_steps)\n'
+    psweep_config_cell += padding + 'species_of_interest = "{0}" # ENTER SPECIES OF INTEREST HERE\n'.format(soi)
+    psweep_config_cell += padding + 'number_of_trajectories = {0}\n'.format(num_traj)
+    psweep_config_cell += padding + '''# What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
     # for number_of_trajectories > 1: how do we aggreggate the values
     ensemble_aggragator = average_of_ensemble
-'''.format(p1['name'], p2['name'], soi, model_name)
+'''
     return psweep_config_cell
 
 

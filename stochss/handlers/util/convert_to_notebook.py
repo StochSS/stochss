@@ -11,12 +11,13 @@ from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFil
 from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 
-def convert_to_notebook(_model_path):
+def convert_to_notebook(_model_path, name=None, settings=None):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
-    name = file.split('.')[0].replace('-', '_')
+    if name is None:
+        name = file.split('.')[0].replace('-', '_')
     dest_path = model_path.split(file)[0]
     
     # Collect .mdl Data
@@ -36,16 +37,19 @@ def convert_to_notebook(_model_path):
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
     try:
         # Create imports cell
-        cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
+        import_cell = generate_imports_cell(json_data) if settings is None else generate_imports_cell(json_data, settings=settings['simulationSettings'])
+        cells.append(nbf.new_code_cell(import_cell))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-        if get_algorithm(json_data) == "SSA" and is_ssa_c:
+        algorithm = get_algorithm(json_data) if settings is None or settings['simulationSettings']['isAutomatic'] else settings['simulationSettings']['algorithm']
+        if algorithm == "SSA" and is_ssa_c:
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
         # Configure Simulation Cell
-        cells.append(nbf.new_code_cell(generate_configure_simulation_cell(json_data)))
+        config_cell = generate_configure_simulation_cell(json_data) if settings is None else generate_configure_simulation_cell(json_data, settings=settings['simulationSettings'])
+        cells.append(nbf.new_code_cell(config_cell))
         # Model Run Cell
         cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
     except KeyError as err:

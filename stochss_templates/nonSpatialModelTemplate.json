@@ -6,8 +6,6 @@
 		"endSim": 20,
 		"timeStep": 0.05,
 		"volume": 1,
-		"realizations": 1,
-		"algorithm": ""
 	},
 	"meshSettings": {
 		"count": 2

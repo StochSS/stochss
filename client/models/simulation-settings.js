@@ -15,29 +15,30 @@ module.exports = State.extend({
     State.prototype.initialize.apply(this, arguments);
   },
   letUsChooseForYou: function (model) {
-    var defaultMode = model.defaultMode;
-    if(defaultMode === "dynamic"){
-      var species = model.species
-      var discreteSpecies = species.filter(function (specie) {
-        if(specie.mode === "discrete")
-          return specie
-      });
-      if(discreteSpecies.length === species.length)
-        defaultMode = "discrete"
+    if(model.rules.length || model.eventsCollection.length || model.functionDefinitions.length){
+      this.algorithm = "Hybrid-Tau-Leaping"
+      return
     }
-    var numEvents = model.eventsCollection.length;
-    var numRules = model.rules.length;
-    var numFuncDef = model.functionDefinitions.length;
-    var tTol = this.tauTol
-    var aTol = this.absoluteTol
-    var rTol = this.relativeTol
 
-    if(numEvents || numRules || numFuncDef || rTol !== 1e-3 || aTol !== 1e-6 || defaultMode !== 'discrete'){
-      this.algorithm = "Hybrid-Tau-Leaping";
-    }else if(tTol !== 0.03){
-      this.algorithm = "Tau-Leaping";
-    }else{
+    var mode = model.defaultMode
+
+    if(mode === "dynamic"){
+      let isDiscrete = Boolean(model.species.filter(specie => specie.mode !== "discrete"))
+      let isContinuous = Boolean(model.species.filter(specie => specie.mode !== "continuous"))
+
+      if(isDiscrete){
+        mode = "discrete"
+      }else if(isContinuous){
+        mode = "continuous"
+      }
+    }
+
+    if(mode === "dynamic"){
+      this.algorithm = "Hybrid-Tau-Leaping"
+    }else if(mode === "discrete"){
       this.algorithm = "SSA"
+    }else{
+      this.algorithm = "ODE"
     }
   },
 });

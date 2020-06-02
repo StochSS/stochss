@@ -6,8 +6,6 @@ module.exports = State.extend({
     endSim: 'number',
     timeStep: 'number',
     volume: 'number',
-    algorithm: 'string',
-    realizations: 'number'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)

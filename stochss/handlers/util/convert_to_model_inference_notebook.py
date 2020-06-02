@@ -14,12 +14,13 @@ from .generate_notebook_cells import generate_mdl_inf_simulator_cell, generate_m
 from .generate_notebook_cells import generate_mdl_inf_summary_stats_cell, generate_mdl_inf_import_cell, get_algorithm
 from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
-def convert_to_mdl_inference_nb(model_path):
+def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
     user_dir = "/home/jovyan"
 
     full_path = path.join(user_dir,model_path)
     file = full_path.split('/').pop()
-    name = file.split('.')[0].replace('-', '_')
+    if name is None:
+        name = file.split('.')[0].replace('-', '_')
     dest_path = model_path.split(file)[0]
     
     # Collect .mdl Data
@@ -39,16 +40,19 @@ def convert_to_mdl_inference_nb(model_path):
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
     try:
         # Create imports cell
-        cells.append(nbf.new_code_cell(generate_imports_cell(json_data)))
+        import_cell = generate_imports_cell(json_data) if settings is None else generate_imports_cell(json_data, settings=settings['simulationSettings'])
+        cells.append(nbf.new_code_cell(import_cell))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-        if get_algorithm(json_data) == "SSA" and is_ssa_c:
+        algorithm = get_algorithm(json_data) if settings is None or settings['simulationSettings']['isAutomatic'] else settings['simulationSettings']['algorithm']
+        if algorithm == "SSA" and is_ssa_c:
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
         # Configure Simulation Cell
-        cells.append(nbf.new_code_cell(generate_configure_simulation_cell(json_data, is_mdl_inf=True, show_labels=False)))
+        config_cell = generate_configure_simulation_cell(json_data) if settings is None else generate_configure_simulation_cell(json_data, settings=settings['simulationSettings'])
+        cells.append(nbf.new_code_cell(config_cell))
         # Create model inference import cell
         cells.append(nbf.new_code_cell(generate_mdl_inf_import_cell()))
         # Create simulator cell
@@ -81,4 +85,4 @@ def convert_to_mdl_inference_nb(model_path):
         nbformat.write(nb, f, version=4)
     f.close()
 
-    return dest_file.replace(user_dir+'/', "")
+    return {"Message":'{0} successfully created'.format(dest_file),"FilePath":dest_file.replace(user_dir+'/', ""),"File":dest_file.split('/').pop()}
