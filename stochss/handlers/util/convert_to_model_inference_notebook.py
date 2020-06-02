@@ -51,7 +51,7 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
         # Configure Simulation Cell
-        config_cell = generate_configure_simulation_cell(json_data) if settings is None else generate_configure_simulation_cell(json_data, settings=settings['simulationSettings'])
+        config_cell = generate_configure_simulation_cell(json_data, is_mdl_inf=True, show_labels=False) if settings is None else generate_configure_simulation_cell(json_data, is_mdl_inf=True, show_labels=False, settings=settings['simulationSettings'])
         cells.append(nbf.new_code_cell(config_cell))
         # Create model inference import cell
         cells.append(nbf.new_code_cell(generate_mdl_inf_import_cell()))
