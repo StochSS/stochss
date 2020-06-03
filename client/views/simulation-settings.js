@@ -32,6 +32,7 @@ module.exports = View.extend({
       $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
       $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
     }else{
+      $(this.queryByHook('settings-container')).collapse('hide')
       $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic);
       this.model.letUsChooseForYou(this.stochssModel);
     }
@@ -54,6 +55,11 @@ module.exports = View.extend({
   },
   handleSelectSimulationAlgorithmClick: function (e) {
     var value = e.target.dataset.name;
+    if(value === "Automatic"){
+      $(this.queryByHook('settings-container')).collapse('hide')
+    }else{
+      $(this.queryByHook('settings-container')).collapse('show')
+    }
     if(value === "ODE"){
       this.model.realizations = 1
       $(this.queryByHook("trajectories")).find("input").val("1")
