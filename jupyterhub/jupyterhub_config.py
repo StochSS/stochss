@@ -19,7 +19,7 @@
 # JupyterHub(Application) configuration
 #------------------------------------------------------------------------------
 
-import sys, os, os.path, shutil
+import sys, os, os.path, shutil, logging
 
 ## Class for authenticating users.
 #  
@@ -51,12 +51,12 @@ c.GoogleOAuthenticator.client_secret = os.environ['CLIENT_SECRET']
 data_dir = os.environ.get('DATA_VOLUME_CONTAINER', '/data')
 
 c.JupyterHub.cookie_secret_file = os.path.join(data_dir,
-    'jupyterhub_cookie_secret')
+		'jupyterhub_cookie_secret')
 
 c.JupyterHub.db_url = 'postgresql://postgres:{password}@{host}/{db}'.format(
-    host=os.environ['POSTGRES_HOST'],
-    password=os.environ['POSTGRES_PASSWORD'],
-    db=os.environ['POSTGRES_DB'],
+		host=os.environ['POSTGRES_HOST'],
+		password=os.environ['POSTGRES_PASSWORD'],
+		db=os.environ['POSTGRES_DB'],
 )
 
 ## An Application for starting a Multi-User Jupyter Notebook server.
@@ -75,12 +75,12 @@ from handlers import HomeHandler
 
 # StochSS request handlers
 c.JupyterHub.extra_handlers = [
-    (r"/stochss\/?", HomeHandler),
+		(r"/stochss\/?", HomeHandler),
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
 c.JupyterHub.template_paths = [
-    '/srv/jupyterhub/templates'
+		'/srv/jupyterhub/templates'
 ]
 
 ## The class to use for spawning single-user servers.
@@ -120,11 +120,11 @@ c.JupyterHub.hub_port = 8080
 
 ## Services managed by JupyterHub
 c.JupyterHub.services = [
-    {
-        'name': 'cull-idle',
-        'admin': True,
-        'command': [sys.executable, '/srv/jupyterhub/cull_idle_servers.py', '--timeout=28800'],
-    }
+		{
+				'name': 'cull-idle',
+				'admin': True,
+				'command': [sys.executable, '/srv/jupyterhub/cull_idle_servers.py', '--timeout=28800'],
+		}
 ]
 
 #------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ c.DockerSpawner.network_name = network_name
 # Pass the network name as argument to spawned containers
 # Pass cpu limit as extra config since dockerspawner does not natively support it
 c.DockerSpawner.extra_host_config = {
-  'network_mode': network_name,
+	'network_mode': network_name,
 }
 # Explicitly set notebook directory because we'll be mounting a host volume to
 # it.  Most jupyter/docker-stacks *-notebook images run the Notebook server as
@@ -167,43 +167,112 @@ c.DockerSpawner.debug = True
 # Spawner(LoggingConfigurable) configuration
 #------------------------------------------------------------------------------
 
-c.StochSS.user_palloc = [0] * os.cpu_count()
+def get_user_cpu_count_or_fail():
+	log = logging.getLogger()
+	reserve_count = int(os.environ['RESERVED_CPUS'])
+	log.info("RESERVED_CPUS environment variable is set to {}".format(reserve_count))
+	# Round up to an even number of reserved cpus
+	if reserve_count % 2 > 0:
+		log.warn("Increasing reserved cpu count by one so it's an even number. This helps allocate logical cpus to users more easily.")
+		reserve_count += 1
+	total_cpus = os.cpu_count()
+	log.info("Total cpu count as reported by os.count: {}".format(total_cpus))
+	if reserve_count >= total_cpus:
+		e_message = "RESERVED_CPUS environment cannot be greater than or equal to the number of cpus returned by os.cpu_count()"
+		log.error(e_message)
+		raise ValueError(e_message)
+	user_cpu_count = total_cpus - reserve_count
+	c.StochSS.reserved_cpu_count = reserve_count
+	log.info('Using {} logical cpus for user containers...'.format(user_cpu_count))
+	log.info('Reserving {} logical cpus for hub container and underlying OS'.format(reserve_count))
+	return user_cpu_count
 
-from logging import getLogger
+c.StochSS.user_cpu_count = get_user_cpu_count_or_fail()
+c.StochSS.user_cpu_alloc = [0] * c.StochSS.user_cpu_count
+
+def get_power_users():
+	power_users_file = os.environ.get('POWER_USERS_FILE')
+	log = logging.getLogger()
+	if not os.path.exists(power_users_file):
+		log.warn('No power users defined!')
+		return []
+	with open(power_users_file) as f:
+		power_users = [ x.rstrip() for x in f.readlines() ]
+	return power_users
+
+
+c.StochSS.power_users = get_power_users()
 
 def pre_spawn_hook(spawner):
-  log = getLogger()
-  palloc = c.StochSS.user_palloc
-  div = len(palloc) // 2
-  reserved = 1 if len(palloc) > 2 else 0
-  log.warn('RESERVED CPUS: ')
-  log.warn(reserved)
-  log.warn('PALLOC')
-  log.warn(palloc)
-  log.warn('AVAILABLE')
-  log.warn(palloc[reserved:div])
-  cpu1_index = palloc[reserved:div].index(min(palloc[reserved:div]))+reserved
-  palloc[cpu1_index] += 1
-  cpu2_index = cpu1_index+div
-  palloc[cpu2_index] += 1
-  spawner.extra_host_config['cpuset_cpus'] = '{},{}'.format(cpu1_index, cpu2_index)
-  log.warn('PALLOC')
-  log.warn(palloc)
+	'''Function that runs before DockerSpawner spawns a user container.
+	Limits the resources available to user containers, excluding a list of power users.
+	'''
+	log = logging.getLogger()
+	# Remove the memory limit for power users
+	if spawner.user.name in c.StochSS.power_users:
+		spawner.mem_limit = None
+		return
+	palloc = c.StochSS.user_cpu_alloc
+	div = len(palloc) // 2
+	reserved = c.StochSS.reserved_cpu_count
+	log.warn('Reserved CPUs: {}'.format(reserved))
+	log.warn('Number of user containers using each logical core: {}'.format(palloc))
+	# We want to allocate logical cores that are on the same physical core
+	# whenever possible.
+	# 
+	# A hyper-threaded 4-core processor has 8 logical cpus, with
+	# two logical cpus per core. Logical cpus on the same cpu core are grouped
+	# such that if (#, #) represents two logical cpus on a single physical core,
+	# then the logical cores in this case are indexed on the system like this:
+	# 
+	#   (1, 5), (2, 6), (3, 7), (4, 8)
+	# 
+	# To allocate two logical cpus per user container, we find the logical cpu that
+	# is being used by the least number of users in the first half of an 
+	# array tracking which users are using what logical cores.
+	# 
+	# The general formula for finding the index of the second logical core
+	#  on the same physical core is then:
+	# 
+	# 	index(matching logical core) = 
+	#			index(chosen logical core) + ( (number of logical cores) / 2 )
+	# 
+	avail_cpus = palloc[div:]
+	# If <= 4 cpus available then use 1 cpu for each user instead of 2
+	if not len(avail_cpus):
+		log.warn("The host system only has 4 logical cpus, so we'll only reserve one logical cpu per user container, instead of the normal 2")
+		avail_cpus = palloc
+		least_used_cpu = min(avail_cpus)
+		cpu1_index = avail_cpus.index(least_used_cpu)
+		log.info("User {} to use logical cpu {}".format(spawner.user.name, str(cpu1_index)))
+		palloc[cpu1_index] += 1
+		spawner.extra_host_config['cpuset_cpus'] = '{}'.format(cpu1_index)
+	else:
+		least_used_cpu = min(avail_cpus)
+		cpu1_index = avail_cpus.index(least_used_cpu)
+		palloc[cpu1_index] += 1
+		cpu2_index = cpu1_index+div
+		palloc[cpu2_index] += 1
+		log.info("User {} to use logical cpus {} and {}".format(
+				spawner.user.name, str(cpu1_index), str(cpu2_index)))
+		spawner.extra_host_config['cpuset_cpus'] = '{},{}'.format(cpu1_index, cpu2_index)
 
 
 def post_stop_hook(spawner):
-  palloc = c.StochSS.user_palloc
-  log = getLogger()
-  log.warn('SHUTTING DOWN -- CPUSET COUNT BELOW')
-  log.warn(spawner.extra_host_config['cpuset_cpus'])
-  cpu1_index, cpu2_index = spawner.extra_host_config['cpuset_cpus'].split(',')
-  palloc[int(cpu1_index)] -= 1
-  palloc[int(cpu2_index)] -= 1
-  log.warn('PALLOC')
-  log.warn(palloc)
+	log = logging.getLogger()
+	reserved = c.StochSS.reserved_cpu_count
+	palloc = c.StochSS.user_cpu_alloc
+	try:
+		cpu1_index, cpu2_index = spawner.extra_host_config['cpuset_cpus'].split(',')
+		palloc[int(cpu1_index)] -= 1
+		palloc[int(cpu2_index)] -= 1
+		log.warn('Reserved CPUs: {}'.format(reserved))
+		log.warn('Number of user containers using each logical core: {}'.format(palloc))
+	except:
+		# Exception thrown due to cpuset_cpus not being set (power user)
+		pass
 
 c.Spawner.pre_spawn_hook = pre_spawn_hook
-
 c.Spawner.post_stop_hook = post_stop_hook
 
 ## The URL the single-user server should start in.
@@ -321,13 +390,13 @@ c.Authenticator.admin_users = admin = set([])
 
 pwd = os.path.dirname(__file__)
 with open(os.path.join(pwd, 'userlist')) as f:
-    for line in f:
-        if not line:
-            continue
-        parts = line.split()
-        # in case of newline at the end of userlist file
-        if len(parts) >= 1:
-            name = parts[0]
-            #whitelist.add(name)
-            if len(parts) > 1 and parts[1] == 'admin':
-                admin.add(name)
+		for line in f:
+				if not line:
+						continue
+				parts = line.split()
+				# in case of newline at the end of userlist file
+				if len(parts) >= 1:
+						name = parts[0]
+						#whitelist.add(name)
+						if len(parts) > 1 and parts[1] == 'admin':
+								admin.add(name)
