@@ -123,7 +123,7 @@ endif
 
 run:    
 ifeq (docker container ls -l | grep $(DOCKER_STOCHSS_IMAGE),"")
-	cleanup #run cleanup if container already exists - doesn't work
+	cleanup #run cleanup if container already exists - ifeq test doesn't work
 endif
 #	make cleanup
 
