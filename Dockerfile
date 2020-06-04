@@ -18,8 +18,6 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
-COPY --chown=jovyan:users user/ /home/jovyan/user
-
 COPY --chown=jovyan:users . /stochss
 
 COPY --chown=jovyan:users stochss-logo.png /home/jovyan/.jupyter/custom/logo.png
