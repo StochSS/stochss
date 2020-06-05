@@ -47,7 +47,7 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
         algorithm = get_algorithm(json_data) if settings is None or settings['simulationSettings']['isAutomatic'] else settings['simulationSettings']['algorithm']
-        if algorithm == "SSA" and is_ssa_c:
+        if settings is not None and not settings['isAutomatic'] and algorithm == "SSA" and is_ssa_c:
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
         # Configure Simulation Cell

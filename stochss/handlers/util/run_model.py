@@ -90,17 +90,6 @@ class GillesPy2Workflow():
         with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
             sim_settings = json.load(template_file)['simulationSettings']
 
-        if stochss_model['eventsCollection'] or stochss_model['rules'] or stochss_model['functionDefinitions']:
-            algorithm = "Hybrid-Tau-Leaping"
-        elif stochss_model['defaultMode'] == "dynamic":
-            algorithm = "Hybrid-Tau-Leaping"
-        elif stochss_model['defaultMode'] == "discrete":
-            algorithm = "SSA"
-        else:
-            algorithm = "ODE"
-
-        sim_settings['algorithm'] = algorithm
-
         _results = run_solver(gillespy2_model, sim_settings, 5)
         results = _results[0]
         res_dict = dict(results)
@@ -459,12 +448,13 @@ def get_models(full_path, name):
         with open(full_path, "r") as model_file:
             stochss_model = json.loads(model_file.read())
             stochss_model['name'] = name
+            is_ode = stochss_model['defaultMode'] == "continuous"
     except FileNotFoundError as error:
         print(str(error))
         log.critical("Failed to find the model file: {0}".format(error))
 
     try:
-        _model = ModelFactory(stochss_model) # build GillesPy2 model
+        _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
         gillespy2_model = _model.model
     except Exception as error:
         print(str(error))
@@ -506,6 +496,8 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
     '''
     # print("Selecting the algorithm")
     algorithm = "V-SSA" if is_ssa else data['algorithm']
+    if data['isAutomatic']:
+        return chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2)
     if(algorithm == "ODE"):
         return basicODESolver(model, data, run_timeout)
     if(algorithm == "SSA"):
@@ -516,6 +508,24 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
         return basicTauLeapingSolver(model, data, run_timeout)
     if(algorithm == "Hybrid-Tau-Leaping"):
         return basicTauHybridSolver(model, data, run_timeout)
+
+
+def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
+    print("running choose for me")
+    if solver is None:
+        solver = model.get_best_solver(precompile=False)
+
+    kwargs = {"solver":solver, "timeout":run_timeout}
+
+    variables = {} if rate1 is None else {rate1[0]:rate1[1]}
+    if rate2 is not None:
+        variables[rate2[0]] = rate2[1]
+
+    if solver.name == "VariableSSACSolver":
+        kwargs["variables"] = variables
+
+    results = model.run(**kwargs)
+    return results
 
 
 def basicODESolver(model, data, run_timeout):

@@ -29,10 +29,11 @@ def generate_imports_cell(json_data, is_ssa_c=False, settings=None):
                 }
 
         for name, algorithm_import in algorithm_map.items():
-            if name == algorithm or name == "SSA":
+            if settings is not None and not settings['isAutomatic'] and name == algorithm:
                 imports += algorithm_import
             else:
-                algorithm_import = "# " + algorithm_import
+                if not algorithm_import.startswith("#"):
+                    algorithm_import = "# " + algorithm_import
                 imports += algorithm_import
 
         # imports += algorithm_map[algorithm]
@@ -221,6 +222,8 @@ def generate_configure_simulation_cell(json_data, is_ssa_c=False, is_mdl_inf=Fal
     else:
         algorithm = get_algorithm(json_data, is_ssa_c, algorithm=settings['algorithm'])
 
+    is_automatic = settings['isAutomatic']
+
     # Get settings for model.run()
     settings = get_run_settings(settings, show_labels, is_mdl_inf, algorithm)
 
@@ -236,7 +239,11 @@ def generate_configure_simulation_cell(json_data, is_ssa_c=False, is_mdl_inf=Fal
 
     settings_map = []
     for setting in settings:
-        if setting.split(':')[0] not in settings_lists[algorithm]:
+        if setting.split(':')[0] == '"solver"' and is_ssa_c:
+            settings_map.append(padding*2 + setting)
+        elif setting.split(':')[0] == '"show_labels"' and is_mdl_inf:
+            settings_map.append(padding*2 + setting)
+        elif is_automatic or setting.split(':')[0] not in settings_lists[algorithm]:
             settings_map.append(padding*2 + "# " + setting)
         else:
             settings_map.append(padding*2 + setting)
@@ -633,12 +640,12 @@ class ParameterSweepConfig(ParameterSweep2D):
     return psweep_config_cell
 
 
-def generate_parameter_sweep_run_cell(algorithm):
+def generate_parameter_sweep_run_cell(algorithm, setting):
     run_cell = '''kwargs = configure_simulation()
 ps = ParameterSweepConfig()
 '''
     
-    if not algorithm == "ODE":
+    if not algorithm == "ODE" and setting is not None and settings['isAutomatic']:
         run_cell += "ps.number_of_trajectories = kwargs['number_of_trajectories']\n"
     run_cell += '%time ps.run(kwargs)'
     

@@ -4,6 +4,7 @@ import nbformat
 from nbformat import v4 as nbf
 from os import path
 from .rename import get_unique_file_name
+from .run_model import ModelFactory
 from json.decoder import JSONDecodeError
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
@@ -26,13 +27,17 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None):
     try:
         with open(model_path, 'r') as json_file:
             json_data = json.loads(json_file.read())
+            json_data['name'] = name
     except FileNotFoundError as err:
         raise ModelNotFoundError('Could not find model file: ' + str(err))
     except JSONDecodeError as err:
         raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err))
         
-    is_ssa_c = get_best_ssa_solver().name == "SSACSolver"
+    is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['algorithm'] == "ODE"
+    gillespy2_model = ModelFactory(json_data, is_ode).model
 
+    is_ssa_c = gillespy2_model.get_best_solver().name == "VariableSSACSolver"
+    
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
@@ -46,9 +51,9 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None):
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
         algorithm = get_algorithm(json_data, is_ssa_c) if settings is None or settings['simulationSettings']['isAutomatic'] else get_algorithm(json_data, is_ssa_c, algorithm=settings['simulationSettings']['algorithm'])
-        if algorithm == "V-SSA":
+        if is_ssa_c:
             # Instantiate Solver Cell
-            cells.append(nbf.new_code_cell('solver = VariableSSACSolver(model=model)'))
+            cells.append(nbf.new_code_cell('solver = model.get_best_solver()\nsolver = solver(model=model)'))
         # Configure Simulation Cell
         config_cell = generate_configure_simulation_cell(json_data, is_ssa_c) if settings is None else generate_configure_simulation_cell(json_data, is_ssa_c, settings=settings['simulationSettings'])
         cells.append(nbf.new_code_cell(config_cell))
@@ -64,7 +69,7 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None):
     except KeyError as err:
         raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err))
     # Parameter Sweep Execution cell
-    cells.append(nbf.new_code_cell(generate_parameter_sweep_run_cell(get_algorithm(json_data, is_ssa_c))))
+    cells.append(nbf.new_code_cell(generate_parameter_sweep_run_cell(get_algorithm(json_data, is_ssa_c), settings)))
     # Parameter Sweet Plot Cell
     cells.append(nbf.new_code_cell('ps.plot()'))
     # Parameter Sweet Plotly Cell

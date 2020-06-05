@@ -445,8 +445,13 @@ class ParameterSweep():
         ps_settings = self.settings['parameterSweepSettings']
         sim_settings = self.settings['simulationSettings']
         trajectories = sim_settings['realizations']
-        is_ssa = sim_settings['algorithm'] == "SSA" and get_best_ssa_solver().name == "SSACSolver"
-        solver = VariableSSACSolver(model=gillespy2_model)
+        solver = gillespy2_model.get_best_solver()
+        if sim_settings['isAutomatic']:
+            is_ssa = solver.name == "VariableSSACSolver"
+        else:
+            is_ssa = sim_settings['algorithm'] == "SSA" and solver.name == "VariableSSACSolver"
+        if is_ssa:
+            solver = solver(model=gillespy2_model)
 
         if ps_settings['is1D']:
             ps = ParameterSweepConfig1D()
