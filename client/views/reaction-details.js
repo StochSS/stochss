@@ -207,6 +207,9 @@ module.exports = View.extend({
       this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
   },
   renderReactionTypes: function () {
+    if(this.model.collection.parent.parameters.length < 1){
+      return
+    }
     var options = {
       displayMode: true,
       output: 'html'
