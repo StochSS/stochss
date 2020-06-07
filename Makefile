@@ -111,6 +111,7 @@ test:   build
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
+		-v $(PWD)/userdata:/home/jovyan/userdata \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
@@ -131,6 +132,7 @@ run_bash:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
+		-v $(PWD)/userdata:/home/jovyan/userdata \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
