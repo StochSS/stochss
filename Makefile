@@ -115,33 +115,14 @@ test:   build
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
 
-cleanup:
-ifeq ($(DOCKER_PERSIST_DATA),true)
-	docker commit $(DOCKER_STOCHSS_IMAGE) $(DOCKER_STOCHSS_IMAGE)
-endif
-	docker container rm $(DOCKER_STOCHSS_IMAGE)
-
 run:    
-ifeq (docker container ls -l | grep $(DOCKER_STOCHSS_IMAGE),"")
-	cleanup #run cleanup if container already exists - ifeq test doesn't work
-endif
-#	make cleanup
-
-ifeq ($(DOCKER_PERSIST_DATA),true) #don't delete the container if persist flag in .env is set to true
-	docker run \
+	docker run --rm\
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
+		-v $(PWD)/userdata:/home/jovyan/userdata \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
-else
-	docker run --rm \
-		--name $(DOCKER_STOCHSS_IMAGE) \
-		--env-file .env \
-		-v $(PWD):/stochss \
-		-p 8888:8888 \
-		$(DOCKER_STOCHSS_IMAGE):latest
-endif
 
 build_and_run: build run
 
