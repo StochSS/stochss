@@ -111,17 +111,17 @@ test:   build
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(PWD)/persistent_data:/home/jovyan/Persistent\ Data/ \
+		-v $(PWD)/persistent_data:/home/jovyan/persistent_data/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
 
 run:    
-	docker run --rm\
+	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(PWD)/persistent_data:/home/jovyan/Persistent\ Data/\
+		-v $(PWD)/persistent_data:/home/jovyan/persistent_data/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
 
@@ -132,7 +132,7 @@ run_bash:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(PWD)/persistent_data:/home/jovyan/Persistent\ Data/\
+		-v $(PWD)/persistent_data:/home/jovyan/persistent/data/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash

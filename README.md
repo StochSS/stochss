@@ -14,10 +14,11 @@ At the moment StochSS development on Windows is not supported. You can try using
 
 ## Quickstart
 
+- Add any existing files or directories you want to work with to the directory StochSS/persistent_data. This directory is accessible in the StochSS client root directory. IMPORTANT: any files or directories you create in the local StochSS client will only be saved from one session to the next if they are in this directory.
+
 - Build and run the stochss notebook server: `make`
 
 - Once your terminal calms down you'll see a link to your server that looks something like this: `127.0.0.1:8888/?token=X8dSfd...`
-
 
 - Navigate to that link and get started!
 
