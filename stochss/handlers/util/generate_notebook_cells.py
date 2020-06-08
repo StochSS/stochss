@@ -4,9 +4,12 @@ import json
 from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 
-def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False, settings=None):
+def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False,
+                            settings=None, interactive_backend=False):
     # Imports cell
     imports = 'import numpy as np\n'
+    if interactive_backend:
+        imports += '%matplotlib notebook'
     if json_data['is_spatial']:
         # Spatial
         imports += 'import spatialPy\n'
