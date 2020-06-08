@@ -182,6 +182,10 @@ def get_user_cpu_count_or_fail():
 		log.error(e_message)
 		raise ValueError(e_message)
 	user_cpu_count = total_cpus - reserve_count
+	# If (num logical cpus) - (num reserved cpus) is odd,
+	# use one less logical cpu for allocating user cpus
+	if user_cpu_count % 2 > 0 and user_cpu_count > 1:
+		user_cpu_count -= 1
 	c.StochSS.reserved_cpu_count = reserve_count
 	log.info('Using {} logical cpus for user containers...'.format(user_cpu_count))
 	log.info('Reserving {} logical cpus for hub container and underlying OS'.format(reserve_count))
