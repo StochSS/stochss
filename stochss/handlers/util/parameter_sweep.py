@@ -391,9 +391,10 @@ class ParameterSweepConfig2D(ParameterSweep2D):
 
 class ParameterSweep():
 
-    def __init__(self, wkfl_path, mdl_path):
+    def __init__(self, wkfl_path, mdl_path, settings=None):
         self.wkfl_path = wkfl_path
         self.mdl_path = mdl_path
+        self.settings = self.get_settings() if settings is None else settings
         self.mdl_file = mdl_path.split('/').pop()
         self.info_path = os.path.join(wkfl_path, 'info.json')
         self.log_path = os.path.join(wkfl_path, 'logs.txt')
@@ -410,12 +411,47 @@ class ParameterSweep():
             self.wkfl_timestamp = None
 
 
-    def run(self, gillespy2_model, stochss_model, verbose):
-        ps_settings = stochss_model['parameterSweepSettings']
-        sim_settings = stochss_model['simulationSettings']
+    def get_settings(self):
+        settings_path = os.path.join(self.wkfl_path, "settings.json")
+
+        if os.path.exists(settings_path):
+            with open(settings_path, "r") as settings_file:
+                return json.load(settings_file)
+
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            settings_template = json.load(template_file)
+        
+        if os.path.exists(self.wkfl_mdl_path):
+            with open(self.wkfl_mdl_path, "r") as mdl_file:
+                mdl = json.load(mdl_file)
+                try:
+                    settings = {"simulationSettings":mdl['simulationSettings'],
+                                "parameterSweepSettings":mdl['parameterSweepSettings'],
+                                "resultsSettings":settings_template['resultsSettings']}
+                    return settings
+                except:
+                    return settings_template
+        else:
+            return settings_template
+
+
+    def save(self):
+        settings_path = os.path.join(self.wkfl_path, "settings.json")
+        with open(settings_path, "w") as settings_file:
+            json.dump(self.settings, settings_file)
+
+
+    def run(self, gillespy2_model, verbose):
+        ps_settings = self.settings['parameterSweepSettings']
+        sim_settings = self.settings['simulationSettings']
         trajectories = sim_settings['realizations']
-        is_ssa = sim_settings['algorithm'] == "SSA" and get_best_ssa_solver().name == "SSACSolver"
-        solver = VariableSSACSolver(model=gillespy2_model)
+        solver = gillespy2_model.get_best_solver()
+        if sim_settings['isAutomatic']:
+            is_ssa = solver.name == "VariableSSACSolver"
+        else:
+            is_ssa = sim_settings['algorithm'] == "SSA" and solver.name == "VariableSSACSolver"
+        if is_ssa:
+            solver = solver(model=gillespy2_model)
 
         if ps_settings['is1D']:
             ps = ParameterSweepConfig1D()

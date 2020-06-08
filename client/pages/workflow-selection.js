@@ -62,17 +62,10 @@ let workflowSelection = PageView.extend({
   },
   toNotebook: function (type) {
     var endpoint = path.join(app.getApiPath(), "/workflow/notebook")+"?type="+type+"&path="+this.modelDir
-    xhr({uri:endpoint}, function (err, response, body) {
+    xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400){
-        if(type === "gillespy"){
-          body = JSON.parse(body)
-          var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
-        }else{
-          var notebookPath = path.join(app.getBasePath(), "notebooks", body)
-        }
+        var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
         window.open(notebookPath, "_blank")
-      }else{
-        body = JSON.parse(body)
       }
     });
   },

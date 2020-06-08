@@ -13,10 +13,12 @@ if __name__ == "__main__":
     print(os.path.dirname(__file__))
 
     import test_model_template
+    import test_settings_template
     import test_convert_sbml
 
     modules = [
         test_model_template,
+        test_settings_template,
         test_convert_sbml
     ]
 
