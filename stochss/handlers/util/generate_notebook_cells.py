@@ -633,12 +633,12 @@ class ParameterSweepConfig(ParameterSweep2D):
     return psweep_config_cell
 
 
-def generate_parameter_sweep_run_cell(algorithm, setting):
+def generate_parameter_sweep_run_cell(algorithm, settings):
     run_cell = '''kwargs = configure_simulation()
 ps = ParameterSweepConfig()
 '''
     
-    if not algorithm == "ODE" and setting is not None and settings['isAutomatic']:
+    if not algorithm == "ODE" and settings is not None and settings['isAutomatic']:
         run_cell += "ps.number_of_trajectories = kwargs['number_of_trajectories']\n"
     run_cell += '%time ps.run(kwargs)'
     
