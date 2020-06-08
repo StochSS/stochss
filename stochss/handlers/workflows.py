@@ -122,7 +122,7 @@ class RunWorkflowAPIHandler(APIHandler):
         log.debug("Type of workflow: {0}".format(wkfl_type))
         log.debug("Path to the model: {0}".format(model_path))
         log.debug("Path to the workflow: {0}".format(workflow_path))
-        exec_cmd = ["/stochss/stochss-pkg/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_path), "{0}".format(wkfl_type) ] # Script commands
+        exec_cmd = ["/stochss/stochss/handlers/util/run_workflow.py", "{}".format(model_path), "{0}".format(workflow_path), "{0}".format(wkfl_type) ] # Script commands
         opt_type = list(map(lambda el: "-" + el, list(opt_type))) # format the opt_type for argparse
         exec_cmd.extend(opt_type) # Add opt_type to exec_cmd
         log.debug("Exec command sent to the subprocess: {0}".format(exec_cmd))

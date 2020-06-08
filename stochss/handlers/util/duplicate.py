@@ -18,14 +18,15 @@ def get_unique_file_name(_path):
     '''
     file = _path.split('/').pop()
     dir_path = path.dirname(_path)
-    ext = '.' + file.split('.').pop()
+    ext = ""
+    if '.' in file:
+        ext = '.' + file.split('.').pop()
     if '-copy' in file:
         name = file.split('-copy')[0]
     elif '.' in file:
         name = file.split(ext)[0]
     else:
         name = file
-        ext = ""
 
     # Check if the file is an original of at least the second copy
     if not '-copy' in file or '-copy(' in file:
