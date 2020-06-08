@@ -4,9 +4,12 @@ import json
 from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 
-def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False, settings=None):
+def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False,
+                            settings=None, interactive_backend=False):
     # Imports cell
     imports = 'import numpy as np\n'
+    if interactive_backend:
+        imports += '%matplotlib notebook\n'
     if json_data['is_spatial']:
         # Spatial
         imports += 'import spatialPy\n'
@@ -632,6 +635,86 @@ class ParameterSweepConfig(ParameterSweep2D):
 '''
     return psweep_config_cell
 
+def generate_sciope_wrapper_cell(json_data, gillespy2_model):
+    settings = get_settings()
+    algorithm = get_algorithm(gillespy2_model)
+    soi = [species['name'] for species in json_data['species']]
+
+    # Select Solver
+    solver_map = {
+        'SSA': '',
+        'Tau-Leaping': '"solver":BasicTauLeapingSolver, ',
+        'Hybrid-Tau-Leaping': '"solver":BasicTauHybridSolver, ',
+        'ODE': '"solver":BasicODESolver, '
+        }
+    sciope_wrapper_cell = '''from sciope.utilities.gillespy2 import wrapper
+settings = {{{}"number_of_trajectories":10, "show_labels":True}}
+simulator = wrapper.get_simulator(gillespy_model=model, run_settings=settings, species_of_interest={})
+expression_array = wrapper.get_parameter_expression_array(model)'''.format(solver_map[algorithm], soi)
+    return sciope_wrapper_cell
+
+def generate_sciope_lhc_cell():
+    sciope_lhc_cell = '''from dask.distributed import Client
+from sciope.designs import latin_hypercube_sampling
+from sciope.utilities.summarystats.auto_tsfresh import SummariesTSFRESH
+
+c = Client()
+lhc = latin_hypercube_sampling.LatinHypercube(xmin=expression_array, xmax=expression_array*3)
+lhc.generate_array(1000) #creates a LHD of size 1000
+
+#will use default minimal set of features
+summary_stats = SummariesTSFRESH()'''
+    return sciope_lhc_cell
+
+def generate_sciope_stochmet_cell():
+    sciope_stochmet_cell = '''from sciope.stochmet.stochmet import StochMET
+
+met = StochMET(simulator, lhc, summary_stats)'''
+    return sciope_stochmet_cell
+
+def generate_sciope_psweep_run_cell():
+    sciope_psweep_run_cell = '''met.compute(n_points=500, chunk_size=10)'''
+    return sciope_psweep_run_cell
+
+def generate_sciope_res_conf_cell():
+    sciope_res_conf_cell = '''#First lets add some appropiate information about the model and features
+met.data.configurations['listOfParameters'] = list(model.listOfParameters.keys())
+met.data.configurations['listOfSpecies'] = list(model.listOfSpecies.keys())
+met.data.configurations['listOfSummaries'] = met.summaries.features
+met.data.configurations['timepoints'] = model.tspan'''
+    return sciope_res_conf_cell
+
+def generate_sciope_met_explore_cell():
+    sciope_met_explore_cell = '''# Here we use UMAP for dimension reduction
+met.explore(dr_method='umap')'''
+    return sciope_met_explore_cell
+
+def generate_sciope_supervised_train_cell():
+    sciope_supervised_train_cell = '''from sciope.models.label_propagation import LPModel
+#here lets use the dimension reduction embedding as input data
+data = met.dr_model.embedding_
+
+model_lp = LPModel()
+#train using basinhopping
+model_lp.train(data, met.data.user_labels, min_=0.01, max_=10, niter=50)'''
+    return sciope_supervised_train_cell
+
+def generate_sciope_map_labels_cell():
+    sciope_map_labels_cell = '''# just to vislualize the result we will map the label distribution to the user_labels (will enable us to see the LP model 
+# output when using method "explore")
+
+user_labels = np.copy(met.data.user_labels)
+#takes the label corresponding to index 0
+met.data.user_labels = model_lp.model.label_distributions_[:,0]'''
+    return sciope_map_labels_cell
+
+def generate_sciope_explore_model_cell():
+    sciope_explore_model_cell = '''met.explore(dr_method='umap')'''
+    return sciope_explore_model_cell
+
+def generate_sciope_set_labels_cell():
+    sciope_set_labels_cell = '''met.data.user_labels = user_labels'''
+    return sciope_set_labels_cell
 
 def generate_parameter_sweep_run_cell(algorithm, settings):
     run_cell = '''kwargs = configure_simulation()

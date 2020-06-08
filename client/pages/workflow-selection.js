@@ -19,6 +19,7 @@ let workflowSelection = PageView.extend({
     "click [data-hook=ensemble-simulation]" : "notebookWorkflow",
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
+    "click [data-hook=sciope-model-exploration]" : "notebookWorkflow",
     "click [data-hook=model-inference]" : "notebookWorkflow",
   },
   initialize: function (attrs, options) {
@@ -52,12 +53,14 @@ let workflowSelection = PageView.extend({
     if(this.model.parameters.length < 1 || this.model.species.length < 1){
       $(this.queryByHook('oned-parameter-sweep')).addClass('disabled')
       $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
+      $(this.queryByHook('sciope-model-exploration')).addClass('disabled')
     }else if(this.model.parameters.length < 2){
       $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
     }
   },
   notebookWorkflow: function (e) {
     var type = e.target.dataset.type;
+    console.log(type)
     this.toNotebook(type);
   },
   toNotebook: function (type) {
