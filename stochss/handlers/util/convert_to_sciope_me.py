@@ -34,7 +34,7 @@ def convert_to_sciope_me(_model_path):
     try:
         # Create imports cell
         cells.append(nbf.new_code_cell(
-                    generate_imports_cell(json_data, interactive_backend=True)))
+                    generate_imports_cell(json_data))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
