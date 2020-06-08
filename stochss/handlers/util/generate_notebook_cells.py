@@ -3,7 +3,7 @@
 
 def generate_imports_cell(json_data, is_ssa=False):
     # Imports cell
-    imports += 'import numpy as np\n'
+    imports = 'import numpy as np\n'
     if json_data['is_spatial']:
         # Spatial
         imports += 'import spatialPy\n'
