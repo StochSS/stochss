@@ -4,7 +4,7 @@ import json
 from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 
-def generate_imports_cell(json_data, is_ssa_c=False, settings=None):
+def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False, settings=None):
     # Imports cell
     imports = 'import numpy as np\n'
     if json_data['is_spatial']:
@@ -15,7 +15,7 @@ def generate_imports_cell(json_data, is_ssa_c=False, settings=None):
         imports += 'import gillespy2\n'
         imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
         imports += 'from gillespy2.core.events import EventAssignment, EventTrigger, Event\n'
-        algorithm = get_algorithm(json_data, is_ssa_c) if settings is None or settings['isAutomatic'] else get_algorithm(json_data, is_ssa_c, algorithm=settings['algorithm'])
+        algorithm = get_algorithm(gillespy2_model, is_ssa_c) if settings is None or settings['isAutomatic'] else get_algorithm(gillespy2_model, is_ssa_c, algorithm=settings['algorithm'])
         if algorithm == "SSA" and get_best_ssa_solver().name == "SSACSolver":
             ssa = 'from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver\n'
         else:
@@ -210,17 +210,17 @@ def get_settings(path=None):
     return settings
 
 
-def generate_configure_simulation_cell(json_data, is_ssa_c=False, is_mdl_inf=False, show_labels=True, settings=None):
+def generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c=False, is_mdl_inf=False, show_labels=True, settings=None):
     padding = '    '
     
     # Get stochss simulation settings
     if settings is None:
         settings = get_settings()
-        algorithm = get_algorithm(json_data, is_ssa_c)
+        algorithm = get_algorithm(gillespy2_model, is_ssa_c)
     elif settings['isAutomatic']:
-        algorithm = get_algorithm(json_data, is_ssa_c)
+        algorithm = get_algorithm(gillespy2_model, is_ssa_c)
     else:
-        algorithm = get_algorithm(json_data, is_ssa_c, algorithm=settings['algorithm'])
+        algorithm = get_algorithm(gillespy2_model, is_ssa_c, algorithm=settings['algorithm'])
 
     is_automatic = settings['isAutomatic']
 
@@ -241,7 +241,7 @@ def generate_configure_simulation_cell(json_data, is_ssa_c=False, is_mdl_inf=Fal
     for setting in settings:
         if setting.split(':')[0] == '"solver"' and is_ssa_c:
             settings_map.append(padding*2 + setting)
-        elif setting.split(':')[0] == '"show_labels"' and is_mdl_inf:
+        elif (setting.split(':')[0] == '"show_labels"' or setting.split(':')[0] == '"number_of_trajectories"') and is_mdl_inf:
             settings_map.append(padding*2 + setting)
         elif is_automatic or setting.split(':')[0] not in settings_lists[algorithm]:
             settings_map.append(padding*2 + "# " + setting)
@@ -273,33 +273,26 @@ def generate_run_cell(json_data):
     return run_cell
 
 
-def get_algorithm(json_data, is_ssa_c=False, algorithm=None):
+def get_algorithm(gillespy2_model, is_ssa_c=False, algorithm=None):
     if algorithm is not None:
         if algorithm == "SSA" and is_ssa_c:
             return "V-SSA"
         return algorithm
 
-    if json_data['eventsCollection'] or json_data['rules'] or json_data['functionDefinitions']:
-        return "Hybrid-Tau-Leaping"
-    
-    mode = json_data['defaultMode']
-    
-    if mode == "dynamic":
-        is_discrete = not boolean(list(filter(lambda species: not species['mode'] == "discrete", json_data['species'])))
-        is_continuous = not boolean(list(filter(lambda species: not species['mode'] == "continuous", json_data['species'])))
+    algorithm_map = {"SSACSolver":"SSA",
+                     "VariableSSACSolver":"V-SSA",
+                     "BasicTauHybridSolver":"Hybrid-Tau-Leaping",
+                     "BasicTauLeapingSolver":"Tau-Leaping",
+                     "BasicODESolver":"ODE",
+                     "NumPySSASolver":"SSA"
+                     }
 
-        if is_discrete:
-            mode = "discrete"
-        elif is_continuous:
-            mode = "continuous"
+    if is_ssa_c:
+        name = gillespy2_model.get_best_solver().name
+    else:
+        name = gillespy2_model.get_best_solver(precompile=False).name
 
-    if mode == "dynamic":
-        return "Hybrid-Tau-Leaping"
-    if mode == "continuous":
-        return "ODE"
-    if mode == "discrete" and is_ssa_c:
-        return "V-SSA"
-    return "SSA"
+    return algorithm_map[name]
 
 
 def get_run_settings(settings, show_labels, is_mdl_inf, algorithm):

@@ -33,7 +33,7 @@ def convert_to_2d_psweep_nb(_model_path, name=None, settings=None):
     except JSONDecodeError as err:
         raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err))
 
-    is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['algorithm'] == "ODE"
+    is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['simulationSettings']['algorithm'] == "ODE"
     gillespy2_model = ModelFactory(json_data, is_ode).model
 
     is_ssa_c = gillespy2_model.get_best_solver().name == "VariableSSACSolver"
@@ -44,18 +44,18 @@ def convert_to_2d_psweep_nb(_model_path, name=None, settings=None):
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
     try:
         # Create imports cell
-        import_cell = generate_imports_cell(json_data, is_ssa_c) if settings is None else generate_imports_cell(json_data, is_ssa_c, settings=settings['simulationSettings'])
+        import_cell = generate_imports_cell(json_data, gillespy2_model, is_ssa_c) if settings is None else generate_imports_cell(json_data, gillespy2_model, is_ssa_c, settings=settings['simulationSettings'])
         cells.append(nbf.new_code_cell(import_cell))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-        algorithm = get_algorithm(json_data, is_ssa_c) if settings is None or settings['simulationSettings']['isAutomatic'] else get_algorithm(json_data, is_ssa_c, algorithm=settings['simulationSettings']['algorithm'])
+        algorithm = get_algorithm(gillespy2_model, is_ssa_c) if settings is None or settings['simulationSettings']['isAutomatic'] else get_algorithm(gillespy2_model, is_ssa_c, algorithm=settings['simulationSettings']['algorithm'])
         if is_ssa_c:
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = model.get_best_solver()\nsolver = solver(model=model)'))
         # Configure Simulation Cell
-        config_cell = generate_configure_simulation_cell(json_data, is_ssa_c) if settings is None else generate_configure_simulation_cell(json_data, is_ssa_c, settings=settings['simulationSettings'])
+        config_cell = generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c) if settings is None else generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c, settings=settings['simulationSettings'])
         cells.append(nbf.new_code_cell(config_cell))
         # Feature Extraction cell
         cells.append(nbf.new_code_cell(generate_feature_extraction_cell()))
