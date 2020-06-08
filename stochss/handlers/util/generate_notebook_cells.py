@@ -632,9 +632,9 @@ class ParameterSweepConfig(ParameterSweep2D):
 '''
     return psweep_config_cell
 
-def generate_sciope_wrapper_cell(json_data):
-    settings = json_data['simulationSettings']
-    algorithm = settings['algorithm']
+def generate_sciope_wrapper_cell(json_data, gillespy2_model):
+    settings = get_settings()
+    algorithm = get_algorithm(gillespy2_model)
     soi = [species['name'] for species in json_data['species']]
 
     # Select Solver

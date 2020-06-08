@@ -43,7 +43,8 @@ def convert_to_sciope_me(_model_path, settings=None):
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
         # Sciope Wrapper Cell
-        cells.append(nbf.new_code_cell(generate_sciope_wrapper_cell(json_data)))
+        cells.append(nbf.new_code_cell(generate_sciope_wrapper_cell(json_data,
+        gillespy2_model)))
         # Sciope lhc Cell
         cells.append(nbf.new_code_cell(generate_sciope_lhc_cell()))
         # Sciope stochmet Cell
