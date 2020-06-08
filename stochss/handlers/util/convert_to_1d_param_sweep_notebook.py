@@ -69,7 +69,7 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None):
     except KeyError as err:
         raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err))
     # Parameter Sweep Execution cell
-    cells.append(nbf.new_code_cell(generate_parameter_sweep_run_cell(get_algorithm(json_data, is_ssa_c), settings)))
+    cells.append(nbf.new_code_cell(generate_parameter_sweep_run_cell(get_algorithm(gillespy2_model, is_ssa_c), settings)))
     # Parameter Sweet Plot Cell
     cells.append(nbf.new_code_cell('ps.plot()'))
     # Parameter Sweet Plotly Cell

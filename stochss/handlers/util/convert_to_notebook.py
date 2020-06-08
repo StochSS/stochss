@@ -40,25 +40,25 @@ def convert_to_notebook(_model_path, name=None, settings=None):
     cells = []
     # Create Markdown Cell with name
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
-    # try:
-    # Create imports cell
-    import_cell = generate_imports_cell(json_data, gillespy2_model) if settings is None else generate_imports_cell(json_data, gillespy2_model, settings=settings['simulationSettings'])
-    cells.append(nbf.new_code_cell(import_cell))
-    # Create Model Cell
-    cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
-    # Instantiate Model Cell
-    cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-    algorithm = get_algorithm(gillespy2_model) if settings is None or settings['simulationSettings']['isAutomatic'] else settings['simulationSettings']['algorithm']
-    if settings is not None and not settings['simulationSettings']['isAutomatic'] and algorithm == "SSA" and is_ssa_c:
-        # Instantiate Solver Cell
-        cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
-    # Configure Simulation Cell
-    config_cell = generate_configure_simulation_cell(json_data, gillespy2_model) if settings is None else generate_configure_simulation_cell(json_data, gillespy2_model, settings=settings['simulationSettings'])
-    cells.append(nbf.new_code_cell(config_cell))
-    # Model Run Cell
-    cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
-    # except KeyError as err:
-    #     raise JSONFileNotModelError("Could not convert your model: " + str(err))
+    try:
+        # Create imports cell
+        import_cell = generate_imports_cell(json_data, gillespy2_model) if settings is None else generate_imports_cell(json_data, gillespy2_model, settings=settings['simulationSettings'])
+        cells.append(nbf.new_code_cell(import_cell))
+        # Create Model Cell
+        cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
+        # Instantiate Model Cell
+        cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        algorithm = get_algorithm(gillespy2_model) if settings is None or settings['simulationSettings']['isAutomatic'] else settings['simulationSettings']['algorithm']
+        if settings is not None and not settings['simulationSettings']['isAutomatic'] and algorithm == "SSA" and is_ssa_c:
+            # Instantiate Solver Cell
+            cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
+        # Configure Simulation Cell
+        config_cell = generate_configure_simulation_cell(json_data, gillespy2_model) if settings is None else generate_configure_simulation_cell(json_data, gillespy2_model, settings=settings['simulationSettings'])
+        cells.append(nbf.new_code_cell(config_cell))
+        # Model Run Cell
+        cells.append(nbf.new_code_cell(generate_run_cell(json_data)))
+    except KeyError as err:
+        raise JSONFileNotModelError("Could not convert your model: " + str(err))
     # Plotting Cell
     cells.append(nbf.new_code_cell('results.plotplotly()'))
 
