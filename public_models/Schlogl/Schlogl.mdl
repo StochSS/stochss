@@ -5,54 +5,7 @@
     "modelSettings": {
         "endSim": 100000,
         "timeStep": 1000,
-        "volume": 1,
-        "realizations": 1,
-        "algorithm": "SSA"
-    },
-    "simulationSettings": {
-        "isAutomatic": false,
-        "realizations": 1,
-        "algorithm": "SSA",
-        "seed": -1,
-        "tauTol": 0.03,
-        "relativeTol": 1e-3,
-        "absoluteTol": 1e-6
-    },
-    "parameterSweepSettings": {
-        "is1D": true,
-        "p1Min": 0.5,
-        "p1Max": 1.5,
-        "p1Steps": 11,
-        "p2Min": 0.5,
-        "p2Max": 1.5,
-        "p2Steps": 11,
-        "parameterOne": {
-            "compID": 5,
-            "name": "k1",
-            "expression": "1",
-            "annotation": ""
-        },
-        "parameterTwo": {
-            "compID": 6,
-            "name": "k2",
-            "expression": "1",
-            "annotation": ""
-        },
-        "speciesOfInterest": {
-            "compID": 1,
-            "name": "s1",
-            "value": 300,
-            "mode": "discrete",
-            "switchTol": 0.03,
-            "switchMin": 100,
-            "isSwitchTol": true,
-            "annotation": "",
-            "diffusionCoeff": 0,
-            "subdomains": [
-                "subdomain 1: ",
-                "subdomain 2: "
-            ]
-        }
+        "volume": 1
     },
     "meshSettings": {
         "count": 2

@@ -68,7 +68,7 @@ def upload_sbml_file(dir_path, _file_name, name, body):
         sbml_file.write(body)
     is_valid, error, model = validate_sbml(sbml_path, file_name)
     if is_valid:
-        template_path = "/stochss/model_templates/nonSpatialModelTemplate.json"
+        template_path = "/stochss/stochss_templates/nonSpatialModelTemplate.json"
         with open(template_path, "r") as template_file:
             template = json.load(template_file)
         convert_to_stochss_model(template, model, sbml_path, name)

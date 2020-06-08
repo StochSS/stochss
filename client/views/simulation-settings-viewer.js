@@ -17,10 +17,10 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     var algorithm = this.model.algorithm
-    if(algorithm === "ODE" || algorithm === "Hybrid-Tau-Leaping"){
+    if(!this.model.isAutomatic && (algorithm === "ODE" || algorithm === "Hybrid-Tau-Leaping")){
       $(this.queryByHook('deterministic')).collapse('show')
     }
-    if(algorithm === "SSA" || algorithm === "Tau-Leaping" || algorithm === "Hybrid-Tau-Leaping"){
+    if(!this.model.isAutomatic && (algorithm === "SSA" || algorithm === "Tau-Leaping" || algorithm === "Hybrid-Tau-Leaping")){
       $(this.queryByHook('stochastic')).collapse('show')
       if(algorithm === "SSA"){
         $(this.queryByHook('SSA')).collapse('show')
