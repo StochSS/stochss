@@ -4,13 +4,13 @@ from json.decoder import JSONDecodeError
 import nbformat
 from nbformat import v4 as nbf
 from os import path
-
+from .run_model import ModelFactory
 from .rename import get_unique_file_name
 from .generate_notebook_cells import *
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
-def convert_to_sciope_me(_model_path):
+def convert_to_sciope_me(_model_path, settings=None):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
@@ -22,11 +22,14 @@ def convert_to_sciope_me(_model_path):
     try:
         with open(model_path, 'r') as json_file:
             json_data = json.loads(json_file.read())
+            json_data['name'] = name
     except FileNotFoundError as e:
         raise ModelNotFoundError('Could not read the file: ' + str(e))
     except JSONDecodeError as e:
         raise ModelNotJSONFormatError('The data is not JSON decobable: ' + str(e))
 
+    is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['simulationSettings']['algorithm'] == "ODE"
+    gillespy2_model = ModelFactory(json_data, is_ode).model
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
@@ -34,7 +37,7 @@ def convert_to_sciope_me(_model_path):
     try:
         # Create imports cell
         cells.append(nbf.new_code_cell(
-                    generate_imports_cell(json_data))
+                    generate_imports_cell(json_data)))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
