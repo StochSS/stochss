@@ -19,6 +19,7 @@ let workflowSelection = PageView.extend({
     "click [data-hook=ensemble-simulation]" : "notebookWorkflow",
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
+    "click [data-hook=sciope-model-exploration]" : "notebookWorkflow",
     "click [data-hook=model-inference]" : "notebookWorkflow",
   },
   initialize: function (attrs, options) {
@@ -52,27 +53,22 @@ let workflowSelection = PageView.extend({
     if(this.model.parameters.length < 1 || this.model.species.length < 1){
       $(this.queryByHook('oned-parameter-sweep')).addClass('disabled')
       $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
+      $(this.queryByHook('sciope-model-exploration')).addClass('disabled')
     }else if(this.model.parameters.length < 2){
       $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
     }
   },
   notebookWorkflow: function (e) {
     var type = e.target.dataset.type;
+    console.log(type)
     this.toNotebook(type);
   },
   toNotebook: function (type) {
     var endpoint = path.join(app.getApiPath(), "/workflow/notebook")+"?type="+type+"&path="+this.modelDir
-    xhr({uri:endpoint}, function (err, response, body) {
+    xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400){
-        if(type === "gillespy"){
-          body = JSON.parse(body)
-          var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
-        }else{
-          var notebookPath = path.join(app.getBasePath(), "notebooks", body)
-        }
+        var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
         window.open(notebookPath, "_blank")
-      }else{
-        body = JSON.parse(body)
       }
     });
   },

@@ -95,8 +95,9 @@ module.exports = SelectView.extend({
     }
   },
   deleteSpecie: function () {
-    this.model.collection.parent.trigger('change-reaction')
+    var reaction = this.model.collection.parent
     this.collection.removeStoichSpecie(this.model);
+    reaction.trigger('change-reaction')
     this.parent.parent.toggleAddSpecieButton();
   },
 });

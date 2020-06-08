@@ -49,7 +49,7 @@ module.exports = View.extend({
     this.model.on("change:reaction_type", function (model) {
       self.updateStoichSpeciesForReactionType(model.reactionType);
     });
-    this.model.collection.parent.parameters.on('add remove', this.updateReactionTypeOptions, this);
+    this.model.collection.parent.parameters.on('add remove', this.render, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -140,9 +140,6 @@ module.exports = View.extend({
   },
   updateValid: function () {
   },
-  updateReactionTypeOptions: function () {
-    this.render();
-  },
   selectRateParam: function (e) {
     if(this.model.reactionType !== 'custom-propensity') {
       var val = e.target.selectedOptions.item(0).text;
@@ -207,6 +204,9 @@ module.exports = View.extend({
       this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
   },
   renderReactionTypes: function () {
+    if(this.model.collection.parent.parameters.length < 1){
+      return
+    }
     var options = {
       displayMode: true,
       output: 'html'

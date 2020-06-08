@@ -8,7 +8,7 @@ module.exports = State.extend({
     type: 'string',
     variable: 'object',
     expression: 'string',
-    annotation: 'string',
+    annotation: 'string'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
