@@ -517,7 +517,7 @@ met.data.user_labels = model_lp.model.label_distributions_[:,0]'''
     return sciope_map_labels_cell
 
 def generate_sciope_explore_model_cell():
-    sciope_explore_model_cell = '''met.explore(dr_method='umap', from_distributed=False)'''
+    sciope_explore_model_cell = '''met.explore(dr_method='umap')'''
     return sciope_explore_model_cell
 
 def generate_sciope_set_labels_cell():
