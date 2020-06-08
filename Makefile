@@ -102,7 +102,22 @@ hub: build_hub build run_hub_dev
 build_clean: deps webpack
 	docker build --no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
-build:  deps webpack
+create_home_mount:
+	#if DOCKER_HOME_MOUNT does not exist, create it
+	bash -c "if [ ! -d "$(DOCKER_HOME_MOUNT)" ]; then mkdir $(DOCKER_HOME_MOUNT);fi"
+	cp -r $(PWD)/jupyter_template/* $(DOCKER_HOME_MOUNT) 
+	#copy logo to docker home mount
+	cp stochss-logo.png $(DOCKER_HOME_MOUNT)/jovyan/.jupyter/custom/logo.png
+	#cp stochss-logo.png /home/jdreeve/Projects/StochSS/home/jovyan/.jupyter/custom/logo.png
+	#copy css to DHM
+	cp custom.css $(DOCKER_HOME_MOUNT)/jovyan/.jupyter/custom/custom.css 
+	#copy jupyter config to DHM
+	cp jupyter_notebook_config.py $(DOCKER_HOME_MOUNT)/jovyan/.jupyter/jupyter_notebook_config.py
+	#copy public_models to DHM
+	cp -r public_models $(DOCKER_HOME_MOUNT)/jovyan/Examples
+
+
+build:  deps webpack create_home_mount
 	docker build \
 	  -t $(DOCKER_STOCHSS_IMAGE):latest .
 
@@ -111,7 +126,7 @@ test:   build
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(PWD)/persistent_data:/home/jovyan/persistent_data/ \
+		-v $(DOCKER_HOME_MOUNT):/home/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
@@ -121,7 +136,7 @@ run:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(PWD)/persistent_data:/home/jovyan/persistent_data/ \
+		-v $(DOCKER_HOME_MOUNT):/home/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
 
@@ -132,7 +147,7 @@ run_bash:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(PWD)/persistent_data:/home/jovyan/persistent/data/ \
+		-v $(DOCKER_HOME_MOUNT):/home/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
