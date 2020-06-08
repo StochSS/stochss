@@ -1,4 +1,5 @@
 node_modules/
+.power_users
 *.bundle.js
 stochss-quickstart.html
 stochss-file-browser.html
@@ -17,3 +18,4 @@ __pycache__
 userlist
 dist/*
 *.egg-info/
+.vscode/

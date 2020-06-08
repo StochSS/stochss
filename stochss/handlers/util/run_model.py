@@ -35,10 +35,11 @@ user_dir = '/home/jovyan'
 
 class GillesPy2Workflow():
 
-    def __init__(self, wkfl_path, mdl_path):
+    def __init__(self, wkfl_path, mdl_path, settings=None):
         self.wkfl_path = wkfl_path
         self.mdl_path = mdl_path
         if wkfl_path:
+            self.settings = self.get_settings() if settings is None else settings
             self.mdl_file = mdl_path.split('/').pop()
             self.info_path = os.path.join(wkfl_path, 'info.json')
             self.log_path = os.path.join(wkfl_path, 'logs.txt')
@@ -55,12 +56,39 @@ class GillesPy2Workflow():
                 self.wkfl_timestamp = None
 
 
-    def run_preview(self, gillespy2_model, stochss_model):
-        sim_settings = stochss_model['simulationSettings']
-        model_settings = stochss_model['modelSettings']
+    def get_settings(self):
+        settings_path = os.path.join(self.wkfl_path, "settings.json")
 
-        sim_settings['realizations'] = model_settings['realizations']
-        sim_settings['algorithm'] = model_settings['algorithm']
+        if os.path.exists(settings_path):
+            with open(settings_path, "r") as settings_file:
+                return json.load(settings_file)
+
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            settings_template = json.load(template_file)
+        
+        if os.path.exists(self.wkfl_mdl_path):
+            with open(self.wkfl_mdl_path, "r") as mdl_file:
+                mdl = json.load(mdl_file)
+                try:
+                    settings = {"simulationSettings":mdl['simulationSettings'],
+                                "parameterSweepSettings":mdl['parameterSweepSettings'],
+                                "resultsSettings":settings_template['resultsSettings']}
+                    return settings
+                except:
+                    return settings_template
+        else:
+            return settings_template
+
+
+    def save(self):
+        settings_path = os.path.join(self.wkfl_path, "settings.json")
+        with open(settings_path, "w") as settings_file:
+            json.dump(self.settings, settings_file)
+
+
+    def run_preview(self, gillespy2_model, stochss_model):
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            sim_settings = json.load(template_file)['simulationSettings']
 
         _results = run_solver(gillespy2_model, sim_settings, 5)
         results = _results[0]
@@ -76,8 +104,8 @@ class GillesPy2Workflow():
         return results
 
 
-    def run(self, gillespy2_model, stochss_model, verbose):
-        sim_settings = stochss_model['simulationSettings']
+    def run(self, gillespy2_model, verbose):
+        sim_settings = self.settings['simulationSettings']
         trajectories = sim_settings['realizations']
         is_stochastic = not sim_settings['algorithm'] == "ODE"
 
@@ -189,7 +217,7 @@ class ModelFactory():
     Build the individual components of a model.
     ##############################################################################
     '''
-    def __init__(self, data):
+    def __init__(self, data, is_ode):
         '''
         Initialize and build a GillesPy2 model.
 
@@ -203,7 +231,6 @@ class ModelFactory():
         timeStep = (data['modelSettings']['timeStep'])
         endSim = data['modelSettings']['endSim']
         volume = data['modelSettings']['volume']
-        is_ode = data['simulationSettings']['algorithm'] == "ODE"
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
@@ -421,12 +448,13 @@ def get_models(full_path, name):
         with open(full_path, "r") as model_file:
             stochss_model = json.loads(model_file.read())
             stochss_model['name'] = name
+            is_ode = stochss_model['defaultMode'] == "continuous"
     except FileNotFoundError as error:
         print(str(error))
         log.critical("Failed to find the model file: {0}".format(error))
 
     try:
-        _model = ModelFactory(stochss_model) # build GillesPy2 model
+        _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
         gillespy2_model = _model.model
     except Exception as error:
         print(str(error))
@@ -468,6 +496,8 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
     '''
     # print("Selecting the algorithm")
     algorithm = "V-SSA" if is_ssa else data['algorithm']
+    if data['isAutomatic']:
+        return chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2)
     if(algorithm == "ODE"):
         return basicODESolver(model, data, run_timeout)
     if(algorithm == "SSA"):
@@ -478,6 +508,24 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
         return basicTauLeapingSolver(model, data, run_timeout)
     if(algorithm == "Hybrid-Tau-Leaping"):
         return basicTauHybridSolver(model, data, run_timeout)
+
+
+def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
+    print("running choose for me")
+    if solver is None:
+        solver = model.get_best_solver(precompile=False)
+
+    kwargs = {"solver":solver, "timeout":run_timeout}
+
+    variables = {} if rate1 is None else {rate1[0]:rate1[1]}
+    if rate2 is not None:
+        variables[rate2[0]] = rate2[1]
+
+    if solver.name == "VariableSSACSolver":
+        kwargs["variables"] = variables
+
+    results = model.run(**kwargs)
+    return results
 
 
 def basicODESolver(model, data, run_timeout):
@@ -528,7 +576,6 @@ def ssaSolver(model, data, run_timeout):
 
 
 def v_ssa_solver(model, data, run_timeout, solver, rate1, rate2):
-    print("running variable ssa c solver")
     seed = data['seed']
     if seed == -1:
         seed = None

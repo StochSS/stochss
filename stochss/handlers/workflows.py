@@ -91,9 +91,34 @@ class LoadWorkflowAPIHandler(APIHandler):
         except:
             resp["model"] = None
             resp["error"] = {"Reason":"Model Not Found","Message":"Could not find the model file: "+resp['mdlPath']}
+        resp["settings"] = self.get_settings(os.path.join(resp['wkflParPath'], resp['wkflDir']), resp['mdlPath'])
         log.debug("Response: {0}".format(resp))
         self.write(resp)
         self.finish()
+
+
+    def get_settings(self, wkfl_path, mdl_path):
+        settings_path = os.path.join(wkfl_path, "settings.json")
+        
+        if os.path.exists(settings_path):
+            with open(settings_path, "r") as settings_file:
+                return json.load(settings_file)
+
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            settings_template = json.load(template_file)
+        
+        if os.path.exists(mdl_path):
+            with open(mdl_path, "r") as mdl_file:
+                mdl = json.load(mdl_file)
+                try:
+                    settings = {"simulationSettings":mdl['simulationSettings'],
+                                "parameterSweepSettings":mdl['parameterSweepSettings'],
+                                "resultsSettings":settings_template['resultsSettings']}
+                    return settings
+                except:
+                    return settings_template
+        else:
+            return settings_template
 
 
 class RunWorkflowAPIHandler(APIHandler):
@@ -153,11 +178,12 @@ class SaveWorkflowAPIHandler(APIHandler):
         wkfl_type = data['type']
         model_path = data['mdlPath']
         workflow_path = data['wkflPath']
+        settings = data['settings']
         log.debug("Actions for the workflow: {0}".format(opt_type))
         log.debug("Type of workflow: {0}".format(wkfl_type))
         log.debug("Path to the model: {0}".format(model_path))
         log.debug("Path to the workflow: {0}".format(workflow_path))
-        kwargs = {"save":True}
+        kwargs = {"save":True,"settings":settings}
         if 'n' in opt_type:
             kwargs['new'] = True
         else:
@@ -276,8 +302,8 @@ class WorkflowLogsAPIHandler(APIHandler):
 class WorkflowNotebookHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for handling conversions from model (.mdl) file to Jupyter Notebook
-    (.ipynb) file for notebook workflows.
+    Handler for handling conversions from model (.mdl) file or workflows (.wkfl) 
+    to Jupyter Notebook (.ipynb) file for notebook workflows.
     ##############################################################################
     '''
     @web.authenticated
@@ -288,8 +314,23 @@ class WorkflowNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         workflow_type = self.get_query_argument(name="type")
         path = self.get_query_argument(name="path")
+        settings = None
+
+        if path.endswith('.wkfl'):
+            name = path.split('/').pop().split('.')[0].replace('-', '_')
+            with open(os.path.join(path, "info.json"), "r") as info_file:
+                info = json.load(info_file)
+                workflow_type = info['type']
+            with open(os.path.join(path, "settings.json"), "r") as settings_file:
+                settings = json.load(settings_file)
+            if workflow_type == "parameterSweep":
+                workflow_type = "1d_parameter_sweep" if settings['parameterSweepSettings']['is1D'] else "2d_parameter_sweep"
+            path = info['source_model'] if info['wkfl_model'] is None else info['wkfl_model']
+            log.debug("Name for the notebook: {0}".format(name))
+
         log.debug("Type of workflow to be run: {0}\n".format(workflow_type))
         log.debug("Path to the model: {0}\n".format(path))
         workflows = {"gillespy":convert_to_notebook,
@@ -298,7 +339,7 @@ class WorkflowNotebookHandler(APIHandler):
                     "sciope_model_exploration":convert_to_sciope_me,
                     "model_inference":convert_to_mdl_inference_nb}
         try:
-            resp = workflows[workflow_type](path)
+            resp = workflows[workflow_type](path, name=name, settings=settings) if settings is not None else workflows[workflow_type](path)
             log.debug("Response: {0}\n".format(resp))
             self.write(resp)
         except StochSSAPIError as err:
@@ -307,4 +348,6 @@ class WorkflowNotebookHandler(APIHandler):
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}\n".format(error))
             self.write(error)
+        log.setLevel(logging.WARNING)
         self.finish()
+
