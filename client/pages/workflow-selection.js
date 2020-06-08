@@ -60,6 +60,7 @@ let workflowSelection = PageView.extend({
   },
   notebookWorkflow: function (e) {
     var type = e.target.dataset.type;
+    console.log(type)
     this.toNotebook(type);
   },
   toNotebook: function (type) {
