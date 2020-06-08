@@ -638,7 +638,7 @@ def generate_parameter_sweep_run_cell(algorithm, settings):
 ps = ParameterSweepConfig()
 '''
     
-    if not algorithm == "ODE" and settings is not None and settings['isAutomatic']:
+    if not algorithm == "ODE" and settings is not None and settings['simulationSettings']['isAutomatic']:
         run_cell += "ps.number_of_trajectories = kwargs['number_of_trajectories']\n"
     run_cell += '%time ps.run(kwargs)'
     
