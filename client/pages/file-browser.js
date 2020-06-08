@@ -177,7 +177,13 @@ let FileBrowser = PageView.extend({
       for(var i = 0; i < node.children.length; i++) {
         var child = $('#models-jstree').jstree().get_node(node.children[i])
         if(child.original.text === fileName) {
-          $('#models-jstree').jstree().select_node(node.children[i])
+          $('#models-jstree').jstree().select_node(child)
+          let optionsButton = $(self.queryByHook("options-for-node"))
+          if(!self.nodeForContextMenu){
+            optionsButton.prop('disabled', false)
+          }
+          optionsButton.text("Actions for " + child.original.text)
+          self.nodeForContextMenu = child;
           break
         }
       }
