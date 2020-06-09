@@ -1,6 +1,7 @@
 FROM jupyter/minimal-notebook:latest
 
 ARG STOCHSS_PIP_EDITABLE
+ARG JUPYTER_CONFIG_DIR
 
 USER root
 
@@ -20,11 +21,11 @@ COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
 COPY --chown=jovyan:users . /stochss
 
-COPY --chown=jovyan:users stochss-logo.png /home/jovyan/.jupyter/custom/logo.png
+COPY --chown=jovyan:users stochss-logo.png $JUPYTER_CONFIG_DIR/custom/logo.png
 
-COPY --chown=jovyan:users custom.css /home/jovyan/.jupyter/custom/custom.css
+COPY --chown=jovyan:users custom.css $JUPYTER_CONFIG_DIR/custom/custom.css
 
-COPY --chown=jovyan:users jupyter_notebook_config.py /home/jovyan/.jupyter/jupyter_notebook_config.py
+COPY --chown=jovyan:users jupyter_notebook_config.py $JUPYTER_CONFIG_DIR/jupyter_notebook_config.py
 
 RUN pip install --no-cache-dir -e .
 
