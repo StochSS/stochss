@@ -104,6 +104,7 @@ build_clean: deps webpack
 
 build:  deps webpack
 	docker build \
+		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	  -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 test:   build
