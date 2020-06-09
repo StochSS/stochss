@@ -131,7 +131,7 @@ c.JupyterHub.services = [
 # Dockerspawner configuration
 #------------------------------------------------------------------------------
 
-c.DockerSpawner.container_image = os.environ['DOCKER_STOCHSS_IMAGE']
+c.DockerSpawner.image = os.environ['DOCKER_STOCHSS_IMAGE']
 # JupyterHub requires a single-user instance of the Notebook server, so we
 # default to using the `start-singleuser.sh` script included in the
 # jupyter/docker-stacks *-notebook images as the Docker run command when
@@ -157,7 +157,10 @@ c.DockerSpawner.notebook_dir = notebook_dir
 # Mount the real user's Docker volume on the host to the notebook user's
 # notebook directory in the container
 c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
-
+# Set extra environment variables
+c.DockerSpawner.environment = {
+	'JUPYTER_CONFIG_DIR': os.environ['JUPYTER_CONFIG_DIR']
+}
 # Remove containers once they are stopped
 c.DockerSpawner.remove_containers = True
 # For debugging arguments passed to spawned containers
