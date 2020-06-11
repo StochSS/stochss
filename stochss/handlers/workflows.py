@@ -314,7 +314,6 @@ class WorkflowNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         workflow_type = self.get_query_argument(name="type")
         path = self.get_query_argument(name="path")
         settings = None
@@ -348,6 +347,44 @@ class WorkflowNotebookHandler(APIHandler):
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}\n".format(error))
             self.write(error)
-        log.setLevel(logging.WARNING)
         self.finish()
+
+
+class SavePlotAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for handling conversions from model (.mdl) file or workflows (.wkfl) 
+    to Jupyter Notebook (.ipynb) file for notebook workflows.
+    ##############################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Create a jupyter notebook workflow using a stochss model.
+
+        Attributes
+        ----------
+        '''
+        log.setLevel(logging.DEBUG)
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        plot = json.loads(self.request.body.decode())
+        log.debug("The path to the workflow setting file: {0}".format(path))
+        log.debug("The plot to be saved: {0}".format(plot))
+
+        with open(path, "r") as settings_file:
+            settings = json.load(settings_file)
+            log.debug("Original settings: {0}".format(settings))
+
+        settings['resultsSettings']['outputs'].append(plot)
+        log.debug("New settings: {0}".format(settings))
+
+        with open(path, "w") as settings_file:
+            json.dump(settings, settings_file)
+
+        resp = {"message":"The plot was successfully saved", "data":plot}
+        log.debug("Response message: {0}".format(resp))
+        self.write(resp)
+        log.setLevel(logging.WARNING)
+        self.finish(resp)
 

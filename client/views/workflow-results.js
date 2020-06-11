@@ -57,6 +57,10 @@ module.exports = View.extend({
       var type = e.target.id;
       this.exportToJsonFile(this.plots[type], type)
     },
+    'click [data-hook=save-plot]' : function (e) {
+      var type = e.target.id;
+      this.savePlot(type)
+    },
     'click [data-hook=download-results-csv]' : 'handlerDownloadResultsCsvClick',
   },
   initialize: function (attrs, options) {
@@ -269,6 +273,30 @@ module.exports = View.extend({
       key += ("-" + this.ensembleAggragator)
     }
     return key
+  },
+  savePlot: function (type) {
+    if(type === "psweep"){
+      type = this.getPsweepKey()
+    }
+    let stamp = this.getTimeStamp()
+    let plotInfo = {"key":type, "stamp":stamp};
+    let queryString = "?path="+path.join(this.parent.wkflPath, "settings.json")
+    let endpoint = path.join(app.getApiPath(), "workflow/save-plot")+queryString
+    xhr({uri: endpoint, method: "post", json: true, body: plotInfo}, function (err, response, body) {
+      if(response.statusCode > 400) {
+        console.log(body.message)
+      }
+    })
+  },
+  getTimeStamp: function () {
+    var date = new Date()
+    let year = date.getFullYear().toString().slice(-2)
+    let month = date.getMonth() >= 10 ? date.getMonth().toString() : "0" + date.getMonth()
+    let day = date.getDate() >= 10 ? date.getDate().toString() : "0" + date.getDate()
+    let hour = date.getHours() >= 10 ? date.getHours().toString() : "0" + date.getHours()
+    let minutes = date.getMinutes() >= 10 ? date.getMinutes().toString() : "0" + date.getMinutes()
+    let seconds = date.getSeconds() >= 10 ? date.getSeconds().toString() : "0" + date.getSeconds()
+    return parseInt(year+month+day+hour+minutes+seconds)
   },
   subviews: {
     inputTitle: {
