@@ -256,17 +256,30 @@ class TestDuplicate(unittest.TestCase):
         from handlers.util.stochss_errors import StochSSFileNotFoundError 
         with tempfile.TemporaryDirectory() as tempdir:
             with self.assertRaises(StochSSFileNotFoundError):
-                duplicate_wkfl_as_new(os.path.join(tempdir,"nonexistent_wkfl"), True, "timestamp")
+                duplicate_wkfl_as_new(os.path.join(tempdir,"nonexistent_wkfl"), False, "timestamp")
 
     def test_duplicate_wkfl_as_new_not_JSON_decodable(self):
         from handlers.util.stochss_errors import FileNotJSONFormatError
         with tempfile.TemporaryDirectory() as tempdir:
             Path(os.path.join(tempdir,"info.json")).touch()
             with self.assertRaises(FileNotJSONFormatError):
-                duplicate_wkfl_as_new(os.path.join(tempdir), True, "timestamp")
+                duplicate_wkfl_as_new(os.path.join(tempdir), False, "timestamp")
         
 
     def test_duplicate_wkfl_as_new_only_model(self):
-        
-
+        from json import load
+        from unittest import mock
+        from handlers.util.stochss_errors import FileNotJSONFormatError
+        with tempfile.TemporaryDirectory() as tempdir:
+            test_dict={"type":
+            mock_json_load=MagicMock(return_value = test_dict)
+            with mock.patch("json.load") as mock_json_load:
+                extract_wkfl_model = mock.Mock(return_value = "mock_return")
+                test_path = os.path.join(tempdir,"test_wkfl_dir")
+                os.mkdir(test_path)
+                Path(os.path.join(test_path,"info.json")).touch()
+                test_return="peanut"
+                test_return = duplicate_wkfl_as_new(test_path, True, "timestamp") == {"message":"A copy of the model in {0} has been created".format(test_path),"mdlPath":"mock_return","File":""}
+                print(test_return)
+                #assert test_return == {"message":"A copy of the model in {0} has been created".format(test_path),"mdlPath":"mock_return","File":""}
 
