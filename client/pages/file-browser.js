@@ -105,6 +105,12 @@ let treeSettings = {
     'nonspatial' : {
       "icon": "jstree-icon jstree-file"
     },
+    'project' : {
+      "icon": "jstree-icon jstree-file"
+    },
+    'experiment' : {
+      "icon": "jstree-icon jstree-folder"
+    },
     'workflow' : {
       "icon": "jstree-icon jstree-file"
     },
@@ -130,6 +136,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
+    'click [data-hook=new-project]' : 'handleCreateProjectClick',
     'click [data-hook=new-model]' : 'handleCreateModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
@@ -534,6 +541,94 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.location.href = endpoint
   },
+  newProjectOrExperiment: function (o, isProject) {
+    var self = this
+    if(document.querySelector("#newProjectModal")) {
+      document.querySelector("#newProjectModal").remove()
+    }
+    var modal = ""
+    var okBtn = ""
+    var input = ""
+    if(isProject) {
+      modal = $(modals.newProjectModalHtml()).modal();
+      okBtn = document.querySelector('#newProjectModal .ok-model-btn');
+      input = document.querySelector('#newProjectModal #projectNameInput');
+    }else{
+      modal = $(modals.newExperimentModalHtml()).modal();
+      okBtn = document.querySelector('#newExperimentModal .ok-model-btn');
+      input = document.querySelector('#newExperimentModal #experimentNameInput');
+    }
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        var parentPath = ""
+        if(o && o.original && o.original.type !== "root") {
+          parentPath = o.original._path
+        }
+        var endpoint = ""
+        if(isProject){
+          var projectName = input.value + ".proj"
+          var projectPath = path.join(parentPath, projectName)
+          endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
+        }else{
+          var experimentName = input.value + ".exp"
+          var experimentPath = path.join(parentPath, experimentName)
+          endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
+        }
+        xhr({uri: endpoint,json: true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            if(o){//directory was created with context menu option
+              var node = $('#models-jstree').jstree().get_node(o);
+              if(node.type === "root"){
+                self.refreshJSTree()
+              }else{          
+                $('#models-jstree').jstree().refresh_node(node);
+              }
+            }else{//directory was created with create directory button
+              self.refreshJSTree()
+            }
+          }else{
+            let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
+          }
+          modal.modal('hide')
+        })
+      }
+    })
+  },
+  addExistingModel: function (o) {
+    var self = this
+    if(document.querySelector('#newProjectModelModal')){
+      document.querySelector('#newProjectModelModal').remove()
+    }
+    let modal = $(modals.newProjectModelHtml()).modal()
+    let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
+    let input = document.querySelector('#newProjectModelModal #modelPathInput')
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        let queryString = "?path="+o.original._path+"&mdlPath="+input.value
+        let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
+        xhr({uri:endpoint, json:true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
+          }else{
+            let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal()
+          }
+        });
+        modal.modal('hide')
+      }
+    });
+  },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
     if(document.querySelector('#newModalModel')) {
@@ -548,7 +643,6 @@ let FileBrowser = PageView.extend({
         okBtn.click();
       }
     });
-    let modelName;
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
         var parentPath = ""
@@ -556,9 +650,19 @@ let FileBrowser = PageView.extend({
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = input.value + '.mdl';
-          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+path.join(parentPath, modelName);
-          window.location.href = modelPath;
+          let modelName = o && o.type === "project" ? input.value.split("/").pop() + '.mdl' : input.value + '.mdl';
+          let message = modelName.split(".")[0] !== input.value ? 
+                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
+          let modelPath = path.join(parentPath, modelName)
+          let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
+          if(message){
+            modal.modal('hide')
+            let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
+            let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
+            yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
+          }else{
+            window.location.href = endpoint;
+          }
         }else{
           let dirName = input.value;
           let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
@@ -586,6 +690,10 @@ let FileBrowser = PageView.extend({
   },
   handleCreateDirectoryClick: function (e) {
     this.newModelOrDirectory(undefined, false, false);
+  },
+  handleCreateProjectClick: function (e) {
+    this.newProjectOrExperiment(undefined, true)
+    console.log("This function is a work in progress")
   },
   handleCreateModelClick: function (e) {
     let isSpatial = false
@@ -679,6 +787,15 @@ let FileBrowser = PageView.extend({
           "separator_after" : false,
           "action" : function (data) {
             self.newModelOrDirectory(o, false, false);
+          }
+        },
+        "New Project" : {
+          "label" : "New Project",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newProjectOrExperiment(o, true)
           }
         },
         "New_model" : {
@@ -842,6 +959,8 @@ let FileBrowser = PageView.extend({
           "action" : function (data) {
             if(nodeType === "workflow"){
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
+            }else if(nodeType === "project"){
+              window.location.href = path.join(app.getBasePath(), "stochss/project/manage")+"?path="+o.original._path
             }else{
               if(nodeType === "notebook") {
                 var identifier = "notebooks"
@@ -852,6 +971,35 @@ let FileBrowser = PageView.extend({
               }
               window.open(path.join(app.getBasePath(), identifier, o.original._path));
             }
+          }
+        }
+      }
+      let project = {
+        "Add Model" : {
+          "label" : "Add Model",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "New Model" : folder.New_model,
+            "Existing Model" : {
+              "label" : "Existing Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.addExistingModel(o)
+              }
+            }
+          }
+        },
+        "New Experiment" : {
+          "label" : "New Experiment",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newProjectOrExperiment(o, false)
           }
         }
       }
@@ -943,6 +1091,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'nonspatial') {
          return $.extend(model, modelConvert, common)
       }
+      if (o.type === 'project'){
+        return $.extend(open, project, common)
+      }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, common)
       }
@@ -991,6 +1142,8 @@ let FileBrowser = PageView.extend({
       }else if(file.endsWith('.sbml')){
         var openPath = path.join(app.getBasePath(), "edit", _path)
         window.open(openPath, '_blank')
+      }else if(file.endsWith('.proj')){
+        window.location.href = path.join(app.getBasePath(), "stochss/project/manage")+"?path="+_path;
       }else if(file.endsWith('.wkfl')){
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){

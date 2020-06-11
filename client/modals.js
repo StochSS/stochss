@@ -39,7 +39,7 @@ let templates = {
                         <p> ${message} </p>
                       </div>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary box-shadow close-btn" data-dismiss="modal">Close</button>
                       </div>
                     </div>
                   </div>
@@ -55,6 +55,28 @@ let templates = {
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                           <span aria-hidden="true">&times;</span>
                         </button>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-primary yes-modal-btn box-shadow">Yes</button>
+                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">No</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>`
+        },
+        confirmation_with_message : (modalID, title, message) => {
+            return `
+                <div id=${modalID} class="modal" tabindex="-1" role="dialog">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content info">
+                      <div class="modal-header">
+                        <h5 class="modal-title"> ${title} </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <p> ${message} </p>
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary yes-modal-btn box-shadow">Yes</button>
@@ -108,6 +130,55 @@ module.exports = {
         let message = help[page]
           
         return templates.message(modalID, title, message)
+    },
+    newProjectModalHtml : () => {
+      let modalID = "newProjectModal"
+      let inputID = "projectNameInput"
+      let title = "New Project"
+      let label = "Project Name"
+      let value = ""
+
+      return templates.input(modalID, inputID, title, label, value)
+    },
+    newExperimentModalHtml : () => {
+      let modalID = "newExperimentModal"
+      let inputID = "experimentNameInput"
+      let title = "New Experiment"
+      let label = "Experiment Name"
+      let value = ""
+
+      return templates.input(modalID, inputID, title, label, value)
+    },
+    newProjectModelHtml : () => {
+      let modalID = "newProjectModelModal"
+      let inputID = "modelPathInput"
+      let title = "Add Existing Model to Project"
+      let label = "Path to the Model"
+      let value = ""
+
+      return templates.input(modalID, inputID, title, label, value)
+    },
+    newProjectModelSuccessHtml : (message) => {
+      let modalID = "newProjectModelSuccessModal"
+      let title = "Success!"
+
+      return templates.message(modalID, title, message)
+    },
+    newProjectModelErrorHtml : (title, message) => {
+      let modalID = "newProjectModelErrorModal"
+
+      return templates.message(modalID, title, message)
+    },
+    newProjectOrExperimentErrorHtml : (title, error) => {
+      let modalID = "newProjectOrExperimentModal"
+
+      return templates.message(modalID, title, error)
+    },
+    newProjectModelWarningHtml : (message) => {
+      let modalID = "newProjectModelWarningModal"
+      let title = "Warnings"
+      
+      return templates.confirmation_with_message(modalID, title, message)
     },
     renderCreateModalHtml : (isModel, isSpatial) => {
         var title = 'Directory';

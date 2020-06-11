@@ -4,6 +4,7 @@ from .pages import *
 from .file_browser import *
 from .models import *
 from .workflows import *
+from .project import *
 from .log import init_log
 
 def get_page_handlers(route_start):
@@ -37,6 +38,9 @@ def get_page_handlers(route_start):
         ("/stochss/api/model/to-spatial\/?", ConvertToSpatialAPIHandler),
         ("/stochss/api/model/to-sbml\/?", ModelToSBMLAPIHandler),
         ("/stochss/api/model/run\/?", RunModelAPIHandler),
+        ("/stochss/api/project/new-project", NewProjectAPIHandler),
+        ("/stochss/api/project/new-experiment", NewExperimentAPIHandler),
+        ("/stochss/api/project/add-existing-model", AddExistingModelAPIHandler),
         ("/stochss/api/workflow/notebook\/?", WorkflowNotebookHandler),
         ("/stochss/api/workflow/load-workflow\/?", LoadWorkflowAPIHandler),
         ("/stochss/api/workflow/save-workflow\/?", SaveWorkflowAPIHandler),

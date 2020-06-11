@@ -31,6 +31,8 @@ def getFileSystemData(full_path, p_path):
     for child in filter(lambda x: not x.startswith('.'), _children):
         if checkExtension(child, ".wkfl"):
             children.append(buildChild(text=child, f_type="workflow", p_path=p_path))
+        elif checkExtension(child, ".proj"):
+            children.append(buildChild(text=child, f_type="project", p_path=p_path))
         elif checkExtension(child, ".mdl"):
             children.append(buildChild(text=child, f_type="nonspatial", p_path=p_path))
         elif checkExtension(child, ".smdl"):
