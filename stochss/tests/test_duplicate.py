@@ -278,10 +278,11 @@ class TestDuplicate(unittest.TestCase):
             Path(os.path.join(test_path,"info.json")).touch()
             test_source_model_path = os.path.join(test_path,"test_source_model")
             Path(test_source_model_path).touch()
-            with mock.patch("json.load") as mock_json:
-                mock_json.return_value = test_dict
-                test_return = duplicate_wkfl_as_new(test_path, True, "timestamp")
-                assert test_return == {'message': 'A copy of the model in {0} has been created'.format(test_path),"mdlPath":os.path.join(tempdir,"test_source_model"),"File":"test_source_model"}
+            with mock.patch("handlers.util.run_model.GillesPy2Workflow.get_settings") as mock_settings:
+                with mock.patch("json.load") as mock_json:
+                    mock_json.return_value = test_dict
+                    test_return = duplicate_wkfl_as_new(test_path, True, "timestamp")
+                    assert test_return == {'message': 'A copy of the model in {0} has been created'.format(test_path),"mdlPath":os.path.join(tempdir,"test_source_model"),"File":"test_source_model"}
 
     def test_duplicate_wkfl_as_new_model_file_not_found(self):
         #from json import load
@@ -295,10 +296,12 @@ class TestDuplicate(unittest.TestCase):
             Path(os.path.join(test_path,"info.json")).touch()
             test_source_model_path = os.path.join(test_path,"test_source_model")
             Path(test_source_model_path).touch()
-            with mock.patch("json.load") as mock_json:
-                mock_json.return_value = test_dict
-                test_return = duplicate_wkfl_as_new(test_path, False, "timestamp")
-                assert test_return == {'message': 'A new workflow has been created from {0}'.format(test_path), 'wkflPath': test_path+"timestamp.wkfl", 'mdlPath': os.path.join(tempdir,"test_source_model"), 'File': 'test_wkfl_dirtimestamp.wkfl', 'mdl_file': 'test_source_model', 'error': 'The model file test_source_model could not be found.  To edit the model or run the workflow you will need to update the path to the model or extract the model from the workflow.'}
+            with mock.patch("handlers.util.run_model.GillesPy2Workflow.get_settings") as mock_settings:
+                mock_settings.return_value = None
+                with mock.patch("json.load") as mock_json:
+                    mock_json.return_value = test_dict
+                    test_return = duplicate_wkfl_as_new(test_path, False, "timestamp")
+                    assert test_return == {'message': 'A new workflow has been created from {0}'.format(test_path), 'wkflPath': test_path+"timestamp.wkfl", 'mdlPath': os.path.join(tempdir,"test_source_model"), 'File': 'test_wkfl_dirtimestamp.wkfl', 'mdl_file': 'test_source_model', 'error': 'The model file test_source_model could not be found.  To edit the model or run the workflow you will need to update the path to the model or extract the model from the workflow.'}
 
     def test_duplicate_wkfl_as_new_model_file_exists(self):
         #from json import load
@@ -313,7 +316,8 @@ class TestDuplicate(unittest.TestCase):
             test_source_model_path = os.path.join(test_path,"test_source_model")
             Path(test_source_model_path).touch()
             Path(os.path.join(tempdir,"test_source_model")).touch()
-            with mock.patch("json.load") as mock_json:
-                mock_json.return_value = test_dict
-                test_return = duplicate_wkfl_as_new(test_path, False, "timestamp")
-                assert test_return == {'message': 'A new workflow has been created from {0}'.format(test_path), 'wkflPath': test_path+"timestamp.wkfl", 'mdlPath': os.path.join(tempdir,"test_source_model"), 'File': 'test_wkfl_dirtimestamp.wkfl', 'mdl_file': 'test_source_model'}
+            with mock.patch("handlers.util.run_model.GillesPy2Workflow.get_settings") as mock_settings:
+                with mock.patch("json.load") as mock_json:
+                    mock_json.return_value = test_dict
+                    test_return = duplicate_wkfl_as_new(test_path, False, "timestamp")
+                    assert test_return == {'message': 'A new workflow has been created from {0}'.format(test_path), 'wkflPath': test_path+"timestamp.wkfl", 'mdlPath': os.path.join(tempdir,"test_source_model"), 'File': 'test_wkfl_dirtimestamp.wkfl', 'mdl_file': 'test_source_model'}
