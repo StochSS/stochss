@@ -279,6 +279,7 @@ class TestDuplicate(unittest.TestCase):
             test_source_model_path = os.path.join(test_path,"test_source_model")
             Path(test_source_model_path).touch()
             with mock.patch("handlers.util.run_model.GillesPy2Workflow.get_settings") as mock_settings:
+                mock_settings.return_value = None
                 with mock.patch("json.load") as mock_json:
                     mock_json.return_value = test_dict
                     test_return = duplicate_wkfl_as_new(test_path, True, "timestamp")
@@ -317,6 +318,7 @@ class TestDuplicate(unittest.TestCase):
             Path(test_source_model_path).touch()
             Path(os.path.join(tempdir,"test_source_model")).touch()
             with mock.patch("handlers.util.run_model.GillesPy2Workflow.get_settings") as mock_settings:
+                mock_settings.return_value = None
                 with mock.patch("json.load") as mock_json:
                     mock_json.return_value = test_dict
                     test_return = duplicate_wkfl_as_new(test_path, False, "timestamp")
