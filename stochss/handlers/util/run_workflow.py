@@ -40,8 +40,10 @@ def save_new_workflow(wkfl, wkfl_type, initialize):
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    # Update workflow info file with start time and permanent model file location
+    # Update the workflow info file
     update_info_file(wkfl, wkfl_type, initialize)
+    # Update workflow settings file
+    wkfl.save()
     if initialize:
         # Update workflow status to running
         open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
@@ -67,15 +69,17 @@ def save_existing_workflow(wkfl, wkfl_type, initialize):
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the new model into the workflow directory
     except FileNotFoundError as error:
         log.error("Failed to copy the model into the directory: {0}".format(error))
-    # Update workflow info file with start time and permanent model file location
+    # Update the workflow info file
     update_info_file(wkfl, wkfl_type, initialize)
+    # Update workflow settings file
+    wkfl.save()
     if initialize:
         # Update workflow status to running
         open(os.path.join(wkfl.wkfl_path, 'RUNNING'), 'w').close()
     return "Successfully saved the existing workflow: {0}".format(wkfl.wkfl_path)
     
 
-def get_models(full_path, name, wkfl_path):
+def get_models(full_path, name, wkfl_path, is_ode):
     try:
         with open(full_path, "r") as model_file:
             stochss_model = json.loads(model_file.read())
@@ -85,7 +89,7 @@ def get_models(full_path, name, wkfl_path):
         open(os.path.join(wkfl_path, 'ERROR'), 'w').close() # update status to error
     
     try:
-        _model = ModelFactory(stochss_model) # build GillesPy2 model
+        _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
         gillespy2_model = _model.model
     except Exception as error:
         log.error("GillesPy2 Model Errors: "+str(error))
@@ -101,6 +105,7 @@ def update_info_file(wkfl, wkfl_type, initialize):
                   "type":"{0}".format(wkfl_type), "start_time":None} # updated workflow info
     
     if initialize:
+        # Update workflow info file with start time and permanent model file location
         today = datetime.now() # workflow run start time
         # If this format is not something Javascript's Date.parse() method
         # understands then the workflow status page will be unable to correctly create a
@@ -129,11 +134,12 @@ def run_workflow(wkfl, verbose):
     verbose : boolean
         Print progress statements.
     '''
+    is_ode = wkfl.settings['simulationSettings']['algorithm'] == "ODE"
     # Get the model data from the file and create the model object
-    gillespy2_model, stochss_model = get_models(wkfl.wkfl_mdl_path, wkfl.mdl_file.split('.')[0], wkfl.wkfl_path)
+    gillespy2_model, stochss_model = get_models(wkfl.wkfl_mdl_path, wkfl.mdl_file.split('.')[0], wkfl.wkfl_path, is_ode)
     # run the workflow
     try:
-        wkfl.run(gillespy2_model, stochss_model, verbose)
+        wkfl.run(gillespy2_model, verbose)
     except Exception as error:
         # update workflow status to error if GillesPy2 throws an exception
         log.error("Workflow errors: {0}".format(error))
@@ -196,7 +202,7 @@ def get_parsed_args():
     return args
 
 
-def initialize(mdl_path, wkfl_path, wkfl_type, new=False, existing=False, save=False, run=False, verbose=False):
+def initialize(mdl_path, wkfl_path, wkfl_type, settings=None, new=False, existing=False, save=False, run=False, verbose=False):
     user_dir = "/home/jovyan"
 
     model_path = os.path.join(user_dir, mdl_path)
@@ -214,7 +220,7 @@ def initialize(mdl_path, wkfl_path, wkfl_type, new=False, existing=False, save=F
 
     workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
 
-    workflow = workflows[wkfl_type](workflow_path, model_path)
+    workflow = workflows[wkfl_type](workflow_path, model_path, settings)
 
     setup_logger(workflow.log_path)
 

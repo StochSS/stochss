@@ -1,7 +1,7 @@
 python-libsbml==5.18.0
-gillespy2==1.4
+gillespy2==1.4.2
 vtk
 pygmsh==5.0.2
 meshio==2.3.10
-https://github.com/spatialpy/SpatialPy/tarball/develop
-https://github.com/sciope/sciope/archive/master.zip
+git+https://github.com/spatialpy/SpatialPy.git@develop
+git+https://github.com/sciope/sciope.git@master

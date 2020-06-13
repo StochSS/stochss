@@ -377,7 +377,7 @@ class SBMLToModelAPIHandler(APIHandler):
         '''
         path = self.get_query_argument(name="path")
         log.debug("Converting SBML: {0}".format(path))
-        template_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
+        template_path ='/stochss/stochss_templates/nonSpatialModelTemplate.json'
         log.debug("Using model template: {0}".format(template_path))
         with open(template_path, "r") as template_file:
             model_template = template_file.read()

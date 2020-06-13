@@ -43,6 +43,8 @@ JupyterHub is a multi-user system for spawning Jupyter notebook servers. We use 
 
 - [Optional] To set admins for JupyterHub, make a file called `userlist` in the `jupyterhub/` directory. On each line of this file place a username followed by the word 'admin'. For example: `myuser admin`. If using Google OAuth, the uesrname will be a gmail address. Navigate to `/hub/admin` to use the JupyterHub admin interface.
 
+- [Optional] By default multi-user StochSS is set up to allocate 2 logical cpus per user, reserving 2 logical cpus for the hub container and underlying OS. You can define a list of "power users" that are excluded from resource limitations by adding a text file called `.power_users` (note the leading period) to the `jupyterhub/` directory with one username/email address on each line of the file.
+
 ### Run Locally
 
 - To run JupyterHub locally run `make hub` and go to 127.0.0.1:8888.
