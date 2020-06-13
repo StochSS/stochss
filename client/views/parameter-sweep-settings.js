@@ -21,12 +21,13 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = Tooltips.parameterSweepSettings
+    this.stochssModel = attrs.stochssModel;
+    this.tooltips = Tooltips.parameterSweepSettings;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    var parameters = this.model.parent.parameters;
-    var species = this.model.parent.species;
+    var parameters = this.stochssModel.parameters;
+    var species = this.stochssModel.species;
     var paramNames = parameters.map(function (parameter) { return parameter.name});
     var speciesNames = species.map(function (specie) { return specie.name});
     var speciesOfInterestView = new SelectView({
@@ -53,7 +54,7 @@ module.exports = View.extend({
       options: paramNames,
       value: this.model.parameterTwo.name
     });
-    if(this.model.parent.parameters.length > 1){
+    if(parameters.length > 1){
       $(this.queryByHook('two-parameter')).prop('disabled', false)
       $(this.queryByHook('one-parameter')).prop('checked', this.model.is1D)
       $(this.queryByHook('two-parameter')).prop('checked', !this.model.is1D)
@@ -113,13 +114,13 @@ module.exports = View.extend({
     this.model.speciesOfInterest = species
   },
   getSpecies: function (name) {
-    var species = this.model.parent.species.filter(function (specie) {
+    var species = this.stochssModel.species.filter(function (specie) {
       if(specie.name === name) return specie
     })[0];
     return species;
   },
   getParameter: function (val) {
-    var parameter = this.model.parent.parameters.filter(function (parameter) {
+    var parameter = this.stochssModel.parameters.filter(function (parameter) {
       if(parameter.name === val) return parameter;
     })[0];
     return parameter;

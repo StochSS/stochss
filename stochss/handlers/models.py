@@ -51,7 +51,7 @@ class JsonFileAPIHandler(APIHandler):
             log.debug("Contents of the json file: {0}".format(data))
             self.write(data)
         elif purpose == "edit":
-            new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
+            new_path ='/stochss/stochss_templates/nonSpatialModelTemplate.json'
             log.debug("Path to the model template: {0}".format(new_path))
             try:
                 with open(new_path, 'r') as json_file:

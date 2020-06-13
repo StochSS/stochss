@@ -48,16 +48,6 @@ module.exports = View.extend({
     $(this.queryByHook('start-workflow')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
   },
   saveModel: function (cb) {
-    var numEvents = this.model.eventsCollection.length;
-    var numRules = this.model.rules.length;
-    var defaultMode = this.model.defaultMode;
-    if(!numEvents && !numRules && defaultMode === "continuous"){
-      this.model.modelSettings.algorithm = "ODE";
-    }else if(!numEvents && !numRules && defaultMode === "discrete"){
-      this.model.modelSettings.algorithm = "SSA";
-    }else{
-      this.model.modelSettings.algorithm = "Hybrid-Tau-Leaping";
-    }
     this.saving();
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;

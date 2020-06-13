@@ -29,7 +29,12 @@ module.exports = View.extend({
     var model = this.model
     var optType = document.URL.endsWith(".mdl") ? "sn" : "se";
     this.saveModel(function () {
-      let query = JSON.stringify({"type":self.type,"optType":optType,"mdlPath":model.directory,"wkflPath":self.parent.parent.wkflPath})
+      let query = JSON.stringify({"type":self.type,
+                                  "optType":optType,
+                                  "mdlPath":model.directory,
+                                  "wkflPath":self.parent.parent.wkflPath,
+                                  "settings":self.parent.settings
+                                })
       var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow') + "?data=" + query;
       xhr({uri: endpoint}, function (err, response, body) {
         self.saved();
@@ -51,8 +56,8 @@ module.exports = View.extend({
   saveModel: function (cb) {
     // this.model is a ModelVersion, the parent of the collection is Model
     let self = this
-    if(this.model.simulationSettings.isAutomatic){
-      this.model.simulationSettings.letUsChooseForYou();
+    if(this.parent.settings.simulationSettings.isAutomatic){
+      this.parent.settings.simulationSettings.letUsChooseForYou(this.model);
     }
     var model = this.model;
     if (cb) {
@@ -95,7 +100,12 @@ module.exports = View.extend({
     var self = this;
     var model = this.model;
     var optType = document.URL.endsWith(".mdl") ? "rn" : "re";
-    var query = {"type":this.type,"optType":"s"+optType,"mdlPath":model.directory,"wkflPath":self.parent.parent.wkflPath}
+    var query = {"type":this.type,
+                 "optType":"s"+optType,
+                 "mdlPath":model.directory,
+                 "wkflPath":self.parent.parent.wkflPath,
+                 "settings":self.parent.settings
+               }
     let initQuery = JSON.stringify(query)
     var initEndpoint = path.join(app.getApiPath(), '/workflow/save-workflow') + "?data=" + initQuery;
     query.optType = optType
