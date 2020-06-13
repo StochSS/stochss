@@ -18,6 +18,7 @@ if __name__ == "__main__":
 
     modules = [
         test_model_template,
+        test_settings_template,
         test_convert_sbml,
         test_duplicate
     ]
