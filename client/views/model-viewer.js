@@ -8,8 +8,6 @@ var ReactionsViewer = require('./reactions-viewer');
 var EventsViewer = require('./events-viewer');
 var RulesViewer = require('./rules-viewer');
 var ModelSettingsViewer = require('./model-settings-viewer');
-//models
-var Model = require('../models/model');
 //templates
 var template = require('../templates/includes/modelViewer.pug');
 
