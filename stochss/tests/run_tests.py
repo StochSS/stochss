@@ -15,11 +15,13 @@ if __name__ == "__main__":
     import test_model_template
     import test_settings_template
     import test_convert_sbml
+    import test_duplicate
 
     modules = [
         test_model_template,
         test_settings_template,
-        test_convert_sbml
+        test_convert_sbml,
+        test_duplicate
     ]
 
     for module in modules:
