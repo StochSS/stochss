@@ -16,7 +16,9 @@ var template = require('../templates/includes/modelViewer.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse-model]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-model]' : function (e) {
+      this.changeCollapseButtonText()
+    },
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -61,8 +63,8 @@ module.exports = View.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-model')).text();
-    text === '+' ? $(this.queryByHook('collapse-model')).text('-') : $(this.queryByHook('collapse-model')).text('+');
+    var text = $(document.querySelector('#model-viewer-header #'+this.model.name)).text();
+    text === '+' ? $(document.querySelector('#model-viewer-header #'+this.model.name)).text('-') : $(document.querySelector('#model-viewer-header #'+this.model.name)).text('+');
   },
   enableCollapseButton: function () {
     $(this.queryByHook('collapse-model')).prop('disabled', false);

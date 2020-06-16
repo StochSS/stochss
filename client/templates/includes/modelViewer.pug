@@ -1,13 +1,11 @@
 div#model-viewer.card.card-body
 
-  div
+  div(id="model-viewer-header")
 
-    h3.inline Model
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-model", data-hook="collapse-model" disabled) +
+    h3.inline=this.model.name
+    button.btn.btn-outline-collapse(id=this.model.name, data-toggle="collapse", data-target="#collapse-model"+this.model.name, data-hook="collapse-model" disabled) +
 
-  div.collapse(id="collapse-model")
-
-    div: h5=this.model.name
+  div.collapse(id="collapse-model"+this.model.name)
 
     div(data-hook="species-viewer-container")
 

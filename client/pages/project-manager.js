@@ -3,6 +3,7 @@ var app = require('../app');
 var modals = require('../modals');
 //views
 var PageView = require('./base');
+var ProjectViewer = require('../views/project-viewer');
 //models
 var Project = require('../models/project');
 //templates
@@ -21,11 +22,30 @@ let ProjectManager = PageView.extend({
     this.model = new Project({
       directory: projectPath
     });
+    var self = this
     this.model.fetch({
       success: function (model, response, options) {
+        self.renderSubviews()
         console.log(model)
       }
     });
+  },
+  renderSubviews: function () {
+    this.renderProjectViewer()
+  },
+  renderProjectViewer: function () {
+    if(this.projectViewer) {
+      this.projectViewer.remove()
+    }
+    this.projectViewer = new ProjectViewer({
+      model: this.model,
+      name: this.projectName
+    });
+    this.registerRenderSubview(this.projectViewer, "project-viewer")
+  },
+  registerRenderSubview: function (view, hook) {
+    this.registerSubview(view);
+    this.renderSubview(view, this.queryByHook(hook));
   }
 });
 
