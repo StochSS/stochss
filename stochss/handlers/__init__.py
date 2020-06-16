@@ -18,6 +18,7 @@ def get_page_handlers(route_start):
         ('/stochss/workflow/selection\/?', WorkflowSelectionHandler),
         ('/stochss/workflow/edit\/?', WorkflowEditorHandler),
         ('/stochss/quickstart\/?', QuickstartHandler),
+        ('/stochss/project/manager\/?', ProjectManagerHandler),
         #
         ## API Handlers
         #

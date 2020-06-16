@@ -9,6 +9,7 @@ module.exports = {
     editor: './client/pages/model-editor.js',
     workflowSelection: './client/pages/workflow-selection.js',
     workflowEditor: './client/pages/workflow-manager.js',
+    projectManager: './client/pages/project-manager.js'
   },
   output: {
     filename: 'stochss-[name].bundle.js',
@@ -51,6 +52,13 @@ module.exports = {
       name: 'workflowEditor',
       inject: false
     }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Project Manager',
+      filename: 'stochss-project-manager.html',
+      template: 'page_template.pug',
+      name: 'projectManager',
+      inject: false
+    })
   ],
   optimization: {
     splitChunks: {

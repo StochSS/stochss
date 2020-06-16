@@ -960,7 +960,7 @@ let FileBrowser = PageView.extend({
             if(nodeType === "workflow"){
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
             }else if(nodeType === "project"){
-              window.location.href = path.join(app.getBasePath(), "stochss/project/manage")+"?path="+o.original._path
+              window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
             }else{
               if(nodeType === "notebook") {
                 var identifier = "notebooks"
@@ -1143,7 +1143,7 @@ let FileBrowser = PageView.extend({
         var openPath = path.join(app.getBasePath(), "edit", _path)
         window.open(openPath, '_blank')
       }else if(file.endsWith('.proj')){
-        window.location.href = path.join(app.getBasePath(), "stochss/project/manage")+"?path="+_path;
+        window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
       }else if(file.endsWith('.wkfl')){
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
