@@ -3,6 +3,7 @@ var path = require('path');
 var app = require('../app.js');
 //Collections
 var ModelsCollection = require('./models');
+var ExperimentsCollection = require('./experiments');
 //Models
 var Model = require('ampersand-model');
 
@@ -11,7 +12,8 @@ module.exports = Model.extend({
     return path.join(app.getApiPath(), "project/load-project")+"?path="+this.directory;
   },
   collections: {
-    models: ModelsCollection
+    models: ModelsCollection,
+    experiments: ExperimentsCollection
   },
   session: {
     directory: 'string'

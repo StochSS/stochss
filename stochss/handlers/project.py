@@ -29,13 +29,17 @@ class LoadProjectAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: {}".format(path))
-        project = {"models": [], "Experiments": []}
+        project = {"models": [], "experiments": []}
         for item in os.listdir(path):
             if item.endswith('.mdl'):
                 with open(os.path.join(path, item), 'r') as mdl_file:
                     model = json.load(mdl_file)
                     model['name'] = item.split('.')[0]
                     project['models'].append(model)
+            else:
+                name = item.split('.')[0]
+                workflows = []
+                project['experiments'].append({"name":name,"workflows":workflows})
         log.debug("Contents of the project: {0}".format(project))
         self.write(project)
         log.setLevel(logging.WARNING)

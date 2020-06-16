@@ -546,6 +546,9 @@ let FileBrowser = PageView.extend({
     if(document.querySelector("#newProjectModal")) {
       document.querySelector("#newProjectModal").remove()
     }
+    if(document.querySelector("#newExperimentModal")) {
+      document.querySelector("#newExperimentModal").remove()
+    }
     var modal = ""
     var okBtn = ""
     var input = ""
@@ -582,15 +585,17 @@ let FileBrowser = PageView.extend({
         }
         xhr({uri: endpoint,json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
-            if(o){//directory was created with context menu option
-              var node = $('#models-jstree').jstree().get_node(o);
-              if(node.type === "root"){
+            if(isProject) {
+              if(o){//directory was created with context menu option
+                var node = $('#models-jstree').jstree().get_node(o);
+                if(node.type === "root"){
+                  self.refreshJSTree()
+                }else{          
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              }else{//directory was created with create directory button
                 self.refreshJSTree()
-              }else{          
-                $('#models-jstree').jstree().refresh_node(node);
               }
-            }else{//directory was created with create directory button
-              self.refreshJSTree()
             }
           }else{
             let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
