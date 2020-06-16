@@ -1,0 +1,13 @@
+div#workflow-viewer.card.card-body
+
+  div
+
+    h3.inline=this.model.name
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-workflow", data-hook="collapse-workflow") +
+
+  div.collapse(id="collapse-workflow")
+
+    each output in this.model.outputs
+      div.inline
+        li=output.key
+        li=output.stamp

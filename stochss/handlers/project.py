@@ -36,9 +36,16 @@ class LoadProjectAPIHandler(APIHandler):
                     model = json.load(mdl_file)
                     model['name'] = item.split('.')[0]
                     project['models'].append(model)
-            else:
+            elif item.endswith('.exp'):
                 name = item.split('.')[0]
                 workflows = []
+                for workflow in os.listdir(os.path.join(path, item)):
+                    if workflow.endswith('.wkfl'):
+                        wkfl_dict = {"path":os.path.join(path, item, workflow), "name":workflow.split('.')[0]}
+                        with open(os.path.join(wkfl_dict['path'], 'settings.json'), 'r') as settings_file:
+                            outputs = json.load(settings_file)['resultsSettings']['outputs']
+                            wkfl_dict['outputs'] = outputs
+                            workflows.append(wkfl_dict)
                 project['experiments'].append({"name":name,"workflows":workflows})
         log.debug("Contents of the project: {0}".format(project))
         self.write(project)
