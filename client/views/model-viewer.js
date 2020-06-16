@@ -20,8 +20,11 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.status = attrs.status;
-    this.wkflType = attrs.type;
+    if(attrs.status) {
+      this.status = attrs.status;
+    }else{
+      this.status = "complete"
+    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);

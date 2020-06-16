@@ -10,6 +10,37 @@ from notebook.base.handlers import APIHandler
 log = logging.getLogger('stochss')
 
 
+class LoadProjectAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for creating new StochSS Projects
+    ##############################################################################
+    '''
+    @web.authenticated
+    def get(self):
+        '''
+        Create a new project directory and the path to the directory if needed.
+
+        Attributes
+        ----------
+        '''
+        log.setLevel(logging.DEBUG)
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the new project directory: {}".format(path))
+        project = {"models": [], "Experiments": []}
+        for item in os.listdir(path):
+            if item.endswith('.mdl'):
+                with open(os.path.join(path, item), 'r') as mdl_file:
+                    model = json.load(mdl_file)
+                    model['name'] = item.split('.')[0]
+                    project['models'].append(model)
+        log.debug("Contents of the project: {0}".format(project))
+        self.write(project)
+        log.setLevel(logging.WARNING)
+        self.finish()
+
+
 class NewProjectAPIHandler(APIHandler):
     '''
     ##############################################################################
