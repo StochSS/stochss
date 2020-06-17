@@ -1,6 +1,6 @@
 import unittest, os, tempfile
 from pathlib import Path
-from stochss.handlers.util.rename import *
+from handlers.util.rename import *
 
 class TestRename(unittest.TestCase):
 
@@ -82,7 +82,7 @@ class TestRename(unittest.TestCase):
             assert os.path.isdir(test_new_path)
 
 #    def test_rename_permission_error(self):
-#        from stochss.handlers.util.stochss_errors import StochSSPermissionsError
+#        from handlers.util.stochss_errors import StochSSPermissionsError
 #        with tempfile.TemporaryDirectory() as tempdir:
 #            test_file = "test_file"
 #            test_path = os.path.join(tempdir,test_file)
@@ -92,7 +92,7 @@ class TestRename(unittest.TestCase):
 #                rename(test_path, "test_file2")
 
     def test_rename_file_not_found_error(self):
-        from stochss.handlers.util.stochss_errors import StochSSFileNotFoundError
+        from handlers.util.stochss_errors import StochSSFileNotFoundError
         with tempfile.TemporaryDirectory() as tempdir:
             test_file = "test_file"
             test_path = os.path.join(tempdir,test_file)
