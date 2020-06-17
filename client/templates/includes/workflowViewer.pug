@@ -3,11 +3,10 @@ div#workflow-viewer.card.card-body
   div
 
     h3.inline=this.model.name
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-workflow", data-hook="collapse-workflow") +
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-workflow"+this.model.name, data-hook="collapse-workflow") +
 
-  div.collapse(id="collapse-workflow")
+  div.collapse(id="collapse-workflow"+this.model.name)
 
     each output in this.model.outputs
-      div.inline
-        li=output.key
-        li=output.stamp
+      div
+        li="Plot type: "+output.key+", Time saved: "+output.stamp
