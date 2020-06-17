@@ -279,7 +279,9 @@ module.exports = View.extend({
       type = this.getPsweepKey()
     }
     let stamp = this.getTimeStamp()
-    let plotInfo = {"key":type, "stamp":stamp};
+    var plotInfo = {"key":type, "stamp":stamp};
+    plotInfo = Object.assign({}, plotInfo, this.plotArgs)
+    console.log(plotInfo)
     let queryString = "?path="+path.join(this.parent.wkflPath, "settings.json")
     let endpoint = path.join(app.getApiPath(), "workflow/save-plot")+queryString
     xhr({uri: endpoint, method: "post", json: true, body: plotInfo}, function (err, response, body) {

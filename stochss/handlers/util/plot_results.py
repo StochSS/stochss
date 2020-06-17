@@ -88,7 +88,6 @@ def edit_plot_fig(plt_fig, plt_data):
     plt_data : str
         The data that needs to be applied to the plot.
     '''
-    plt_data = json.loads(plt_data)
     for key in plt_data.keys():
         if key == "title":
             plt_fig['layout']['title']['text'] = plt_data[key]

@@ -7,6 +7,4 @@ div#workflow-viewer.card.card-body
 
   div.collapse(id="collapse-workflow"+this.model.name)
 
-    each output in this.model.outputs
-      div
-        li="Plot type: "+output.key+", Time saved: "+output.stamp
+    div(data-hook="workflow-plots")
