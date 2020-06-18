@@ -16,11 +16,13 @@ if __name__ == "__main__":
     import test_settings_template
     import test_convert_sbml
     import test_duplicate
+    import test_rename
 
     modules = [
         test_model_template,
         test_settings_template,
         test_convert_sbml,
+        test_rename,
         test_duplicate
     ]
 
