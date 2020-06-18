@@ -39,9 +39,14 @@ class ModelBrowserFileList(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
+        is_root = self.get_query_argument(name="isRoot", default=False)
+        print(type(is_root))
         log.info("Path to the directory: {0}".format(path))
         try:
-            output = ls(path)
+            if is_root:
+                output = ls(path, is_root=True)
+            else:
+                output = ls(path)
             log.debug("Contents of the directory: {0}".format(output))
             self.write(output)
         except StochSSAPIError as err:

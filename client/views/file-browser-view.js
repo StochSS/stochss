@@ -35,7 +35,11 @@ module.exports = View.extend({
     this.ajaxData = {
       "url" : function (node) {
         if(node.parent === null){
-          return path.join(app.getApiPath(), "file/browser-list")+"?path="+self.root
+          var endpoint = path.join(app.getApiPath(), "file/browser-list")+"?path="+self.root
+          if(self.root !== "none") {
+            endpoint += "&isRoot=True"
+          }
+          return endpoint
         }
         return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
       },
@@ -120,12 +124,12 @@ module.exports = View.extend({
     var self = this;
     this.nodeForContextMenu = "";
     this.jstreeIsLoaded = false
-    window.addEventListener('pageshow', function (e) {
-      var navType = window.performance.navigation.type
-      if(navType === 2){
-        window.location.reload()
-      }
-    });
+    // window.addEventListener('pageshow', function (e) {
+    //   var navType = window.performance.navigation.type
+    //   if(navType === 2){
+    //     window.location.reload()
+    //   }
+    // });
   },
   refreshJSTree: function () {
     this.jstreeIsLoaded = false

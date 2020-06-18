@@ -76,8 +76,8 @@ def buildChild(text, f_type, p_path):
     return child
 
 
-def buildRoot(children):
-    root = {"text":"/", "type":"root", "_path":"/"}
+def buildRoot(children, path="/", text="/"):
+    root = {"text":text, "type":"root", "_path":path}
     root["children"] = children
     root["state"] = {"opened":True}
     return [root]
@@ -98,7 +98,7 @@ def checkExtension(child, target):
         return False
 
 
-def ls(p_path):
+def ls(p_path, is_root=False):
     '''
     Format the path to the target directory to an absolute path.
     Retreive the JSTree children nodes and add them to a root node
@@ -115,8 +115,12 @@ def ls(p_path):
         full_path = user_dir
     else:
         full_path = path.join(user_dir, p_path)
+    print(is_root, p_path, full_path)
     data = getFileSystemData(full_path, p_path)
     if p_path == "none":
         data = buildRoot(data)
+    elif is_root:
+        text = p_path.split('/').pop().split('.')[0]
+        data = buildRoot(data, path=p_path, text=text)
     return json.dumps(data)
     
