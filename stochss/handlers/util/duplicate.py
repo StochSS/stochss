@@ -3,7 +3,7 @@
 import os
 from os import path
 from shutil import copyfile, copytree
-from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
+from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, ModelNotFoundError
 
 
 def get_unique_file_name(_path):
