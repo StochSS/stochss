@@ -7,16 +7,14 @@ let _ = require('underscore');
 let app = require('../app');
 let modals = require('../modals');
 //views
-let PageView = require('./base');
+let View = require('ampersand-view');
 //templates
-let template = require('../templates/pages/fileBrowser.pug');
+let template = require('../templates/includes/fileBrowserView.pug');
 
-import initPage from './page.js';
-
-let FileBrowser = PageView.extend({
-  pageTitle: 'StochSS | File Browser',
+module.exports = View.extend({
   template: template,
   events: {
+    'click [data-hook=collapse-browse-files]' : 'changeCollapseButtonText',
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
@@ -28,9 +26,12 @@ let FileBrowser = PageView.extend({
     },
   },
   initialize: function (attrs, options) {
-    PageView.prototype.initialize.apply(this, arguments)
+    View.prototype.initialize.apply(this, arguments)
     var self = this
     this.root = "none"
+    if(attrs && attrs.root){
+      this.root = attrs.root
+    }
     this.ajaxData = {
       "url" : function (node) {
         if(node.parent === null){
@@ -61,7 +62,7 @@ let FileBrowser = PageView.extend({
             var BreakException = {}
             try{
               more.ref.children.forEach(function (child) {
-                var child_node = $('#models-jstree').jstree().get_node(child)
+                var child_node = $('#models-jstree-view').jstree().get_node(child)
                 exists = child_node.text === node.text
                 if(exists){
                   throw BreakException;
@@ -86,9 +87,9 @@ let FileBrowser = PageView.extend({
               }else{
                 body = JSON.parse(body)
                 if(par.type === 'root'){
-                  $('#models-jstree').jstree().refresh()
+                  $('#models-jstree-view').jstree().refresh()
                 }else{
-                  $('#models-jstree').jstree().refresh_node(par);
+                  $('#models-jstree-view').jstree().refresh_node(par);
                 }
               }
             });
@@ -96,7 +97,7 @@ let FileBrowser = PageView.extend({
           return true
         },
         'themes': {'stripes': true, 'variant': 'large'},
-        'data': this.ajaxData,
+        'data': self.ajaxData,
       },
       'types' : {
         'root' : {"icon": "jstree-icon jstree-folder"},
@@ -112,11 +113,12 @@ let FileBrowser = PageView.extend({
         'other' : {"icon": "jstree-icon jstree-file"},
       },  
     }
+    this.setupJstree()
   },
   render: function () {
+    View.prototype.render.apply(this, arguments)
     var self = this;
     this.nodeForContextMenu = "";
-    this.renderWithTemplate();
     this.jstreeIsLoaded = false
     window.addEventListener('pageshow', function (e) {
       var navType = window.performance.navigation.type
@@ -124,20 +126,15 @@ let FileBrowser = PageView.extend({
         window.location.reload()
       }
     });
-    this.setupJstree(function () {
-      setTimeout(function () {
-        self.refreshInitialJSTree();
-      }, 3000);
-    });
   },
   refreshJSTree: function () {
     this.jstreeIsLoaded = false
-    $('#models-jstree').jstree().deselect_all(true)
-    $('#models-jstree').jstree().refresh()
+    $('#models-jstree-view').jstree().deselect_all(true)
+    $('#models-jstree-view').jstree().refresh()
   },
   refreshInitialJSTree: function () {
     var self = this;
-    var count = $('#models-jstree').jstree()._model.data['#'].children.length;
+    var count = $('#models-jstree-view').jstree()._model.data['#'].children.length;
     if(count == 0) {
       self.refreshJSTree();
       setTimeout(function () {
@@ -147,15 +144,15 @@ let FileBrowser = PageView.extend({
   },
   selectNode: function (node, fileName) {
     let self = this
-    if(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
+    if(!this.jstreeIsLoaded || !$('#models-jstree-view').jstree().is_loaded(node) && $('#models-jstree-view').jstree().is_loading(node)) {
       setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
     }else{
-      node = $('#models-jstree').jstree().get_node(node)
+      node = $('#models-jstree-view').jstree().get_node(node)
       var child = ""
       for(var i = 0; i < node.children.length; i++) {
-        var child = $('#models-jstree').jstree().get_node(node.children[i])
+        var child = $('#models-jstree-view').jstree().get_node(node.children[i])
         if(child.original.text === fileName) {
-          $('#models-jstree').jstree().select_node(child)
+          $('#models-jstree-view').jstree().select_node(child)
           let optionsButton = $(self.queryByHook("options-for-node"))
           if(!self.nodeForContextMenu){
             optionsButton.prop('disabled', false)
@@ -206,11 +203,11 @@ let FileBrowser = PageView.extend({
         var resp = JSON.parse(req.response)
         if(req.status < 400) {
           if(o){
-            var node = $('#models-jstree').jstree().get_node(o.parent);
+            var node = $('#models-jstree-view').jstree().get_node(o.parent);
             if(node.type === "root" || node.type === "#"){
               self.refreshJSTree();
             }else{
-              $('#models-jstree').jstree().refresh_node(node);
+              $('#models-jstree-view').jstree().refresh_node(node);
             }
           }else{
             self.refreshJSTree();
@@ -242,11 +239,11 @@ let FileBrowser = PageView.extend({
       var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
       xhr({uri: endpoint}, function(err, response, body) {
         if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(o.parent);
+          var node = $('#models-jstree-view').jstree().get_node(o.parent);
           if(node.type === "root"){
             self.refreshJSTree();
           }else{
-            $('#models-jstree').jstree().refresh_node(node);
+            $('#models-jstree-view').jstree().refresh_node(node);
           }
         }else{
           body = JSON.parse(body)
@@ -278,11 +275,11 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(parentID);
+          var node = $('#models-jstree-view').jstree().get_node(parentID);
           if(node.type === "root"){
             self.refreshJSTree()
           }else{          
-            $('#models-jstree').jstree().refresh_node(node);
+            $('#models-jstree-view').jstree().refresh_node(node);
           }
           if(type === "workflow"){
             var message = ""
@@ -330,11 +327,11 @@ let FileBrowser = PageView.extend({
     xhr({uri: endpoint, json: true}, 
       function (err, response, body) {
         if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(parentID);
+          var node = $('#models-jstree-view').jstree().get_node(parentID);
           if(node.type === "root"){
             self.refreshJSTree()
           }else{          
-            $('#models-jstree').jstree().refresh_node(node);
+            $('#models-jstree-view').jstree().refresh_node(node);
           }
           self.selectNode(node, body.File)
         }
@@ -352,11 +349,11 @@ let FileBrowser = PageView.extend({
     let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(parentID);
+          var node = $('#models-jstree-view').jstree().get_node(parentID);
           if(node.type === "root"){
             self.refreshJSTree()
           }else{          
-            $('#models-jstree').jstree().refresh_node(node);
+            $('#models-jstree-view').jstree().refresh_node(node);
           }
           self.selectNode(node, body.File)
           if(from === "SBML" && body.errors.length > 0){
@@ -379,11 +376,11 @@ let FileBrowser = PageView.extend({
     }
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400){
-        var node = $('#models-jstree').jstree().get_node(o.parent)
+        var node = $('#models-jstree-view').jstree().get_node(o.parent)
         if(node.type === 'root'){
           self.refreshJSTree();
         }else{
-          $('#models-jstree').jstree().refresh_node(node);
+          $('#models-jstree-view').jstree().refresh_node(node);
         }
         var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
         self.selectNode(node, body.File)
@@ -397,11 +394,11 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
+        var node = $('#models-jstree-view').jstree().get_node(parentID);
         if(node.type === "root"){
           self.refreshJSTree()
         }else{          
-          $('#models-jstree').jstree().refresh_node(node);
+          $('#models-jstree-view').jstree().refresh_node(node);
         }
         self.selectNode(node, body.File)
       }
@@ -410,11 +407,11 @@ let FileBrowser = PageView.extend({
   renameNode: function (o) {
     var self = this
     var text = o.text;
-    var parent = $('#models-jstree').jstree().get_node(o.parent)
+    var parent = $('#models-jstree-view').jstree().get_node(o.parent)
     var extensionWarning = $(this.queryByHook('extension-warning'));
     var nameWarning = $(this.queryByHook('rename-warning'));
     extensionWarning.collapse('show')
-    $('#models-jstree').jstree().edit(o, null, function(node, status) {
+    $('#models-jstree-view').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
         var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+node.text
         xhr({uri: endpoint, json: true}, function (err, response, body){
@@ -431,7 +428,7 @@ let FileBrowser = PageView.extend({
             if(parent.type === "root"){
               self.refreshJSTree()
             }else{          
-              $('#models-jstree').jstree().refresh_node(parent);
+              $('#models-jstree-view').jstree().refresh_node(parent);
             }
           }
         })
@@ -469,11 +466,11 @@ let FileBrowser = PageView.extend({
         if(dataType === "json") {
           self.exportToJsonFile(body, o.original.text);
         }else if(dataType === "zip") {
-          var node = $('#models-jstree').jstree().get_node(o.parent);
+          var node = $('#models-jstree-view').jstree().get_node(o.parent);
           if(node.type === "root"){
             self.refreshJSTree();
           }else{
-            $('#models-jstree').jstree().refresh_node(node);
+            $('#models-jstree-view').jstree().refresh_node(node);
           }
           self.exportToZipFile(body.Path)
         }else{
@@ -558,11 +555,11 @@ let FileBrowser = PageView.extend({
           if(response.statusCode < 400) {
             if(isProject) {
               if(o){//directory was created with context menu option
-                var node = $('#models-jstree').jstree().get_node(o);
+                var node = $('#models-jstree-view').jstree().get_node(o);
                 if(node.type === "root"){
                   self.refreshJSTree()
                 }else{          
-                  $('#models-jstree').jstree().refresh_node(node);
+                  $('#models-jstree-view').jstree().refresh_node(node);
                 }
               }else{//directory was created with create directory button
                 self.refreshJSTree()
@@ -645,11 +642,11 @@ let FileBrowser = PageView.extend({
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
               if(o){//directory was created with context menu option
-                var node = $('#models-jstree').jstree().get_node(o);
+                var node = $('#models-jstree-view').jstree().get_node(o);
                 if(node.type === "root"){
                   self.refreshJSTree()
                 }else{          
-                  $('#models-jstree').jstree().refresh_node(node);
+                  $('#models-jstree-view').jstree().refresh_node(node);
                 }
               }else{//directory was created with create directory button
                 self.refreshJSTree()
@@ -675,7 +672,7 @@ let FileBrowser = PageView.extend({
     this.newModelOrDirectory(undefined, true, isSpatial);
   },
   showContextMenuForNode: function (e) {
-    $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
+    $('#models-jstree-view').jstree().show_contextmenu(this.nodeForContextMenu)
   },
   editWorkflowModel: function (o) {
     let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
@@ -751,7 +748,7 @@ let FileBrowser = PageView.extend({
             if(nodeType === "root"){
               self.refreshJSTree();
             }else{
-              $('#models-jstree').jstree().refresh_node(o);
+              $('#models-jstree-view').jstree().refresh_node(o);
             }
           }
         },
@@ -1079,56 +1076,60 @@ let FileBrowser = PageView.extend({
         return $.extend(open, sbml, common)
       }
     }
-    $(document).on('shown.bs.modal', function (e) {
-      $('[autofocus]', e.target).focus();
-    });
-    $(document).on('dnd_start.vakata', function (data, element, helper, event) {
-      $('#models-jstree').jstree().load_all()
-    });
-    $('#models-jstree').jstree(this.treeSettings).bind("loaded.jstree", function (event, data) {
-      self.jstreeIsLoaded = true
-    }).bind("refresh.jstree", function (event, data) {
-      self.jstreeIsLoaded = true
-    });
-    $('#models-jstree').on('click.jstree', function(e) {
-      var parent = e.target.parentElement
-      var _node = parent.children[parent.children.length - 1]
-      var node = $('#models-jstree').jstree().get_node(_node)
-      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node) && node.type === "folder"){
-        $('#models-jstree').jstree().refresh_node(node)
-      }else{
-        let optionsButton = $(self.queryByHook("options-for-node"))
-        if(!self.nodeForContextMenu){
-          optionsButton.prop('disabled', false)
+    $(document).ready(function () {
+      $(document).on('shown.bs.modal', function (e) {
+        $('[autofocus]', e.target).focus();
+      });
+      $(document).on('dnd_start.vakata', function (data, element, helper, event) {
+        $('#models-jstree-view').jstree().load_all()
+      });
+      $('#models-jstree-view').jstree(self.treeSettings).bind("loaded.jstree", function (event, data) {
+        self.jstreeIsLoaded = true
+      }).bind("refresh.jstree", function (event, data) {
+        self.jstreeIsLoaded = true
+      });
+      $('#models-jstree-view').on('click.jstree', function(e) {
+        var parent = e.target.parentElement
+        var _node = parent.children[parent.children.length - 1]
+        var node = $('#models-jstree-view').jstree().get_node(_node)
+        if(_node.nodeName === "A" && $('#models-jstree-view').jstree().is_loaded(node) && node.type === "folder"){
+          $('#models-jstree-view').jstree().refresh_node(node)
+        }else{
+          let optionsButton = $(self.queryByHook("options-for-node"))
+          if(!self.nodeForContextMenu){
+            optionsButton.prop('disabled', false)
+          }
+          optionsButton.text("Actions for " + node.original.text)
+          self.nodeForContextMenu = node;
         }
-        optionsButton.text("Actions for " + node.original.text)
-        self.nodeForContextMenu = node;
-      }
-    });
-    $('#models-jstree').on('dblclick.jstree', function(e) {
-      var file = e.target.text
-      var node = $('#models-jstree').jstree().get_node(e.target)
-      var _path = node.original._path;
-      if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-        window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
-      }else if(file.endsWith('.ipynb')){
-        var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
-        window.open(notebookPath, '_blank')
-      }else if(file.endsWith('.sbml')){
-        var openPath = path.join(app.getBasePath(), "edit", _path)
-        window.open(openPath, '_blank')
-      }else if(file.endsWith('.proj')){
-        window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
-      }else if(file.endsWith('.wkfl')){
-        window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
-      }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
-        $('#models-jstree').jstree().refresh_node(node)
-      }else if(node.type === "other"){
-        var openPath = path.join(app.getBasePath(), "view", _path);
-        window.open(openPath, "_blank");
-      }
-    });
+      });
+      $('#models-jstree-view').on('dblclick.jstree', function(e) {
+        var file = e.target.text
+        var node = $('#models-jstree-view').jstree().get_node(e.target)
+        var _path = node.original._path;
+        if(file.endsWith('.mdl') || file.endsWith('.smdl')){
+          window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
+        }else if(file.endsWith('.ipynb')){
+          var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
+          window.open(notebookPath, '_blank')
+        }else if(file.endsWith('.sbml')){
+          var openPath = path.join(app.getBasePath(), "edit", _path)
+          window.open(openPath, '_blank')
+        }else if(file.endsWith('.proj')){
+          window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
+        }else if(file.endsWith('.wkfl')){
+          window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
+        }else if(node.type === "folder" && $('#models-jstree-view').jstree().is_open(node) && $('#models-jstree-view').jstree().is_loaded(node)){
+          $('#models-jstree-view').jstree().refresh_node(node)
+        }else if(node.type === "other"){
+          var openPath = path.join(app.getBasePath(), "view", _path);
+          window.open(openPath, "_blank");
+        }
+      });
+    })
+  },
+  changeCollapseButtonText: function () {
+    var text = $(this.queryByHook('collapse-browse-files')).text();
+    text === '+' ? $(this.queryByHook('collapse-browse-files')).text('-') : $(this.queryByHook('collapse-browse-files')).text('+');
   }
 });
-
-initPage(FileBrowser);

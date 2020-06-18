@@ -25,7 +25,6 @@ module.exports = View.extend({
     var self = this;
     var plotArgs = {"title":this.model.title,"xaxis":this.model.xaxis,"yaxis":this.model.yaxis}
     var data = {"plt_key":this.model.key, "plt_data":plotArgs}
-    console.log(JSON.stringify(data))
     var endpoint = path.join(app.getApiPath(), 'workflow/plot-results')+"?path="+this.parent.model.path+"&data="+JSON.stringify(data);
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode >= 400) {

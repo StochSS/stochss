@@ -1,0 +1,35 @@
+div#browse-files.card.card-body
+
+  div
+
+    h3.inline Browser Files
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-browse-files", data-hook="collapse-browse-files") +
+
+  div.collapse(id="collapse-browse-files")
+
+    div.alert-warning(class="collapse", data-hook="extension-warning") You should avoid changing the file extension unless you know what you are doing!
+
+    div.alert-warning(class="collapse", data-hook="rename-warning") MESSAGE
+
+    div#models-jstree-view
+
+    button.btn.btn-primary.inline.box-shadow(
+      data-hook="new-file-directory",
+      data-toggle="dropdown",
+      aria-haspopup="true",
+      aria-expanded="false",
+      type="button"
+    ) <b>+</b>
+
+    ul.dropdown-menu(aria-labelledby="addReactionBtn")
+      li.dropdown-item(data-hook="new-directory") Create Directory
+      li.dropdown-item(data-hook="new-project") Create Project
+      li.dropdown-item(data-hook="new-model") Create Model
+      li.dropdown-divider
+      li.dropdown-item(data-hook="upload-file-btn", data-type="model") Upload StochSS Model
+      li.dropdown-item(data-hook="upload-file-btn", data-type="sbml") Upload SBML Model
+      li.dropdown-item(data-hook="upload-file-btn", data-type="file") Upload File
+
+    button.btn.btn-primary.box-shadow(data-hook="options-for-node" disabled) Actions
+    
+    button.btn.btn-primary.inline.box-shadow(data-hook="refresh-jstree") Refresh
