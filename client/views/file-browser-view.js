@@ -80,7 +80,7 @@ module.exports = View.extend({
             return false
           }
           if(op === 'move_node' && more && more.core) {
-            var newDir = par.type !== "root" ? par.original._path : ""
+            var newDir = par.original._path !== "/" ? par.original._path : ""
             var file = node.original._path.split('/').pop()
             var oldPath = node.original._path
             let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
@@ -88,6 +88,7 @@ module.exports = View.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
+                self.updateParent(node.type)
               }else{
                 body = JSON.parse(body)
                 if(par.type === 'root'){
@@ -124,12 +125,17 @@ module.exports = View.extend({
     var self = this;
     this.nodeForContextMenu = "";
     this.jstreeIsLoaded = false
-    // window.addEventListener('pageshow', function (e) {
-    //   var navType = window.performance.navigation.type
-    //   if(navType === 2){
-    //     window.location.reload()
-    //   }
-    // });
+    window.addEventListener('pageshow', function (e) {
+      var navType = window.performance.navigation.type
+      if(navType === 2){
+        window.location.reload()
+      }
+    });
+  },
+  updateParent: function (type) {
+    if(type === "nonspatial" || type === "workflow" || type === "experiment") {
+      this.parent.update()
+    }
   },
   refreshJSTree: function () {
     this.jstreeIsLoaded = false
@@ -254,6 +260,7 @@ module.exports = View.extend({
         }
       })
       modal.modal('hide')
+      self.updateParent(o.type)
     });
   },
   duplicateFileOrDirectory: function(o, type) {
@@ -295,6 +302,7 @@ module.exports = View.extend({
             let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal()
           }
           self.selectNode(node, body.File)
+          self.updateParent(o.type)
         }
       }
     );
@@ -435,6 +443,7 @@ module.exports = View.extend({
               $('#models-jstree-view').jstree().refresh_node(parent);
             }
           }
+          self.updateParent(o.type)
         })
       }
       extensionWarning.collapse('hide');
@@ -573,6 +582,9 @@ module.exports = View.extend({
             let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
           }
           modal.modal('hide')
+          if(!isProject) {
+            self.updateParent('experiment')
+          }
         })
       }
     })
@@ -623,7 +635,7 @@ module.exports = View.extend({
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
         var parentPath = ""
-        if(o && o.original && o.original.type !== "root"){
+        if(o && o.original && o.original._path !== "/"){
           parentPath = o.original._path
         }
         if(isModel) {
