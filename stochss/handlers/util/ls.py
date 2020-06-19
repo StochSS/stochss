@@ -3,8 +3,8 @@
 import os
 import json
 from os import path
-from .workflow_status import get_status
-from .stochss_errors import StochSSFileNotFoundError
+import handlers.util.workflow_status as workflow_status
+import handlers.util.stochss_errors as stochss_errors
 
 
 def getFileSystemData(full_path, p_path):
@@ -23,7 +23,7 @@ def getFileSystemData(full_path, p_path):
     try:
         _children = os.listdir(path=full_path)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not find the directory: " + str(err))
+        raise stochss_errors.StochSSFileNotFoundError("Could not find the directory: " + str(err))
         
     if len(_children) == 0:
         return _children
@@ -69,7 +69,7 @@ def buildChild(text, f_type, p_path):
     child = { 'text' : text, 'type' : f_type, '_path' : _path }
     child['children'] = f_type == "folder"
     if f_type == "workflow":
-        status = get_status(_path)
+        status = workflow_status.get_status(_path)
         child['_status'] = status
     return child
 
