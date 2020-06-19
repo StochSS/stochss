@@ -40,7 +40,6 @@ class ModelBrowserFileList(APIHandler):
         '''
         path = self.get_query_argument(name="path")
         is_root = self.get_query_argument(name="isRoot", default=False)
-        print(type(is_root))
         log.info("Path to the directory: {0}".format(path))
         try:
             if is_root:

@@ -25,7 +25,6 @@ class LoadProjectAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: {}".format(path))
@@ -49,7 +48,6 @@ class LoadProjectAPIHandler(APIHandler):
                 project['experiments'].append({"name":name,"workflows":workflows})
         log.debug("Contents of the project: {0}".format(project))
         self.write(project)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 

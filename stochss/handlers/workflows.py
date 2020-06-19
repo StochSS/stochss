@@ -50,7 +50,7 @@ class LoadWorkflowAPIHandler(APIHandler):
         log.debug("The path to the workflow/model: {0}".format(path))
         title_types = {"gillespy":"Ensemble Simulation","parameterSweep":"Parameter Sweep"}
         name_types = {"gillespy":"_ES","parameterSweep":"_PS"}
-        parent_path = os.path.dirname(path)
+        parent_path = self.get_query_argument(name='parentPath', default=os.path.dirname(path))
         if path.endswith('.mdl'):
             resp = {"mdlPath":path,"timeStamp":stamp,"type":wkfl_type,
                     "status":"new","titleType":title_types[wkfl_type],

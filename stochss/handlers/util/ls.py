@@ -33,6 +33,8 @@ def getFileSystemData(full_path, p_path):
             children.append(buildChild(text=child, f_type="workflow", p_path=p_path))
         elif checkExtension(child, ".proj"):
             children.append(buildChild(text=child, f_type="project", p_path=p_path))
+        elif checkExtension(child, ".exp"):
+            children.append(buildChild(text=child, f_type="experiment", p_path=p_path))
         elif checkExtension(child, ".mdl"):
             children.append(buildChild(text=child, f_type="nonspatial", p_path=p_path))
         elif checkExtension(child, ".smdl"):
@@ -115,7 +117,6 @@ def ls(p_path, is_root=False):
         full_path = user_dir
     else:
         full_path = path.join(user_dir, p_path)
-    print(is_root, p_path, full_path)
     data = getFileSystemData(full_path, p_path)
     if p_path == "none":
         data = buildRoot(data)

@@ -40,9 +40,12 @@ let WorkflowManager = PageView.extend({
     this.url = decodeURI(document.URL)
     let urlParams = new URLSearchParams(window.location.search)
     let type = urlParams.get('type');
-    let wkflPath = urlParams.get('path');
+    this.urlPathParam = urlParams.get('path');
     var stamp = this.getCurrentDate();
-    let queryStr = "?stamp="+stamp+"&type="+type+"&path="+wkflPath
+    var queryStr = "?stamp="+stamp+"&type="+type+"&path="+this.urlPathParam
+    if(urlParams.has('parentPath')) {
+      queryStr += ("&parentPath=" + urlParams.get('parentPath'))
+    }
     var endpoint = path.join(app.getApiPath(), "workflow/load-workflow")+queryStr
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       if(resp.statusCode < 400) {

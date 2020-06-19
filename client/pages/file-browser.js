@@ -104,7 +104,7 @@ let FileBrowser = PageView.extend({
         'spatial' : {"icon": "jstree-icon jstree-file"},
         'nonspatial' : {"icon": "jstree-icon jstree-file"},
         'project' : {"icon": "jstree-icon jstree-file"},
-        'experiment' : {"icon": "jstree-icon jstree-folder"},
+        'experiment' : {"icon": "jstree-icon jstree-file"},
         'workflow' : {"icon": "jstree-icon jstree-file"},
         'notebook' : {"icon": "jstree-icon jstree-file"},
         'mesh' : {"icon": "jstree-icon jstree-file"},
@@ -695,7 +695,8 @@ let FileBrowser = PageView.extend({
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       let nodeType = o.original.type
-      let asZip = (nodeType === "workflow" || nodeType === "folder" || nodeType === "other" || nodeType === "mesh")
+      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "experiment"]
+      let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
         "Download" : {

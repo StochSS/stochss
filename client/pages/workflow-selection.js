@@ -25,7 +25,13 @@ let workflowSelection = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this
-    this.modelDir = (new URLSearchParams(window.location.search)).get('path');
+    let urlParams = new URLSearchParams(window.location.search)
+    this.modelDir = urlParams.get('path');
+    if(urlParams.has('parentPath')){
+      this.parentPath = urlParams.get('parentPath')
+    }else{
+      this.parentPath = path.dirname(this.modelDir)
+    }
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();

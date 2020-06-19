@@ -110,7 +110,7 @@ module.exports = View.extend({
         'spatial' : {"icon": "jstree-icon jstree-file"},
         'nonspatial' : {"icon": "jstree-icon jstree-file"},
         'project' : {"icon": "jstree-icon jstree-file"},
-        'experiment' : {"icon": "jstree-icon jstree-folder"},
+        'experiment' : {"icon": "jstree-icon jstree-file"},
         'workflow' : {"icon": "jstree-icon jstree-file"},
         'notebook' : {"icon": "jstree-icon jstree-file"},
         'mesh' : {"icon": "jstree-icon jstree-file"},
@@ -708,7 +708,8 @@ module.exports = View.extend({
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       let nodeType = o.original.type
-      let asZip = (nodeType === "workflow" || nodeType === "folder" || nodeType === "other" || nodeType === "mesh")
+      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "experiment"]
+      let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
         "Download" : {
@@ -752,8 +753,7 @@ module.exports = View.extend({
           }
         }
       }
-      // common to root and folders
-      let folder = {
+      let refresh = {
         "Refresh" : {
           "label" : "Refresh",
           "_disabled" : false,
@@ -767,7 +767,11 @@ module.exports = View.extend({
               $('#models-jstree-view').jstree().refresh_node(o);
             }
           }
-        },
+        }
+      }
+      // common to root and folders
+      let folder = {
+        "Refresh" : refresh.Refresh,
         "New_Directory" : {
           "label" : "New Directory",
           "_disabled" : false,
@@ -991,6 +995,34 @@ module.exports = View.extend({
           }
         }
       }
+      let experiment = {
+        "Add Workflow" : {
+          "label" : "Add Workflow",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "New Workflow" : {
+              "label" : "New Workflow",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.addNewWorkflow()
+              }
+            },
+            "Existing Workflow" : {
+              "label" : "Existing Workflow",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.addExistingWorkflow()
+              }
+            }
+          }
+        }
+      }
       // specific to workflows
       let workflow = {
         "Convert to Notebook" : {
@@ -1068,7 +1100,7 @@ module.exports = View.extend({
         }
       }
       if (o.type === 'root'){
-        return folder
+        return $.extend(refresh, project, common)
       }
       if (o.type ===  'folder') {
         return $.extend(folder, common)
@@ -1081,6 +1113,9 @@ module.exports = View.extend({
       }
       if (o.type === 'project'){
         return $.extend(open, project, common)
+      }
+      if (o.type === 'experiment') {
+        return $.extend(refresh, experiment, common)
       }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, common)
