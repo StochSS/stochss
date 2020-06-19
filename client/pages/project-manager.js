@@ -19,6 +19,7 @@ let ProjectManager = PageView.extend({
   template: template,
   events: {
     'click [data-hook=new-model]' : 'handleNewModelClick',
+    'click [data-hook=new-experiment]' : 'handleNewExperimentClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick'
   },
   initialize: function (attrs, options) {
@@ -37,11 +38,14 @@ let ProjectManager = PageView.extend({
       }
     });
   },
-  update: function () {
+  update: function (target) {
     let self = this
     this.model.fetch({
       success: function (model, response, options) {
         self.renderProjectViewer()
+        if(target === "experiment" || target === "existing-model") {
+          self.projectFileBrowser.refreshJSTree()
+        }
       }
     });
   },
@@ -75,6 +79,9 @@ let ProjectManager = PageView.extend({
   },
   handleNewModelClick: function () {
     this.addNewModel(false)
+  },
+  handleNewExperimentClick: function () {
+    this.addNewExperiment()
   },
   handleExistingModelClick: function () {
     this.addExistingModel()
@@ -112,6 +119,37 @@ let ProjectManager = PageView.extend({
       }
     });
   },
+  addNewExperiment: function () {
+    let self = this
+    if(document.querySelector("#newExperimentModal")) {
+      document.querySelector("#newExperimentModal").remove()
+    }
+    let modal = $(modals.newExperimentModalHtml()).modal();
+    let okBtn = document.querySelector('#newExperimentModal .ok-model-btn');
+    let input = document.querySelector('#newExperimentModal #experimentNameInput');
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        let experimentName = input.value + ".exp"
+        let experimentPath = path.join(self.projectPath, experimentName)
+        let endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
+        console.log(endpoint)
+        xhr({uri: endpoint,json: true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            self.update("experiment")
+          }else{
+            let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
+          }
+          modal.modal('hide')
+        });
+      }
+    });
+  },
   addExistingModel: function () {
     let self = this
     if(document.querySelector('#newProjectModelModal')){
@@ -138,7 +176,7 @@ let ProjectManager = PageView.extend({
           }
         });
         modal.modal('hide')
-        self.update()
+        self.update("existing-model")
       }
     });
   }

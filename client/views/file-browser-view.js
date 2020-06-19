@@ -133,8 +133,8 @@ module.exports = View.extend({
     });
   },
   updateParent: function (type) {
-    if(type === "nonspatial" || type === "workflow" || type === "experiment") {
-      this.parent.update()
+    if(type === "nonspatial" || type === "workflow" || type === "folder") {
+      this.parent.update("file-browser")
     }
   },
   refreshJSTree: function () {
