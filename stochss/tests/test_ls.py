@@ -130,7 +130,7 @@ class TestLS(unittest.TestCase):
             test_p_path = "test_p_path"
             test_text = "test_text"
             test_f_type = "workflow"
-            with mock.patch("handlers.util.workflow_status.get_status") as mock_get_status:
+            with mock.patch("handlers.util.ls.get_status") as mock_get_status:
                 buildChild(text=test_text,p_path=test_p_path, f_type=test_f_type)
                 mock_get_status.assert_called()
 
