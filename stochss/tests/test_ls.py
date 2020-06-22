@@ -120,7 +120,7 @@ class TestLS(unittest.TestCase):
             test_p_path = "test_p_path"
             test_text = "test_text"
             test_f_type = "test_f_type"
-            assert ls.buildChild(text=test_text, f_type=test_f_type, p_path=test_p_path) == {"text" : "test_text", "type" : "test_f_type", "_path" : path.join(test_p_path, test_text), "children" : False}
+            assert ls.buildChild(text=test_text, f_type=test_f_type, p_path=test_p_path) == {"text" : "test_text", "type" : "test_f_type", "_path" : os.path.join(test_p_path, test_text), "children" : False}
 
     def test_buildChild_wkfl_calls_get_status(self):
         with tempfile.TemporaryDirectory() as tempdir:
