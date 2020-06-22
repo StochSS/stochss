@@ -17,12 +17,14 @@ if __name__ == "__main__":
     import test_convert_sbml
     import test_duplicate
     import test_rename
+    import test_generate_zip_file
 
     modules = [
         test_model_template,
         test_settings_template,
         test_convert_sbml,
         test_rename,
+        test_generate_zip_file,
         test_duplicate
     ]
 
