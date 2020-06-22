@@ -31,9 +31,9 @@ class TestLS(unittest.TestCase):
             os.mkdir(test_path)
             test_file_path = os.path.join(test_path, "test_file.wkfl")
             Path(test_file_path).touch()
-            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_buildChild:
-                children = ls.getFileSystemData(test_path, tempdir)
-            mock_buildChild.assert_called_once_with \
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with \
                 (text="test_file.wkfl", f_type="workflow", p_path=tempdir)
 
     def test_get_file_system_data_child_is_mdl(self):
@@ -42,9 +42,10 @@ class TestLS(unittest.TestCase):
             os.mkdir(test_path)
             test_file_path = os.path.join(test_path, "test_file.mdl")
             Path(test_file_path).touch()
-            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_buildChild:
-                children = ls.getFileSystemData(test_path, tempdir)
-            mock_buildChild.assert_called_once_with(text="test_file.mdl", f_type="nonspatial", p_path=tempdir)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_file.mdl", f_type="nonspatial", p_path=tempdir)
 
     def test_get_file_system_data_child_is_smdl(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -52,9 +53,10 @@ class TestLS(unittest.TestCase):
             os.mkdir(test_path)
             test_file_path = os.path.join(test_path, "test_file.smdl")
             Path(test_file_path).touch()
-            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_buildChild:
-                children = ls.getFileSystemData(test_path, tempdir)
-            mock_buildChild.assert_called_once_with(text="test_file.smdl", f_type="spatial", p_path=tempdir)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_file.smdl", f_type="spatial", p_path=tempdir)
 
     def test_get_file_system_data_child_is_mesh(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -62,9 +64,10 @@ class TestLS(unittest.TestCase):
             os.mkdir(test_path)
             test_file_path = os.path.join(test_path, "test_file.mesh")
             Path(test_file_path).touch()
-            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_buildChild:
-                children = ls.getFileSystemData(test_path, tempdir)
-            mock_buildChild.assert_called_once_with(text="test_file.mesh", f_type="mesh", p_path=tempdir)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_file.mesh", f_type="mesh", p_path=tempdir)
 
     def test_get_file_system_data_child_is_ipynb(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -72,9 +75,10 @@ class TestLS(unittest.TestCase):
             os.mkdir(test_path)
             test_file_path = os.path.join(test_path, "test_file.ipynb")
             Path(test_file_path).touch()
-            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_buildChild:
-                children = ls.getFileSystemData(test_path, tempdir)
-            mock_buildChild.assert_called_once_with(text="test_file.ipynb", f_type="notebook", p_path=tempdir)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_file.ipynb", f_type="notebook", p_path=tempdir)
 
     def test_get_file_system_data_child_is_sbml(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -82,9 +86,10 @@ class TestLS(unittest.TestCase):
             os.mkdir(test_path)
             test_file_path = os.path.join(test_path, "test_file.sbml")
             Path(test_file_path).touch()
-            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_buildChild:
-                children = ls.getFileSystemData(test_path, tempdir)
-            mock_buildChild.assert_called_once_with(text="test_file.sbml", f_type="sbml-model", p_path=tempdir)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_file.sbml", f_type="sbml-model", p_path=tempdir)
 
     def test_get_file_system_data_child_is_dir(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -92,9 +97,10 @@ class TestLS(unittest.TestCase):
             os.mkdir(test_path)
             test_dir_path = os.path.join(test_path, "test_dir")
             os.mkdir(test_dir_path)
-            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_buildChild:
-                children = ls.getFileSystemData(test_path, tempdir)
-            mock_buildChild.assert_called_once_with(text="test_dir", f_type="folder", p_path=tempdir)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_dir", f_type="folder", p_path=tempdir)
 
     def test_get_file_system_data_child_is_other(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -102,28 +108,33 @@ class TestLS(unittest.TestCase):
             os.mkdir(test_path)
             test_file_path = os.path.join(test_path, "test_file.foo")
             Path(test_file_path).touch()
-            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_buildChild:
-                children = ls.getFileSystemData(test_path, tempdir)
-            mock_buildChild.assert_called_once_with(text="test_file.foo", f_type="other", p_path=tempdir)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_file.foo", f_type="other", p_path=tempdir)
 
     #unit tests for method buildChild
 
-    def test_buildChild_top_level(self):
-        with tempfile.TemporaryDirectory() as tempdir:
+    def test_build_child_top_level(self):
+        with tempfile.TemporaryDirectory():
             test_p_path = "none"
             test_text = "test_text"
             test_f_type = "test_f_type"
-            assert ls.buildChild(text=test_text, f_type=test_f_type, p_path=test_p_path) == {"text" : "test_text", "type" : "test_f_type", "_path" : "test_text", "children" : False}
+            assert ls.buildChild(text=test_text, f_type=test_f_type, p_path=test_p_path) ==\
+                    {"text" : "test_text", "type" : "test_f_type", \
+                    "_path" : "test_text", "children" : False}
 
-    def test_buildChild_sub_level(self):
-        with tempfile.TemporaryDirectory() as tempdir:
+    def test_build_child_sub_level(self):
+        with tempfile.TemporaryDirectory():
             test_p_path = "test_p_path"
             test_text = "test_text"
             test_f_type = "test_f_type"
-            assert ls.buildChild(text=test_text, f_type=test_f_type, p_path=test_p_path) == {"text" : "test_text", "type" : "test_f_type", "_path" : os.path.join(test_p_path, test_text), "children" : False}
+            assert ls.buildChild(text=test_text, f_type=test_f_type, p_path=test_p_path) == \
+                    {"text" : "test_text", "type" : "test_f_type", \
+                    "_path" : os.path.join(test_p_path, test_text), "children" : False}
 
-    def test_buildChild_wkfl_calls_get_status(self):
-        with tempfile.TemporaryDirectory() as tempdir:
+    def test_build_child_wkfl_calls_get_status(self):
+        with tempfile.TemporaryDirectory():
             test_p_path = "test_p_path"
             test_text = "test_text"
             test_f_type = "workflow"
@@ -133,19 +144,21 @@ class TestLS(unittest.TestCase):
 
     #unit tests for method buildRoot
 
-    def test_buildRoot(self):
+    def test_build_root(self):
         test_children = "test_children"
-        assert ls.buildRoot(test_children) == [{"text":"/", "type":"root", "_path":"/", "children":"test_children", "state":{"opened":True}}]
+        assert ls.buildRoot(test_children) ==\
+                [{"text":"/", "type":"root", "_path":"/", \
+                "children":"test_children", "state":{"opened":True}}]
 
     #unit tests for method checkExtension
 
-    def test_checkExtension_true(self):
+    def test_check_extension_true(self):
         test_str = "test"
         test_target = "target"
         test_name = test_str + test_target
         assert ls.checkExtension(test_name, test_target)
 
-    def test_checkExtension_false(self):
+    def test_check_extension_false(self):
         test_str = "test"
         test_target = "target"
         test_name = test_str
@@ -155,18 +168,20 @@ class TestLS(unittest.TestCase):
 
     def test_ls_p_path_none(self):
         test_p_path = "none"
-        with unittest.mock.patch("handlers.util.ls.buildRoot") as mock_buildRoot:
-            with unittest.mock.patch("handlers.util.ls.getFileSystemData", return_value="test_return") as mock_getFileSystemData:
-                with unittest.mock.patch("json.dumps") as mock_json:
+        with unittest.mock.patch("handlers.util.ls.buildRoot") as mock_build_root:
+            with unittest.mock.patch("handlers.util.ls.getFileSystemData", \
+                    return_value="test_return") as mock_get_file_system_data:
+                with unittest.mock.patch("json.dumps"):
                     ls.ls(p_path=test_p_path)
-        mock_getFileSystemData.assert_called()
-        mock_buildRoot.assert_called_with("test_return")
+        mock_get_file_system_data.assert_called()
+        mock_build_root.assert_called_with("test_return")
 
     def test_ls_p_path_not_none(self):
         test_p_path = "test_p_path"
         test_full_path = os.path.join("/home/jovyan", test_p_path)
-        with unittest.mock.patch("handlers.util.ls.buildRoot") as mock_buildRoot:
-            with unittest.mock.patch("handlers.util.ls.getFileSystemData", return_value="test_return") as mock_getFileSystemData:
-                with unittest.mock.patch("json.dumps") as mock_json:
+        with unittest.mock.patch("handlers.util.ls.buildRoot"):
+            with unittest.mock.patch("handlers.util.ls.getFileSystemData", \
+                    return_value="test_return") as mock_get_file_system_data:
+                with unittest.mock.patch("json.dumps"):
                     ls.ls(p_path=test_p_path)
-        mock_getFileSystemData.assert_called_with(test_full_path, test_p_path)
+        mock_get_file_system_data.assert_called_with(test_full_path, test_p_path)
