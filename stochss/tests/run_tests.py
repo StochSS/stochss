@@ -16,6 +16,7 @@ if __name__ == "__main__":
     import test_settings_template
     import test_convert_sbml
     import test_rename
+    import test_workflow_status
     import test_ls
     import test_duplicate
 
@@ -24,6 +25,7 @@ if __name__ == "__main__":
         test_settings_template,
         test_convert_sbml,
         test_rename,
+        test_workflow_status,
         test_ls,
         test_duplicate
     ]
