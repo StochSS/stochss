@@ -18,8 +18,8 @@ module.exports = View.extend({
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
-    'click [data-hook=new-project]' : 'handleCreateProjectClick',
-    'click [data-hook=new-model]' : 'handleCreateModelClick',
+    'click [data-hook=browser-new-experiment]' : 'handleCreateExperimentClick',
+    'click [data-hook=browser-new-model]' : 'handleCreateModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
@@ -53,6 +53,9 @@ module.exports = View.extend({
       'core': {'multiple' : false, 'animation': 0,
         'check_callback': function (op, node, par, pos, more) {
           if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
+            return false
+          }
+          if(op === 'move_node' && node && node.type && (node.type === "nonspatial" || node.type === "spatial" || node.type === "experiment")) {
             return false
           }
           if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
@@ -133,7 +136,7 @@ module.exports = View.extend({
     });
   },
   updateParent: function (type) {
-    if(type === "nonspatial" || type === "workflow" || type === "folder") {
+    if(type === "nonspatial" || type === "workflow" || type === "experiment") {
       this.parent.update("file-browser")
     }
   },
@@ -522,26 +525,14 @@ module.exports = View.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.location.href = endpoint
   },
-  newProjectOrExperiment: function (o, isProject) {
+  newExperiment: function (o) {
     var self = this
-    if(document.querySelector("#newProjectModal")) {
-      document.querySelector("#newProjectModal").remove()
-    }
     if(document.querySelector("#newExperimentModal")) {
       document.querySelector("#newExperimentModal").remove()
     }
-    var modal = ""
-    var okBtn = ""
-    var input = ""
-    if(isProject) {
-      modal = $(modals.newProjectModalHtml()).modal();
-      okBtn = document.querySelector('#newProjectModal .ok-model-btn');
-      input = document.querySelector('#newProjectModal #projectNameInput');
-    }else{
-      modal = $(modals.newExperimentModalHtml()).modal();
-      okBtn = document.querySelector('#newExperimentModal .ok-model-btn');
-      input = document.querySelector('#newExperimentModal #experimentNameInput');
-    }
+    let modal = $(modals.newExperimentModalHtml()).modal();
+    let okBtn = document.querySelector('#newExperimentModal .ok-model-btn');
+    let input = document.querySelector('#newExperimentModal #experimentNameInput');
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
         event.preventDefault();
@@ -550,40 +541,29 @@ module.exports = View.extend({
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
-        var parentPath = ""
-        if(o && o.original && o.original.type !== "root") {
+        modal.modal('hide')
+        var parentPath = self.parent.projectPath
+        if(o && o.original && o.original._path !== "/") {
           parentPath = o.original._path
         }
-        var endpoint = ""
-        if(isProject){
-          var projectName = input.value + ".proj"
-          var projectPath = path.join(parentPath, projectName)
-          endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
-        }else{
-          var experimentName = input.value + ".exp"
-          var experimentPath = path.join(parentPath, experimentName)
-          endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
-        }
+        var experimentName = input.value + ".exp"
+        var experimentPath = path.join(parentPath, experimentName)
+        let endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
         xhr({uri: endpoint,json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
-            if(isProject) {
-              if(o){//directory was created with context menu option
-                var node = $('#models-jstree-view').jstree().get_node(o);
-                if(node.type === "root"){
-                  self.refreshJSTree()
-                }else{          
-                  $('#models-jstree-view').jstree().refresh_node(node);
-                }
-              }else{//directory was created with create directory button
+            if(o){//directory was created with context menu option
+              var node = $('#models-jstree-view').jstree().get_node(o);
+              if(node.type === "root"){
                 self.refreshJSTree()
+              }else{          
+                $('#models-jstree-view').jstree().refresh_node(node);
               }
+            }else{//directory was created with create directory button
+              self.refreshJSTree()
             }
+            self.updateParent('experiment')
           }else{
             let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
-          }
-          modal.modal('hide')
-          if(!isProject) {
-            self.updateParent('experiment')
           }
         })
       }
@@ -609,9 +589,64 @@ module.exports = View.extend({
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
         xhr({uri:endpoint, json:true}, function (err, response, body) {
           if(response.statusCode < 400) {
+            self.updateParent("nonspatial")
             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
           }else{
             let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal()
+          }
+        });
+        modal.modal('hide')
+      }
+    });
+  },
+  addNewWorkflow: function (o) {
+    let self = this
+    if(document.querySelector('#newProjectWorkflowModal')){
+      document.querySelector('#newProjectWorkflowModal').remove()
+    }
+    let label = o.type === "experiment" ? "Model file name: " : "Experiment file name: "
+    let modal = $(modals.newProjectWorkflowHtml(label)).modal()
+    let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
+    let input = document.querySelector('#newProjectWorkflowModal #input')
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        let parentPath = o.type === "experiment" ? o.original._path : path.join(path.dirname(o.original._path), input.value)
+        let modelPath = o.type === "experiment" ? path.join(path.dirname(o.original._path), input.value) : o.original._path
+        let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
+        window.location.href = endpoint
+      }
+    });
+  },
+  addExistingWorkflow: function (o) {
+    let self = this;
+    if(document.querySelector('#newProjectWorkflowModal')) {
+      document.querySelector('#newProjectWorkflowModal').remove()
+    }
+    let modal = $(modals.addExistingWorkflowToProjectHtml()).modal()
+    let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
+    let input = document.querySelector('#newProjectWorkflowModal #workflowPathInput')
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        let queryString = "?path="+o.original._path+"&wkflPath="+input.value
+        let endpoint = path.join(app.getApiPath(), "project/add-existing-workflow")+queryString
+        xhr({uri: endpoint, json: true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            self.updateParent("workflow")
+            let successModal = $(modals.addExistingWorkflowToProjectSuccessHtml(body.message)).modal()
+          }else{
+            let errorModal = $(modals.addExistingWorkflowToProjectErrorHtml(body.Reason, body.Message)).modal()
           }
         });
         modal.modal('hide')
@@ -634,7 +669,7 @@ module.exports = View.extend({
     });
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
-        var parentPath = ""
+        var parentPath = self.parent.projectPath
         if(o && o.original && o.original._path !== "/"){
           parentPath = o.original._path
         }
@@ -680,8 +715,8 @@ module.exports = View.extend({
   handleCreateDirectoryClick: function (e) {
     this.newModelOrDirectory(undefined, false, false);
   },
-  handleCreateProjectClick: function (e) {
-    this.newProjectOrExperiment(undefined, true)
+  handleCreateExperimentClick: function (e) {
+    this.newExperiment(undefined)
   },
   handleCreateModelClick: function (e) {
     let isSpatial = false
@@ -753,7 +788,62 @@ module.exports = View.extend({
           }
         }
       }
-      let refresh = {
+      let project = {
+        "Add_Model" : {
+          "label" : "Add Model",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "New_model" : {
+              "label" : "New Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "submenu" : {
+                "spatial" : {
+                  "label" : "Spatial",
+                  "_disabled" : true,
+                  "separator_before" : false,
+                  "separator_after" : false,
+                  "action" : function (data) {
+                    console.log("Spatial Models Coming Soon!")
+                  }
+                },
+                "nonspatial" : { 
+                  "label" : "Non-Spatial",
+                  "_disabled" : false,
+                  "separator_before" : false,
+                  "separator_after" : false,
+                  "action" : function (data) {
+                    self.newModelOrDirectory(o, true, false);
+                  }
+                } 
+              }
+            },
+            "Existing Model" : {
+              "label" : "Existing Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.addExistingModel(o)
+              }
+            }
+          }
+        },
+        "New_Experiment" : {
+          "label" : "New Experiment",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newExperiment(o)
+          }
+        }
+      }
+      // common to root and folders
+      let root = {
         "Refresh" : {
           "label" : "Refresh",
           "_disabled" : false,
@@ -767,11 +857,9 @@ module.exports = View.extend({
               $('#models-jstree-view').jstree().refresh_node(o);
             }
           }
-        }
-      }
-      // common to root and folders
-      let folder = {
-        "Refresh" : refresh.Refresh,
+        },
+        "Add_model" : project.Add_Model,
+        "New_Experiment" : project.New_Experiment,
         "New_Directory" : {
           "label" : "New Directory",
           "_disabled" : false,
@@ -779,41 +867,6 @@ module.exports = View.extend({
           "separator_after" : false,
           "action" : function (data) {
             self.newModelOrDirectory(o, false, false);
-          }
-        },
-        "New Project" : {
-          "label" : "New Project",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newProjectOrExperiment(o, true)
-          }
-        },
-        "New_model" : {
-          "label" : "New Model",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "spatial" : {
-              "label" : "Spatial",
-              "_disabled" : true,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                console.log("Spatial Models Coming Soon!")
-              }
-            },
-            "nonspatial" : { 
-              "label" : "Non-Spatial",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.newModelOrDirectory(o, true, false);
-              }
-            } 
           }
         },
         "Upload" : {
@@ -852,6 +905,19 @@ module.exports = View.extend({
           }
         }
       }
+      let folder = {
+        "refresh" : root.Refresh,
+        "new_directory": root.New_Directory,
+        "uploadFile" : {
+          "label" : "Upload File",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.uploadFile(o, "file")
+          }
+        }
+      }
       // common to both spatial and non-spatial models
       let model = {
         "Edit" : {
@@ -870,7 +936,7 @@ module.exports = View.extend({
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
-            window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
+            self.addNewWorkflow(o)
           }
         }
       }
@@ -966,35 +1032,6 @@ module.exports = View.extend({
           }
         }
       }
-      let project = {
-        "Add Model" : {
-          "label" : "Add Model",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "New Model" : folder.New_model,
-            "Existing Model" : {
-              "label" : "Existing Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.addExistingModel(o)
-              }
-            }
-          }
-        },
-        "New Experiment" : {
-          "label" : "New Experiment",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newProjectOrExperiment(o, false)
-          }
-        }
-      }
       let experiment = {
         "Add Workflow" : {
           "label" : "Add Workflow",
@@ -1008,7 +1045,7 @@ module.exports = View.extend({
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
-                self.addNewWorkflow()
+                self.addNewWorkflow(o)
               }
             },
             "Existing Workflow" : {
@@ -1017,7 +1054,7 @@ module.exports = View.extend({
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
-                self.addExistingWorkflow()
+                self.addExistingWorkflow(o)
               }
             }
           }
@@ -1100,7 +1137,7 @@ module.exports = View.extend({
         }
       }
       if (o.type === 'root'){
-        return $.extend(refresh, project, common)
+        return $.extend(root, {"Download":common.Download})
       }
       if (o.type ===  'folder') {
         return $.extend(folder, common)
@@ -1115,7 +1152,7 @@ module.exports = View.extend({
         return $.extend(open, project, common)
       }
       if (o.type === 'experiment') {
-        return $.extend(refresh, experiment, common)
+        return $.extend(experiment, common)
       }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, common)

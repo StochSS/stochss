@@ -158,6 +158,26 @@ module.exports = {
 
       return templates.input(modalID, inputID, title, label, value)
     },
+    addExistingWorkflowToProjectHtml : () => {
+      let modalID = "newProjectWorkflowModal"
+      let inputID = "workflowPathInput"
+      let title = "Add Existing Workflow to Experiment"
+      let label = "Path to the workflow"
+      let value = ""
+
+      return templates.input(modalID, inputID, title, label, value)
+    },
+    addExistingWorkflowToProjectSuccessHtml : (message) => {
+      let modalID = "newProjectModelSuccessModal"
+      let title = "Success!"
+
+      return templates.message(modalID, title, message)
+    },
+    addExistingWorkflowToProjectErrorHtml : (title, message) => {
+      let modalID = "newProjectModelErrorModal"
+
+      return templates.message(modalID, title, message)
+    },
     newProjectModelSuccessHtml : (message) => {
       let modalID = "newProjectModelSuccessModal"
       let title = "Success!"
@@ -251,6 +271,13 @@ module.exports = {
         let modalID = "newDirectoryErrorModal"
 
         return templates.message(modalID, title, error)
+    },
+    newProjectWorkflowHtml : (label) => {
+        let modalID = "newProjectWorkflowModal"
+        let inputID = "input"
+        let title = "New Workflow"
+
+        return templates.input(modalID, inputID, title, label, "")
     },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;

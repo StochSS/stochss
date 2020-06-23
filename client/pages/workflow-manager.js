@@ -258,7 +258,7 @@ let WorkflowManager = PageView.extend({
   reloadWkfl: function () {
     let self = this;
     if(self.status === 'new')
-      window.location.href = self.url.replace(self.modelDirectory.split('/').pop(), self.wkflDirectory)
+      window.location.href = self.url.replace(self.modelDirectory.split('/').pop(), self.wkflPath.split(path.dirname(self.modelDirectory)).pop())
     else
       window.location.reload()
   },

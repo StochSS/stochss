@@ -4,7 +4,7 @@ import shutil
 import logging
 
 from tornado import web
-from shutil import copyfile
+from shutil import copyfile, copytree
 from .util.rename import get_unique_file_name
 from notebook.base.handlers import APIHandler
 
@@ -150,6 +150,50 @@ class AddExistingModelAPIHandler(APIHandler):
         except FileNotFoundError as err:
             self.set_status(404)
             error = {"Reason":"Model Not Found", "Message":"Could not find the model: {0}".format(err)}
+            log.error("Exception Information: {0}".format(error))
+            self.write(error)
+        self.finish()
+
+
+class AddExistingWorkflowAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for creating new StochSS Experiments
+    ##############################################################################
+    '''
+    @web.authenticated
+    def get(self):
+        '''
+        Create a new experiment directory.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        wkfl_path = os.path.join(user_dir, self.get_query_argument(name="wkflPath"))
+        log.debug("Path to the experiment: {0}".format(path))
+        log.debug("Path to the workflow: {0}".format(wkfl_path))
+        try:
+            unique_path, changed = get_unique_file_name(wkfl_path.split('/').pop(), path)
+            copytree(wkfl_path, unique_path)
+            resp = {"message": "The Workflow {0} was successfully moved into {1}".format(wkfl_path.split('/').pop(), path.split('/').pop())}
+            with open(os.path.join(unique_path, "info.json"), 'r+') as info_file:
+                info = json.load(info_file)
+                log.debug("Old workflow info: {0}".format(info))
+                info['wkfl_model'] = info['wkfl_model'].replace(os.path.dirname(info['wkfl_model']), unique_path)
+                log.debug("New workflow info: {0}".format(info))
+                info_file.seek(0)
+                json.dump(info, info_file)
+                info_file.truncate()
+            if changed:
+                resp['message'] += "as {0}".format(unique_path.split("/").pop())
+            log.debug("Response message: {0}".format(resp))
+            self.write(resp)
+        except FileNotFoundError as err:
+            self.set_status(404)
+            error = {"Reason":"Workflow Not Found", "Message":"Could not find the workflow: {0}".format(err)}
             log.error("Exception Information: {0}".format(error))
             self.write(error)
         self.finish()
