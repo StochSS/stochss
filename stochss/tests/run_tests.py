@@ -15,9 +15,10 @@ if __name__ == "__main__":
     import test_model_template
     import test_settings_template
     import test_convert_sbml
-    import test_duplicate
     import test_rename
     import test_workflow_status
+    import test_ls
+    import test_duplicate
 
     modules = [
         test_model_template,
@@ -25,6 +26,7 @@ if __name__ == "__main__":
         test_convert_sbml,
         test_rename,
         test_workflow_status,
+        test_ls,
         test_duplicate
     ]
 
