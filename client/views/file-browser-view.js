@@ -20,6 +20,7 @@ module.exports = View.extend({
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
     'click [data-hook=browser-new-experiment]' : 'handleCreateExperimentClick',
     'click [data-hook=browser-new-model]' : 'handleCreateModelClick',
+    'click [data-hook=browser-existing-model]' : 'handleAddExistingModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
@@ -569,6 +570,9 @@ module.exports = View.extend({
       }
     })
   },
+  handleAddExistingModelClick: function () {
+    this.addExistingModel(undefined)
+  },
   addExistingModel: function (o) {
     var self = this
     if(document.querySelector('#newProjectModelModal')){
@@ -585,12 +589,13 @@ module.exports = View.extend({
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
-        let queryString = "?path="+o.original._path+"&mdlPath="+input.value
+        let queryString = "?path="+self.parent.projectPath+"&mdlPath="+input.value
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
         xhr({uri:endpoint, json:true}, function (err, response, body) {
           if(response.statusCode < 400) {
             self.updateParent("nonspatial")
             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
+            self.refreshJSTree()
           }else{
             let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal()
           }
