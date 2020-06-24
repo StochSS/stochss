@@ -49,7 +49,6 @@ module.exports = View.extend({
     this.model.on("change:reaction_type", function (model) {
       self.updateStoichSpeciesForReactionType(model.reactionType);
     });
-    this.model.collection.parent.parameters.on('add remove', this.renderReactionTypesSelectView, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
