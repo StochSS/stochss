@@ -113,6 +113,28 @@ class TestLS(unittest.TestCase):
             mock_build_child.assert_called_once_with\
                     (text="test_file.foo", f_type="other", p_path=tempdir)
 
+    def test_get_file_system_data_child_is_exp(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            test_path = os.path.join(tempdir, "parent_dir")
+            os.mkdir(test_path)
+            test_dir_path = os.path.join(test_path, "test_dir.exp")
+            os.mkdir(test_dir_path)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_dir.exp", f_type="experiment", p_path=tempdir)
+
+    def test_get_file_system_data_child_is_proj(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            test_path = os.path.join(tempdir, "parent_dir")
+            os.mkdir(test_path)
+            test_dir_path = os.path.join(test_path, "test_dir.proj")
+            os.mkdir(test_dir_path)
+            with unittest.mock.patch("handlers.util.ls.buildChild") as mock_build_child:
+                ls.getFileSystemData(test_path, tempdir)
+            mock_build_child.assert_called_once_with\
+                    (text="test_dir.proj", f_type="project", p_path=tempdir)
+
     #unit tests for method buildChild
 
     def test_build_child_top_level(self):
