@@ -423,7 +423,10 @@ class ModelFactory():
         for stoich_specie in args:
             key = stoich_specie['specie']['name']
             value = stoich_specie['ratio']
-            d[key] = value
+            if key not in d.keys():
+                d[key] = value
+            else:
+                d[key] += value
         return d
 
 
