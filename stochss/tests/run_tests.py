@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-import unittest, sys, os
+import unittest
+import sys
+import os
 import argparse
 
 parser = argparse.ArgumentParser()
