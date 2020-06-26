@@ -6,6 +6,7 @@ var app = require('../app');
 var modals = require('../modals');
 //views
 var PageView = require('./base');
+var EditModelsView = require('../views/edit-models-view');
 var ProjectViewer = require('../views/project-viewer');
 var FileBrowser = require('../views/file-browser-view');
 //models
@@ -52,6 +53,21 @@ let ProjectManager = PageView.extend({
   renderSubviews: function () {
     this.renderProjectViewer();
     this.renderProjectFileBrowser();
+    this.renderEditModelsView();
+  },
+  renderEditModelsView: function () {
+    if(this.editModelsView) {
+      this.editModelsView.remove()
+    }
+    this.editModelsView = new EditModelsView({
+      collection: this.model.models
+    });
+    this.registerRenderSubview(this.editModelsView, "edit-models-container")
+  },
+  renderEditExperimentsView: function () {
+    if(this.editExperimentsView) {
+      this.editExperimentsView.remove()
+    }
   },
   renderProjectViewer: function () {
     if(this.projectViewer) {
