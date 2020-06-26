@@ -1,3 +1,6 @@
+var path = require('path');
+//support files
+var app = require('../app');
 //views
 var View = require('ampersand-view');
 //templates
@@ -15,6 +18,6 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
   },
   handleEditModelClick: function (e) {
-    console.log(this.model.directory)
+    window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+this.model.directory
   }
 });

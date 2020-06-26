@@ -31,9 +31,11 @@ class LoadProjectAPIHandler(APIHandler):
         project = {"models": [], "experiments": []}
         for item in os.listdir(path):
             if item.endswith('.mdl'):
-                with open(os.path.join(path, item), 'r') as mdl_file:
+                mdl_dir = os.path.join(path, item)
+                with open(mdl_dir, 'r') as mdl_file:
                     model = json.load(mdl_file)
                     model['name'] = item.split('.')[0]
+                    model['directory'] = mdl_dir
                     project['models'].append(model)
             elif item.endswith('.exp'):
                 name = item.split('.')[0]
