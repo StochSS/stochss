@@ -13,6 +13,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
+    'click [data-hook=project-model-workflow]' : 'handleNewWorkflowClick',
     'click [data-hook=project-model-remove]' : 'handleRemoveModelClick'
   },
   initialize: function (attrs, options) {
@@ -23,6 +24,31 @@ module.exports = View.extend({
   },
   handleEditModelClick: function (e) {
     window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+this.model.directory
+  },
+  handleNewWorkflowClick: function (e) {
+    let self = this
+    if(document.querySelector('#newProjectWorkflowModal')){
+      document.querySelector('#newProjectWorkflowModal').remove()
+    }
+    let modal = $(modals.newProjectWorkflowHtml("Name of the experiment:")).modal()
+    let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
+    let input = document.querySelector('#newProjectWorkflowModal #input')
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener('click', function (e) {
+      if(Boolean(input.value)) {
+        let expFile = input.value.endsWith('.exp') ? input.value : input.value + ".exp" 
+        let parentPath = path.join(path.dirname(self.model.directory), expFile)
+        let queryString = "?path="+self.model.directory+"&parentPath="+parentPath
+        let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
+        modal.modal('hide')
+        window.location.href = endpoint
+      }
+    });
   },
   handleRemoveModelClick: function (e) {
     let self = this
