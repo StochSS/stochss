@@ -7,6 +7,7 @@ var modals = require('../modals');
 //views
 var PageView = require('./base');
 var EditModelsView = require('../views/edit-models-view');
+var EditExperimentsView = require('../views/edit-experiments-view');
 var ProjectViewer = require('../views/project-viewer');
 var FileBrowser = require('../views/file-browser-view');
 //models
@@ -46,10 +47,13 @@ let ProjectManager = PageView.extend({
         self.renderProjectViewer()
         if(target === "model-editor") {
           self.projectFileBrowser.refreshJSTree()
+          self.renderEditExperimentsView()
         }else if(target === "file-browser") {
           self.renderEditModelsView()
+          self.renderEditExperimentsView()
         }else{
           self.renderEditModelsView()
+          self.renderEditExperimentsView()
           self.projectFileBrowser.refreshJSTree()
         }
       }
@@ -59,6 +63,7 @@ let ProjectManager = PageView.extend({
     this.renderProjectViewer();
     this.renderProjectFileBrowser();
     this.renderEditModelsView();
+    this.renderEditExperimentsView();
   },
   renderEditModelsView: function () {
     if(this.editModelsView) {
@@ -73,6 +78,10 @@ let ProjectManager = PageView.extend({
     if(this.editExperimentsView) {
       this.editExperimentsView.remove()
     }
+    this.editExperimentsView = new EditExperimentsView({
+      collection: this.model.experiments
+    });
+    this.registerRenderSubview(this.editExperimentsView, "edit-experiments-container")
   },
   renderProjectViewer: function () {
     if(this.projectViewer) {
