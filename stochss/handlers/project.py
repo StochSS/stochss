@@ -200,3 +200,38 @@ class AddExistingWorkflowAPIHandler(APIHandler):
             self.write(error)
         self.finish()
 
+
+class ExtractModelAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for extracting models from a project
+    ##############################################################################
+    '''
+    @web.authenticated
+    def get(self):
+        '''
+        Extract a model from a project.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
+        log.debug("Path to the target model: {0}".format(src_path))
+        dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
+        log.debug("Destination path for the target model: {0}".format(dst_path))
+        try:
+            unique_path, changed = get_unique_file_name(dst_path.split('/').pop(), os.path.dirname(dst_path))
+            copyfile(src_path, unique_path)
+            resp = "The Model {0} was extracted to {1}".format(src_path.split('/').pop(), os.path.dirname(dst_path))
+            if changed:
+                resp += " as {0}".format(unique_path.split('/').pop())
+            log.debug("Response message: {0}".format(resp))
+            self.write(resp)
+        except FileNotFoundError as err:
+            self.set_status(404)
+            error = {"Reason":"Workflow Not Found", "Message":"Could not find the workflow: {0}".format(err)}
+            log.error("Exception Information: {0}".format(error))
+            self.write(error)
+        self.finish()
+
