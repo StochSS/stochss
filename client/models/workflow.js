@@ -8,6 +8,7 @@ module.exports = State.extend({
     outputs: 'object'
   },
   session: {
-    name: 'string'
+    name: 'string',
+    status: 'string'
   }
 });

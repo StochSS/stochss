@@ -6,6 +6,7 @@ var app = require('../app');
 var modals = require('../modals');
 //views
 var View = require('ampersand-view');
+var EditWorkflowsView = require('./edit-workflows-view');
 //templates
 var template = require('../templates/includes/editExperimentView.pug');
 
@@ -22,6 +23,20 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    this.renderEditWorkflowsView();
+  },
+  renderEditWorkflowsView: function () {
+    if(this.editWorkflowsView){
+      this.editWorkflowsView.remove()
+    }
+    this.editWorkflowsView = new EditWorkflowsView({
+      collection: this.model.workflows
+    });
+    this.registerRenderSubview(this.editWorkflowsView, "project-workflows-container")
+  },
+  registerRenderSubview: function (view, hook) {
+    this.registerSubview(view);
+    this.renderSubview(view, this.queryByHook(hook));
   },
   handleViewWorkflowsClick: function (e) {
     let options = {"View":"show", "Hide":"hide"}

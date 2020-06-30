@@ -6,6 +6,7 @@ import logging
 from tornado import web
 from shutil import copyfile, copytree
 from .util.rename import get_unique_file_name
+from .util.workflow_status import get_status
 from notebook.base.handlers import APIHandler
 
 log = logging.getLogger('stochss')
@@ -43,6 +44,7 @@ class LoadProjectAPIHandler(APIHandler):
                 for workflow in os.listdir(os.path.join(path, item)):
                     if workflow.endswith('.wkfl'):
                         wkfl_dict = {"path":os.path.join(path, item, workflow), "name":workflow.split('.')[0]}
+                        wkfl_dict['status'] = get_status(wkfl_dict['path'])
                         with open(os.path.join(wkfl_dict['path'], 'settings.json'), 'r') as settings_file:
                             outputs = json.load(settings_file)['resultsSettings']['outputs']
                             wkfl_dict['outputs'] = outputs
