@@ -4,16 +4,14 @@ div#edit-project-models
 
     h3.inline Models
 
-  table.table
+  hr
 
-    thead
+  div.mx-1.row.head
 
-      tr
+    div.col-md-5: h6 <b>Name</b>
+    div.col-md-2: h6 <b>Edit</b>
+    div.col-md-2: h6 <b>New Workflow</b>
+    div.col-md-2: h6 <b>Extract</b>
+    div.col-md-1: h6 <b>Remove</b>
 
-        th(scope="col") Name
-        th(scope="col") Edit
-        th(scope="col") New Workflow
-        th(scope="col") Extract
-        th(scope="col") Remove
-
-    tbody(data-hook="project-models-list")
+  div.mt-3(data-hook="project-models-list")

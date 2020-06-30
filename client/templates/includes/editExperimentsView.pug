@@ -4,16 +4,14 @@ div#edit-project-experiments
 
     h3.inline Experiments
 
-  table.table
+  hr
 
-    thead
+  div.mx-1.row.head
 
-      tr
+    div.col-sm-5: h6 <b>Name</b>
+    div.col-sm-2: h6 <b>View Workflows</b>
+    div.col-sm-2: h6 <b>New Workflow</b>
+    div.col-sm-2: h6 <b>Add Existing Workflow</b>
+    div.col-sm-1: h6 <b>Remove</b>
 
-        th(scope="col") Name
-        th(scope="col") View Workflows
-        th(scope="col") New Workflow
-        th(scope="col") Add Existing Workflow
-        th(scope="col") Remove
-
-    tbody(data-hook="project-experiments-list")
+  div.mt-3(data-hook="project-experiments-list")

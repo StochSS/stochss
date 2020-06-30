@@ -1,11 +1,15 @@
-tr
+div
 
-  td.name(style="width:40%;")=this.model.name
+  div.ml-1.row
 
-  td: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-edit") Edit
+    div.col-md-5.name=this.model.name
 
-  td: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-workflow") New Workflow
+    div.col-md-2: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-edit") Edit
 
-  td: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-extract") Extract
+    div.col-md-2: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-workflow") New
 
-  td: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-remove") X
+    div.col-md-2: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-extract") Extract
+
+    div.col-md-1: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-remove") X
+
+  hr

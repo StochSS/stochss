@@ -51,6 +51,10 @@ button.custom {
   margin: 0.25rem;
 }
 
+div.head {
+  border-bottom: 2px solid #dee2e6;
+}
+
 a.disabled {
   pointer-events: none;
   cursor: default;

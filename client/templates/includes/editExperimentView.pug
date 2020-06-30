@@ -1,11 +1,21 @@
-tr
+div
 
-  td.name(style="width:40%;")=this.model.name
+  div.ml-1.row
 
-  td: button.btn.btn-outline-secondary.box-shadow(data-hook="project-experiment-view") View Workflows
+    div.col-md-5.name=this.model.name
 
-  td: button.btn.btn-outline-secondary.box-shadow(data-hook="project-experiment-new-workflow") New Workflow
+    div.col-md-2: button.btn.btn-outline-secondary.box-shadow(data-hook="project-experiment-view") View
 
-  td: button.btn.btn-outline-secondary.box-shadow(data-hook="project-experiment-add-workflow") Add Workflow
+    div.col-md-2: button.btn.btn-outline-secondary.box-shadow(data-hook="project-experiment-new-workflow") New
 
-  td: button.btn.btn-outline-secondary.box-shadow(data-hook="project-experiment-remove") X
+    div.col-md-2: button.btn.btn-outline-secondary.box-shadow(data-hook="project-experiment-add-workflow") Add
+
+    div.col-md-1: button.btn.btn-outline-secondary.box-shadow(data-hook="project-experiment-remove") X
+
+  div.ml-5.verticle-space.collapse(data-hook="project-workflows-container")
+
+    h3 Workflows
+
+    p COMING SOON
+
+  hr
