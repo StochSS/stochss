@@ -11,7 +11,7 @@ import json, os
 import logging
 from tornado import web
 from shutil import move, rmtree
-from .util.stochss_errors import StochSSAPIError
+from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
 from .util.ls import ls
 from .util.convert_to_notebook import convert_to_notebook
 from .util.duplicate import duplicate, duplicate_wkfl_as_new
@@ -21,6 +21,7 @@ from .util.convert_to_sbml import convert_to_sbml
 from .util.convert_sbml_to_model import convert_sbml_to_model
 from .util.generate_zip_file import download_zip
 from .util.upload_file import upload
+from .util.workflow_status import get_status
 
 log = logging.getLogger('stochss')
 
@@ -163,6 +164,38 @@ class MoveFileAPIHandler(APIHandler):
                         log.debug("New wkfl info: {0}".format(info))
                         json.dump(info, info_file)
                         info_file.truncate()
+                elif old_path.endswith('.proj'):
+                    old_parent_dir = os.path.dirname(src_path)
+                    log.debug("Old parent directory: {0}".format(old_parent_dir))
+                    new_parent_dir = os.path.dirname(dst_path)
+                    log.debug("New parent directory: {0}".format(new_parent_dir))
+                    for proj_item in os.listdir(old_path):
+                        if proj_item.endswith('.exp'):
+                            for exp_item in os.listdir(os.path.join(old_path, proj_item)):
+                                if exp_item.endswith('.wkfl') and get_status(os.path.join(old_path, proj_item, exp_item)) == 'running':
+                                    raise StochSSPermissionsError("This project contains a running workflow: {0} in {1}".format(exp_item, proj_item))
+                    for proj_item in os.listdir(old_path):
+                        if proj_item.endswith('.exp'):
+                            for exp_item in os.listdir(os.path.join(old_path, proj_item)):
+                                with open(os.path.join(old_path, proj_item, exp_item, "info.json"), "r+") as info_file:
+                                    info = json.load(info_file)
+                                    log.debug("Old wkfl info: {0}".format(info))
+                                    if get_status(os.path.join(old_path, proj_item, exp_item)) == 'ready':
+                                        if not old_parent_dir:
+                                            src_mdl = os.path.join(new_parent_dir, info['source_model'])
+                                        else:
+                                            src_mdl = info['source_model'].replace(old_parent_dir, new_parent_dir, 1)
+                                        info['source_model'] = src_mdl[1:] if src_mdl.startswith('/') else src_mdl
+                                    else:
+                                        if not old_parent_dir:
+                                            wkfl_mdl = os.path.join(new_parent_dir, info['wkfl_model'])
+                                        else:
+                                            wkfl_mdl = info['wkfl_model'].replace(old_parent_dir, new_parent_dir, 1)
+                                        info['wkfl_model'] = wkfl_mdl[1:] if wkfl_mdl.startswith('/') else wkfl_mdl
+                                    info_file.seek(0)
+                                    log.debug("New wkfl info: {0}".format(info))
+                                    json.dump(info, info_file)
+                                    info_file.truncate()
                 move(old_path, new_path)
             else:
                 os.rename(old_path, new_path)
@@ -171,11 +204,19 @@ class MoveFileAPIHandler(APIHandler):
             self.set_status(404)
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"StochSS File Not Found","Message":"Could not find the file or directory: {0}".format(err)}
+            log.error(error)
             self.write(error)
         except PermissionError as err:
             self.set_status(403)
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"Permission Denied","Message":"You do not have permission to move this file: {0}".format(err)}
+            log.error(error)
+            self.write(error)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            self.set_header('Content-Type', 'application/json')
+            error = {"Reason":err.reason, "Message":err.message}
+            log.error(error)
             self.write(error)
         self.finish()
         

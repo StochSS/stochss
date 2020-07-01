@@ -245,15 +245,23 @@ let WorkflowManager = PageView.extend({
   },
   updateWkflModel: function (e) {
     let self = this;
-    this.model.fetch({
-      json: true,
-      success: function (model, response, options) {
-        self.renderWorkflowEditor()
-      },
-      error: function (model, response, options) {
-        self.wkflModelNotFound(response.body)
-      }
-    });
+    let parPath = path.dirname(self.modelDirectory)
+    if(parPath.endsWith(".proj") && parPath !== path.dirname(e.target.value)) {
+      self.model.directory = self.modelDirectory
+      $(self.queryByHook("model-path")).find('input').val(self.modelDirectory)
+      let mdlPathErr = $(modals.wkflModelPathErrorHtml()).modal()
+    }else{
+      self.modelDirectory = e.target.value
+      this.model.fetch({
+        json: true,
+        success: function (model, response, options) {
+          self.renderWorkflowEditor()
+        },
+        error: function (model, response, options) {
+          self.wkflModelNotFound(response.body)
+        }
+      });
+    }
   },
   reloadWkfl: function () {
     let self = this;

@@ -45,15 +45,11 @@ let ProjectManager = PageView.extend({
     this.model.fetch({
       success: function (model, response, options) {
         self.renderProjectViewer()
-        if(target === "model-editor") {
-          self.renderEditExperimentsView()
+        if(target === "model-editor" || target === "experiment-editor" || target === "workflows-editor") {
           self.projectFileBrowser.refreshJSTree()
         }else if(target === "file-browser") {
           self.renderEditModelsView()
           self.renderEditExperimentsView()
-        }else if(target === "experiment-editor") {
-          self.renderEditModelsView()
-          self.projectFileBrowser.refreshJSTree()
         }else{
           self.renderEditModelsView()
           self.renderEditExperimentsView()

@@ -85,11 +85,7 @@ let FileBrowser = PageView.extend({
                 node.original._path = path.join(newDir, file)
               }else{
                 body = JSON.parse(body)
-                if(par.type === 'root'){
-                  $('#models-jstree').jstree().refresh()
-                }else{
-                  $('#models-jstree').jstree().refresh_node(par);
-                }
+                $('#models-jstree').jstree().refresh()
               }
             });
           }

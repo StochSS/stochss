@@ -7,6 +7,7 @@ from tornado import web
 from shutil import copyfile, copytree
 from .util.rename import get_unique_file_name
 from .util.workflow_status import get_status
+from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
 from notebook.base.handlers import APIHandler
 
 log = logging.getLogger('stochss')
@@ -180,13 +181,18 @@ class AddExistingWorkflowAPIHandler(APIHandler):
         log.debug("Path to the experiment: {0}".format(path))
         log.debug("Path to the workflow: {0}".format(wkfl_path))
         try:
+            if get_status(wkfl_path) == "running":
+                raise StochSSPermissionsError("Running workflows cannot be moved.")
             unique_path, changed = get_unique_file_name(wkfl_path.split('/').pop(), path)
             copytree(wkfl_path, unique_path)
             resp = {"message": "The Workflow {0} was successfully moved into {1}".format(wkfl_path.split('/').pop(), path.split('/').pop())}
             with open(os.path.join(unique_path, "info.json"), 'r+') as info_file:
                 info = json.load(info_file)
                 log.debug("Old workflow info: {0}".format(info))
-                info['wkfl_model'] = info['wkfl_model'].replace(os.path.dirname(info['wkfl_model']), unique_path)
+                if get_status(unique_path) == "ready":
+                    info['source_model'] = os.path.join(os.path.dirname(path).replace(user_dir+"/", ""), info['source_model'].split('/').pop())
+                else:
+                    info['wkfl_model'] = info['wkfl_model'].replace(os.path.dirname(info['wkfl_model']), unique_path.replace(user_dir+"/", ""))
                 log.debug("New workflow info: {0}".format(info))
                 info_file.seek(0)
                 json.dump(info, info_file)
@@ -198,6 +204,11 @@ class AddExistingWorkflowAPIHandler(APIHandler):
         except FileNotFoundError as err:
             self.set_status(404)
             error = {"Reason":"Workflow Not Found", "Message":"Could not find the workflow: {0}".format(err)}
+            log.error("Exception Information: {0}".format(error))
+            self.write(error)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            error = {"Reason":err.reason, "Message":err.message}
             log.error("Exception Information: {0}".format(error))
             self.write(error)
         self.finish()

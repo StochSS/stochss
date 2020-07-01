@@ -6,7 +6,7 @@ div
 
     div.col-md-2: button.btn.btn-outline-secondary.box-shadow(data-hook="project-workflow-open") Open
 
-    div.col-md-2.name=this.model.status
+    div.col-md-2(data-hook="project-workflow-status")=this.model.status
 
     div.col-md-1: button.btn.btn-outline-secondary.box-shadow(data-hook="project-workflow-remove") X
 

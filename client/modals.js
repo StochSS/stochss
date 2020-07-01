@@ -254,6 +254,13 @@ module.exports = {
 
         return templates.message(modalID, title, message)
     },
+    wkflModelPathErrorHtml : () => {
+        let modalID = "wkflModelPathErrorModal"
+        let title = "Premission Denied"
+        let message = "Models for workflow in a project must also be in the same project."
+
+        return templates.message(modalID, title, message)
+    },
     annotationModalHtml : (type, name, annotation) => {
         let modalID = `${type}AnnotationModal`
         let inputID = `${type}AnnotationInput`
