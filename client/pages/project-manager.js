@@ -24,7 +24,8 @@ let ProjectManager = PageView.extend({
   events: {
     'click [data-hook=new-model]' : 'handleNewModelClick',
     'click [data-hook=new-experiment]' : 'handleNewExperimentClick',
-    'click [data-hook=existing-model]' : 'handleExistingModelClick'
+    'click [data-hook=existing-model]' : 'handleExistingModelClick',
+    'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments)
@@ -39,6 +40,9 @@ let ProjectManager = PageView.extend({
     this.model.fetch({
       success: function (model, response, options) {
         self.plot = response.plot
+        if(response.trash_empty) {
+          $(self.queryByHook('empty-project-trash')).prop('disabled', true)
+        }
         self.renderSubviews()
       }
     });
@@ -48,6 +52,7 @@ let ProjectManager = PageView.extend({
     this.model.fetch({
       success: function (model, response, options) {
         self.renderProjectViewer()
+        $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
         if(target === "model-editor" || target === "experiment-editor" || target === "workflows-editor") {
           self.projectFileBrowser.refreshJSTree()
         }else if(target === "file-browser") {
@@ -132,6 +137,26 @@ let ProjectManager = PageView.extend({
   },
   handleExistingModelClick: function () {
     this.addExistingModel()
+  },
+  handleEmptyTrashClick: function () {
+    let self = this;
+    if(document.querySelector("#emptyTrashConfirmModal")) {
+      document.querySelector("#emptyTrashConfirmModal").remove()
+    }
+    let modal = $(modals.emptyTrashConfirmHtml()).modal();
+    let yesBtn = document.querySelector('#emptyTrashConfirmModal .yes-modal-btn');
+    yesBtn.addEventListener('click', function (e) {
+      modal.modal('hide')
+      let endpoint = path.join(app.getApiPath(), "project/empty-trash")+"?path="+path.join(self.projectPath, "trash")
+      xhr({uri: endpoint, json: true}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          $(self.queryByHook('empty-project-trash')).prop('disabled', true)
+          console.log(body.message)
+        }else{
+          console.log(body)
+        }
+      });
+    });
   },
   addNewModel: function (isSpatial) {
     let self = this

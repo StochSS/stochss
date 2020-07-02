@@ -4,7 +4,7 @@ import shutil
 import logging
 
 from tornado import web
-from shutil import copyfile, copytree
+from shutil import copyfile, copytree, rmtree
 from .util.rename import get_unique_file_name
 from .util.workflow_status import get_status
 from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
@@ -30,7 +30,7 @@ class LoadProjectAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: {}".format(path))
-        project = {"models": [], "experiments": []}
+        project = {"models": [], "experiments": [], "trash_empty": True}
         for item in os.listdir(path):
             if item.endswith('.mdl'):
                 mdl_dir = os.path.join(path, item)
@@ -58,6 +58,8 @@ class LoadProjectAPIHandler(APIHandler):
                             wkfl_dict['outputs'] = outputs
                             workflows.append(wkfl_dict)
                 project['experiments'].append({"name":name,"workflows":workflows})
+            elif item == "trash":
+                project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
         log.debug("Contents of the project: {0}".format(project))
         self.write(project)
         self.finish()
@@ -82,6 +84,7 @@ class NewProjectAPIHandler(APIHandler):
         log.debug("The path to the new project directory: {}".format(path))
         try:
             os.makedirs(path)
+            os.mkdir(os.path.join(path, "trash"))
             resp = {"message":"", "path":""}
             self.write(resp)
         except FileExistsError as err:
@@ -236,6 +239,7 @@ class ExtractModelAPIHandler(APIHandler):
         ----------
         '''
         user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
         src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
         log.debug("Path to the target model: {0}".format(src_path))
         dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
@@ -253,5 +257,41 @@ class ExtractModelAPIHandler(APIHandler):
             error = {"Reason":"Workflow Not Found", "Message":"Could not find the workflow: {0}".format(err)}
             log.error("Exception Information: {0}".format(error))
             self.write(error)
+        self.finish()
+
+
+class EmptyTrashAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for a projects trash directory
+    ##############################################################################
+    '''
+    @web.authenticated
+    def get(self):
+        '''
+        Empty the trash directory.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        log.debug("Path to the trash directory: {0}".format(0))
+        try:
+            for item in os.listdir(path):
+                item_path = os.path.join(path, item)
+                if os.path.isdir(item_path):
+                    rmtree(item_path)
+                else:
+                    os.remove(item_path)
+            resp = "Successfully emptied the trash"
+            log.debug("Response message: {0}".format(resp))
+            self.write(resp)
+        except FileNotFoundError:
+            os.mkdir(path)
+            resp = "The trash directory was removed."
+            log.debug("Response message: {0}".format(resp))
+            self.write(resp)
         self.finish()
 
