@@ -6,12 +6,14 @@ var app = require('../app');
 var modals = require('../modals');
 //views
 var PageView = require('./base');
+var PlotsView = require('../views/plots-view');
 var EditModelsView = require('../views/edit-models-view');
 var EditExperimentsView = require('../views/edit-experiments-view');
 var ProjectViewer = require('../views/project-viewer');
 var FileBrowser = require('../views/file-browser-view');
 //models
 var Project = require('../models/project');
+var Plot = require('../models/plots');
 //templates
 var template = require('../templates/pages/projectManager.pug');
 
@@ -36,6 +38,7 @@ let ProjectManager = PageView.extend({
     });
     this.model.fetch({
       success: function (model, response, options) {
+        self.plot = response.plot
         self.renderSubviews()
       }
     });
@@ -61,8 +64,23 @@ let ProjectManager = PageView.extend({
   renderSubviews: function () {
     this.renderProjectViewer();
     this.renderProjectFileBrowser();
+    this.renderRecentPlotView();
     this.renderEditModelsView();
     this.renderEditExperimentsView();
+  },
+  renderRecentPlotView: function () {
+    if(this.recentPlotView) {
+      this.recentPlotView.remove()
+    }
+    var plot = new Plot(this.plot.output)
+    var expName = path.dirname(this.plot.path).split('/').pop().split('.')[0]
+    var wkflName = this.plot.path.split('/').pop().split('.')[0]
+    this.recentPlotView = new PlotsView({
+      model: plot,
+      path: this.plot.path,
+      heading: expName + " - " + wkflName
+    });
+    this.registerRenderSubview(this.recentPlotView, "project-most-recent-plot");
   },
   renderEditModelsView: function () {
     if(this.editModelsView) {

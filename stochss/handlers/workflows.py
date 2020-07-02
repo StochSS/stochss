@@ -236,7 +236,6 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         workflow_path = self.get_query_argument(name="path")
         log.debug("The path to the workflow: {0}\n".format(workflow_path))
         body = json.loads(self.get_query_argument(name='data'))
@@ -260,7 +259,6 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             error = {"Reason":err.reason,"Message":err.message}
             log.error("Exception information: {0}\n".format(error))
             self.write(error)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 

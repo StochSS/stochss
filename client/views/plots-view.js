@@ -16,6 +16,8 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments)
+    this.path = attrs.path ? attrs.path : this.parent.model.path
+    this.heading = attrs.heading ? attrs.heading + " - " + this.model.key : this.model.key
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments)
@@ -25,7 +27,7 @@ module.exports = View.extend({
     var self = this;
     var plotArgs = {"title":this.model.title,"xaxis":this.model.xaxis,"yaxis":this.model.yaxis}
     var data = {"plt_key":this.model.key, "plt_data":plotArgs}
-    var endpoint = path.join(app.getApiPath(), 'workflow/plot-results')+"?path="+this.parent.model.path+"&data="+JSON.stringify(data);
+    var endpoint = path.join(app.getApiPath(), 'workflow/plot-results')+"?path="+this.path+"&data="+JSON.stringify(data);
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode >= 400) {
         $(self.queryByHook(self.model.key+self.model.stamp)).html(body.Message)
