@@ -111,7 +111,9 @@ module.exports = View.extend({
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
-      let endpoint = path.join(app.getApiPath(), 'file/delete')+"?path="+expPath
+      let trashPath = path.join(self.parent.parent.projectPath, "trash")
+      let queryString = "?srcPath="+expPath+"&dstPath="+trashPath
+      let endpoint = path.join(app.getApiPath(), 'file/move')+queryString
       xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           self.parent.parent.update("experiment-editor")

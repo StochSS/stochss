@@ -73,7 +73,9 @@ module.exports = View.extend({
     let modal = $(modals.deleteFileHtml("model")).modal();
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
-      let endpoint = path.join(app.getApiPath(), 'file/delete')+"?path="+self.model.directory
+      let trashPath = path.join(path.dirname(self.model.directory), "trash", self.model.directory.split('/').pop())
+      let queryString = "?srcPath="+self.model.directory+"&dstPath="+trashPath
+      let endpoint = path.join(app.getApiPath(), 'file/move')+queryString
       xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           self.parent.parent.update("model-editor")

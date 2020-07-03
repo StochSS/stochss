@@ -52,7 +52,9 @@ module.exports = View.extend({
     let modal = $(modals.deleteFileHtml("experiment")).modal();
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
-      let endpoint = path.join(app.getApiPath(), 'file/delete')+"?path="+self.model.path
+      let trashPath = path.join(path.dirname(path.dirname(self.model.path)), "trash")
+      let queryString = "?srcPath="+self.model.path+"&dstPath="+trashPath
+      let endpoint = path.join(app.getApiPath(), 'file/move')+queryString
       xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           self.parent.parent.parent.parent.update("workflows-editor")

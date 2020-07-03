@@ -53,13 +53,30 @@ module.exports = View.extend({
       'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
       'core': {'multiple' : false, 'animation': 0,
         'check_callback': function (op, node, par, pos, more) {
+          if(node && node.type && node.original && node.original._path && more && more.ref && more.ref.type){
+            console.log(node.type, node.original._path.includes("trash"), more.ref.original.text === "trash", !(node.original._path.includes("trash") || more.ref.original.text === "trash"), more.ref.type)
+          }
           if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
             return false
           }
-          if(op === 'move_node' && node && node.type && (node.type === "nonspatial" || node.type === "spatial" || node.type === "experiment")) {
+          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && (node.type === "nonspatial" || node.type === "spatial") && 
+            !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
+          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && node.type === "experiment" && 
+            !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && (node.type === "workflow") && 
+            !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && node.original._path.includes("trash") && 
+            ((node.type === "workflow" && more.ref.type !== 'experiment') || 
+            ((node.type === "nonspatial" || node.type === "spatial" || node.type === "experiment") && more.ref.type !== 'root'))){
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && node.type !== "workflow" && !(more.ref.type == 'folder' || more.ref.type == 'root')){
             return false
           }
           if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
