@@ -58,20 +58,20 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), "project/extract-model")+queryString
     xhr({uri: endpoint}, function (err, response, body) {
       if(response.statusCode < 400){
-        self.parent.parent.update("model-editor")
+        let successModel = $(modals.projectExportSuccessHtml("Model", body)).modal()
       }else{
         body = JSON.parse(body)
-        console.log(body)
+        let successModel = $(modals.projectExportErrorHtml("Model", body.Reason, body.message)).modal()
       }
     });
   },
   handleRemoveModelClick: function (e) {
     let self = this
-    if(document.querySelector('#deleteFileModal')) {
-      document.querySelector('#deleteFileModal').remove();
+    if(document.querySelector('#moveToTrashConfirmModal')) {
+      document.querySelector('#moveToTrashConfirmModal').remove();
     }
-    let modal = $(modals.deleteFileHtml("model")).modal();
-    let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
+    let modal = $(modals.moveToTrashConfirmHtml("model")).modal();
+    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       let trashPath = path.join(path.dirname(self.model.directory), "trash", self.model.directory.split('/').pop())
       let queryString = "?srcPath="+self.model.directory+"&dstPath="+trashPath

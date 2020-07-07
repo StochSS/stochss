@@ -104,11 +104,11 @@ module.exports = View.extend({
   },
   handleRemoveExperimentClick: function (e) {
     let self = this
-    if(document.querySelector('#deleteFileModal')) {
-      document.querySelector('#deleteFileModal').remove();
+    if(document.querySelector('#moveToTrashConfirmModal')) {
+      document.querySelector('#moveToTrashConfirmModal').remove();
     }
-    let modal = $(modals.deleteFileHtml("experiment")).modal();
-    let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
+    let modal = $(modals.moveToTrashConfirmHtml("experiment")).modal();
+    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
       let trashPath = path.join(self.parent.parent.projectPath, "trash")

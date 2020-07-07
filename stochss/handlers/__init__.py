@@ -45,6 +45,7 @@ def get_page_handlers(route_start):
         ("/stochss/api/project/add-existing-model\/?", AddExistingModelAPIHandler),
         ("/stochss/api/project/add-existing-workflow\/?", AddExistingWorkflowAPIHandler),
         ("/stochss/api/project/extract-model\/?", ExtractModelAPIHandler),
+        ("/stochss/api/project/extract-workflow\/?", ExtractWorkflowAPIHandler),
         ("/stochss/api/project/empty-trash\/?", EmptyTrashAPIHandler),
         ("/stochss/api/workflow/notebook\/?", WorkflowNotebookHandler),
         ("/stochss/api/workflow/load-workflow\/?", LoadWorkflowAPIHandler),

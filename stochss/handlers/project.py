@@ -247,13 +247,51 @@ class ExtractModelAPIHandler(APIHandler):
         try:
             unique_path, changed = get_unique_file_name(dst_path.split('/').pop(), os.path.dirname(dst_path))
             copyfile(src_path, unique_path)
-            resp = "The Model {0} was extracted to {1}".format(src_path.split('/').pop(), os.path.dirname(dst_path))
+            export_path = os.path.dirname(unique_path).replace(user_dir+"/", "") if os.path.dirname(unique_path) != user_dir else "/"
+            resp = "The Model {0} was extracted to {1}".format(src_path.split('/').pop(), export_path)
             if changed:
                 resp += " as {0}".format(unique_path.split('/').pop())
             log.debug("Response message: {0}".format(resp))
             self.write(resp)
         except FileNotFoundError as err:
             self.set_status(404)
+            error = {"Reason":"Model Not Found", "Message":"Could not find the model: {0}".format(err)}
+            log.error("Exception Information: {0}".format(error))
+            self.write(error)
+        self.finish()
+
+
+class ExtractWorkflowAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for extracting workflows from a project
+    ##############################################################################
+    '''
+    @web.authenticated
+    def get(self):
+        '''
+        Extract a workflow from a project.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
+        log.debug("Path to the target model: {0}".format(src_path))
+        dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
+        log.debug("Destination path for the target model: {0}".format(dst_path))
+        try:
+            unique_path, changed = get_unique_file_name(dst_path.split('/').pop(), os.path.dirname(dst_path))
+            copytree(src_path, unique_path)
+            export_path = os.path.dirname(unique_path).replace(user_dir+"/", "") if os.path.dirname(unique_path) != user_dir else "/"
+            resp = "The Workflow {0} was extracted to {1}".format(src_path.split('/').pop(), export_path)
+            if changed:
+                resp += " as {0}".format(unique_path.split('/').pop())
+            log.debug("Response message: {0}".format(resp))
+            self.write(resp)
+        except FileNotFoundError as err:
+            self.set_status(404)
+            self.set_header('Content-Type', 'application/json')
             error = {"Reason":"Workflow Not Found", "Message":"Could not find the workflow: {0}".format(err)}
             log.error("Exception Information: {0}".format(error))
             self.write(error)

@@ -14,6 +14,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=project-workflow-open]' : 'handleOpenWorkflowClick',
+    'click [data-hook=project-workflow-export]' : 'handleExportWorkflowClick',
     'click [data-hook=project-workflow-remove]' : 'handleDeleteWorkflowClick'
   },
   initialize: function (attrs, options) {
@@ -44,13 +45,28 @@ module.exports = View.extend({
     let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+this.model.path+"&type=none";
     window.location.href = endpoint
   },
+  handleExportWorkflowClick: function (e) {
+    let self = this
+    let projectParent = path.dirname(path.dirname(path.dirname(this.model.path))) === '.' ? "" : path.dirname(path.dirname(path.dirname(this.model.path)))
+    let queryString = "?srcPath="+this.model.path+"&dstPath="+path.join(projectParent, this.model.path.split('/').pop())
+    let endpoint = path.join(app.getApiPath(), "project/extract-workflow")+queryString
+    xhr({uri: endpoint}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        let successModel = $(modals.projectExportSuccessHtml("Workflow", body)).modal()
+      }
+      else {
+        body = JSON.parse(body)
+        let successModel = $(modals.projectExportErrorHtml("Workflow", body.Reason, body.message)).modal()
+      }
+    })
+  },
   handleDeleteWorkflowClick: function (e) {
     let self = this
-    if(document.querySelector('#deleteFileModal')) {
-      document.querySelector('#deleteFileModal').remove();
+    if(document.querySelector('#moveToTrashConfirmModal')) {
+      document.querySelector('#moveToTrashConfirmModal').remove();
     }
-    let modal = $(modals.deleteFileHtml("experiment")).modal();
-    let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
+    let modal = $(modals.moveToTrashConfirmHtml("experiment")).modal();
+    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       let trashPath = path.join(path.dirname(path.dirname(self.model.path)), "trash")
       let queryString = "?srcPath="+self.model.path+"&dstPath="+trashPath

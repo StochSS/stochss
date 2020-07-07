@@ -124,6 +124,12 @@ module.exports = {
 
         return templates.confirmation(modalID, title)
     },
+    moveToTrashConfirmHtml : (fileType) => {
+        let modalID = "moveToTrashConfirmModal"
+        let title = `Move this ${fileType} to trash?`
+
+        return templates.confirmation(modalID, title)
+    },
     emptyTrashConfirmHtml : () => {
       let modalID = "emptyTrashConfirmModal"
       let title = "Are you sure you want to permanently erase the items in the Trash?"
@@ -291,6 +297,17 @@ module.exports = {
         let title = "New Workflow"
 
         return templates.input(modalID, inputID, title, label, "")
+    },
+    projectExportSuccessHtml : (fileType, message) => {
+      let modalID = "projectExportSuccessModal"
+      let title = `Successfully Exported the ${fileType}`
+
+      return templates.message(modalID, title, message)
+    },
+    projectExportErrorHtml : (fileType, title, message) => {
+      let modalID = "projectExportErrorModal"
+      
+      return templates.message(modalID, title, message)
     },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;
