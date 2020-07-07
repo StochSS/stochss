@@ -22,8 +22,8 @@ import numpy
 import gillespy2.core.gillespySolver
 from gillespy2.core.events import EventAssignment, EventTrigger, Event
 from gillespy2.core.gillespyError import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
-from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
-from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
+from gillespy2.solvers.numpy.tau_leaping_solver import TauLeapingSolver
+from gillespy2.solvers.numpy.tau_hybrid_solver import TauHybridSolver
 from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver
 
 import warnings
@@ -530,7 +530,7 @@ def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
 
 def basicODESolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicODESolver.
+    Run the model with the GillesPy2 ODESolver.
 
     Attributes
     ----------
@@ -543,7 +543,7 @@ def basicODESolver(model, data, run_timeout):
     '''
     # print("running ode solver")
     results = model.run(
-        solver = BasicTauHybridSolver,
+        solver = TauHybridSolver,
         timeout = run_timeout,
         integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
@@ -594,7 +594,7 @@ def v_ssa_solver(model, data, run_timeout, solver, rate1, rate2):
 
 def basicTauLeapingSolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicTauLeapingSolver.
+    Run the model with the GillesPy2 TauLeapingSolver.
     
     Attributes
     ----------
@@ -610,7 +610,7 @@ def basicTauLeapingSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = BasicTauLeapingSolver,
+        solver = TauLeapingSolver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,
@@ -621,7 +621,7 @@ def basicTauLeapingSolver(model, data, run_timeout):
 
 def basicTauHybridSolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicTauHybridSolver.
+    Run the model with the GillesPy2 TauHybridSolver.
     
     Attributes
     ----------
@@ -637,7 +637,7 @@ def basicTauHybridSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = BasicTauHybridSolver,
+        solver = TauHybridSolver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,

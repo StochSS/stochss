@@ -26,9 +26,9 @@ def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False,
         algorithm_map = {
                 'SSA': ssa,
                 'V-SSA': 'from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver\n',
-                'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver\n',
-                'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver\n',
-                'ODE': 'from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver'
+                'Tau-Leaping': 'from gillespy2.solvers.numpy.tau_leaping_solver import TauLeapingSolver\n',
+                'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.tau_hybrid_solver import TauHybridSolver\n',
+                'ODE': 'from gillespy2.solvers.numpy.ode_solver import ODESolver'
                 }
 
         for name, algorithm_import in algorithm_map.items():
@@ -213,7 +213,7 @@ def get_settings(path=None):
     return settings
 
 
-def generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c=False, is_mdl_inf=False, show_labels=True, settings=None):
+def generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c=False, is_mdl_inf=False, settings=None):
     padding = '    '
     
     # Get stochss simulation settings
@@ -228,13 +228,13 @@ def generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c=Fals
     is_automatic = settings['isAutomatic']
 
     # Get settings for model.run()
-    settings = get_run_settings(settings, show_labels, is_mdl_inf, algorithm)
+    settings = get_run_settings(settings, is_mdl_inf, algorithm)
 
-    settings_lists = {"ODE":['"solver"','"integrator_options"','"show_labels"'],
-                      "SSA":['"seed"','"number_of_trajectories"','"show_labels"'],
-                      "V-SSA":['"solver"','"seed"','"number_of_trajectories"','"show_labels"'],
-                      "Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"show_labels"'],
-                      "Hybrid-Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"','"show_labels"']
+    settings_lists = {"ODE":['"solver"','"integrator_options"'],
+                      "SSA":['"seed"','"number_of_trajectories"'],
+                      "V-SSA":['"solver"','"seed"','"number_of_trajectories"'],
+                      "Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"'],
+                      "Hybrid-Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"']
                      }
 
     if get_best_ssa_solver().name == "SSACSolver":
@@ -244,7 +244,7 @@ def generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c=Fals
     for setting in settings:
         if setting.split(':')[0] == '"solver"' and is_ssa_c:
             settings_map.append(padding*2 + setting)
-        elif (setting.split(':')[0] == '"show_labels"' or setting.split(':')[0] == '"number_of_trajectories"') and is_mdl_inf:
+        elif setting.split(':')[0] == '"number_of_trajectories"' and is_mdl_inf:
             settings_map.append(padding*2 + setting)
         elif is_automatic or setting.split(':')[0] not in settings_lists[algorithm]:
             settings_map.append(padding*2 + "# " + setting)
@@ -284,9 +284,9 @@ def get_algorithm(gillespy2_model, is_ssa_c=False, algorithm=None):
 
     algorithm_map = {"SSACSolver":"SSA",
                      "VariableSSACSolver":"V-SSA",
-                     "BasicTauHybridSolver":"Hybrid-Tau-Leaping",
-                     "BasicTauLeapingSolver":"Tau-Leaping",
-                     "BasicODESolver":"ODE",
+                     "TauHybridSolver":"Hybrid-Tau-Leaping",
+                     "TauLeapingSolver":"Tau-Leaping",
+                     "ODESolver":"ODE",
                      "NumPySSASolver":"SSA"
                      }
 
@@ -298,13 +298,13 @@ def get_algorithm(gillespy2_model, is_ssa_c=False, algorithm=None):
     return algorithm_map[name]
 
 
-def get_run_settings(settings, show_labels, is_mdl_inf, algorithm):
+def get_run_settings(settings, is_mdl_inf, algorithm):
     # Map algorithm for GillesPy2
     solver_map = {"SSA":"",
                   "V-SSA":'"solver":solver',
-                  "ODE":'"solver":BasicODESolver',
-                  "Tau-Leaping":'"solver":BasicTauLeapingSolver',
-                  "Hybrid-Tau-Leaping":'"solver":BasicTauHybridSolver'}
+                  "ODE":'"solver":ODESolver',
+                  "Tau-Leaping":'"solver":TauLeapingSolver',
+                  "Hybrid-Tau-Leaping":'"solver":TauHybridSolver'}
 
     if get_best_ssa_solver().name == "SSACSolver":
         solver_map['SSA'] = '"solver":solver'
@@ -326,8 +326,6 @@ def get_run_settings(settings, show_labels, is_mdl_inf, algorithm):
     
     #Parse settings for algorithm
     run_settings = [solver_map[algorithm]] if solver_map[algorithm] else []
-    if not show_labels:
-        run_settings.append('"show_labels":False')
     algorithm_settings =  ['"{0}":{1}'.format(key, val) for key, val in settings_map.items()]
     run_settings.extend(algorithm_settings)
     
@@ -643,12 +641,12 @@ def generate_sciope_wrapper_cell(json_data, gillespy2_model):
     # Select Solver
     solver_map = {
         'SSA': '',
-        'Tau-Leaping': '"solver":BasicTauLeapingSolver, ',
-        'Hybrid-Tau-Leaping': '"solver":BasicTauHybridSolver, ',
-        'ODE': '"solver":BasicODESolver, '
+        'Tau-Leaping': '"solver":TauLeapingSolver, ',
+        'Hybrid-Tau-Leaping': '"solver":TauHybridSolver, ',
+        'ODE': '"solver":ODESolver, '
         }
     sciope_wrapper_cell = '''from sciope.utilities.gillespy2 import wrapper
-settings = {{{}"number_of_trajectories":10, "show_labels":True}}
+settings = {{{}"number_of_trajectories":10}}
 simulator = wrapper.get_simulator(gillespy_model=model, run_settings=settings, species_of_interest={})
 expression_array = wrapper.get_parameter_expression_array(model)'''.format(solver_map[algorithm], soi)
     return sciope_wrapper_cell
@@ -756,6 +754,7 @@ def simulator(params, model):
     model_update = set_model_parameters(params, model)
     
     res = model_update.run(**kwargs)
+    res = res.to_array()
     tot_res = np.asarray([x.T for x in res]) # reshape to (N, S, T)
     tot_res = tot_res[:,1:, :] # should not contain timepoints
 
@@ -794,6 +793,7 @@ fixed_data = model.run(**kwargs)'''
 
 def generate_mdl_inf_reshape_data_cell():
     reshape_data_cell = '''# Reshape the data to (n_points,n_species,n_timepoints) and remove timepoints array
+fixed_data = fixed_data.to_array()
 fixed_data = np.asarray([x.T for x in fixed_data])
 fixed_data = fixed_data[:,1:, :]'''
 
