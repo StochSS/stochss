@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import json
 
-from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
-
-def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False,
+def generate_imports_cell(json_data, algorithm, solv_name,
                             settings=None, interactive_backend=False):
     # Imports cell
     imports = 'import numpy as np\n'
@@ -18,8 +16,7 @@ def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False,
         imports += 'import gillespy2\n'
         imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
         imports += 'from gillespy2.core.events import EventAssignment, EventTrigger, Event\n'
-        algorithm = get_algorithm(gillespy2_model, is_ssa_c) if settings is None or settings['isAutomatic'] else get_algorithm(gillespy2_model, is_ssa_c, algorithm=settings['algorithm'])
-        if algorithm == "SSA" and get_best_ssa_solver().name == "SSACSolver":
+        if solv_name == "SSACSolver":
             ssa = 'from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver\n'
         else:
             ssa = '# To run a simulation using the SSA Solver simply omit the solver argument from model.run().\n'
@@ -213,22 +210,17 @@ def get_settings(path=None):
     return settings
 
 
-def generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c=False, is_mdl_inf=False, settings=None):
+def generate_configure_simulation_cell(json_data, algorithm, solv_name, is_psweep=False, is_mdl_inf=False, settings=None):
     padding = '    '
     
     # Get stochss simulation settings
     if settings is None:
         settings = get_settings()
-        algorithm = get_algorithm(gillespy2_model, is_ssa_c)
-    elif settings['isAutomatic']:
-        algorithm = get_algorithm(gillespy2_model, is_ssa_c)
-    else:
-        algorithm = get_algorithm(gillespy2_model, is_ssa_c, algorithm=settings['algorithm'])
-
+    
     is_automatic = settings['isAutomatic']
 
     # Get settings for model.run()
-    settings = get_run_settings(settings, is_mdl_inf, algorithm)
+    settings = get_run_settings(settings, is_mdl_inf, algorithm, solv_name)
 
     settings_lists = {"ODE":['"solver"','"integrator_options"'],
                       "SSA":['"seed"','"number_of_trajectories"'],
@@ -237,12 +229,12 @@ def generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c=Fals
                       "Hybrid-Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"']
                      }
 
-    if get_best_ssa_solver().name == "SSACSolver":
+    if solv_name == "SSACSolver":
         settings_lists['SSA'].append('"solver"')
 
     settings_map = []
     for setting in settings:
-        if setting.split(':')[0] == '"solver"' and is_ssa_c:
+        if setting.split(':')[0] == '"solver"' and is_psweep:
             settings_map.append(padding*2 + setting)
         elif setting.split(':')[0] == '"number_of_trajectories"' and is_mdl_inf:
             settings_map.append(padding*2 + setting)
@@ -276,11 +268,11 @@ def generate_run_cell(json_data):
     return run_cell
 
 
-def get_algorithm(gillespy2_model, is_ssa_c=False, algorithm=None):
+def get_algorithm(gillespy2_model, is_psweep=False, is_ssa_c=False, algorithm=None):
     if algorithm is not None:
-        if algorithm == "SSA" and is_ssa_c:
-            return "V-SSA"
-        return algorithm
+        if algorithm == "SSA" and is_psweep:
+            return "V-SSA", "VariableSSACSolver"
+        return algorithm, None
 
     algorithm_map = {"SSACSolver":"SSA",
                      "VariableSSACSolver":"V-SSA",
@@ -293,12 +285,12 @@ def get_algorithm(gillespy2_model, is_ssa_c=False, algorithm=None):
     if is_ssa_c:
         name = gillespy2_model.get_best_solver().name
     else:
-        name = gillespy2_model.get_best_solver(precompile=False).name
+        name = gillespy2_model.get_best_solver(cpp_test=False).name
+    
+    return algorithm_map[name], name
 
-    return algorithm_map[name]
 
-
-def get_run_settings(settings, is_mdl_inf, algorithm):
+def get_run_settings(settings, is_mdl_inf, algorithm, solv_name):
     # Map algorithm for GillesPy2
     solver_map = {"SSA":"",
                   "V-SSA":'"solver":solver',
@@ -306,7 +298,7 @@ def get_run_settings(settings, is_mdl_inf, algorithm):
                   "Tau-Leaping":'"solver":TauLeapingSolver',
                   "Hybrid-Tau-Leaping":'"solver":TauHybridSolver'}
 
-    if get_best_ssa_solver().name == "SSACSolver":
+    if solv_name == "SSACSolver":
         solver_map['SSA'] = '"solver":solver'
 
     # Map seed for GillesPy2
@@ -633,11 +625,13 @@ class ParameterSweepConfig(ParameterSweep2D):
 '''
     return psweep_config_cell
 
-def generate_sciope_wrapper_cell(json_data, gillespy2_model):
+def generate_sciope_wrapper_cell(json_data, algorithm, solv_name):
     settings = get_settings()
-    algorithm = get_algorithm(gillespy2_model)
     soi = [species['name'] for species in json_data['species']]
 
+    if algorithm == "V-SSA":
+        algorithm = "SSA"
+        
     # Select Solver
     solver_map = {
         'SSA': '',
