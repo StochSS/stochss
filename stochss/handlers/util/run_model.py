@@ -3,6 +3,7 @@
 import os
 import sys
 import json
+import numpy
 import argparse
 import logging
 import pickle
@@ -15,16 +16,11 @@ for handler in log.handlers:
     if type(handler) is logging.StreamHandler:
         handler.stream = log_stream
 
-
-from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
-
-import numpy
 import gillespy2.core.gillespySolver
-from gillespy2.core.events import EventAssignment, EventTrigger, Event
-from gillespy2.core.gillespyError import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
-from gillespy2.solvers.numpy.tau_leaping_solver import TauLeapingSolver
-from gillespy2.solvers.numpy.tau_hybrid_solver import TauHybridSolver
-from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver
+from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
+from gillespy2 import EventAssignment, EventTrigger, Event
+from gillespy2 import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
+from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, SSACSolver
 
 import warnings
 warnings.simplefilter("ignore")
@@ -563,11 +559,12 @@ def ssaSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    print("running ssa solver")
+    solver = SSACSolver(model=model)
     seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
+        solver = solver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed

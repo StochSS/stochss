@@ -14,18 +14,18 @@ def generate_imports_cell(json_data, algorithm, solv_name,
     else:
         # Non-Spatial
         imports += 'import gillespy2\n'
-        imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
-        imports += 'from gillespy2.core.events import EventAssignment, EventTrigger, Event\n'
+        imports += 'from gillespy2 import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
+        imports += 'from gillespy2 import EventAssignment, EventTrigger, Event\n'
         if solv_name == "SSACSolver":
-            ssa = 'from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver\n'
+            ssa = 'from gillespy2 import SSACSolver\n'
         else:
             ssa = '# To run a simulation using the SSA Solver simply omit the solver argument from model.run().\n'
         algorithm_map = {
                 'SSA': ssa,
-                'V-SSA': 'from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver\n',
-                'Tau-Leaping': 'from gillespy2.solvers.numpy.tau_leaping_solver import TauLeapingSolver\n',
-                'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.tau_hybrid_solver import TauHybridSolver\n',
-                'ODE': 'from gillespy2.solvers.numpy.ode_solver import ODESolver'
+                'V-SSA': 'from gillespy2 import VariableSSACSolver\n',
+                'Tau-Leaping': 'from gillespy2 import TauLeapingSolver\n',
+                'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridSolver\n',
+                'ODE': 'from gillespy2 import ODESolver'
                 }
 
         for name, algorithm_import in algorithm_map.items():
