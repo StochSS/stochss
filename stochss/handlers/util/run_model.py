@@ -3,6 +3,7 @@
 import os
 import sys
 import json
+import numpy
 import argparse
 import logging
 import pickle
@@ -15,16 +16,11 @@ for handler in log.handlers:
     if type(handler) is logging.StreamHandler:
         handler.stream = log_stream
 
-
-from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
-
-import numpy
 import gillespy2.core.gillespySolver
-from gillespy2.core.events import EventAssignment, EventTrigger, Event
-from gillespy2.core.gillespyError import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
-from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
-from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
-from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver
+from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
+from gillespy2 import EventAssignment, EventTrigger, Event
+from gillespy2 import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
+from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, SSACSolver
 
 import warnings
 warnings.simplefilter("ignore")
@@ -423,7 +419,10 @@ class ModelFactory():
         for stoich_specie in args:
             key = stoich_specie['specie']['name']
             value = stoich_specie['ratio']
-            d[key] = value
+            if key not in d.keys():
+                d[key] = value
+            else:
+                d[key] += value
         return d
 
 
@@ -513,7 +512,7 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
 def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
     print("running choose for me")
     if solver is None:
-        solver = model.get_best_solver(precompile=False)
+        solver = model.get_best_solver(cpp_test=False)
 
     kwargs = {"solver":solver, "timeout":run_timeout}
 
@@ -530,7 +529,7 @@ def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
 
 def basicODESolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicODESolver.
+    Run the model with the GillesPy2 ODESolver.
 
     Attributes
     ----------
@@ -543,7 +542,7 @@ def basicODESolver(model, data, run_timeout):
     '''
     # print("running ode solver")
     results = model.run(
-        solver = BasicTauHybridSolver,
+        solver = TauHybridSolver,
         timeout = run_timeout,
         integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
@@ -563,11 +562,12 @@ def ssaSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    print("running ssa solver")
+    solver = SSACSolver(model=model)
     seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
+        solver = solver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed
@@ -594,7 +594,7 @@ def v_ssa_solver(model, data, run_timeout, solver, rate1, rate2):
 
 def basicTauLeapingSolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicTauLeapingSolver.
+    Run the model with the GillesPy2 TauLeapingSolver.
     
     Attributes
     ----------
@@ -610,7 +610,7 @@ def basicTauLeapingSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = BasicTauLeapingSolver,
+        solver = TauLeapingSolver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,
@@ -621,7 +621,7 @@ def basicTauLeapingSolver(model, data, run_timeout):
 
 def basicTauHybridSolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicTauHybridSolver.
+    Run the model with the GillesPy2 TauHybridSolver.
     
     Attributes
     ----------
@@ -637,7 +637,7 @@ def basicTauHybridSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = BasicTauHybridSolver,
+        solver = TauHybridSolver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,

@@ -102,6 +102,9 @@ module.exports = View.extend({
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
       $(this.queryByHook('add-reaction-partial')).prop('hidden', false);
     }
+    if(this.selectedReaction){
+      this.selectedReaction.detailsView.renderReactionTypesSelectView()
+    }
   },
   setSelectedReaction: function (reaction) {
     this.collection.each(function (m) { m.selected = false; });
@@ -109,7 +112,7 @@ module.exports = View.extend({
     this.selectedReaction = reaction;
   },
   setDetailsView: function (reaction) {
-    reaction.detailsView = reaction.detailsView || this.newDetailsView(reaction);
+    reaction.detailsView = this.newDetailsView(reaction);
     this.detailsViewSwitcher.set(reaction.detailsView);
   },
   handleAddReactionClick: function (e) {

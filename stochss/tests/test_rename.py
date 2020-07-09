@@ -83,18 +83,17 @@ class TestRename(unittest.TestCase):
 
     def test_rename_permission_error(self):
         from handlers.util.stochss_errors import StochSSPermissionsError
-        with self.assertRaises(PermissionError):
-            with tempfile.TemporaryDirectory() as tempdir:
-                test_dir = "test_dir"
-                test_file = "test_file"
-                test_dir_path = os.path.join(tempdir,test_dir)
-                os.mkdir(test_dir_path)
-                test_path = os.path.join(test_dir_path,test_file)
-                Path(test_path).touch()
-                os.chmod(test_path,400)
-                os.chmod(test_dir_path,400)
-                with self.assertRaises(StochSSPermissionsError):
-                    rename(test_path, "test_file2")
+        with tempfile.TemporaryDirectory() as tempdir:
+            test_dir = "test_dir"
+            test_file = "test_file"
+            test_dir_path = os.path.join(tempdir,test_dir)
+            os.mkdir(test_dir_path)
+            test_path = os.path.join(test_dir_path,test_file)
+            Path(test_path).touch()
+            os.chmod(test_path,400)
+            os.chmod(test_dir_path,400)
+            with self.assertRaises(StochSSPermissionsError):
+                rename(test_path, "test_file2")
 
     def test_rename_file_not_found_error(self):
         from handlers.util.stochss_errors import StochSSFileNotFoundError
