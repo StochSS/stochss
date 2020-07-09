@@ -8,7 +8,7 @@ from .rename import get_unique_file_name
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
-def convert_to_sbml(_path):
+def convert_to_sbml(_path, write_to_file=True):
     user_dir = "/home/jovyan"
     
     path = os.path.join(user_dir, _path)
@@ -60,9 +60,12 @@ def convert_to_sbml(_path):
     except KeyError as err:
         raise JSONFileNotModelError("Could not convert your model: " + str(err))
 
-    write_sbml_to_file(sbml_path, document)
+    if write_to_file:
+        write_sbml_to_file(sbml_path, document)
 
-    return {"Message":"{0} was successfully converted to {1}".format(model_file, sbml_file),"File":sbml_file}
+        return {"Message":"{0} was successfully converted to {1}".format(model_file, sbml_file),"File":sbml_file}
+    else:
+        return document
     
 
 def is_valid_rate_rule(rule):
