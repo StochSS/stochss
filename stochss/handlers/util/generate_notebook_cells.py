@@ -69,9 +69,15 @@ def create_reaction_strings(json_data, padding):
         products = {}
         # Parse Reactants/Products
         for reactant in reaction['reactants']:
-            reactants[reactant['specie']['name']] = reactant['ratio']
+            if reactant['specie']['name'] not in reactants.keys():
+                reactants[reactant['specie']['name']] = reactant['ratio']
+            else:
+                reactants[reactant['specie']['name']] += reactant['ratio']
         for product in reaction['products']:
-            products[product['specie']['name']] = product['ratio']
+            if product['specie']['name'] not in products.keys():
+                products[product['specie']['name']] = product['ratio']
+            else:
+                products[product['specie']['name']] += product['ratio']
 
         #If custom propensity given
         if reaction['reactionType'] == 'custom-propensity':
