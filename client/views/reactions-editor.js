@@ -102,7 +102,9 @@ module.exports = View.extend({
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
       $(this.queryByHook('add-reaction-partial')).prop('hidden', false);
     }
-    this.selectedReaction.detailsView.renderReactionTypesSelectView()
+    if(this.selectedReaction){
+      this.selectedReaction.detailsView.renderReactionTypesSelectView()
+    }
   },
   setSelectedReaction: function (reaction) {
     this.collection.each(function (m) { m.selected = false; });
