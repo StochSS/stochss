@@ -17,7 +17,7 @@ def convert_to_gillespy_model(path):
         except:
             return None, []
     else:
-        raise StochSSFileNotFoundError("Could not find the sbml file: "+path)
+        raise StochSSFileNotFoundError("Could not find the sbml file: "+path, None)
 
 
 def get_sbml_function_definitions(path):

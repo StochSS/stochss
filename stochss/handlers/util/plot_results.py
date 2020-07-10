@@ -4,6 +4,7 @@
 import os
 import json
 import pickle
+import traceback
 from os import path
 from .stochss_errors import StochSSFileNotFoundError, PlotNotAvailableError
 
@@ -28,7 +29,7 @@ def read_pickled_results(pickle_path):
             results = pickle.load(pickle_file)
         return results
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not find the plot file: {0}".format(err))
+        raise StochSSFileNotFoundError("Could not find the plot file: {0}".format(err), traceback.format_exc())
     
 
 def get_plot_fig(plots_file_path, plt_key):
@@ -52,7 +53,7 @@ def get_plot_fig(plots_file_path, plt_key):
                 results = read_pickled_results(pickle_path)
                 return get_plot_fig_from_results(results, plt_key)
             else:
-                raise PlotNotAvailableError("The plot is not available: "+str(err))
+                raise PlotNotAvailableError("The plot is not available: "+str(err), traceback.format_exc())
     else:
         results = read_pickled_results(pickle_path)
         return get_plot_fig_from_results(results, plt_key)

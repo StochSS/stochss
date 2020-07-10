@@ -2,6 +2,7 @@
 
 import os
 import json
+import traceback
 from os import path
 from .workflow_status import get_status
 from .stochss_errors import StochSSFileNotFoundError
@@ -23,7 +24,7 @@ def getFileSystemData(full_path, p_path):
     try:
         _children = os.listdir(path=full_path)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not find the directory: " + str(err))
+        raise StochSSFileNotFoundError("Could not find the directory: " + str(err), traceback.format_exc())
         
     if len(_children) == 0:
         return _children
