@@ -40,7 +40,7 @@ def save_new_workflow(wkfl, wkfl_type, initialize):
     try:
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the model into the workflow directory
     except FileNotFoundError as error:
-        print(trackback.format_exc())
+        print(traceback.format_exc())
         log.error("Failed to copy the model into the directory: {0}".format(error))
     # Update the workflow info file
     update_info_file(wkfl, wkfl_type, initialize)
@@ -70,7 +70,7 @@ def save_existing_workflow(wkfl, wkfl_type, initialize):
     try:
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the new model into the workflow directory
     except FileNotFoundError as error:
-        print(trackback.format_exc())
+        print(traceback.format_exc())
         log.error("Failed to copy the model into the directory: {0}".format(error))
     # Update the workflow info file
     update_info_file(wkfl, wkfl_type, initialize)
@@ -88,7 +88,7 @@ def get_models(full_path, name, wkfl_path, is_ode):
             stochss_model = json.loads(model_file.read())
             stochss_model['name'] = name
     except FileNotFoundError as error:
-        print(trackback.format_exc())
+        print(traceback.format_exc())
         log.critical("Failed to copy the model into the directory: {0}".format(error))
         open(os.path.join(wkfl_path, 'ERROR'), 'w').close() # update status to error
     
@@ -96,7 +96,7 @@ def get_models(full_path, name, wkfl_path, is_ode):
         _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
         gillespy2_model = _model.model
     except Exception as error:
-        print(trackback.format_exc())
+        print(traceback.format_exc())
         log.error("GillesPy2 Model Errors: "+str(error))
         gillespy2_model = None
     
@@ -147,7 +147,7 @@ def run_workflow(wkfl, verbose):
         wkfl.run(gillespy2_model, verbose)
     except Exception as error:
         # update workflow status to error if GillesPy2 throws an exception
-        print(trackback.format_exc())
+        print(traceback.format_exc())
         log.error("Workflow errors: {0}".format(error))
         open(os.path.join(wkfl.wkfl_path, 'ERROR'), 'w').close()
     else:
