@@ -1,4 +1,4 @@
-name: PyLint Action
+name: PyLint On Pull Request
 on: [pull_request]
 jobs:
   build:
