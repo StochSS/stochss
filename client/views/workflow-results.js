@@ -275,11 +275,14 @@ module.exports = View.extend({
     return key
   },
   savePlot: function (type) {
+    var species = []
     if(type === "psweep"){
       type = this.getPsweepKey()
+      species = [this.speciesOfInterest]
+    }else{
+      species = this.species.map(function (specie) { return specie.name; });
     }
     let stamp = this.getTimeStamp()
-    let species = type === "psweep" ? [this.speciesOfInterest] : this.species.map(function (specie) { return specie.name; });
     var plotInfo = {"key":type, "stamp":stamp, "species":species};
     plotInfo = Object.assign({}, plotInfo, this.plotArgs)
     let queryString = "?path="+path.join(this.parent.wkflPath, "settings.json")
