@@ -48,9 +48,9 @@ class LoadProjectAPIHandler(APIHandler):
                         wkfl_dict['status'] = get_status(wkfl_dict['path'])
                         with open(os.path.join(wkfl_dict['path'], 'settings.json'), 'r') as settings_file:
                             outputs = json.load(settings_file)['resultsSettings']['outputs']
-                            output = min(outputs, key=lambda output: output['stamp'])
+                            output = max(outputs, key=lambda output: output['stamp'])
                             if "plot" in project.keys():
-                                if output['stamp'] < project['plot']['output']['stamp']:
+                                if output['stamp'] > project['plot']['output']['stamp']:
                                     project['plot']['path'] = wkfl_dict['path']
                                     project['plot']['output'] = output
                             else:

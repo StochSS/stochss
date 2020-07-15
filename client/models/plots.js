@@ -7,6 +7,7 @@ module.exports = State.extend({
     title: 'string',
     xaxis: 'string',
     yaxis: 'string',
-    stamp: 'number'
+    stamp: 'number',
+    species: 'object'
   }
 });

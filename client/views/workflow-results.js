@@ -279,7 +279,8 @@ module.exports = View.extend({
       type = this.getPsweepKey()
     }
     let stamp = this.getTimeStamp()
-    var plotInfo = {"key":type, "stamp":stamp};
+    let species = type === "psweep" ? [this.speciesOfInterest] : this.species.map(function (specie) { return specie.name; });
+    var plotInfo = {"key":type, "stamp":stamp, "species":species};
     plotInfo = Object.assign({}, plotInfo, this.plotArgs)
     let queryString = "?path="+path.join(this.parent.wkflPath, "settings.json")
     let endpoint = path.join(app.getApiPath(), "workflow/save-plot")+queryString
