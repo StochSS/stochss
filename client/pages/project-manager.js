@@ -77,15 +77,20 @@ let ProjectManager = PageView.extend({
     if(this.recentPlotView) {
       this.recentPlotView.remove()
     }
-    var plot = new Plot(this.plot.output)
-    var expName = path.dirname(this.plot.path).split('/').pop().split('.')[0]
-    var wkflName = this.plot.path.split('/').pop().split('.')[0]
-    this.recentPlotView = new PlotsView({
-      model: plot,
-      path: this.plot.path,
-      heading: expName + " - " + wkflName
-    });
-    this.registerRenderSubview(this.recentPlotView, "project-most-recent-plot");
+    if(this.plot) {
+      var plot = new Plot(this.plot.output)
+      var expName = path.dirname(this.plot.path).split('/').pop().split('.')[0]
+      var wkflName = this.plot.path.split('/').pop().split('.')[0]
+      this.recentPlotView = new PlotsView({
+        model: plot,
+        path: this.plot.path,
+        heading: expName + " - " + wkflName
+      });
+      this.registerRenderSubview(this.recentPlotView, "project-most-recent-plot");
+    }else{
+      let message = "Their are no saved plots in the workflows of this project"
+      $(this.queryByHook("project-most-recent-plot")).text(message)
+    }
   },
   renderEditModelsView: function () {
     if(this.editModelsView) {
