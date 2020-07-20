@@ -3,24 +3,24 @@ div#workflow-info-view.card.card-body
   div
 
     h3.inline Info
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-info", data-hook="collapse", disabled) +
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-info", id="collapse", data-hook="collapse", disabled) +
 
   div.collapse(id="collapse-info", data-hook="workflow-info")
 
-    div.collapse(data-hook="workflow-statistics")
+    div.collapse(id="workflow-statistics", data-hook="workflow-statistics")
 
       h5.inline Statistics
 
-      div(data-hook="list-of-notes")
+      div(id="list-of-notes", data-hook="list-of-notes")
 
-    div.collapse(data-hook="workflow-warnings")
+    div.collapse(id="workflow-warnings", data-hook="workflow-warnings")
 
       h5.inline Warnings
 
-      div(data-hook="list-of-warnings")
+      div(id="list-of-warnings", data-hook="list-of-warnings")
 
-    div.collapse(data-hook="workflow-errors")
+    div.collapse(id="workflow-errors", data-hook="workflow-errors")
 
       h5.inline Errors
 
-      div(data-hook="list-of-errors")
+      div(id="list-of-errors", data-hook="list-of-errors")

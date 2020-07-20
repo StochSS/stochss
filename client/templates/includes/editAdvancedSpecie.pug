@@ -1,19 +1,19 @@
 tr
 
-  td.name: div(data-hook="specie-name")=this.model.name
+  td.name: div(id="specie-name", data-hook="specie-name")=this.model.name
 
-  td: div(data-hook="specie-mode")
+  td: div(id="specie-mode", data-hook="specie-mode")
 
   td
     div.switching
-      input(type="radio", name=this.model.name + "-switch-method", data-hook="switching-tol") 
+      input(type="radio", name=this.model.name + "-switch-method", id="switching-tol", data-hook="switching-tol") 
       |  Switching Tolerance
 
     div.switching
-      input(type="radio", name=this.model.name + "-switch-method", data-hook="switching-min")
+      input(type="radio", name=this.model.name + "-switch-method", id="switching-min", data-hook="switching-min")
       |  Minimum Value for Switching (number of molecules)
 
   td
-    div(data-hook="switching-tolerance")
+    div(id="switching-tolerance", data-hook="switching-tolerance")
   
-    div(data-hook="switching-threshold")
+    div(id="switching-threshold", data-hook="switching-threshold")

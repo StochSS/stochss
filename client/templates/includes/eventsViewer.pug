@@ -3,7 +3,7 @@ div#events-viewer.card.card-body
   div
 
     h3.inline Events
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-model-events-viewer", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-model-events-viewer", id="collapse", data-hook="collapse") -
 
   div.row.collapse(class="show", id="collapse-model-events-viewer")
 
@@ -25,4 +25,4 @@ div#events-viewer.card.card-body
 
           th(scope="col") Use Values From
 
-      tbody(data-hook="view-events-container")
+      tbody(id="view-events-container", data-hook="view-events-container")

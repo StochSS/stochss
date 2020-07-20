@@ -4,7 +4,7 @@ div#events.card.card-body
 
     h3.inline Events
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#events-container", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#events-container", id="collapse", data-hook="collapse") -
 
   div.collapse(class="show", id="events-container", data-hook="events")
 
@@ -34,9 +34,9 @@ div#events.card.card-body
 
               th(scope="col") Remove
 
-          tbody(data-hook="event-listing-container")
+          tbody(id="event-listing-container", data-hook="event-listing-container")
 
-      div.col-md-6.container-part(data-hook="event-details-container")
+      div.col-md-6.container-part(id="event-details-container", data-hook="event-details-container")
 
-    button.btn.btn-outline-primary.box-shadow(data-hook="add-event", type="button")
+    button.btn.btn-outline-primary.box-shadow(id="add-event", data-hook="add-event", type="button")
       | Add Event

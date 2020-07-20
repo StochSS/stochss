@@ -4,7 +4,7 @@ div#workflow-status.card.card-body
 
     h3.inline Status
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-status", data-hook="collapse", disabled) +
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-status", id="collapse", data-hook="collapse", disabled) +
 
   div.collapse(id="collapse-status", data-hook="workflow-status")
 
@@ -23,8 +23,8 @@ div#workflow-status.card.card-body
 
     div(style="display: none;")
 
-      button.btn.btn-outline-primary.box-shadow(data-hook="stop-workflow", type="button", disabled)
+      button.btn.btn-outline-primary.box-shadow(id="stop-workflow", data-hook="stop-workflow", type="button", disabled)
         | Stop Workflow
 
-      button.btn.btn-outline-primary.box-shadow(data-hook="restart-workflow", type="button", disabled)
+      button.btn.btn-outline-primary.box-shadow(id="restart-workflow", data-hook="restart-workflow", type="button", disabled)
         | Restart Workflow

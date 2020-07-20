@@ -3,13 +3,13 @@ div#settings-viewer.card.card-body
   div
 
     h3.inline Simulation Settings
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings-viewer", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings-viewer", id="collapse", data-hook="collapse") -
 
   div.row.collapse(class="show", id="collapse-settings-viewer")
 
     div.col-md-12(style="margin-bottom: 0.75rem;")=this.algorithm
 
-    div.col-md-6.collapse(data-hook="deterministic")
+    div.col-md-6.collapse(id="deterministic", data-hook="deterministic")
 
       h5.inline Deterministic Settings
 
@@ -23,11 +23,11 @@ div#settings-viewer.card.card-body
             td=this.model.relativeTol
             td=this.model.absoluteTol
 
-    div.col-md-6.collapse(data-hook="stochastic")
+    div.col-md-6.collapse(id="stochastic", data-hook="stochastic")
 
       h5.inline Stochastic Settings
 
-      div.collapse(data-hook="SSA")
+      div.collapse(id="SSA", data-hook="SSA")
 
         table.table
           thead
@@ -39,7 +39,7 @@ div#settings-viewer.card.card-body
               td=this.model.realizations
               td=this.model.seed
 
-      div.collapse(data-hook="Tau")
+      div.collapse(id="Tau", data-hook="Tau")
 
         table.table
           thead
