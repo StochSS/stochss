@@ -334,3 +334,45 @@ class EmptyTrashAPIHandler(APIHandler):
             self.write(resp)
         self.finish()
 
+
+class ProjectMetaDataAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for a projects meta data
+    ##############################################################################
+    '''
+    @web.authenticated
+    def get(self):
+        '''
+        Get the projects meta data if it exists else create a meta data dictionary.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        log.debug("Path to the trash directory: {0}".format(0))
+        files = self.get_query_argument(name="files").split(',')
+        log.debug("List of files: {0}".format(files))
+        md_path = os.path.join(path, "meta-data.json")
+        log.debug("Path to the meta-data file: {0}".format(md_path))
+        if os.path.exists(md_path):
+            with open(md_path, "r") as md_file:
+                data = json.load(md_file)
+                meta_data = data['meta-data']
+                creators = data['creators']
+        else:
+            meta_data = {}
+            creators = {}
+
+        for file in files:
+            if file not in meta_data.keys():
+                meta_data[file] = {"description":"","creators":[]}
+        log.debug("Meta-data for the project: {0}".format(meta_data))
+        log.debug("Creators for the project: {0}".format(creators))
+        resp = {"meta_data":meta_data, "creators":creators}
+        log.debug("Response Message: {0}".format(resp))
+        self.write(resp)
+        self.finish()
+
