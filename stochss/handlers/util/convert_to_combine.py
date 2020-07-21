@@ -1,13 +1,16 @@
 import os
 import json
+import tempfile
+import numpy as np
+
 import libsbml
 import libsedml
-import tempfile
 import libcombine
-import numpy as np
+
 from .workflow_status import get_status
 from .rename import get_unique_file_name
 from .convert_to_sbml import convert_to_sbml
+from .stochss_errors import StochSSExportCombineError
 
 
 kisao_map = {"ODE":"KISAO:0000088", "SSA":"KISAO:0000029", "Tau-Leaping":"KISAO:0000084",
@@ -33,8 +36,8 @@ def convert(path, description=None, creators=None):
     # Add file(s) to archive
     if path.endswith('.wkfl'):
         if get_status(path) != 'complete':
-            raise Exception("You cannot create a combine achrive with a \
-                                    workflow that has not completed")
+            raise StochSSExportCombineError("You cannot create a combine achrive \
+                                            with a workflow that has not completed")
         archive_name = path.split('/')[:-2].pop().split('.')[0]
         dst_parent = '/'.join(path.split('/')[:-3])
         sedml = convert_workflow(path, archive, archive_dir)
@@ -135,11 +138,12 @@ def convert_experiment(path, archive, archive_dir, num_exps=None):
             message = "The experiment {1} contains no workflows that have \
                         successfully completed and cannot be added to the COMBINE \
                         archive {2}: {0}".format(errors, path.split('/').pop(), archive_name)
-        raise Exception(message)
+        raise StochSSExportCombineError(message)
 
     sedml_writer = libsedml.SedWriter()
     with open(sedml_path, "w") as sedml_file:
         sedml_file.write(sedml_writer.writeSedMLToString(sedml_doc))
+
     archive.addFile(sedml_path, "./{0}".format(sedml_name),
                     libcombine.KnownFormats.lookupFormat('sedml'), True)
 
@@ -157,14 +161,14 @@ def convert_project(path, archive, archive_dir):
             errors = convert_experiment(exp_path, archive, archive_dir,
                                         num_exps=len(experiments))
             project_errors.extend(errors)
-        except Exception as err:
+        except StochSSExportCombineError as err:
             failed += 1
             project_errors.append(str(err))
 
     if len(experiments) <= failed:
         message = "Could not create the COMBINE archive as none of the experiments \
                     contain successfully completed workflows: {0}".format(project_errors)
-        raise Exception(message)
+        raise StochSSExportCombineError(message)
 
     return project_errors
 
@@ -241,7 +245,7 @@ def convert_workflow_to_sedml(path, info, mdl_src, sedml_doc):
 
 
 def create_model_reference(sedml_doc, mdl_src):
-    model_id = mdl_src.split('.')[0]
+    model_id = mdl_src.split('.')[0].replace('(', '_').replace(')', '')
     sedml_mdl = sedml_doc.createModel()
     sedml_mdl.setId(model_id)
     sedml_mdl.setSource(mdl_src)
@@ -397,7 +401,8 @@ def create_subtask(sedml_rtask, sub_task_id):
 
 def get_data_generator_code(wkfl_type, key=None, settings=None):
     if key is None and settings is None:
-        raise Exception("No key or settings were provided, you must provide one of either.")
+        raise StochSSExportCombineError("No key or settings were provided, \
+                                        you must provide one of either.")
     if key is None:
         res_settings = settings['resultsSettings']
         sim_settings = settings['simulationSettings']
@@ -474,7 +479,7 @@ def create_default_data_generators(sedml_doc, mdl, info, wkfl_settings, task_id)
             if wkfl_settings['parameterSweepSettings']['is1D']:
                 # create the data generators for the error bars in 1D parameter sweeps
                 error_dgs.extend(create_error_data_generators(sedml_doc, info['type'], code,
-                                                              species, task_id, target))
+                                                              specie, task_id, target))
 
         list_of_dgs.append(data_gen)
 
@@ -529,9 +534,11 @@ def create_data_generator(sedml_doc, name, task_id, code=None,
         if formula is None:
             formula = name
         if symbol is None and target is None:
-            raise Exception("You must have a 'symbol' or a 'target' for data generators")
+            raise StochSSExportCombineError("You must have a 'symbol' or a 'target' \
+                                            for data generators")
         if symbol is not None and target is not None:
-            raise Exception("You cannot have a 'symbol' and a 'target' in a  data generators")
+            raise StochSSExportCombineError("You cannot have a 'symbol' and a 'target' \
+                                            in a  data generators")
 
         # create the Sed-ML data generator
         sedml_dg = sedml_doc.createDataGenerator()
@@ -561,8 +568,8 @@ def doc_has_data_generator(sedml_doc, dg_id):
 def create_default_outputs(sedml_doc, index, list_of_dgs, error_dgs=None, x_ref="time"):
     plot = sedml_doc.createPlot2D()
     plot.setId("p{0}".format(index))
-    for dg in list_of_dgs:
-        create_plot2d_curve(plot, dg, x_ref=x_ref, error_dgs=error_dgs)
+    for data_gen in list_of_dgs:
+        create_plot2d_curve(plot, data_gen, x_ref=x_ref, error_dgs=error_dgs)
     plot.setLegend(True)
 
 
@@ -572,11 +579,12 @@ def create_saved_outputs(sedml_doc, outputs, index, x_ref="time"):
         plot.setId("p{0}".format(index + i))
         if "title" in output.keys():
             plot.setName(output['title'])
-        for dg in output['data_generators']:
+        for data_gen in output['data_generators']:
             if 'error_dgs' in output.keys():
-                create_plot2d_curve(plot, dg, x_ref=x_ref, error_dgs=output['error_dgs'])
+                create_plot2d_curve(plot, data_gen, x_ref=x_ref,
+                                    error_dgs=output['error_dgs'])
             else:
-                create_plot2d_curve(plot, dg, x_ref=x_ref)
+                create_plot2d_curve(plot, data_gen, x_ref=x_ref)
         plot.setLegend(True)
 
 
@@ -606,8 +614,8 @@ def create_default_3d_outputs(sedml_doc, index, list_of_dgs):
     plot = sedml_doc.createPlot3D()
     plot.setId("p{0}".format(index))
     plot.setLegend(True)
-    for dg in list_of_dgs:
-        create_plot3d_surface(plot, "p1range", "p2range", dg)
+    for data_gen in list_of_dgs:
+        create_plot3d_surface(plot, "p1range", "p2range", data_gen)
 
 
 def create_saved_3d_outputs(sedml_doc, outputs, index):
@@ -616,8 +624,8 @@ def create_saved_3d_outputs(sedml_doc, outputs, index):
         plot.setId("p{0}".format(index + i))
         if "title" in output.keys():
             plot.setName(output['title'])
-        for dg in output['data_generators']:
-            create_plot3d_surface(plot, "p1range", "p2range", dg)
+        for data_gen in output['data_generators']:
+            create_plot3d_surface(plot, "p1range", "p2range", data_gen)
 
 
 def create_plot3d_surface(plot, x_ref, y_ref, z_ref):

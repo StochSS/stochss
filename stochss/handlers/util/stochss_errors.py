@@ -72,3 +72,12 @@ class StochSSWorkflowNotCompleteError(StochSSAPIError):
         self.status_code = 403
         self.reason = "Workflow Run Not Complete"
         self.message = msg
+
+
+class StochSSExportCombineError(StochSSAPIError):
+
+    def __init__(self, msg):
+        self.status_code = 406
+        self.reason = "No Completed Workflows Found"
+        self.message = msg
+
