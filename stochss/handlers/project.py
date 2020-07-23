@@ -7,6 +7,7 @@ from tornado import web
 from shutil import copyfile, copytree, rmtree
 from .util.rename import get_unique_file_name
 from .util.workflow_status import get_status
+from .util.convert_to_combine import convert
 from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
 from notebook.base.handlers import APIHandler
 
@@ -285,7 +286,7 @@ class ExtractWorkflowAPIHandler(APIHandler):
             unique_path, changed = get_unique_file_name(dst_path.split('/').pop(), os.path.dirname(dst_path))
             copytree(src_path, unique_path)
             export_path = os.path.dirname(unique_path).replace(user_dir+"/", "") if os.path.dirname(unique_path) != user_dir else "/"
-            resp = "The Workflow {0} was extracted to {1}".format(src_path.split('/').pop(), export_path)
+            resp = "The Workflow {0} was exported to {1}".format(src_path.split('/').pop(), export_path)
             if changed:
                 resp += " as {0}".format(unique_path.split('/').pop())
             log.debug("Response message: {0}".format(resp))
@@ -352,10 +353,10 @@ class ProjectMetaDataAPIHandler(APIHandler):
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the trash directory: {0}".format(0))
+        log.debug("Path to the project directory: {0}".format(0))
         files = self.get_query_argument(name="files").split(',')
         log.debug("List of files: {0}".format(files))
-        md_path = os.path.join(path, "meta-data.json")
+        md_path = os.path.join(path, ".meta-data.json")
         log.debug("Path to the meta-data file: {0}".format(md_path))
         if os.path.exists(md_path):
             with open(md_path, "r") as md_file:
@@ -374,5 +375,102 @@ class ProjectMetaDataAPIHandler(APIHandler):
         resp = {"meta_data":meta_data, "creators":creators}
         log.debug("Response Message: {0}".format(resp))
         self.write(resp)
+        self.finish()
+
+
+    @web.authenticated
+    def post(self):
+        '''
+        Save the projects meta data.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        log.debug("Path to the project directory: {0}".format(path))
+        data = self.request.body.decode()
+        log.debug("Meta-data to be saved: {0}".format(data))
+        with open(os.path.join(path, ".meta-data.json"), "w") as md_file:
+            md_file.write(data)
+        self.finish()
+
+
+class ExportAsCombineAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for exporting a project or part of a project as a COMBINE archive
+    ##############################################################################
+    '''
+    @web.authenticated
+    def get(self):
+        '''
+        Export a project with existing meta data if any.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        log.debug("Path to the project/experiment/workflow directory: {0}".format(path))
+        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath"))
+        log.debug("Path to the project directory: {0}".format(project_path))
+        try:
+            if os.path.exists(os.path.join(project_path, ".meta-data.json")):
+                with open(os.path.join(project_path, ".meta-data.json"), "w") as md_file:
+                    data = json.load(md_file)
+                for file, meta_data in data['meta-data'].items():
+                    meta_data['creators'] = list(map(lambda key: data['creators'][key], meta_data['creators']))
+                message, errors, file_type = convert(path, data["meta-data"])
+            else:
+                message, errors, file_type = convert(path)
+            if errors:
+                log.error("Errors raised by convert process: {0}".format(errors))
+            resp = {"message":message,"errors":errors,"file_type":file_type}
+            log.debug("Response message: {0}".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            error = {"Reason":err.reason, "Message":err.message}
+            log.error("Exception Information: {0}".format(error))
+            self.write(error)
+        self.finish()
+
+
+    @web.authenticated
+    def post(self):
+        '''
+        Export a project with new or updated meta data.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        log.debug("Path to the project/experiment/workflow directory: {0}".format(path))
+        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath"))
+        log.debug("Path to the project directory: {0}".format(project_path))
+        data = self.request.body.decode()
+        log.debug("Meta-data to be saved: {0}".format(data))
+        with open(os.path.join(project_path, ".meta-data.json"), "w") as md_file:
+            md_file.write(data)
+        data = json.loads(data)
+        for file, meta_data in data['meta-data'].items():
+            meta_data['creators'] = list(map(lambda key: data['creators'][key], meta_data['creators']))
+        try:
+            message, errors, file_type = convert(path, data["meta-data"])
+            if errors:
+                log.error("Errors raised by convert process: {0}".format(errors))
+            resp = {"message":message,"errors":errors,"file_type":file_type}
+            log.debug("Response message: {0}".format(resp))
+            self.write(resp)
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            error = {"Reason":err.reason, "Message":err.message}
+            log.error("Exception Information: {0}".format(error))
+            self.write(error)
         self.finish()
 

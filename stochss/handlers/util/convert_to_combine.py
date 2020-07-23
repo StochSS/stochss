@@ -24,7 +24,7 @@ params_map = {"ODE":["absoluteTol", "relativeTol"],
               "Hybrid-Tau-Leaping":["absoluteTol", "relativeTol", "seed", "realizations", "tauTol"]}
 
 
-def convert(path, description=None, creators=None):
+def convert(path, meta_data=None):
     user_dir = "/home/jovyan"
     path = os.path.join(user_dir, path)
 
@@ -39,6 +39,7 @@ def convert(path, description=None, creators=None):
             raise StochSSExportCombineError("You cannot create a combine achrive \
                                             with a workflow that has not completed")
         archive_name = path.split('/')[:-2].pop().split('.')[0]
+        file_type = "workflow"
         dst_parent = '/'.join(path.split('/')[:-3])
         sedml = convert_workflow(path, archive, archive_dir)
         with open(sedml['path'], "w") as sedml_file:
@@ -47,31 +48,45 @@ def convert(path, description=None, creators=None):
                         libcombine.KnownFormats.lookupFormat('sedml'), True)
     elif path.endswith('.exp'):
         archive_name = path.split('/')[:-1].pop().split('.')[0]
+        file_type = "Experiment"
         dst_parent = '/'.join(path.split('/')[:-2])
         archive_errors = convert_experiment(path, archive, archive_dir)
     elif path.endswith('.proj'):
         archive_name = path.split('/').pop().split('.')[0]
+        file_type = "Project"
         dst_parent = os.path.dirname(path)
         archive_errors = convert_project(path, archive, archive_dir)
     dst, _ = get_unique_file_name(archive_name + ".omex", dst_parent)
 
-    # Create meta data for archive
-    des = libcombine.OmexDescription()
-    des.setAbout('.')
-    des.setCreated(libcombine.OmexDescription.getCurrentDateAndTime())
-    if description is not None:
-        des.setDescription(description)
-    # Create creator to the meta data
-    for data in creators:
-        # Add creator to meta data
-        des.addCreator(create_creator(**data))
-    # Add meta data to archive
-    archive.addMetadata(".", des)
+    if meta_data is not None:
+        add_meta_data(archive, archive_name, meta_data)
 
     # write the archive to the parent directory of the project
     archive.writeToFile(dst)
 
-    return archive_errors
+    resp = "The {0} {1} was exported as {2} to {3}".format(file_type,
+                                                           path.split('/').pop(),
+                                                           archive_name+".omex",
+                                                           "/" if os.path.dirname(dst) == user_dir
+                                                           else os.path.dirname(dst))
+    return resp, archive_errors, file_type
+
+
+def add_meta_data(archive, archive_name, meta_data):
+    for file in meta_data.keys():
+        # Create meta data for archive
+        des = libcombine.OmexDescription()
+        des.setAbout('.' if file.split('.')[0] == archive_name else "./{0}.xml".format(file))
+        des.setCreated(libcombine.OmexDescription.getCurrentDateAndTime())
+        if meta_data[file]["description"]:
+            des.setDescription(meta_data[file]["description"])
+        # Create creator for the meta data
+        for creator_data in meta_data[file]["creators"]:
+            # Add creator to meta data
+            des.addCreator(create_creator(**creator_data))
+        # Add meta data to archive
+        archive.addMetadata('.' if file.split('.')[0] == archive_name else
+                            "./{0}.xml".format(file), des)
 
 
 def create_creator(fname=None, lname=None, email=None, organization=None):
@@ -492,8 +507,8 @@ def create_data_generators(sedml_doc, info, outputs, task_id, is_1d=False):
         code = get_data_generator_code(info['type'], output['key'])
         for species in output['species']:
             formula = get_data_generator_formula(info['type'], code, species)
-            target = "/sbml:sbml/sbml:model/sbml:listOfSpecies/sbml:species\
-                        [@id='{0}']".format(species)
+            target = ("/sbml:sbml/sbml:model/sbml:listOfSpecies/sbml:species[@id='{0}']"
+                      .format(species))
             list_of_dgs.append(create_data_generator(sedml_doc, species, task_id, code=code,
                                                      formula=formula, target=target))
             if code == "sdr":
