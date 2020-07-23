@@ -61,7 +61,7 @@ module.exports = View.extend({
         let successModel = $(modals.projectExportSuccessHtml("Model", body)).modal()
       }else{
         body = JSON.parse(body)
-        let successModel = $(modals.projectExportErrorHtml("Model", body.Reason, body.message)).modal()
+        let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal()
       }
     });
   },

@@ -12,7 +12,6 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
-    console.log(this.collection)
     this.renderCollection(this.collection, EditExperimentView, this.queryByHook("project-experiments-list"))
   }
 });

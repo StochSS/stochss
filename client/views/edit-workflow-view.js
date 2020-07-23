@@ -15,6 +15,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-workflow-open]' : 'handleOpenWorkflowClick',
     'click [data-hook=project-workflow-export]' : 'handleExportWorkflowClick',
+    'click [data-hook=export-workflow-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=project-workflow-remove]' : 'handleDeleteWorkflowClick'
   },
   initialize: function (attrs, options) {
@@ -56,9 +57,12 @@ module.exports = View.extend({
       }
       else {
         body = JSON.parse(body)
-        let successModel = $(modals.projectExportErrorHtml("Workflow", body.Reason, body.message)).modal()
+        let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal()
       }
     })
+  },
+  handleExportCombineClick: function (e) {
+    this.exportAsCombine(this.model.path)
   },
   handleDeleteWorkflowClick: function (e) {
     let self = this
@@ -78,5 +82,8 @@ module.exports = View.extend({
       });
       modal.modal('hide')
     });
+  },
+  exportAsCombine: function (target) {
+    this.parent.parent.exportAsCombine(target)
   }
 });

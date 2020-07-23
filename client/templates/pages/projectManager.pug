@@ -22,6 +22,8 @@ section.page
 
     div.col-md-12.col-lg-10(id="project-manager-file-browser" data-hook="file-browser")
 
+  div.col-md-12.col-lg-10.collapse(id="project-meta-data-container" data-hook="project-meta-data-container")
+  
   div.col-md-12.col-lg-10
 
     button.btn.btn-primary.inline.box-shadow(
@@ -41,7 +43,8 @@ section.page
       li.dropdown-divider
       li.dropdown-item(data-hook="upload-file-btn", data-type="model") Upload StochSS Model
 
+    button.btn.btn-primary.inline.box-shadow(data-hook="export-project-as-combine") Export as combine
+
     button.btn.btn-primary.inline.box-shadow(data-hook="empty-project-trash") Empty Trash
 
-  div.col-md-12.col-lg-10.collapse(id="project-meta-data-container" data-hook="project-meta-data-container")
       

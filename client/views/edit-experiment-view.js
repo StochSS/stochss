@@ -16,6 +16,7 @@ module.exports = View.extend({
     'click [data-hook=project-experiment-view]' : 'handleViewWorkflowsClick',
     'click [data-hook=project-experiment-new-workflow]' : 'handleNewWorkflowClick',
     'click [data-hook=project-experiment-add-workflow]' : 'handleAddWorkflowClick',
+    'click [data-hook=export-experiment-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=project-experiment-remove]' : 'handleRemoveExperimentClick'
   },
   initialize: function (attrs, options) {
@@ -102,6 +103,11 @@ module.exports = View.extend({
       }
     });
   },
+  handleExportCombineClick: function (e) {
+    let parentPath = this.parent.parent.projectPath
+    let target = path.join(parentPath, this.model.name + ".exp")
+    this.exportAsCombine(target)
+  },
   handleRemoveExperimentClick: function (e) {
     let self = this
     if(document.querySelector('#moveToTrashConfirmModal')) {
@@ -121,5 +127,8 @@ module.exports = View.extend({
       });
       modal.modal('hide')
     });
+  },
+  exportAsCombine: function (target) {
+    this.parent.parent.exportAsCombine(target)
   }
 });

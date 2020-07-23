@@ -11,6 +11,7 @@ var EditModelsView = require('../views/edit-models-view');
 var EditExperimentsView = require('../views/edit-experiments-view');
 var ProjectViewer = require('../views/project-viewer');
 var FileBrowser = require('../views/file-browser-view');
+var MetaDataView = require('../views/meta-data');
 //models
 var Project = require('../models/project');
 var Plot = require('../models/plots');
@@ -25,6 +26,7 @@ let ProjectManager = PageView.extend({
     'click [data-hook=new-model]' : 'handleNewModelClick',
     'click [data-hook=new-experiment]' : 'handleNewExperimentClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
+    'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick'
   },
   initialize: function (attrs, options) {
@@ -130,6 +132,19 @@ let ProjectManager = PageView.extend({
     })
     this.registerRenderSubview(this.projectFileBrowser, "file-browser")
   },
+  renderMetaDataView: function (target, files) {
+    if(this.metaDataView) {
+      this.metaDataView.remove()
+    }
+    this.metaDataView = new MetaDataView({
+      parent: this,
+      projectName: this.model.directory,
+      files: files,
+      path: target
+    });
+    this.registerRenderSubview(this.metaDataView, "project-meta-data-container")
+    $(this.queryByHook("project-meta-data-container")).collapse("show")
+  },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
@@ -142,6 +157,9 @@ let ProjectManager = PageView.extend({
   },
   handleExistingModelClick: function () {
     this.addExistingModel()
+  },
+  handleExportCombineClick: function () {
+    this.exportAsCombine(this.projectPath)
   },
   handleEmptyTrashClick: function () {
     let self = this;
@@ -255,6 +273,37 @@ let ProjectManager = PageView.extend({
         modal.modal('hide')
         self.update("existing-model")
       }
+    });
+  },
+  exportAsCombine: function(target) {
+    let self = this
+    if(document.querySelector("#addMetaDataModal")) {
+      document.querySelector("#addMetaDataModal").remove()
+    }
+    let modal = $(modals.addMetaDataHtml("Do you wish to add/update the meta-data for this archive?")).modal()
+    let yesBtn = document.querySelector("#addMetaDataModal .yes-modal-btn")
+    let noBtn = document.querySelector("#addMetaDataModal .no-modal-btn")
+    yesBtn.addEventListener('click', function (e) {
+      modal.modal('hide')
+      var files = []
+      if(target === self.projectPath){
+        files = self.model.experiments.map(function (experiment) {return experiment.name+".exp"})
+        files.unshift(self.model.directory)
+      }else{
+        files = [self.model.directory, target.split('/').pop()]
+      }
+      self.renderMetaDataView(target, files)
+    });
+    noBtn.addEventListener('click', function (e) {
+      let queryString = "?path="+target+"&projectPath="+self.projectPath
+      let endpoint = path.join(app.getApiPath(), "project/export-combine")+queryString
+      xhr({uri:endpoint, json:true}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
+        }else{
+          let modal = $(modals.projectExportErrorHtml(body.Reason, body.Message))
+        }
+      });
     });
   }
 });

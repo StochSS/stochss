@@ -58,7 +58,7 @@ let templates = {
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary yes-modal-btn box-shadow">Yes</button>
-                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">No</button>
+                        <button type="button" class="btn btn-secondary no-modal-btn box-shadow" data-dismiss="modal">No</button>
                       </div>
                     </div>
                   </div>
@@ -304,10 +304,20 @@ module.exports = {
 
       return templates.message(modalID, title, message)
     },
-    projectExportErrorHtml : (fileType, title, message) => {
+    projectExportErrorHtml : (title, message) => {
       let modalID = "projectExportErrorModal"
       
       return templates.message(modalID, title, message)
+    },
+    existingCreatorConfirmationHtml : (title) => {
+      let modalID = "existingCreatorConfirmationModal"
+
+      return templates.confirmation(modalID, title)
+    },
+    addMetaDataHtml: (title) => {
+      let modalID = "addMetaDataModal"
+
+      return templates.confirmation(modalID, title)
     },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;
