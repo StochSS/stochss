@@ -1,4 +1,5 @@
 import selenium_test_setup_and_teardown
+import time
 
 browser_and_container = selenium_test_setup_and_teardown.setup()
 browser=browser_and_container[0]
@@ -15,7 +16,7 @@ browser.click_element_by_id("new-file-directory")
 browser.click_element_by_id("new-model")
 browser.enter_modal_text("test_model")
 browser.back()
-
+time.sleep(5)
 #upload StochSS model
 browser.click_element_by_id("new-file-directory")
 browser.click_element_by_class_and_text("dropdown-item", "Upload StochSS Model")

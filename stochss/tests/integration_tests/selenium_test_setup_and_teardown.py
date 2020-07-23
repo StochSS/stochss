@@ -30,7 +30,7 @@ def initialize_browser(passed_options=None):
         options = Options()
         options.headless=False
     browser=Firefox(options=options)
-    browser.implicitly_wait(5)
+    browser.implicitly_wait(10)
     return browser
 
 def add_methods(browser_class):
