@@ -511,7 +511,7 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
 
 def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
     if solver is None:
-        solver = model.get_best_solver(cpp_test=False)
+        solver = model.get_best_solver(precompile=False)
 
     kwargs = {"solver":solver, "timeout":run_timeout}
 
