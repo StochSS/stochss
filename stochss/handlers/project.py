@@ -1,19 +1,27 @@
+'''
+Use BaseHandler for page requests since
+the base API handler has some logic that prevents
+requests without a referrer field
+'''
+
+
 import os
 import json
-import shutil
 import logging
 
-from tornado import web
 from shutil import copyfile, copytree, rmtree
+from tornado import web
+from notebook.base.handlers import APIHandler
+
 from .util.rename import get_unique_file_name
 from .util.workflow_status import get_status
 from .util.convert_to_combine import convert
 from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
-from notebook.base.handlers import APIHandler
 
 log = logging.getLogger('stochss')
 
 
+# pylint: disable=abstract-method
 class LoadProjectAPIHandler(APIHandler):
     '''
     ##############################################################################
@@ -30,7 +38,7 @@ class LoadProjectAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the new project directory: {}".format(path))
+        log.debug("The path to the new project directory: %s", path)
         project = {"models": [], "experiments": [], "trash_empty": True}
         for item in os.listdir(path):
             if item.endswith('.mdl'):
@@ -45,11 +53,13 @@ class LoadProjectAPIHandler(APIHandler):
                 workflows = []
                 for workflow in os.listdir(os.path.join(path, item)):
                     if workflow.endswith('.wkfl'):
-                        wkfl_dict = {"path":os.path.join(path, item, workflow), "name":workflow.split('.')[0]}
+                        wkfl_dict = {"path":os.path.join(path, item, workflow),
+                                     "name":workflow.split('.')[0]}
                         wkfl_dict['status'] = get_status(wkfl_dict['path'])
-                        with open(os.path.join(wkfl_dict['path'], 'settings.json'), 'r') as settings_file:
+                        with open(os.path.join(wkfl_dict['path'],
+                                               'settings.json'), 'r') as settings_file:
                             outputs = json.load(settings_file)['resultsSettings']['outputs']
-                            if len(outputs):
+                            if outputs:
                                 output = max(outputs, key=lambda output: output['stamp'])
                                 if "plot" in project.keys():
                                     if output['stamp'] > project['plot']['output']['stamp']:
@@ -59,10 +69,10 @@ class LoadProjectAPIHandler(APIHandler):
                                     project['plot'] = {"path":wkfl_dict['path'], "output":output}
                             wkfl_dict['outputs'] = outputs
                             workflows.append(wkfl_dict)
-                project['experiments'].append({"name":name,"workflows":workflows})
+                project['experiments'].append({"name":name, "workflows":workflows})
             elif item == "trash":
                 project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
-        log.debug("Contents of the project: {0}".format(project))
+        log.debug("Contents of the project: %s", project)
         self.write(project)
         self.finish()
 
@@ -83,7 +93,7 @@ class NewProjectAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the new project directory: {}".format(path))
+        log.debug("The path to the new project directory: %s", path)
         try:
             os.makedirs(path)
             os.mkdir(os.path.join(path, "trash"))
@@ -91,8 +101,9 @@ class NewProjectAPIHandler(APIHandler):
             self.write(resp)
         except FileExistsError as err:
             self.set_status(406)
-            error = {"Reason":"Project Already Exists", "Message":"Could not create your project: {0}".format(err)}
-            log.error("Exception Information: {0}".format(error))
+            error = {"Reason":"Project Already Exists",
+                     "Message":"Could not create your project: {0}".format(err)}
+            log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
 
@@ -113,20 +124,23 @@ class NewExperimentAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the new experiment directory: {}".format(path))
+        log.debug("The path to the new experiment directory: %s", path)
         try:
             os.mkdir(path)
             resp = {"message":"", "path":""}
             self.write(resp)
         except FileExistsError as err:
             self.set_status(406)
-            error = {"Reason":"Experiment Already Exists", "Message":"Could not create your experiment: {0}".format(err)}
-            log.error("Exception Information: {0}".format(error))
+            error = {"Reason":"Experiment Already Exists",
+                     "Message":"Could not create your experiment: {0}".format(err)}
+            log.error("Exception Information: %s", error)
             self.write(error)
         except FileNotFoundError as err:
             self.set_status(404)
-            error = {"Reason":"Dirctory Not Found", "Message":"Experiments can only be created in a StochSS Project: {0}".format(err)}
-            log.error("Exception Information: {0}".format(error))
+            error = {"Reason":"Dirctory Not Found",
+                     "Message":"Experiments can only be created in a StochSS Project: \
+                                {0}".format(err)}
+            log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
 
@@ -149,25 +163,28 @@ class AddExistingModelAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
         mdl_path = os.path.join(user_dir, self.get_query_argument(name="mdlPath"))
-        log.debug("Path to the project: {}".format(path))
-        log.debug("Path to the model: {}".format(mdl_path))
+        log.debug("Path to the project: %s", path)
+        log.debug("Path to the model: %s", mdl_path)
         try:
             unique_path, changed = get_unique_file_name(mdl_path.split("/").pop(), path)
             copyfile(mdl_path, unique_path)
-            resp = {"message": "The model {0} was successfully move into {1}".format(mdl_path.split('/').pop(), path.split("/").pop())}
+            resp = {"message": "The model {0} was successfully move into \
+                                {1}".format(mdl_path.split('/').pop(), path.split("/").pop())}
             if changed:
-                resp['message'] += "as {0}".format(unique_path.split('/').pop())
-            log.debug("Response message: {0}".format(resp))
+                resp['message'] += " as {0}".format(unique_path.split('/').pop())
+            log.debug("Response message: %s", resp)
             self.write(resp)
         except IsADirectoryError as err:
             self.set_status(406)
-            error = {"Reason":"Not A Model", "Message":"Cannot move directories into StochSS Projects: {0}".format(err)}
-            log.error("Exception Information: {0}".format(error))
+            error = {"Reason":"Not A Model",
+                     "Message":"Cannot move directories into StochSS Projects: {0}".format(err)}
+            log.error("Exception Information: %s", error)
             self.write(error)
         except FileNotFoundError as err:
             self.set_status(404)
-            error = {"Reason":"Model Not Found", "Message":"Could not find the model: {0}".format(err)}
-            log.error("Exception Information: {0}".format(error))
+            error = {"Reason":"Model Not Found",
+                     "Message":"Could not find the model: {0}".format(err)}
+            log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
 
@@ -190,38 +207,45 @@ class AddExistingWorkflowAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
         wkfl_path = os.path.join(user_dir, self.get_query_argument(name="wkflPath"))
-        log.debug("Path to the experiment: {0}".format(path))
-        log.debug("Path to the workflow: {0}".format(wkfl_path))
+        log.debug("Path to the experiment: %s", path)
+        log.debug("Path to the workflow: %s", wkfl_path)
         try:
             if get_status(wkfl_path) == "running":
                 raise StochSSPermissionsError("Running workflows cannot be moved.")
             unique_path, changed = get_unique_file_name(wkfl_path.split('/').pop(), path)
             copytree(wkfl_path, unique_path)
-            resp = {"message": "The Workflow {0} was successfully moved into {1}".format(wkfl_path.split('/').pop(), path.split('/').pop())}
+            resp = {"message": "The Workflow {0} was successfully moved into \
+                                {1}".format(wkfl_path.split('/').pop(), path.split('/').pop())}
             with open(os.path.join(unique_path, "info.json"), 'r+') as info_file:
                 info = json.load(info_file)
-                log.debug("Old workflow info: {0}".format(info))
+                log.debug("Old workflow info: %s", info)
                 if get_status(unique_path) == "ready":
-                    info['source_model'] = os.path.join(os.path.dirname(path).replace(user_dir+"/", ""), info['source_model'].split('/').pop())
+                    info['source_model'] = os.path.join(os.path.dirname(path).replace(user_dir+"/",
+                                                                                      ""),
+                                                        info['source_model'].split('/').pop())
                 else:
-                    info['wkfl_model'] = info['wkfl_model'].replace(os.path.dirname(info['wkfl_model']), unique_path.replace(user_dir+"/", ""))
-                log.debug("New workflow info: {0}".format(info))
+                    info['wkfl_model'] = (info['wkfl_model']
+                                          .replace(os.path.dirname(info['wkfl_model']),
+                                                   unique_path.replace(user_dir+"/",
+                                                                       "")))
+                log.debug("New workflow info: %s", info)
                 info_file.seek(0)
                 json.dump(info, info_file)
                 info_file.truncate()
             if changed:
-                resp['message'] += "as {0}".format(unique_path.split("/").pop())
-            log.debug("Response message: {0}".format(resp))
+                resp['message'] += " as {0}".format(unique_path.split("/").pop())
+            log.debug("Response message: %s", resp)
             self.write(resp)
         except FileNotFoundError as err:
             self.set_status(404)
-            error = {"Reason":"Workflow Not Found", "Message":"Could not find the workflow: {0}".format(err)}
-            log.error("Exception Information: {0}".format(error))
+            error = {"Reason":"Workflow Not Found",
+                     "Message":"Could not find the workflow: {0}".format(err)}
+            log.error("Exception Information: %s", error)
             self.write(error)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception Information: {0}".format(error))
+            log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
 
@@ -243,22 +267,26 @@ class ExtractModelAPIHandler(APIHandler):
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
-        log.debug("Path to the target model: {0}".format(src_path))
+        log.debug("Path to the target model: %s", src_path)
         dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
-        log.debug("Destination path for the target model: {0}".format(dst_path))
+        log.debug("Destination path for the target model: %s", dst_path)
         try:
-            unique_path, changed = get_unique_file_name(dst_path.split('/').pop(), os.path.dirname(dst_path))
+            unique_path, changed = get_unique_file_name(dst_path.split('/').pop(),
+                                                        os.path.dirname(dst_path))
             copyfile(src_path, unique_path)
-            export_path = os.path.dirname(unique_path).replace(user_dir+"/", "") if os.path.dirname(unique_path) != user_dir else "/"
-            resp = "The Model {0} was extracted to {1}".format(src_path.split('/').pop(), export_path)
+            export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
+                           if os.path.dirname(unique_path) != user_dir else "/")
+            resp = "The Model {0} was extracted to {1}".format(src_path.split('/').pop(),
+                                                               export_path)
             if changed:
                 resp += " as {0}".format(unique_path.split('/').pop())
-            log.debug("Response message: {0}".format(resp))
+            log.debug("Response message: %s", resp)
             self.write(resp)
         except FileNotFoundError as err:
             self.set_status(404)
-            error = {"Reason":"Model Not Found", "Message":"Could not find the model: {0}".format(err)}
-            log.error("Exception Information: {0}".format(error))
+            error = {"Reason":"Model Not Found",
+                     "Message":"Could not find the model: {0}".format(err)}
+            log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
 
@@ -279,25 +307,53 @@ class ExtractWorkflowAPIHandler(APIHandler):
         '''
         user_dir = "/home/jovyan"
         src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
-        log.debug("Path to the target model: {0}".format(src_path))
+        log.debug("Path to the target model: %s", src_path)
         dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
-        log.debug("Destination path for the target model: {0}".format(dst_path))
+        log.debug("Destination path for the target model: %s", dst_path)
         try:
-            unique_path, changed = get_unique_file_name(dst_path.split('/').pop(), os.path.dirname(dst_path))
-            copytree(src_path, unique_path)
-            export_path = os.path.dirname(unique_path).replace(user_dir+"/", "") if os.path.dirname(unique_path) != user_dir else "/"
-            resp = "The Workflow {0} was exported to {1}".format(src_path.split('/').pop(), export_path)
-            if changed:
-                resp += " as {0}".format(unique_path.split('/').pop())
-            log.debug("Response message: {0}".format(resp))
-            self.write(resp)
+            if get_status(src_path) != "running":
+                unique_path, changed = get_unique_file_name(dst_path.split('/').pop(),
+                                                            os.path.dirname(dst_path))
+                copytree(src_path, unique_path)
+                if get_status(unique_path) != "ready":
+                    self.update_workflow_path(unique_path)
+                export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
+                               if os.path.dirname(unique_path) != user_dir else "/")
+                resp = "The Workflow {0} was exported to {1}".format(src_path.split('/').pop(),
+                                                                     export_path)
+                if changed:
+                    resp += " as {0}".format(unique_path.split('/').pop())
+                log.debug("Response message: %s", resp)
+                self.write(resp)
         except FileNotFoundError as err:
             self.set_status(404)
             self.set_header('Content-Type', 'application/json')
-            error = {"Reason":"Workflow Not Found", "Message":"Could not find the workflow: {0}".format(err)}
-            log.error("Exception Information: {0}".format(error))
+            error = {"Reason":"Workflow Not Found",
+                     "Message":"Could not find the workflow: {0}".format(err)}
+            log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
+
+
+    @classmethod
+    def update_workflow_path(cls, dst):
+        '''
+        Update the path to the workflows model
+
+        Attributes
+        ----------
+        dst : string
+            Destination path for the workflow
+        '''
+        with open(os.path.join(dst, "info.json"), "r+") as info_file:
+            info = json.load(info_file)
+            log.debug("Old workflow info: %s", info)
+            new_path = os.path.join(dst, info['wkfl_model'].split('/').pop())
+            info['wkfl_model'] = new_path.replace("/home/jovyan/", "")
+            log.debug("New workflow info: %s", info)
+            info_file.seek(0)
+            json.dump(info, info_file)
+            info_file.truncate()
 
 
 class EmptyTrashAPIHandler(APIHandler):
@@ -317,7 +373,7 @@ class EmptyTrashAPIHandler(APIHandler):
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the trash directory: {0}".format(0))
+        log.debug("Path to the trash directory: %s", path)
         try:
             for item in os.listdir(path):
                 item_path = os.path.join(path, item)
@@ -326,12 +382,12 @@ class EmptyTrashAPIHandler(APIHandler):
                 else:
                     os.remove(item_path)
             resp = "Successfully emptied the trash"
-            log.debug("Response message: {0}".format(resp))
+            log.debug("Response message: %s", resp)
             self.write(resp)
         except FileNotFoundError:
             os.mkdir(path)
             resp = "The trash directory was removed."
-            log.debug("Response message: {0}".format(resp))
+            log.debug("Response message: %s", resp)
             self.write(resp)
         self.finish()
 
@@ -353,11 +409,11 @@ class ProjectMetaDataAPIHandler(APIHandler):
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project directory: {0}".format(0))
+        log.debug("Path to the project directory: %s", path)
         files = self.get_query_argument(name="files").split(',')
-        log.debug("List of files: {0}".format(files))
+        log.debug("List of files: %s", files)
         md_path = os.path.join(path, ".meta-data.json")
-        log.debug("Path to the meta-data file: {0}".format(md_path))
+        log.debug("Path to the meta-data file: %s", md_path)
         if os.path.exists(md_path):
             with open(md_path, "r") as md_file:
                 data = json.load(md_file)
@@ -369,11 +425,11 @@ class ProjectMetaDataAPIHandler(APIHandler):
 
         for file in files:
             if file not in meta_data.keys():
-                meta_data[file] = {"description":"","creators":[]}
-        log.debug("Meta-data for the project: {0}".format(meta_data))
-        log.debug("Creators for the project: {0}".format(creators))
+                meta_data[file] = {"description":"", "creators":[]}
+        log.debug("Meta-data for the project: %s", meta_data)
+        log.debug("Creators for the project: %s", creators)
         resp = {"meta_data":meta_data, "creators":creators}
-        log.debug("Response Message: {0}".format(resp))
+        log.debug("Response Message: %s", resp)
         self.write(resp)
         self.finish()
 
@@ -389,9 +445,9 @@ class ProjectMetaDataAPIHandler(APIHandler):
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project directory: {0}".format(path))
+        log.debug("Path to the project directory: %s", path)
         data = self.request.body.decode()
-        log.debug("Meta-data to be saved: {0}".format(data))
+        log.debug("Meta-data to be saved: %s", data)
         with open(os.path.join(path, ".meta-data.json"), "w") as md_file:
             md_file.write(data)
         self.finish()
@@ -414,27 +470,28 @@ class ExportAsCombineAPIHandler(APIHandler):
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project/experiment/workflow directory: {0}".format(path))
+        log.debug("Path to the project/experiment/workflow directory: %s", path)
         project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath"))
-        log.debug("Path to the project directory: {0}".format(project_path))
+        log.debug("Path to the project directory: %s", project_path)
         try:
             if os.path.exists(os.path.join(project_path, ".meta-data.json")):
-                with open(os.path.join(project_path, ".meta-data.json"), "w") as md_file:
+                with open(os.path.join(project_path, ".meta-data.json"), "r") as md_file:
                     data = json.load(md_file)
-                for file, meta_data in data['meta-data'].items():
-                    meta_data['creators'] = list(map(lambda key: data['creators'][key], meta_data['creators']))
+                for _, meta_data in data['meta-data'].items():
+                    meta_data['creators'] = list(map(lambda key: data['creators'][key],
+                                                     meta_data['creators']))
                 message, errors, file_type = convert(path, data["meta-data"])
             else:
                 message, errors, file_type = convert(path)
             if errors:
-                log.error("Errors raised by convert process: {0}".format(errors))
-            resp = {"message":message,"errors":errors,"file_type":file_type}
-            log.debug("Response message: {0}".format(resp))
+                log.error("Errors raised by convert process: %s", errors)
+            resp = {"message":message, "errors":errors, "file_type":file_type}
+            log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception Information: {0}".format(error))
+            log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
 
@@ -450,27 +507,27 @@ class ExportAsCombineAPIHandler(APIHandler):
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project/experiment/workflow directory: {0}".format(path))
+        log.debug("Path to the project/experiment/workflow directory: %s", path)
         project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath"))
-        log.debug("Path to the project directory: {0}".format(project_path))
+        log.debug("Path to the project directory: %s", project_path)
         data = self.request.body.decode()
-        log.debug("Meta-data to be saved: {0}".format(data))
+        log.debug("Meta-data to be saved: %s", data)
         with open(os.path.join(project_path, ".meta-data.json"), "w") as md_file:
             md_file.write(data)
         data = json.loads(data)
-        for file, meta_data in data['meta-data'].items():
-            meta_data['creators'] = list(map(lambda key: data['creators'][key], meta_data['creators']))
+        for _, meta_data in data['meta-data'].items():
+            meta_data['creators'] = list(map(lambda key: data['creators'][key],
+                                             meta_data['creators']))
         try:
             message, errors, file_type = convert(path, data["meta-data"])
             if errors:
-                log.error("Errors raised by convert process: {0}".format(errors))
-            resp = {"message":message,"errors":errors,"file_type":file_type}
-            log.debug("Response message: {0}".format(resp))
+                log.error("Errors raised by convert process: %s", errors)
+            resp = {"message":message, "errors":errors, "file_type":file_type}
+            log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception Information: {0}".format(error))
+            log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
-

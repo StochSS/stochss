@@ -1,83 +1,67 @@
 class StochSSAPIError(Exception):
-    pass
+
+    def __init__(self, status_code, reason, msg):
+        super().__init__()
+        self.status_code = status_code
+        self.reason = reason
+        self.message = msg
 
 
 class ModelNotFoundError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 404
-        self.reason = "Model File Not Found"
-        self.message = msg
+        super().__init__(404, "Model File Not Found", msg)
 
 
 class StochSSFileNotFoundError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 404
-        self.reason = "StochSS File or Directory Not Found"
-        self.message = msg
+        super().__init__(404, "StochSS File or Directory Not Found", msg)
 
 
 class StochSSPermissionsError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 403
-        self.reason = "Permission Denied"
-        self.message = msg
+        super().__init__(403, "Permission Denied", msg)
 
 
 class ModelNotJSONFormatError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 406
-        self.reason = "Model Data Not JSON Format"
-        self.message = msg
+        super().__init__(406, "Model Data Not JSON Format", msg)
 
 
 class FileNotJSONFormatError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 406
-        self.reason = "File Data Not JSON Format"
-        self.message = msg
+        super().__init__(406, "File Data Not JSON Format", msg)
 
 
 class JSONFileNotModelError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 406
-        self.reason = "JSON File Not StochSS Model Format"
-        self.message = msg
+        super().__init__(406, "JSON File Not StochSS Model Format", msg)
 
 
 class PlotNotAvailableError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 406
-        self.reason = "Plot Figure Not Available"
-        self.message = msg
+        super().__init__(406, "Plot Figure Not Available", msg)
 
 
 class StochSSWorkflowError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 403
-        self.reason = "Workflow Errored on Run"
-        self.message = msg
+        super().__init__(403, "Workflow Errored on Run", msg)
 
 
 class StochSSWorkflowNotCompleteError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 403
-        self.reason = "Workflow Run Not Complete"
-        self.message = msg
+        super().__init__(403, "Workflow Run Not Complete", msg)
 
 
 class StochSSExportCombineError(StochSSAPIError):
 
     def __init__(self, msg):
-        self.status_code = 406
-        self.reason = "No Completed Workflows Found"
-        self.message = msg
-
+        super().__init__(406, "No Completed Workflows Found", msg)

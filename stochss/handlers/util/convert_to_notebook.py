@@ -11,14 +11,15 @@ from .generate_notebook_cells import generate_imports_cell, generate_model_cell,
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
-def convert_to_notebook(_model_path, name=None, settings=None):
+def convert_to_notebook(_model_path, name=None, settings=None, dest_path=None):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     if name is None:
         name = file.split('.')[0].replace('-', '_')
-    dest_path = model_path.split(file)[0]
+    if dest_path is None:
+        dest_path = model_path.split(file)[0]
     
     # Collect .mdl Data
     try:
