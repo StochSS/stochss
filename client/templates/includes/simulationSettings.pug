@@ -3,7 +3,7 @@ div#simulation-settings.card.card-body
   div
 
     h3.inline Simulation Settings
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings", id="collapse", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-settings")
 
@@ -19,36 +19,36 @@ div#simulation-settings.card.card-body
       tbody
         tr
           td
-            input(type="radio", name="simAlgorithm", data-hook="select-ode", data-name="ODE")
+            input(type="radio", name="simAlgorithm", id="select-ode", data-hook="select-ode", data-name="ODE")
             |  ODE
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
           td
-            input(type="radio", name="simAlgorithm", data-hook="select-ssa", data-name="SSA")
+            input(type="radio", name="simAlgorithm", id="select-ssa", data-hook="select-ssa", data-name="SSA")
             |  SSA
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ssa) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
           td
-            input(type="radio", name="simAlgorithm", data-hook="select-tau-leaping", data-name="Tau-Leaping")
+            input(type="radio", name="simAlgorithm", id="select-tau-leaping", data-hook="select-tau-leaping", data-name="Tau-Leaping")
             |  Tau Leaping
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.tauLeaping) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
           td
-            input(type="radio", name="simAlgorithm", data-hook="select-hybrid-tau", data-name="Hybrid-Tau-Leaping")
+            input(type="radio", name="simAlgorithm", id="select-hybrid-tau", data-hook="select-hybrid-tau", data-name="Hybrid-Tau-Leaping")
             |  Hybrid ODE/SSA
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.hybrid) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
           td
-            input.inline(type="radio", name="simAlgorithm", data-hook="select-automatic", data-name="Automatic")
+            input.inline(type="radio", name="simAlgorithm", id="select-automatic", data-hook="select-automatic", data-name="Automatic")
             |  Choose for me
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.chooseForMe) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
       
-    div.row.collapse.show(data-hook="settings-container")
+    div.row.collapse.show(id="settings-container", data-hook="settings-container")
 
       div.col-md-5
 
@@ -71,8 +71,8 @@ div#simulation-settings.card.card-body
 
           tbody
             tr
-              td: div(data-hook="relative-tolerance")
-              td: div(data-hook="absolute-tolerance")
+              td: div(id="relative-tolerance", data-hook="relative-tolerance")
+              td: div(id="absolute-tolerance", data-hook="absolute-tolerance")
 
       div.col-md-7
         
@@ -101,6 +101,6 @@ div#simulation-settings.card.card-body
 
           tbody
             tr
-              td: div(data-hook="trajectories")
-              td: div(data-hook="seed")
-              td: div(data-hook="tau-tolerance")
+              td: div(id="trajectories", data-hook="trajectories")
+              td: div(id="seed", data-hook="seed")
+              td: div(id="tau-tolerance", data-hook="tau-tolerance")

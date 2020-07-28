@@ -3,7 +3,7 @@ div#rules-viewer.card.card-body
   div
 
     h3.inline Rules
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-rules", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-rules", id="collapse", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-rules")
 
@@ -15,4 +15,4 @@ div#rules-viewer.card.card-body
           th.col-md-3-view(scope="col") Variable
           th.col-md-3-view(scope="col") Expression
         
-      tbody(data-hook="rules-list")
+      tbody(id="rules-list", data-hook="rules-list")

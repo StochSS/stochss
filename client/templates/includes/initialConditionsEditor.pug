@@ -4,7 +4,7 @@ div#initial-conditions.card.card-body
 
     h3.inline Initial Conditions
 
-    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#initial-condition" data-hook="initial-condition-button") -
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#initial-condition" id="initial-condition-button", data-hook="initial-condition-button") -
 
   div.collapse(class="show" id="initial-condition" data-hook="initial-conditions")
 
@@ -22,12 +22,12 @@ div#initial-conditions.card.card-body
     
           th(scope="col") Remove
 
-      tbody(data-hook="initial-conditions-collection")
+      tbody(id="initial-conditions-collection", data-hook="initial-conditions-collection")
 
     div.dropdown
 
       button.btn.btn-outline-primary.dropdown-toggle#addInitialConditionBtn(
-        data-hook='add-initial-condition',
+        data-hook='add-initial-condition', 
         data-toggle='dropdown',
         aria-haspopup='true',
         aria-expanded='false',
@@ -35,6 +35,6 @@ div#initial-conditions.card.card-body
       ) Add Initial Condition <span class="caret"></span>
 
       ul.dropdown-menu(aria-labelledby='addInitialConditionBtn')
-        li.dropdown-item(data-hook='scatter') Scatter
-        li.dropdown-item(data-hook='place') Place
-        li.dropdown-item(data-hook='distribute-uniformly') Distribute Uniformly per Voxel
+        li.dropdown-item(id='scatter', data-hook='scatter') Scatter, 
+        li.dropdown-item(id='place', data-hook='place') Place, 
+        li.dropdown-item(id='distribute-uniformly', data-hook='distribute-uniformly') Distribute Uniformly per Voxel

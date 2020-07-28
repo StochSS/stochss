@@ -4,14 +4,14 @@ div#workflow-editor.card.card-body
 
     h3.inline Settings
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-wkfl-settings", data-hook="collapse-settings") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-wkfl-settings", id="collapse-settings", data-hook="collapse-settings") -
 
   div.collapse(class="show", id="collapse-wkfl-settings", data-hook="workflow-editor-container")
 
-    div(data-hook="model-name-container")
+    div(id="model-name-container", data-hook="model-name-container")
 
-    div.collapse(class="show" data-hook="param-sweep-settings-container")
+    div.collapse(class="show" id="param-sweep-settings-container", data-hook="param-sweep-settings-container")
 
-    div(data-hook="sim-settings-container")
+    div(id="sim-settings-container", data-hook="sim-settings-container")
 
-    div(data-hook="workflow-state-buttons-container")
+    div(id="workflow-state-buttons-container", data-hook="workflow-state-buttons-container")

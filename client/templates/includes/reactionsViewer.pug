@@ -3,7 +3,7 @@ div#reactions-viewer.card.card-body
   div
 
     h3.inline Reactions
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-reactions", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-reactions", id="collapse", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-reactions")
 
@@ -14,4 +14,4 @@ div#reactions-viewer.card.card-body
           th.col-md-3-view(scope="col") Summary
           th.col-md-6-view(scope="col") Rate/Propensity
         
-      tbody(data-hook="reaction-list")
+      tbody(id="reaction-list", data-hook="reaction-list")

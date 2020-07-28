@@ -3,7 +3,7 @@ div#parameter-sweep-settings.card.card-body
   div
 
     h3.inline Parameter Sweep Settings
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-psweep-settings", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-psweep-settings", id="collapse", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-psweep-settings")
     div.row
@@ -13,10 +13,10 @@ div#parameter-sweep-settings.card.card-body
           div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.sweepType) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
         div.inline.horizontal-space
-          input(type="radio", name="sweepType", data-hook="one-parameter", data-name="1D" checked)
+          input(type="radio", name="sweepType", id="one-parameter", data-hook="one-parameter", data-name="1D" checked)
           |  One Parameter
         div.inline.horizontal-space
-          input(type="radio", name="sweepType", data-hook="two-parameter", data-name="2D" disabled)
+          input(type="radio", name="sweepType", id="two-parameter", data-hook="two-parameter", data-name="2D" disabled)
           |  Two Parameters
       div.col-md-6.verticle-space
         span.inline(for="species-of-interest") Species of Interest:
@@ -60,14 +60,14 @@ div#parameter-sweep-settings.card.card-body
 
       tbody
         tr
-          td: div(data-hook="sweep-variable-one-select")
-          td: div(data-hook="current-value-one-input")
-          td: div(data-hook="minimum-value-one-input")
-          td: div(data-hook="maximum-value-one-input")
-          td: div(data-hook="step-one-input")
-        tr.collapse(data-hook="parameter-two-row")
-          td: div(data-hook="sweep-variable-two-select")
-          td: div(data-hook="current-value-two-input")
-          td: div(data-hook="minimum-value-two-input")
-          td: div(data-hook="maximum-value-two-input")
-          td: div(data-hook="step-two-input")
+          td: div(id="sweep-variable-one-select", data-hook="sweep-variable-one-select")
+          td: div(id="current-value-one-input", data-hook="current-value-one-input")
+          td: div(id="minimum-value-one-input", data-hook="minimum-value-one-input")
+          td: div(id="maximum-value-one-input", data-hook="maximum-value-one-input")
+          td: div(id="step-one-input", data-hook="step-one-input")
+        tr.collapse(id="parameter-two-row", data-hook="parameter-two-row")
+          td: div(id="sweep-variable-two-select", data-hook="sweep-variable-two-select")
+          td: div(id="current-value-two-input", data-hook="current-value-two-input")
+          td: div(id="minimum-value-two-input", data-hook="minimum-value-two-input")
+          td: div(id="maximum-value-two-input", data-hook="maximum-value-two-input")
+          td: div(id="step-two-input", data-hook="step-two-input")
