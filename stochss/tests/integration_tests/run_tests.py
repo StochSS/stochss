@@ -16,11 +16,12 @@ if __name__ == '__main__':
 
 
 #import test_module
-    import selenium_test_new_file_directory
+    #import selenium_test_new_file_directory
+    import selenium_test_new_model
 
     modules = [
-    #test_module1,
-    selenium_test_new_file_directory
+    selenium_test_new_model,
+    #selenium_test_new_file_directory
     ]
 
     for module in modules:
