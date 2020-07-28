@@ -134,6 +134,11 @@ module.exports = View.extend({
     $(this.queryByHook("email-input-view")).find("input").val(email)
     $(this.queryByHook("organization-input-view")).find("input").val(organization)
     $(this.queryByHook("add-creator-btn")).prop('disabled', this.selectedCreator === "New Creator")
+    if(this.metaData[this.selectedFile].creators.includes(this.selectedCreator)) {
+      $(this.queryByHook("add-creator-btn")).text("Update")
+    }else{
+      $(this.queryByHook("add-creator-btn")).text("Add")
+    }
   },
   handleAddCreatorClick: function (e) {
     let fName = $(this.queryByHook("given-name-input-view")).find("input").val()
@@ -171,6 +176,7 @@ module.exports = View.extend({
     }
     this.selectedCreator = key
     this.renderCreatorsSelectView()
+    $(this.queryByHook("add-creator-btn")).text("Update")
     this.renderCreatorListingView()
   },
   toggleAddCreatorBtn: function (e) {
@@ -193,7 +199,7 @@ module.exports = View.extend({
       if(response.statusCode < 400) {
         let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
       }else{
-        let modal = $(modals.projectExportErrorHtml(body.Reason, body.Message))
+        let modal = $(modals.projectExportErrorHtml(body.Reason, body.Message)).modal()
       }
     })
   },

@@ -4,13 +4,13 @@ div#browse-files.card.card-body
 
     h3.inline Browse Files
     div.inline
-      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-browse-files", data-hook="collapse-browse-files") +
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-browse-files", id="collapse-browse-files" data-hook="collapse-browse-files") +
 
   div.collapse(id="collapse-browse-files")
 
-    div.alert-warning(class="collapse", data-hook="extension-warning") You should avoid changing the file extension unless you know what you are doing!
+    div.alert-warning(class="collapse", id="extension-warning" data-hook="extension-warning") You should avoid changing the file extension unless you know what you are doing!
 
-    div.alert-warning(class="collapse", data-hook="rename-warning") MESSAGE
+    div.alert-warning(class="collapse", id="rename-warning" data-hook="rename-warning") MESSAGE
 
     div#models-jstree-view
 
@@ -26,16 +26,16 @@ div#browse-files.card.card-body
       ) <b>+</b>
 
       ul.dropdown-menu(aria-labelledby="project-browse-files-add-btn")
-        li.dropdown-item(data-hook="new-directory") Create Directory
-        li.dropdown-item(data-hook="browser-new-experiment") Create Experiment
-        li.dropdown-item(data-hook="browser-new-model") Create Model
+        li.dropdown-item(id="new-directory" data-hook="new-directory") Create Directory
+        li.dropdown-item(id="browser-new-experiment" data-hook="browser-new-experiment") Create Experiment
+        li.dropdown-item(id="browser-new-model" data-hook="browser-new-model") Create Model
         li.dropdown-divider
-        li.dropdown-item(data-hook="browser-existing-model") Add Existing Model
+        li.dropdown-item(id="browser-existing-model" data-hook="browser-existing-model") Add Existing Model
         li.dropdown-divider
-        li.dropdown-item(data-hook="upload-file-btn", data-type="model") Upload StochSS Model
-        li.dropdown-item(data-hook="upload-file-btn", data-type="sbml") Upload SBML Model
-        li.dropdown-item(data-hook="upload-file-btn", data-type="file") Upload File
+        li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model
+        li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="sbml") Upload SBML Model
+        li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="file") Upload File
 
-      button.btn.btn-primary.box-shadow(data-hook="options-for-node" disabled) Actions
+      button.btn.btn-primary.box-shadow(id="options-for-node" data-hook="options-for-node" disabled) Actions
       
-      button.btn.btn-primary.inline.box-shadow(data-hook="refresh-jstree") Refresh
+      button.btn.btn-primary.inline.box-shadow(id="refresh-jstree" data-hook="refresh-jstree") Refresh

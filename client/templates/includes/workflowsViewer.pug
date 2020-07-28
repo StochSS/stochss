@@ -3,8 +3,8 @@ div#workflows-viewer.card.card-body
   div
 
     h3.inline Workflows
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-workflows"+this.collection.parent.name, data-hook="collapse-workflows") +
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-workflows"+this.collection.parent.name, id="collapse-workflows" data-hook="collapse-workflows") +
 
   div.collapse(id="collapse-workflows"+this.collection.parent.name)
 
-    div(data-hook="workflow-container")
+    div(id="workflow-container" data-hook="workflow-container")
