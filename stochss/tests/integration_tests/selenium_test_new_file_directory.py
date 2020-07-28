@@ -17,9 +17,6 @@ class TestNewFileDirectory(unittest.TestCase):
 
         self.browser.new_file_directory_new_directory("test_dir")
         
-       # self.browser.click_element_by_id("new-file-directory")
-       # self.browser.click_element_by_id("new-model")
-       # self.browser.enter_modal_text("test_model")
         self.browser.new_file_directory_new_model("test_model")
         self.browser.back()
         self.browser.wait_for_navigation_complete()
