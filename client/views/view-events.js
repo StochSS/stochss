@@ -1,3 +1,4 @@
+var $ = require('jquery');
 //views
 var View = require('ampersand-view');
 var AssignmentsViewer = require('./event-assignments-viewer');
@@ -16,12 +17,7 @@ module.exports = View.extend({
       hook: 'event-trigger-persistent',
       type: 'booleanAttribute',
       name: 'checked',
-    },
-    'model.useValuesFromTriggerTime': {
-      hook: 'use-values-from-trigger-time',
-      type: 'booleanAttribute',
-      name: 'checked',
-    },
+    }
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -33,6 +29,11 @@ module.exports = View.extend({
       collection: this.model.eventAssignments
     });
     this.registerRenderSubview(assignmentsViewer, 'assignment-viewer');
+    if(this.model.useValuesFromTriggerTime) {
+      $(this.queryByHook("trigger-time")).prop('checked', true)
+    }else{
+      $(this.queryByHook("assignment-time")).prop('checked', true)
+    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
