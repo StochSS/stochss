@@ -97,7 +97,10 @@ class NewProjectAPIHandler(APIHandler):
         try:
             os.makedirs(path)
             os.mkdir(os.path.join(path, "trash"))
-            resp = {"message":"", "path":""}
+            os.mkdir(os.path.join(path, "Experiment1.exp"))
+            resp = {"message":"Successfully created the project: {0}\
+                              ".format(path.split('/').pop()),
+                    "path":path}
             self.write(resp)
         except FileExistsError as err:
             self.set_status(406)
