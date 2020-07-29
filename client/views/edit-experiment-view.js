@@ -47,30 +47,36 @@ module.exports = View.extend({
     $(this.queryByHook("project-experiment-view")).text(newText[text])
   },
   handleNewWorkflowClick: function (e) {
+    if(this.parent.parent.model.models.length > 0) {
     let self = this
-    if(document.querySelector("#newProjectWorkflowModal")) {
-      document.querySelector("#newProjectWorkflowModal").remove()
+      if(document.querySelector("#newProjectWorkflowModal")) {
+        document.querySelector("#newProjectWorkflowModal").remove()
+      }
+      let modal = $(modals.newProjectWorkflowHtml("Name of the model: ")).modal()
+      let okBtn = document.querySelector("#newProjectWorkflowModal .ok-model-btn")
+      let input = document.querySelector("#newProjectWorkflowModal #input")
+      input.addEventListener("keyup", function (event) {
+        if(event.keyCode === 13){
+          event.preventDefault();
+          okBtn.click();
+        }
+      });
+      okBtn.addEventListener('click', function (e) {
+        if(Boolean(input.value)) {
+          let mdlFile = input.value.endsWith('.mdl') ? input.value : input.value + ".mdl"
+          let mdlPath =  path.join(self.parent.parent.projectPath, mdlFile)
+          let parentPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
+          let queryString = "?path="+mdlPath+"&parentPath="+parentPath
+          let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
+          modal.modal('hide')
+          window.location.href = endpoint
+        }
+      });
+    }else{
+      let title = "No Models Found"
+      let message = "You need to add a model before you can create a new workflow."
+      let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
     }
-    let modal = $(modals.newProjectWorkflowHtml("Name of the model: ")).modal()
-    let okBtn = document.querySelector("#newProjectWorkflowModal .ok-model-btn")
-    let input = document.querySelector("#newProjectWorkflowModal #input")
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    okBtn.addEventListener('click', function (e) {
-      if(Boolean(input.value)) {
-        let mdlFile = input.value.endsWith('.mdl') ? input.value : input.value + ".mdl"
-        let mdlPath =  path.join(self.parent.parent.projectPath, mdlFile)
-        let parentPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
-        let queryString = "?path="+mdlPath+"&parentPath="+parentPath
-        let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
-        modal.modal('hide')
-        window.location.href = endpoint
-      }
-    });
   },
   handleAddWorkflowClick: function (e) {
     let self = this
