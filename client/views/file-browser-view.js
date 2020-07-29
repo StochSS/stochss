@@ -950,6 +950,9 @@ module.exports = View.extend({
           }
         }
       }
+      let trash = {
+        "refresh" : root.Refresh
+      }
       // common to both spatial and non-spatial models
       let model = {
         "Edit" : {
@@ -1171,8 +1174,11 @@ module.exports = View.extend({
       if (o.type === 'root'){
         return $.extend(root, {"Download":common.Download})
       }
-      if (o.type ===  'folder') {
+      if (o.type ===  'folder' && o.text !== "trash") {
         return $.extend(folder, common)
+      }
+      if (o.text === "trash"){
+        return trash
       }
       if (o.type === 'spatial') {
         return $.extend(model, spatialConvert, common)
