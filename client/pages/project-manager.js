@@ -174,7 +174,7 @@ let ProjectManager = PageView.extend({
       xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           $(self.queryByHook('empty-project-trash')).prop('disabled', true)
-          console.log(body.message)
+          console.log(body)
         }else{
           console.log(body)
         }

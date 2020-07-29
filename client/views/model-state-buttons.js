@@ -1,8 +1,10 @@
-var app = require('../app');
 var xhr = require('xhr');
 var path = require('path');
 var Plotly = require('../lib/plotly');
 var $ = require('jquery');
+//support file
+var app = require('../app');
+var modals = require('../modals');
 //views
 var View = require('ampersand-view');
 //templates
@@ -25,6 +27,12 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.togglePreviewWorkflowBtn();
+    if(this.parent.experiments && !this.parent.experiments[0]) {
+      $(this.queryByHook('start-workflow')).prop('disabled', true)
+      let title = "No Experiments Found"
+      let message = "The project that contains this model does not contain any experiments.<br>You will be unable to start a workflow using this model until you create an experiment within the project."
+      let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
+    }
   },
   clickSaveHandler: function (e) {
     this.saveModel(this.saved.bind(this));
@@ -39,7 +47,11 @@ module.exports = View.extend({
   clickStartWorkflowHandler: function (e) {
     let self = this
     this.saveModel(function () {
-      window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+self.model.directory;
+      var queryString = "?path="+self.model.directory
+      if(self.parent.experiments) {
+        queryString += ("&experiments="+self.parent.experiments)
+      }
+      window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+queryString;
     })
   },
   togglePreviewWorkflowBtn: function () {

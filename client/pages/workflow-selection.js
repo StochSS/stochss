@@ -32,6 +32,9 @@ let workflowSelection = PageView.extend({
     }else{
       this.parentPath = path.dirname(this.modelDir)
     }
+    if(urlParams.has('experiments')){
+      this.experiments = urlParams.get('experiments')
+    }
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();

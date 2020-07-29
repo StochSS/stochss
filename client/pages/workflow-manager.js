@@ -14,6 +14,7 @@ var WorkflowResultsView = require('../views/workflow-results');
 var ModelViewer = require('../views/model-viewer');
 var InfoView = require('../views/workflow-info');
 var InputView = require('../views/input');
+var SelectView = require('ampersand-select-view');
 //models
 var Model = require('../models/model')
 //templates
@@ -29,6 +30,7 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=edit-workflow-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('wkfl-manager')).modal();
     },
+    'change [data-hook=experiments-select-view]' : 'updateExperiment'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -41,6 +43,11 @@ let WorkflowManager = PageView.extend({
     let urlParams = new URLSearchParams(window.location.search)
     let type = urlParams.get('type');
     this.urlPathParam = urlParams.get('path');
+    if(urlParams.has('experiments')) {
+      this.experiments = urlParams.get('experiments')
+    }else{
+      this.experiments = 'undefined'
+    }
     var stamp = this.getCurrentDate();
     var queryStr = "?stamp="+stamp+"&type="+type+"&path="+this.urlPathParam
     if(urlParams.has('parentPath')) {
@@ -112,6 +119,9 @@ let WorkflowManager = PageView.extend({
     $(this.queryByHook("page-title")).text('Workflow: '+this.titleType)
     this.renderWkflNameInputView();
     this.renderMdlPathInputView();
+    if(this.experiments !== 'undefined') {
+      this.renderExperimentsSelectView()
+    }
     this.renderWorkflowEditor();
     this.renderWorkflowStatusView();
     this.renderResultsView();
@@ -156,6 +166,29 @@ let WorkflowManager = PageView.extend({
     if(this.status !== "new" && this.status !== "ready") {
       $(this.queryByHook('model-path')).find('input').prop('disabled', true);
     }
+  },
+  renderExperimentsSelectView: function () {
+    if(this.experimentsSelectView) {
+      this.experimentsSelectView.remove()
+    }
+    let experiments = this.experiments.split(',')
+    this.experimentsSelectView = new SelectView({
+      label: 'Experiment: ',
+      name: 'experiment',
+      required: true,
+      idAttribute: 'cid',
+      textAttribute: 'name',
+      eagerValidate: true,
+      options: experiments,
+      value: experiments[0]
+    });
+    let pathElements = this.wkflPath.split('/')
+    pathElements.splice(-1, 0, experiments[0]+".exp")
+    this.wkflPath = pathElements.join('/')
+    this.registerRenderSubview(this.experimentsSelectView, "experiments-select-view")
+    let title = "Experiment Needed"
+    let message = "Workflows within a project must be stored in an experiment.<br> You can select an experment using the drop down list under the Model Path."
+    let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
   },
   renderWorkflowEditor: function () {
     if(this.workflowEditorView){
@@ -263,6 +296,13 @@ let WorkflowManager = PageView.extend({
       });
     }
   },
+  updateExperiment: function (e) {
+    let experiment = e.target.selectedOptions.item(0).text
+    let pathElements = this.wkflPath.split('/')
+    pathElements.splice(-2, 1, experiment+".exp")
+    this.wkflPath = pathElements.join('/')
+    console.log(this.wkflPath)
+  },
   reloadWkfl: function () {
     let self = this;
     if(self.status === 'new') {
@@ -273,6 +313,9 @@ let WorkflowManager = PageView.extend({
         this.url = this.url.replace(this.modelDirectory.split('/').pop(), replaceText)
       }else{
         this.url = this.url.replace(this.modelDirectory, this.wkflPath)
+      }
+      if(this.experiments !== 'undefined'){
+        this.url = this.url.replace(this.experiments, 'undefined')
       }
       window.location.href = this.url
     }

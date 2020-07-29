@@ -32,7 +32,8 @@ let ModelEditor = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    var directory = (new URLSearchParams(window.location.search)).get('path');
+    let urlParams = new URLSearchParams(window.location.search)
+    var directory = urlParams.get('path');
     var modelFile = directory.split('/').pop();
     var name = decodeURI(modelFile.split('.')[0]);
     var isSpatial = modelFile.split('.').pop().startsWith('s');
@@ -67,6 +68,9 @@ let ModelEditor = PageView.extend({
       this.updateSpeciesInUse();
       this.updateParametersInUse();
     }, this);
+    if(this.model.directory.includes('.proj')){
+      this.experiments = urlParams.get('experiments').split(',')
+    }
   },
   update: function () {
   },

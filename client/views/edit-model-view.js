@@ -24,7 +24,11 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
   },
   handleEditModelClick: function (e) {
-    window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+this.model.directory
+    let experiments = this.parent.parent.model.experiments.map(function (exp) {
+      return exp.name
+    })
+    let queryString = "?path="+this.model.directory+"&experiments="+experiments.toString()
+    window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+queryString
   },
   handleNewWorkflowClick: function (e) {
     let self = this
