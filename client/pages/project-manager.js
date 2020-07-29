@@ -27,7 +27,8 @@ let ProjectManager = PageView.extend({
     'click [data-hook=new-experiment]' : 'handleNewExperimentClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
-    'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick'
+    'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick',
+    // 'click [data-hook=upload-file-btn]' : 'handleUploadModelClick' TODO: need to add functionality for this
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments)

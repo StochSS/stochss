@@ -14,7 +14,6 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
     'click [data-hook=project-model-workflow]' : 'handleNewWorkflowClick',
-    'click [data-hook=project-model-extract]' : 'handleExtractModelClick',
     'click [data-hook=project-model-remove]' : 'handleRemoveModelClick'
   },
   initialize: function (attrs, options) {
@@ -60,20 +59,6 @@ module.exports = View.extend({
       let message = "You need to create an experiment before you can create a new workflow."
       let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
     }
-  },
-  handleExtractModelClick: function (e) {
-    let self = this
-    let projectParent = path.dirname(path.dirname(this.model.directory)) === '.' ? "" : path.dirname(path.dirname(this.model.directory))
-    let queryString = "?srcPath="+this.model.directory+"&dstPath="+path.join(projectParent, this.model.directory.split('/').pop())
-    let endpoint = path.join(app.getApiPath(), "project/extract-model")+queryString
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(response.statusCode < 400){
-        let successModel = $(modals.projectExportSuccessHtml("Model", body)).modal()
-      }else{
-        body = JSON.parse(body)
-        let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal()
-      }
-    });
   },
   handleRemoveModelClick: function (e) {
     let self = this
