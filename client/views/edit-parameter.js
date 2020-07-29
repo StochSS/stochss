@@ -49,7 +49,7 @@ module.exports = View.extend({
     if(document.querySelector('#parameterAnnotationModal')) {
       document.querySelector('#parameterAnnotationModal').remove();
     }
-    let modal = $(annotationModalHtml("parameter", name, annotation)).modal();
+    let modal = $(modals.annotationModalHtml("parameter", name, annotation)).modal();
     let okBtn = document.querySelector('#parameterAnnotationModal .ok-model-btn');
     let input = document.querySelector('#parameterAnnotationModal #parameterAnnotationInput');
     input.addEventListener("keyup", function (event) {
