@@ -93,6 +93,7 @@ def rename(path, new_name):
             info_file.truncate()
 
     if changed:
+        new_name = new_path.split('/').pop()
         message = "A file already exists with that name, {0} was renamed to {1} in order to prevent a file from being overwriten.".format(old_path.split('/').pop(), new_name)
     else:
         message = 'Success! {0} was renamed to {1}'.format(old_name, new_name)
