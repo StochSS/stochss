@@ -55,7 +55,8 @@ let ProjectManager = PageView.extend({
       success: function (model, response, options) {
         self.renderProjectViewer()
         $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
-        if(target === "model-editor" || target === "experiment-editor" || target === "workflows-editor") {
+        if(target === "model-editor" || target === "experiment-editor" || 
+                          target === "workflows-editor" || target === "trash") {
           self.projectFileBrowser.refreshJSTree()
         }else if(target === "file-browser") {
           self.renderEditModelsView()
@@ -174,6 +175,7 @@ let ProjectManager = PageView.extend({
       xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           $(self.queryByHook('empty-project-trash')).prop('disabled', true)
+          self.update("trash")
           console.log(body)
         }else{
           console.log(body)
