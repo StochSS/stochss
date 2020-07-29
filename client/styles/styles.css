@@ -76,6 +76,10 @@ a.disabled {
   width: 8rem;
 }
 
+button.name {
+  width: 75%;
+}
+
 .form-input {
   width: 100%;
 }
