@@ -744,6 +744,20 @@ module.exports = View.extend({
     let isSpatial = false
     this.newModelOrDirectory(undefined, true, isSpatial);
   },
+  handleExtractModelClick: function (o) {
+    let self = this
+    let projectParent = path.dirname(this.parent.projectPath) === '.' ? "" : path.dirname(this.parent.projectPath)
+    let queryString = "?srcPath="+o.original._path+"&dstPath="+path.join(projectParent, o.original._path.split('/').pop())
+    let endpoint = path.join(app.getApiPath(), "project/extract-model")+queryString
+    xhr({uri: endpoint}, function (err, response, body) {
+      if(response.statusCode < 400){
+        let successModel = $(modals.projectExportSuccessHtml("Model", body)).modal()
+      }else{
+        body = JSON.parse(body)
+        let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal()
+      }
+    });
+  },
   showContextMenuForNode: function (e) {
     $('#models-jstree-view').jstree().show_contextmenu(this.nodeForContextMenu)
   },
@@ -950,6 +964,15 @@ module.exports = View.extend({
           "separator_after" : true,
           "action" : function (data) {
             window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
+          }
+        },
+        "Extract" : {
+          "label" : "Extract",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.handleExtractModelClick(o);
           }
         },
         "New Workflow" : {
