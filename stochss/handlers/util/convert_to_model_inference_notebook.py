@@ -21,7 +21,7 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
     file = full_path.split('/').pop()
     if name is None:
         name = file.split('.')[0].replace('-', '_')
-    dest_path = model_path.split(file)[0]
+    dest_path = full_path.split(file)[0]
     
     # Collect .mdl Data
     try:
