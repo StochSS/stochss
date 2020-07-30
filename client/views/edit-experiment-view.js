@@ -22,6 +22,9 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     this.renderEditWorkflowsView();
+    if(this.model.collection.length == 1) {
+      this.handleViewWorkflowsClick(undefined)
+    }
   },
   renderEditWorkflowsView: function () {
     if(this.editWorkflowsView){

@@ -75,7 +75,7 @@ def build_child(text, f_type, p_path):
     else:
         _path = path.join(p_path, text) # The child is in a sub-leve of the tree
     child = {'text' : text, 'type' : f_type, '_path' : _path}
-    child['children'] = f_type == "folder"
+    child['children'] = f_type == "folder" or f_type == "experiment"
     if f_type == "workflow":
         status = get_status(_path)
         child['_status'] = status
