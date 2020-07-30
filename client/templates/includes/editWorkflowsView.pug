@@ -15,3 +15,20 @@ div#edit-project-workflows
     div.col-md-1: h6 <b>Move to Trash</b>
 
   div.mt-3(id="project-workflows-list" data-hook="project-workflows-list")
+
+  div.col-md-2
+
+    button.btn.btn-outline-secondary.dropdown-toggle.box-shadow(
+      id="add-workflow-btn",
+      data-hook="add-workflow-btn",
+      data-toggle="dropdown",
+      aria-haspopup="true",
+      aria-expanded="false",
+      type="button"
+    ) Add <span class="caret"></span>
+
+    ul.dropdown-menu(aria-labelledby="add-workflow-btn")
+      li.dropdown-item(id="project-experiment-new-workflow" data-hook="project-experiment-new-workflow") New Workflow
+      li.dropdown-item(id="project-experiment-add-workflow" data-hook="project-experiment-add-workflow") Existing Workflow
+          
+    
