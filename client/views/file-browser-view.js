@@ -131,7 +131,7 @@ module.exports = View.extend({
         'spatial' : {"icon": "jstree-icon jstree-file"},
         'nonspatial' : {"icon": "jstree-icon jstree-file"},
         'project' : {"icon": "jstree-icon jstree-file"},
-        'experiment' : {"icon": "jstree-icon jstree-file"},
+        'experiment' : {"icon": "jstree-icon jstree-folder"},
         'workflow' : {"icon": "jstree-icon jstree-file"},
         'notebook' : {"icon": "jstree-icon jstree-file"},
         'mesh' : {"icon": "jstree-icon jstree-file"},
@@ -758,10 +758,23 @@ module.exports = View.extend({
       }
     });
   },
+  handleExportWorkflowClick: function (o) {
+    let self = this
+    let projectParent = path.dirname(this.parent.projectPath) === '.' ? "" : path.dirname(this.parent.projectPath)
+    let queryString = "?srcPath="+o.original._path+"&dstPath="+path.join(projectParent, o.original._path.split('/').pop())
+    let endpoint = path.join(app.getApiPath(), "project/extract-workflow")+queryString
+    xhr({uri: endpoint}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        let successModel = $(modals.projectExportSuccessHtml("Workflow", body)).modal()
+      }
+      else {
+        body = JSON.parse(body)
+        let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal()
+      }
+    })
+  },
   handleExportCombineClick: function (o, download) {
-    let parentPath = this.parent.projectPath
-    let file = o.original._path.split('/').pop()
-    let target = path.join(parentPath, file)
+    let target = o.original._path
     this.parent.exportAsCombine(target, download)
   },
   showContextMenuForNode: function (e) {
@@ -1182,6 +1195,33 @@ module.exports = View.extend({
                 self.duplicateFileOrDirectory(o, "wkfl_model")
               }
             }
+          }
+        },
+        "Extract" : {
+          "label" : "Extract",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.handleExportWorkflowClick(o)
+          }
+        },
+        "convertToCombine" : {
+          "label" : "Convert to Combine",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.handleExportCombineClick(o, false)
+          }
+        },
+        "downloadAsCombine" : {
+          "label" : "Download as Combine",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.handleExportCombineClick(o, false)
           }
         }
       }

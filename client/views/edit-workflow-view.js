@@ -15,7 +15,6 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-workflow-open]' : 'handleOpenWorkflowClick',
     'click [data-hook=project-workflow-export]' : 'handleExportWorkflowClick',
-    'click [data-hook=export-workflow-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=project-workflow-remove]' : 'handleDeleteWorkflowClick'
   },
   initialize: function (attrs, options) {
@@ -45,21 +44,6 @@ module.exports = View.extend({
   handleOpenWorkflowClick: function (e) {
     let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+this.model.path+"&type=none";
     window.location.href = endpoint
-  },
-  handleExportWorkflowClick: function (e) {
-    let self = this
-    let projectParent = path.dirname(path.dirname(path.dirname(this.model.path))) === '.' ? "" : path.dirname(path.dirname(path.dirname(this.model.path)))
-    let queryString = "?srcPath="+this.model.path+"&dstPath="+path.join(projectParent, this.model.path.split('/').pop())
-    let endpoint = path.join(app.getApiPath(), "project/extract-workflow")+queryString
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(response.statusCode < 400) {
-        let successModel = $(modals.projectExportSuccessHtml("Workflow", body)).modal()
-      }
-      else {
-        body = JSON.parse(body)
-        let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal()
-      }
-    })
   },
   handleExportCombineClick: function (e) {
     this.exportAsCombine(this.model.path)
