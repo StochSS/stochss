@@ -134,7 +134,7 @@ let ProjectManager = PageView.extend({
     })
     this.registerRenderSubview(this.projectFileBrowser, "file-browser")
   },
-  renderMetaDataView: function (target, files) {
+  renderMetaDataView: function (target, files, download) {
     if(this.metaDataView) {
       this.metaDataView.remove()
     }
@@ -142,7 +142,8 @@ let ProjectManager = PageView.extend({
       parent: this,
       projectName: this.model.directory,
       files: files,
-      path: target
+      path: target,
+      download: download
     });
     this.registerRenderSubview(this.metaDataView, "project-meta-data-container")
     $(this.queryByHook("project-meta-data-container")).collapse("show")
@@ -278,7 +279,7 @@ let ProjectManager = PageView.extend({
       }
     });
   },
-  exportAsCombine: function(target) {
+  exportAsCombine: function(target, download) {
     let self = this
     if(document.querySelector("#addMetaDataModal")) {
       document.querySelector("#addMetaDataModal").remove()
@@ -295,14 +296,19 @@ let ProjectManager = PageView.extend({
       }else{
         files = [self.model.directory, target.split('/').pop()]
       }
-      self.renderMetaDataView(target, files)
+      self.renderMetaDataView(target, files, download)
     });
     noBtn.addEventListener('click', function (e) {
       let queryString = "?path="+target+"&projectPath="+self.projectPath
       let endpoint = path.join(app.getApiPath(), "project/export-combine")+queryString
       xhr({uri:endpoint, json:true}, function (err, response, body) {
         if(response.statusCode < 400) {
-          let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
+          if(download) {
+            let downloadEP = path.join(app.getBasePath(), "/files", body.file_path);
+            window.location.href = downloadEP
+          }else{
+            let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
+          }
         }else{
           let modal = $(modals.projectExportErrorHtml(body.Reason, body.Message))
         }

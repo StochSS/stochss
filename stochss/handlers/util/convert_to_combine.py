@@ -56,7 +56,9 @@ def convert(path, meta_data=None):
         file_type = "Project"
         dst_parent = os.path.dirname(path)
         archive_errors = convert_project(path, archive, archive_dir)
-    dst, _ = get_unique_file_name(archive_name + ".omex", dst_parent)
+    dst, changed = get_unique_file_name(archive_name + ".omex", dst_parent)
+    if changed:
+        archive_name = dst.split('/').pop().split('.')[0]
 
     if meta_data is not None:
         add_meta_data(archive, archive_name, meta_data)
@@ -69,7 +71,8 @@ def convert(path, meta_data=None):
                                                            archive_name+".omex",
                                                            "/" if os.path.dirname(dst) == user_dir
                                                            else os.path.dirname(dst))
-    return resp, archive_errors, file_type
+    return {"message":resp, "errors":archive_errors, "file_type":file_type,
+            "file_path":dst.replace("/home/jovyan/", "")}
 
 
 def add_meta_data(archive, archive_name, meta_data):

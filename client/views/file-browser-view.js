@@ -768,6 +768,12 @@ module.exports = View.extend({
       }
     });
   },
+  handleExportCombineClick: function (o, download) {
+    let parentPath = this.parent.projectPath
+    let file = o.original._path.split('/').pop()
+    let target = path.join(parentPath, file)
+    this.parent.exportAsCombine(target, download)
+  },
   showContextMenuForNode: function (e) {
     $('#models-jstree-view').jstree().show_contextmenu(this.nodeForContextMenu)
   },
@@ -1115,6 +1121,24 @@ module.exports = View.extend({
                 self.addExistingWorkflow(o)
               }
             }
+          }
+        },
+        "convertToCombine" : {
+          "label" : "Convert to Combine",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.handleExportCombineClick(o, false)
+          }
+        },
+        "downloadAsCombine" : {
+          "label" : "Download as Combine",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.handleExportCombineClick(o, true)
           }
         }
       }

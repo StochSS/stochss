@@ -33,6 +33,7 @@ module.exports = View.extend({
     this.projectName = attrs.projectName;
     this.files = attrs.files;
     this.path = attrs.path;
+    this.download = attrs.download;
     this.selectedFile = attrs.projectName;
     this.selectedCreator = "New Creator"
     let self = this
@@ -192,12 +193,19 @@ module.exports = View.extend({
     });
   },
   submitMetaData: function (e) {
+    let self = this
     $(this.parent.queryByHook("project-meta-data-container")).collapse('hide')
     let data = {"meta-data":this.metaData,"creators":this.creators}
-    let endpoint = path.join(app.getApiPath(), "project/export-combine")+"?path="+this.path+"&projectPath="+this.parent.projectPath
+    let queryString = "?path="+this.path+"&projectPath="+this.parent.projectPath
+    let endpoint = path.join(app.getApiPath(), "project/export-combine")+queryString
     xhr({uri:endpoint, json:true, method:"post", body:data}, function (err, response, body) {
       if(response.statusCode < 400) {
-        let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
+        if(self.download) {
+          let downloadEP = path.join(app.getBasePath(), "/files", body.file_path);
+          window.location.href = downloadEP
+        }else{
+          let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
+        }
       }else{
         let modal = $(modals.projectExportErrorHtml(body.Reason, body.Message)).modal()
       }
