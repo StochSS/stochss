@@ -26,8 +26,11 @@ let ProjectManager = PageView.extend({
     'click [data-hook=new-model]' : 'handleNewModelClick',
     'click [data-hook=new-experiment]' : 'handleNewExperimentClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
+    'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
+    'click [data-hook=convert-project-to-combine]' : 'handleToCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick',
+    'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
     // 'click [data-hook=upload-file-btn]' : 'handleUploadModelClick' TODO: need to add functionality for this
   },
   initialize: function (attrs, options) {
@@ -160,8 +163,22 @@ let ProjectManager = PageView.extend({
   handleExistingModelClick: function () {
     this.addExistingModel()
   },
+  handleExportZipClick: function () {
+    let self = this
+    let queryStr = "?path="+this.projectPath+"&action=generate"
+    let endpoint = path.join(app.getApiPath(), "file/download-zip")+queryStr
+    xhr({uri:endpoint, json:true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        var downloadEP = path.join(app.getBasePath(), "/files", body.Path);
+        window.location.href = downloadEP
+      }
+    })
+  },
   handleExportCombineClick: function () {
-    this.exportAsCombine(this.projectPath)
+    this.exportAsCombine(this.projectPath, true)
+  },
+  handleToCombineClick: function () {
+    this.exportAsCombine(this.projectPath, false)
   },
   handleEmptyTrashClick: function () {
     let self = this;
@@ -312,6 +329,10 @@ let ProjectManager = PageView.extend({
         }
       });
     });
+  },
+  changeCollapseButtonText: function () {
+    var text = $(this.queryByHook('project-manager-advanced-btn')).text();
+    text === '+' ? $(this.queryByHook('project-manager-advanced-btn')).text('-') : $(this.queryByHook('project-manager-advanced-btn')).text('+');
   }
 });
 
