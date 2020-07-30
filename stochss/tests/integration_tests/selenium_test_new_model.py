@@ -70,4 +70,5 @@ class TestNewFileDirectory(unittest.TestCase):
         #input reaction
         self.browser.click_element_by_id("addReactionBtn")
         self.browser.click_element_by_id("destruction")
-
+        reaction_summary=self.browser.find_element_by_id("reaction-summary")
+        assert reaction_summary.text="test_species→∅"
