@@ -28,6 +28,7 @@ module.exports = View.extend({
       let self = this
       if(document.querySelector("#newProjectWorkflowModal")) {
         document.querySelector("#newProjectWorkflowModal").remove()
+      }
       let modal = $(modals.newProjectWorkflowHtml("Name of the model: ")).modal()
       let okBtn = document.querySelector("#newProjectWorkflowModal .ok-model-btn")
       let input = document.querySelector("#newProjectWorkflowModal #input")
