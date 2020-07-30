@@ -15,6 +15,7 @@ from notebook.base.handlers import APIHandler
 
 from .util.rename import get_unique_file_name
 from .util.workflow_status import get_status
+from .util.generate_zip_file import download_zip
 from .util.convert_to_combine import convert
 from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
 
@@ -468,27 +469,38 @@ class ExportAsCombineAPIHandler(APIHandler):
         ----------
         '''
         user_dir = "/home/jovyan"
-        self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
         log.debug("Path to the project/experiment/workflow directory: %s", path)
-        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath"))
+        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath",
+                                                                      default=""))
         log.debug("Path to the project directory: %s", project_path)
+        download = bool(self.get_query_argument(name="download", default=False))
         try:
-            if os.path.exists(os.path.join(project_path, ".meta-data.json")):
-                with open(os.path.join(project_path, ".meta-data.json"), "r") as md_file:
-                    data = json.load(md_file)
-                for _, meta_data in data['meta-data'].items():
-                    meta_data['creators'] = list(map(lambda key: data['creators'][key],
-                                                     meta_data['creators']))
-                message, errors, file_type = convert(path, data["meta-data"])
+            if download:
+                self.set_header('Content-Type', 'application/zip')
+                self.set_header('Content_Disposition',
+                                'attachment; filename="{0}"'.format((path.split('/')
+                                                                     .pop().split('.')[0])))
+                resp = download_zip(path, "download")
+                log.debug("Response message: %s", resp)
             else:
-                message, errors, file_type = convert(path)
-            if errors:
-                log.error("Errors raised by convert process: %s", errors)
-            resp = {"message":message, "errors":errors, "file_type":file_type}
-            log.debug("Response message: %s", resp)
+                self.set_header('Content-Type', 'application/json')
+                if os.path.exists(os.path.join(project_path, ".meta-data.json")):
+                    with open(os.path.join(project_path, ".meta-data.json"), "r") as md_file:
+                        data = json.load(md_file)
+                    for _, meta_data in data['meta-data'].items():
+                        meta_data['creators'] = list(map(lambda key: data['creators'][key],
+                                                         meta_data['creators']))
+                    resp = convert(path, data["meta-data"])
+                else:
+                    resp = convert(path)
+                if resp["errors"]:
+                    log.error("Errors raised by convert process: %s", resp["errors"])
+                log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
+            if download:
+                self.set_header('Content-Type', 'application/json')
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
             log.error("Exception Information: %s", error)
@@ -505,10 +517,10 @@ class ExportAsCombineAPIHandler(APIHandler):
         ----------
         '''
         user_dir = "/home/jovyan"
-        self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
         log.debug("Path to the project/experiment/workflow directory: %s", path)
-        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath"))
+        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath",
+                                                                      default=""))
         log.debug("Path to the project directory: %s", project_path)
         data = self.request.body.decode()
         log.debug("Meta-data to be saved: %s", data)
@@ -518,14 +530,24 @@ class ExportAsCombineAPIHandler(APIHandler):
         for _, meta_data in data['meta-data'].items():
             meta_data['creators'] = list(map(lambda key: data['creators'][key],
                                              meta_data['creators']))
+        download = bool(self.get_query_argument(name="download", default=False))
         try:
-            message, errors, file_type = convert(path, data["meta-data"])
-            if errors:
-                log.error("Errors raised by convert process: %s", errors)
-            resp = {"message":message, "errors":errors, "file_type":file_type}
-            log.debug("Response message: %s", resp)
+            if download:
+                self.set_header('Content-Type', 'application/zip')
+                self.set_header('Content_Disposition',
+                                'attachment; filename="{0}"'.format((path.split('/')
+                                                                     .pop().split('.')[0])))
+                resp = download_zip(path, "download")
+            else:
+                self.set_header('Content-Type', 'application/json')
+                resp = convert(path, data["meta-data"])
+                if resp["errors"]:
+                    log.error("Errors raised by convert process: %s", resp["errors"])
+                log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
+            if download:
+                self.set_header('Content-Type', 'application/json')
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
             log.error("Exception Information: %s", error)
