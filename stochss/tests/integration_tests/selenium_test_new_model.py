@@ -1,6 +1,7 @@
 import unittest
 import selenium_test_setup_and_teardown
 import os
+import time
 
 class TestNewFileDirectory(unittest.TestCase):
 
@@ -49,7 +50,9 @@ class TestNewFileDirectory(unittest.TestCase):
 
         #Test radio buttons for continuous/discrete/hybrid species mode
         self.browser.click_element_by_id("all-continuous")
+        time.sleep(1)
         self.browser.click_element_by_id("advanced")
+        time.sleep(1)
         self.browser.click_element_by_id("all-discrete")
 
         #test parameters editor
@@ -102,6 +105,8 @@ class TestNewFileDirectory(unittest.TestCase):
         #assert annotation_tooltips[len(annotation_tooltips)-1].get_attribute("data-original-title")=="test_event_annotation"
         remove_buttons=self.browser.find_elements_by_id("remove")
         remove_buttons[len(remove_buttons)-1].click()
+        remove_buttons=self.browser.find_elements_by_id("remove")
+        remove_buttons[len(remove_buttons)-1].click()
 
         #test rules editor
         self.browser.click_element_by_id("addRuleBtn")
@@ -121,21 +126,13 @@ class TestNewFileDirectory(unittest.TestCase):
         remove_buttons[len(remove_buttons)-1].click()
 
         self.browser.click_element_by_id("run")
-        import time
         start_time=time.time()
-        elapsed_time=0
-        timeout=100
-        while(time.time() < start_time+timeout):
-            mrc=self.browser.find_element_by_id("model-run-container")
-            if (mrc.text != ''):
-                print("Preview generated.")
-            else:
-                elapsed_time += 0.1
-                print(elapsed_time)
-                if elapsed_time > 14.8:
-                    raise Exception(
-                            'Timeout waiting for preview.')
-                else:
-                    time.sleep(0.1)
+        timeout=30
         mrc=self.browser.find_element_by_id("model-run-container")
-        print(mrc.text)
+        while(time.time() < start_time+timeout and mrc.text == ''):
+            time.sleep(0.1)
+        mrc=self.browser.find_element_by_id("model-run-container")
+        if mrc.text == '':
+            raise Exception(
+                "Timeout waiting for preview."
+                )
