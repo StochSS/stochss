@@ -139,7 +139,7 @@ def create_rate_rule_strings(json_data, padding):
     if rate_rules:
         rr_string += '\n' + padding + '# Rate Rules\n'
         for rr in rate_rules:
-            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}""))\n'.format(
+            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}"))\n'.format(
                     rr['name'], 
                     rr['expression'], 
                     rr['variable']['name'])
