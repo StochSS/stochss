@@ -20,7 +20,7 @@ if __name__ == '__main__':
     import selenium_test_new_model
 
     modules = [
-    selenium_test_new_model,
+    selenium_test_new_model
     #selenium_test_new_file_directory
     ]
 
