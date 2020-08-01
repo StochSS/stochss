@@ -3,7 +3,7 @@ import selenium_test_setup_and_teardown
 import os
 import time
 
-class TestNewFileDirectory(unittest.TestCase):
+class TestModelEditor(unittest.TestCase):
 
     def setUp(self):
         self.browser_and_container = selenium_test_setup_and_teardown.setup()
@@ -13,7 +13,7 @@ class TestNewFileDirectory(unittest.TestCase):
     def tearDown(self):
         selenium_test_setup_and_teardown.teardown(self.browser, self.stochss_container)
 
-    def test_new_file_directory(self):
+    def test_model_editor(self):
 
         #create new model
         self.browser.new_file_directory_new_model("test_model")
