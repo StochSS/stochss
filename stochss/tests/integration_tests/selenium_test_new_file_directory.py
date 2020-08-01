@@ -21,19 +21,22 @@ class TestNewFileDirectory(unittest.TestCase):
         self.browser.back()
         self.browser.wait_for_navigation_complete()
         
-        #upload StochSS model
+        #test upload StochSS model
         self.browser.click_element_by_id("new-file-directory")
         self.browser.click_element_by_class_and_text("dropdown-item", "Upload StochSS Model")
         self.browser.click_element_by_class_and_text("btn", "Cancel")
         
-        #upload SBML model
+        #test upload SBML model
         self.browser.click_element_by_id("new-file-directory")
         self.browser.click_element_by_class_and_text("dropdown-item", "Upload SBML Model")
         self.browser.click_element_by_class_and_text("btn", "Cancel")
-        #upload file
+
+        #test upload file
         self.browser.click_element_by_id("new-file-directory")
         self.browser.click_element_by_class_and_text("dropdown-item", "Upload File")
         self.browser.click_element_by_class_and_text("btn", "Cancel")
+
+
         jstree_nodes=self.browser.find_elements_by_class_name('jstree-node')
         assert (jstree_nodes[0].text==(" /" + "\n" + " test_dir" + "\n" + " test_model.mdl" + "\n" + " Examples"))
         stochss_dir_contents = (self.stochss_container.exec_run("python -c \"import os;print(os.listdir())\"", demux=False)[1])

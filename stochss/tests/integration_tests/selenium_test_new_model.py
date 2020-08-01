@@ -50,9 +50,9 @@ class TestNewFileDirectory(unittest.TestCase):
 
         #Test radio buttons for continuous/discrete/hybrid species mode
         self.browser.click_element_by_id("all-continuous")
-        time.sleep(1)
+        #time.sleep(1)
         self.browser.click_element_by_id("advanced")
-        time.sleep(1)
+        #time.sleep(1)
         self.browser.click_element_by_id("all-discrete")
 
         #test parameters editor
@@ -127,7 +127,7 @@ class TestNewFileDirectory(unittest.TestCase):
 
         self.browser.click_element_by_id("run")
         start_time=time.time()
-        timeout=30
+        timeout=60
         mrc=self.browser.find_element_by_id("model-run-container")
         while(time.time() < start_time+timeout and mrc.text == ''):
             time.sleep(0.1)
