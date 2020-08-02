@@ -1,7 +1,8 @@
 import unittest
-import selenium_test_setup_and_teardown
 import time
 import os
+import selenium_test_setup_and_teardown
+from selenium import webdriver
 
 class TestFilesystem(unittest.TestCase):
 
@@ -30,16 +31,22 @@ class TestFilesystem(unittest.TestCase):
         #test upload StochSS model
         self.browser.click_element_by_id("new-file-directory")
         self.browser.click_element_by_class_and_text("dropdown-item", "Upload StochSS Model")
+        title=self.browser.find_element_by_class_name("modal-title")
+        assert title.text=='Upload a model'
         self.browser.click_element_by_class_and_text("btn", "Cancel")
         
         #test upload SBML model
         self.browser.click_element_by_id("new-file-directory")
         self.browser.click_element_by_class_and_text("dropdown-item", "Upload SBML Model")
+        title=self.browser.find_element_by_class_name("modal-title")
+        assert title.text=='Upload a model'
         self.browser.click_element_by_class_and_text("btn", "Cancel")
 
         #test upload file
         self.browser.click_element_by_id("new-file-directory")
         self.browser.click_element_by_class_and_text("dropdown-item", "Upload File")
+        title=self.browser.find_element_by_class_name("modal-title")
+        assert title.text=='Upload a file'
         self.browser.click_element_by_class_and_text("btn", "Cancel")
 
         #test collapse/expand jstree
@@ -52,9 +59,39 @@ class TestFilesystem(unittest.TestCase):
         jstree_nodes=self.browser.find_elements_by_class_name("jstree-node")
         assert 4 == len(jstree_nodes)
 
-        #
+        #test Actions For <node> button
+        #test Edit (model)
         jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
-        jstree_ocls[3].click()
-        #to test vakata context menu
-#        menu=browser.find_elements_by_class_name("vakata-contextmenu-sep")
-#        menu[1].click()
+        jstree_ocls[2].click()
+        self.browser.click_element_by_id("options-for-node")
+        menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
+        menu[0].click()
+        title=self.browser.find_element_by_class_name("modal-title")
+        assert title.text=='Default Species Mode (required)'
+        self.browser.back()
+        self.browser.wait_for_navigation_complete()
+        #test New Workflow
+        jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
+        jstree_ocls[2].click()
+        self.browser.click_element_by_id("options-for-node")
+        menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
+        menu[1].click()
+        table=self.browser.find_element_by_class_name("table")
+        assert table.text=='StochSS Workflows\nEnsemble Simulation\nParameter Sweep'
+        self.browser.back()
+        self.browser.wait_for_navigation_complete()
+
+        #test Convert To Notebook
+        jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
+        jstree_ocls[2].click()
+        self.browser.click_element_by_id("options-for-node")
+        menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
+        webdriver.ActionChains(self.browser).move_to_element(menu[2]).perform()
+        menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
+        webdriver.ActionChains(self.browser).click(menu[4]).perform()
+
+        handles=browser.window_handles
+        self.browser.switch_to.window(handles[1])
+        assert self.browser.find_element_by_id("ipython_notebook")
+        self.browser.close()
+
