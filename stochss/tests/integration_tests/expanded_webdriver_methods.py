@@ -53,6 +53,6 @@ def new_file_directory_new_model(self, model_name):
     self.enter_modal_text(model_name)
 
 def wait_for_navigation_complete(self):
-    return wait_for(function=self.element_has_gone_stale, element=self.find_element_by_id('navbar'))
-
+    wait_for(function=self.element_has_gone_stale, element=self.find_element_by_id('navbar'))
+    time.sleep(3)
 
