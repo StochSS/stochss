@@ -13,7 +13,6 @@ from .generate_notebook_cells import generate_imports_cell, generate_model_cell,
 # imports for model inference workflow
 from .generate_notebook_cells import generate_mdl_inf_simulator_cell, generate_mdl_inf_prior_cell, generate_mdl_inf_fixed_data_cell, generate_mdl_inf_reshape_data_cell
 from .generate_notebook_cells import generate_mdl_inf_summary_stats_cell, generate_mdl_inf_import_cell, get_algorithm
-from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
 def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
     user_dir = "/home/jovyan"
@@ -37,26 +36,32 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
     is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['simulationSettings']['algorithm'] == "ODE"
     gillespy2_model = ModelFactory(json_data, is_ode).model
 
-    is_ssa_c = gillespy2_model.get_best_solver().name == "VariableSSACSolver"
-
+    if settings is None or settings['simulationSettings']['isAutomatic']:
+        algorithm, solv_name = get_algorithm(gillespy2_model)
+    else:
+        algorithm, solv_name = get_algorithm(gillespy2_model, algorithm=settings['simulationSettings']['algorithm'])
+    
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
     cells.append(nbf.new_markdown_cell('# {0}'.format(name)))
     try:
         # Create imports cell
-        import_cell = generate_imports_cell(json_data, gillespy2_model) if settings is None else generate_imports_cell(json_data, gillespy2_model, settings=settings['simulationSettings'])
+        if settings is None:
+            import_cell = generate_imports_cell(json_data, algorithm, solv_name)
+            config_cell = generate_configure_simulation_cell(json_data, algorithm, solv_name, is_mdl_inf=True)
+        else:
+            import_cell = generate_imports_cell(json_data, algorithm, solv_name, settings=settings['simulationSettings'])
+            config_cell = generate_configure_simulation_cell(json_data, algorithm, solv_name, is_mdl_inf=True, settings=settings['simulationSettings'])
         cells.append(nbf.new_code_cell(import_cell))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
-        algorithm = get_algorithm(gillespy2_model) if settings is None or settings['simulationSettings']['isAutomatic'] else settings['simulationSettings']['algorithm']
-        if settings is not None and not settings['isAutomatic'] and algorithm == "SSA" and is_ssa_c:
+        if settings is not None and not settings['isAutomatic'] and solv_name == "SSACSolver":
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))
         # Configure Simulation Cell
-        config_cell = generate_configure_simulation_cell(json_data, gillespy2_model, is_mdl_inf=True, show_labels=False) if settings is None else generate_configure_simulation_cell(json_data, gillespy2_model, is_mdl_inf=True, show_labels=False, settings=settings['simulationSettings'])
         cells.append(nbf.new_code_cell(config_cell))
         # Create model inference import cell
         cells.append(nbf.new_code_cell(generate_mdl_inf_import_cell()))

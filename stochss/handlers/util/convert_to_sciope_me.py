@@ -30,6 +30,12 @@ def convert_to_sciope_me(_model_path, settings=None):
 
     is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['simulationSettings']['algorithm'] == "ODE"
     gillespy2_model = ModelFactory(json_data, is_ode).model
+    
+    if settings is None or settings['simulationSettings']['isAutomatic']:
+        algorithm, solv_name = get_algorithm(gillespy2_model)
+    else:
+        algorithm, solv_name = get_algorithm(gillespy2_model, algorithm=settings['simulationSettings']['algorithm'])
+
     # Create new notebook
     cells = []
     # Create Markdown Cell with name
@@ -37,7 +43,7 @@ def convert_to_sciope_me(_model_path, settings=None):
     try:
         # Create imports cell
         cells.append(nbf.new_code_cell(
-                    generate_imports_cell(json_data, gillespy2_model,
+                    generate_imports_cell(json_data, algorithm, solv_name,
                     interactive_backend=True)))
         # Create Model Cell
         cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
@@ -45,7 +51,7 @@ def convert_to_sciope_me(_model_path, settings=None):
         cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
         # Sciope Wrapper Cell
         cells.append(nbf.new_code_cell(generate_sciope_wrapper_cell(json_data,
-        gillespy2_model)))
+                    algorithm, solv_name)))
         # Sciope lhc Cell
         cells.append(nbf.new_code_cell(generate_sciope_lhc_cell()))
         # Sciope stochmet Cell
