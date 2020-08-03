@@ -72,15 +72,57 @@ class TestUpload_File(unittest.TestCase):
         test_valid = True
         test_json = False
         test_error = ""
-        predicted_name = ".".join(["some_file_name", "mdl"])
-        with mock.patch("handlers.util.upload_file.validate_model",return_value = (test_valid, test_json, test_error)) as mock_validate_model:
-            with mock.patch("builtins.open",mock.mock_open(read_data="foo")) as mock_open:
-                assert upload_model_file("some_path", "some_file_name","some_name", None)['message'] == "{0} was successfully uploaded to {1}".format("some_file_name", predicted_name, "some_path")
+        predicted_name = ".".join(["some_name", "mdl"])
+        with mock.patch("handlers.util.upload_file.get_unique_file_name",return_value=("some_path", False)) as mock_get_unique_file_name:
+            with mock.patch("handlers.util.upload_file.validate_model",return_value = (test_valid, test_json, test_error)) as mock_validate_model:
+                with mock.patch("builtins.open",mock.mock_open(read_data="foo")) as mock_open:
+                    assert upload_model_file("some_path", "some_file_name","some_name", None)['message'] == "{0} was successfully uploaded to {1}".format(predicted_name, "some_path")
 
-#    def test_upload_model_file_not_valid(self):
+    def test_upload_model_file_not_valid(self):
+        from unittest import mock
+        test_valid = False
+        test_json = False
+        test_error = ""
+        predicted_name = ".".join(["some_name", "json"])
+        with mock.patch("handlers.util.upload_file.get_unique_file_name",return_value=("some_path", False)) as mock_get_unique_file_name:
+            with mock.patch("handlers.util.upload_file.validate_model",return_value = (test_valid, test_json, test_error)) as mock_validate_model:
+                with mock.patch("builtins.open",mock.mock_open(read_data="foo")) as mock_open:
+                    assert upload_model_file("some_path", "some_file_name","some_name", None)['message'] == "{0} could not be validated as a Model file and was uploaded as {1} to {2}".format("some_file_name", predicted_name, "some_path")
+        
+
+    def test_upload_model_file_error(self):
+        from unittest import mock
+        test_valid = False
+        test_json = False
+        test_error = "test_error"
+        predicted_name = ".".join(["some_name", "json"])
+        with mock.patch("handlers.util.upload_file.get_unique_file_name",return_value=("some_path", False)) as mock_get_unique_file_name:
+            with mock.patch("handlers.util.upload_file.validate_model",return_value = (test_valid, test_json, test_error)) as mock_validate_model:
+                with mock.patch("builtins.open",mock.mock_open(read_data="foo")) as mock_open:
+                    assert upload_model_file("some_path", "some_file_name","some_name", None)['errors'] == ['test_error']
+
     
-#    def test_upload_model_file_error(self):
+    def test_upload_model_file_name_changed(self):
+        from unittest import mock
+        test_valid = False
+        test_json = False
+        test_error = ""
+        predicted_name = "some_file"
+        with mock.patch("handlers.util.upload_file.get_unique_file_name",return_value=(os.path.join("some_parent","some_file"), True)) as mock_get_unique_file_name:
+            with mock.patch("handlers.util.upload_file.validate_model",return_value = (test_valid, test_json, test_error)) as mock_validate_model:
+                with mock.patch("builtins.open",mock.mock_open(read_data="foo")) as mock_open:
+                    assert upload_model_file("some_path", "some_file_name","some_name", None)['message'] == "{0} could not be validated as a Model file and was uploaded as {1} to {2}".format("some_file_name", predicted_name, "some_path")
+
     
-#    def test_upload_model_file_name_changed(self):
-    
-#    def test_upload_model_file_json(self):
+    def test_upload_model_file_json(self):
+        from unittest import mock
+        test_valid = True
+        test_json = True
+        test_error = ""
+        predicted_name = ".".join(["some_name", "mdl"])
+        with mock.patch("handlers.util.upload_file.get_unique_file_name",return_value=("some_path", False)) as mock_get_unique_file_name:
+            with mock.patch("handlers.util.upload_file.validate_model",return_value = (test_valid, test_json, test_error)) as mock_validate_model:
+                with mock.patch("builtins.open",mock.mock_open(read_data="foo")) as mock_open:
+                    with mock.patch("json.loads", return_value="mock_return") as mock_json_loads:
+                        upload_model_file("some_path", "some_file_name", "some_name", None)
+                        mock_json_loads.assert_called()
