@@ -31,7 +31,7 @@ let ProjectManager = PageView.extend({
     'click [data-hook=convert-project-to-combine]' : 'handleToCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
-    // 'click [data-hook=upload-file-btn]' : 'handleUploadModelClick' TODO: need to add functionality for this
+    'click [data-hook=upload-file-btn]' : 'handleUploadModelClick'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments)
@@ -199,6 +199,49 @@ let ProjectManager = PageView.extend({
         }
       });
     });
+  },
+  handleUploadModelClick: function (e) {
+    let self = this
+    let type = e.target.dataset.type
+    if(document.querySelector('#uploadFileModal')) {
+      document.querySelector('#uploadFileModal').remove()
+    }
+    let modal = $(modals.uploadFileHtml(type)).modal();
+    let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
+    let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
+    let input = document.querySelector('#uploadFileModal #fileNameInput');
+    fileInput.addEventListener('change', function (e) {
+      if(fileInput.files.length){
+        uploadBtn.disabled = false
+      }else{
+        uploadBtn.disabled = true
+      }
+    })
+    uploadBtn.addEventListener('click', function (e) {
+      let file = fileInput.files[0]
+      var fileinfo = {"type":type,"name":"","path":self.projectPath}
+      if(Boolean(input.value)){
+        fileinfo.name = input.value
+      }
+      let formData = new FormData()
+      formData.append("datafile", file)
+      formData.append("fileinfo", JSON.stringify(fileinfo))
+      let endpoint = path.join(app.getApiPath(), 'file/upload');
+      let req = new XMLHttpRequest();
+      req.open("POST", endpoint)
+      req.onload = function (e) {
+        var resp = JSON.parse(req.response)
+        if(req.status < 400) {
+          if(resp.errors.length > 0){
+            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
+          }else{
+            self.update("model-editor")
+          }
+        }
+      }
+      req.send(formData)
+      modal.modal('hide')
+    })
   },
   addNewModel: function (isSpatial) {
     let self = this
