@@ -18,6 +18,7 @@ def get_page_handlers(route_start):
         (r'/stochss/workflow/selection\/?', WorkflowSelectionHandler),
         (r'/stochss/workflow/edit\/?', WorkflowEditorHandler),
         (r'/stochss/quickstart\/?', QuickstartHandler),
+        (r'/stochss/project/browser\/?', ProjectBrowserHandler),
         (r'/stochss/project/manager\/?', ProjectManagerHandler),
         #
         ## API Handlers
@@ -41,6 +42,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/model/run\/?", RunModelAPIHandler),
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),
         (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
+        (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),
         (r"/stochss/api/project/new-experiment\/?", NewExperimentAPIHandler),
         (r"/stochss/api/project/add-existing-model\/?", AddExistingModelAPIHandler),
         (r"/stochss/api/project/add-existing-workflow\/?", AddExistingWorkflowAPIHandler),

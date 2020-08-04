@@ -63,6 +63,12 @@ class WorkflowEditorHandler(PageHandler):
         self.render("stochss-workflow-manager.html", server_path=self.get_server_path())
 
 
+class ProjectBrowserHandler(PageHandler):
+    @web.authenticated
+    async def get(self):
+        self.render("stochss-project-browser.html", server_path=self.get_server_path())
+
+
 class ProjectManagerHandler(PageHandler):
     @web.authenticated
     async def get(self):
