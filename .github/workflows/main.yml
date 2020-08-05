@@ -2,7 +2,7 @@ on: [push, pull_request]
 
 jobs:
   run_tests:
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-latest
     name: StochSS Continuous Testing
     steps:
       # Checkout
@@ -12,6 +12,7 @@ jobs:
       # Setup container & execute Python unit tests
     - name: run_tests.py
       id: run_tests
-      uses: ./
-      with:
-        testin: '/stochss/stochss/tests/run_tests.py'
+      using: 'docker'
+      image: 'Dockerfile'
+      args:
+             - '/stochss/stochss/tests/run_tests.py'
