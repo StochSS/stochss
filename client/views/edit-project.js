@@ -18,9 +18,17 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.projectName = this.model.directory.split('/').pop().split('.')[0]
+    this.location = this.getLocationString(this.model.directory)
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+  },
+  getLocationString: function (projectPath) {
+    let parent = path.dirname(projectPath)
+    if(parent === '.') {
+      return '/'
+    }
+    return parent
   },
   handleOpenProjectClick: function (e) {
     window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+this.model.directory

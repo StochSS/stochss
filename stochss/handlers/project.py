@@ -37,7 +37,6 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         projects = []
@@ -45,7 +44,6 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         log.debug("List of projects: %s", projects)
         resp = {"projects":projects}
         self.write(resp)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 

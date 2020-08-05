@@ -397,6 +397,13 @@ span.checkbox {
   border-radius: 1.5rem;
 }
 
+.user-home-btn {
+  padding: 1rem 1rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  border-radius: 1.5rem;
+}
+
 .home-list {
   line-height: 2;
 }
