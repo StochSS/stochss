@@ -4,8 +4,6 @@ jobs:
   run_tests:
     runs-on: ubuntu-latest
     name: StochSS Continuous Testing
-    container:
-      image: 'stochss/Dockerfile'
     steps:
       # Checkout
     - name: Checkout
