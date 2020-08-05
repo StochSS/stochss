@@ -14,4 +14,8 @@ jobs:
       # Setup container & execute Python unit tests
     - name: run_tests.py
       id: run_tests
-      run: '/stochss/stochss/tests/run_tests.py'
+      runs:
+        using: 'docker'
+        image: Dockerfile
+        args:
+        - '/stochss/stochss/tests/run_tests.py'
