@@ -12,6 +12,6 @@ jobs:
       # Setup container & execute Python unit tests
     - name: run_tests.py
       id: run_tests
-      uses: ./ci_actions/action1.yml
+      uses: ./
       with:
         testin: '/stochss/stochss/tests/run_tests.py'
