@@ -18,4 +18,4 @@ jobs:
       with:
         image: 'Dockerfile'
         args:
-        - '/stochss/stochss/tests/run_tests.py'
+          - '/stochss/stochss/tests/run_tests.py'
