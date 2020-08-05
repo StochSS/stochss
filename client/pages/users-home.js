@@ -83,7 +83,7 @@ let usersHomePage = PageView.extend({
     this.navToPage(endpoint)
   },
   handleBrowseFilesClick: function (e) {
-    let endpoint = path.join(app.getBasePath(), "stochss/models")
+    let endpoint = path.join(app.getBasePath(), "stochss/files")
     this.navToPage(endpoint)
   },
   handleQuickstartClick: function (e) {
