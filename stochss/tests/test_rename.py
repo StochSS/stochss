@@ -83,6 +83,7 @@ class TestRename(unittest.TestCase):
 
     def test_rename_permission_error(self):
         from handlers.util.stochss_errors import StochSSPermissionsError
+        from unittest import mock
         with tempfile.TemporaryDirectory() as tempdir:
             test_dir = "test_dir"
             test_file = "test_file"
@@ -90,10 +91,9 @@ class TestRename(unittest.TestCase):
             os.mkdir(test_dir_path)
             test_path = os.path.join(test_dir_path,test_file)
             Path(test_path).touch()
-            os.chmod(test_path,400)
-            os.chmod(test_dir_path,400)
-            with self.assertRaises(StochSSPermissionsError):
-                rename(test_path, "test_file2")
+            with mock.patch("shutil.move", side_effect=StochSSPermissionsError('test_error')) as mock_shutil:
+                with self.assertRaises(StochSSPermissionsError):
+                    rename(test_path, "test_file2")
 
     def test_rename_file_not_found_error(self):
         from handlers.util.stochss_errors import StochSSFileNotFoundError
