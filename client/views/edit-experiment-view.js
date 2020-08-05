@@ -40,8 +40,8 @@ module.exports = View.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   handleViewWorkflowsClick: function (e) {
-    let options = {"View Workflows":"show", "Hide Workflows":"hide"}
-    let newText = {"View Workflows":"Hide Workflows", "Hide Workflows":"View Workflows"}
+    let options = {"+":"show", "-":"hide"}
+    let newText = {"+":"-", "-":"+"}
     let text = $(this.queryByHook("project-experiment-view")).text()
     $(this.queryByHook("project-workflows-container")).collapse(options[text])
     $(this.queryByHook("project-experiment-view")).text(newText[text])
