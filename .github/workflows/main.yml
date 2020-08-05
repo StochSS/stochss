@@ -4,6 +4,8 @@ jobs:
   run_tests:
     runs-on: ubuntu-latest
     name: StochSS Continuous Testing
+    container:
+      image: 'Dockerfile'
     steps:
       # Checkout
     - name: Checkout
@@ -12,8 +14,4 @@ jobs:
       # Setup container & execute Python unit tests
     - name: run_tests.py
       id: run_tests
-      runs:
-        using: 'docker'
-        image: 'Dockerfile'
-        args:
-          - '/stochss/stochss/tests/run_tests.py'
+      run: '/stochss/stochss/tests/run_tests.py'
