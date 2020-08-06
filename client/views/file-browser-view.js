@@ -845,7 +845,7 @@ module.exports = View.extend({
         },
         "Delete" : {
           "label" : "Delete",
-          "_disabled" : false,
+          "_disabled" : o.type === 'experiment' && self.parent.model.experiments.length === 1 ? true : false,
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
