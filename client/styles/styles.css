@@ -402,6 +402,7 @@ span.checkbox {
   font-size: 1.5rem;
   line-height: 1;
   border-radius: 1.5rem;
+  width: 100%
 }
 
 .home-list {
