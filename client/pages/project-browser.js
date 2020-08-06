@@ -39,7 +39,9 @@ let projectBrowser = PageView.extend({
     if(this.projectsView) {
       this.projectsView.remove()
     }
-    let projects = new Collection(this.projects, {model: Project})
+    let projects = new Collection(this.projects, {model: Project, comparator: function (model) {
+      return path.dirname(model.directory)
+    }})
     this.projectsView = this.renderCollection(projects, EditProjectView, this.queryByHook("projects-view-container"))
   },
   handleNewProjectClick: function (e) {

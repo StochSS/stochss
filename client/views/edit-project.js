@@ -26,9 +26,9 @@ module.exports = View.extend({
   getLocationString: function (projectPath) {
     let parent = path.dirname(projectPath)
     if(parent === '.') {
-      return '/'
+      return ''
     }
-    return parent
+    return 'Location: '+parent
   },
   handleOpenProjectClick: function (e) {
     window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+this.model.directory
