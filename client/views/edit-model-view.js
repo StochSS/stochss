@@ -14,6 +14,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
     'click [data-hook=project-model-workflow]' : 'handleNewWorkflowClick',
+    'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=project-model-remove]' : 'handleRemoveModelClick'
   },
   initialize: function (attrs, options) {
@@ -21,6 +22,9 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(!this.model.annotation){
+      $(this.queryByHook('edit-annotation-btn')).text('Add')
+    }
   },
   handleEditModelClick: function (e) {
     let experiments = this.parent.parent.model.experiments.map(function (exp) {
@@ -77,6 +81,29 @@ module.exports = View.extend({
         }
       });
       modal.modal('hide')
+    });
+  },
+  handleEditAnnotationClick: function (e) {
+    let self = this
+    var name = this.model.name;
+    var annotation = this.model.annotation;
+    if(document.querySelector('#modelAnnotationModal')) {
+      document.querySelector('#modelAnnotationModal').remove();
+    }
+    let modal = $(modals.annotationModalHtml("model", name, annotation)).modal();
+    let okBtn = document.querySelector('#modelAnnotationModal .ok-model-btn');
+    let input = document.querySelector('#modelAnnotationModal #modelAnnotationInput');
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      self.model.annotation = input.value;
+      self.model.saveModel()
+      self.parent.renderEditModelview();
     });
   }
 });

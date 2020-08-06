@@ -30,6 +30,7 @@ let ProjectManager = PageView.extend({
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=convert-project-to-combine]' : 'handleToCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick',
+    'click [data-hook=collapse-most-recent-plot-btn]' : 'changeCollapseButtonText',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
     'click [data-hook=upload-file-btn]' : 'handleUploadModelClick'
   },
@@ -375,9 +376,10 @@ let ProjectManager = PageView.extend({
       });
     });
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('project-manager-advanced-btn')).text();
-    text === '+' ? $(this.queryByHook('project-manager-advanced-btn')).text('-') : $(this.queryByHook('project-manager-advanced-btn')).text('+');
+  changeCollapseButtonText: function (e) {
+    let hook = e.target.dataset.hook
+    var text = $(this.queryByHook(hook)).text();
+    text === '+' ? $(this.queryByHook(hook)).text('-') : $(this.queryByHook(hook)).text('+');
   }
 });
 

@@ -21,7 +21,19 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments)
-    this.renderCollection(this.collection, EditWorkflowView, this.queryByHook("project-workflows-list"))
+    this.renderEditWorkflowView()
+  },
+  renderEditWorkflowView: function () {
+    if(this.editWorkflowView) {
+      this.editWorkflowView.remove()
+    }
+    this.editWorkflowView = this.renderCollection(this.collection, EditWorkflowView, this.queryByHook("project-workflows-list"))
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   handleNewWorkflowClick: function (e) {
     if(this.parent.parent.model.models.length > 0) {

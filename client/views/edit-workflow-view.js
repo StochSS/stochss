@@ -15,6 +15,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-workflow-open]' : 'handleOpenWorkflowClick',
     'click [data-hook=project-workflow-export]' : 'handleExportWorkflowClick',
+    'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=project-workflow-remove]' : 'handleDeleteWorkflowClick'
   },
   initialize: function (attrs, options) {
@@ -25,6 +26,9 @@ module.exports = View.extend({
     if(this.model.status === "running"){
       this.getStatus()
       console.log("updating status")
+    }
+    if(!this.model.annotation){
+      $(this.queryByHook('edit-annotation-btn')).text('Add')
     }
   },
   getStatus: function () {
@@ -65,6 +69,35 @@ module.exports = View.extend({
         }
       });
       modal.modal('hide')
+    });
+  },
+  handleEditAnnotationClick: function (e) {
+    let self = this
+    var name = this.model.name;
+    var annotation = this.model.annotation;
+    if(document.querySelector('#workflowAnnotationModal')) {
+      document.querySelector('#workflowAnnotationModal').remove();
+    }
+    let modal = $(modals.annotationModalHtml("workflow", name, annotation)).modal();
+    let okBtn = document.querySelector('#workflowAnnotationModal .ok-model-btn');
+    let input = document.querySelector('#workflowAnnotationModal #workflowAnnotationInput');
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      self.model.annotation = input.value;
+      let queryString = "?path="+path.join(self.model.path, "info.json")
+      let endpoint = path.join(app.getApiPath(), "workflow/save-annotation")+queryString
+      let body = {'annotation':self.model.annotation}
+      xhr({uri:endpoint, json:true, method:'post', body:body}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          self.parent.renderEditWorkflowView();
+        }
+      })
     });
   },
   exportAsCombine: function (target) {

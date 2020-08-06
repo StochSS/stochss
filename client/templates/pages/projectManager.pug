@@ -32,9 +32,15 @@ section.page
 
     div
 
-      h3 Recent Plot
+      div
 
-      div(id="project-most-recent-plot" data-hook="project-most-recent-plot")
+        h3.inline Most Recent Plot
+
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#project-most-recent-plot-container", data-hook="collapse-most-recent-plot-btn") -
+
+      div.collapse.show(id="project-most-recent-plot-container")
+
+        div(id="project-most-recent-plot" data-hook="project-most-recent-plot")
 
     div(id="project-viewer" data-hook="project-viewer")
 
