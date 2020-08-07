@@ -636,28 +636,29 @@ module.exports = View.extend({
       let title = "No Models Found"
       let message = "You need to add a model before you can create a new workflow."
       let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
+    }else if(o.type !== "experiment" && this.parent.model.experiments.length == 1) {
+      let expName = this.parent.model.experiments.models[0].name
+      let parentPath = path.join(path.dirname(o.original._path), expName + ".exp")
+      let modelPath = o.original._path
+      let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
+      window.location.href = endpoint
     }else{
       let self = this
       if(document.querySelector('#newProjectWorkflowModal')){
         document.querySelector('#newProjectWorkflowModal').remove()
       }
+      let options = o.type === "experiment" ?
+                    this.parent.model.models.map(function (model) {return model.name}) :
+                    this.parent.model.experiments.map(function (experiment) {return experiment.name})
       let label = o.type === "experiment" ? "Model file name: " : "Experiment file name: "
-      let modal = $(modals.newProjectWorkflowHtml(label)).modal()
+      let modal = $(modals.newProjectWorkflowHtml(label, options)).modal()
       let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-      let input = document.querySelector('#newProjectWorkflowModal #input')
-      input.addEventListener("keyup", function (event) {
-        if(event.keyCode === 13){
-          event.preventDefault();
-          okBtn.click();
-        }
-      });
+      let select = document.querySelector('#newProjectWorkflowModal #select')
       okBtn.addEventListener("click", function (e) {
-        if(Boolean(input.value)) {
-          let parentPath = o.type === "experiment" ? o.original._path : path.join(path.dirname(o.original._path), input.value)
-          let modelPath = o.type === "experiment" ? path.join(path.dirname(o.original._path), input.value) : o.original._path
+          let parentPath = o.type === "experiment" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".exp")
+          let modelPath = o.type === "experiment" ? path.join(path.dirname(o.original._path), select.value + ".mdl") : o.original._path
           let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
           window.location.href = endpoint
-        }
       });
     }
   },
