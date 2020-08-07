@@ -53,9 +53,6 @@ module.exports = View.extend({
       'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
       'core': {'multiple' : false, 'animation': 0,
         'check_callback': function (op, node, par, pos, more) {
-          if(node && node.type && node.original && node.original._path && more && more.ref && more.ref.type){
-            console.log(node.type, node.original._path.includes("trash"), more.ref.original.text === "trash", !(node.original._path.includes("trash") || more.ref.original.text === "trash"), more.ref.type)
-          }
           if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
             return false
           }
@@ -79,22 +76,28 @@ module.exports = View.extend({
           if(op === 'move_node' && more && more.ref && more.ref.type && node.type !== "workflow" && !(more.ref.type == 'folder' || more.ref.type == 'root')){
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
+          if(op === 'move_node' && more && more.ref && more.ref.type && (more.ref.type === 'folder' || more.ref.type === 'root')){
             if(!more.ref.state.loaded){
               return false
             }
             var exists = false
             var BreakException = {}
-            try{
-              more.ref.children.forEach(function (child) {
-                var child_node = $('#models-jstree-view').jstree().get_node(child)
-                exists = child_node.text === node.text
-                if(exists){
-                  throw BreakException;
-                }
-              })
-            }catch{
-              return false;
+            var text = node.text
+            if(!isNaN(text.split(' ').pop().split('.').join(""))){
+              text = text.replace(text.split(' ').pop(), '').trim()
+            }
+            if(more.ref.text !== "trash"){
+              try{
+                more.ref.children.forEach(function (child) {
+                  var child_node = $('#models-jstree-view').jstree().get_node(child)
+                  exists = child_node.text === text
+                  if(exists){
+                    throw BreakException;
+                  }
+                })
+              }catch{
+                return false;
+              }
             }
           }
           if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
@@ -109,7 +112,8 @@ module.exports = View.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
-                self.updateParent(node.type)
+                console.log((oldPath.includes('trash/') || newDir.endsWith('trash')))
+                self.updateParent(node.type, (oldPath.includes('trash/') || newDir.endsWith('trash')))
               }else{
                 body = JSON.parse(body)
                 if(par.type === 'root'){
@@ -153,8 +157,10 @@ module.exports = View.extend({
       }
     });
   },
-  updateParent: function (type) {
-    if(type === "nonspatial" || type === "workflow" || type === "experiment") {
+  updateParent: function (type, trash = false) {
+    if(trash){
+      this.parent.update("all")
+    }else if(type === "nonspatial" || type === "workflow" || type === "experiment") {
       this.parent.update("file-browser")
     }
   },

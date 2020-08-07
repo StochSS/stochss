@@ -57,7 +57,7 @@ module.exports = View.extend({
       let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
       yesBtn.addEventListener('click', function (e) {
         let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
-        let trashPath = path.join(self.parent.parent.projectPath, "trash")
+        let trashPath = path.join(self.parent.parent.projectPath, "trash", self.model.name + ".exp")
         let queryString = "?srcPath="+expPath+"&dstPath="+trashPath
         let endpoint = path.join(app.getApiPath(), 'file/move')+queryString
         xhr({uri: endpoint, json: true}, function (err, response, body) {
