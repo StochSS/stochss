@@ -46,7 +46,6 @@ let ProjectManager = PageView.extend({
     });
     this.model.fetch({
       success: function (model, response, options) {
-        self.plot = response.plot
         if(response.trash_empty) {
           $(self.queryByHook('empty-project-trash')).prop('disabled', true)
         }
@@ -85,13 +84,13 @@ let ProjectManager = PageView.extend({
     if(this.recentPlotView) {
       this.recentPlotView.remove()
     }
-    if(this.plot) {
-      var plot = new Plot(this.plot.output)
-      var expName = path.dirname(this.plot.path).split('/').pop().split('.')[0]
-      var wkflName = this.plot.path.split('/').pop().split('.')[0]
+    if(this.model.plot) {
+      var plot = new Plot(this.model.plot.output)
+      var expName = path.dirname(this.model.plot.path).split('/').pop().split('.')[0]
+      var wkflName = this.model.plot.path.split('/').pop().split('.')[0]
       this.recentPlotView = new PlotsView({
         model: plot,
-        path: this.plot.path,
+        path: this.model.plot.path,
         heading: expName + " - " + wkflName
       });
       this.registerRenderSubview(this.recentPlotView, "project-most-recent-plot");

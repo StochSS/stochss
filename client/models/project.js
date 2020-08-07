@@ -16,6 +16,8 @@ module.exports = Model.extend({
     experiments: ExperimentsCollection
   },
   session: {
-    directory: 'string'
+    directory: 'string',
+    parentDir: 'string',
+    plot: 'object'
   }
 })

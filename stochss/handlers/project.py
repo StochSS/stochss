@@ -62,7 +62,10 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         for item in os.listdir(path):
             new_path = os.path.join(path, item)
             if item.endswith('.proj'):
-                projects.append({'directory': new_path.replace("/home/jovyan/", "")})
+                projects.append({'directory': new_path.replace("/home/jovyan/", ""),
+                                 'parentDir': os.path.dirname(new_path.replace("/home/jovyan/",
+                                                                               "")),
+                                 'elementID': "p{}".format(len(projects) + 1)})
             elif not item.startswith('.') and os.path.isdir(new_path):
                 cls.get_projects_from_directory(new_path, projects)
 
