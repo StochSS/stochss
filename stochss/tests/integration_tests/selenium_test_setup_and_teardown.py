@@ -18,7 +18,7 @@ def setup():
 def teardown(browser, container):
     browser.close()
     container.stop()
-
+    time.sleep(3)
 #add shortcut clicking methods
 
 

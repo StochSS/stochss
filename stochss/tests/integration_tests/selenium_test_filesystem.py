@@ -62,8 +62,7 @@ class TestFilesystem(unittest.TestCase):
 
         #test Actions For <node> button
         #test Edit (model)
-        jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
-        jstree_ocls[2].click()
+        self.browser.click_element_by_class_and_text("jstree-node", " test_model.mdl")
         self.browser.click_element_by_id("options-for-node")
         menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
         menu[0].click()
@@ -72,8 +71,7 @@ class TestFilesystem(unittest.TestCase):
         self.browser.back()
         self.browser.wait_for_navigation_complete()
         #test New Workflow
-        jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
-        jstree_ocls[2].click()
+        self.browser.click_element_by_class_and_text("jstree-node", " test_model.mdl")
         self.browser.click_element_by_id("options-for-node")
         menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
         menu[1].click()
@@ -83,8 +81,7 @@ class TestFilesystem(unittest.TestCase):
         self.browser.wait_for_navigation_complete()
 
         #test Convert To Notebook - can't access context menu submenu
-        #jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
-        #jstree_ocls[2].click()
+        #self.browser.click_element_by_class_and_text("jstree-node", " test_model.mdl")
         #self.browser.click_element_by_id("options-for-node")
         #menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
         #webdriver.ActionChains(self.browser).move_to_element(menu[2]).perform()
@@ -100,8 +97,7 @@ class TestFilesystem(unittest.TestCase):
         #test Download
         
         #test Rename
-        jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
-        jstree_ocls[2].click()
+        self.browser.click_element_by_class_and_text("jstree-node", " test_model.mdl")
         self.browser.click_element_by_id("options-for-node")
         menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
         menu[7].click()
@@ -109,8 +105,7 @@ class TestFilesystem(unittest.TestCase):
         assert warning.text=='You should avoid changing the file extension unless you know what you are doing!'
 
         #test Duplicate
-        jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
-        jstree_ocls[2].click()
+        self.browser.click_element_by_class_and_text("jstree-node", " test_model.mdl")
         self.browser.click_element_by_id("options-for-node")
         menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
         menu[8].click()
@@ -118,13 +113,12 @@ class TestFilesystem(unittest.TestCase):
         assert "test_model-copy.mdl" in jstree_nodes[0].text
         stochss_dir_contents = (self.stochss_container.exec_run("python -c \"import os;print(os.listdir())\"", demux=False)[1])
         assert b'test_model-copy.mdl' in stochss_dir_contents
-
+        
         #test Delete
-        jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
-        jstree_ocls[2].click()
+        self.browser.click_element_by_class_and_text("jstree-node", " test_model-copy.mdl")
         self.browser.click_element_by_id("options-for-node")
         menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
-        menu[9].click()
+        menu[len(menu)-1].click()
         self.browser.click_element_by_class_and_text("yes-modal-btn", "Yes")
         jstree_nodes=self.browser.find_elements_by_class_name("jstree-node")
         assert "test_model-copy.mdl" not in jstree_nodes[0].text
@@ -132,8 +126,7 @@ class TestFilesystem(unittest.TestCase):
         assert b'test_model-copy.mdl' not in stochss_dir_contents
 
         #test directory New Directory
-        jstree_ocls=self.browser.find_elements_by_class_name("jstree-ocl")
-        jstree_ocls[1].click()
+        self.browser.click_element_by_class_and_text("jstree-node", " test_dir")
         self.browser.click_element_by_id("options-for-node")
         menu=self.browser.find_elements_by_class_name("vakata-contextmenu-sep")
         menu[1].click()
