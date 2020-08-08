@@ -1,14 +1,14 @@
-div(id="reaction-details", data-hook="reaction-details")
+div(data-hook="reaction-details")
 
-  h5(id="field-title", data-hook="field-title")
+  h5(data-hook="field-title")
     div
       div.inline=this.fieldTitle
 
-      div.tooltip-icon(id="field-title-tooltip", data-hook="field-title-tooltip" data-html="true" data-toggle="tooltip" title="") <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+      div.tooltip-icon(data-hook="field-title-tooltip" data-html="true" data-toggle="tooltip" title="") <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-  div(id="reactants-editor", data-hook="reactants-editor")
+  div(data-hook="reactants-editor")
 
-  div(id="collapse", data-hook="collapse", class="collapse")
-    div.row(id="add-specie-container", data-hook="add-specie-container")
-      div(id="select-specie", data-hook="select-specie")
-      button.btn.btn-outline-secondary(class="btn-sm", id="add-selected-specie", data-hook="add-selected-specie") add
+  div(data-hook="collapse", class="collapse")
+    div.row(data-hook="add-specie-container")
+      div(data-hook="select-specie")
+      button.btn.btn-outline-secondary(class="btn-sm", data-hook="add-selected-specie") add

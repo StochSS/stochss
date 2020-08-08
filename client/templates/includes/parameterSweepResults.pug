@@ -3,11 +3,11 @@ div#workflow-results.card.card-body
   div
 
     h3.inline Results
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", id="collapse", data-hook="collapse", disabled) +
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", data-hook="collapse", disabled) +
 
   div.collapse(id="collapse-results", data-hook="workflow-results")
 
-    div.collapse(id="edit-plot-args", data-hook="edit-plot-args")
+    div.collapse(data-hook="edit-plot-args")
 
       table.table
         thead
@@ -18,9 +18,9 @@ div#workflow-results.card.card-body
 
         tbody
           tr
-            td: div(id="title", data-hook="title")
-            td: div(id="xaxis", data-hook="xaxis")
-            td: div(id="yaxis", data-hook="yaxis")
+            td: div(data-hook="title")
+            td: div(data-hook="xaxis")
+            td: div(data-hook="yaxis")
 
     div
 
@@ -40,7 +40,7 @@ div#workflow-results.card.card-body
 
         div.inline(id="feature-extractor" data-hook="feature-extraction-list")
 
-      div.horizontal-space.collapse(class="show" id="ensemble-aggragator-container", data-hook="ensemble-aggragator-container")
+      div.horizontal-space.collapse(class="show" data-hook="ensemble-aggragator-container")
 
         span.inline(for="ensemble-aggragator") Ensemble Aggragator: 
 
@@ -52,13 +52,13 @@ div#workflow-results.card.card-body
       div
 
         h5.inline Parameter Sweep
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-psweep", id="collapse-psweep", data-hook="collapse-psweep") -
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-psweep", data-hook="collapse-psweep") -
 
       div.collapse(class="show", id="collapse-psweep")
 
-        div(id="psweep", data-hook="psweep")
+        div(data-hook="psweep")
         button.btn.btn-primary.box-shadow(id="psweep" data-hook="plot") Edit Plot
         button.btn.btn-primary.box-shadow(id="psweep" data-hook="download-png-custom" disabled) Download PNG
         button.btn.btn-primary.box-shadow(id="psweep" data-hook="download-json" disabled) Download JSON 
 
-    button.btn.btn-primary.box-shadow(id="download-results-csv", data-hook="download-results-csv") Download Results as .csv
+    button.btn.btn-primary.box-shadow(data-hook="download-results-csv") Download Results as .csv

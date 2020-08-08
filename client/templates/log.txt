@@ -1,0 +1,76 @@
+On branch selenium-testing-filesystem
+Your branch is up to date with 'origin/selenium-testing-filesystem'.
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+	modified:   includes/editAdvancedSpecie.pug
+	modified:   includes/editCustomStoichSpecie.pug
+	modified:   includes/editEventAssignment.pug
+	modified:   includes/editFunctionDefinition.pug
+	modified:   includes/editInitialCondition.pug
+	modified:   includes/editPlaceDetails.pug
+	modified:   includes/editReactionVar.pug
+	modified:   includes/editRule.pug
+	modified:   includes/editScatterDetails.pug
+	modified:   includes/editSpatialSpecie.pug
+	modified:   includes/editStoichSpecie.pug
+	modified:   includes/eventAssignmentsEditor.pug
+	modified:   includes/eventAssignmentsViewer.pug
+	modified:   includes/eventDetails.pug
+	modified:   includes/eventListings.pug
+	modified:   includes/eventsEditor.pug
+	modified:   includes/eventsViewer.pug
+	modified:   includes/gillespyResults.pug
+	modified:   includes/gillespyResultsEnsemble.pug
+	modified:   includes/initialConditionsEditor.pug
+	modified:   includes/meshEditor.pug
+	modified:   includes/modelSettings.pug
+	modified:   includes/modelSettingsViewer.pug
+	modified:   includes/modelStateButtons.pug
+	modified:   includes/modelViewer.pug
+	modified:   includes/parameterSweepResults.pug
+	modified:   includes/parameterSweepSettings.pug
+	modified:   includes/parameterSweepSettingsViewer.pug
+	modified:   includes/parametersEditor.pug
+	modified:   includes/parametersViewer.pug
+	modified:   includes/reactantProduct.pug
+	modified:   includes/reactionDetails.pug
+	modified:   includes/reactionListing.pug
+	modified:   includes/reactionSubdomains.pug
+	modified:   includes/reactionsEditor.pug
+	modified:   includes/reactionsViewer.pug
+	modified:   includes/ruleEditor.pug
+	modified:   includes/rulesViewer.pug
+	modified:   includes/sbmlComponentEditor.pug
+	modified:   includes/simulationSettings.pug
+	modified:   includes/simulationSettingsViewer.pug
+	modified:   includes/spatialSpeciesEditor.pug
+	modified:   includes/speciesEditor.pug
+	modified:   includes/speciesViewer.pug
+	modified:   includes/viewEvents.pug
+	modified:   includes/viewReactions.pug
+	modified:   includes/workflowEditor.pug
+	modified:   includes/workflowInfo.pug
+	modified:   includes/workflowStateButtons.pug
+	modified:   includes/workflowStatus.pug
+	new file:   log.txt
+	modified:   ../../stochss/tests/integration_tests/launch_docker_container.py
+	modified:   ../../stochss/tests/integration_tests/selenium_test_new_file_directory.py
+	modified:   ../../stochss/tests/integration_tests/selenium_test_setup_and_teardown.py
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   log.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	../../build.log
+	../../geckodriver.log
+	../../stochss/tests/build.log
+	../../stochss/tests/integration_tests/expanded_webdriver_methods.py
+	../../stochss/tests/integration_tests/geckodriver.log
+
