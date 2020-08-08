@@ -1,0 +1,16 @@
+name: Ubuntu/Firefox Integration Test
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set Up Python
+      uses: actions/setup-python@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Move To Integration Tests Directory
+      run: python import os;path=os.path.join(os.getcwd(), "stochss", "tests", "integration_tests");os.chdir(path)
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+    - name: Run Integration Tests
+      run: python run_tests.py
