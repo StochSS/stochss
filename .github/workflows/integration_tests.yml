@@ -8,8 +8,8 @@ jobs:
       uses: actions/setup-python@v2
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Move To Integration Tests Directory
-      run: python -c 'import os;path=os.path.join(os.getcwd(), "stochss", "tests", "integration_tests");os.chdir(path)'
+    - name: Move To IT Directory
+      run: cd stochss/tests/integration_tests
     - name: Install Dependencies
       run: pip install -r requirements.txt
     - name: Run Integration Tests
