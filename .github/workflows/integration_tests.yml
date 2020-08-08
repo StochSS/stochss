@@ -9,7 +9,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Move To Integration Tests Directory
-      run: python import os;path=os.path.join(os.getcwd(), "stochss", "tests", "integration_tests");os.chdir(path)
+      run: python -c 'import os;path=os.path.join(os.getcwd(), "stochss", "tests", "integration_tests");os.chdir(path)'
     - name: Install Dependencies
       run: pip install -r requirements.txt
     - name: Run Integration Tests
