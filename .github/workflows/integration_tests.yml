@@ -9,8 +9,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Move To IT Directory
-      run: cd stochss/tests/integration_tests
+      run: | 
+        cd stochss/tests/integration_tests
+        pwd
     - name: Install Dependencies
-      run: pip install -r requirements.txt
+      run: |
+        pwd
+        pip install -r requirements.txt
     - name: Run Integration Tests
       run: python run_tests.py
