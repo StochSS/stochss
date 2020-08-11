@@ -11,6 +11,7 @@ import json
 from json.decoder import JSONDecodeError
 from datetime import datetime
 import logging
+import traceback
 from shutil import move, rmtree
 from tornado import web
 from notebook.base.handlers import APIHandler
@@ -58,7 +59,12 @@ class ModelBrowserFileList(APIHandler):
             self.set_status(err.status_code)
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -89,7 +95,12 @@ class ModelToNotebookHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -122,12 +133,18 @@ class DeleteFileAPIHandler(APIHandler):
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"StochSS File Not Found",
                      "Message":"Could not find the file or directory: {0}".format(err)}
+            trace = traceback.format_exc()
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         except PermissionError as err:
             self.set_status(403)
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"Permission Denied",
                      "Message":"You do not have permission to delete this file: {0}".format(err)}
+            trace = traceback.format_exc()
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -146,10 +163,9 @@ class MoveFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         src_path = self.get_query_argument(name="srcPath")
         log.debug("Path to the file: %s", src_path)
-        old_path = os.path.join(user_dir, src_path)
+        old_path = os.path.join("/home/jovyan", src_path)
         log.debug("Full path to the file: %s", old_path)
         dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path: %s", dst_path)
@@ -172,20 +188,29 @@ class MoveFileAPIHandler(APIHandler):
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"StochSS File Not Found",
                      "Message":"Could not find the file or directory: {0}".format(err)}
-            log.error(error)
+            trace = traceback.format_exc()
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         except PermissionError as err:
             self.set_status(403)
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"Permission Denied",
                      "Message":"You do not have permission to move this file: {0}".format(err)}
-            log.error(error)
+            trace = traceback.format_exc()
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason, "Message":err.message}
-            log.error(error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -337,7 +362,12 @@ class DuplicateModelHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -367,7 +397,12 @@ class DuplicateDirectoryHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -400,7 +435,12 @@ class RenameAPIHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -430,7 +470,12 @@ class ConvertToSpatialAPIHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -460,7 +505,12 @@ class ConvertToModelAPIHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -490,7 +540,12 @@ class ModelToSBMLAPIHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -525,7 +580,12 @@ class SBMLToModelAPIHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -557,7 +617,9 @@ class DownloadAPIHandler(APIHandler):
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"File Not Found",
                      "Message":"Could not find file: " + str(err)}
-            log.error("Exception information: %s", error)
+            trace = traceback.format_exc()
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -599,7 +661,12 @@ class DownloadZipFileAPIHandler(APIHandler):
             if action == "download":
                 self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -631,7 +698,9 @@ class CreateDirectoryHandler(APIHandler):
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"Directory Already Exists",
                      "Message":"Could not create your directory: "+str(err)}
-            log.error("Exception information: %s", error)
+            trace = traceback.format_exc()
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -705,7 +774,12 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception information: %s", error)
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -750,12 +824,16 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
             self.set_status(404)
             error = {"Reason":"Workflow Info File Not Found",
                      "Message":"Could not find the workflow's info file: "+str(err)}
-            log.error(error)
+            trace = traceback.format_exc()
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         except JSONDecodeError as err:
             self.set_status(404)
             error = {"Reason":"Workflow Info File Not JSON Format",
                      "Message":"The workflow info file is not JSON decodable: "+str(err)}
-            log.error(error)
+            trace = traceback.format_exc()
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
             self.write(error)
         self.finish()

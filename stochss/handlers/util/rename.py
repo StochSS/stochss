@@ -3,6 +3,7 @@
 import os
 import json
 import shutil
+import traceback
 try:
     from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
 except:
@@ -74,9 +75,9 @@ def rename(path, new_name):
     try:
         shutil.move(old_path, new_path)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err))
+        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err), traceback.format_exc())
     except PermissionError as err:
-        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err), traceback.format_exc())
     
     if old_path.endswith('/'):
         new_path = new_path[:-1]
