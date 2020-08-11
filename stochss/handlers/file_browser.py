@@ -169,7 +169,7 @@ class MoveFileAPIHandler(APIHandler):
         log.debug("Full path to the file: %s", old_path)
         dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path: %s", dst_path)
-        new_path = self.get_new_path(user_dir, dst_path)
+        new_path = self.get_new_path("/home/jovyan", dst_path)
         log.debug("Full destination path: %s", new_path)
         try:
             if os.path.isdir(old_path):

@@ -37,7 +37,7 @@ let templates = {
                       </div>
                       <div class="modal-body">
                         <label for=${inputID}>${label}</label>
-                        <textarea id=${inputID} name=${inputID} rows="5" style="width: 100%;" autofocus value="${value}"></textarea>
+                        <textarea id=${inputID} name=${inputID} rows="5" style="width: 100%;" autofocus>${value}</textarea>
                         </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>

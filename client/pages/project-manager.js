@@ -260,7 +260,10 @@ let ProjectManager = PageView.extend({
         let message = modelName.split(".")[0] !== input.value ? 
               "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
         let modelPath = path.join(self.projectPath, modelName)
-        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
+        let experiments = self.model.experiments.map(function (exp) {
+          return exp.name
+        })
+        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message+"&experiments="+experiments.toString();
         if(message){
           modal.modal('hide')
           let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
