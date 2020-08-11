@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import json
-from json.decoder import JSONDecodeError
 import nbformat
-from nbformat import v4 as nbf
+import traceback
 from os import path
+from nbformat import v4 as nbf
+from json.decoder import JSONDecodeError
 from .run_model import ModelFactory
 from .rename import get_unique_file_name
 from .generate_notebook_cells import *
@@ -24,9 +25,9 @@ def convert_to_sciope_me(_model_path, settings=None):
             json_data = json.loads(json_file.read())
             json_data['name'] = name
     except FileNotFoundError as e:
-        raise ModelNotFoundError('Could not read the file: ' + str(e))
+        raise ModelNotFoundError('Could not read the file: ' + str(e), traceback.format_exc())
     except JSONDecodeError as e:
-        raise ModelNotJSONFormatError('The data is not JSON decobable: ' + str(e))
+        raise ModelNotJSONFormatError('The data is not JSON decobable: ' + str(e), traceback.format_exc())
 
     is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['simulationSettings']['algorithm'] == "ODE"
     gillespy2_model = ModelFactory(json_data, is_ode).model
@@ -71,7 +72,7 @@ def convert_to_sciope_me(_model_path, settings=None):
         # Sciope Set Labels Cell
         cells.append(nbf.new_code_cell(generate_sciope_set_labels_cell()))
     except KeyError as err:
-        raise JSONFileNotModelError("Could not convert your model {}: {}".format(json_data, str(err)))
+        raise JSONFileNotModelError("Could not convert your model {}: {}".format(json_data, str(err)), traceback.format_exc())
     # Append cells to worksheet
     nb = nbf.new_notebook(cells=cells)
 

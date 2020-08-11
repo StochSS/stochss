@@ -8,6 +8,7 @@ import argparse
 import logging
 import pickle
 import plotly
+import traceback
 
 from io import StringIO
 from gillespy2.core import log
@@ -449,15 +450,15 @@ def get_models(full_path, name):
             stochss_model['name'] = name
             is_ode = stochss_model['defaultMode'] == "continuous"
     except FileNotFoundError as error:
-        print(str(error))
+        print("{0}\n{1}".format(error, traceback.format_exc()))
         log.critical("Failed to find the model file: {0}".format(error))
 
     try:
         _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
         gillespy2_model = _model.model
     except Exception as error:
-        print(str(error))
-        log.error(str(error))
+        print("{0}\n{1}".format(error, traceback.format_exc()))
+        log.error("{0}".format(error))
         gillespy2_model = None
 
     return gillespy2_model, stochss_model
@@ -679,7 +680,7 @@ if __name__ == "__main__":
             if 'GillesPy2 simulation exceeded timeout.' in logs:
                 resp['timeout'] = True
         except ModelError as error:
-            resp['errors'] = str(error)
+            resp['errors'] = "{0}\n{1}".format(error, traceback.format_exc())
         with open(outfile, "w") as fd:
             json.dump(resp, fd)
         open(outfile + ".done", "w").close()
