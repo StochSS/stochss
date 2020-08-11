@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import traceback
 from .rename import get_unique_file_name
 from .stochss_errors import StochSSFileNotFoundError, StochSSWorkflowError, StochSSWorkflowNotCompleteError
 
@@ -31,7 +32,7 @@ def download_zip(path, action):
     target = os.path.join(user_dir, path)
 
     if not os.path.exists(target):
-        raise StochSSFileNotFoundError("Could not find the file or directory: " + target)
+        raise StochSSFileNotFoundError("Could not find the file or directory: " + target, traceback.format_exc())
 
     if action == "generate":
         full_path = "{0}.zip".format(target.split('.')[0])
@@ -46,16 +47,16 @@ def download_zip(path, action):
     elif action == "resultscsv":
         error_status = os.path.join(target, "ERROR")
         if os.path.exists(error_status):
-            raise StochSSWorkflowError("The workflow experienced an error during run: " + error_status)
+            raise StochSSWorkflowError("The workflow experienced an error during run: " + error_status, traceback.format_exc())
         complete_status = os.path.join(target, "COMPLETE")
         if not os.path.exists(complete_status):
-            raise StochSSWorkflowNotCompleteError("The workflow has not finished running: {0} not found.".format(complete_status))
+            raise StochSSWorkflowNotCompleteError("The workflow has not finished running: {0} not found.".format(complete_status), traceback.format_exc())
 
         results_path = os.path.join(target, "results")
         try:
             csv_results_dir = list(filter(lambda file: get_results_csv_dir(file, results_path), os.listdir(results_path)))[0]
         except IndexError as err:
-            raise StochSSFileNotFoundError("Could not find the workflow results csv directory: " + str(err))
+            raise StochSSFileNotFoundError("Could not find the workflow results csv directory: " + str(err), traceback.format_exc())
         
         target_path = os.path.join(results_path, csv_results_dir)
         zip_path = "{0}.zip".format(target_path)

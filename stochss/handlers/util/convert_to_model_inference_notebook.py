@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import nbformat
+import traceback
 from nbformat import v4 as nbf
 from os import path
 from .rename import get_unique_file_name
@@ -29,9 +30,9 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
             json_data = json.load(json_file)
             json_data['name'] = name
     except FileNotFoundError as err:
-        raise ModelNotFoundError('Could not find model file: ' + str(err))
+        raise ModelNotFoundError('Could not find model file: ' + str(err), traceback.format_exc())
     except JSONDecodeError as err:
-        raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err))
+        raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err), traceback.format_exc())
 
     is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['simulationSettings']['algorithm'] == "ODE"
     gillespy2_model = ModelFactory(json_data, is_ode).model
@@ -84,7 +85,7 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
         # Create absolute error cell
         cells.append(nbf.new_code_cell('mae_inference = mean_absolute_error(bound, abc.results["inferred_parameters"])'))
     except KeyError as err:
-        raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err))
+        raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err), traceback.format_exc())
 
     # Append cells to worksheet
     nb = nbf.new_notebook(cells=cells)

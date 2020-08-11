@@ -8,6 +8,7 @@ import logging
 import json
 import os
 import subprocess
+import traceback
 from notebook.base.handlers import APIHandler
 from json.decoder import JSONDecodeError
 from tornado import web
@@ -78,12 +79,16 @@ class LoadWorkflowAPIHandler(APIHandler):
             except FileNotFoundError as err:
                 self.set_status(404)
                 error = {"Reason":"Info File Not Found","Message":"Could not find the workflow info file: "+str(err)}
-                log.error("Exception information: {0}".format(error))
+                trace = traceback.format_exc()
+                log.error("Exception information: {0}\n{1}".format(error, trace))
+                error['Traceback'] = trace
                 self.write(error)
             except JSONDecodeError as err:
                 self.set_status(406)
                 error = {"Reason":"File Not JSON Format","Message":"The workflow info file is not JSON decodable: "+str(err)}
-                log.error("Exception information: {0}".format(error))
+                trace = traceback.format_exc()
+                log.error("Exception information: {0}\n{1}".format(error, trace))
+                error['Traceback'] = trace
                 self.write(error)
         try:
             with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
@@ -91,6 +96,8 @@ class LoadWorkflowAPIHandler(APIHandler):
         except:
             resp["model"] = None
             resp["error"] = {"Reason":"Model Not Found","Message":"Could not find the model file: "+resp['mdlPath']}
+            trace = traceback.format_exc()
+            log.error("Exception information: {0}\n{1}".format(resp['error'], trace))
         resp["settings"] = self.get_settings(os.path.join(resp['wkflParPath'], resp['wkflDir']), resp['mdlPath'])
         log.debug("Response: {0}".format(resp))
         self.write(resp)
@@ -257,7 +264,12 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         except StochSSAPIError as err:
             self.set_status(err.status_code)
             error = {"Reason":err.reason,"Message":err.message}
-            log.error("Exception information: {0}\n".format(error))
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: {0}\n{1}".format(error, trace))
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -294,7 +306,9 @@ class WorkflowLogsAPIHandler(APIHandler):
             self.set_status(404)
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"StochSS File or Directory Not Found","Message":"Could not find the workflow log file: "+str(err)}
-            log.error("Exception information: {0}\n".format(error))
+            trace = traceback.format_exc()
+            log.error("Exception information: {0}\n{1}".format(error, trace))
+            error['Traceback'] = trace
             self.write(error)
         self.finish()
 
@@ -314,7 +328,6 @@ class WorkflowNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         workflow_type = self.get_query_argument(name="type")
         path = self.get_query_argument(name="path")
         settings = None
@@ -346,8 +359,13 @@ class WorkflowNotebookHandler(APIHandler):
             self.set_status(err.status_code)
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":err.reason,"Message":err.message}
-            log.error("Exception information: {0}\n".format(error))
+            if err.traceback is None:
+                import traceback
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: {0}\n{1}".format(error, trace))
+            error['Traceback'] = trace
             self.write(error)
-        log.setLevel(logging.WARNING)
         self.finish()
 
