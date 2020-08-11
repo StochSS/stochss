@@ -120,7 +120,9 @@ let ModelEditor = PageView.extend({
        });
     }
     reactions.forEach(function (reaction) {
-      updateInUse(reaction.rate);
+      if(reaction.reactionType !== "custom-propensity"){
+        updateInUse(reaction.rate);
+      }
     });
     events.forEach(function (event) {
       event.eventAssignments.forEach(function (assignment) {
