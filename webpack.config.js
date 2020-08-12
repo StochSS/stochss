@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: {
+    home: './client/pages/users-home.js',
     quickstart: './client/pages/quickstart.js',
     browser: './client/pages/file-browser.js',
     editor: './client/pages/model-editor.js',
@@ -18,6 +19,13 @@ module.exports = {
   },
   devtool: 'inline-source-map',
   plugins: [
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Home',
+      filename: 'stochss-user-home.html',
+      template: 'page_template.pug',
+      name: 'home',
+      inject: false
+    }),
     new HtmlWebpackPlugin({
       title: 'StochSS | Quickstart',
       filename: 'stochss-quickstart.html',

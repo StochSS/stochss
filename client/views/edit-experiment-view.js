@@ -22,8 +22,9 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     this.renderEditWorkflowsView();
-    if(this.model.collection.length == 1) {
+    if(this.model.collection.length === 1) {
       this.handleViewWorkflowsClick(undefined)
+      $(this.queryByHook("project-experiment-remove")).prop('disabled', true)
     }
   },
   renderEditWorkflowsView: function () {
@@ -47,23 +48,26 @@ module.exports = View.extend({
     $(this.queryByHook("project-experiment-view")).text(newText[text])
   },
   handleRemoveExperimentClick: function (e) {
-    let self = this
-    if(document.querySelector('#moveToTrashConfirmModal')) {
-      document.querySelector('#moveToTrashConfirmModal').remove();
-    }
-    let modal = $(modals.moveToTrashConfirmHtml("experiment")).modal();
-    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
-    yesBtn.addEventListener('click', function (e) {
-      let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
-      let trashPath = path.join(self.parent.parent.projectPath, "trash")
-      let queryString = "?srcPath="+expPath+"&dstPath="+trashPath
-      let endpoint = path.join(app.getApiPath(), 'file/move')+queryString
-      xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode < 400) {
-          self.parent.parent.update("experiment-editor")
-        }
+    if(this.model.collection.length > 1) {
+      let self = this
+      if(document.querySelector('#moveToTrashConfirmModal')) {
+        document.querySelector('#moveToTrashConfirmModal').remove();
+      }
+      let title = "experiment and it workflows"
+      let modal = $(modals.moveToTrashConfirmHtml(title)).modal();
+      let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
+      yesBtn.addEventListener('click', function (e) {
+        let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
+        let trashPath = path.join(self.parent.parent.projectPath, "trash", self.model.name + ".exp")
+        let queryString = "?srcPath="+expPath+"&dstPath="+trashPath
+        let endpoint = path.join(app.getApiPath(), 'file/move')+queryString
+        xhr({uri: endpoint, json: true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            self.parent.parent.update("experiment-editor")
+          }
+        });
+        modal.modal('hide')
       });
-      modal.modal('hide')
-    });
+    }
   },
 });

@@ -9,6 +9,7 @@ Use finish() for json, write() for text
 import os
 import json
 from json.decoder import JSONDecodeError
+from datetime import datetime
 import logging
 import traceback
 from shutil import move, rmtree
@@ -168,7 +169,7 @@ class MoveFileAPIHandler(APIHandler):
         log.debug("Full path to the file: %s", old_path)
         dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path: %s", dst_path)
-        new_path = os.path.join("/home/jovyan", dst_path)
+        new_path = self.get_new_path("/home/jovyan", dst_path)
         log.debug("Full destination path: %s", new_path)
         try:
             if os.path.isdir(old_path):
@@ -212,6 +213,27 @@ class MoveFileAPIHandler(APIHandler):
             error['Traceback'] = trace
             self.write(error)
         self.finish()
+
+
+    @classmethod
+    def get_new_path(cls, user_dir, dst_path):
+        '''
+        Gets the proper destination path for the file to be moved
+
+        Attributes
+        ----------
+        user_dir : string
+            Path to the users home directory
+        dst_path : string
+            New path for the file object from the users home directory
+        '''
+        new_path = os.path.join(user_dir, dst_path)
+        if new_path.split().pop().replace('.', '', 5).isdigit():
+            return new_path.replace(new_path.split().pop(), "").strip()
+        if 'trash/' in new_path and os.path.exists(new_path):
+            stamp = datetime.now().strftime(" %y.%m.%d.%H.%M.%S")
+            return new_path + stamp
+        return new_path
 
 
     @classmethod

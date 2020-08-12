@@ -31,16 +31,19 @@ body
             ul.nav.flex-column
               li.nav-item: h5.icon-flask Tools
 
+              li.nav-item: a.nav-link(href="stochss/home", title="Users Home Page")
+                | Home
+
               li.nav-item: a.nav-link(href="stochss/project/browser", title="Explore your StochSS projects")
                 | Projects
 
-              li.nav-item: a.nav-link(href="stochss/models", title="Explore your StochSS models")
-                | Browser
+              li.nav-item: a.nav-link(href="stochss/files", title="Explore your StochSS files")
+                | Files
 
               li.nav-item: a.nav-link(target="_blank", href="tree", title="Browse your files in a Jupyter interface")
                 | Jupyter
 
               li.nav-item: a.nav-link(href="stochss/quickstart", title="Quickstart")
-                | Quickstart
+                | Tutorial
 
       main.col-md-10.body(role="main"): div.container-fluid(data-hook="page-container")

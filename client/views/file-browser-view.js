@@ -53,9 +53,6 @@ module.exports = View.extend({
       'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
       'core': {'multiple' : false, 'animation': 0,
         'check_callback': function (op, node, par, pos, more) {
-          if(node && node.type && node.original && node.original._path && more && more.ref && more.ref.type){
-            console.log(node.type, node.original._path.includes("trash"), more.ref.original.text === "trash", !(node.original._path.includes("trash") || more.ref.original.text === "trash"), more.ref.type)
-          }
           if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
             return false
           }
@@ -79,22 +76,28 @@ module.exports = View.extend({
           if(op === 'move_node' && more && more.ref && more.ref.type && node.type !== "workflow" && !(more.ref.type == 'folder' || more.ref.type == 'root')){
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
+          if(op === 'move_node' && more && more.ref && more.ref.type && (more.ref.type === 'folder' || more.ref.type === 'root')){
             if(!more.ref.state.loaded){
               return false
             }
             var exists = false
             var BreakException = {}
-            try{
-              more.ref.children.forEach(function (child) {
-                var child_node = $('#models-jstree-view').jstree().get_node(child)
-                exists = child_node.text === node.text
-                if(exists){
-                  throw BreakException;
-                }
-              })
-            }catch{
-              return false;
+            var text = node.text
+            if(!isNaN(text.split(' ').pop().split('.').join(""))){
+              text = text.replace(text.split(' ').pop(), '').trim()
+            }
+            if(more.ref.text !== "trash"){
+              try{
+                more.ref.children.forEach(function (child) {
+                  var child_node = $('#models-jstree-view').jstree().get_node(child)
+                  exists = child_node.text === text
+                  if(exists){
+                    throw BreakException;
+                  }
+                })
+              }catch{
+                return false;
+              }
             }
           }
           if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
@@ -109,7 +112,8 @@ module.exports = View.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
-                self.updateParent(node.type)
+                console.log((oldPath.includes('trash/') || newDir.endsWith('trash')))
+                self.updateParent(node.type, (oldPath.includes('trash/') || newDir.endsWith('trash')))
               }else{
                 body = JSON.parse(body)
                 if(par.type === 'root'){
@@ -153,8 +157,10 @@ module.exports = View.extend({
       }
     });
   },
-  updateParent: function (type) {
-    if(type === "nonspatial" || type === "workflow" || type === "experiment") {
+  updateParent: function (type, trash = false) {
+    if(trash){
+      this.parent.update("all")
+    }else if(type === "nonspatial" || type === "workflow" || type === "experiment") {
       this.parent.update("file-browser")
     }
   },
@@ -630,28 +636,29 @@ module.exports = View.extend({
       let title = "No Models Found"
       let message = "You need to add a model before you can create a new workflow."
       let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
+    }else if(o.type !== "experiment" && this.parent.model.experiments.length == 1) {
+      let expName = this.parent.model.experiments.models[0].name
+      let parentPath = path.join(path.dirname(o.original._path), expName + ".exp")
+      let modelPath = o.original._path
+      let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
+      window.location.href = endpoint
     }else{
       let self = this
       if(document.querySelector('#newProjectWorkflowModal')){
         document.querySelector('#newProjectWorkflowModal').remove()
       }
+      let options = o.type === "experiment" ?
+                    this.parent.model.models.map(function (model) {return model.name}) :
+                    this.parent.model.experiments.map(function (experiment) {return experiment.name})
       let label = o.type === "experiment" ? "Model file name: " : "Experiment file name: "
-      let modal = $(modals.newProjectWorkflowHtml(label)).modal()
+      let modal = $(modals.newProjectWorkflowHtml(label, options)).modal()
       let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-      let input = document.querySelector('#newProjectWorkflowModal #input')
-      input.addEventListener("keyup", function (event) {
-        if(event.keyCode === 13){
-          event.preventDefault();
-          okBtn.click();
-        }
-      });
+      let select = document.querySelector('#newProjectWorkflowModal #select')
       okBtn.addEventListener("click", function (e) {
-        if(Boolean(input.value)) {
-          let parentPath = o.type === "experiment" ? o.original._path : path.join(path.dirname(o.original._path), input.value)
-          let modelPath = o.type === "experiment" ? path.join(path.dirname(o.original._path), input.value) : o.original._path
+          let parentPath = o.type === "experiment" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".exp")
+          let modelPath = o.type === "experiment" ? path.join(path.dirname(o.original._path), select.value + ".mdl") : o.original._path
           let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
           window.location.href = endpoint
-        }
       });
     }
   },
@@ -845,7 +852,7 @@ module.exports = View.extend({
         },
         "Delete" : {
           "label" : "Delete",
-          "_disabled" : false,
+          "_disabled" : o.type === 'experiment' && self.parent.model.experiments.length === 1 ? true : false,
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {

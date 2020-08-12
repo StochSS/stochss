@@ -5,7 +5,7 @@ let templates = {
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
                   <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content info">
                       <div class="modal-header">
                         <h5 class="modal-title">${title}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -28,7 +28,7 @@ let templates = {
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
                   <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content info">
                       <div class="modal-header">
                         <h5 class="modal-title">${title}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -37,7 +37,7 @@ let templates = {
                       </div>
                       <div class="modal-body">
                         <label for=${inputID}>${label}</label>
-                        <textarea id=${inputID} name=${inputID} rows="5" style="width: 100%;" autofocus value="${value}"></textarea>
+                        <textarea id=${inputID} name=${inputID} rows="5" style="width: 100%;" autofocus>${value}</textarea>
                         </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
@@ -133,6 +133,31 @@ let templates = {
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary box-shadow upload-modal-btn" disabled>Upload</button>
                         <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>`
+        },
+        select : (modalID, selectID, title, label, options) => {
+            return `
+                <div id=${modalID} class="modal" tabindex="-1" role="dialog">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <label for=${selectID}>${label}</label>
+                        <select id=${selectID} name=${selectID} autofocus>
+                          ${options}
+                        </select>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
+                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
                       </div>
                     </div>
                   </div>
@@ -301,6 +326,9 @@ module.exports = {
         let inputID = `${type}AnnotationInput`
         let title = `Annotation for ${name}`
         let label = "Annotation:"
+        if(!annotation) {
+          annotation = ""
+        }
 
         return templates.input_long(modalID, inputID, title, label, annotation)
     },
@@ -314,12 +342,23 @@ module.exports = {
 
         return templates.message(modalID, title, error)
     },
-    newProjectWorkflowHtml : (label) => {
-        let modalID = "newProjectWorkflowModal"
-        let inputID = "input"
-        let title = "New Workflow"
+    // newProjectWorkflowHtml : (label) => {
+    //     let modalID = "newProjectWorkflowModal"
+    //     let inputID = "input"
+    //     let title = "New Workflow"
 
-        return templates.input(modalID, inputID, title, label, "")
+    //     return templates.input(modalID, inputID, title, label, "")
+    // },
+    newProjectWorkflowHtml : (label, options) => {
+        let modalID = "newProjectWorkflowModal"
+        let selectID = "select"
+        let title = "New Workflow"
+        options = options.map(function (name) {
+          return `<option value="${name}">${name}</option>`
+        })
+        options = options.join(" ")
+
+        return templates.select(modalID, selectID, title, label, options)
     },
     projectExportSuccessHtml : (fileType, message) => {
       let modalID = "projectExportSuccessModal"

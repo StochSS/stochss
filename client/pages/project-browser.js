@@ -39,7 +39,7 @@ let projectBrowser = PageView.extend({
     if(this.projectsView) {
       this.projectsView.remove()
     }
-    let projects = new Collection(this.projects, {model: Project})
+    let projects = new Collection(this.projects, {model: Project, comparator: 'parentDir'})
     this.projectsView = this.renderCollection(projects, EditProjectView, this.queryByHook("projects-view-container"))
   },
   handleNewProjectClick: function (e) {
@@ -49,7 +49,7 @@ let projectBrowser = PageView.extend({
     }
     let modal = $(modals.newProjectModalHtml()).modal()
     let input = document.querySelector("#newProjectModal #projectNameInput")
-    $(input).focus()
+    input.focus()
     let okBtn = document.querySelector("#newProjectModal .ok-model-btn")
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
@@ -64,7 +64,7 @@ let projectBrowser = PageView.extend({
         let endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
         xhr({uri:endpoint, json:true}, function (err, response, body) {
           if(response.statusCode < 400) {
-            window.location.href = path.join(app.getBasePath(), "/stochss/project/manager")+"?path="+body.path
+            window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body.path
           }else{
             let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
           }

@@ -37,7 +37,6 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         projects = []
@@ -45,7 +44,6 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         log.debug("List of projects: %s", projects)
         resp = {"projects":projects}
         self.write(resp)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -64,7 +62,10 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         for item in os.listdir(path):
             new_path = os.path.join(path, item)
             if item.endswith('.proj'):
-                projects.append({'directory': new_path.replace("/home/jovyan/", "")})
+                projects.append({'directory': new_path.replace("/home/jovyan/", ""),
+                                 'parentDir': os.path.dirname(new_path.replace("/home/jovyan/",
+                                                                               "")),
+                                 'elementID': "p{}".format(len(projects) + 1)})
             elif not item.startswith('.') and os.path.isdir(new_path):
                 cls.get_projects_from_directory(new_path, projects)
 
@@ -115,13 +116,33 @@ class LoadProjectAPIHandler(APIHandler):
                                 else:
                                     project['plot'] = {"path":wkfl_dict['path'], "output":output}
                             wkfl_dict['outputs'] = outputs
-                            workflows.append(wkfl_dict)
+                        self.get_workflow_info(wkfl_dict)
+                        workflows.append(wkfl_dict)
                 project['experiments'].append({"name":name, "workflows":workflows})
             elif item == "trash":
                 project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
         log.debug("Contents of the project: %s", project)
         self.write(project)
         self.finish()
+
+
+    @classmethod
+    def get_workflow_info(cls, wkfl_dict):
+        '''
+        Add the necessary workflow info elements to the workflow model
+
+        Attributes
+        ----------
+        wkfl_dict : dict
+            JSON representation of a workflow
+        '''
+        with open(os.path.join(wkfl_dict["path"], "info.json"), 'r') as info_file:
+            info = json.load(info_file)
+            wkfl_dict['annotation'] = ""
+            if not 'annotation' in info.keys():
+                wkfl_dict['annotation'] = ""
+            else:
+                wkfl_dict['annotation'] = info['annotation']
 
 
 class NewProjectAPIHandler(APIHandler):

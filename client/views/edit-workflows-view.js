@@ -21,33 +21,39 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments)
-    this.renderCollection(this.collection, EditWorkflowView, this.queryByHook("project-workflows-list"))
+    this.renderEditWorkflowView()
+  },
+  renderEditWorkflowView: function () {
+    if(this.editWorkflowView) {
+      this.editWorkflowView.remove()
+    }
+    this.editWorkflowView = this.renderCollection(this.collection, EditWorkflowView, this.queryByHook("project-workflows-list"))
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   handleNewWorkflowClick: function (e) {
-    if(this.parent.parent.model.models.length > 0) {
+    let models = this.parent.parent.parent.model.models
+    if(models.length > 0) {
       let self = this
       if(document.querySelector("#newProjectWorkflowModal")) {
         document.querySelector("#newProjectWorkflowModal").remove()
       }
-      let modal = $(modals.newProjectWorkflowHtml("Name of the model: ")).modal()
+      let options = models.map(function (model) { return model.name });
+      let modal = $(modals.newProjectWorkflowHtml("Name of the model: ", options)).modal()
       let okBtn = document.querySelector("#newProjectWorkflowModal .ok-model-btn")
-      let input = document.querySelector("#newProjectWorkflowModal #input")
-      input.addEventListener("keyup", function (event) {
-        if(event.keyCode === 13){
-          event.preventDefault();
-          okBtn.click();
-        }
-      });
+      let select = document.querySelector("#newProjectWorkflowModal #select")
       okBtn.addEventListener('click', function (e) {
-        if(Boolean(input.value)) {
-          let mdlFile = input.value.endsWith('.mdl') ? input.value : input.value + ".mdl"
-          let mdlPath =  path.join(self.parent.parent.parent.projectPath, mdlFile)
-          let parentPath = path.join(self.parent.parent.parent.projectPath, self.parent.model.name)+".exp"
-          let queryString = "?path="+mdlPath+"&parentPath="+parentPath
-          let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
-          modal.modal('hide')
-          window.location.href = endpoint
-        }
+        let mdlFile = select.value.endsWith('.mdl') ? select.value : select.value + ".mdl"
+        let mdlPath =  path.join(self.parent.parent.parent.projectPath, mdlFile)
+        let parentPath = path.join(self.parent.parent.parent.projectPath, self.parent.model.name)+".exp"
+        let queryString = "?path="+mdlPath+"&parentPath="+parentPath
+        let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
+        modal.modal('hide')
+        window.location.href = endpoint
       });
     }else{
       let title = "No Models Found"

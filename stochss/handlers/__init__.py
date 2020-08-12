@@ -13,7 +13,8 @@ def get_page_handlers(route_start):
         #
         ## Page Handlers
         #
-        (r'/stochss/models\/?$', ModelBrowserHandler),
+        (r'/stochss/home\/?', UserHomeHandler),
+        (r'/stochss/files\/?$', ModelBrowserHandler),
         (r'/stochss/models/edit\/?', ModelEditorHandler),
         (r'/stochss/workflow/selection\/?', WorkflowSelectionHandler),
         (r'/stochss/workflow/edit\/?', WorkflowEditorHandler),
@@ -60,7 +61,8 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/plot-results\/?", PlotWorkflowResultsAPIHandler),
         (r"/stochss/api/workflow/duplicate\/?", DuplicateWorkflowAsNewHandler),
         (r"/stochss/api/workflow/edit-model\/?", GetWorkflowModelPathAPIHandler),
-        (r"/stochss/api/workflow/save-plot\/?", SavePlotAPIHandler)
+        (r"/stochss/api/workflow/save-plot\/?", SavePlotAPIHandler),
+        (r"/stochss/api/workflow/save-annotation\/?", SaveAnnotationAPIHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers

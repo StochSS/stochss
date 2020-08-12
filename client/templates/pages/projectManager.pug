@@ -26,15 +26,21 @@ section.page
         li.dropdown-divider
         li.dropdown-item(id="existing-model" data-hook="existing-model") Existing Model
         li.dropdown-divider
-        li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model
+        li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model (.mdl)
 
     div.verticle-space(id="edit-experiments-container" data-hook="edit-experiments-container")
 
     div
 
-      h3 Recent Plot
+      div
 
-      div(id="project-most-recent-plot" data-hook="project-most-recent-plot")
+        h3.inline Most Recent Plot
+
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#project-most-recent-plot-container", data-hook="collapse-most-recent-plot-btn") -
+
+      div.collapse.show(id="project-most-recent-plot-container")
+
+        div(id="project-most-recent-plot" data-hook="project-most-recent-plot")
 
     div(id="project-viewer" data-hook="project-viewer")
 
@@ -48,8 +54,6 @@ section.page
       div.collapse(id="project-manager-advanced" data-hook="project-manager-advanced")
 
         div(id="project-manager-file-browser" data-hook="file-browser")
-
-        div.collapse(id="project-meta-data-container" data-hook="project-meta-data-container")
 
         div
 
@@ -69,4 +73,6 @@ section.page
           button.btn.btn-primary.inline.box-shadow(id="convert-project-to-combine" data-hook="convert-project-to-combine") Convert to combine
 
           button.btn.btn-primary.inline.box-shadow(id="empty-project-trash" data-hook="empty-project-trash") Empty Trash
+
+        div.collapse(id="project-meta-data-container" data-hook="project-meta-data-container")
       

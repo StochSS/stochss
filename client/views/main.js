@@ -100,7 +100,7 @@ module.exports = View.extend({
       }
     });
 
-    var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/models"
+    var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/home"
     $(this.queryByHook("home-link")).prop('href', homePath);
 
     return this;
