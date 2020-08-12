@@ -24,6 +24,29 @@ let templates = {
                   </div>
                 </div>`
         },
+        input_long : (modalID, inputID, title, label, value) => {
+            return `
+                <div id=${modalID} class="modal" tabindex="-1" role="dialog">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <label for=${inputID}>${label}</label>
+                        <textarea id=${inputID} name=${inputID} rows="5" style="width: 100%;" autofocus value="${value}"></textarea>
+                        </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
+                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>`
+        },
         message : (modalID, title, message) => {
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
@@ -279,7 +302,7 @@ module.exports = {
         let title = `Annotation for ${name}`
         let label = "Annotation:"
 
-        return templates.input(modalID, inputID, title, label, annotation)
+        return templates.input_long(modalID, inputID, title, label, annotation)
     },
     modelSaveErrorHtml : (title, error) => {
         let modalID = "modelSaveErrorModal"

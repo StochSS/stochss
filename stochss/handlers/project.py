@@ -23,6 +23,52 @@ log = logging.getLogger('stochss')
 
 
 # pylint: disable=abstract-method
+class LoadProjectBrowserAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for loading all of the users projects
+    ##############################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Recursively searches all directories for projects
+
+        Attributes
+        ----------
+        '''
+        log.setLevel(logging.DEBUG)
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        projects = []
+        self.get_projects_from_directory(user_dir, projects)
+        log.debug("List of projects: %s", projects)
+        resp = {"projects":projects}
+        self.write(resp)
+        log.setLevel(logging.WARNING)
+        self.finish()
+
+
+    @classmethod
+    def get_projects_from_directory(cls, path, projects):
+        '''
+        Get the projects in the directory if any exist.
+
+        Attributes
+        ----------
+        path : string
+            Path the target directory
+        projects : list
+            List of project dictionaries
+        '''
+        for item in os.listdir(path):
+            new_path = os.path.join(path, item)
+            if item.endswith('.proj'):
+                projects.append({'directory': new_path.replace("/home/jovyan/", "")})
+            elif not item.startswith('.') and os.path.isdir(new_path):
+                cls.get_projects_from_directory(new_path, projects)
+
+
 class LoadProjectAPIHandler(APIHandler):
     '''
     ##############################################################################
