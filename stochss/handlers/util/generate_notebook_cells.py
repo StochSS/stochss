@@ -291,7 +291,7 @@ def get_algorithm(gillespy2_model, is_psweep=False, is_ssa_c=False, algorithm=No
     if is_ssa_c:
         name = gillespy2_model.get_best_solver().name
     else:
-        name = gillespy2_model.get_best_solver(cpp_test=False).name
+        name = gillespy2_model.get_best_solver(precompile=False).name
     
     return algorithm_map[name], name
 
