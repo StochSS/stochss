@@ -60,7 +60,7 @@ let projectBrowser = PageView.extend({
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
         modal.modal('hide')
-        let projectPath = input.value + ".proj"
+        let projectPath = input.value.trim() + ".proj"
         let endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
         xhr({uri:endpoint, json:true}, function (err, response, body) {
           if(response.statusCode < 400) {
