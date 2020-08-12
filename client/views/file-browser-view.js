@@ -228,7 +228,7 @@ module.exports = View.extend({
         fileinfo.path = o.original._path
       }
       if(Boolean(input.value)){
-        fileinfo.name = input.value
+        fileinfo.name = input.value.trim()
       }
       let formData = new FormData()
       formData.append("datafile", file)
@@ -570,7 +570,7 @@ module.exports = View.extend({
         if(o && o.original && o.original._path !== "/") {
           parentPath = o.original._path
         }
-        var experimentName = input.value + ".exp"
+        var experimentName = input.value.trim() + ".exp"
         var experimentPath = path.join(parentPath, experimentName)
         let endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
         xhr({uri: endpoint,json: true}, function (err, response, body) {
@@ -612,7 +612,7 @@ module.exports = View.extend({
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
-        let queryString = "?path="+self.parent.projectPath+"&mdlPath="+input.value
+        let queryString = "?path="+self.parent.projectPath+"&mdlPath="+input.value.trim()
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
         xhr({uri:endpoint, json:true}, function (err, response, body) {
           if(response.statusCode < 400) {
@@ -678,7 +678,7 @@ module.exports = View.extend({
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
-        let queryString = "?path="+o.original._path+"&wkflPath="+input.value
+        let queryString = "?path="+o.original._path+"&wkflPath="+input.value.trim()
         let endpoint = path.join(app.getApiPath(), "project/add-existing-workflow")+queryString
         xhr({uri: endpoint, json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
@@ -713,9 +713,9 @@ module.exports = View.extend({
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = o && o.type === "project" ? input.value.split("/").pop() + '.mdl' : input.value + '.mdl';
-          let message = modelName.split(".")[0] !== input.value ? 
-                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
+          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
+          let message = modelName.split(".")[0] !== input.value.trim() ? 
+                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
           let modelPath = path.join(parentPath, modelName)
           let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
           if(message){
@@ -727,7 +727,7 @@ module.exports = View.extend({
             window.location.href = endpoint;
           }
         }else{
-          let dirName = input.value;
+          let dirName = input.value.trim();
           let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
