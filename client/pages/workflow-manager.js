@@ -317,6 +317,8 @@ let WorkflowManager = PageView.extend({
       if(this.experiments !== 'undefined'){
         this.url = this.url.replace(this.experiments, 'undefined')
       }
+      let parentQuery = this.url.split('&')[2]
+      this.url = this.url.replace(parentQuery, "parentPath="+path.dirname(this.wkflPath))
       window.location.href = this.url
     }
     else

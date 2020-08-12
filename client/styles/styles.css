@@ -252,6 +252,12 @@ input[type="file"]::-ms-browse {
   font-size: 12px;
 }
 
+.modal-title {
+  width: 95%;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
 .modal-content.info {
   width: 150%;
 }

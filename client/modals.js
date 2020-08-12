@@ -5,7 +5,7 @@ let templates = {
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
                   <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content info">
                       <div class="modal-header">
                         <h5 class="modal-title">${title}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -28,7 +28,7 @@ let templates = {
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
                   <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content info">
                       <div class="modal-header">
                         <h5 class="modal-title">${title}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -326,6 +326,9 @@ module.exports = {
         let inputID = `${type}AnnotationInput`
         let title = `Annotation for ${name}`
         let label = "Annotation:"
+        if(!annotation) {
+          annotation = ""
+        }
 
         return templates.input_long(modalID, inputID, title, label, annotation)
     },

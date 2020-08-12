@@ -53,7 +53,8 @@ module.exports = View.extend({
       if(document.querySelector('#moveToTrashConfirmModal')) {
         document.querySelector('#moveToTrashConfirmModal').remove();
       }
-      let modal = $(modals.moveToTrashConfirmHtml("experiment")).modal();
+      let title = "experiment and it workflows"
+      let modal = $(modals.moveToTrashConfirmHtml(title)).modal();
       let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
       yesBtn.addEventListener('click', function (e) {
         let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
