@@ -21,6 +21,8 @@ let workflowSelection = PageView.extend({
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=sciope-model-exploration]" : "notebookWorkflow",
     "click [data-hook=model-inference]" : "notebookWorkflow",
+    "click [data-hook=stochss-es]" : "handleEnsembleSimulationClick",
+    "click [data-hook=stochss-ps]" : "handleParameterSweepClick"
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -31,6 +33,9 @@ let workflowSelection = PageView.extend({
       this.parentPath = urlParams.get('parentPath')
     }else{
       this.parentPath = path.dirname(this.modelDir)
+    }
+    if(urlParams.has('experiments')){
+      this.experiments = urlParams.get('experiments')
     }
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
@@ -77,6 +82,17 @@ let workflowSelection = PageView.extend({
       }
     });
   },
+  handleEnsembleSimulationClick: function (e) {
+    this.launchStochssWorkflow("gillespy")
+  },
+  handleParameterSweepClick: function (e) {
+    this.launchStochssWorkflow("parameterSweep")
+  },
+  launchStochssWorkflow: function (type) {
+    let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath + "&experiments=" + this.experiments
+    let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
+    window.location.href = endpoint
+  }
 });
 
 initPage(workflowSelection);

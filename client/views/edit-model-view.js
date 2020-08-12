@@ -14,6 +14,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
     'click [data-hook=project-model-workflow]' : 'handleNewWorkflowClick',
+    'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=project-model-remove]' : 'handleRemoveModelClick'
   },
   initialize: function (attrs, options) {
@@ -21,34 +22,48 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(!this.model.annotation){
+      $(this.queryByHook('edit-annotation-btn')).text('Add')
+    }
   },
   handleEditModelClick: function (e) {
-    window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+this.model.directory
+    let experiments = this.parent.parent.model.experiments.map(function (exp) {
+      return exp.name
+    })
+    let queryString = "?path="+this.model.directory+"&experiments="+experiments.toString()
+    window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+queryString
   },
   handleNewWorkflowClick: function (e) {
-    let self = this
-    if(document.querySelector('#newProjectWorkflowModal')){
-      document.querySelector('#newProjectWorkflowModal').remove()
-    }
-    let modal = $(modals.newProjectWorkflowHtml("Name of the experiment:")).modal()
-    let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-    let input = document.querySelector('#newProjectWorkflowModal #input')
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
+    if(this.parent.parent.model.experiments.length > 1) {
+      let self = this
+      if(document.querySelector('#newProjectWorkflowModal')){
+        document.querySelector('#newProjectWorkflowModal').remove()
       }
-    });
-    okBtn.addEventListener('click', function (e) {
-      if(Boolean(input.value)) {
-        let expFile = input.value.endsWith('.exp') ? input.value : input.value + ".exp" 
-        let parentPath = path.join(path.dirname(self.model.directory), expFile)
-        let queryString = "?path="+self.model.directory+"&parentPath="+parentPath
-        let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
+      let options = this.parent.parent.model.experiments.map(function (experiment) {
+        return experiment.name
+      });
+      let modal = $(modals.newProjectWorkflowHtml("Name of the experiment:", options)).modal()
+      let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
+      let select = document.querySelector('#newProjectWorkflowModal #select')
+      okBtn.addEventListener('click', function (e) {
         modal.modal('hide')
-        window.location.href = endpoint
-      }
-    });
+        let expFile = select.value.endsWith('.exp') ? select.value : select.value + ".exp" 
+        self.openWorkflowManager(expFile)
+      });
+    }else if(this.parent.parent.model.experiments.length == 1) {
+      let expFile = this.parent.parent.model.experiments.models[0].name + ".exp"
+      this.openWorkflowManager(expFile)
+    }else{
+      let title = "No Experiments Found"
+      let message = "You need to create an experiment before you can create a new workflow."
+      let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
+    }
+  },
+  openWorkflowManager: function (expFile) {
+    let parentPath = path.join(path.dirname(this.model.directory), expFile)
+    let queryString = "?path="+this.model.directory+"&parentPath="+parentPath
+    let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
+    window.location.href = endpoint
   },
   handleRemoveModelClick: function (e) {
     let self = this
@@ -67,6 +82,29 @@ module.exports = View.extend({
         }
       });
       modal.modal('hide')
+    });
+  },
+  handleEditAnnotationClick: function (e) {
+    let self = this
+    var name = this.model.name;
+    var annotation = this.model.annotation;
+    if(document.querySelector('#modelAnnotationModal')) {
+      document.querySelector('#modelAnnotationModal').remove();
+    }
+    let modal = $(modals.annotationModalHtml("model", name, annotation)).modal();
+    let okBtn = document.querySelector('#modelAnnotationModal .ok-model-btn');
+    let input = document.querySelector('#modelAnnotationModal #modelAnnotationInput');
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      self.model.annotation = input.value;
+      self.model.saveModel()
+      self.parent.renderEditModelview();
     });
   }
 });

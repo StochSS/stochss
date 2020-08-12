@@ -26,7 +26,7 @@ div#workflow-results-ensemble.card.card-body
       div
 
         h5.inline Plot Standard Deviation Range
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-stddevrange", id="collapse-stddevrange" data-hook="collapse-stddevrange") -
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-stddevrange", id="collapse-stddevrange-btn" data-hook="collapse-stddevrange") -
 
       div.collapse(class="show", id="collapse-stddevrange")
 
@@ -40,12 +40,12 @@ div#workflow-results-ensemble.card.card-body
       div
 
         h5.inline Plot Trajectories
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", id="collapse-trajectories" data-hook="collapse-trajectories") +
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", id="collapse-trajectories-btn" data-hook="collapse-trajectories") +
 
       div.collapse(id="collapse-trajectories")
 
         div(id="trajectories" data-hook="trajectories")
-        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Plot
+        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Edit Plot
         button.btn.btn-primary.box-shadow(id="trajectories" data-hook="save-plot" disabled) Save Plot
         button.btn.btn-primary.box-shadow(id="plot-multiple" data-hook="plot-multiple", disabled) Multiple Plots
         button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-png-custom" disabled) Download PNG
@@ -55,12 +55,12 @@ div#workflow-results-ensemble.card.card-body
       div
 
         h5.inline Plot Standard Deviation
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-stddev", id="collapse-stddev" data-hook="collapse-stddev") +
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-stddev", id="collapse-stddev-btn" data-hook="collapse-stddev") +
 
       div.collapse(id="collapse-stddev")
 
         div(id="stddev" data-hook="stddev")
-        button.btn.btn-primary.box-shadow(id="stddev" data-hook="plot") Plot
+        button.btn.btn-primary.box-shadow(id="stddev" data-hook="plot") Edit Plot
         button.btn.btn-primary.box-shadow(id="stddev" data-hook="save-plot" disabled) Save Plot
         button.btn.btn-primary.box-shadow(id="stddev" data-hook="download-png-custom" disabled) Download PNG
         button.btn.btn-primary.box-shadow(id="stddev" data-hook="download-json" disabled) Download JSON
@@ -69,12 +69,12 @@ div#workflow-results-ensemble.card.card-body
       div
 
         h5.inline Plot Trajectory Mean
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajmean", id="collapse-trajmean" data-hook="collapse-trajmean") +
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajmean", id="collapse-trajmean-btn" data-hook="collapse-trajmean") +
 
       div.collapse(id="collapse-trajmean")
 
         div(id="avg" data-hook="avg")
-        button.btn.btn-primary.box-shadow(id="avg" data-hook="plot") Plot
+        button.btn.btn-primary.box-shadow(id="avg" data-hook="plot") Edit Plot
         button.btn.btn-primary.box-shadow(id="avg" data-hook="save-plot" disabled) Save Plot
         button.btn.btn-primary.box-shadow(id="avg" data-hook="download-png-custom" disabled) Download PNG
         button.btn.btn-primary.box-shadow(id="avg" data-hook="download-json" disabled) Download JSON

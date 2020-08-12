@@ -33,6 +33,12 @@ class HomeHandler(PageHandler):
         self.render("stochss-home.html", server_path=self.get_server_path())
 
 
+class UserHomeHandler(PageHandler):
+    @web.authenticated
+    async def get(self):
+        self.render("stochss-user-home.html", server_path=self.get_server_path())
+
+
 class QuickstartHandler(PageHandler):
     @web.authenticated
     async def get(self):
@@ -61,6 +67,12 @@ class WorkflowEditorHandler(PageHandler):
     @web.authenticated
     async def get(self):
         self.render("stochss-workflow-manager.html", server_path=self.get_server_path())
+
+
+class ProjectBrowserHandler(PageHandler):
+    @web.authenticated
+    async def get(self):
+        self.render("stochss-project-browser.html", server_path=self.get_server_path())
 
 
 class ProjectManagerHandler(PageHandler):

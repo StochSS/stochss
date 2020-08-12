@@ -252,6 +252,12 @@ input[type="file"]::-ms-browse {
   font-size: 12px;
 }
 
+.modal-title {
+  width: 95%;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
 .modal-content.info {
   width: 150%;
 }
@@ -395,6 +401,14 @@ span.checkbox {
   font-size: 2rem;
   line-height: 1;
   border-radius: 1.5rem;
+}
+
+.user-home-btn {
+  padding: 1rem 1rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  border-radius: 1.5rem;
+  width: 100%
 }
 
 .home-list {

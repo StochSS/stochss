@@ -23,6 +23,53 @@ log = logging.getLogger('stochss')
 
 
 # pylint: disable=abstract-method
+class LoadProjectBrowserAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for loading all of the users projects
+    ##############################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Recursively searches all directories for projects
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        projects = []
+        self.get_projects_from_directory(user_dir, projects)
+        log.debug("List of projects: %s", projects)
+        resp = {"projects":projects}
+        self.write(resp)
+        self.finish()
+
+
+    @classmethod
+    def get_projects_from_directory(cls, path, projects):
+        '''
+        Get the projects in the directory if any exist.
+
+        Attributes
+        ----------
+        path : string
+            Path the target directory
+        projects : list
+            List of project dictionaries
+        '''
+        for item in os.listdir(path):
+            new_path = os.path.join(path, item)
+            if item.endswith('.proj'):
+                projects.append({'directory': new_path.replace("/home/jovyan/", ""),
+                                 'parentDir': os.path.dirname(new_path.replace("/home/jovyan/",
+                                                                               "")),
+                                 'elementID': "p{}".format(len(projects) + 1)})
+            elif not item.startswith('.') and os.path.isdir(new_path):
+                cls.get_projects_from_directory(new_path, projects)
+
+
 class LoadProjectAPIHandler(APIHandler):
     '''
     ##############################################################################
@@ -69,13 +116,33 @@ class LoadProjectAPIHandler(APIHandler):
                                 else:
                                     project['plot'] = {"path":wkfl_dict['path'], "output":output}
                             wkfl_dict['outputs'] = outputs
-                            workflows.append(wkfl_dict)
+                        self.get_workflow_info(wkfl_dict)
+                        workflows.append(wkfl_dict)
                 project['experiments'].append({"name":name, "workflows":workflows})
             elif item == "trash":
                 project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
         log.debug("Contents of the project: %s", project)
         self.write(project)
         self.finish()
+
+
+    @classmethod
+    def get_workflow_info(cls, wkfl_dict):
+        '''
+        Add the necessary workflow info elements to the workflow model
+
+        Attributes
+        ----------
+        wkfl_dict : dict
+            JSON representation of a workflow
+        '''
+        with open(os.path.join(wkfl_dict["path"], "info.json"), 'r') as info_file:
+            info = json.load(info_file)
+            wkfl_dict['annotation'] = ""
+            if not 'annotation' in info.keys():
+                wkfl_dict['annotation'] = ""
+            else:
+                wkfl_dict['annotation'] = info['annotation']
 
 
 class NewProjectAPIHandler(APIHandler):
@@ -98,7 +165,10 @@ class NewProjectAPIHandler(APIHandler):
         try:
             os.makedirs(path)
             os.mkdir(os.path.join(path, "trash"))
-            resp = {"message":"", "path":""}
+            os.mkdir(os.path.join(path, "Experiment1.exp"))
+            resp = {"message":"Successfully created the project: {0}\
+                              ".format(path.split('/').pop()),
+                    "path":path}
             self.write(resp)
         except FileExistsError as err:
             self.set_status(406)

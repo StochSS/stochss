@@ -30,6 +30,7 @@ let ProjectManager = PageView.extend({
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=convert-project-to-combine]' : 'handleToCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick',
+    'click [data-hook=collapse-most-recent-plot-btn]' : 'changeCollapseButtonText',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
     'click [data-hook=upload-file-btn]' : 'handleUploadModelClick'
   },
@@ -45,7 +46,6 @@ let ProjectManager = PageView.extend({
     });
     this.model.fetch({
       success: function (model, response, options) {
-        self.plot = response.plot
         if(response.trash_empty) {
           $(self.queryByHook('empty-project-trash')).prop('disabled', true)
         }
@@ -59,7 +59,8 @@ let ProjectManager = PageView.extend({
       success: function (model, response, options) {
         self.renderProjectViewer()
         $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
-        if(target === "model-editor" || target === "experiment-editor" || target === "workflows-editor") {
+        if(target === "model-editor" || target === "experiment-editor" || 
+                          target === "workflows-editor" || target === "trash") {
           self.projectFileBrowser.refreshJSTree()
         }else if(target === "file-browser") {
           self.renderEditModelsView()
@@ -83,13 +84,13 @@ let ProjectManager = PageView.extend({
     if(this.recentPlotView) {
       this.recentPlotView.remove()
     }
-    if(this.plot) {
-      var plot = new Plot(this.plot.output)
-      var expName = path.dirname(this.plot.path).split('/').pop().split('.')[0]
-      var wkflName = this.plot.path.split('/').pop().split('.')[0]
+    if(this.model.plot) {
+      var plot = new Plot(this.model.plot.output)
+      var expName = path.dirname(this.model.plot.path).split('/').pop().split('.')[0]
+      var wkflName = this.model.plot.path.split('/').pop().split('.')[0]
       this.recentPlotView = new PlotsView({
         model: plot,
-        path: this.plot.path,
+        path: this.model.plot.path,
         heading: expName + " - " + wkflName
       });
       this.registerRenderSubview(this.recentPlotView, "project-most-recent-plot");
@@ -193,7 +194,8 @@ let ProjectManager = PageView.extend({
       xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           $(self.queryByHook('empty-project-trash')).prop('disabled', true)
-          console.log(body.message)
+          self.update("trash")
+          console.log(body)
         }else{
           console.log(body)
         }
@@ -258,7 +260,10 @@ let ProjectManager = PageView.extend({
         let message = modelName.split(".")[0] !== input.value ? 
               "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
         let modelPath = path.join(self.projectPath, modelName)
-        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
+        let experiments = self.model.experiments.map(function (exp) {
+          return exp.name
+        })
+        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message+"&experiments="+experiments.toString();
         if(message){
           modal.modal('hide')
           let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
@@ -373,9 +378,10 @@ let ProjectManager = PageView.extend({
       });
     });
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('project-manager-advanced-btn')).text();
-    text === '+' ? $(this.queryByHook('project-manager-advanced-btn')).text('-') : $(this.queryByHook('project-manager-advanced-btn')).text('+');
+  changeCollapseButtonText: function (e) {
+    let hook = e.target.dataset.hook
+    var text = $(this.queryByHook(hook)).text();
+    text === '+' ? $(this.queryByHook(hook)).text('-') : $(this.queryByHook(hook)).text('+');
   }
 });
 

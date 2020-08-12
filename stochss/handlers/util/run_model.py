@@ -20,7 +20,7 @@ for handler in log.handlers:
 import gillespy2.core.gillespySolver
 from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
 from gillespy2 import EventAssignment, EventTrigger, Event
-from gillespy2 import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
+from gillespy2 import ModelError, SimulationError, SolverError, DirectoryError, BuildError, ExecutionError
 from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, SSACSolver
 
 import warnings
@@ -231,7 +231,8 @@ class ModelFactory():
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
-        self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), data['eventsCollection']))
+        events = list(filter(lambda e: self.is_valid_event(e), data['eventsCollection']))
+        self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), events))
         rate_rules = list(filter(lambda rr: self.is_valid_rate_rule(rr), data['rules']))
         assignment_rules = list(filter(lambda rr: self.is_valid_assignment_rule(rr), data["rules"]))
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr, self.species, self.parameters), rate_rules))
@@ -354,6 +355,19 @@ class ModelFactory():
 
         return EventAssignment(variable=variable[0], expression=expression)
         
+
+    def is_valid_event(self, event):
+        if event['triggerExpression'] != "":
+            assignments = list(filter(lambda assignment: self.is_valid_assignment(assignment), event['eventAssignments']))
+            if len(assignments) > 0:
+                event['eventAssignments'] = assignments
+                return event
+
+
+    def is_valid_assignment(self, assignment):
+        if assignment['expression'] != "":
+            return assignment
+
 
     def is_valid_rate_rule(self, rr):
         if rr['type'] == "Rate Rule" and not rr['expression'] == "":
@@ -680,6 +694,8 @@ if __name__ == "__main__":
             if 'GillesPy2 simulation exceeded timeout.' in logs:
                 resp['timeout'] = True
         except ModelError as error:
+            resp['errors'] = "{0}\n{1}".format(error, traceback.format_exc())
+        except SimulationError as error:
             resp['errors'] = "{0}\n{1}".format(error, traceback.format_exc())
         with open(outfile, "w") as fd:
             json.dump(resp, fd)

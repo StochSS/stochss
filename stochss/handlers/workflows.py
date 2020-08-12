@@ -429,4 +429,40 @@ class SavePlotAPIHandler(APIHandler):
         resp = {"message":"The plot was successfully saved", "data":plot}
         log.debug("Response message: %s", resp)
         self.write(resp)
-        self.finish(resp)
+        self.finish()
+
+
+class SaveAnnotationAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for saving annotations for workflows.
+    ##############################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Adds/updates the workflows annotation in the info file.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        annotation = json.loads(self.request.body.decode())['annotation']
+        log.debug("The path to the workflow info file: %s", path)
+        log.debug("The annotation to be saved: %s", annotation)
+
+        with open(path, "r") as info_file:
+            info = json.load(info_file)
+            log.debug("Original info: %s", info)
+
+        info['annotation'] = annotation
+        log.debug("New info: %s", info)
+
+        with open(path, "w") as info_file:
+            json.dump(info, info_file)
+
+        resp = {"message":"The annotation was successfully saved", "data":annotation}
+        log.debug("Response message: %s", resp)
+        self.write(resp)
+        self.finish()
