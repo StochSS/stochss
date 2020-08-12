@@ -14,14 +14,15 @@ from .generate_notebook_cells import generate_imports_cell, generate_model_cell,
 # imports for parameter sweep workflow
 from .generate_notebook_cells import generate_feature_extraction_cell, generate_average_aggregate_cell, generate_2D_parameter_sweep_class_cell, generate_2D_psweep_config_cell, generate_parameter_sweep_run_cell
 
-def convert_to_2d_psweep_nb(_model_path, name=None, settings=None):
+def convert_to_2d_psweep_nb(_model_path, name=None, settings=None, dest_path=None):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     if name is None:
         name = file.split('.')[0].replace('-', '_')
-    dest_path = model_path.split(file)[0]
+    if dest_path is None:
+        dest_path = model_path.split(file)[0]
 
     # Collect .mdl Data
     try:

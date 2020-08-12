@@ -13,116 +13,6 @@ let template = require('../templates/pages/fileBrowser.pug');
 
 import initPage from './page.js';
 
-let ajaxData = {
-  "url" : function (node) {
-    if(node.parent === null){
-      return path.join(app.getApiPath(), "file/browser-list")+"?path=none"
-    }
-    return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
-  },
-  "dataType" : "json",
-  "data" : function (node) {
-    return { 'id' : node.id}
-  },
-}
-
-let treeSettings = {
-  'plugins': [
-    'types',
-    'wholerow',
-    'changed',
-    'contextmenu',
-    'dnd',
-  ],
-  'core': {
-    'multiple' : false,
-    'animation': 0,
-    'check_callback': function (op, node, par, pos, more) {
-      if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
-        return false
-      }
-      if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
-        return false
-      }
-      if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
-        if(!more.ref.state.loaded){
-          return false
-        }
-        var exists = false
-        var BreakException = {}
-        try{
-          more.ref.children.forEach(function (child) {
-            var child_node = $('#models-jstree').jstree().get_node(child)
-            exists = child_node.text === node.text
-            if(exists){
-              throw BreakException;
-            }
-          })
-        }catch{
-          return false;
-        }
-      }
-      if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
-        return false
-      }
-      if(op === 'move_node' && more && more.core) {
-        var newDir = par.type !== "root" ? par.original._path : ""
-        var file = node.original._path.split('/').pop()
-        var oldPath = node.original._path
-        let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
-        var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
-        xhr({uri: endpoint}, function(err, response, body) {
-          if(response.statusCode < 400) {
-            node.original._path = path.join(newDir, file)
-          }else{
-            body = JSON.parse(body)
-            if(par.type === 'root'){
-              $('#models-jstree').jstree().refresh()
-            }else{
-              $('#models-jstree').jstree().refresh_node(par);
-            }
-          }
-        });
-      }
-      return true
-    },
-    'themes': {
-      'stripes': true,
-      'variant': 'large'
-    },
-    'data': ajaxData,
-  },
-  'types' : {
-    'root' : {
-      "icon": "jstree-icon jstree-folder"
-    },
-    'folder' : {
-      "icon": "jstree-icon jstree-folder"
-    },
-    'spatial' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'nonspatial' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'workflow' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'notebook' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'mesh' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'sbml-model' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'other' : {
-      "icon": "jstree-icon jstree-file"
-    },
-  },  
-}
-
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
   template: template,
@@ -130,11 +20,94 @@ let FileBrowser = PageView.extend({
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
+    'click [data-hook=new-project]' : 'handleCreateProjectClick',
     'click [data-hook=new-model]' : 'handleCreateModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
+  },
+  initialize: function (attrs, options) {
+    PageView.prototype.initialize.apply(this, arguments)
+    var self = this
+    this.root = "none"
+    this.ajaxData = {
+      "url" : function (node) {
+        if(node.parent === null){
+          return path.join(app.getApiPath(), "file/browser-list")+"?path="+self.root
+        }
+        return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
+      },
+      "dataType" : "json",
+      "data" : function (node) {
+        return { 'id' : node.id}
+      },
+    }
+    this.treeSettings = {
+      'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
+      'core': {'multiple' : false, 'animation': 0,
+        'check_callback': function (op, node, par, pos, more) {
+          if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
+            if(!more.ref.state.loaded){
+              return false
+            }
+            var exists = false
+            var BreakException = {}
+            try{
+              more.ref.children.forEach(function (child) {
+                var child_node = $('#models-jstree').jstree().get_node(child)
+                exists = child_node.text === node.text
+                if(exists){
+                  throw BreakException;
+                }
+              })
+            }catch{
+              return false;
+            }
+          }
+          if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
+            return false
+          }
+          if(op === 'move_node' && more && more.core) {
+            var newDir = par.type !== "root" ? par.original._path : ""
+            var file = node.original._path.split('/').pop()
+            var oldPath = node.original._path
+            let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
+            var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
+            xhr({uri: endpoint}, function(err, response, body) {
+              if(response.statusCode < 400) {
+                node.original._path = path.join(newDir, file)
+              }else{
+                body = JSON.parse(body)
+                $('#models-jstree').jstree().refresh()
+              }
+            });
+          }
+          return true
+        },
+        'themes': {'stripes': true, 'variant': 'large'},
+        'data': this.ajaxData,
+      },
+      'types' : {
+        'root' : {"icon": "jstree-icon jstree-folder"},
+        'folder' : {"icon": "jstree-icon jstree-folder"},
+        'spatial' : {"icon": "jstree-icon jstree-file"},
+        'nonspatial' : {"icon": "jstree-icon jstree-file"},
+        'project' : {"icon": "jstree-icon jstree-file"},
+        'experiment' : {"icon": "jstree-icon jstree-file"},
+        'workflow' : {"icon": "jstree-icon jstree-file"},
+        'notebook' : {"icon": "jstree-icon jstree-file"},
+        'mesh' : {"icon": "jstree-icon jstree-file"},
+        'sbml-model' : {"icon": "jstree-icon jstree-file"},
+        'other' : {"icon": "jstree-icon jstree-file"},
+      },  
+    }
   },
   render: function () {
     var self = this;
@@ -147,10 +120,11 @@ let FileBrowser = PageView.extend({
         window.location.reload()
       }
     });
-    this.setupJstree();
-    setTimeout(function () {
-      self.refreshInitialJSTree();
-    }, 3000);
+    this.setupJstree(function () {
+      setTimeout(function () {
+        self.refreshInitialJSTree();
+      }, 3000);
+    });
   },
   refreshJSTree: function () {
     this.jstreeIsLoaded = false
@@ -216,7 +190,7 @@ let FileBrowser = PageView.extend({
         fileinfo.path = o.original._path
       }
       if(Boolean(input.value)){
-        fileinfo.name = input.value
+        fileinfo.name = input.value.trim()
       }
       let formData = new FormData()
       formData.append("datafile", file)
@@ -534,6 +508,99 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.location.href = endpoint
   },
+  newProjectOrExperiment: function (o, isProject) {
+    var self = this
+    if(document.querySelector("#newProjectModal")) {
+      document.querySelector("#newProjectModal").remove()
+    }
+    if(document.querySelector("#newExperimentModal")) {
+      document.querySelector("#newExperimentModal").remove()
+    }
+    var modal = ""
+    var okBtn = ""
+    var input = ""
+    if(isProject) {
+      modal = $(modals.newProjectModalHtml()).modal();
+      okBtn = document.querySelector('#newProjectModal .ok-model-btn');
+      input = document.querySelector('#newProjectModal #projectNameInput');
+    }else{
+      modal = $(modals.newExperimentModalHtml()).modal();
+      okBtn = document.querySelector('#newExperimentModal .ok-model-btn');
+      input = document.querySelector('#newExperimentModal #experimentNameInput');
+    }
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        var parentPath = ""
+        if(o && o.original && o.original.type !== "root") {
+          parentPath = o.original._path
+        }
+        var endpoint = ""
+        if(isProject){
+          var projectName = input.value.trim() + ".proj"
+          var projectPath = path.join(parentPath, projectName)
+          endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
+        }else{
+          var experimentName = input.value.trim() + ".exp"
+          var experimentPath = path.join(parentPath, experimentName)
+          endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
+        }
+        xhr({uri: endpoint,json: true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            if(isProject) {
+              if(o){//directory was created with context menu option
+                var node = $('#models-jstree').jstree().get_node(o);
+                if(node.type === "root"){
+                  self.refreshJSTree()
+                }else{          
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              }else{//directory was created with create directory button
+                self.refreshJSTree()
+              }
+            }
+          }else{
+            let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
+          }
+          modal.modal('hide')
+        })
+      }
+    })
+  },
+  addExistingModel: function (o) {
+    var self = this
+    if(document.querySelector('#newProjectModelModal')){
+      document.querySelector('#newProjectModelModal').remove()
+    }
+    let modal = $(modals.newProjectModelHtml()).modal()
+    let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
+    let input = document.querySelector('#newProjectModelModal #modelPathInput')
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        let queryString = "?path="+o.original._path+"&mdlPath="+input.value.trim()
+        let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
+        xhr({uri:endpoint, json:true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
+          }else{
+            let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal()
+          }
+        });
+        modal.modal('hide')
+      }
+    });
+  },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
     if(document.querySelector('#newModalModel')) {
@@ -548,7 +615,6 @@ let FileBrowser = PageView.extend({
         okBtn.click();
       }
     });
-    let modelName;
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
         var parentPath = ""
@@ -556,11 +622,21 @@ let FileBrowser = PageView.extend({
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = input.value + '.mdl';
-          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+path.join(parentPath, modelName);
-          window.location.href = modelPath;
+          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
+          let message = modelName.split(".")[0] !== input.value.trim() ? 
+                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
+          let modelPath = path.join(parentPath, modelName)
+          let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
+          if(message){
+            modal.modal('hide')
+            let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
+            let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
+            yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
+          }else{
+            window.location.href = endpoint;
+          }
         }else{
-          let dirName = input.value;
+          let dirName = input.value.trim();
           let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
@@ -587,6 +663,9 @@ let FileBrowser = PageView.extend({
   handleCreateDirectoryClick: function (e) {
     this.newModelOrDirectory(undefined, false, false);
   },
+  handleCreateProjectClick: function (e) {
+    this.newProjectOrExperiment(undefined, true)
+  },
   handleCreateModelClick: function (e) {
     let isSpatial = false
     this.newModelOrDirectory(undefined, true, isSpatial);
@@ -612,7 +691,8 @@ let FileBrowser = PageView.extend({
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       let nodeType = o.original.type
-      let asZip = (nodeType === "workflow" || nodeType === "folder" || nodeType === "other" || nodeType === "mesh")
+      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "experiment"]
+      let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
         "Download" : {
@@ -639,7 +719,7 @@ let FileBrowser = PageView.extend({
         },
         "Duplicate" : {
           "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
-          "_disabled" : false,
+          "_disabled" : (nodeType === "project"),
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
@@ -679,6 +759,15 @@ let FileBrowser = PageView.extend({
           "separator_after" : false,
           "action" : function (data) {
             self.newModelOrDirectory(o, false, false);
+          }
+        },
+        "New Project" : {
+          "label" : "New Project",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newProjectOrExperiment(o, true)
           }
         },
         "New_model" : {
@@ -842,6 +931,8 @@ let FileBrowser = PageView.extend({
           "action" : function (data) {
             if(nodeType === "workflow"){
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
+            }else if(nodeType === "project"){
+              window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
             }else{
               if(nodeType === "notebook") {
                 var identifier = "notebooks"
@@ -852,6 +943,35 @@ let FileBrowser = PageView.extend({
               }
               window.open(path.join(app.getBasePath(), identifier, o.original._path));
             }
+          }
+        }
+      }
+      let project = {
+        "Add Model" : {
+          "label" : "Add Model",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "New Model" : folder.New_model,
+            "Existing Model" : {
+              "label" : "Existing Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.addExistingModel(o)
+              }
+            }
+          }
+        },
+        "New Experiment" : {
+          "label" : "New Experiment",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newProjectOrExperiment(o, false)
           }
         }
       }
@@ -943,6 +1063,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'nonspatial') {
          return $.extend(model, modelConvert, common)
       }
+      if (o.type === 'project'){
+        return $.extend(open, project, common)
+      }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, common)
       }
@@ -959,7 +1082,7 @@ let FileBrowser = PageView.extend({
     $(document).on('dnd_start.vakata', function (data, element, helper, event) {
       $('#models-jstree').jstree().load_all()
     });
-    $('#models-jstree').jstree(treeSettings).bind("loaded.jstree", function (event, data) {
+    $('#models-jstree').jstree(this.treeSettings).bind("loaded.jstree", function (event, data) {
       self.jstreeIsLoaded = true
     }).bind("refresh.jstree", function (event, data) {
       self.jstreeIsLoaded = true
@@ -991,6 +1114,8 @@ let FileBrowser = PageView.extend({
       }else if(file.endsWith('.sbml')){
         var openPath = path.join(app.getBasePath(), "edit", _path)
         window.open(openPath, '_blank')
+      }else if(file.endsWith('.proj')){
+        window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
       }else if(file.endsWith('.wkfl')){
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){

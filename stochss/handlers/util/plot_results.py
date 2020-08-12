@@ -29,8 +29,9 @@ def read_pickled_results(pickle_path):
             results = pickle.load(pickle_file)
         return results
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not find the plot file: {0}".format(err), traceback.format_exc())
-    
+        raise StochSSFileNotFoundError("Could not find the plot file: {0}".format(err),
+                                       traceback.format_exc())
+
 
 def get_plot_fig(plots_file_path, plt_key):
     '''
@@ -52,15 +53,14 @@ def get_plot_fig(plots_file_path, plt_key):
             if os.path.exists(pickle_path):
                 results = read_pickled_results(pickle_path)
                 return get_plot_fig_from_results(results, plt_key)
-            else:
-                raise PlotNotAvailableError("The plot is not available: "+str(err), traceback.format_exc())
+            raise PlotNotAvailableError("The plot is not available: "+str(err), traceback.format_exc())
     else:
         results = read_pickled_results(pickle_path)
         return get_plot_fig_from_results(results, plt_key)
 
 
 def get_plot_fig_from_results(results, plt_key):
-    es_keys = ["stddevran","trajectories","stddev","avg"]
+    es_keys = ["stddevran", "trajectories", "stddev", "avg"]
 
     if plt_key == "stddevran":
         plt_fig = results.plotplotly_std_dev_range(return_plotly_figure=True)
@@ -89,7 +89,6 @@ def edit_plot_fig(plt_fig, plt_data):
     plt_data : str
         The data that needs to be applied to the plot.
     '''
-    plt_data = json.loads(plt_data)
     for key in plt_data.keys():
         if key == "title":
             plt_fig['layout']['title']['text'] = plt_data[key]
@@ -103,14 +102,13 @@ def plot_results(plots_path, plt_key, plt_data=None):
     user_dir = "/home/jovyan"
 
     full_path = path.join(user_dir, plots_path)
-    
+
     plt_fig = get_plot_fig(full_path, plt_key)
 
-    if type(plt_fig) is str:
+    if isinstance(plt_fig, str):
         return plt_fig
     if not plt_data:
         return json.dumps(plt_fig)
     plt_fig = edit_plot_fig(plt_fig, plt_data)
     return json.dumps(plt_fig)
-
         

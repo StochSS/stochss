@@ -40,7 +40,7 @@ def get_sbml_function_definitions(path):
 def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None):
     comp_id = 1
     errors = []
-    if type(gillespy_model) is gillespy2.core.gillespy2.Model:
+    if type(gillespy_model) is gillespy2.Model:
         sbml_model_file = full_path.split('/').pop()
         if name is None:
             stochss_model_file = gillespy_model.name + '.mdl'
@@ -49,11 +49,10 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
         stochss_model_path = get_unique_file_name(stochss_model_file, full_path.split(sbml_model_file)[0])[0]
 
         species = gillespy_model.get_all_species()
-        stochss_species, algorithm, default_mode, comp_id = get_species(species, comp_id)
+        stochss_species, default_mode, comp_id = get_species(species, comp_id)
         stochss_model['species'].extend(stochss_species)
         stochss_model['defaultMode'] = default_mode
-        stochss_model['simulationSettings']['algorithm'] = algorithm
-
+        
         parameters = gillespy_model.get_all_parameters()
         stochss_parameters, comp_id = get_parameters(parameters, comp_id)
         stochss_model['parameters'].extend(stochss_parameters)
@@ -92,12 +91,10 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
 def get_species(species, comp_id):
     stochss_species = []
     mode = "dynamic"
-    algorithm = "SSA"
-
+    
     for name, specie in species.items():
         if not specie.mode == "dynamic":
             mode = "continuous"
-            algorithm = "Hybrid-Tau-Leaping"
             break
 
     for name, specie in species.items():
@@ -119,7 +116,7 @@ def get_species(species, comp_id):
         stochss_species.append(stochss_specie)
         comp_id += 1
 
-    return stochss_species, algorithm, mode, comp_id
+    return stochss_species, mode, comp_id
 
 
 def get_parameters(parameters, comp_id):

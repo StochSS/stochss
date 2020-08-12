@@ -8,20 +8,23 @@ var ReactionsViewer = require('./reactions-viewer');
 var EventsViewer = require('./events-viewer');
 var RulesViewer = require('./rules-viewer');
 var ModelSettingsViewer = require('./model-settings-viewer');
-//models
-var Model = require('../models/model');
 //templates
 var template = require('../templates/includes/modelViewer.pug');
 
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse-model]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-model]' : function (e) {
+      this.changeCollapseButtonText()
+    },
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.status = attrs.status;
-    this.wkflType = attrs.type;
+    if(attrs.status) {
+      this.status = attrs.status;
+    }else{
+      this.status = "complete"
+    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -58,8 +61,8 @@ module.exports = View.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-model')).text();
-    text === '+' ? $(this.queryByHook('collapse-model')).text('-') : $(this.queryByHook('collapse-model')).text('+');
+    var text = $(document.querySelector('#model-viewer-header #'+this.model.name)).text();
+    text === '+' ? $(document.querySelector('#model-viewer-header #'+this.model.name)).text('-') : $(document.querySelector('#model-viewer-header #'+this.model.name)).text('+');
   },
   enableCollapseButton: function () {
     $(this.queryByHook('collapse-model')).prop('disabled', false);

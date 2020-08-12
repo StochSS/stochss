@@ -1,112 +1,122 @@
 #!/usr/bin/env python3
 
 import os
+import ast
 import json
-import libsbml
 import traceback
 
 from json.decoder import JSONDecodeError
+import libsbml
+
 from .rename import get_unique_file_name
-from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError, FileNotSBMLFormatError, ImporperMathMLFormatError
+from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, \
+                            JSONFileNotModelError, FileNotSBMLFormatError, \
+                            ImporperMathMLFormatError
 
 
-def convert_to_sbml(_path):
+def convert_to_sbml(_path, write_to_file=True):
     user_dir = "/home/jovyan"
-    
+
     path = os.path.join(user_dir, _path)
     model_file = path.split('/').pop()
     model_name = model_file.split('.')[0]
     sbml_file = model_name + ".sbml"
-    sbml_path, changed  = get_unique_file_name(sbml_file, path.split(model_file)[0])
+    sbml_path, changed = get_unique_file_name(sbml_file, path.split(model_file)[0])
     if changed:
         sbml_file = sbml_path.split('/').pop()
-    
+
     model = get_stochss_model(path)
     model['name'] = model_name
 
     try:
-        document = libsbml.SBMLDocument(3,2)
+        document = libsbml.SBMLDocument(3, 2)
     except ValueError as err:
-        raise FileNotSBMLFormatError("Could not create SBML object."+str(err), traceback.format_exc())
+        raise FileNotSBMLFormatError("Could not create SBML object."+str(err),
+                                     traceback.format_exc())
 
     sbml_model = document.createModel()
     sbml_model.setName(str(model['name']))
 
-    c = sbml_model.createCompartment()
-    c.setId('c')
-    c.setConstant(True)
-    c.setSize(1)
-    c.setSpatialDimensions(3)
+    compartment = sbml_model.createCompartment()
+    compartment.setId('c')
+    compartment.setConstant(True)
+    compartment.setSize(1)
+    compartment.setSpatialDimensions(3)
 
     try:
-        species = model['species']
-        convert_species(sbml_model, species)
+        convert_species(sbml_model, model['species'])
 
-        parameters = model['parameters']
-        convert_parameters(sbml_model, parameters)
+        convert_parameters(sbml_model, model['parameters'])
 
-        reactions = model['reactions']
-        convert_reactions(sbml_model, reactions)
+        convert_reactions(sbml_model, model['reactions'])
 
-        events = model['eventsCollection']
-        convert_events(sbml_model, events)
+        convert_events(sbml_model, model['eventsCollection'])
 
-        rate_rules = list(filter(lambda r: is_valid_rate_rule(r), model['rules']))
+        rate_rules = get_rate_rules(model['rules'])
         convert_rate_rules(sbml_model, rate_rules)
 
-        assignment_rules = list(filter(lambda r: is_valid_assignment_rule(r), model['rules']))
+        assignment_rules = get_assignment_rules(model['rules'])
         convert_assignment_rules(sbml_model, assignment_rules)
 
-        function_definitions = model['functionDefinitions']
-        convert_function_definitions(sbml_model, function_definitions)
+        convert_function_definitions(sbml_model, model['functionDefinitions'])
     except KeyError as err:
-        raise JSONFileNotModelError("Could not convert your model: " + str(err), traceback.format_exc())
+        raise JSONFileNotModelError("Could not convert your model: " + str(err),
+                                    traceback.format_exc())
 
-    write_sbml_to_file(sbml_path, document)
+    if write_to_file:
+        write_sbml_to_file(sbml_path, document)
 
-    return {"Message":"{0} was successfully converted to {1}".format(model_file, sbml_file),"File":sbml_file}
-    
-
-def is_valid_rate_rule(rule):
-    if rule['type'] == "Rate Rule" and not rule['expression'] == "":
-        return rule
+        return {"Message":"{0} was successfully converted to {1}".format(model_file, sbml_file),
+                "File":sbml_file}
+    return document
 
 
-def is_valid_assignment_rule(rule):
-    if rule['type'] == "Assignment Rule" and not rule['expression'] == "":
-        return rule
+def get_rate_rules(rules):
+    rate_rules = []
+    for rule in rules:
+        if rule['type'] == "Rate Rule" and not rule['expression'] == "":
+            rate_rules.append(rule)
+    return rate_rules
+
+
+def get_assignment_rules(rules):
+    assignment_rules = []
+    for rule in rules:
+        if rule['type'] == "Assignment Rule" and not rule['expression'] == "":
+            assignment_rules.append(rule)
+    return assignment_rules
 
 
 def convert_species(sbml_model, species):
     for specie in species:
-        s = sbml_model.createSpecies()
-        s.initDefaults()
-        s.setCompartment('c')
-        s.setId(specie['name'])
-        s.setInitialAmount(specie['value'])
-        
+        spec = sbml_model.createSpecies()
+        spec.initDefaults()
+        spec.setCompartment('c')
+        spec.setId(specie['name'])
+        spec.setInitialAmount(specie['value'])
+
 
 def convert_parameters(sbml_model, parameters):
     for parameter in parameters:
-        p = sbml_model.createParameter()
-        p.initDefaults()
-        p.setId(parameter['name'])
-        p.setValue(eval(parameter['expression']))
-        
+        param = sbml_model.createParameter()
+        param.initDefaults()
+        param.setId(parameter['name'])
+        param.setValue(ast.literal_eval(parameter['expression']))
+
 
 def convert_reactions(sbml_model, reactions):
     for reaction in reactions:
-        r = sbml_model.createReaction()
-        r.initDefaults()
-        r.setId(reaction['name'])
-        
+        reac = sbml_model.createReaction()
+        reac.initDefaults()
+        reac.setId(reaction['name'])
+
         _reactants = reaction['reactants']
-        reactants = convert_reactants(r, _reactants)
+        reactants = convert_reactants(reac, _reactants)
 
         _products = reaction['products']
-        products = convert_products(r, _products)
+        convert_products(reac, _products)
 
-        create_equation(r, reaction, reactants)
+        create_equation(reac, reaction, reactants)
 
 
 def convert_reactants(sbml_reaction, _reactants):
@@ -119,10 +129,10 @@ def convert_reactants(sbml_reaction, _reactants):
         reactants[specie['name']] += reactant['ratio']
 
     for name, ratio in reactants.items():
-        r = sbml_reaction.createReactant()
-        r.setConstant(True)
-        r.setSpecies(name)
-        r.setStoichiometry(ratio)
+        react = sbml_reaction.createReactant()
+        react.setConstant(True)
+        react.setSpecies(name)
+        react.setStoichiometry(ratio)
 
     return reactants
 
@@ -137,16 +147,14 @@ def convert_products(sbml_reaction, _products):
         products[specie['name']] += product['ratio']
 
     for name, ratio in products.items():
-        p = sbml_reaction.createProduct()
-        p.setConstant(True)
-        p.setSpecies(name)
-        p.setStoichiometry(ratio)
-
-    return products
+        prod = sbml_reaction.createProduct()
+        prod.setConstant(True)
+        prod.setSpecies(name)
+        prod.setStoichiometry(ratio)
 
 
 def create_equation(sbml_reaction, reaction, reactants):
-    k = sbml_reaction.createKineticLaw()
+    kin_law = sbml_reaction.createKineticLaw()
     rate = reaction['rate']
     if not reaction['propensity']:
         if len(reactants) == 0:
@@ -164,106 +172,115 @@ def create_equation(sbml_reaction, reaction, reactants):
         equation = reaction['propensity'].replace("and", "&&").replace("or", "||")
 
     try:
-        k.setMath(libsbml.parseL3Formula(equation))
-    except Exception as error:
-        raise ImporperMathMLFormatError('libsbml threw an error when parsing rate equation "{0}" for reaction "{1}"'
-                                        .format(equation, reaction['name']), traceback.format_exc())
+        kin_law.setMath(libsbml.parseL3Formula(equation))
+    except Exception:
+        raise ImporperMathMLFormatError('libsbml threw an error when parsing rate equation "{0}" \
+                    for reaction "{1}"'.format(equation, reaction['name']), traceback.format_exc())
 
 
 def convert_events(sbml_model, events):
     for event in events:
-        e = sbml_model.createEvent()
-        e.setId(event['name'])
-        e.setUseValuesFromTriggerTime(event['useValuesFromTriggerTime'])
+        evt = sbml_model.createEvent()
+        evt.setId(event['name'])
+        evt.setUseValuesFromTriggerTime(event['useValuesFromTriggerTime'])
 
         if event['delay']:
             delay = event['delay'].replace('and', '&&').replace('or', '||')
-            d = e.createDelay()
+            dly = evt.createDelay()
             try:
-                d.setMath(libsbml.parseL3Formula(delay))
-            except Exception as error:
-                raise ImporperMathMLFormatError('libsbml threw an error when parsing delay equation "{0}" for event "{1}"'
-                                                .format(delay, event['name']), traceback.format_exc())
+                dly.setMath(libsbml.parseL3Formula(delay))
+            except Exception:
+                raise ImporperMathMLFormatError('libsbml threw an error when parsing \
+                            delay equation "{0}" for event "{1}"'.format(delay, event['name']),
+                                                traceback.format_exc())
 
         priority = event['priority'].replace('and', '&&').replace('or', '||')
-        p = e.createPriority()
+        prior = evt.createPriority()
         try:
-            p.setMath(libsbml.parseL3Formula(priority))
-        except Exception as error:
-            raise ImporperMathMLFormatError('libsbml threw an error when parsing priority equation "{0}" for event "{1}"'
-                                            .format(priority, event['name']), traceback.format_exc())
+            prior.setMath(libsbml.parseL3Formula(priority))
+        except Exception:
+            raise ImporperMathMLFormatError('libsbml threw an error when parsing priority \
+                        equation "{0}" for event "{1}"'.format(priority, event['name']),
+                                            traceback.format_exc())
 
-        trigger_expression = event['triggerExpression'].replace('and','&&').replace('or','||')
-        t = e.createTrigger()
+        trigger_expression = event['triggerExpression'].replace('and', '&&').replace('or', '||')
+        trig = evt.createTrigger()
         try:
-            t.setMath(libsbml.parseL3Formula(trigger_expression))
-        except Exception as error:
-            raise ImporperMathMLFormatError('libsbml threw an error when parsing trigger equation "{0}" for event "{1}"'
-                                            .format(trigger_expression, event['name']), traceback.format_exc())
-        t.setInitialValue(event['initialValue'])
-        t.setPersistent(event['persistent'])
+            trig.setMath(libsbml.parseL3Formula(trigger_expression))
+        except Exception:
+            raise ImporperMathMLFormatError('libsbml threw an error when parsing trigger \
+                        equation "{0}" for event "{1}"'.format(trigger_expression, event['name']),
+                                            traceback.format_exc())
+        trig.setInitialValue(event['initialValue'])
+        trig.setPersistent(event['persistent'])
 
         assignments = event['eventAssignments']
-        convert_event_assignments(event['name'], e, assignments)
+        convert_event_assignments(event['name'], evt, assignments)
 
 
 def convert_event_assignments(event_name, sbml_event, assignments):
     for assignment in assignments:
-        a = sbml_event.createEventAssignment()
+        assign = sbml_event.createEventAssignment()
 
         variable = assignment['variable']
-        a.setVariable(variable['name'])
+        assign.setVariable(variable['name'])
 
-        expression = assignment['expression'].replace('and','&&').replace('or','||')
+        expression = assignment['expression'].replace('and', '&&').replace('or', '||')
         try:
-            a.setMath(libsbml.parseL3Formula(expression))
-        except Exception as error:
-            raise ImporperMathMLFormatError('libsbml threw an error when parsing assignment equation "{0}" for event "{1}"'
-                                            .format(assignment, event_name), traceback.format_exc())
+            assign.setMath(libsbml.parseL3Formula(expression))
+        except Exception:
+            raise ImporperMathMLFormatError('libsbml threw an error when parsing assignment \
+                        equation "{0}" for event "{1}"'.format(assignment, event_name),
+                                            traceback.format_exc())
 
 
 def convert_rate_rules(sbml_model, rules):
     for rule in rules:
         variable = rule['variable']
-        r = sbml_model.createRateRule()
-        r.setId(rule['name'])
-        r.setVariable(variable['name'])
+        r_rule = sbml_model.createRateRule()
+        r_rule.setId(rule['name'])
+        r_rule.setVariable(variable['name'])
         equation = rule['expression'].replace("and", "&&").replace("or", "||")
-        
+
         try:
-            r.setMath(libsbml.parseL3Formula(equation))
-        except Exception as error:
-            raise ImporperMathMLFormatError('libsbml threw an error when parsing rate equation "{0}" for rate rule "{1}"'
-                                            .format(equation, rule['name']), traceback.format_exc())
+            r_rule.setMath(libsbml.parseL3Formula(equation))
+        except Exception:
+            raise ImporperMathMLFormatError('libsbml threw an error when parsing rate \
+                        equation "{0}" for rate rule "{1}"'.format(equation, rule['name']),
+                                            traceback.format_exc())
 
 
 def convert_assignment_rules(sbml_model, rules):
     for rule in rules:
         variable = rule['variable']
-        r = sbml_model.createAssignmentRule()
-        r.setId(rule['name'])
-        r.setVariable(variable['name'])
+        a_rule = sbml_model.createAssignmentRule()
+        a_rule.setId(rule['name'])
+        a_rule.setVariable(variable['name'])
         equation = rule['expression'].replace("and", "&&").replace("or", "||")
 
         try:
-            r.setMath(libsbml.parseL3Formula(equation))
+            a_rule.setMath(libsbml.parseL3Formula(equation))
         except:
-            raise ImporperMathMLFormatError('libsbml threw an error when parsing assignment equation "{0}" for assignment rule "{1}"'
-                                            .format(equation, rule['name']), traceback.format_exc())
+            raise ImporperMathMLFormatError('libsbml threw an error when parsing assignment \
+                        equation "{0}" for assignment rule "{1}"'.format(equation, rule['name']),
+                                            traceback.format_exc())
 
 
 def convert_function_definitions(sbml_model, function_definitions):
     for function_definition in function_definitions:
-        fd = sbml_model.createFunctionDefinition()
-        fd.setId(function_definition['name'])
-        function = function_definition['function'].replace("and", "&&").replace("or", "||").replace("**", "^")
+        func_def = sbml_model.createFunctionDefinition()
+        func_def.setId(function_definition['name'])
+        function = (function_definition['function']
+                    .replace("and", "&&").replace("or", "||").replace("**", "^"))
 
         try:
             node = libsbml.parseL3Formula(function)
-            fd.setMath(node)
+            func_def.setMath(node)
         except:
-            raise ImporperMathMLFormatError('libsbml threw an error when parsing function "{0}" for function definition "{1}"'
-                                            .format(function, function_definition['name']), traceback.format_exc())
+            raise ImporperMathMLFormatError('libsbml threw an error when parsing function "{0}" \
+                             for function definition "{1}"'.format(function,
+                                                                   function_definition['name']),
+                                            traceback.format_exc())
 
 
 def write_sbml_to_file(sbml_path, sbml_doc):
@@ -281,6 +298,5 @@ def get_stochss_model(path):
     except FileNotFoundError as err:
         raise ModelNotFoundError("Could not finf model file: " + str(err), traceback.format_exc())
     except JSONDecodeError as err:
-        raise ModelNotJSONFormatError("The model is not JSON decodable: " + str(err), traceback.format_exc())
-
-
+        raise ModelNotJSONFormatError("The model is not JSON decodable: " + str(err),
+                                      traceback.format_exc())
