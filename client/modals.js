@@ -254,6 +254,12 @@ module.exports = {
 
       return templates.message(modalID, title, error)
     },
+    newExperimentSuccessHtml: (message) => {
+      let modalID = "newExperimentSuccessModal"
+      let title = "Success!"
+
+      return templates.message(modalID, title, message)
+    },
     newProjectModelWarningHtml : (message) => {
       let modalID = "newProjectModelWarningModal"
       let title = "Warnings"
