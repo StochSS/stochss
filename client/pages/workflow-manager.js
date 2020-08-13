@@ -199,6 +199,7 @@ let WorkflowManager = PageView.extend({
       this.workflowResultsView.remove();
     }
     var resultsView = new WorkflowResultsView({
+      parent: this,
       trajectories: this.settings.simulationSettings.realizations,
       status: this.status,
       species: this.model.species,

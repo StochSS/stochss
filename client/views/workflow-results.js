@@ -43,6 +43,7 @@ module.exports = View.extend({
     },
     'click [data-hook=save-plot]' : function (e) {
       var type = e.target.id;
+      e.target.disabled = true
       this.savePlot(type)
     },
     'click [data-hook=download-results-csv]' : 'handlerDownloadResultsCsvClick',
@@ -59,6 +60,7 @@ module.exports = View.extend({
     this.ensembleAggragator = "avg";
     this.plots = {}
     this.plotArgs = {}
+    this.savedPlots = this.parent.settings.resultsSettings.outputs
   },
   render: function () {
     if(this.type === "parameterSweep"){
@@ -169,6 +171,13 @@ module.exports = View.extend({
       }else{
         self.plots[type] = body
         self.plotFigure(body, type);
+        let plotSaved = Boolean(self.savedPlots.filter(function (plot) {
+          if(plot.key === data.plt_key)
+            return true
+        }).length > 0)
+        if(plotSaved) {
+          $("button[data-hook=save-plot]").filter("#"+type).prop('disabled', true)
+        }
       }
     });
   },
@@ -269,6 +278,7 @@ module.exports = View.extend({
     let stamp = this.getTimeStamp()
     var plotInfo = {"key":type, "stamp":stamp, "species":species};
     plotInfo = Object.assign({}, plotInfo, this.plotArgs)
+    this.savedPlots.push(plotInfo)
     let queryString = "?path="+path.join(this.parent.wkflPath, "settings.json")
     let endpoint = path.join(app.getApiPath(), "workflow/save-plot")+queryString
     xhr({uri: endpoint, method: "post", json: true, body: plotInfo}, function (err, response, body) {
