@@ -39,14 +39,10 @@ module.exports = View.extend({
       this.renderWorkflowStateButtons()
     }else{
       this.collapseContainer()
-      $(this.queryByHook('collapse-settings')).prop('disabled', true);
       this.renderSimulationSettingViewer()
       if(this.type === "parameterSweep"){
         this.renderParameterSweepSettingsViewer()
       }
-    }
-    if(this.status === "complete"){
-      this.enableCollapseButton();
     }
   },
   registerRenderSubview: function (view, hook) {
@@ -131,8 +127,5 @@ module.exports = View.extend({
   collapseContainer: function () {
     $(this.queryByHook("workflow-editor-container")).collapse()
     this.changeCollapseButtonText()
-  },
-  enableCollapseButton: function () {
-    $(this.queryByHook('collapse-settings')).prop('disabled', false);
   },
 });

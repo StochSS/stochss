@@ -52,9 +52,6 @@ module.exports = View.extend({
     this.registerRenderSubview(eventsViewer, "events-viewer-container");
     this.registerRenderSubview(rulesViewer, "rules-viewer-container");
     this.registerRenderSubview(modelSettingsViewer, "model-settings-viewer-container");
-    if(this.status === 'complete'){
-      this.enableCollapseButton();
-    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -63,8 +60,5 @@ module.exports = View.extend({
   changeCollapseButtonText: function () {
     var text = $(document.querySelector('#model-viewer-header #'+this.model.name)).text();
     text === '+' ? $(document.querySelector('#model-viewer-header #'+this.model.name)).text('-') : $(document.querySelector('#model-viewer-header #'+this.model.name)).text('+');
-  },
-  enableCollapseButton: function () {
-    $(this.queryByHook('collapse-model')).prop('disabled', false);
   },
 });

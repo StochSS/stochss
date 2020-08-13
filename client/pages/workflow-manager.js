@@ -122,10 +122,14 @@ let WorkflowManager = PageView.extend({
     this.renderWkflNameInputView();
     this.renderMdlPathInputView();
     this.renderWorkflowEditor();
-    this.renderWorkflowStatusView();
-    this.renderResultsView();
-    this.renderInfoView();
-    this.renderModelViewer();
+    if(this.status !== "new" && this.status !== "ready") {
+      this.renderWorkflowStatusView();
+      this.renderModelViewer();
+    }
+    if(this.status === "error" || this.status === "complete") {
+      this.renderResultsView();
+      this.renderInfoView();
+    }
     if(this.status === 'running'){
       this.getWorkflowStatus();
     }
