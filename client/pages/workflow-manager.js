@@ -43,11 +43,6 @@ let WorkflowManager = PageView.extend({
     let urlParams = new URLSearchParams(window.location.search)
     let type = urlParams.get('type');
     this.urlPathParam = urlParams.get('path');
-    if(urlParams.has('experiments')) {
-      this.experiments = urlParams.get('experiments')
-    }else{
-      this.experiments = 'undefined'
-    }
     var stamp = this.getCurrentDate();
     var queryStr = "?stamp="+stamp+"&type="+type+"&path="+this.urlPathParam
     if(urlParams.has('parentPath')) {
@@ -69,6 +64,14 @@ let WorkflowManager = PageView.extend({
         self.wkflPath = path.join(self.wkflParPath, self.wkflDirectory)
         self.buildWkflModel(body)
         self.renderSubviews();
+        if(self.wkflPath.includes('.proj')) {
+          self.projectPath = path.dirname(self.wkflParPath)
+          $(self.queryByHook('project-breadcrumb')).attr("href", "/stochss/project/manager?path="+self.projectPath)
+          $(self.queryByHook('project-breadcrumb')).text(self.projectPath.split('/').pop().split('.')[0])
+          $(self.queryByHook('workflow-group-breadcrumb')).text(self.wkflParPath.split('/').pop().split('.')[0])
+          $(self.queryByHook('workflow-breadcrumb')).text(self.workflowName)
+          self.queryByHook("project-breadcrumb-links").style.display = "block"
+        }
       }
     });
   },
@@ -119,9 +122,6 @@ let WorkflowManager = PageView.extend({
     $(this.queryByHook("page-title")).text('Workflow: '+this.titleType)
     this.renderWkflNameInputView();
     this.renderMdlPathInputView();
-    if(this.experiments !== 'undefined') {
-      this.renderExperimentsSelectView()
-    }
     this.renderWorkflowEditor();
     this.renderWorkflowStatusView();
     this.renderResultsView();
@@ -273,6 +273,7 @@ let WorkflowManager = PageView.extend({
       this.workflowName = newWorkflowName + this.workflowDate
       e.target.value = this.workflowName
     }
+    $(this.queryByHook('workflow-breadcrumb')).text(this.workflowName)
     this.wkflDirectory = this.workflowName + ".wkfl"
     this.wkflPath = path.join(this.wkflParPath, this.wkflDirectory)
   },

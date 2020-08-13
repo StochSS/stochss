@@ -77,9 +77,6 @@ let ModelEditor = PageView.extend({
       this.updateSpeciesInUse();
       this.updateParametersInUse();
     }, this);
-    if(this.model.directory.includes('.proj')){
-      this.experiments = urlParams.get('experiments').split(',')
-    }
   },
   update: function () {
   },

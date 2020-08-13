@@ -34,9 +34,6 @@ let workflowSelection = PageView.extend({
     }else{
       this.parentPath = path.dirname(this.modelDir)
     }
-    if(urlParams.has('experiments')){
-      this.experiments = urlParams.get('experiments')
-    }
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -89,7 +86,7 @@ let workflowSelection = PageView.extend({
     this.launchStochssWorkflow("parameterSweep")
   },
   launchStochssWorkflow: function (type) {
-    let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath + "&experiments=" + this.experiments
+    let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath
     let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
     window.location.href = endpoint
   }
