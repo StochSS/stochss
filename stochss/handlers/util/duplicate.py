@@ -82,6 +82,8 @@ def extract_wkfl_model(model_file, mdl_parent_path, wkfl):
     from .rename import get_unique_file_name
 
     # Get unique path for the new model path
+    if ".proj" in mdl_parent_path:
+        mdl_parent_path = path.dirname(mdl_parent_path)
     model_path, changed = get_unique_file_name(model_file, mdl_parent_path)
     if changed:
         model_file = model_path.split('/').pop()

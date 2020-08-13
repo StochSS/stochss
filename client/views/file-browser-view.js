@@ -314,7 +314,7 @@ module.exports = View.extend({
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree-view').jstree().get_node(parentID);
-          if(node.type === "root"){
+          if(node.type === "root" || type === "wkfl_model"){
             self.refreshJSTree()
           }else{          
             $('#models-jstree-view').jstree().refresh_node(node);
@@ -843,7 +843,7 @@ module.exports = View.extend({
         },
         "Duplicate" : {
           "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
-          "_disabled" : false,
+          "_disabled" : (nodeType === "project" || nodeType === "experiment"),
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
