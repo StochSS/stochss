@@ -30,7 +30,6 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=edit-workflow-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('wkfl-manager')).modal();
     },
-    'change [data-hook=experiments-select-view]' : 'updateExperiment'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -167,29 +166,6 @@ let WorkflowManager = PageView.extend({
       $(this.queryByHook('model-path')).find('input').prop('disabled', true);
     }
   },
-  renderExperimentsSelectView: function () {
-    if(this.experimentsSelectView) {
-      this.experimentsSelectView.remove()
-    }
-    let experiments = this.experiments.split(',')
-    this.experimentsSelectView = new SelectView({
-      label: 'Experiment: ',
-      name: 'experiment',
-      required: true,
-      idAttribute: 'cid',
-      textAttribute: 'name',
-      eagerValidate: true,
-      options: experiments,
-      value: experiments[0]
-    });
-    let pathElements = this.wkflPath.split('/')
-    pathElements.splice(-1, 0, experiments[0]+".exp")
-    this.wkflPath = pathElements.join('/')
-    this.registerRenderSubview(this.experimentsSelectView, "experiments-select-view")
-    let title = "Experiment Needed"
-    let message = "Workflows within a project must be stored in an experiment.<br> You can select an experment using the drop down list under the Model Path."
-    let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
-  },
   renderWorkflowEditor: function () {
     if(this.workflowEditorView){
       this.workflowEditorView.remove()
@@ -297,13 +273,6 @@ let WorkflowManager = PageView.extend({
       });
     }
   },
-  updateExperiment: function (e) {
-    let experiment = e.target.selectedOptions.item(0).text
-    let pathElements = this.wkflPath.split('/')
-    pathElements.splice(-2, 1, experiment+".exp")
-    this.wkflPath = pathElements.join('/')
-    console.log(this.wkflPath)
-  },
   reloadWkfl: function () {
     let self = this;
     if(self.status === 'new') {
@@ -315,11 +284,6 @@ let WorkflowManager = PageView.extend({
       }else{
         this.url = this.url.replace(this.modelDirectory, this.wkflPath)
       }
-      if(this.experiments !== 'undefined'){
-        this.url = this.url.replace("experiments=" + this.experiments, 'experiments=undefined')
-      }
-      let parentQuery = this.url.split('&')[2]
-      this.url = this.url.replace(parentQuery, "parentPath="+path.dirname(this.wkflPath))
       window.location.href = this.url
     }
     else
