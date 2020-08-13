@@ -23,7 +23,7 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
   },
-  clickSaveHandler: function (e) {
+  clickSaveHandler: function (e, cb) {
     this.saving();
     var self = this;
     var model = this.model
@@ -38,8 +38,10 @@ module.exports = View.extend({
       var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow') + "?data=" + query;
       xhr({uri: endpoint}, function (err, response, body) {
         self.saved();
-        if(self.parent.parent.urlPathParam.endsWith('.mdl')){
-          self.parent.parent.reloadWkfl(); 
+        if(cb){
+          cb()
+        }else if(self.parent.parent.urlPathParam.endsWith('.mdl')){
+          self.parent.parent.reloadWkfl();
         }
       });
     });

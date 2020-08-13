@@ -30,6 +30,7 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=edit-workflow-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('wkfl-manager')).modal();
     },
+    'click [data-hook=return-to-project-btn]' : 'handleReturnToProjectClick'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -70,6 +71,7 @@ let WorkflowManager = PageView.extend({
           $(self.queryByHook('workflow-group-breadcrumb')).text(self.wkflParPath.split('/').pop().split('.')[0])
           $(self.queryByHook('workflow-breadcrumb')).text(self.workflowName)
           self.queryByHook("project-breadcrumb-links").style.display = "block"
+          self.queryByHook("return-to-project-btn").style.display = "inline-block"
         }
       }
     });
@@ -293,6 +295,16 @@ let WorkflowManager = PageView.extend({
     else
       window.location.reload()
   },
+  handleReturnToProjectClick: function(e) {
+    let self = this
+    if(this.status === 'ready'){
+      this.workflowEditorView.workflowStateButtons.clickSaveHandler(undefined, function (e) {
+        window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
+      })
+    }else{
+      window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
+    }
+  }
 });
 
 initPage(WorkflowManager);

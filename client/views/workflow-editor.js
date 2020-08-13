@@ -80,11 +80,14 @@ module.exports = View.extend({
     this.registerRenderSubview(parameterSweepSettingsView, 'param-sweep-settings-container');
   },
   renderWorkflowStateButtons: function () {
-    let workflowStateButtons = new WorkflowStateButtonsView({
+    if(this.workflowStateButtons) {
+      this.workflowStateButtons.remove()
+    }
+    this.workflowStateButtons = new WorkflowStateButtonsView({
       model: this.model,
       type: this.type,
     });
-    this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
+    this.registerRenderSubview(this.workflowStateButtons, 'workflow-state-buttons-container');
   },
   validatePsweep: function () {
     let species = this.model.species;
