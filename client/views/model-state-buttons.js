@@ -15,7 +15,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
-    'click [data-hook=start-workflow]' : 'clickStartWorkflowHandler',
+    'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -27,11 +27,8 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.togglePreviewWorkflowBtn();
-    if(this.parent.experiments && !this.parent.experiments[0]) {
-      $(this.queryByHook('start-workflow')).prop('disabled', true)
-      let title = "No Experiments Found"
-      let message = "The project that contains this model does not contain any experiments.<br>You will be unable to start a workflow using this model until you create an experiment within the project."
-      let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
+    if(this.model.directory.includes('.proj')) {
+      this.queryByHook("return-to-project-btn").style.display = "inline-block"
     }
   },
   clickSaveHandler: function (e) {
@@ -44,14 +41,11 @@ module.exports = View.extend({
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
-  clickStartWorkflowHandler: function (e) {
+  clickReturnToProjectHandler: function (e) {
     let self = this
     this.saveModel(function () {
-      var queryString = "?path="+self.model.directory
-      if(self.parent.experiments) {
-        queryString += ("&experiments="+self.parent.experiments)
-      }
-      window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+queryString;
+      var queryString = "?path="+path.dirname(self.model.directory)
+      window.location.href = path.join(app.getBasePath(), "/stochss/project/manager")+queryString;
     })
   },
   togglePreviewWorkflowBtn: function () {
@@ -60,7 +54,6 @@ module.exports = View.extend({
     var numEvents = this.model.eventsCollection.length
     var numRules = this.model.rules.length
     $(this.queryByHook('run')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
-    $(this.queryByHook('start-workflow')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
   },
   saveModel: function (cb) {
     this.saving();

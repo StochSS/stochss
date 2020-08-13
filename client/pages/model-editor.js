@@ -52,8 +52,8 @@ let ModelEditor = PageView.extend({
     this.model.fetch({
       success: function (model, response, options) {
         if(directory.includes('.proj')) {
-          $(self.queryByHook("project-breadcrumb-links")).collapse('show')
-          $(self.queryByHook("model-name-header")).collapse('hide')
+          self.queryByHook("project-breadcrumb-links").style.display = "block"
+          self.queryByHook("model-name-header").style.display = "none"
         }
         self.renderSubviews();
         if(!self.model.is_spatial){
