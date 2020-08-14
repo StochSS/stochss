@@ -198,7 +198,10 @@ class NewExperimentAPIHandler(APIHandler):
         log.debug("The path to the new experiment directory: %s", path)
         try:
             os.mkdir(path)
-            resp = {"message":"", "path":""}
+            proj_file = os.path.dirname(path).split('/').pop()
+            exp_file = path.split('/').pop()
+            resp = {"message":"The {} was successfully created in {}".format(exp_file, proj_file),
+                    "path":path}
             self.write(resp)
         except FileExistsError as err:
             self.set_status(406)

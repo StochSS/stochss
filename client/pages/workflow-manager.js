@@ -30,7 +30,7 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=edit-workflow-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('wkfl-manager')).modal();
     },
-    'change [data-hook=experiments-select-view]' : 'updateExperiment'
+    'click [data-hook=return-to-project-btn]' : 'handleReturnToProjectClick'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -43,11 +43,6 @@ let WorkflowManager = PageView.extend({
     let urlParams = new URLSearchParams(window.location.search)
     let type = urlParams.get('type');
     this.urlPathParam = urlParams.get('path');
-    if(urlParams.has('experiments')) {
-      this.experiments = urlParams.get('experiments')
-    }else{
-      this.experiments = 'undefined'
-    }
     var stamp = this.getCurrentDate();
     var queryStr = "?stamp="+stamp+"&type="+type+"&path="+this.urlPathParam
     if(urlParams.has('parentPath')) {
@@ -69,6 +64,15 @@ let WorkflowManager = PageView.extend({
         self.wkflPath = path.join(self.wkflParPath, self.wkflDirectory)
         self.buildWkflModel(body)
         self.renderSubviews();
+        if(self.wkflPath.includes('.proj')) {
+          self.projectPath = path.dirname(self.wkflParPath)
+          $(self.queryByHook('project-breadcrumb')).attr("href", "/stochss/project/manager?path="+self.projectPath)
+          $(self.queryByHook('project-breadcrumb')).text(self.projectPath.split('/').pop().split('.')[0])
+          $(self.queryByHook('workflow-group-breadcrumb')).text(self.wkflParPath.split('/').pop().split('.')[0])
+          $(self.queryByHook('workflow-breadcrumb')).text(self.workflowName)
+          self.queryByHook("project-breadcrumb-links").style.display = "block"
+          self.queryByHook("return-to-project-btn").style.display = "inline-block"
+        }
       }
     });
   },
@@ -119,14 +123,15 @@ let WorkflowManager = PageView.extend({
     $(this.queryByHook("page-title")).text('Workflow: '+this.titleType)
     this.renderWkflNameInputView();
     this.renderMdlPathInputView();
-    if(this.experiments !== 'undefined') {
-      this.renderExperimentsSelectView()
-    }
     this.renderWorkflowEditor();
-    this.renderWorkflowStatusView();
-    this.renderResultsView();
-    this.renderInfoView();
-    this.renderModelViewer();
+    if(this.status !== "new" && this.status !== "ready") {
+      this.renderWorkflowStatusView();
+      this.renderModelViewer();
+    }
+    if(this.status === "error" || this.status === "complete") {
+      this.renderResultsView();
+      this.renderInfoView();
+    }
     if(this.status === 'running'){
       this.getWorkflowStatus();
     }
@@ -167,29 +172,6 @@ let WorkflowManager = PageView.extend({
       $(this.queryByHook('model-path')).find('input').prop('disabled', true);
     }
   },
-  renderExperimentsSelectView: function () {
-    if(this.experimentsSelectView) {
-      this.experimentsSelectView.remove()
-    }
-    let experiments = this.experiments.split(',')
-    this.experimentsSelectView = new SelectView({
-      label: 'Experiment: ',
-      name: 'experiment',
-      required: true,
-      idAttribute: 'cid',
-      textAttribute: 'name',
-      eagerValidate: true,
-      options: experiments,
-      value: experiments[0]
-    });
-    let pathElements = this.wkflPath.split('/')
-    pathElements.splice(-1, 0, experiments[0]+".exp")
-    this.wkflPath = pathElements.join('/')
-    this.registerRenderSubview(this.experimentsSelectView, "experiments-select-view")
-    let title = "Experiment Needed"
-    let message = "Workflows within a project must be stored in an experiment.<br> You can select an experment using the drop down list under the Model Path."
-    let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
-  },
   renderWorkflowEditor: function () {
     if(this.workflowEditorView){
       this.workflowEditorView.remove()
@@ -217,6 +199,7 @@ let WorkflowManager = PageView.extend({
       this.workflowResultsView.remove();
     }
     var resultsView = new WorkflowResultsView({
+      parent: this,
       trajectories: this.settings.simulationSettings.realizations,
       status: this.status,
       species: this.model.species,
@@ -273,6 +256,7 @@ let WorkflowManager = PageView.extend({
       this.workflowName = newWorkflowName + this.workflowDate
       e.target.value = this.workflowName
     }
+    $(this.queryByHook('workflow-breadcrumb')).text(this.workflowName)
     this.wkflDirectory = this.workflowName + ".wkfl"
     this.wkflPath = path.join(this.wkflParPath, this.wkflDirectory)
   },
@@ -296,13 +280,6 @@ let WorkflowManager = PageView.extend({
       });
     }
   },
-  updateExperiment: function (e) {
-    let experiment = e.target.selectedOptions.item(0).text
-    let pathElements = this.wkflPath.split('/')
-    pathElements.splice(-2, 1, experiment+".exp")
-    this.wkflPath = pathElements.join('/')
-    console.log(this.wkflPath)
-  },
   reloadWkfl: function () {
     let self = this;
     if(self.status === 'new') {
@@ -314,16 +291,21 @@ let WorkflowManager = PageView.extend({
       }else{
         this.url = this.url.replace(this.modelDirectory, this.wkflPath)
       }
-      if(this.experiments !== 'undefined'){
-        this.url = this.url.replace("experiments=" + this.experiments, 'experiments=undefined')
-      }
-      let parentQuery = this.url.split('&')[2]
-      this.url = this.url.replace(parentQuery, "parentPath="+path.dirname(this.wkflPath))
       window.location.href = this.url
     }
     else
       window.location.reload()
   },
+  handleReturnToProjectClick: function(e) {
+    let self = this
+    if(this.status === 'ready'){
+      this.workflowEditorView.workflowStateButtons.clickSaveHandler(undefined, function (e) {
+        window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
+      })
+    }else{
+      window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
+    }
+  }
 });
 
 initPage(WorkflowManager);

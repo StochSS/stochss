@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var $ = require('jquery');
+let path = require('path');
 //support files
 var app = require('../app');
 var modals = require('../modals')
@@ -44,8 +45,16 @@ let ModelEditor = PageView.extend({
       isPreview: true,
       for: 'edit',
     });
+    if(directory.includes('.proj')) {
+      this.projectPath = path.dirname(directory)
+      this.projectName = this.projectPath.split('/').pop().split('.')[0]
+    }
     this.model.fetch({
       success: function (model, response, options) {
+        if(directory.includes('.proj')) {
+          self.queryByHook("project-breadcrumb-links").style.display = "block"
+          self.queryByHook("model-name-header").style.display = "none"
+        }
         self.renderSubviews();
         if(!self.model.is_spatial){
           self.queryByHook('mesh-editor-container').style.display = "none";
@@ -68,9 +77,6 @@ let ModelEditor = PageView.extend({
       this.updateSpeciesInUse();
       this.updateParametersInUse();
     }, this);
-    if(this.model.directory.includes('.proj')){
-      this.experiments = urlParams.get('experiments').split(',')
-    }
   },
   update: function () {
   },

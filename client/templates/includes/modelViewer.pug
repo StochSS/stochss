@@ -2,8 +2,8 @@ div.card.card-body
 
   div(id="model-viewer-header")
 
-    h3.inline=this.model.name
-    button.btn.btn-outline-collapse(id=this.model.name, data-toggle="collapse", data-target="#collapse-model"+this.model.name, data-hook="collapse-model" disabled) +
+    h3.inline="Preview Model: "+this.model.name
+    button.btn.btn-outline-collapse(id=this.model.name, data-toggle="collapse", data-target="#collapse-model"+this.model.name, data-hook="collapse-model") +
 
   div.collapse(id="collapse-model"+this.model.name)
 

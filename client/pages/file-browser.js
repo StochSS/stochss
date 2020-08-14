@@ -563,6 +563,8 @@ let FileBrowser = PageView.extend({
               }else{//directory was created with create directory button
                 self.refreshJSTree()
               }
+            }else{
+              let successModal = $(modals.newExperimentSuccessHtml(body.message)).modal()
             }
           }else{
             let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
