@@ -127,12 +127,12 @@ class TestLS(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             test_path = os.path.join(tempdir, "parent_dir")
             os.mkdir(test_path)
-            test_dir_path = os.path.join(test_path, "test_dir.exp")
+            test_dir_path = os.path.join(test_path, "test_dir.wkgp")
             os.mkdir(test_dir_path)
             with unittest.mock.patch("handlers.util.ls.build_child") as mock_build_child:
                 ls.get_file_system_data(test_path, tempdir)
             mock_build_child.assert_called_once_with\
-                    (text="test_dir.exp", f_type="workflow-group", p_path=tempdir)
+                    (text="test_dir.wkgp", f_type="workflow-group", p_path=tempdir)
 
     @classmethod
     def test_get_file_system_data_child_is_proj(cls):
