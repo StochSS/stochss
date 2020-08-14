@@ -407,12 +407,7 @@ module.exports = View.extend({
   },
   toNotebook: function (o, type) {
     let self = this
-    var endpoint = ""
-    if(type === "model"){
-      endpoint = path.join(app.getApiPath(), "model/to-notebook")+"?path="+o.original._path
-    }else{
-      endpoint = path.join(app.getApiPath(), "workflow/notebook")+"?type=none&path="+o.original._path
-    }
+    var endpoint = path.join(app.getApiPath(), "workflow/notebook")+"?type=none&path="+o.original._path
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400){
         var node = $('#models-jstree-view').jstree().get_node(o.parent)
@@ -1067,15 +1062,6 @@ module.exports = View.extend({
               "separator_after" : false,
               "action" : function (data) {
                 self.toSpatial(o)
-              }
-            },
-            "Convert to Notebook" : {
-              "label" : "To Notebook",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toNotebook(o, "model")
               }
             },
             "Convert to SBML" : {

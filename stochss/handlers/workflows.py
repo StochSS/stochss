@@ -365,8 +365,11 @@ class WorkflowNotebookHandler(APIHandler):
             if workflow_type == "parameterSweep":
                 workflow_type = ("1d_parameter_sweep" if settings['parameterSweepSettings']['is1D']
                                  else "2d_parameter_sweep")
+            dest_path = os.path.dirname(path)
             path = info['source_model'] if info['wkfl_model'] is None else info['wkfl_model']
             log.debug("Name for the notebook: %s", name)
+        else:
+            dest_path = self.get_query_argument(name="parentPath")
 
         log.debug("Type of workflow to be run: %s", workflow_type)
         log.debug("Path to the model: %s", path)
@@ -377,8 +380,9 @@ class WorkflowNotebookHandler(APIHandler):
                      "model_inference":convert_to_mdl_inference_nb}
         try:
             resp = (workflows[workflow_type](path, name=name, settings=settings,
-                                             dest_path='/'.join(path.split('/')[:-2]))
-                    if settings is not None else workflows[workflow_type](path))
+                                             dest_path=dest_path)
+                    if settings is not None else workflows[workflow_type](path,
+                                                                          dest_path=dest_path))
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:

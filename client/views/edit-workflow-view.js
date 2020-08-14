@@ -27,6 +27,9 @@ module.exports = View.extend({
       this.getStatus()
       console.log("updating status")
     }
+    if(this.model.path.endsWith('.ipynb')) {
+      this.queryByHook('annotation-container').style.display = "none"
+    }
     if(!this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Add')
     }
@@ -46,8 +49,12 @@ module.exports = View.extend({
     });
   },
   handleOpenWorkflowClick: function (e) {
-    let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+this.model.path+"&type=none";
-    window.location.href = endpoint
+    if(this.model.path.endsWith('.ipynb')) {
+      window.open(path.join(app.getBasePath(), "notebooks", this.model.path))
+    }else{
+      let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+this.model.path+"&type=none";
+      window.location.href = endpoint
+    }
   },
   handleExportCombineClick: function (e) {
     this.exportAsCombine(this.model.path)

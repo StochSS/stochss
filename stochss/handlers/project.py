@@ -101,23 +101,13 @@ class LoadProjectAPIHandler(APIHandler):
                 workflows = []
                 for workflow in os.listdir(os.path.join(path, item)):
                     if workflow.endswith('.wkfl'):
-                        wkfl_dict = {"path":os.path.join(path, item, workflow),
-                                     "name":workflow.split('.')[0]}
-                        wkfl_dict['status'] = get_status(wkfl_dict['path'])
-                        with open(os.path.join(wkfl_dict['path'],
-                                               'settings.json'), 'r') as settings_file:
-                            outputs = json.load(settings_file)['resultsSettings']['outputs']
-                            if outputs:
-                                output = max(outputs, key=lambda output: output['stamp'])
-                                if "plot" in project.keys():
-                                    if output['stamp'] > project['plot']['output']['stamp']:
-                                        project['plot']['path'] = wkfl_dict['path']
-                                        project['plot']['output'] = output
-                                else:
-                                    project['plot'] = {"path":wkfl_dict['path'], "output":output}
-                            wkfl_dict['outputs'] = outputs
-                        self.get_workflow_info(wkfl_dict)
-                        workflows.append(wkfl_dict)
+                        self.get_stochss_workflow(project, workflows,
+                                                  os.path.join(path, item, workflow),
+                                                  workflow)
+                    elif workflow.endswith('.ipynb'):
+                        self.get_notebook_workflow(workflows,
+                                                   os.path.join(path, item, workflow),
+                                                   workflow)
                 project['workflowGroups'].append({"name":name, "workflows":workflows})
             elif item == "trash":
                 project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
@@ -143,6 +133,64 @@ class LoadProjectAPIHandler(APIHandler):
                 wkfl_dict['annotation'] = ""
             else:
                 wkfl_dict['annotation'] = info['annotation']
+
+
+    @classmethod
+    def get_notebook_workflow(cls, workflows, path, workflow):
+        '''
+        Get the info for the notebook workflow
+
+        Attributes
+        ----------
+        workflows: list
+            List of workflows
+        path : string
+            Path to the workflow
+        workflow : string
+            Name of the workflow directory
+        '''
+        wkfl_dict = {"path":path, "name":workflow.split('.')[0],
+                     "status":"", "outputs":[], "annotation":""}
+        with open(path, "r") as nb_file:
+            file_data = nb_file.read()
+        if "Traceback (most recent call last)" in file_data:
+            wkfl_dict['status'] = 'error'
+        else:
+            wkfl_dict['status'] = 'ready'
+        workflows.append(wkfl_dict)
+
+
+    def get_stochss_workflow(self, project, workflows, path, workflow):
+        '''
+        Get the info for the StochSS Workflow
+
+        Attributes
+        ----------
+        project : dict
+            Dictionary representation of the stochss project
+        workflows: list
+            List of workflows
+        path : string
+            Path to the workflow
+        workflow : string
+            Name of the workflow directory
+        '''
+        wkfl_dict = {"path":path, "name":workflow.split('.')[0]}
+        wkfl_dict['status'] = get_status(wkfl_dict['path'])
+        with open(os.path.join(wkfl_dict['path'],
+                               'settings.json'), 'r') as settings_file:
+            outputs = json.load(settings_file)['resultsSettings']['outputs']
+            if outputs:
+                output = max(outputs, key=lambda output: output['stamp'])
+                if "plot" in project.keys():
+                    if output['stamp'] > project['plot']['output']['stamp']:
+                        project['plot']['path'] = wkfl_dict['path']
+                        project['plot']['output'] = output
+                else:
+                    project['plot'] = {"path":wkfl_dict['path'], "output":output}
+            wkfl_dict['outputs'] = outputs
+        self.get_workflow_info(wkfl_dict)
+        workflows.append(wkfl_dict)
 
 
 class NewProjectAPIHandler(APIHandler):
