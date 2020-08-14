@@ -165,7 +165,7 @@ class NewProjectAPIHandler(APIHandler):
         try:
             os.makedirs(path)
             os.mkdir(os.path.join(path, "trash"))
-            os.mkdir(os.path.join(path, "Experiment1.exp"))
+            os.mkdir(os.path.join(path, "WorkflowGroup1.exp"))
             resp = {"message":"Successfully created the project: {0}\
                               ".format(path.split('/').pop()),
                     "path":path}
