@@ -276,7 +276,7 @@ class MoveFileAPIHandler(APIHandler):
             The path to the source file or directory.
         '''
         for proj_item in os.listdir(old_path):
-            if proj_item.endswith('.exp'):
+            if proj_item.endswith('.wkgp'):
                 for exp_item in os.listdir(os.path.join(old_path, proj_item)):
                     if (exp_item.endswith('.wkfl') and
                             get_status(os.path.join(old_path, proj_item, exp_item)) == 'running'):
@@ -304,7 +304,7 @@ class MoveFileAPIHandler(APIHandler):
         new_parent_dir = os.path.dirname(dst)
         log.debug("New parent directory: %s", new_parent_dir)
         for proj_item in os.listdir(old_path,):
-            if proj_item.endswith('.exp'):
+            if proj_item.endswith('.wkgp'):
                 for exp_item in os.listdir(os.path.join(old_path, proj_item)):
                     with open(os.path.join(old_path, proj_item, exp_item,
                                            "info.json"), "r+") as info_file:

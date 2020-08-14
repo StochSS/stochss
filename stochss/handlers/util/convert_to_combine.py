@@ -46,11 +46,11 @@ def convert(path, meta_data=None):
             sedml_file.write(libsedml.SedWriter().writeSedMLToString(sedml['doc']))
         archive.addFile(sedml['path'], "./{0}".format(sedml['name']),
                         libcombine.KnownFormats.lookupFormat('sedml'), True)
-    elif path.endswith('.exp'):
+    elif path.endswith('.wkgp'):
         archive_name = path.split('/')[:-1].pop().split('.')[0]
-        file_type = "Experiment"
+        file_type = "Workflow Group"
         dst_parent = '/'.join(path.split('/')[:-2])
-        archive_errors = convert_experiment(path, archive, archive_dir)
+        archive_errors = convert_workflow_group(path, archive, archive_dir)
     elif path.endswith('.proj'):
         archive_name = path.split('/').pop().split('.')[0]
         file_type = "Project"
@@ -124,7 +124,7 @@ def convert_workflow(path, archive, archive_dir, sedml_doc=None):
     if sedml_doc is None:
         sedml_doc = libsedml.SedDocument(1, 3)
         sedml_document = convert_workflow_to_sedml(path, wkfl_info, model_file, sedml_doc)
-        sedml_name = os.path.dirname(path).split('/').pop().replace(".exp", ".xml")
+        sedml_name = os.path.dirname(path).split('/').pop().replace(".wkgp", ".xml")
         sedml_path, _ = get_unique_file_name(sedml_name, archive_dir.name)
 
         return {"doc":sedml_document, "name":sedml_name, "path":sedml_path}
@@ -132,9 +132,9 @@ def convert_workflow(path, archive, archive_dir, sedml_doc=None):
     return convert_workflow_to_sedml(path, wkfl_info, model_file, sedml_doc)
 
 
-def convert_experiment(path, archive, archive_dir, num_exps=None):
+def convert_workflow_group(path, archive, archive_dir, num_exps=None):
     sedml_doc = libsedml.SedDocument(1, 3)
-    sedml_name = path.split('/').pop().replace(".exp", ".xml")
+    sedml_name = path.split('/').pop().replace(".wkgp", ".xml")
     sedml_path, _ = get_unique_file_name(sedml_name, archive_dir.name)
     errors = []
 
@@ -149,11 +149,11 @@ def convert_experiment(path, archive, archive_dir, num_exps=None):
     if sedml_doc.getNumSimulations() <= 0:
         archive_name = os.path.dirname(path).split('/').pop().replace('.proj', '.omex')
         if num_exps is None:
-            message = "A COMBINE archive cannot be created from an experiment that \
+            message = "A COMBINE archive cannot be created from a workflow group that \
                         does not contain any successfully completed workflows: {0} \
                         ".format(errors)
         else:
-            message = "The experiment {1} contains no workflows that have \
+            message = "The workflow group {1} contains no workflows that have \
                         successfully completed and cannot be added to the COMBINE \
                         archive {2}: {0}".format(errors, path.split('/').pop(), archive_name)
         raise StochSSExportCombineError(message)
@@ -172,19 +172,19 @@ def convert_project(path, archive, archive_dir):
     failed = 0
     project_errors = []
 
-    experiments = list(filter(lambda obj: obj.endswith(".exp"), os.listdir(path)))
-    for exp in experiments:
+    workflow_groups = list(filter(lambda obj: obj.endswith(".wkgp"), os.listdir(path)))
+    for exp in workflow_groups:
         exp_path = os.path.join(path, exp)
         try:
-            errors = convert_experiment(exp_path, archive, archive_dir,
-                                        num_exps=len(experiments))
+            errors = convert_workflow_group(exp_path, archive, archive_dir,
+                                        num_exps=len(workflow_groups))
             project_errors.extend(errors)
         except StochSSExportCombineError as err:
             failed += 1
             project_errors.append(str(err))
 
-    if len(experiments) <= failed:
-        message = "Could not create the COMBINE archive as none of the experiments \
+    if len(workflow_groups) <= failed:
+        message = "Could not create the COMBINE archive as none of the workflow groups \
                     contain successfully completed workflows: {0}".format(project_errors)
         raise StochSSExportCombineError(message)
 

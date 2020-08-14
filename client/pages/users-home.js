@@ -72,7 +72,7 @@ let usersHomePage = PageView.extend({
             let projectEP = path.join(app.getBasePath(), "stochss/project/manager")+projectQS
             self.navToPage(projectEP)
           }else{
-            let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
           }
         });
       }

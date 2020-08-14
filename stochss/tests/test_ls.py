@@ -132,7 +132,7 @@ class TestLS(unittest.TestCase):
             with unittest.mock.patch("handlers.util.ls.build_child") as mock_build_child:
                 ls.get_file_system_data(test_path, tempdir)
             mock_build_child.assert_called_once_with\
-                    (text="test_dir.exp", f_type="experiment", p_path=tempdir)
+                    (text="test_dir.exp", f_type="workflow-group", p_path=tempdir)
 
     @classmethod
     def test_get_file_system_data_child_is_proj(cls):

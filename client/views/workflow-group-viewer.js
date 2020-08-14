@@ -3,12 +3,12 @@ var $ = require('jquery');
 var View = require('ampersand-view');
 var WorkflowCollectionsViewer = require('./workflows-viewer');
 //templates
-var template = require('../templates/includes/experimentViewer.pug')
+var template = require('../templates/includes/workflowGroupViewer.pug')
 
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse-experiment]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse-workflow-group]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments)
@@ -31,7 +31,7 @@ module.exports = View.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-experiment')).text();
-    text === '+' ? $(this.queryByHook('collapse-experiment')).text('-') : $(this.queryByHook('collapse-experiment')).text('+');
+    var text = $(this.queryByHook('collapse-workflow-group')).text();
+    text === '+' ? $(this.queryByHook('collapse-workflow-group')).text('-') : $(this.queryByHook('collapse-workflow-group')).text('+');
   }
 })

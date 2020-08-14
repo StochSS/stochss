@@ -3,7 +3,7 @@ var path = require('path');
 var app = require('../app.js');
 //Collections
 var ModelsCollection = require('./models');
-var ExperimentsCollection = require('./experiments');
+var WorkflowGroupsCollection = require('./workflow-groups');
 //Models
 var Model = require('ampersand-model');
 
@@ -13,7 +13,7 @@ module.exports = Model.extend({
   },
   collections: {
     models: ModelsCollection,
-    experiments: ExperimentsCollection
+    workflowGroups: WorkflowGroupsCollection
   },
   session: {
     directory: 'string',

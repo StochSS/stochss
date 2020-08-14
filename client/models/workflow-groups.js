@@ -1,8 +1,8 @@
 //collections
 var Collection = require('ampersand-collection');
 //models
-var Experiment = require('./experiment');
+var WorkflowGroup = require('./workflow-group');
 
 module.exports = Collection.extend({
-  model: Experiment
+  model: WorkflowGroup
 });

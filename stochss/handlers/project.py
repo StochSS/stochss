@@ -87,7 +87,7 @@ class LoadProjectAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: %s", path)
-        project = {"models": [], "experiments": [], "trash_empty": True}
+        project = {"models": [], "workflowGroups": [], "trash_empty": True}
         for item in os.listdir(path):
             if item.endswith('.mdl'):
                 mdl_dir = os.path.join(path, item)
@@ -96,7 +96,7 @@ class LoadProjectAPIHandler(APIHandler):
                     model['name'] = item.split('.')[0]
                     model['directory'] = mdl_dir
                     project['models'].append(model)
-            elif item.endswith('.exp'):
+            elif item.endswith('.wkgp'):
                 name = item.split('.')[0]
                 workflows = []
                 for workflow in os.listdir(os.path.join(path, item)):
@@ -118,7 +118,7 @@ class LoadProjectAPIHandler(APIHandler):
                             wkfl_dict['outputs'] = outputs
                         self.get_workflow_info(wkfl_dict)
                         workflows.append(wkfl_dict)
-                project['experiments'].append({"name":name, "workflows":workflows})
+                project['workflowGroups'].append({"name":name, "workflows":workflows})
             elif item == "trash":
                 project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
         log.debug("Contents of the project: %s", project)
@@ -165,7 +165,7 @@ class NewProjectAPIHandler(APIHandler):
         try:
             os.makedirs(path)
             os.mkdir(os.path.join(path, "trash"))
-            os.mkdir(os.path.join(path, "WorkflowGroup1.exp"))
+            os.mkdir(os.path.join(path, "WorkflowGroup1.wkgp"))
             resp = {"message":"Successfully created the project: {0}\
                               ".format(path.split('/').pop()),
                     "path":path}
@@ -179,23 +179,23 @@ class NewProjectAPIHandler(APIHandler):
         self.finish()
 
 
-class NewExperimentAPIHandler(APIHandler):
+class NewWorkflowGroupAPIHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for creating new StochSS Experiments
+    Handler for creating new StochSS Workflow Groups
     ##############################################################################
     '''
     @web.authenticated
     def get(self):
         '''
-        Create a new experiment directory.
+        Create a new workflow group directory.
 
         Attributes
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the new experiment directory: %s", path)
+        log.debug("The path to the new workflow group directory: %s", path)
         try:
             os.mkdir(path)
             proj_file = os.path.dirname(path).split('/').pop()
@@ -205,14 +205,14 @@ class NewExperimentAPIHandler(APIHandler):
             self.write(resp)
         except FileExistsError as err:
             self.set_status(406)
-            error = {"Reason":"Experiment Already Exists",
-                     "Message":"Could not create your experiment: {0}".format(err)}
+            error = {"Reason":"Workflow Group Already Exists",
+                     "Message":"Could not create your workflow group: {0}".format(err)}
             log.error("Exception Information: %s", error)
             self.write(error)
         except FileNotFoundError as err:
             self.set_status(404)
             error = {"Reason":"Dirctory Not Found",
-                     "Message":"Experiments can only be created in a StochSS Project: \
+                     "Message":"Workflow Groups can only be created in a StochSS Project: \
                                 {0}".format(err)}
             log.error("Exception Information: %s", error)
             self.write(error)
@@ -222,13 +222,13 @@ class NewExperimentAPIHandler(APIHandler):
 class AddExistingModelAPIHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for creating new StochSS Experiments
+    Handler for adding existing models to a project
     ##############################################################################
     '''
     @web.authenticated
     def get(self):
         '''
-        Create a new experiment directory.
+        Add the selected model to the project.
 
         Attributes
         ----------
@@ -266,13 +266,13 @@ class AddExistingModelAPIHandler(APIHandler):
 class AddExistingWorkflowAPIHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for creating new StochSS Experiments
+    Handler for adding an existing workflow to a project
     ##############################################################################
     '''
     @web.authenticated
     def get(self):
         '''
-        Create a new experiment directory.
+        Add the selected workflow to the project.
 
         Attributes
         ----------
@@ -281,7 +281,7 @@ class AddExistingWorkflowAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
         wkfl_path = os.path.join(user_dir, self.get_query_argument(name="wkflPath"))
-        log.debug("Path to the experiment: %s", path)
+        log.debug("Path to the workflow group: %s", path)
         log.debug("Path to the workflow: %s", wkfl_path)
         try:
             if get_status(wkfl_path) == "running":
@@ -543,7 +543,7 @@ class ExportAsCombineAPIHandler(APIHandler):
         '''
         user_dir = "/home/jovyan"
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project/experiment/workflow directory: %s", path)
+        log.debug("Path to the project/workflow group/workflow directory: %s", path)
         project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath",
                                                                       default=""))
         log.debug("Path to the project directory: %s", project_path)
@@ -591,7 +591,7 @@ class ExportAsCombineAPIHandler(APIHandler):
         '''
         user_dir = "/home/jovyan"
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project/experiment/workflow directory: %s", path)
+        log.debug("Path to the project/workflow group/workflow directory: %s", path)
         project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath",
                                                                       default=""))
         log.debug("Path to the project directory: %s", project_path)

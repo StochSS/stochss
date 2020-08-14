@@ -39,8 +39,8 @@ def get_children(_children, p_path, full_path):
             children.append(build_child(text=child, f_type="workflow", p_path=p_path))
         elif check_extension(child, ".proj"):
             children.append(build_child(text=child, f_type="project", p_path=p_path))
-        elif check_extension(child, ".exp"):
-            children.append(build_child(text=child, f_type="experiment", p_path=p_path))
+        elif check_extension(child, ".wkgp"):
+            children.append(build_child(text=child, f_type="workflow-group", p_path=p_path))
         elif check_extension(child, ".mdl"):
             children.append(build_child(text=child, f_type="nonspatial", p_path=p_path))
         elif check_extension(child, ".smdl"):
@@ -77,7 +77,7 @@ def build_child(text, f_type, p_path):
     else:
         _path = path.join(p_path, text) # The child is in a sub-leve of the tree
     child = {'text' : text, 'type' : f_type, '_path' : _path}
-    child['children'] = f_type == "folder" or f_type == "experiment"
+    child['children'] = f_type == "folder" or f_type == "workflow-group"
     if f_type == "workflow":
         status = get_status(_path)
         child['_status'] = status

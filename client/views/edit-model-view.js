@@ -27,36 +27,33 @@ module.exports = View.extend({
     }
   },
   handleEditModelClick: function (e) {
-    let experiments = this.parent.parent.model.experiments.map(function (exp) {
-      return exp.name
-    })
-    let queryString = "?path="+this.model.directory+"&experiments="+experiments.toString()
+    let queryString = "?path="+this.model.directory
     window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+queryString
   },
   handleNewWorkflowClick: function (e) {
-    if(this.parent.parent.model.experiments.length > 1) {
+    if(this.parent.parent.model.workflowGroups.length > 1) {
       let self = this
       if(document.querySelector('#newProjectWorkflowModal')){
         document.querySelector('#newProjectWorkflowModal').remove()
       }
-      let options = this.parent.parent.model.experiments.map(function (experiment) {
-        return experiment.name
+      let options = this.parent.parent.model.workflowGroups.map(function (workflowGroup) {
+        return workflowGroup.name
       });
-      let modal = $(modals.newProjectWorkflowHtml("Name of the experiment:", options)).modal()
+      let modal = $(modals.newProjectWorkflowHtml("Name of the workflow group:", options)).modal()
       let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
       let select = document.querySelector('#newProjectWorkflowModal #select')
       okBtn.addEventListener('click', function (e) {
         modal.modal('hide')
-        let expFile = select.value.endsWith('.exp') ? select.value : select.value + ".exp" 
+        let expFile = select.value.endsWith('.wkgp') ? select.value : select.value + ".wkgp" 
         self.openWorkflowManager(expFile)
       });
-    }else if(this.parent.parent.model.experiments.length == 1) {
-      let expFile = this.parent.parent.model.experiments.models[0].name + ".exp"
+    }else if(this.parent.parent.model.workflowGroups.length == 1) {
+      let expFile = this.parent.parent.model.workflowGroups.models[0].name + ".wkgp"
       this.openWorkflowManager(expFile)
     }else{
-      let title = "No Experiments Found"
-      let message = "You need to create an experiment before you can create a new workflow."
-      let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
+      let title = "No Workflow Groups Found"
+      let message = "You need to create an workflow group before you can create a new workflow."
+      let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
     }
   },
   openWorkflowManager: function (expFile) {

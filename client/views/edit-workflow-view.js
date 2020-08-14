@@ -57,7 +57,7 @@ module.exports = View.extend({
     if(document.querySelector('#moveToTrashConfirmModal')) {
       document.querySelector('#moveToTrashConfirmModal').remove();
     }
-    let modal = $(modals.moveToTrashConfirmHtml("experiment")).modal();
+    let modal = $(modals.moveToTrashConfirmHtml("workflow")).modal();
     let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       let trashPath = path.join(path.dirname(path.dirname(self.model.path)), "trash")

@@ -8,7 +8,7 @@ var modals = require('../modals');
 var PageView = require('./base');
 var PlotsView = require('../views/plots-view');
 var EditModelsView = require('../views/edit-models-view');
-var EditExperimentsView = require('../views/edit-experiments-view');
+var EditWorkflowGroupsView = require('../views/edit-workflow-groups-view');
 var ProjectViewer = require('../views/project-viewer');
 var FileBrowser = require('../views/file-browser-view');
 var MetaDataView = require('../views/meta-data');
@@ -24,7 +24,7 @@ let ProjectManager = PageView.extend({
   template: template,
   events: {
     'click [data-hook=new-model]' : 'handleNewModelClick',
-    'click [data-hook=new-experiment]' : 'handleNewExperimentClick',
+    'click [data-hook=new-workflow-group]' : 'handleNewWorkflowGroupClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
     'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
@@ -59,15 +59,15 @@ let ProjectManager = PageView.extend({
       success: function (model, response, options) {
         self.renderProjectViewer()
         $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
-        if(target === "model-editor" || target === "experiment-editor" || 
+        if(target === "model-editor" || target === "workflow-group-editor" || 
                           target === "workflows-editor" || target === "trash") {
           self.projectFileBrowser.refreshJSTree()
         }else if(target === "file-browser") {
           self.renderEditModelsView()
-          self.renderEditExperimentsView()
+          self.renderEditWorkflowGroupsView()
         }else{
           self.renderEditModelsView()
-          self.renderEditExperimentsView()
+          self.renderEditWorkflowGroupsView()
           self.projectFileBrowser.refreshJSTree()
         }
       }
@@ -78,7 +78,7 @@ let ProjectManager = PageView.extend({
     this.renderProjectFileBrowser();
     this.renderRecentPlotView();
     this.renderEditModelsView();
-    this.renderEditExperimentsView();
+    this.renderEditWorkflowGroupsView();
   },
   renderRecentPlotView: function () {
     if(this.recentPlotView) {
@@ -108,14 +108,14 @@ let ProjectManager = PageView.extend({
     });
     this.registerRenderSubview(this.editModelsView, "edit-models-container")
   },
-  renderEditExperimentsView: function () {
-    if(this.editExperimentsView) {
-      this.editExperimentsView.remove()
+  renderEditWorkflowGroupsView: function () {
+    if(this.editWorkflowGroupsView) {
+      this.editWorkflowGroupsView.remove()
     }
-    this.editExperimentsView = new EditExperimentsView({
-      collection: this.model.experiments
+    this.editWorkflowGroupsView = new EditWorkflowGroupsView({
+      collection: this.model.workflowGroups
     });
-    this.registerRenderSubview(this.editExperimentsView, "edit-experiments-container")
+    this.registerRenderSubview(this.editWorkflowGroupsView, "edit-workflow-groups-container")
   },
   renderProjectViewer: function () {
     if(this.projectViewer) {
@@ -158,8 +158,8 @@ let ProjectManager = PageView.extend({
   handleNewModelClick: function () {
     this.addNewModel(false)
   },
-  handleNewExperimentClick: function () {
-    this.addNewExperiment()
+  handleNewWorkflowGroupClick: function () {
+    this.addNewWorkflowGroup()
   },
   handleExistingModelClick: function () {
     this.addExistingModel()
@@ -260,10 +260,7 @@ let ProjectManager = PageView.extend({
         let message = modelName.split(".")[0] !== input.value ? 
               "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
         let modelPath = path.join(self.projectPath, modelName)
-        let experiments = self.model.experiments.map(function (exp) {
-          return exp.name
-        })
-        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message+"&experiments="+experiments.toString();
+        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message
         if(message){
           modal.modal('hide')
           let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
@@ -281,14 +278,14 @@ let ProjectManager = PageView.extend({
       }
     });
   },
-  addNewExperiment: function () {
+  addNewWorkflowGroup: function () {
     let self = this
-    if(document.querySelector("#newExperimentModal")) {
-      document.querySelector("#newExperimentModal").remove()
+    if(document.querySelector("#newWorkflowGroupModal")) {
+      document.querySelector("#newWorkflowGroupModal").remove()
     }
-    let modal = $(modals.newExperimentModalHtml()).modal();
-    let okBtn = document.querySelector('#newExperimentModal .ok-model-btn');
-    let input = document.querySelector('#newExperimentModal #experimentNameInput');
+    let modal = $(modals.newWorkflowGroupModalHtml()).modal();
+    let okBtn = document.querySelector('#newWorkflowGroupModal .ok-model-btn');
+    let input = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInput');
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
         event.preventDefault();
@@ -297,15 +294,14 @@ let ProjectManager = PageView.extend({
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
-        let experimentName = input.value + ".exp"
-        let experimentPath = path.join(self.projectPath, experimentName)
-        let endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
-        console.log(endpoint)
+        let workflowGroupName = input.value + ".wkgp"
+        let workflowGroupPath = path.join(self.projectPath, workflowGroupName)
+        let endpoint = path.join(app.getApiPath(), "project/new-workflow-group")+"?path="+workflowGroupPath
         xhr({uri: endpoint,json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
-            self.update("experiment")
+            self.update("workflow-group")
           }else{
-            let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
           }
           modal.modal('hide')
         });
@@ -354,7 +350,7 @@ let ProjectManager = PageView.extend({
       modal.modal('hide')
       var files = []
       if(target === self.projectPath){
-        files = self.model.experiments.map(function (experiment) {return experiment.name+".exp"})
+        files = self.model.workflowGroups.map(function (workflowGroup) {return workflowGroup.name+".wkgp"})
         files.unshift(self.model.directory)
       }else{
         files = [self.model.directory, target.split('/').pop()]
