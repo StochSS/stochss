@@ -1130,7 +1130,7 @@ module.exports = View.extend({
           }
         },
         "convertToCombine" : {
-          "label" : "Convert to Combine",
+          "label" : "Convert to COMBINE",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
@@ -1139,7 +1139,7 @@ module.exports = View.extend({
           }
         },
         "downloadAsCombine" : {
-          "label" : "Download as Combine",
+          "label" : "Download as COMBINE",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
@@ -1213,7 +1213,7 @@ module.exports = View.extend({
           }
         },
         "convertToCombine" : {
-          "label" : "Convert to Combine",
+          "label" : "Convert to COMBINE",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
@@ -1222,7 +1222,7 @@ module.exports = View.extend({
           }
         },
         "downloadAsCombine" : {
-          "label" : "Download as Combine",
+          "label" : "Download as COMBINE",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
