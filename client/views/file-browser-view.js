@@ -1129,15 +1129,6 @@ module.exports = View.extend({
             }
           }
         },
-        "convertToCombine" : {
-          "label" : "Convert to COMBINE",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.handleExportCombineClick(o, false)
-          }
-        },
         "downloadAsCombine" : {
           "label" : "Download as COMBINE",
           "_disabled" : false,
@@ -1210,15 +1201,6 @@ module.exports = View.extend({
           "separator_after" : false,
           "action" : function (data) {
             self.handleExportWorkflowClick(o)
-          }
-        },
-        "convertToCombine" : {
-          "label" : "Convert to COMBINE",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.handleExportCombineClick(o, false)
           }
         },
         "downloadAsCombine" : {

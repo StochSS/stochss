@@ -66,11 +66,9 @@ def convert(path, meta_data=None):
     # write the archive to the parent directory of the project
     archive.writeToFile(dst)
 
-    resp = "The {0} {1} was exported as {2} to {3}".format(file_type,
-                                                           path.split('/').pop(),
-                                                           archive_name+".omex",
-                                                           "/" if os.path.dirname(dst) == user_dir
-                                                           else os.path.dirname(dst))
+    resp = "The {0} {1} was downloaded as {2}".format(file_type,
+                                                      path.split('/').pop(),
+                                                      archive_name+".omex")
     return {"message":resp, "errors":archive_errors, "file_type":file_type,
             "file_path":dst.replace("/home/jovyan/", "")}
 

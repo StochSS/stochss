@@ -28,7 +28,6 @@ let ProjectManager = PageView.extend({
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
     'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
-    'click [data-hook=convert-project-to-combine]' : 'handleToCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick',
     'click [data-hook=collapse-most-recent-plot-btn]' : 'changeCollapseButtonText',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
@@ -177,9 +176,6 @@ let ProjectManager = PageView.extend({
   },
   handleExportCombineClick: function () {
     this.exportAsCombine(this.projectPath, true)
-  },
-  handleToCombineClick: function () {
-    this.exportAsCombine(this.projectPath, false)
   },
   handleEmptyTrashClick: function () {
     let self = this;
@@ -364,7 +360,8 @@ let ProjectManager = PageView.extend({
         if(response.statusCode < 400) {
           if(download) {
             let downloadEP = path.join(app.getBasePath(), "/files", body.file_path);
-            window.location.href = downloadEP
+            window.open(downloadEP)
+            xhr({uri: path.join(app.getApiPath(), "file/delete")+"?path="+body.file_path})
           }else{
             let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
           }
