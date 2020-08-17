@@ -398,8 +398,8 @@ class ExtractModelAPIHandler(APIHandler):
             copyfile(src_path, unique_path)
             export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
                            if os.path.dirname(unique_path) != user_dir else "/")
-            resp = "The Model {0} was extracted to {1}".format(src_path.split('/').pop(),
-                                                               export_path)
+            resp = "The Model {0} was extracted to {1} in files\
+                                ".format(src_path.split('/').pop(), export_path)
             if changed:
                 resp += " as {0}".format(unique_path.split('/').pop())
             log.debug("Response message: %s", resp)
@@ -441,8 +441,8 @@ class ExtractWorkflowAPIHandler(APIHandler):
                     self.update_workflow_path(unique_path)
                 export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
                                if os.path.dirname(unique_path) != user_dir else "/")
-                resp = "The Workflow {0} was exported to {1}".format(src_path.split('/').pop(),
-                                                                     export_path)
+                resp = "The Workflow {0} was exported to {1} in files\
+                                ".format(src_path.split('/').pop(), export_path)
                 if changed:
                     resp += " as {0}".format(unique_path.split('/').pop())
                 log.debug("Response message: %s", resp)
