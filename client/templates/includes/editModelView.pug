@@ -1,10 +1,25 @@
+- var workflowGroups = this.workflowGroupOptions;
 div
 
   div.ml-1.row
 
     div.col-md-5: button.btn.btn-outline-secondary.box-shadow.text-break(data-hook="project-model-edit" style="width: 100%;")=this.model.name
 
-    div.col-md-4: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-workflow") Create Workflow with Model
+    div.col-md-4
+
+      button.btn.btn-outline-secondary.inline.dropdown-toggle.box-shadow(
+        id="new-workflow-btn",
+        data-toggle="dropdown",
+        aria-haspopup="true",
+        aria-expanded="false",
+        type="button",
+      ) Create Workflow with Model <span class="caret"></span>
+
+      ul.dropdown-menu(aria-labelledby="new-workflow-btn" class="workflow-group-options" )
+        each workflowGroup in this.workflowGroupOptions
+          li.dropdown-item(data-hook="project-model-workflow-option" data-name=workflowGroup)="in "+workflowGroup
+        else
+          li.dropdown-item(data-hook="project-model-workflow-option" data-name="invalid")="in New Workflow Group"
 
     div.col-md-2
 

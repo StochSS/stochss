@@ -274,7 +274,7 @@ let ProjectManager = PageView.extend({
       }
     });
   },
-  addNewWorkflowGroup: function () {
+  addNewWorkflowGroup: function (cb) {
     let self = this
     if(document.querySelector("#newWorkflowGroupModal")) {
       document.querySelector("#newWorkflowGroupModal").remove()
@@ -295,7 +295,11 @@ let ProjectManager = PageView.extend({
         let endpoint = path.join(app.getApiPath(), "project/new-workflow-group")+"?path="+workflowGroupPath
         xhr({uri: endpoint,json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
-            self.update("workflow-group")
+            if(cb) {
+              cb(workflowGroupName)
+            }else{
+              self.update("workflow-group")
+            }
           }else{
             let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
           }

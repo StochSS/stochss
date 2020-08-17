@@ -1,4 +1,5 @@
 var $ = require('jquery');
+var _ = require('underscore');
 var xhr = require('xhr');
 var path = require('path');
 //support files
@@ -13,12 +14,15 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
-    'click [data-hook=project-model-workflow]' : 'handleNewWorkflowClick',
+    'click [data-hook=project-model-workflow-option]' : 'handleNewWorkflowClick',
     'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=project-model-remove]' : 'handleRemoveModelClick'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.workflowGroupOptions = this.model.collection.parent.workflowGroups.map(function (wg) {
+      return wg.name
+    })
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -31,29 +35,12 @@ module.exports = View.extend({
     window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+queryString
   },
   handleNewWorkflowClick: function (e) {
-    if(this.parent.parent.model.workflowGroups.length > 1) {
-      let self = this
-      if(document.querySelector('#newProjectWorkflowModal')){
-        document.querySelector('#newProjectWorkflowModal').remove()
-      }
-      let options = this.parent.parent.model.workflowGroups.map(function (workflowGroup) {
-        return workflowGroup.name
-      });
-      let modal = $(modals.newProjectWorkflowHtml("Name of the workflow group:", options)).modal()
-      let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-      let select = document.querySelector('#newProjectWorkflowModal #select')
-      okBtn.addEventListener('click', function (e) {
-        modal.modal('hide')
-        let expFile = select.value.endsWith('.wkgp') ? select.value : select.value + ".wkgp" 
-        self.openWorkflowManager(expFile)
-      });
-    }else if(this.parent.parent.model.workflowGroups.length == 1) {
-      let expFile = this.parent.parent.model.workflowGroups.models[0].name + ".wkgp"
-      this.openWorkflowManager(expFile)
+    let name = e.target.dataset.name
+    if(name === "invalid") {
+      this.parent.parent.addNewWorkflowGroup(_.bind(this.openWorkflowManager, this))
     }else{
-      let title = "No Workflow Groups Found"
-      let message = "You need to create an workflow group before you can create a new workflow."
-      let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
+      let expFile = name + ".wkgp"
+      this.openWorkflowManager(expFile)
     }
   },
   openWorkflowManager: function (expFile) {
