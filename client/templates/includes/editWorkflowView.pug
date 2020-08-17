@@ -2,9 +2,13 @@ div
 
   div.ml-1.row
 
-    div.col-md-6: button.btn.btn-outline-secondary.box-shadow.text-break(data-hook="project-workflow-open" style="width: 100%")=this.model.name
+    div.col-md-5: button.btn.btn-outline-secondary.box-shadow.text-break(data-hook="project-workflow-open" style="width: 100%")=this.model.name
 
-    div.col-md-3(data-hook="project-workflow-status")="Status: "+this.model.status
+    div.col-md-4
+
+        div(data-hook="project-workflow-type")="Type: "+this.model.type
+
+        div(data-hook="project-workflow-status")="Status: "+this.model.status
 
     div.col-md-2
 

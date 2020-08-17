@@ -128,7 +128,8 @@ class LoadProjectAPIHandler(APIHandler):
         '''
         with open(os.path.join(wkfl_dict["path"], "info.json"), 'r') as info_file:
             info = json.load(info_file)
-            wkfl_dict['annotation'] = ""
+            types = {'gillespy': 'Ensemble Simulation', 'parameterSweep':'Parameter Sweep'}
+            wkfl_dict['type'] = types[info['type']]
             if not 'annotation' in info.keys():
                 wkfl_dict['annotation'] = ""
             else:
@@ -157,6 +158,7 @@ class LoadProjectAPIHandler(APIHandler):
             wkfl_dict['status'] = 'error'
         else:
             wkfl_dict['status'] = 'ready'
+        wkfl_dict['type'] = "notebook"
         workflows.append(wkfl_dict)
 
 
