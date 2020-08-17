@@ -58,7 +58,7 @@ module.exports = View.extend({
     }else{
       let title = "No Models Found"
       let message = "You need to add a model before you can create a new workflow."
-      let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
+      let modal = $(modals.noModelsMessageHtml(title, message)).modal()
     }
   },
   handleAddWorkflowClick: function (e) {

@@ -380,6 +380,11 @@ module.exports = {
 
       return templates.confirmation(modalID, title)
     },
+    noModelsMessageHtml: (title, message) => {
+      let modalID = "noModelsMessageModal"
+
+      return templates.message(modalID, title, message)
+    },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;
         let populationDescription = `Population - Species will only be represented using discrete (integer count) values.`;

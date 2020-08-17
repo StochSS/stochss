@@ -73,7 +73,13 @@ module.exports = View.extend({
             ((node.type === "nonspatial" || node.type === "spatial" || node.type === "workflow-group") && more.ref.type !== 'root'))){
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.type && node.type !== "workflow" && !(more.ref.type == 'folder' || more.ref.type == 'root')){
+          if(op === 'move_node' && more && more.ref && more.ref.type && !(node.type === "workflow" || node.type === "notebook") && !(more.ref.type == 'folder' || more.ref.type == 'root')){
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && node.type === "notebook" && !(more.ref.type == 'folder' || more.ref.type == 'root' || more.ref.type == 'workflow-group')) {
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && node.original._path.includes("trash") && more.ref.original.text == 'trash') {
             return false
           }
           if(op === 'move_node' && more && more.ref && more.ref.type && (more.ref.type === 'folder' || more.ref.type === 'root')){

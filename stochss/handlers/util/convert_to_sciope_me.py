@@ -11,13 +11,14 @@ from .generate_notebook_cells import *
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
-def convert_to_sciope_me(_model_path, settings=None):
+def convert_to_sciope_me(_model_path, settings=None, dest_path=None):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     name = file.split('.')[0].replace('-', '_')
-    dest_path = model_path.split(file)[0]
+    if dest_path is None:
+        dest_path = model_path.split(file)[0]
     
     # Collect .mdl Data
     try:
