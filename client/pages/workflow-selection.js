@@ -59,11 +59,15 @@ let workflowSelection = PageView.extend({
   },
   validateWorkflows: function () {
     if(this.model.parameters.length < 1 || this.model.species.length < 1){
-      $(this.queryByHook('oned-parameter-sweep')).addClass('disabled')
-      $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
-      $(this.queryByHook('sciope-model-exploration')).addClass('disabled')
+      $(this.queryByHook('stochss-es')).prop('disabled', true)
+      $(this.queryByHook('stochss-ps')).prop('disabled', true)
+      $(this.queryByHook('ensemble-simulation')).prop('disabled', true)
+      $(this.queryByHook('model-inference')).prop('disabled', true)
+      $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
     }else if(this.model.parameters.length < 2){
-      $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
+      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
     }
   },
   notebookWorkflow: function (e) {
