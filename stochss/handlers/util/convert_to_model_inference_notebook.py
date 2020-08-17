@@ -2,8 +2,8 @@
 import json
 from os import path
 from json.decoder import JSONDecodeError
-import nbformat
 import traceback
+import nbformat
 from nbformat import v4 as nbf
 from .rename import get_unique_file_name
 from .run_model import ModelFactory
@@ -38,7 +38,8 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None, dest_path=
     except FileNotFoundError as err:
         raise ModelNotFoundError('Could not find model file: ' + str(err), traceback.format_exc())
     except JSONDecodeError as err:
-        raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err), traceback.format_exc())
+        raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err),
+                                      traceback.format_exc())
 
     is_ode = (json_data['defaultMode'] == "continuous"
               if settings is None else settings['simulationSettings']['algorithm'] == "ODE")
@@ -91,16 +92,17 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None, dest_path=
         # Create local dask client cell
         cells.append(nbf.new_code_cell("c = Client()\nc"))
         # Create compute fixed mean cell
-        cells.append(nbf.new_code_cell("# First compute the fixed(observed) mean\n\
-                                        abc.compute_fixed_mean(chunk_size=2)"))
+        cfmc = "# First compute the fixed(observed) mean\nabc.compute_fixed_mean(chunk_size=2)"
+        cells.append(nbf.new_code_cell(cfmc))
         # Create run model inference cell
-        cells.append(nbf.new_code_cell("res = abc.infer(num_samples=100, \
-                                        batch_size=10, chunk_size=2)"))
+        rmic = "res = abc.infer(num_samples=100, batch_size=10, chunk_size=2)"
+        cells.append(nbf.new_code_cell(rmic))
         # Create absolute error cell
-        cells.append(nbf.new_code_cell('mae_inference = mean_absolute_error(bound, \
-                                        abc.results["inferred_parameters"])'))
+        aec = 'mae_inference = mean_absolute_error(bound, abc.results["inferred_parameters"])'
+        cells.append(nbf.new_code_cell(aec))
     except KeyError as err:
-        raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err), traceback.format_exc())
+        raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err),
+                                    traceback.format_exc())
 
     # Append cells to worksheet
     notebook = nbf.new_notebook(cells=cells)
