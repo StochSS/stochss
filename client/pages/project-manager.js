@@ -58,9 +58,11 @@ let ProjectManager = PageView.extend({
       success: function (model, response, options) {
         self.renderProjectViewer()
         $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
-        if(target === "model-editor" || target === "workflow-group-editor" || 
-                          target === "workflows-editor" || target === "trash") {
+        if(target === "model-editor" || target === "workflows-editor" || target === "trash") {
           self.projectFileBrowser.refreshJSTree()
+        }else if(target === "workflow-group-editor"){
+          self.projectFileBrowser.refreshJSTree()
+          self.renderEditModelsView()
         }else if(target === "file-browser") {
           self.renderEditModelsView()
           self.renderEditWorkflowGroupsView()
