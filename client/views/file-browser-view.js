@@ -818,49 +818,50 @@ module.exports = View.extend({
       let nodeType = o.original.type
       let zipTypes = ["workflow", "folder", "other", "mesh", "project", "workflow-group"]
       let asZip = zipTypes.includes(nodeType)
-      // common to all type except root
-      let common = {
-        "Download" : {
-          "label" : asZip ? "Download as .zip" : "Download",
+      // refresh context menu option
+      let refresh = {
+        "Refresh" : {
+          "label" : "Refresh",
           "_disabled" : false,
-          "separator_before" : true,
-          "separator_after" : false,
+          "_class" : "font-weight-bold",
+          "separator_before" : false,
+          "separator_after" : o.text !== "trash",
           "action" : function (data) {
-            if(o.original.text.endsWith('.zip')){
-              self.exportToZipFile(o);
+            if(nodeType === "root"){
+              self.refreshJSTree();
             }else{
-              self.getExportData(o, asZip)
+              $('#models-jstree-view').jstree().refresh_node(o);
             }
-          }
-        },
-        "Rename" : {
-          "label" : "Rename",
-          "_disabled" : (o.type === "workflow" && o.original._status === "running"),
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.renameNode(o);
-          }
-        },
-        "Duplicate" : {
-          "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
-          "_disabled" : (nodeType === "project" || nodeType === "workflow-group"),
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.duplicateFileOrDirectory(o, null)
-          }
-        },
-        "Delete" : {
-          "label" : "Delete",
-          "_disabled" : o.type === 'workflow-group' && self.parent.model.workflowGroups.length === 1 ? true : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.deleteFile(o);
           }
         }
       }
+      // For notebooks, workflows, sbml models, and other files
+      let open = {
+        "Open" : {
+          "label" : "Open",
+          "_disabled" : false,
+          "_class" : "font-weight-bolder",
+          "separator_before" : false,
+          "separator_after" : true,
+          "action" : function (data) {
+            if(nodeType === "workflow"){
+              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
+            }else if(nodeType === "project"){
+              window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
+            }else{
+              if(nodeType === "notebook") {
+                var identifier = "notebooks"
+              }else if(nodeType === "sbml-model") {
+                var identifier = "edit"
+              }else{
+                var identifier = "view"
+              }
+              window.open(path.join(app.getBasePath(), identifier, o.original._path));
+            }
+          }
+        }
+      }
+      // project contect menu option
       let project = {
         "Add_Model" : {
           "label" : "Add Model",
@@ -909,44 +910,31 @@ module.exports = View.extend({
           "label" : "New Workflow Group",
           "_disabled" : false,
           "separator_before" : false,
-          "separator_after" : false,
+          "separator_after" : true,
           "action" : function (data) {
             self.newWorkflowGroup(o)
           }
         }
       }
-      // common to root and folders
-      let root = {
-        "Refresh" : {
-          "label" : "Refresh",
-          "_disabled" : false,
-          "_class" : "font-weight-bold",
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            if(nodeType === "root"){
-              self.refreshJSTree();
-            }else{
-              $('#models-jstree-view').jstree().refresh_node(o);
-            }
-          }
-        },
-        "Add_model" : project.Add_Model,
-        "New_Workflow_Group" : project.New_Workflow_Group,
-        "New_Directory" : {
-          "label" : "New Directory",
+      // option for uploading files
+      let uploadFile = {
+        "Upload": {
+          "label" : o.type === "root" ? "File" : "Upload File",
           "_disabled" : false,
           "separator_before" : false,
-          "separator_after" : false,
+          "separator_after" : o.type !== "root",
           "action" : function (data) {
-            self.newModelOrDirectory(o, false, false);
+            self.uploadFile(o, "file")
           }
-        },
+        }
+      }
+      // all upload options
+      let uploadAll = {
         "Upload" : {
           "label" : "Upload File",
           "_disabled" : false,
           "separator_before" : false,
-          "separator_after" : false,
+          "separator_after" : true,
           "submenu" : {
             "Model" : {
               "label" : "StochSS Model",
@@ -966,36 +954,79 @@ module.exports = View.extend({
                 self.uploadFile(o, "sbml")
               }
             },
-            "File" : {
-              "label" : "File",
+            "File" : uploadFile.Upload
+          }
+        }
+      }
+      // common to folder and root
+      let commonFolder = {
+        "New_Directory" : {
+          "label" : "New Directory",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newModelOrDirectory(o, false, false);
+          }
+        },
+        "Upload": o.type === "root" ? uploadAll.Upload : uploadFile.Upload
+      }
+      if(o.type === "root" || o.type === "workflow-group" || o.type === "workflow")
+        var downloadLabel = "as .zip"
+      else if(asZip)
+        var downloadLabel = "Download as .zip"
+      else
+        var downloadLabel = "Download"
+      let download = {
+        "Download" : {
+          "label" : downloadLabel,
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : !(o.type === "root" || o.type === "workflow-group" || o.type === "workflow"),
+          "action" : function (data) {
+            if(o.original.text.endsWith('.zip')){
+              self.exportToZipFile(o);
+            }else{
+              self.getExportData(o, asZip)
+            }
+          }
+        }
+      }
+      // download options for .zip and COMBINE
+      let downloadWCombine = {
+        "Download" : {
+          "label" : "Download",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : true,
+          "submenu" : {
+            "DownloadAsZip": download.Download,
+            "downloadAsCombine" : {
+              "label" : "as COMBINE",
               "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
-                self.uploadFile(o, "file")
+                self.handleExportCombineClick(o, true)
               }
             }
           }
         }
       }
-      let folder = {
-        "refresh" : root.Refresh,
-        "new_directory": root.New_Directory,
-        "uploadFile" : {
-          "label" : "Upload File",
-          "_disabled" : false,
+      // menu option for creating new workflows
+      let newWorkflow = {
+        "NewWorkflow" : {
+          "label" : "New Workflow",
+          "_disabled" : (nodeType === "spatial") ? true : false,
           "separator_before" : false,
-          "separator_after" : false,
+          "separator_after" : o.type !== "workflow-group",
           "action" : function (data) {
-            self.uploadFile(o, "file")
+            self.addNewWorkflow(o)
           }
         }
       }
-      let trash = {
-        "refresh" : root.Refresh
-      }
-      // common to both spatial and non-spatial models
-      let model = {
+      // common to all models
+      let commonModel = {
         "Edit" : {
           "label" : "Edit",
           "_disabled" : (nodeType === "spatial") ? true : false,
@@ -1015,43 +1046,7 @@ module.exports = View.extend({
             self.handleExtractModelClick(o);
           }
         },
-        "New Workflow" : {
-          "label" : "New Workflow",
-          "_disabled" : (nodeType === "spatial") ? true : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.addNewWorkflow(o)
-          }
-        }
-      }
-      // convert options for spatial models
-      let spatialConvert = {
-        "Convert" : {
-          "label" : "Convert",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "Convert to Model" : {
-              "label" : "Convert to Non Spatial",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toModel(o, "Spatial");
-              }
-            },
-            "Convert to Notebook" : {
-              "label" : "Convert to Notebook",
-              "_disabled" : true,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-              }
-            }
-          }
-        }
+        "New Workflow" : newWorkflow.NewWorkflow
       }
       // convert options for non-spatial models
       let modelConvert = {
@@ -1059,7 +1054,7 @@ module.exports = View.extend({
           "label" : "Convert",
           "_disabled" : false,
           "separator_before" : false,
-          "separator_after" : false,
+          "separator_after" : true,
           "submenu" : {
             "Convert to Spatial" : {
               "label" : "To Spatial Model",
@@ -1082,48 +1077,43 @@ module.exports = View.extend({
           }
         }
       }
-      // For notebooks, workflows, sbml models, and other files
-      let open = {
-        "Open" : {
-          "label" : "Open",
+      // convert options for spatial models
+      let spatialConvert = {
+        "Convert" : {
+          "label" : "Convert",
           "_disabled" : false,
-          "_class" : "font-weight-bolder",
           "separator_before" : false,
           "separator_after" : true,
-          "action" : function (data) {
-            if(nodeType === "workflow"){
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
-            }else if(nodeType === "project"){
-              window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
-            }else{
-              if(nodeType === "notebook") {
-                var identifier = "notebooks"
-              }else if(nodeType === "sbml-model") {
-                var identifier = "edit"
-              }else{
-                var identifier = "view"
+          "submenu" : {
+            "Convert to Model" : {
+              "label" : "Convert to Non Spatial",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.toModel(o, "Spatial");
               }
-              window.open(path.join(app.getBasePath(), identifier, o.original._path));
+            },
+            "Convert to Notebook" : {
+              "label" : "Convert to Notebook",
+              "_disabled" : true,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+              }
             }
           }
         }
       }
+      // specific to workflow groups
       let workflowGroup = {
         "Add Workflow" : {
           "label" : "Add Workflow",
           "_disabled" : false,
           "separator_before" : false,
-          "separator_after" : false,
+          "separator_after" : true,
           "submenu" : {
-            "New Workflow" : {
-              "label" : "New Workflow",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.addNewWorkflow(o)
-              }
-            },
+            "New Workflow" : newWorkflow.NewWorkflow,
             "Existing Workflow" : {
               "label" : "Existing Workflow",
               "_disabled" : false,
@@ -1133,15 +1123,6 @@ module.exports = View.extend({
                 self.addExistingWorkflow(o)
               }
             }
-          }
-        },
-        "downloadAsCombine" : {
-          "label" : "Download as COMBINE",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.handleExportCombineClick(o, true)
           }
         }
       }
@@ -1204,20 +1185,11 @@ module.exports = View.extend({
           "label" : "Extract",
           "_disabled" : false,
           "separator_before" : false,
-          "separator_after" : false,
+          "separator_after" : true,
           "action" : function (data) {
             self.handleExportWorkflowClick(o)
           }
         },
-        "downloadAsCombine" : {
-          "label" : "Download as COMBINE",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.handleExportCombineClick(o, false)
-          }
-        }
       }
       // Specific to sbml files
       let sbml = {
@@ -1239,29 +1211,56 @@ module.exports = View.extend({
           }
         }
       }
+      // common to all type except root and trash
+      let common = {
+        "Rename" : {
+          "label" : "Rename",
+          "_disabled" : (o.type === "workflow" && o.original._status === "running"),
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.renameNode(o);
+          }
+        },
+        "Duplicate" : {
+          "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
+          "_disabled" : (nodeType === "project" || nodeType === "workflow-group"),
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.duplicateFileOrDirectory(o, null)
+          }
+        },
+        "Delete" : {
+          "label" : "Delete",
+          "_disabled" : o.type === 'workflow-group' && self.parent.model.workflowGroups.length === 1 ? true : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.deleteFile(o);
+          }
+        }
+      }
       if (o.type === 'root'){
-        return $.extend(root, {"Download":common.Download})
+        return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
       }
       if (o.type ===  'folder' && o.text !== "trash") {
-        return $.extend(folder, common)
+        return $.extend(refresh, commonFolder, download, common)
       }
       if (o.text === "trash"){
-        return trash
+        return refresh
       }
       if (o.type === 'spatial') {
-        return $.extend(model, spatialConvert, common)
+        return $.extend(commonModel, spatialConvert, download, common)
       }
       if (o.type === 'nonspatial') {
-         return $.extend(model, modelConvert, common)
-      }
-      if (o.type === 'project'){
-        return $.extend(open, project, common)
+         return $.extend(commonModel, modelConvert, download, common)
       }
       if (o.type === 'workflow-group') {
-        return $.extend(workflowGroup, common)
+        return $.extend(refresh, workflowGroup, downloadWCombine, common)
       }
       if (o.type === 'workflow') {
-        return $.extend(open, workflow, common)
+        return $.extend(open, workflow, downloadWCombine, common)
       }
       if (o.type === 'notebook' || o.type === "other") {
         return $.extend(open, common)
