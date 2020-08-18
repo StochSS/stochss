@@ -34,6 +34,10 @@ let workflowSelection = PageView.extend({
     }else{
       this.parentPath = path.dirname(this.modelDir)
     }
+    if(this.modelDir.includes(".proj")) {
+      this.projectPath = path.dirname(this.modelDir)
+      this.projectName = this.projectPath.split('/').pop()
+    }
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -53,6 +57,10 @@ let workflowSelection = PageView.extend({
     });
     this.model.fetch({
       success: function (model, response, options) {
+        console.log(self.modelDir, self.parentPath)
+        if(self.modelDir.includes(".proj")) {
+          self.queryByHook("workflow-selection-breadcrumb-links").style.display = "block"
+        }
         self.validateWorkflows()
       }
     });
