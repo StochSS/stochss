@@ -65,7 +65,9 @@ def save_existing_workflow(wkfl, wkfl_type, initialize):
     is_new : boolean
         Represents whether the workflow is new or not.
     '''
-    old_model_path = os.path.join(wkfl.wkfl_path, wkfl.mdl_file) # path to the old model
+    with open(wkfl.info_path, 'r') as info_file:
+        file_name = json.load(info_file)['source_model'].split('/').pop()
+    old_model_path = os.path.join(wkfl.wkfl_path, file_name) # path to the old model
     os.remove(old_model_path) # remove the old model
     try:
         copyfile(wkfl.mdl_path, wkfl.wkfl_mdl_path) # copy the new model into the workflow directory

@@ -22,6 +22,9 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    $(this.queryByHook("save")).prop('disabled', this.parent.parent.modelLoadError)
+    $(this.queryByHook("start-workflow")).prop('disabled', this.parent.parent.modelLoadError)
+    $(this.queryByHook("edit-model")).prop('disabled', this.parent.parent.modelLoadError)
   },
   clickSaveHandler: function (e, cb) {
     this.saving();
@@ -29,21 +32,25 @@ module.exports = View.extend({
     var model = this.model
     var optType = this.parent.parent.urlPathParam.endsWith(".mdl") ? "sn" : "se";
     this.saveModel(function () {
-      let query = JSON.stringify({"type":self.type,
+      self.saveWorkflow(model, optType, cb)
+    });
+  },
+  saveWorkflow: function (model, optType, cb) {
+    let self = this
+    let query = JSON.stringify({"type":self.type,
                                   "optType":optType,
                                   "mdlPath":model.directory,
                                   "wkflPath":self.parent.parent.wkflPath,
                                   "settings":self.parent.settings
                                 })
-      var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow') + "?data=" + query;
-      xhr({uri: endpoint}, function (err, response, body) {
-        self.saved();
-        if(cb){
-          cb()
-        }else if(self.parent.parent.urlPathParam.endsWith('.mdl')){
-          self.parent.parent.reloadWkfl();
-        }
-      });
+    var endpoint = path.join(app.getApiPath(), 'workflow/save-workflow') + "?data=" + query;
+    xhr({uri: endpoint}, function (err, response, body) {
+      self.saved();
+      if(cb){
+        cb()
+      }else if(self.parent.parent.urlPathParam.endsWith('.mdl')){
+        self.parent.parent.reloadWkfl();
+      }
     });
   },
   clickStartWorkflowHandler: function (e) {

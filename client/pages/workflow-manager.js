@@ -84,8 +84,12 @@ let WorkflowManager = PageView.extend({
     this.model.is_spatial = this.modelDirectory.endsWith(".smdl")
     this.model.isPreview = false
     this.model.for = "wkfl"
-    if(!model)
+    if(!model) {
+      this.modelLoadError = true
       this.wkflModelNotFound(data.error)
+    }else{
+      this.modelLoadError = false
+    }
   },
   wkflModelNotFound: function (error) {
     let modal = $(modals.modelNotFoundHtml(error.Reason, error.Message)).modal()
@@ -269,12 +273,16 @@ let WorkflowManager = PageView.extend({
       let mdlPathErr = $(modals.wkflModelPathErrorHtml()).modal()
     }else{
       self.modelDirectory = e.target.value
+      this.model.directory = e.target.value
       this.model.fetch({
         json: true,
         success: function (model, response, options) {
+          self.modelLoadError = false
           self.renderWorkflowEditor()
         },
         error: function (model, response, options) {
+          self.modelLoadError = true
+          self.renderWorkflowEditor()
           self.wkflModelNotFound(response.body)
         }
       });
@@ -298,7 +306,7 @@ let WorkflowManager = PageView.extend({
   },
   handleReturnToProjectClick: function(e) {
     let self = this
-    if(this.status === 'ready' || this.status === 'new'){
+    if((this.status === 'ready' || this.status === 'new') && !this.modelLoadError){
       this.workflowEditorView.workflowStateButtons.clickSaveHandler(e, function (e) {
         window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
       })
