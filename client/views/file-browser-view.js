@@ -548,7 +548,7 @@ module.exports = View.extend({
       targetPath = o.original._path
     }
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
-    window.location.href = endpoint
+    window.open(endpoint)
   },
   newWorkflowGroup: function (o) {
     var self = this

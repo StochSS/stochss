@@ -170,7 +170,7 @@ let ProjectManager = PageView.extend({
     xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400) {
         var downloadEP = path.join(app.getBasePath(), "/files", body.Path);
-        window.location.href = downloadEP
+        window.open(downloadEP)
       }
     })
   },
@@ -365,7 +365,6 @@ let ProjectManager = PageView.extend({
           if(download) {
             let downloadEP = path.join(app.getBasePath(), "/files", body.file_path);
             window.open(downloadEP)
-            xhr({uri: path.join(app.getApiPath(), "file/delete")+"?path="+body.file_path})
           }else{
             let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
           }

@@ -202,7 +202,7 @@ module.exports = View.extend({
       if(response.statusCode < 400) {
         if(self.download) {
           let downloadEP = path.join(app.getBasePath(), "/files", body.file_path);
-          window.location.href = downloadEP
+          window.open(downloadEP)
         }else{
           let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
         }

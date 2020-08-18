@@ -506,7 +506,7 @@ let FileBrowser = PageView.extend({
       targetPath = o.original._path
     }
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
-    window.location.href = endpoint
+    window.open(endpoint)
   },
   newProjectOrWorkflowGroup: function (o, isProject) {
     var self = this
