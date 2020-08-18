@@ -55,6 +55,21 @@ div.head {
   border-bottom: 2px solid #dee2e6;
 }
 
+a.active-link:not([href]):not([tabindex]) {
+  color: #007bff;
+  text-decoration: none;
+  background-color: transparent;
+}
+
+a.active-link:not([href]):not([tabindex]):hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+a.active-link:not([href]):not([tabindex]):focus {
+  color: rgba(0, 0, 0, 0.9);
+}
+
 a.disabled {
   pointer-events: none;
   cursor: default;

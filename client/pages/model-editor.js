@@ -29,6 +29,7 @@ let ModelEditor = PageView.extend({
     'click [data-hook=edit-model-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
+    'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -81,6 +82,12 @@ let ModelEditor = PageView.extend({
   update: function () {
   },
   updateValid: function () {
+  },
+  handleProjectBreadcrumbClick: function () {
+    this.modelStateButtons.saveModel(_.bind(function (e) {
+      let endpoint = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+this.projectPath
+      window.location.href = endpoint
+    }, this))
   },
   updateSpeciesInUse: function () {
     var species = this.model.species;
@@ -164,7 +171,7 @@ let ModelEditor = PageView.extend({
       parent: this,
       model: this.model.modelSettings,
     });
-    var modelStateButtons = new ModelStateButtonsView({
+    this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
     this.registerRenderSubview(meshEditor, 'mesh-editor-container');
@@ -174,7 +181,7 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
     this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
     this.registerRenderSubview(modelSettings, 'model-settings-container');
-    this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
+    this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
