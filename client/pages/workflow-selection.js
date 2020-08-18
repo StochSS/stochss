@@ -67,7 +67,7 @@ let workflowSelection = PageView.extend({
     });
   },
   validateWorkflows: function () {
-    if(this.model.parameters.length < 1 || this.model.species.length < 1){
+    if(this.model.species.length < 1 || (this.model.reactions.length < 1 && this.model.eventsCollection.length < 1 && this.model.rules.length < 1)){
       $(this.queryByHook('stochss-es')).prop('disabled', true)
       $(this.queryByHook('stochss-ps')).prop('disabled', true)
       $(this.queryByHook('ensemble-simulation')).prop('disabled', true)
@@ -75,6 +75,10 @@ let workflowSelection = PageView.extend({
       $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
+    }else if(this.model.parameters.length < 1){
+      $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('stochss-ps')).prop('disabled', true)
     }else if(this.model.parameters.length < 2){
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
     }
