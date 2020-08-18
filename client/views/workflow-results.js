@@ -44,6 +44,7 @@ module.exports = View.extend({
     'click [data-hook=save-plot]' : function (e) {
       var type = e.target.id;
       e.target.disabled = true
+      $("button[data-hook=save-plot]").filter("#"+type).text('Saved Plot to Gallery')
       this.savePlot(type)
     },
     'click [data-hook=download-results-csv]' : 'handlerDownloadResultsCsvClick',
@@ -176,7 +177,9 @@ module.exports = View.extend({
             return true
         }).length > 0)
         if(plotSaved) {
-          $("button[data-hook=save-plot]").filter("#"+type).prop('disabled', true)
+          let saveBtn = $("button[data-hook=save-plot]").filter("#"+type)
+          saveBtn.prop('disabled', true)
+          saveBtn.text('Plot Saved to Gallery')
         }
       }
     });
@@ -221,7 +224,7 @@ module.exports = View.extend({
   },
   exportToZipFile: function (resultsPath) {
     var endpoint = path.join("files", resultsPath);
-    window.location.href = endpoint
+    window.open(endpoint)
   },
   expandContainer: function () {
     $(this.queryByHook('workflow-results')).collapse('show');
