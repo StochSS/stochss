@@ -8,6 +8,7 @@ section.page.col-md-10
         ol.breadcrumb
           li.breadcrumb-item
             a(href="/stochss/project/manager?path="+this.projectPath data-hook="project-breadcrumb")=this.projectName
+          li.breadcrumb-item.active=this.workflowGroupName
 
   table.table
     thead

@@ -30,6 +30,7 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=edit-workflow-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('wkfl-manager')).modal();
     },
+    'click [data-hook=project-breadcrumb]' : 'handleReturnToProjectClick',
     'click [data-hook=return-to-project-btn]' : 'handleReturnToProjectClick'
   },
   initialize: function (attrs, options) {
@@ -66,7 +67,6 @@ let WorkflowManager = PageView.extend({
         self.renderSubviews();
         if(self.wkflPath.includes('.proj')) {
           self.projectPath = path.dirname(self.wkflParPath)
-          $(self.queryByHook('project-breadcrumb')).attr("href", "/stochss/project/manager?path="+self.projectPath)
           $(self.queryByHook('project-breadcrumb')).text(self.projectPath.split('/').pop().split('.')[0])
           $(self.queryByHook('workflow-group-breadcrumb')).text(self.wkflParPath.split('/').pop().split('.')[0])
           $(self.queryByHook('workflow-breadcrumb')).text(self.workflowName)
@@ -298,8 +298,8 @@ let WorkflowManager = PageView.extend({
   },
   handleReturnToProjectClick: function(e) {
     let self = this
-    if(this.status === 'ready'){
-      this.workflowEditorView.workflowStateButtons.clickSaveHandler(undefined, function (e) {
+    if(this.status === 'ready' || this.status === 'new'){
+      this.workflowEditorView.workflowStateButtons.clickSaveHandler(e, function (e) {
         window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
       })
     }else{

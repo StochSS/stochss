@@ -37,6 +37,7 @@ let workflowSelection = PageView.extend({
     if(this.modelDir.includes(".proj")) {
       this.projectPath = path.dirname(this.modelDir)
       this.projectName = this.projectPath.split('/').pop().split('.')[0]
+      this.workflowGroupName = this.parentPath.split('/').pop().split('.')[0]
     }
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
