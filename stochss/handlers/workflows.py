@@ -274,13 +274,15 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         log.debug("Key identifying the requested plot: %s", plt_key)
         plt_data = body['plt_data']
         log.debug("Title and axis data for the plot: %s", plt_data)
+        plt_species = body['plt_species'] if "plt_species" in body.keys() else None
+        log.debug("Visible species in the plot: %s", plt_species)
         self.set_header('Content-Type', 'application/json')
         try:
             if "None" in plt_data:
-                plt_fig = plot_results(results_path, plt_key)
+                plt_fig = plot_results(results_path, plt_key, plt_species=plt_species)
             else:
-                # Add plot data to the exec cmd if its not "None"
-                plt_fig = plot_results(results_path, plt_key, plt_data)
+                plt_fig = plot_results(results_path, plt_key, plt_data=plt_data,
+                                       plt_species=plt_species)
             log.debug("Plot figure: %s", plt_fig)
             self.write(plt_fig)
         except StochSSAPIError as err:

@@ -95,10 +95,14 @@ def edit_plot_fig(plt_fig, plt_data):
         else:
             plt_fig['layout'][key]['title']['text'] = plt_data[key]
 
-    return plt_fig
+
+def customize_plot_traces(plot, plt_species):
+    for trace in plot['data']:
+        if trace['name'].split()[0] not in plt_species:
+            trace['visible'] = "legendonly"
 
 
-def plot_results(plots_path, plt_key, plt_data=None):
+def plot_results(plots_path, plt_key, plt_data=None, plt_species=None):
     user_dir = "/home/jovyan"
 
     full_path = path.join(user_dir, plots_path)
@@ -107,8 +111,9 @@ def plot_results(plots_path, plt_key, plt_data=None):
 
     if isinstance(plt_fig, str):
         return plt_fig
-    if not plt_data:
-        return json.dumps(plt_fig)
-    plt_fig = edit_plot_fig(plt_fig, plt_data)
+    if plt_data is not None:
+        edit_plot_fig(plt_fig, plt_data)
+    if plt_species is not None:
+        customize_plot_traces(plt_fig, plt_species)
     return json.dumps(plt_fig)
         

@@ -26,7 +26,7 @@ module.exports = View.extend({
   getPlot: function () {
     var self = this;
     var plotArgs = {"title":this.model.title,"xaxis":this.model.xaxis,"yaxis":this.model.yaxis}
-    var data = {"plt_key":this.model.key, "plt_data":plotArgs}
+    var data = {"plt_key":this.model.key, "plt_data":plotArgs, "plt_species":this.model.species}
     var endpoint = path.join(app.getApiPath(), 'workflow/plot-results')+"?path="+this.path+"&data="+JSON.stringify(data);
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode >= 400) {
@@ -39,7 +39,11 @@ module.exports = View.extend({
   plotFigure: function (figure) {
     var self = this;
     var el = this.queryByHook(this.model.key+this.model.stamp);
+    figure['config']['staticPlot'] = true
+    // figure['config']['modeBarButtonsToRemove'] = ["toggleSpikelines", "toImage", "sendDataToCloud", "autoScale2d"]
     Plotly.newPlot(el, figure);
+    el.on('plotly_legendclick', function () {return false})
+    el.on('plotly_legenddoubleclick', function () {return false})
   },
   changeCollapseButtonText: function (e) {
     var source = e.target.dataset.hook;

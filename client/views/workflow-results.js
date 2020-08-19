@@ -1,4 +1,5 @@
 var $ = require('jquery');
+var _ = require('underscore');
 var path = require('path');
 var xhr = require('xhr');
 //support files
@@ -61,6 +62,7 @@ module.exports = View.extend({
     this.ensembleAggragator = "avg";
     this.plots = {}
     this.plotArgs = {}
+    this.plotSpecies = {}
     this.savedPlots = this.parent.settings.resultsSettings.outputs
   },
   render: function () {
@@ -194,6 +196,43 @@ module.exports = View.extend({
         el.disabled = false;
       }
     });
+    el.on('plotly_restyle', function (e) {
+      let hiddenSpecies = el.data.filter(function (trace) {
+        if(trace.visible === "legendonly")
+          return true
+      }).map(trace => trace.name)
+      let hiddenSpeciesCounts = _.countBy(hiddenSpecies, name => name)
+      let names = Object.keys(hiddenSpeciesCounts)
+      let counts = Object.values(hiddenSpeciesCounts)
+      let minCount = Math.min.apply(Math, counts)
+      let nameOfMinCount = names[counts.indexOf(minCount)]
+      let isRemovable = counts.length > 1 ? Boolean(counts.filter(function (count) {
+        if(count === minCount)
+          return true
+      }).length <= 1) : false
+      if(isRemovable) {
+        hiddenSpecies = _.uniq(hiddenSpecies)
+        delete hiddenSpecies[hiddenSpecies.indexOf(nameOfMinCount)]
+      }
+      let speciesList = _.uniq(el.data.filter(function (trace) {
+        if(trace.visible !== "legendonly" && !hiddenSpecies.includes(trace.name) && !(trace.name.includes(" Lower Bound") || trace.name.includes(" Upper Bound"))) {
+          return trace.name
+        }
+      }).map(trace => trace.name))
+      self.plotSpecies[type] = speciesList
+      let plotSaved = Boolean(self.savedPlots.filter(function (plot) {
+        if(plot.key === type && JSON.stringify(plot.species) === JSON.stringify(speciesList))
+          return true
+      }).length > 0)
+      let saveBtn = $("button[data-hook=save-plot]").filter("#"+type)
+      if(plotSaved) {
+        saveBtn.prop('disabled', true)
+        saveBtn.text('Plot Saved to Gallery')
+      }else{
+        saveBtn.prop('disabled', false)
+        saveBtn.text('Save Plot to Gallery')
+      }
+    })
   },
   clickDownloadPNGButton: function (type) {
     var pngButton = $('div[data-hook*='+type+'] a[data-title*="Download plot as a png"]')[0]
@@ -276,7 +315,7 @@ module.exports = View.extend({
       type = this.getPsweepKey()
       species = [this.speciesOfInterest]
     }else{
-      species = this.species.map(function (specie) { return specie.name; });
+      species = this.plotSpecies[type];
     }
     let stamp = this.getTimeStamp()
     var plotInfo = {"key":type, "stamp":stamp, "species":species};
