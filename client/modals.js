@@ -254,6 +254,12 @@ module.exports = {
 
       return templates.message(modalID, title, error)
     },
+    newExperimentSuccessHtml: (message) => {
+      let modalID = "newExperimentSuccessModal"
+      let title = "Success!"
+
+      return templates.message(modalID, title, message)
+    },
     newProjectModelWarningHtml : (message) => {
       let modalID = "newProjectModelWarningModal"
       let title = "Warnings"
@@ -342,13 +348,6 @@ module.exports = {
 
         return templates.message(modalID, title, error)
     },
-    // newProjectWorkflowHtml : (label) => {
-    //     let modalID = "newProjectWorkflowModal"
-    //     let inputID = "input"
-    //     let title = "New Workflow"
-
-    //     return templates.input(modalID, inputID, title, label, "")
-    // },
     newProjectWorkflowHtml : (label, options) => {
         let modalID = "newProjectWorkflowModal"
         let selectID = "select"
@@ -380,11 +379,6 @@ module.exports = {
       let modalID = "addMetaDataModal"
 
       return templates.confirmation(modalID, title)
-    },
-    noExperimentMessageHtml : (title, message) => {
-      let modalID = "noExperimentMessageModal"
-
-      return templates.message(modalID, title, message)
     },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;
