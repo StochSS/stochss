@@ -44,7 +44,7 @@ module.exports = View.extend({
     'click [data-hook=save-plot]' : function (e) {
       var type = e.target.id;
       e.target.disabled = true
-      $("button[data-hook=save-plot]").filter("#"+type).text('Saved Plot to Gallery')
+      $("button[data-hook=save-plot]").filter("#"+type).text('Saved Plot to Project Viewer')
       this.savePlot(type)
     },
     'click [data-hook=download-results-csv]' : 'handlerDownloadResultsCsvClick',
@@ -176,11 +176,13 @@ module.exports = View.extend({
           if(plot.key === data.plt_key)
             return true
         }).length > 0)
-        if(plotSaved) {
-          let saveBtn = $("button[data-hook=save-plot]").filter("#"+type)
+        let saveBtn = $("button[data-hook=save-plot]").filter("#"+type)
+        if(!self.parent.wkflPath.includes('.proj')) {
+          saveBtn.hide()
+        }else if(plotSaved) {
           saveBtn.prop('disabled', true)
-          saveBtn.text('Plot Saved to Gallery')
-        }
+          saveBtn.text('Plot Saved to Project Viewer')
+        } 
       }
     });
   },
