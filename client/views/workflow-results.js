@@ -21,9 +21,7 @@ module.exports = View.extend({
     'click [data-hook=collapse-stddev]' : 'handleCollapseStddevClick',
     'click [data-hook=collapse-trajmean]' : 'handleCollapseTrajmeanClick',
     'click [data-hook=collapse-psweep]' : 'handleCollapsePsweepClick',
-    'click [data-hook=collapse]' : function () {
-      this.changeCollapseButtonText("collapse");
-    },
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
@@ -121,9 +119,14 @@ module.exports = View.extend({
   },
   updateValid: function () {
   },
-  changeCollapseButtonText: function (source) {
-    var text = $(this.queryByHook(source)).text();
-    text === '+' ? $(this.queryByHook(source)).text('-') : $(this.queryByHook(source)).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
@@ -230,8 +233,9 @@ module.exports = View.extend({
   },
   expandContainer: function () {
     $(this.queryByHook('workflow-results')).collapse('show');
-    $(this.queryByHook('collapse')).prop('disabled', false);
-    this.changeCollapseButtonText("collapse")
+    let collapseBtn = $(this.queryByHook('collapse'));
+    collapseBtn.prop('disabled', false)
+    collapseBtn.click()
     if(this.type === "parameterSweep"){
       this.getPlot("psweep")
     }else{
@@ -303,35 +307,35 @@ module.exports = View.extend({
     return parseInt(year+month+day+hour+minutes+seconds)
   },
   handleCollapseStddevrangeClick: function (e) {
-    this.changeCollapseButtonText("collapse-stddevrange");
+    this.changeCollapseButtonText(e)
     let type = "stddevran"
     if(!this.plots[type]){
       this.getPlot(type);
     }
   },
-  handleCollapseTrajectoriesClick: function () {
-    this.changeCollapseButtonText("collapse-trajectories");
+  handleCollapseTrajectoriesClick: function (e) {
+    this.changeCollapseButtonText(e)
     let type = "trajectories"
     if(!this.plots[type]){
       this.getPlot(type);
     }
   },
-  handleCollapseStddevClick: function () {
-    this.changeCollapseButtonText("collapse-stddev");
+  handleCollapseStddevClick: function (e) {
+    this.changeCollapseButtonText(e)
     let type = "stddev"
     if(!this.plots[type]){
       this.getPlot(type);
     }
   },
-  handleCollapseTrajmeanClick: function () {
-    this.changeCollapseButtonText("collapse-trajmean");
+  handleCollapseTrajmeanClick: function (e) {
+    this.changeCollapseButtonText(e)
     let type = "avg"
     if(!this.plots[type]){
       this.getPlot(type);
     }
   },
-  handleCollapsePsweepClick: function () {
-    this.changeCollapseButtonText("collapse-psweep");
+  handleCollapsePsweepClick: function (e) {
+    this.changeCollapseButtonText(e)
     let type = "psweep"
     if(!this.plots[type]){
       this.getPlot(type);

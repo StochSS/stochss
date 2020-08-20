@@ -25,12 +25,18 @@ module.exports = View.extend({
   },
   expandContainer: function () {
     $(this.queryByHook('workflow-status')).collapse('show');
-    $(this.queryByHook('collapse')).prop('disabled', false);
-    this.changeCollapseButtonText()
+    let collapseBtn = $(this.queryByHook('collapse'))
+    collapseBtn.prop('disabled', false);
+    collapseBtn.trigger('click')
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse')).text();
-    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
   getFormattedDate: function (date) {
     var months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];

@@ -78,8 +78,13 @@ module.exports = View.extend({
     this.model.useValuesFromTriggerTime = e.target.dataset.name === "trigger";
   },
   changeCollapseButtonText: function (e) {
-    var text = $(this.queryByHook('advanced-event-button')).text();
-    text === '+' ? $(this.queryByHook('advanced-event-button')).text('-') : $(this.queryByHook('advanced-event-button')).text('+');
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
   subviews: {
     inputDelay: {

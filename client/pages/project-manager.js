@@ -377,9 +377,13 @@ let ProjectManager = PageView.extend({
     });
   },
   changeCollapseButtonText: function (e) {
-    let hook = e.target.dataset.hook
-    var text = $(this.queryByHook(hook)).text();
-    text === '+' ? $(this.queryByHook(hook)).text('-') : $(this.queryByHook(hook)).text('+');
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 });
 

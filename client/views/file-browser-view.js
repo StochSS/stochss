@@ -1321,8 +1321,13 @@ module.exports = View.extend({
       });
     })
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-browse-files')).text();
-    text === '+' ? $(this.queryByHook('collapse-browse-files')).text('-') : $(this.queryByHook('collapse-browse-files')).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 });
