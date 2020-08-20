@@ -18,7 +18,7 @@ let templates = {
                         </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
-                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
                       </div>
                     </div>
                   </div>
@@ -41,7 +41,7 @@ let templates = {
                         </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
-                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
                       </div>
                     </div>
                   </div>
