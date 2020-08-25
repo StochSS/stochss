@@ -34,9 +34,6 @@ let workflowSelection = PageView.extend({
     }else{
       this.parentPath = path.dirname(this.modelDir)
     }
-    if(urlParams.has('experiments')){
-      this.experiments = urlParams.get('experiments')
-    }
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -74,7 +71,8 @@ let workflowSelection = PageView.extend({
     this.toNotebook(type);
   },
   toNotebook: function (type) {
-    var endpoint = path.join(app.getApiPath(), "/workflow/notebook")+"?type="+type+"&path="+this.modelDir
+    let queryString = "?type="+type+"&path="+this.modelDir+"&parentPath="+this.parentPath
+    var endpoint = path.join(app.getApiPath(), "/workflow/notebook")+queryString
     xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400){
         var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
@@ -89,7 +87,7 @@ let workflowSelection = PageView.extend({
     this.launchStochssWorkflow("parameterSweep")
   },
   launchStochssWorkflow: function (type) {
-    let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath + "&experiments=" + this.experiments
+    let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath
     let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
     window.location.href = endpoint
   }

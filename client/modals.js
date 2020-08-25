@@ -200,11 +200,11 @@ module.exports = {
 
       return templates.input(modalID, inputID, title, label, value)
     },
-    newExperimentModalHtml : () => {
-      let modalID = "newExperimentModal"
-      let inputID = "experimentNameInput"
-      let title = "New Experiment"
-      let label = "Experiment Name"
+    newWorkflowGroupModalHtml : () => {
+      let modalID = "newWorkflowGroupModal"
+      let inputID = "workflowGroupNameInput"
+      let title = "New Workflow Group"
+      let label = "Workflow Group Name"
       let value = ""
 
       return templates.input(modalID, inputID, title, label, value)
@@ -221,7 +221,7 @@ module.exports = {
     addExistingWorkflowToProjectHtml : () => {
       let modalID = "newProjectWorkflowModal"
       let inputID = "workflowPathInput"
-      let title = "Add Existing Workflow to Experiment"
+      let title = "Add Existing Workflow to Workflow Group"
       let label = "Path to the workflow"
       let value = ""
 
@@ -249,13 +249,13 @@ module.exports = {
 
       return templates.message(modalID, title, message)
     },
-    newProjectOrExperimentErrorHtml : (title, error) => {
-      let modalID = "newProjectOrExperimentModal"
+    newProjectOrWorkflowGroupErrorHtml : (title, error) => {
+      let modalID = "newProjectOrWorkflowGroupModal"
 
       return templates.message(modalID, title, error)
     },
-    newExperimentSuccessHtml: (message) => {
-      let modalID = "newExperimentSuccessModal"
+    newWorkflowGroupSuccessHtml: (message) => {
+      let modalID = "newWorkflowGroupSuccessModal"
       let title = "Success!"
 
       return templates.message(modalID, title, message)
@@ -379,6 +379,16 @@ module.exports = {
       let modalID = "addMetaDataModal"
 
       return templates.confirmation(modalID, title)
+    },
+    noModelsMessageHtml: (title, message) => {
+      let modalID = "noModelsMessageModal"
+
+      return templates.message(modalID, title, message)
+    },
+    noWorkflowGroupMessageHtml: (title, message) => {
+      let modalID = "noWorkflowGroupMessageModal"
+
+      return templates.message(modalID, title, message)
     },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;

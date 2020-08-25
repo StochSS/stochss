@@ -20,14 +20,15 @@ from .generate_notebook_cells import generate_mdl_inf_summary_stats_cell, \
                                      generate_mdl_inf_import_cell, \
                                      get_algorithm
 
-def convert_to_mdl_inference_nb(model_path, name=None, settings=None):
+def convert_to_mdl_inference_nb(model_path, name=None, settings=None, dest_path=None):
     user_dir = "/home/jovyan"
 
     full_path = path.join(user_dir, model_path)
     file = full_path.split('/').pop()
     if name is None:
         name = file.split('.')[0].replace('-', '_')
-    dest_path = full_path.split(file)[0]
+    if dest_path is None:
+        dest_path = full_path.split(file)[0]
 
     # Collect .mdl Data
     try:

@@ -6,7 +6,8 @@ module.exports = State.extend({
   props: {
     path: 'string',
     annotation: 'string',
-    outputs: 'object'
+    outputs: 'object',
+    type: 'string'
   },
   session: {
     name: 'string',

@@ -66,7 +66,7 @@ let projectBrowser = PageView.extend({
           if(response.statusCode < 400) {
             window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body.path
           }else{
-            let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
           }
         })
       }

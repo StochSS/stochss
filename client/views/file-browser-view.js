@@ -18,7 +18,7 @@ module.exports = View.extend({
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
-    'click [data-hook=browser-new-experiment]' : 'handleCreateExperimentClick',
+    'click [data-hook=browser-new-workflow-group]' : 'handleCreateWorkflowGroupClick',
     'click [data-hook=browser-new-model]' : 'handleCreateModelClick',
     'click [data-hook=browser-existing-model]' : 'handleAddExistingModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
@@ -60,7 +60,7 @@ module.exports = View.extend({
             !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && node.type === "experiment" && 
+          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && node.type === "workflow-group" && 
             !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
             return false
           }
@@ -69,11 +69,17 @@ module.exports = View.extend({
             return false
           }
           if(op === 'move_node' && more && more.ref && more.ref.type && node.original._path.includes("trash") && 
-            ((node.type === "workflow" && more.ref.type !== 'experiment') || 
-            ((node.type === "nonspatial" || node.type === "spatial" || node.type === "experiment") && more.ref.type !== 'root'))){
+            ((node.type === "workflow" && more.ref.type !== 'workflow-group') || 
+            ((node.type === "nonspatial" || node.type === "spatial" || node.type === "workflow-group") && more.ref.type !== 'root'))){
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.type && node.type !== "workflow" && !(more.ref.type == 'folder' || more.ref.type == 'root')){
+          if(op === 'move_node' && more && more.ref && more.ref.type && !(node.type === "workflow" || node.type === "notebook") && !(more.ref.type == 'folder' || more.ref.type == 'root')){
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && node.type === "notebook" && !(more.ref.type == 'folder' || more.ref.type == 'root' || more.ref.type == 'workflow-group')) {
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && node.original._path.includes("trash") && more.ref.original.text == 'trash') {
             return false
           }
           if(op === 'move_node' && more && more.ref && more.ref.type && (more.ref.type === 'folder' || more.ref.type === 'root')){
@@ -135,7 +141,7 @@ module.exports = View.extend({
         'spatial' : {"icon": "jstree-icon jstree-file"},
         'nonspatial' : {"icon": "jstree-icon jstree-file"},
         'project' : {"icon": "jstree-icon jstree-file"},
-        'experiment' : {"icon": "jstree-icon jstree-folder"},
+        'workflow-group' : {"icon": "jstree-icon jstree-folder"},
         'workflow' : {"icon": "jstree-icon jstree-file"},
         'notebook' : {"icon": "jstree-icon jstree-file"},
         'mesh' : {"icon": "jstree-icon jstree-file"},
@@ -160,7 +166,7 @@ module.exports = View.extend({
   updateParent: function (type, trash = false) {
     if(trash){
       this.parent.update("all")
-    }else if(type === "nonspatial" || type === "workflow" || type === "experiment") {
+    }else if(type === "nonspatial" || type === "workflow" || type === "workflow-group") {
       this.parent.update("file-browser")
     }
   },
@@ -314,7 +320,7 @@ module.exports = View.extend({
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree-view').jstree().get_node(parentID);
-          if(node.type === "root"){
+          if(node.type === "root" || type === "wkfl_model"){
             self.refreshJSTree()
           }else{          
             $('#models-jstree-view').jstree().refresh_node(node);
@@ -407,12 +413,7 @@ module.exports = View.extend({
   },
   toNotebook: function (o, type) {
     let self = this
-    var endpoint = ""
-    if(type === "model"){
-      endpoint = path.join(app.getApiPath(), "model/to-notebook")+"?path="+o.original._path
-    }else{
-      endpoint = path.join(app.getApiPath(), "workflow/notebook")+"?type=none&path="+o.original._path
-    }
+    var endpoint = path.join(app.getApiPath(), "workflow/notebook")+"?type=none&path="+o.original._path
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400){
         var node = $('#models-jstree-view').jstree().get_node(o.parent)
@@ -549,14 +550,14 @@ module.exports = View.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.location.href = endpoint
   },
-  newExperiment: function (o) {
+  newWorkflowGroup: function (o) {
     var self = this
-    if(document.querySelector("#newExperimentModal")) {
-      document.querySelector("#newExperimentModal").remove()
+    if(document.querySelector("#newWorkflowGroupModal")) {
+      document.querySelector("#newWorkflowGroupModal").remove()
     }
-    let modal = $(modals.newExperimentModalHtml()).modal();
-    let okBtn = document.querySelector('#newExperimentModal .ok-model-btn');
-    let input = document.querySelector('#newExperimentModal #experimentNameInput');
+    let modal = $(modals.newWorkflowGroupModalHtml()).modal();
+    let okBtn = document.querySelector('#newWorkflowGroupModal .ok-model-btn');
+    let input = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInput');
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
         event.preventDefault();
@@ -570,9 +571,9 @@ module.exports = View.extend({
         if(o && o.original && o.original._path !== "/") {
           parentPath = o.original._path
         }
-        var experimentName = input.value.trim() + ".exp"
-        var experimentPath = path.join(parentPath, experimentName)
-        let endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
+        var workflowGroupName = input.value.trim() + ".wkgp"
+        var workflowGroupPath = path.join(parentPath, workflowGroupName)
+        let endpoint = path.join(app.getApiPath(), "project/new-workflow-group")+"?path="+workflowGroupPath
         xhr({uri: endpoint,json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
             if(o){//directory was created with context menu option
@@ -585,9 +586,9 @@ module.exports = View.extend({
             }else{//directory was created with create directory button
               self.refreshJSTree()
             }
-            self.updateParent('experiment')
+            self.updateParent('workflow-group')
           }else{
-            let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
           }
         })
       }
@@ -628,17 +629,17 @@ module.exports = View.extend({
     });
   },
   addNewWorkflow: function (o) {
-    if(o.type !== "experiment" && this.parent.model.experiments.length <= 0) {
-      let title = "No Experiments Found"
-      let message = "You need to create an experiment before you can create a new workflow."
-      let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
-    }else if(o.type === "experiment" && this.parent.model.models.length <= 0) {
+    if(o.type !== "workflow-group" && this.parent.model.workflowGroups.length <= 0) {
+      let title = "No Workflow Groups Found"
+      let message = "You need to create an workflow group before you can create a new workflow."
+      let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
+    }else if(o.type === "workflow-group" && this.parent.model.models.length <= 0) {
       let title = "No Models Found"
       let message = "You need to add a model before you can create a new workflow."
-      let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
-    }else if(o.type !== "experiment" && this.parent.model.experiments.length == 1) {
-      let expName = this.parent.model.experiments.models[0].name
-      let parentPath = path.join(path.dirname(o.original._path), expName + ".exp")
+      let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
+    }else if(o.type !== "workflow-group" && this.parent.model.workflowGroups.length == 1) {
+      let expName = this.parent.model.workflowGroups.models[0].name
+      let parentPath = path.join(path.dirname(o.original._path), expName + ".wkgp")
       let modelPath = o.original._path
       let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
       window.location.href = endpoint
@@ -647,16 +648,16 @@ module.exports = View.extend({
       if(document.querySelector('#newProjectWorkflowModal')){
         document.querySelector('#newProjectWorkflowModal').remove()
       }
-      let options = o.type === "experiment" ?
+      let options = o.type === "workflow-group" ?
                     this.parent.model.models.map(function (model) {return model.name}) :
-                    this.parent.model.experiments.map(function (experiment) {return experiment.name})
-      let label = o.type === "experiment" ? "Model file name: " : "Experiment file name: "
+                    this.parent.model.workflowGroups.map(function (workflowGroup) {return workflowGroup.name})
+      let label = o.type === "workflow-group" ? "Model file name: " : "Workflow Group file name: "
       let modal = $(modals.newProjectWorkflowHtml(label, options)).modal()
       let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
       let select = document.querySelector('#newProjectWorkflowModal #select')
       okBtn.addEventListener("click", function (e) {
-          let parentPath = o.type === "experiment" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".exp")
-          let modelPath = o.type === "experiment" ? path.join(path.dirname(o.original._path), select.value + ".mdl") : o.original._path
+          let parentPath = o.type === "workflow-group" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".wkgp")
+          let modelPath = o.type === "workflow-group" ? path.join(path.dirname(o.original._path), select.value + ".mdl") : o.original._path
           let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
           window.location.href = endpoint
       });
@@ -754,8 +755,8 @@ module.exports = View.extend({
   handleCreateDirectoryClick: function (e) {
     this.newModelOrDirectory(undefined, false, false);
   },
-  handleCreateExperimentClick: function (e) {
-    this.newExperiment(undefined)
+  handleCreateWorkflowGroupClick: function (e) {
+    this.newWorkflowGroup(undefined)
   },
   handleCreateModelClick: function (e) {
     let isSpatial = false
@@ -815,7 +816,7 @@ module.exports = View.extend({
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       let nodeType = o.original.type
-      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "experiment"]
+      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "workflow-group"]
       let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
@@ -843,7 +844,7 @@ module.exports = View.extend({
         },
         "Duplicate" : {
           "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
-          "_disabled" : false,
+          "_disabled" : (nodeType === "project" || nodeType === "workflow-group"),
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
@@ -852,7 +853,7 @@ module.exports = View.extend({
         },
         "Delete" : {
           "label" : "Delete",
-          "_disabled" : o.type === 'experiment' && self.parent.model.experiments.length === 1 ? true : false,
+          "_disabled" : o.type === 'workflow-group' && self.parent.model.workflowGroups.length === 1 ? true : false,
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
@@ -904,13 +905,13 @@ module.exports = View.extend({
             }
           }
         },
-        "New_Experiment" : {
-          "label" : "New Experiment",
+        "New_Workflow_Group" : {
+          "label" : "New Workflow Group",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
-            self.newExperiment(o)
+            self.newWorkflowGroup(o)
           }
         }
       }
@@ -931,7 +932,7 @@ module.exports = View.extend({
           }
         },
         "Add_model" : project.Add_Model,
-        "New_Experiment" : project.New_Experiment,
+        "New_Workflow_Group" : project.New_Workflow_Group,
         "New_Directory" : {
           "label" : "New Directory",
           "_disabled" : false,
@@ -1069,15 +1070,6 @@ module.exports = View.extend({
                 self.toSpatial(o)
               }
             },
-            "Convert to Notebook" : {
-              "label" : "To Notebook",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toNotebook(o, "model")
-              }
-            },
             "Convert to SBML" : {
               "label" : "To SBML Model",
               "_disabled" : false,
@@ -1116,7 +1108,7 @@ module.exports = View.extend({
           }
         }
       }
-      let experiment = {
+      let workflowGroup = {
         "Add Workflow" : {
           "label" : "Add Workflow",
           "_disabled" : false,
@@ -1143,17 +1135,8 @@ module.exports = View.extend({
             }
           }
         },
-        "convertToCombine" : {
-          "label" : "Convert to Combine",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.handleExportCombineClick(o, false)
-          }
-        },
         "downloadAsCombine" : {
-          "label" : "Download as Combine",
+          "label" : "Download as COMBINE",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
@@ -1226,17 +1209,8 @@ module.exports = View.extend({
             self.handleExportWorkflowClick(o)
           }
         },
-        "convertToCombine" : {
-          "label" : "Convert to Combine",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.handleExportCombineClick(o, false)
-          }
-        },
         "downloadAsCombine" : {
-          "label" : "Download as Combine",
+          "label" : "Download as COMBINE",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
@@ -1283,8 +1257,8 @@ module.exports = View.extend({
       if (o.type === 'project'){
         return $.extend(open, project, common)
       }
-      if (o.type === 'experiment') {
-        return $.extend(experiment, common)
+      if (o.type === 'workflow-group') {
+        return $.extend(workflowGroup, common)
       }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, common)

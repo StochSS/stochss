@@ -3,7 +3,7 @@ var $ = require('jquery');
 //Views
 var View = require('ampersand-view');
 var ModelsCollectionView = require('./models-viewer');
-var ExperimentsCollectionView = require('./experiments-viewer');
+var WorkflowGroupsCollectionView = require('./workflow-groups-viewer');
 //templates
 var template = require('../templates/includes/projectViewer.pug');
 
@@ -19,7 +19,7 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments)
     this.renderModelsCollection()
-    this.renderExperimentsCollection()
+    this.renderWorkflowGroupsCollection()
   },
   renderModelsCollection: function () {
     if(this.modelsCollectionView) {
@@ -30,14 +30,14 @@ module.exports = View.extend({
     });
     this.registerRenderSubview(this.modelsCollectionView, "models-collection-container")
   },
-  renderExperimentsCollection: function () {
-    if(this.experimentsCollectionView) {
-      this.experimentsCollectionView.remove()
+  renderWorkflowGroupsCollection: function () {
+    if(this.workflowGroupsCollectionView) {
+      this.workflowGroupsCollectionView.remove()
     }
-    this.experimentsCollectionView = new ExperimentsCollectionView({
-      collection: this.model.experiments
+    this.workflowGroupsCollectionView = new WorkflowGroupsCollectionView({
+      collection: this.model.workflowGroups
     });
-    this.registerRenderSubview(this.experimentsCollectionView, "experiments-collection-container")
+    this.registerRenderSubview(this.workflowGroupsCollectionView, "workflow-groups-collection-container")
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);

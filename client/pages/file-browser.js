@@ -100,7 +100,7 @@ let FileBrowser = PageView.extend({
         'spatial' : {"icon": "jstree-icon jstree-file"},
         'nonspatial' : {"icon": "jstree-icon jstree-file"},
         'project' : {"icon": "jstree-icon jstree-file"},
-        'experiment' : {"icon": "jstree-icon jstree-file"},
+        'workflow-group' : {"icon": "jstree-icon jstree-file"},
         'workflow' : {"icon": "jstree-icon jstree-file"},
         'notebook' : {"icon": "jstree-icon jstree-file"},
         'mesh' : {"icon": "jstree-icon jstree-file"},
@@ -508,13 +508,13 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.location.href = endpoint
   },
-  newProjectOrExperiment: function (o, isProject) {
+  newProjectOrWorkflowGroup: function (o, isProject) {
     var self = this
     if(document.querySelector("#newProjectModal")) {
       document.querySelector("#newProjectModal").remove()
     }
-    if(document.querySelector("#newExperimentModal")) {
-      document.querySelector("#newExperimentModal").remove()
+    if(document.querySelector("#newWorkflowGroupModal")) {
+      document.querySelector("#newWorkflowGroupModal").remove()
     }
     var modal = ""
     var okBtn = ""
@@ -524,9 +524,9 @@ let FileBrowser = PageView.extend({
       okBtn = document.querySelector('#newProjectModal .ok-model-btn');
       input = document.querySelector('#newProjectModal #projectNameInput');
     }else{
-      modal = $(modals.newExperimentModalHtml()).modal();
-      okBtn = document.querySelector('#newExperimentModal .ok-model-btn');
-      input = document.querySelector('#newExperimentModal #experimentNameInput');
+      modal = $(modals.newWorkflowGroupModalHtml()).modal();
+      okBtn = document.querySelector('#newWorkflowGroupModal .ok-model-btn');
+      input = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInput');
     }
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
@@ -546,9 +546,9 @@ let FileBrowser = PageView.extend({
           var projectPath = path.join(parentPath, projectName)
           endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
         }else{
-          var experimentName = input.value.trim() + ".exp"
-          var experimentPath = path.join(parentPath, experimentName)
-          endpoint = path.join(app.getApiPath(), "project/new-experiment")+"?path="+experimentPath
+          var workflowGroupName = input.value.trim() + ".wkgp"
+          var workflowGroupPath = path.join(parentPath, workflowGroupName)
+          endpoint = path.join(app.getApiPath(), "project/new-workflow-group")+"?path="+workflowGroupPath
         }
         xhr({uri: endpoint,json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
@@ -564,10 +564,10 @@ let FileBrowser = PageView.extend({
                 self.refreshJSTree()
               }
             }else{
-              let successModal = $(modals.newExperimentSuccessHtml(body.message)).modal()
+              let successModal = $(modals.newWorkflowGroupSuccessHtml(body.message)).modal()
             }
           }else{
-            let errorModel = $(modals.newProjectOrExperimentErrorHtml(body.Reason, body.Message)).modal()
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
           }
           modal.modal('hide')
         })
@@ -666,7 +666,7 @@ let FileBrowser = PageView.extend({
     this.newModelOrDirectory(undefined, false, false);
   },
   handleCreateProjectClick: function (e) {
-    this.newProjectOrExperiment(undefined, true)
+    this.newProjectOrWorkflowGroup(undefined, true)
   },
   handleCreateModelClick: function (e) {
     let isSpatial = false
@@ -693,7 +693,7 @@ let FileBrowser = PageView.extend({
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       let nodeType = o.original.type
-      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "experiment"]
+      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "workflow-group"]
       let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
@@ -769,7 +769,7 @@ let FileBrowser = PageView.extend({
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
-            self.newProjectOrExperiment(o, true)
+            self.newProjectOrWorkflowGroup(o, true)
           }
         },
         "New_model" : {
@@ -967,13 +967,13 @@ let FileBrowser = PageView.extend({
             }
           }
         },
-        "New Experiment" : {
-          "label" : "New Experiment",
+        "New Workflow Group" : {
+          "label" : "New Workflow Group",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
-            self.newProjectOrExperiment(o, false)
+            self.newProjectOrWorkflowGroup(o, false)
           }
         }
       }

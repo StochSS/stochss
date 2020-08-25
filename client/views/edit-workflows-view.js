@@ -13,8 +13,8 @@ var template = require('../templates/includes/editWorkflowsView.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=project-experiment-new-workflow]' : 'handleNewWorkflowClick',
-    'click [data-hook=project-experiment-add-workflow]' : 'handleAddWorkflowClick',
+    'click [data-hook=project-workflow-group-new-workflow]' : 'handleNewWorkflowClick',
+    'click [data-hook=project-workflow-group-add-workflow]' : 'handleAddWorkflowClick',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments)
@@ -49,7 +49,7 @@ module.exports = View.extend({
       okBtn.addEventListener('click', function (e) {
         let mdlFile = select.value.endsWith('.mdl') ? select.value : select.value + ".mdl"
         let mdlPath =  path.join(self.parent.parent.parent.projectPath, mdlFile)
-        let parentPath = path.join(self.parent.parent.parent.projectPath, self.parent.model.name)+".exp"
+        let parentPath = path.join(self.parent.parent.parent.projectPath, self.parent.model.name)+".wkgp"
         let queryString = "?path="+mdlPath+"&parentPath="+parentPath
         let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
         modal.modal('hide')
@@ -58,7 +58,7 @@ module.exports = View.extend({
     }else{
       let title = "No Models Found"
       let message = "You need to add a model before you can create a new workflow."
-      let modal = $(modals.noExperimentMessageHtml(title, message)).modal()
+      let modal = $(modals.noModelsMessageHtml(title, message)).modal()
     }
   },
   handleAddWorkflowClick: function (e) {
@@ -77,12 +77,12 @@ module.exports = View.extend({
     });
     okBtn.addEventListener('click', function (e) {
       if(Boolean(input.value)) {
-        let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".exp"
+        let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".wkgp"
         let queryString = "?path="+expPath+"&wkflPath="+input.value
         let endpoint = path.join(app.getApiPath(), "project/add-existing-workflow")+queryString
         xhr({uri: endpoint, json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
-            self.parent.parent.update("experiment-editor")
+            self.parent.parent.update("workflow-group-editor")
             let successModal = $(modals.addExistingWorkflowToProjectSuccessHtml(body.message)).modal()
           }else{
             let errorModal = $(modals.addExistingWorkflowToProjectErrorHtml(body.Reason, body.Message)).modal()

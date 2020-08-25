@@ -1,8 +1,8 @@
 //views
 var View = require('ampersand-view');
-var EditExperimentView = require('./edit-experiment-view');
+var EditWorkflowGroupView = require('./edit-workflow-group-view');
 //templates
-var template = require('../templates/includes/editExperimentsView.pug');
+var template = require('../templates/includes/editWorkflowGroupsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -12,6 +12,6 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(this.collection, EditExperimentView, this.queryByHook("project-experiments-list"))
+    this.renderCollection(this.collection, EditWorkflowGroupView, this.queryByHook("project-workflow-groups-list"))
   }
 });
