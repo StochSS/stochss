@@ -467,14 +467,9 @@ def get_models(full_path, name):
         print("{0}\n{1}".format(error, traceback.format_exc()))
         log.critical("Failed to find the model file: {0}".format(error))
 
-    try:
-        _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
-        gillespy2_model = _model.model
-    except Exception as error:
-        print("{0}\n{1}".format(error, traceback.format_exc()))
-        log.error("{0}".format(error))
-        gillespy2_model = None
-
+    _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
+    gillespy2_model = _model.model
+    
     return gillespy2_model, stochss_model
 
 
@@ -694,9 +689,9 @@ if __name__ == "__main__":
             if 'GillesPy2 simulation exceeded timeout.' in logs:
                 resp['timeout'] = True
         except ModelError as error:
-            resp['errors'] = "{0}\n{1}".format(error, traceback.format_exc())
+            resp['errors'] = "{0}".format(error)
         except SimulationError as error:
-            resp['errors'] = "{0}\n{1}".format(error, traceback.format_exc())
+            resp['errors'] = "{0}".format(error)
         with open(outfile, "w") as fd:
             json.dump(resp, fd)
         open(outfile + ".done", "w").close()
