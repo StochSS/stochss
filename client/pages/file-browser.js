@@ -90,6 +90,7 @@ let FileBrowser = PageView.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
+                $('#models-jstree').jstree().refresh_node(node);
               }else{
                 body = JSON.parse(body)
                 $('#models-jstree').jstree().refresh()
