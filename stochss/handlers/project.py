@@ -209,6 +209,7 @@ class NewProjectAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: %s", path)
@@ -226,6 +227,7 @@ class NewProjectAPIHandler(APIHandler):
                      "Message":"Could not create your project: {0}".format(err)}
             log.error("Exception Information: %s", error)
             self.write(error)
+        log.setLevel(logging.WARNING)
         self.finish()
 
 

@@ -2,6 +2,7 @@
 import json
 import nbformat
 import traceback
+import string
 from nbformat import v4 as nbf
 from os import path
 from .rename import get_unique_file_name
@@ -14,13 +15,29 @@ from .generate_notebook_cells import generate_imports_cell, generate_model_cell,
 # imports for parameter sweep workflow
 from .generate_notebook_cells import generate_feature_extraction_cell, generate_mean_std_aggregate_cell, generate_1D_parameter_sweep_class_cell, generate_1D_psweep_config_cell, generate_parameter_sweep_run_cell
 
+
+def get_class_name(name):
+    leading_char = name[0]
+    if leading_char in string.digits or leading_char in string.punctuation:
+        name = "M{}".format(name)
+    elif leading_char in string.ascii_lowercase:
+        name = name.replace(leading_char, leading_char.upper(), 1)
+
+    for char in string.punctuation:
+        if char in name:
+            name = name.replace(char, "")
+
+    return name
+
+
 def convert_to_1d_psweep_nb(_model_path, name=None, settings=None, dest_path=None):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     if name is None:
-        name = file.split('.')[0].replace('-', '_')
+        name = file.split('.')[0]
+    class_name = get_class_name(name)
     if dest_path is None:
         dest_path = model_path.split(file)[0]
     
@@ -51,16 +68,16 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None, dest_path=Non
         if settings is None:
             import_cell = generate_imports_cell(json_data, algorithm, solv_name)
             config_cell = generate_configure_simulation_cell(json_data, algorithm, solv_name, is_psweep=True)
-            psweep_config_cell = generate_1D_psweep_config_cell(json_data, name)
+            psweep_config_cell = generate_1D_psweep_config_cell(json_data, class_name)
         else:
             import_cell = generate_imports_cell(json_data, algorithm, solv_name, settings=settings['simulationSettings'])
             config_cell = generate_configure_simulation_cell(json_data, algorithm, solv_name, is_psweep=True, settings=settings['simulationSettings'])
-            psweep_config_cell = generate_1D_psweep_config_cell(json_data, name, settings=settings)
+            psweep_config_cell = generate_1D_psweep_config_cell(json_data, class_name, settings=settings)
         cells.append(nbf.new_code_cell(import_cell))
         # Create Model Cell
-        cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
+        cells.append(nbf.new_code_cell(generate_model_cell(json_data, class_name)))
         # Instantiate Model Cell
-        cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        cells.append(nbf.new_code_cell('model = {0}()'.format(class_name)))
         if solv_name == "VariableSSACSolver":
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = model.get_best_solver()\nsolver = solver(model=model)'))

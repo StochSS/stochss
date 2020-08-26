@@ -53,6 +53,13 @@ module.exports = View.extend({
       'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
       'core': {'multiple' : false, 'animation': 0,
         'check_callback': function (op, node, par, pos, more) {
+          if(op === "rename_node" && self.validateName(pos, true) !== ""){
+            document.querySelector("#renameSpecialCharError").style.display = "block"
+            setTimeout(function () {
+              document.querySelector("#renameSpecialCharError").style.display = "none"
+            }, 5000)
+            return false
+          }
           if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
             return false
           }
@@ -550,6 +557,22 @@ module.exports = View.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.open(endpoint)
   },
+  validateName(input, rename = false) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    if(rename) {
+      invalidChars += "/"
+    }
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
+  },
   newWorkflowGroup: function (o) {
     var self = this
     if(document.querySelector("#newWorkflowGroupModal")) {
@@ -563,6 +586,14 @@ module.exports = View.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
@@ -610,6 +641,14 @@ module.exports = View.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
@@ -677,6 +716,14 @@ module.exports = View.extend({
         okBtn.click();
       }
     });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
         let queryString = "?path="+o.original._path+"&wkflPath="+input.value.trim()
@@ -706,6 +753,14 @@ module.exports = View.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {

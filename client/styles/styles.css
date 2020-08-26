@@ -64,6 +64,7 @@ a.active-link:not([href]):not([tabindex]) {
 a.active-link:not([href]):not([tabindex]):hover {
   color: #0056b3;
   text-decoration: underline;
+  cursor: pointer;
 }
 
 a.active-link:not([href]):not([tabindex]):focus {
@@ -89,6 +90,18 @@ a.disabled {
 
 .name {
   width: 8rem;
+}
+
+.invalid-feedback.wkfl-name {
+  margin-top: 0;
+  margin-left: 8rem;
+  margin-bottom: 1rem;
+}
+
+.invalid-feedback.mdl-path {
+  margin-top: 0;
+  margin-left: 6rem;
+  margin-bottom: 1rem;
 }
 
 button.name {

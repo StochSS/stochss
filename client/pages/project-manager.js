@@ -269,12 +269,33 @@ let ProjectManager = PageView.extend({
         }
       }
     });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
         event.preventDefault();
         okBtn.click();
       }
     });
+  },
+  validateName(input) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    let invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
   },
   addNewWorkflowGroup: function (cb) {
     let self = this
@@ -289,6 +310,14 @@ let ProjectManager = PageView.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
@@ -323,6 +352,14 @@ let ProjectManager = PageView.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {

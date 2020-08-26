@@ -3,6 +3,7 @@ import json
 from os import path
 from json.decoder import JSONDecodeError
 import traceback
+import string
 import nbformat
 from nbformat import v4 as nbf
 from .rename import get_unique_file_name
@@ -20,13 +21,29 @@ from .generate_notebook_cells import generate_mdl_inf_summary_stats_cell, \
                                      generate_mdl_inf_import_cell, \
                                      get_algorithm
 
+
+def get_class_name(name):
+    leading_char = name[0]
+    if leading_char in string.digits or leading_char in string.punctuation:
+        name = "M{}".format(name)
+    elif leading_char in string.ascii_lowercase:
+        name = name.replace(leading_char, leading_char.upper(), 1)
+
+    for char in string.punctuation:
+        if char in name:
+            name = name.replace(char, "")
+
+    return name
+
+
 def convert_to_mdl_inference_nb(model_path, name=None, settings=None, dest_path=None):
     user_dir = "/home/jovyan"
 
     full_path = path.join(user_dir, model_path)
     file = full_path.split('/').pop()
     if name is None:
-        name = file.split('.')[0].replace('-', '_')
+        name = file.split('.')[0]
+    class_name = get_class_name(name)
     if dest_path is None:
         dest_path = full_path.split(file)[0]
 
@@ -69,9 +86,9 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None, dest_path=
                                                              settings=settings['simulationSettings'])
         cells.append(nbf.new_code_cell(import_cell))
         # Create Model Cell
-        cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
+        cells.append(nbf.new_code_cell(generate_model_cell(json_data, class_name)))
         # Instantiate Model Cell
-        cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        cells.append(nbf.new_code_cell('model = {0}()'.format(class_name)))
         if settings is not None and not settings['isAutomatic'] and solv_name == "SSACSolver":
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))

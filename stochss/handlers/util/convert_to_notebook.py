@@ -2,6 +2,7 @@
 import json
 import nbformat
 import traceback
+import string
 
 from os import path
 from nbformat import v4 as nbf
@@ -13,13 +14,28 @@ from .generate_notebook_cells import generate_imports_cell, generate_model_cell,
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
+def get_class_name(name):
+    leading_char = name[0]
+    if leading_char in string.digits or leading_char in string.punctuation:
+        name = "M{}".format(name)
+    elif leading_char in string.ascii_lowercase:
+        name = name.replace(leading_char, leading_char.upper(), 1)
+
+    for char in string.punctuation:
+        if char in name:
+            name = name.replace(char, "")
+
+    return name
+
+
 def convert_to_notebook(_model_path, name=None, settings=None, dest_path=None):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     if name is None:
-        name = file.split('.')[0].replace('-', '_')
+        name = file.split('.')[0]
+    class_name = get_class_name(name)
     if dest_path is None:
         dest_path = model_path.split(file)[0]
     
@@ -55,9 +71,9 @@ def convert_to_notebook(_model_path, name=None, settings=None, dest_path=None):
         # Create imports cell
         cells.append(nbf.new_code_cell(import_cell))
         # Create Model Cell
-        cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
+        cells.append(nbf.new_code_cell(generate_model_cell(json_data, class_name)))
         # Instantiate Model Cell
-        cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        cells.append(nbf.new_code_cell('model = {0}()'.format(class_name)))
         if settings is not None and not settings['simulationSettings']['isAutomatic'] and solv_name == "SSACSolver":
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))

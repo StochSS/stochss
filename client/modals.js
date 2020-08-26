@@ -15,7 +15,10 @@ let templates = {
                       <div class="modal-body">
                         <label for=${inputID}>${label}</label>
                         <input type="text" id=${inputID} name=${inputID} size="30" autofocus value="${value}">
-                        </div>
+                        <li class="invalid-feedback" id="${inputID}SpecCharError">Names can only include the following characters: 
+                                                                                  (0-9), (a-z), (A-Z) and (., -, _, (, or ))</li>
+                        <li class="invalid-feedback" id="${inputID}EndCharError">Names cannot end with a '/'</li>
+                      </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
                         <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
