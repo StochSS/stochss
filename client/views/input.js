@@ -14,16 +14,26 @@ module.exports = AmpersandInputView.extend({
     AmpersandInputView.prototype.initialize.apply(this, arguments);
   },
   render: function () {
-    if(this.label)
+    if(this.label) {
       this.template = [
         '<label>',
             '<span data-hook="label"></span>',
             '<input class="form-input labeled">',
-            '<div data-hook="message-container" class="message message-below message-error">',
+            '<div data-hook="message-container" class="message message-below message-error text-danger">',
                 '<p data-hook="message-text"></p>',
             '</div>',
         '</label>'
       ].join('')
+    }else{
+      this.template = [
+        '<label>',
+            '<input class="form-input">',
+            '<div data-hook="message-container" class="message message-below message-error text-danger">',
+                '<p data-hook="message-text"></p>',
+            '</div>',
+        '</label>'
+      ].join('')
+    }
     AmpersandInputView.prototype.render.apply(this, arguments);
   },
   changeInputHandler: function (e) {
