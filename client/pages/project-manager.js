@@ -217,10 +217,17 @@ let ProjectManager = PageView.extend({
         uploadBtn.disabled = true
       }
     })
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+      var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
       var fileinfo = {"type":type,"name":"","path":self.projectPath}
-      if(Boolean(input.value)){
+      if(Boolean(input.value) && self.validateName(input.value) === ""){
         fileinfo.name = input.value
       }
       let formData = new FormData()
