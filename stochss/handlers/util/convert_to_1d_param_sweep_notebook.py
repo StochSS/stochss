@@ -17,15 +17,17 @@ from .generate_notebook_cells import generate_feature_extraction_cell, generate_
 
 
 def get_class_name(name):
-    leading_char = name[0]
-    if leading_char in string.digits or leading_char in string.punctuation:
-        name = "M{}".format(name)
-    elif leading_char in string.ascii_lowercase:
-        name = name.replace(leading_char, leading_char.upper(), 1)
+    name = name.replace(" ", "")
 
     for char in string.punctuation:
         if char in name:
             name = name.replace(char, "")
+
+    leading_char = name[0]
+    if leading_char in string.digits:
+        name = "M{}".format(name)
+    elif leading_char in string.ascii_lowercase:
+        name = name.replace(leading_char, leading_char.upper(), 1)
 
     return name
 
