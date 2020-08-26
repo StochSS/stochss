@@ -25,7 +25,6 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     if(this.model.status === "running"){
       this.getStatus()
-      console.log("updating status")
     }
     if(this.model.path.endsWith('.ipynb')) {
       this.queryByHook('annotation-container').style.display = "none"
@@ -44,7 +43,6 @@ module.exports = View.extend({
         setTimeout(_.bind(self.getStatus, self), 1000);
       else{
         $(self.queryByHook("project-workflow-status")).text(self.model.status)
-        console.log(self.model.status)
       }
     });
   },

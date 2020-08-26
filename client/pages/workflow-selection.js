@@ -58,7 +58,6 @@ let workflowSelection = PageView.extend({
     });
     this.model.fetch({
       success: function (model, response, options) {
-        console.log(self.modelDir, self.parentPath)
         if(self.modelDir.includes(".proj")) {
           self.queryByHook("workflow-selection-breadcrumb-links").style.display = "block"
         }

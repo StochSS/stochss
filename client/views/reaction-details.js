@@ -32,9 +32,11 @@ module.exports = View.extend({
     },
     'model.hasConflict': {
       type: function (el, value, previousValue) {
-        this.model.hasConflict ? 
-          $(this.queryByHook('conflicting-modes-message')).collapse('show') : 
+        if(value) {
+          $(this.queryByHook('conflicting-modes-message')).collapse('show')
+        }else{
           $(this.queryByHook('conflicting-modes-message')).collapse('hide')
+        }
       },
       hook: 'conflicting-modes-message',
     },
