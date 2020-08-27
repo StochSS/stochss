@@ -43,7 +43,7 @@ module.exports = View.extend({
     this.collection.removeSpecie(this.model);
   },
   setSpeciesName: function (e) {
-    this.model.name = e.target.value;
+    this.model.name = e.target.value.trim();
     this.model.collection.trigger('update-species', this.model.compID, this.model, true, false);
     this.model.collection.trigger('remove');
   },

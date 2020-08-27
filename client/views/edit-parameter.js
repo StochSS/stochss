@@ -65,7 +65,7 @@ module.exports = View.extend({
     });
   },
   setParameterName: function (e) {
-    this.model.name = e.target.value;
+    this.model.name = e.target.value.trim();
     this.model.collection.trigger('update-parameters', this.model.compID, this.model);
     this.model.collection.trigger('remove')
   },
