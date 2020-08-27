@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import traceback
 from os import path
 from shutil import copyfile, copytree
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, ModelNotFoundError
@@ -68,9 +69,9 @@ def duplicate(file_path, is_directory=False):
         else:
             copyfile(full_path, unique_file_path)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err))
+        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err), traceback.format_exc())
     except PermissionError as err:
-        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err), traceback.format_exc())
 
     original = full_path.split('/').pop()
     copy = unique_file_path.split('/').pop()
@@ -81,6 +82,8 @@ def extract_wkfl_model(model_file, mdl_parent_path, wkfl):
     from .rename import get_unique_file_name
 
     # Get unique path for the new model path
+    if ".proj" in mdl_parent_path:
+        mdl_parent_path = path.dirname(mdl_parent_path)
     model_path, changed = get_unique_file_name(model_file, mdl_parent_path)
     if changed:
         model_file = model_path.split('/').pop()
@@ -89,9 +92,9 @@ def extract_wkfl_model(model_file, mdl_parent_path, wkfl):
         copyfile(wkfl.wkfl_mdl_path, model_path)
         return model_file
     except FileNotFoundError as err:
-        raise ModelNotFoundError("Could not read the StochSS model file: " + str(err))
+        raise ModelNotFoundError("Could not read the StochSS model file: " + str(err), traceback.format_exc())
     except PermissionError as err:
-        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err), traceback.format_exc())
 
 
 def get_wkfl_model_parent_path(wkfl_parent_path, model_only, wkfl):
@@ -144,9 +147,9 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
         with open(path.join(full_path, 'info.json'), 'r') as info_file:
             data = json.load(info_file)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not read the workflow info file: " + str(err))
+        raise StochSSFileNotFoundError("Could not read the workflow info file: " + str(err), traceback.format_exc())
     except JSONDecodeError as err:
-        raise FileNotJSONFormatError("The workflow info file is not JSON decodable: "+str(err))
+        raise FileNotJSONFormatError("The workflow info file is not JSON decodable: "+str(err), traceback.format_exc())
     workflows = {"gillespy":GillesPy2Workflow,"psweep":ParameterSweep}
     model_path = data['source_model']
     org_wkfl = workflows[data['type']](full_path, model_path)

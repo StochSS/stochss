@@ -14,6 +14,7 @@ var WorkflowResultsView = require('../views/workflow-results');
 var ModelViewer = require('../views/model-viewer');
 var InfoView = require('../views/workflow-info');
 var InputView = require('../views/input');
+var SelectView = require('ampersand-select-view');
 //models
 var Model = require('../models/model')
 //templates
@@ -29,6 +30,7 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=edit-workflow-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('wkfl-manager')).modal();
     },
+    'click [data-hook=return-to-project-btn]' : 'handleReturnToProjectClick'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -40,9 +42,12 @@ let WorkflowManager = PageView.extend({
     this.url = decodeURI(document.URL)
     let urlParams = new URLSearchParams(window.location.search)
     let type = urlParams.get('type');
-    let wkflPath = urlParams.get('path');
+    this.urlPathParam = urlParams.get('path');
     var stamp = this.getCurrentDate();
-    let queryStr = "?stamp="+stamp+"&type="+type+"&path="+wkflPath
+    var queryStr = "?stamp="+stamp+"&type="+type+"&path="+this.urlPathParam
+    if(urlParams.has('parentPath')) {
+      queryStr += ("&parentPath=" + urlParams.get('parentPath'))
+    }
     var endpoint = path.join(app.getApiPath(), "workflow/load-workflow")+queryStr
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       if(resp.statusCode < 400) {
@@ -59,6 +64,15 @@ let WorkflowManager = PageView.extend({
         self.wkflPath = path.join(self.wkflParPath, self.wkflDirectory)
         self.buildWkflModel(body)
         self.renderSubviews();
+        if(self.wkflPath.includes('.proj')) {
+          self.projectPath = path.dirname(self.wkflParPath)
+          $(self.queryByHook('project-breadcrumb')).attr("href", "/stochss/project/manager?path="+self.projectPath)
+          $(self.queryByHook('project-breadcrumb')).text(self.projectPath.split('/').pop().split('.')[0])
+          $(self.queryByHook('workflow-group-breadcrumb')).text(self.wkflParPath.split('/').pop().split('.')[0])
+          $(self.queryByHook('workflow-breadcrumb')).text(self.workflowName)
+          self.queryByHook("project-breadcrumb-links").style.display = "block"
+          self.queryByHook("return-to-project-btn").style.display = "inline-block"
+        }
       }
     });
   },
@@ -110,10 +124,14 @@ let WorkflowManager = PageView.extend({
     this.renderWkflNameInputView();
     this.renderMdlPathInputView();
     this.renderWorkflowEditor();
-    this.renderWorkflowStatusView();
-    this.renderResultsView();
-    this.renderInfoView();
-    this.renderModelViewer();
+    if(this.status !== "new" && this.status !== "ready") {
+      this.renderWorkflowStatusView();
+      this.renderModelViewer();
+    }
+    if(this.status === "error" || this.status === "complete") {
+      this.renderResultsView();
+      this.renderInfoView();
+    }
     if(this.status === 'running'){
       this.getWorkflowStatus();
     }
@@ -181,6 +199,7 @@ let WorkflowManager = PageView.extend({
       this.workflowResultsView.remove();
     }
     var resultsView = new WorkflowResultsView({
+      parent: this,
       trajectories: this.settings.simulationSettings.realizations,
       status: this.status,
       species: this.model.species,
@@ -237,28 +256,56 @@ let WorkflowManager = PageView.extend({
       this.workflowName = newWorkflowName + this.workflowDate
       e.target.value = this.workflowName
     }
+    $(this.queryByHook('workflow-breadcrumb')).text(this.workflowName)
     this.wkflDirectory = this.workflowName + ".wkfl"
     this.wkflPath = path.join(this.wkflParPath, this.wkflDirectory)
   },
   updateWkflModel: function (e) {
     let self = this;
-    this.model.fetch({
-      json: true,
-      success: function (model, response, options) {
-        self.renderWorkflowEditor()
-      },
-      error: function (model, response, options) {
-        self.wkflModelNotFound(response.body)
-      }
-    });
+    let parPath = path.dirname(self.modelDirectory)
+    if(parPath.endsWith(".proj") && parPath !== path.dirname(e.target.value)) {
+      self.model.directory = self.modelDirectory
+      $(self.queryByHook("model-path")).find('input').val(self.modelDirectory)
+      let mdlPathErr = $(modals.wkflModelPathErrorHtml()).modal()
+    }else{
+      self.modelDirectory = e.target.value
+      this.model.fetch({
+        json: true,
+        success: function (model, response, options) {
+          self.renderWorkflowEditor()
+        },
+        error: function (model, response, options) {
+          self.wkflModelNotFound(response.body)
+        }
+      });
+    }
   },
   reloadWkfl: function () {
     let self = this;
-    if(self.status === 'new')
-      window.location.href = self.url.replace(self.modelDirectory.split('/').pop(), self.wkflDirectory)
+    if(self.status === 'new') {
+      // Need to refactor this
+      let mdlParPath = path.dirname(this.modelDirectory)
+      if(mdlParPath !== "."){
+        let replaceText = this.wkflPath.split(mdlParPath+'/').slice(1).join(mdlParPath)
+        this.url = this.url.replace(this.modelDirectory.split('/').pop(), replaceText)
+      }else{
+        this.url = this.url.replace(this.modelDirectory, this.wkflPath)
+      }
+      window.location.href = this.url
+    }
     else
       window.location.reload()
   },
+  handleReturnToProjectClick: function(e) {
+    let self = this
+    if(this.status === 'ready'){
+      this.workflowEditorView.workflowStateButtons.clickSaveHandler(undefined, function (e) {
+        window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
+      })
+    }else{
+      window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
+    }
+  }
 });
 
 initPage(WorkflowManager);

@@ -78,7 +78,7 @@ module.exports = View.extend({
     if(document.querySelector('#eventAnnotationModal')) {
       document.querySelector('#eventAnnotationModal').remove();
     }
-    let modal = $(annotationModalHtml("event", name, annotation)).modal();
+    let modal = $(modals.annotationModalHtml("event", name, annotation)).modal();
     let okBtn = document.querySelector('#eventAnnotationModal .ok-model-btn');
     let input = document.querySelector('#eventAnnotationModal #eventAnnotationInput');
     input.addEventListener("keyup", function (event) {

@@ -181,7 +181,7 @@ c.NotebookApp.disable_check_xsrf = True
 #c.NotebookApp.custom_display_url = ''
 
 ## The default URL to redirect to from `/`
-c.NotebookApp.default_url = '/stochss/models'
+c.NotebookApp.default_url = '/stochss/home'
 
 
 ## Whether to enable MathJax for typesetting math/TeX

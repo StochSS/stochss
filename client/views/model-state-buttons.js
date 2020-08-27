@@ -1,8 +1,10 @@
-var app = require('../app');
 var xhr = require('xhr');
 var path = require('path');
 var Plotly = require('../lib/plotly');
 var $ = require('jquery');
+//support file
+var app = require('../app');
+var modals = require('../modals');
 //views
 var View = require('ampersand-view');
 //templates
@@ -13,7 +15,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
-    'click [data-hook=start-workflow]' : 'clickStartWorkflowHandler',
+    'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -25,6 +27,9 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.togglePreviewWorkflowBtn();
+    if(this.model.directory.includes('.proj')) {
+      this.queryByHook("return-to-project-btn").style.display = "inline-block"
+    }
   },
   clickSaveHandler: function (e) {
     this.saveModel(this.saved.bind(this));
@@ -36,8 +41,12 @@ module.exports = View.extend({
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
-  clickStartWorkflowHandler: function (e) {
-    window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+this.model.directory;
+  clickReturnToProjectHandler: function (e) {
+    let self = this
+    this.saveModel(function () {
+      var queryString = "?path="+path.dirname(self.model.directory)
+      window.location.href = path.join(app.getBasePath(), "/stochss/project/manager")+queryString;
+    })
   },
   togglePreviewWorkflowBtn: function () {
     var numSpecies = this.model.species.length;
@@ -45,7 +54,6 @@ module.exports = View.extend({
     var numEvents = this.model.eventsCollection.length
     var numRules = this.model.rules.length
     $(this.queryByHook('run')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
-    $(this.queryByHook('start-workflow')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
   },
   saveModel: function (cb) {
     this.saving();
