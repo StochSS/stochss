@@ -74,12 +74,16 @@ let workflowSelection = PageView.extend({
       $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
+      $(this.queryByHook('invalid-model-message')).css('display', 'block')
     }else if(this.model.parameters.length < 1){
       $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('stochss-ps')).prop('disabled', true)
+      $(this.queryByHook('psweep-workflow-message')).css('display', 'block')
     }else if(this.model.parameters.length < 2){
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('psweep-workflow-message')).text('2D Parameter Sweep workflows require at least two parameters')
+      $(this.queryByHook('psweep-workflow-message')).css('display', 'block')
     }
   },
   notebookWorkflow: function (e) {
