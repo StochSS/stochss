@@ -30,6 +30,11 @@ module.exports = View.extend({
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
     'click [data-hook=plot]' : function (e) {
       $(this.queryByHook("edit-plot-args")).collapse("show");
+      $(document).ready(function () {
+      $("html, body").animate({ 
+          scrollTop: $("#edit-plot-args").offset().top - 50
+      }, false);
+    });
     },
     'click [data-hook=download-png-custom]' : function (e) {
       var type = e.target.id;
