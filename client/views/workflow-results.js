@@ -201,7 +201,7 @@ module.exports = View.extend({
     });
   },
   clickDownloadPNGButton: function (type) {
-    var pngButton = $('div[data-hook*='+type+'] a[data-title*="Download plot as a png"]')[0]
+    var pngButton = $('div[data-hook='+type+'] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
   },
   exportToJsonFile: function (jsonData, plotType) {

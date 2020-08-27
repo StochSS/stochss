@@ -38,8 +38,8 @@ module.exports = AmpersandInputView.extend({
   },
   changeInputHandler: function (e) {
     if(this.modelKey){
-      var value = this.valueType === 'number' ? Number(e.target.value) : e.target.value;
-      this.parent.model[this.modelKey] = value.trim();
+      var value = this.valueType === 'number' ? Number(e.target.value.trim()) : e.target.value.trim();
+      this.parent.model[this.modelKey] = value;
     }
   },
 });
