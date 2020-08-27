@@ -16,18 +16,22 @@ module.exports = View.extend({
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
     'click [data-hook=project-model-workflow-option]' : 'handleNewWorkflowClick',
     'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
-    'click [data-hook=project-model-remove]' : 'handleRemoveModelClick'
+    'click [data-hook=project-model-remove]' : 'handleRemoveModelClick',
+    'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.workflowGroupOptions = this.model.collection.parent.workflowGroups.map(function (wg) {
       return wg.name
     })
+    this.annotation = this.model.annotation.replaceAll('\\n', "<br>")
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+      $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
+    }else{
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replaceAll(" ",""))).collapse('show')
     }
   },
   handleEditModelClick: function (e) {
@@ -90,5 +94,14 @@ module.exports = View.extend({
       self.model.saveModel()
       self.parent.renderEditModelview();
     });
+  },
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 });

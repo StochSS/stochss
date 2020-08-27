@@ -16,10 +16,12 @@ module.exports = View.extend({
     'click [data-hook=project-workflow-open]' : 'handleOpenWorkflowClick',
     'click [data-hook=project-workflow-export]' : 'handleExportWorkflowClick',
     'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
-    'click [data-hook=project-workflow-remove]' : 'handleDeleteWorkflowClick'
+    'click [data-hook=project-workflow-remove]' : 'handleDeleteWorkflowClick',
+    'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.annotation = this.model.annotation.replaceAll('\\n', "<br>")
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -29,8 +31,10 @@ module.exports = View.extend({
     if(this.model.path.endsWith('.ipynb')) {
       this.queryByHook('annotation-container').style.display = "none"
     }
-    if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+    if(!this.model.annotation || !this.model.annotation.trim()){
+      $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
+    }else{
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replaceAll(" ",""))).collapse('show')
     }
   },
   getStatus: function () {
@@ -108,5 +112,14 @@ module.exports = View.extend({
   },
   exportAsCombine: function (target) {
     this.parent.parent.exportAsCombine(target)
+  },
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 });

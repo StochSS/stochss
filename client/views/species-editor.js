@@ -179,5 +179,5 @@ module.exports = View.extend({
       let text = collapseBtn.text();
       text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
     }
-  },
+  }
 });
