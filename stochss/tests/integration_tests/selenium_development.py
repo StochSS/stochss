@@ -1,4 +1,5 @@
 import selenium_test_setup_and_teardown
+from selenium.webdriver.common.by import By
 
 browser_and_container=selenium_test_setup_and_teardown.setup()
 
