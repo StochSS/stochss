@@ -24,14 +24,14 @@ module.exports = View.extend({
     this.workflowGroupOptions = this.model.collection.parent.workflowGroups.map(function (wg) {
       return wg.name
     })
-    this.annotation = this.model.annotation.replaceAll('\\n', "<br>")
+    this.annotation = this.model.annotation.replace(/\\n/g, "<br>")
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     if(!this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
     }else{
-      $(this.queryByHook('collapse-annotation-container'+this.model.name.replaceAll(" ",""))).collapse('show')
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('show')
     }
   },
   handleEditModelClick: function (e) {

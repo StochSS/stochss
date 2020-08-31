@@ -21,7 +21,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.annotation = this.model.annotation.replaceAll('\\n', "<br>")
+    this.annotation = this.model.annotation.replace(/\\n/g, "<br>")
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -34,7 +34,7 @@ module.exports = View.extend({
     if(!this.model.annotation || !this.model.annotation.trim()){
       $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
     }else{
-      $(this.queryByHook('collapse-annotation-container'+this.model.name.replaceAll(" ",""))).collapse('show')
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('show')
     }
   },
   getStatus: function () {
