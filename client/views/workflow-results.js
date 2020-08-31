@@ -16,21 +16,11 @@ var parameterSweepResultsTemplate = require('../templates/includes/parameterSwee
 
 module.exports = View.extend({
   events: {
-    'click [data-hook=collapse-stddevrange]' : function () {
-      this.changeCollapseButtonText("collapse-stddevrange");
-    },
-    'click [data-hook=collapse-trajectories]' : function () {
-      this.changeCollapseButtonText("collapse-trajectories");
-    },
-    'click [data-hook=collapse-stddev]' : function () {
-      this.changeCollapseButtonText("collapse-stddev");
-    },
-    'click [data-hook=collapse-trajmean]' : function () {
-      this.changeCollapseButtonText("collapse-trajmean");
-    },
-    'click [data-hook=collapse-psweep]' : function () {
-       this.changeCollapseButtonText("collapse-psweep");
-     },
+    'click [data-hook=collapse-stddevrange]' : 'handleCollapseStddevrangeClick',
+    'click [data-hook=collapse-trajectories]' : 'handleCollapseTrajectoriesClick',
+    'click [data-hook=collapse-stddev]' : 'handleCollapseStddevClick',
+    'click [data-hook=collapse-trajmean]' : 'handleCollapseTrajmeanClick',
+    'click [data-hook=collapse-psweep]' : 'handleCollapsePsweepClick',
     'click [data-hook=collapse]' : function () {
       this.changeCollapseButtonText("collapse");
     },
@@ -41,13 +31,7 @@ module.exports = View.extend({
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
     'click [data-hook=plot]' : function (e) {
-      var type = e.target.id
-      if(this.plots[type]) {
-        $(this.queryByHook("edit-plot-args")).collapse("show");
-      }else{
-        this.getPlot(type);
-        e.target.innerText = "Edit Plot"
-      }
+      $(this.queryByHook("edit-plot-args")).collapse("show");
     },
     'click [data-hook=download-png-custom]' : function (e) {
       var type = e.target.id;
@@ -56,6 +40,11 @@ module.exports = View.extend({
     'click [data-hook=download-json]' : function (e) {
       var type = e.target.id;
       this.exportToJsonFile(this.plots[type], type)
+    },
+    'click [data-hook=save-plot]' : function (e) {
+      var type = e.target.id;
+      e.target.disabled = true
+      this.savePlot(type)
     },
     'click [data-hook=download-results-csv]' : 'handlerDownloadResultsCsvClick',
   },
@@ -71,6 +60,7 @@ module.exports = View.extend({
     this.ensembleAggragator = "avg";
     this.plots = {}
     this.plotArgs = {}
+    this.savedPlots = this.parent.settings.resultsSettings.outputs
   },
   render: function () {
     if(this.type === "parameterSweep"){
@@ -181,6 +171,13 @@ module.exports = View.extend({
       }else{
         self.plots[type] = body
         self.plotFigure(body, type);
+        let plotSaved = Boolean(self.savedPlots.filter(function (plot) {
+          if(plot.key === data.plt_key)
+            return true
+        }).length > 0)
+        if(plotSaved) {
+          $("button[data-hook=save-plot]").filter("#"+type).prop('disabled', true)
+        }
       }
     });
   },
@@ -269,6 +266,71 @@ module.exports = View.extend({
       key += ("-" + this.ensembleAggragator)
     }
     return key
+  },
+  savePlot: function (type) {
+    var species = []
+    if(type === "psweep"){
+      type = this.getPsweepKey()
+      species = [this.speciesOfInterest]
+    }else{
+      species = this.species.map(function (specie) { return specie.name; });
+    }
+    let stamp = this.getTimeStamp()
+    var plotInfo = {"key":type, "stamp":stamp, "species":species};
+    plotInfo = Object.assign({}, plotInfo, this.plotArgs)
+    this.savedPlots.push(plotInfo)
+    let queryString = "?path="+path.join(this.parent.wkflPath, "settings.json")
+    let endpoint = path.join(app.getApiPath(), "workflow/save-plot")+queryString
+    xhr({uri: endpoint, method: "post", json: true, body: plotInfo}, function (err, response, body) {
+      if(response.statusCode > 400) {
+        console.log(body.message)
+      }
+    })
+  },
+  getTimeStamp: function () {
+    var date = new Date()
+    let year = date.getFullYear().toString().slice(-2)
+    let month = date.getMonth() >= 10 ? date.getMonth().toString() : "0" + date.getMonth()
+    let day = date.getDate() >= 10 ? date.getDate().toString() : "0" + date.getDate()
+    let hour = date.getHours() >= 10 ? date.getHours().toString() : "0" + date.getHours()
+    let minutes = date.getMinutes() >= 10 ? date.getMinutes().toString() : "0" + date.getMinutes()
+    let seconds = date.getSeconds() >= 10 ? date.getSeconds().toString() : "0" + date.getSeconds()
+    return parseInt(year+month+day+hour+minutes+seconds)
+  },
+  handleCollapseStddevrangeClick: function (e) {
+    this.changeCollapseButtonText("collapse-stddevrange");
+    let type = "stddevran"
+    if(!this.plots[type]){
+      this.getPlot(type);
+    }
+  },
+  handleCollapseTrajectoriesClick: function () {
+    this.changeCollapseButtonText("collapse-trajectories");
+    let type = "trajectories"
+    if(!this.plots[type]){
+      this.getPlot(type);
+    }
+  },
+  handleCollapseStddevClick: function () {
+    this.changeCollapseButtonText("collapse-stddev");
+    let type = "stddev"
+    if(!this.plots[type]){
+      this.getPlot(type);
+    }
+  },
+  handleCollapseTrajmeanClick: function () {
+    this.changeCollapseButtonText("collapse-trajmean");
+    let type = "avg"
+    if(!this.plots[type]){
+      this.getPlot(type);
+    }
+  },
+  handleCollapsePsweepClick: function () {
+    this.changeCollapseButtonText("collapse-psweep");
+    let type = "psweep"
+    if(!this.plots[type]){
+      this.getPlot(type);
+    }
   },
   subviews: {
     inputTitle: {

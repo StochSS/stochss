@@ -139,7 +139,7 @@ def create_rate_rule_strings(json_data, padding):
     if rate_rules:
         rr_string += '\n' + padding + '# Rate Rules\n'
         for rr in rate_rules:
-            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}""))\n'.format(
+            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}"))\n'.format(
                     rr['name'], 
                     rr['expression'], 
                     rr['variable']['name'])
@@ -291,7 +291,7 @@ def get_algorithm(gillespy2_model, is_psweep=False, is_ssa_c=False, algorithm=No
     if is_ssa_c:
         name = gillespy2_model.get_best_solver().name
     else:
-        name = gillespy2_model.get_best_solver(cpp_test=False).name
+        name = gillespy2_model.get_best_solver(precompile=False).name
     
     return algorithm_map[name], name
 

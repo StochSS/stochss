@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import nbformat
+import traceback
 from nbformat import v4 as nbf
 from os import path
 from .rename import get_unique_file_name
@@ -13,14 +14,15 @@ from .generate_notebook_cells import generate_imports_cell, generate_model_cell,
 # imports for parameter sweep workflow
 from .generate_notebook_cells import generate_feature_extraction_cell, generate_mean_std_aggregate_cell, generate_1D_parameter_sweep_class_cell, generate_1D_psweep_config_cell, generate_parameter_sweep_run_cell
 
-def convert_to_1d_psweep_nb(_model_path, name=None, settings=None):
+def convert_to_1d_psweep_nb(_model_path, name=None, settings=None, dest_path=None):
     user_dir = '/home/jovyan'
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     if name is None:
         name = file.split('.')[0].replace('-', '_')
-    dest_path = model_path.split(file)[0]
+    if dest_path is None:
+        dest_path = model_path.split(file)[0]
     
     # Collect .mdl Data
     try:
@@ -28,9 +30,9 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None):
             json_data = json.loads(json_file.read())
             json_data['name'] = name
     except FileNotFoundError as err:
-        raise ModelNotFoundError('Could not find model file: ' + str(err))
+        raise ModelNotFoundError('Could not find model file: ' + str(err), traceback.format_exc())
     except JSONDecodeError as err:
-        raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err))
+        raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err), traceback.format_exc())
         
     is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['simulationSettings']['algorithm'] == "ODE"
     gillespy2_model = ModelFactory(json_data, is_ode).model
@@ -79,7 +81,7 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None):
         # Parameter Sweet Plotly Cell
         cells.append(nbf.new_code_cell('ps.plotplotly()'))
     except KeyError as err:
-        raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err))
+        raise JSONFileNotModelError("The JSON file is not formatted as a StochSS model "+str(err), traceback.format_exc())
     # Append cells to worksheet
     nb = nbf.new_notebook(cells=cells)
 

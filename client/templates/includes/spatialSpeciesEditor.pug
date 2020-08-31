@@ -3,7 +3,7 @@ div#species-editor.card.card-body
   div
 
     h3.inline Species Editor
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-species", id="collapse", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-species", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-species")
 
@@ -15,7 +15,7 @@ div#species-editor.card.card-body
           th(scope="col") Active in Subdomains
           th(scope="col") Remove
         
-      tbody(id="specie-list", data-hook="specie-list")
+      tbody(data-hook="specie-list")
 
-    button.btn.btn-outline-primary(id="add-species", data-hook="add-species", type="button")
+    button.btn.btn-outline-primary(data-hook="add-species", type="button")
       | Add Species

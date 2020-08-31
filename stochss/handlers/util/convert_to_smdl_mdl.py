@@ -2,6 +2,7 @@
 
 import os
 import json
+import traceback
 from json.decoder import JSONDecodeError
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
@@ -36,9 +37,9 @@ def get_model_data(path, to_spatial):
             model_data = json.loads(model_file.read())
         return model_data
     except FileNotFoundError as err:
-        raise ModelNotFoundError("Could not read file: " + str(err))
+        raise ModelNotFoundError("Could not read file: " + str(err), traceback.format_exc())
     except JSONDecodeError as err:
-        raise ModelNotJSONFormatError("The data is not JSON decobable: " + str(e))
+        raise ModelNotJSONFormatError("The data is not JSON decobable: " + str(e), traceback.format_exc())
 
 
 def convert_model(path, to_spatial):
@@ -53,7 +54,7 @@ def convert_model(path, to_spatial):
     try:
         model_data['is_spatial'] = to_spatial
     except KeyError as err:
-        raise JSONFileNotModelError("Could not convert your model: " + str(err))
+        raise JSONFileNotModelError("Could not convert your model: " + str(err), traceback.format_exc())
 
     with open(model_path, 'w') as model_file:
         json.dump(model_data, model_file)

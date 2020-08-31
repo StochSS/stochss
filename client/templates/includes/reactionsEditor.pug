@@ -6,7 +6,7 @@ div#reactions-editor.card.card-body
       div
         div.inline Reactions
 
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-reaction", id="collapse", data-hook="collapse") -
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-reaction", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-reaction")
 
@@ -37,9 +37,9 @@ div#reactions-editor.card.card-body
 
           th(scope="col") Remove
 
-        tbody(id="reaction-list", data-hook="reaction-list")
+        tbody(data-hook="reaction-list")
 
-      div.col-md-5.container-part(id="reaction-details-container", data-hook="reaction-details-container")
+      div.col-md-5.container-part(data-hook="reaction-details-container")
       
     div.dropdown
 
@@ -52,16 +52,16 @@ div#reactions-editor.card.card-body
       ) Add Reaction <span class="caret"></span>
 
       ul.dropdown-menu(aria-labelledby="addReactionBtn")
-        li.dropdown-item(id="creation", data-hook="creation")
-        li.dropdown-item(id="destruction", data-hook="destruction")
-        li.dropdown-item(id="change", data-hook="change")
-        li.dropdown-item(id="dimerization", data-hook="dimerization")
-        li.dropdown-item(id="merge", data-hook="merge")
-        li.dropdown-item(id="split", data-hook="split")
-        li.dropdown-item(id="four", data-hook="four")
+        li.dropdown-item(data-hook="creation")
+        li.dropdown-item(data-hook="destruction")
+        li.dropdown-item(data-hook="change")
+        li.dropdown-item(data-hook="dimerization")
+        li.dropdown-item(data-hook="merge")
+        li.dropdown-item(data-hook="split")
+        li.dropdown-item(data-hook="four")
         li.dropdown-divider
-        li.dropdown-item(id="custom-massaction", data-hook="custom-massaction") Custom mass action
-        li.dropdown-item(id="custom-propensity", data-hook="custom-propensity") Custom propensity
+        li.dropdown-item(data-hook="custom-massaction") Custom mass action
+        li.dropdown-item(data-hook="custom-propensity") Custom propensity
 
     div.dropdown
 
@@ -74,4 +74,4 @@ div#reactions-editor.card.card-body
       ) Add Reaction <span class="caret"></span>
 
       ul.dropdown-menu(aria-labelledby="addReactionBtn")
-        li.dropdown-item(id="custom-propensity", data-hook="custom-propensity") Custom propensity
+        li.dropdown-item(data-hook="custom-propensity") Custom propensity

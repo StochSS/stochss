@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var $ = require('jquery');
+let path = require('path');
 //support files
 var app = require('../app');
 var modals = require('../modals')
@@ -32,7 +33,8 @@ let ModelEditor = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    var directory = (new URLSearchParams(window.location.search)).get('path');
+    let urlParams = new URLSearchParams(window.location.search)
+    var directory = urlParams.get('path');
     var modelFile = directory.split('/').pop();
     var name = decodeURI(modelFile.split('.')[0]);
     var isSpatial = modelFile.split('.').pop().startsWith('s');
@@ -43,8 +45,16 @@ let ModelEditor = PageView.extend({
       isPreview: true,
       for: 'edit',
     });
+    if(directory.includes('.proj')) {
+      this.projectPath = path.dirname(directory)
+      this.projectName = this.projectPath.split('/').pop().split('.')[0]
+    }
     this.model.fetch({
       success: function (model, response, options) {
+        if(directory.includes('.proj')) {
+          self.queryByHook("project-breadcrumb-links").style.display = "block"
+          self.queryByHook("model-name-header").style.display = "none"
+        }
         self.renderSubviews();
         if(!self.model.is_spatial){
           self.queryByHook('mesh-editor-container').style.display = "none";
@@ -116,7 +126,9 @@ let ModelEditor = PageView.extend({
        });
     }
     reactions.forEach(function (reaction) {
-      updateInUse(reaction.rate);
+      if(reaction.reactionType !== "custom-propensity"){
+        updateInUse(reaction.rate);
+      }
     });
     events.forEach(function (event) {
       event.eventAssignments.forEach(function (assignment) {
