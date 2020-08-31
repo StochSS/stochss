@@ -52,6 +52,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/project/empty-trash\/?", EmptyTrashAPIHandler),
         (r"/stochss/api/project/export-combine\/?", ExportAsCombineAPIHandler),
         (r"/stochss/api/project/meta-data\/?", ProjectMetaDataAPIHandler),
+        (r"/stochss/api/project/save-annotation\/?", UpdateAnnotationAPIHandler),
         (r"/stochss/api/workflow/notebook\/?", WorkflowNotebookHandler),
         (r"/stochss/api/workflow/load-workflow\/?", LoadWorkflowAPIHandler),
         (r"/stochss/api/workflow/save-workflow\/?", SaveWorkflowAPIHandler),

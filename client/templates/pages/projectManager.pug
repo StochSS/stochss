@@ -1,10 +1,31 @@
 section.page
 
-  div.verticle-space-2
+  div.verticle-space
 
     h2.inline(id="page-title" data-hook="page-title")= "Project: "+this.projectName
 
   div.col-md-12.col-lg-10.no-gutters-padding
+
+    if !this.annotation
+      div.verticle-space-2
+        button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-annotation-btn") Edit Notes
+    else
+      div
+        button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-annotation-btn") Edit Notes
+
+    div.mx-3.mt-2.collapse.verticle-space-2(data-hook="collapse-annotation-container")
+
+      div.col-md-1.inline
+
+        div.row
+
+          div: h5="Notes: "
+
+          div: button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#annotation-text" data-hook="collapse-annotation-text") -
+
+      div.collapse.show.col-md-11.inline(id="annotation-text")
+
+          div.card.card-body.text-wrap(data-hook="annotation-text-container")
 
     div(id="edit-models-container" data-hook="edit-models-container")
 

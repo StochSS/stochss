@@ -15,7 +15,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
     'click [data-hook=project-model-workflow-option]' : 'handleNewWorkflowClick',
-    'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
+    'click [data-hook=edit-model-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=project-model-remove]' : 'handleRemoveModelClick',
     'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText'
   },
@@ -24,7 +24,7 @@ module.exports = View.extend({
     this.workflowGroupOptions = this.model.collection.parent.workflowGroups.map(function (wg) {
       return wg.name
     })
-    this.annotation = this.model.annotation.replace(/\\n/g, "<br>")
+    this.annotation = this.model.annotation.replace(/\\n/g, "<br/>")
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);

@@ -18,6 +18,7 @@ module.exports = Model.extend({
   session: {
     directory: 'string',
     parentDir: 'string',
-    plot: 'object'
+    plot: 'object',
+    annotation: 'string'
   }
 })

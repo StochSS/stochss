@@ -89,7 +89,11 @@ class LoadProjectAPIHandler(APIHandler):
         log.debug("The path to the new project directory: %s", path)
         project = {"models": [], "workflowGroups": [], "trash_empty": True}
         for item in os.listdir(path):
-            if item.endswith('.mdl'):
+            if item == "README.md":
+                readme_path = os.path.join(path, item)
+                with open(readme_path, 'r') as readme_file:
+                    project['annotation'] = readme_file.read()
+            elif item.endswith('.mdl'):
                 mdl_dir = os.path.join(path, item)
                 with open(mdl_dir, 'r') as mdl_file:
                     model = json.load(mdl_file)
@@ -677,4 +681,29 @@ class ExportAsCombineAPIHandler(APIHandler):
             error = {"Reason":err.reason, "Message":err.message}
             log.error("Exception Information: %s", error)
             self.write(error)
+        self.finish()
+
+
+class UpdateAnnotationAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for updating the README.md file with the projects annotation
+    ##############################################################################
+    '''
+    @web.authenticated
+    def post(self):
+        '''
+        Export a project with new or updated meta data.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        path = os.path.join(user_dir, self.get_query_argument(name="path"), "README.md")
+        log.debug("Path to the project directory: %s", path)
+        data = json.loads(self.request.body.decode())['annotation'].strip()
+        log.debug("Annotation to be saved: %s", data)
+        log.debug(type(data))
+        with open(path, 'w') as readme_file:
+            readme_file.write(data)
         self.finish()

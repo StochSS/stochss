@@ -15,13 +15,13 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-workflow-open]' : 'handleOpenWorkflowClick',
     'click [data-hook=project-workflow-export]' : 'handleExportWorkflowClick',
-    'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
+    'click [data-hook=edit-workflow-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=project-workflow-remove]' : 'handleDeleteWorkflowClick',
     'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.annotation = this.model.annotation.replace(/\\n/g, "<br>")
+    this.annotation = this.model.annotation.replace(/\\n/g, "<br/>")
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
