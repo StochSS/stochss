@@ -105,8 +105,8 @@ build_clean: deps webpack
 	 	--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 create_home_mount:
-	#if DOCKER_HOME_MOUNT does not exist, create it	
-	bash -c "if [ ! -d "$(DOCKER_HOME_MOUNT)" ] && [ -z ${DOCKER_HOME_MOUNT+"unset_test"}]; then mkdir $(DOCKER_HOME_MOUNT); mkdir $(DOCKER_HOME_MOUNT)/Examples;cp -r public_models/* $(DOCKER_HOME_MOUNT)/Examples;fi"
+	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
+	bash -c "if [ ! -d "$(DOCKER_WORKING_DIR)" ] && [ -z ${DOCKER_WORKING_DIR+"if_var_set"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
 
 
 build:  deps webpack create_home_mount
@@ -119,7 +119,7 @@ test:   build
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(DOCKER_HOME_MOUNT):/home/jovyan/ \
+		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
@@ -129,7 +129,7 @@ run:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(DOCKER_HOME_MOUNT):/home/jovyan/ \
+		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
 
@@ -140,11 +140,11 @@ run_bash:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
+		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
 
-		#-v $(DOCKER_HOME_MOUNT):/home/jovyan/ \
 
 update:
 	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss
