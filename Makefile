@@ -103,18 +103,8 @@ build_clean: deps webpack
 	docker build --no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 create_home_mount:
-	#if DOCKER_HOME_MOUNT does not exist, create it
-	bash -c "if [ ! -d "$(DOCKER_HOME_MOUNT)" ]; then mkdir $(DOCKER_HOME_MOUNT);fi"
-	cp -r $(PWD)/jupyter_template/* $(DOCKER_HOME_MOUNT) 
-	#copy logo to docker home mount
-	cp stochss-logo.png $(DOCKER_HOME_MOUNT)/jovyan/.jupyter/custom/logo.png
-	#cp stochss-logo.png /home/jdreeve/Projects/StochSS/home/jovyan/.jupyter/custom/logo.png
-	#copy css to DHM
-	cp custom.css $(DOCKER_HOME_MOUNT)/jovyan/.jupyter/custom/custom.css 
-	#copy jupyter config to DHM
-	cp jupyter_notebook_config.py $(DOCKER_HOME_MOUNT)/jovyan/.jupyter/jupyter_notebook_config.py
-	#copy public_models to DHM
-	cp -r public_models $(DOCKER_HOME_MOUNT)/jovyan/Examples
+	#if DOCKER_HOME_MOUNT does not exist, create it	
+	bash -c "if [ ! -d "$(DOCKER_HOME_MOUNT)" ] && [ -z ${DOCKER_HOME_MOUNT+"unset_test"}]; then mkdir $(DOCKER_HOME_MOUNT); mkdir $(DOCKER_HOME_MOUNT)/Examples;cp -r public_models/* $(DOCKER_HOME_MOUNT)/Examples;fi"
 
 
 build:  deps webpack create_home_mount
@@ -126,7 +116,7 @@ test:   build
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(DOCKER_HOME_MOUNT):/home/ \
+		-v $(DOCKER_HOME_MOUNT):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
@@ -136,7 +126,7 @@ run:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(DOCKER_HOME_MOUNT):/home/ \
+		-v $(DOCKER_HOME_MOUNT):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
 
@@ -147,11 +137,11 @@ run_bash:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(DOCKER_HOME_MOUNT):/home/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
 
+		#-v $(DOCKER_HOME_MOUNT):/home/jovyan/ \
 
 update:
 	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss
