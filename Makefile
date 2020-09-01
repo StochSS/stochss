@@ -109,7 +109,7 @@ create_working_dir:
 	bash -c "if [ ! -d "$(DOCKER_WORKING_DIR)" ] && [ -z ${DOCKER_WORKING_DIR+"if_var_set"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
 
 
-build:  deps webpack create_working_dir
+build:  deps webpack
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	  	-t $(DOCKER_STOCHSS_IMAGE):latest .
@@ -124,7 +124,7 @@ test:   build
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
 
-run:    
+run:    create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
