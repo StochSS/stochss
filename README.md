@@ -14,7 +14,7 @@ At the moment StochSS development on Windows is not supported. You can try using
 
 ## Quickstart
 
-- Add any existing files or directories you want to work with to the working directory, /local\_data/. This directory will be mounted into the Docker container for StochSS to access.
+- Add any existing files or directories you want to work with to the working directory, /local\_data/. This directory will be mounted into the Docker container for StochSS to access and save your work.
 
 - Build and run the stochss notebook server: `make`
 
