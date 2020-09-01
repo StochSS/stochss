@@ -104,12 +104,12 @@ build_clean: deps webpack
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	 	--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
-create_home_mount:
+create_working_dir:
 	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
 	bash -c "if [ ! -d "$(DOCKER_WORKING_DIR)" ] && [ -z ${DOCKER_WORKING_DIR+"if_var_set"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
 
 
-build:  deps webpack create_home_mount
+build:  deps webpack create_working_dir
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	  	-t $(DOCKER_STOCHSS_IMAGE):latest .
