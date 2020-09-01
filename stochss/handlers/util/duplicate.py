@@ -25,7 +25,7 @@ def get_unique_file_name(_path):
     if '-copy' in file:
         name = file.split('-copy')[0]
     elif '.' in file:
-        name = file.split(ext)[0]
+        name = ext.join(file.split(ext)[:-1])
     else:
         name = file
 

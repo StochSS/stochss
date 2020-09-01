@@ -26,7 +26,7 @@ def get_unique_file_name(new_name, dir_path):
     i = 1
     if exists:
         ext = "." + new_name.split('.').pop()
-        name = new_name.split(ext)[0]
+        name = ext.join(new_name.split(ext)[:-1])
         if "(" in name and ")" in name:
             _i = name.split('(').pop().split(')')[0]
             if _i.isdigit():

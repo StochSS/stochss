@@ -8,7 +8,7 @@ from .stochss_errors import StochSSFileNotFoundError, StochSSWorkflowError, Stoc
 
 
 def generate_zip_file(file_path, file_directory, target):
-    file_name = file_path.split('/').pop().split('.')[0]
+    file_name = ".".join(file_path.split('/').pop().split('.')[:-1])
     target = target.split('/').pop()
 
     shutil.make_archive(os.path.join(file_directory, file_name), 'zip', file_directory, target)
@@ -35,7 +35,7 @@ def download_zip(path, action):
         raise StochSSFileNotFoundError("Could not find the file or directory: " + target, traceback.format_exc())
 
     if action == "generate":
-        full_path = "{0}.zip".format(target.split('.')[0])
+        full_path = "{0}.zip".format('.'.join(target.split('.')[:-1]))
 
         file_directory = os.path.dirname(full_path)
         file_name = full_path.split('/').pop()
