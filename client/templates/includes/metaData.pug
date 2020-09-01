@@ -1,0 +1,57 @@
+div#project-meta-data.card.card-body
+
+  h3 Metadata
+
+  div(id="file-select-view" data-hook="file-select-view")
+
+  div
+
+    span(for="description-input-view") Description:
+
+    textarea(id="description-input-view" data-hook="description-input-view" rows="5" style="width: 100%;")
+
+  table.table
+
+    thead
+
+      tr
+
+        th(scope="col") Given Name
+
+        th(scope="col") Family Name
+
+        th(scope="col") E-Mail
+
+        th(scope="col") Organization
+
+        th(scpoe="col") Remove
+
+    tbody(id="list-of-creators" data-hook="list-of-creators")
+
+  hr
+
+  p Add a new creator or update an existing creators information by selecting the appropriate 'creator' option and entering their information below.
+
+  div(id="creator-select-view" data-hook="creator-select-view")
+
+  div.inline
+
+    div.inline(id="given-name-input-view" data-hook="given-name-input-view")
+
+    div.inline(id="family-name-input-view" data-hook="family-name-input-view")
+
+    div.inline(id="email-input-view" data-hook="email-input-view")
+
+    div.inline(id="organization-input-view" data-hook="organization-input-view")
+
+  div
+
+    button.btn.btn-outline-secondary.box-shadow(id="add-creator-btn" data-hook="add-creator-btn" disabled) Add
+
+  hr
+
+  div.inline
+
+    button.btn.btn-primary.box-shadow(id="save-meta-data-button" data-hook="save-meta-data-button") Save
+
+    button.btn.btn-primary.box-shadow(id="submit-meta-data-button" data-hook="submit-meta-data-button") Submit

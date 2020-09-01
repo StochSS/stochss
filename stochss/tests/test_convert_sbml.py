@@ -47,11 +47,9 @@ class TestConvertSBMLToModel(unittest.TestCase):
         with open(model_path, "r") as model_file:
             data = model_file.read()
             props = data.split("props: {").pop().split('}')[0].split(',')
-            model_keys = list(map(lambda item: item.strip().split(':')[0], props))
-            model_keys.sort()
-
-        species_keys = list(get_species(gillespy2_model.listOfSpecies, 1)[0][0].keys())
-        species_keys.sort()
+            model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
+            
+        species_keys = sorted(list(get_species(gillespy2_model.listOfSpecies, 1)[0][0].keys()))
         self.assertEqual(species_keys, model_keys)
 
 
@@ -63,11 +61,9 @@ class TestConvertSBMLToModel(unittest.TestCase):
         with open(model_path, "r") as model_file:
             data = model_file.read()
             props = data.split("props: {").pop().split('}')[0].split(',')
-            model_keys = list(map(lambda item: item.strip().split(':')[0], props))
-            model_keys.sort()
-
-        parameter_keys = list(get_parameters(gillespy2_model.listOfParameters, 1)[0][0].keys())
-        parameter_keys.sort()
+            model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
+        
+        parameter_keys = sorted(list(get_parameters(gillespy2_model.listOfParameters, 1)[0][0].keys()))
         self.assertEqual(parameter_keys, model_keys)
 
 
@@ -87,8 +83,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
             model_keys.sort()
 
         species = get_species(gillespy2_model.listOfSpecies, 1)[0]
-        reaction_keys = list(get_reactions(gillespy2_model.listOfReactions, species, 1)[0][0].keys())
-        reaction_keys.sort()
+        reaction_keys = sorted(list(get_reactions(gillespy2_model.listOfReactions, species, 1)[0][0].keys()))
         self.assertEqual(reaction_keys, model_keys)
 
 
@@ -106,8 +101,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
             model_keys.sort()
 
         species = get_species(gillespy2_model.listOfSpecies, 1)[0]
-        reactant_keys = list(get_reactants(list(gillespy2_model.listOfReactions.popitem(last=False)).pop().reactants, species)[0].keys())
-        reactant_keys.sort()
+        reactant_keys = sorted(list(get_reactants(list(gillespy2_model.listOfReactions.popitem(last=False)).pop().reactants, species)[0].keys()))
         self.assertEqual(reactant_keys, model_keys)
 
 
@@ -125,8 +119,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
             model_keys.sort()
 
         species = get_species(gillespy2_model.listOfSpecies, 1)[0]
-        product_keys = list(get_products(list(gillespy2_model.listOfReactions.popitem(last=False)).pop().products, species)[0].keys())
-        product_keys.sort()
+        product_keys = sorted(list(get_products(list(gillespy2_model.listOfReactions.popitem(last=False)).pop().products, species)[0].keys()))
         self.assertEqual(product_keys, model_keys)
 
 
@@ -145,8 +138,7 @@ class TestConvertSBMLToModel(unittest.TestCase):
 
         species = get_species(gillespy2_model.listOfSpecies, 1)[0]
         parameters = get_parameters(gillespy2_model.listOfParameters, 1)[0]
-        event_keys = list(get_events(gillespy2_model.listOfEvents, species, parameters, 1)[0][0].keys())
-        event_keys.sort()
+        event_keys = sorted(list(get_events(gillespy2_model.listOfEvents, species, parameters, 1)[0][0].keys()))
         self.assertEqual(event_keys, model_keys)
 
 
@@ -158,13 +150,11 @@ class TestConvertSBMLToModel(unittest.TestCase):
         with open(model_path, "r") as model_file:
             data = model_file.read()
             props = data.split("props: {").pop().split('}')[0].split(',')
-            model_keys = list(map(lambda item: item.strip().split(':')[0], props))
-            model_keys.sort()
-
+            model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
+            
         species = get_species(gillespy2_model.listOfSpecies, 1)[0]
         parameters = get_parameters(gillespy2_model.listOfParameters, 1)[0]
-        assignment_keys = list(get_event_assignment(list(gillespy2_model.listOfEvents.popitem(last=False)).pop().assignments, species, parameters)[0].keys())
-        assignment_keys.sort()
+        assignment_keys = sorted(list(get_event_assignment(list(gillespy2_model.listOfEvents.popitem(last=False)).pop().assignments, species, parameters)[0].keys()))
         self.assertEqual(assignment_keys, model_keys)
 
 
@@ -176,13 +166,11 @@ class TestConvertSBMLToModel(unittest.TestCase):
         with open(model_path, "r") as model_file:
             data = model_file.read()
             props = data.split("props: {").pop().split('}')[0].split(',')
-            model_keys = list(map(lambda item: item.strip().split(':')[0], props))
-            model_keys.sort()
-
+            model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
+            
         species = get_species(gillespy2_model.listOfSpecies, 1)[0]
         parameters = get_parameters(gillespy2_model.listOfParameters, 1)[0]
-        rate_rule_keys = list(get_rate_rules(gillespy2_model.listOfRateRules, species, parameters, 1)[0][0].keys())
-        rate_rule_keys.sort()
+        rate_rule_keys = sorted(list(get_rate_rules(gillespy2_model.listOfRateRules, species, parameters, 1)[0][0].keys()))
         self.assertEqual(rate_rule_keys, model_keys)
 
 
@@ -194,13 +182,11 @@ class TestConvertSBMLToModel(unittest.TestCase):
         with open(model_path, "r") as model_file:
             data = model_file.read()
             props = data.split("props: {").pop().split('}')[0].split(',')
-            model_keys = list(map(lambda item: item.strip().split(':')[0], props))
-            model_keys.sort()
-
+            model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
+            
         species = get_species(gillespy2_model.listOfSpecies, 1)[0]
         parameters = get_parameters(gillespy2_model.listOfParameters, 1)[0]
-        assignment_rule_keys = list(get_assignment_rules(gillespy2_model.listOfAssignmentRules, species, parameters, 1)[0][0].keys())
-        assignment_rule_keys.sort()
+        assignment_rule_keys = sorted(list(get_assignment_rules(gillespy2_model.listOfAssignmentRules, species, parameters, 1)[0][0].keys()))
         self.assertEqual(assignment_rule_keys, model_keys)
 
 
@@ -212,10 +198,8 @@ class TestConvertSBMLToModel(unittest.TestCase):
         with open(model_path, "r") as model_file:
             data = model_file.read()
             props = data.split("props: {").pop().split('}')[0].split(',')
-            model_keys = list(map(lambda item: item.strip().split(':')[0], props))
-            model_keys.sort()
-
-        function_definition_keys = list(get_function_definitions(function_definitions, 1)[0][0].keys())
-        function_definition_keys.sort()
+            model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
+            
+        function_definition_keys = sorted(list(get_function_definitions(function_definitions, 1)[0][0].keys()))
         self.assertEqual(function_definition_keys, model_keys)
 

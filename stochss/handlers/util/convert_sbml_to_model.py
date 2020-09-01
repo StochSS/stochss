@@ -17,7 +17,7 @@ def convert_to_gillespy_model(path):
         except:
             return None, []
     else:
-        raise StochSSFileNotFoundError("Could not find the sbml file: "+path)
+        raise StochSSFileNotFoundError("Could not find the sbml file: "+path, None)
 
 
 def get_sbml_function_definitions(path):
@@ -40,7 +40,7 @@ def get_sbml_function_definitions(path):
 def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None):
     comp_id = 1
     errors = []
-    if type(gillespy_model) is gillespy2.core.gillespy2.Model:
+    if type(gillespy_model) is gillespy2.Model:
         sbml_model_file = full_path.split('/').pop()
         if name is None:
             stochss_model_file = gillespy_model.name + '.mdl'
@@ -49,11 +49,10 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
         stochss_model_path = get_unique_file_name(stochss_model_file, full_path.split(sbml_model_file)[0])[0]
 
         species = gillespy_model.get_all_species()
-        stochss_species, algorithm, default_mode, comp_id = get_species(species, comp_id)
+        stochss_species, default_mode, comp_id = get_species(species, comp_id)
         stochss_model['species'].extend(stochss_species)
         stochss_model['defaultMode'] = default_mode
-        stochss_model['simulationSettings']['algorithm'] = algorithm
-
+        
         parameters = gillespy_model.get_all_parameters()
         stochss_parameters, comp_id = get_parameters(parameters, comp_id)
         stochss_model['parameters'].extend(stochss_parameters)
@@ -92,12 +91,10 @@ def convert_to_stochss_model(stochss_model, gillespy_model, full_path, name=None
 def get_species(species, comp_id):
     stochss_species = []
     mode = "dynamic"
-    algorithm = "SSA"
-
+    
     for name, specie in species.items():
         if not specie.mode == "dynamic":
             mode = "continuous"
-            algorithm = "Hybrid-Tau-Leaping"
             break
 
     for name, specie in species.items():
@@ -119,7 +116,7 @@ def get_species(species, comp_id):
         stochss_species.append(stochss_specie)
         comp_id += 1
 
-    return stochss_species, algorithm, mode, comp_id
+    return stochss_species, mode, comp_id
 
 
 def get_parameters(parameters, comp_id):
@@ -366,9 +363,8 @@ def convert_sbml_to_model(path, model_template):
     name = full_path.split('/').pop().split('.')[0]
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)
-    if gillespy_model is not None:
-        sbml_errors = list(map(lambda error: error[0], sbml_errors))
-    else:
+    sbml_errors = list(map(lambda error: error[0], sbml_errors))
+    if gillespy_model is None:
         sbml_errors.append("Error: could not convert the SBML Model to a StochSS Model")
     msg, errors, stochss_model_path = convert_to_stochss_model(template, gillespy_model, full_path, name=name)
     sbml_errors.extend(errors)

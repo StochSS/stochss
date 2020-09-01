@@ -100,7 +100,9 @@ clean_notebook_server:
 hub: build_hub build run_hub_dev
 
 build_clean: deps webpack
-	docker build --no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
+	docker build \
+		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
+	 	--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 create_home_mount:
 	#if DOCKER_HOME_MOUNT does not exist, create it	
@@ -109,7 +111,8 @@ create_home_mount:
 
 build:  deps webpack create_home_mount
 	docker build \
-	  -t $(DOCKER_STOCHSS_IMAGE):latest .
+		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
+	  	-t $(DOCKER_STOCHSS_IMAGE):latest .
 
 test:   build
 	docker run --rm \

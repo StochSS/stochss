@@ -6,6 +6,7 @@ requests without a referrer field
 
 import os
 import subprocess
+import traceback
 
 from notebook.base.handlers import APIHandler
 from tornado import web
@@ -51,7 +52,7 @@ class JsonFileAPIHandler(APIHandler):
             log.debug("Contents of the json file: {0}".format(data))
             self.write(data)
         elif purpose == "edit":
-            new_path ='/stochss/model_templates/nonSpatialModelTemplate.json'
+            new_path ='/stochss/stochss_templates/nonSpatialModelTemplate.json'
             log.debug("Path to the model template: {0}".format(new_path))
             try:
                 with open(new_path, 'r') as json_file:
@@ -69,12 +70,16 @@ class JsonFileAPIHandler(APIHandler):
             except FileNotFoundError as err:
                 self.set_status(404)
                 error = {"Reason":"Model Template Not Found","Message":"Could not find the model template file: "+str(err)}
-                log.error("Exception information: {0}".format(error))
+                trace = traceback.format_exc()
+                log.error("Exception information: {0}\n{1}".format(error, trace))
+                error['Traceback'] = trace
                 self.write(error)
             except JSONDecodeError as err:
                 self.set_status(406)
                 error = {"Reason":"Template Data Not JSON Format","Message":"Template data is not JSON decodeable: "+str(err)}
-                log.error("Exception information: {0}".format(error))
+                trace = traceback.format_exc()
+                log.error("Exception information: {0}\n{1}".format(error, trace))
+                error['Traceback'] = trace
                 self.write(error)
         else:
             self.set_status(404)

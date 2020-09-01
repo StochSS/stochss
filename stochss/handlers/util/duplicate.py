@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import os
+import traceback
 from os import path
 from shutil import copyfile, copytree
-from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
+from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, ModelNotFoundError
 
 
 def get_unique_file_name(_path):
@@ -18,14 +19,15 @@ def get_unique_file_name(_path):
     '''
     file = _path.split('/').pop()
     dir_path = path.dirname(_path)
-    ext = '.' + file.split('.').pop()
+    ext = ""
+    if '.' in file:
+        ext = '.' + file.split('.').pop()
     if '-copy' in file:
         name = file.split('-copy')[0]
     elif '.' in file:
         name = file.split(ext)[0]
     else:
         name = file
-        ext = ""
 
     # Check if the file is an original of at least the second copy
     if not '-copy' in file or '-copy(' in file:
@@ -67,9 +69,9 @@ def duplicate(file_path, is_directory=False):
         else:
             copyfile(full_path, unique_file_path)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err))
+        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err), traceback.format_exc())
     except PermissionError as err:
-        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err), traceback.format_exc())
 
     original = full_path.split('/').pop()
     copy = unique_file_path.split('/').pop()
@@ -80,6 +82,8 @@ def extract_wkfl_model(model_file, mdl_parent_path, wkfl):
     from .rename import get_unique_file_name
 
     # Get unique path for the new model path
+    if ".proj" in mdl_parent_path:
+        mdl_parent_path = path.dirname(mdl_parent_path)
     model_path, changed = get_unique_file_name(model_file, mdl_parent_path)
     if changed:
         model_file = model_path.split('/').pop()
@@ -88,9 +92,9 @@ def extract_wkfl_model(model_file, mdl_parent_path, wkfl):
         copyfile(wkfl.wkfl_mdl_path, model_path)
         return model_file
     except FileNotFoundError as err:
-        raise ModelNotFoundError("Could not read the StochSS model file: " + str(err))
+        raise ModelNotFoundError("Could not read the StochSS model file: " + str(err), traceback.format_exc())
     except PermissionError as err:
-        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err), traceback.format_exc())
 
 
 def get_wkfl_model_parent_path(wkfl_parent_path, model_only, wkfl):
@@ -143,9 +147,9 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
         with open(path.join(full_path, 'info.json'), 'r') as info_file:
             data = json.load(info_file)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not read the workflow info file: " + str(err))
+        raise StochSSFileNotFoundError("Could not read the workflow info file: " + str(err), traceback.format_exc())
     except JSONDecodeError as err:
-        raise FileNotJSONFormatError("The workflow info file is not JSON decodable: "+str(err))
+        raise FileNotJSONFormatError("The workflow info file is not JSON decodable: "+str(err), traceback.format_exc())
     workflows = {"gillespy":GillesPy2Workflow,"psweep":ParameterSweep}
     model_path = data['source_model']
     org_wkfl = workflows[data['type']](full_path, model_path)
@@ -172,7 +176,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
         new_wkfl_dir = ''.join([wkfl_base_name, time_stamp, ".wkfl"])
         new_wkfl_path = path.join(parent_dir, new_wkfl_dir)
 
-        new_wkfl = workflows[data['type']](new_wkfl_path, model_path)
+        new_wkfl = workflows[data['type']](new_wkfl_path, model_path, org_wkfl.settings)
         os.mkdir(new_wkfl_path)
         save_new_workflow(new_wkfl, data['type'], False)
         if not path.exists(new_wkfl.wkfl_mdl_path):

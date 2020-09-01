@@ -3,6 +3,7 @@
 import os
 import json
 import shutil
+import traceback
 try:
     from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
 except:
@@ -74,9 +75,9 @@ def rename(path, new_name):
     try:
         shutil.move(old_path, new_path)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err))
+        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err), traceback.format_exc())
     except PermissionError as err:
-        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err), traceback.format_exc())
     
     if old_path.endswith('/'):
         new_path = new_path[:-1]
@@ -93,6 +94,7 @@ def rename(path, new_name):
             info_file.truncate()
 
     if changed:
+        new_name = new_path.split('/').pop()
         message = "A file already exists with that name, {0} was renamed to {1} in order to prevent a file from being overwriten.".format(old_path.split('/').pop(), new_name)
     else:
         message = 'Success! {0} was renamed to {1}'.format(old_name, new_name)

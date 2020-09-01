@@ -3,10 +3,12 @@
 import os
 import sys
 import json
+import numpy
 import argparse
 import logging
 import pickle
 import plotly
+import traceback
 
 from io import StringIO
 from gillespy2.core import log
@@ -15,16 +17,11 @@ for handler in log.handlers:
     if type(handler) is logging.StreamHandler:
         handler.stream = log_stream
 
-
-from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
-
-import numpy
 import gillespy2.core.gillespySolver
-from gillespy2.core.events import EventAssignment, EventTrigger, Event
-from gillespy2.core.gillespyError import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
-from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
-from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
-from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver
+from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
+from gillespy2 import EventAssignment, EventTrigger, Event
+from gillespy2 import ModelError, SimulationError, SolverError, DirectoryError, BuildError, ExecutionError
+from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, SSACSolver
 
 import warnings
 warnings.simplefilter("ignore")
@@ -35,10 +32,11 @@ user_dir = '/home/jovyan'
 
 class GillesPy2Workflow():
 
-    def __init__(self, wkfl_path, mdl_path):
+    def __init__(self, wkfl_path, mdl_path, settings=None):
         self.wkfl_path = wkfl_path
         self.mdl_path = mdl_path
         if wkfl_path:
+            self.settings = self.get_settings() if settings is None else settings
             self.mdl_file = mdl_path.split('/').pop()
             self.info_path = os.path.join(wkfl_path, 'info.json')
             self.log_path = os.path.join(wkfl_path, 'logs.txt')
@@ -55,12 +53,39 @@ class GillesPy2Workflow():
                 self.wkfl_timestamp = None
 
 
-    def run_preview(self, gillespy2_model, stochss_model):
-        sim_settings = stochss_model['simulationSettings']
-        model_settings = stochss_model['modelSettings']
+    def get_settings(self):
+        settings_path = os.path.join(self.wkfl_path, "settings.json")
 
-        sim_settings['realizations'] = model_settings['realizations']
-        sim_settings['algorithm'] = model_settings['algorithm']
+        if os.path.exists(settings_path):
+            with open(settings_path, "r") as settings_file:
+                return json.load(settings_file)
+
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            settings_template = json.load(template_file)
+        
+        if os.path.exists(self.wkfl_mdl_path):
+            with open(self.wkfl_mdl_path, "r") as mdl_file:
+                mdl = json.load(mdl_file)
+                try:
+                    settings = {"simulationSettings":mdl['simulationSettings'],
+                                "parameterSweepSettings":mdl['parameterSweepSettings'],
+                                "resultsSettings":settings_template['resultsSettings']}
+                    return settings
+                except:
+                    return settings_template
+        else:
+            return settings_template
+
+
+    def save(self):
+        settings_path = os.path.join(self.wkfl_path, "settings.json")
+        with open(settings_path, "w") as settings_file:
+            json.dump(self.settings, settings_file)
+
+
+    def run_preview(self, gillespy2_model, stochss_model):
+        with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
+            sim_settings = json.load(template_file)['simulationSettings']
 
         _results = run_solver(gillespy2_model, sim_settings, 5)
         results = _results[0]
@@ -76,8 +101,8 @@ class GillesPy2Workflow():
         return results
 
 
-    def run(self, gillespy2_model, stochss_model, verbose):
-        sim_settings = stochss_model['simulationSettings']
+    def run(self, gillespy2_model, verbose):
+        sim_settings = self.settings['simulationSettings']
         trajectories = sim_settings['realizations']
         is_stochastic = not sim_settings['algorithm'] == "ODE"
 
@@ -189,7 +214,7 @@ class ModelFactory():
     Build the individual components of a model.
     ##############################################################################
     '''
-    def __init__(self, data):
+    def __init__(self, data, is_ode):
         '''
         Initialize and build a GillesPy2 model.
 
@@ -203,11 +228,11 @@ class ModelFactory():
         timeStep = (data['modelSettings']['timeStep'])
         endSim = data['modelSettings']['endSim']
         volume = data['modelSettings']['volume']
-        is_ode = data['simulationSettings']['algorithm'] == "ODE"
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
-        self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), data['eventsCollection']))
+        events = list(filter(lambda e: self.is_valid_event(e), data['eventsCollection']))
+        self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), events))
         rate_rules = list(filter(lambda rr: self.is_valid_rate_rule(rr), data['rules']))
         assignment_rules = list(filter(lambda rr: self.is_valid_assignment_rule(rr), data["rules"]))
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr, self.species, self.parameters), rate_rules))
@@ -331,6 +356,19 @@ class ModelFactory():
         return EventAssignment(variable=variable[0], expression=expression)
         
 
+    def is_valid_event(self, event):
+        if event['triggerExpression'] != "":
+            assignments = list(filter(lambda assignment: self.is_valid_assignment(assignment), event['eventAssignments']))
+            if len(assignments) > 0:
+                event['eventAssignments'] = assignments
+                return event
+
+
+    def is_valid_assignment(self, assignment):
+        if assignment['expression'] != "":
+            return assignment
+
+
     def is_valid_rate_rule(self, rr):
         if rr['type'] == "Rate Rule" and not rr['expression'] == "":
             return rr
@@ -396,7 +434,10 @@ class ModelFactory():
         for stoich_specie in args:
             key = stoich_specie['specie']['name']
             value = stoich_specie['ratio']
-            d[key] = value
+            if key not in d.keys():
+                d[key] = value
+            else:
+                d[key] += value
         return d
 
 
@@ -421,16 +462,17 @@ def get_models(full_path, name):
         with open(full_path, "r") as model_file:
             stochss_model = json.loads(model_file.read())
             stochss_model['name'] = name
+            is_ode = stochss_model['defaultMode'] == "continuous"
     except FileNotFoundError as error:
-        print(str(error))
+        print("{0}\n{1}".format(error, traceback.format_exc()))
         log.critical("Failed to find the model file: {0}".format(error))
 
     try:
-        _model = ModelFactory(stochss_model) # build GillesPy2 model
+        _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
         gillespy2_model = _model.model
     except Exception as error:
-        print(str(error))
-        log.error(str(error))
+        print("{0}\n{1}".format(error, traceback.format_exc()))
+        log.error("{0}".format(error))
         gillespy2_model = None
 
     return gillespy2_model, stochss_model
@@ -468,6 +510,8 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
     '''
     # print("Selecting the algorithm")
     algorithm = "V-SSA" if is_ssa else data['algorithm']
+    if data['isAutomatic']:
+        return chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2)
     if(algorithm == "ODE"):
         return basicODESolver(model, data, run_timeout)
     if(algorithm == "SSA"):
@@ -480,9 +524,26 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
         return basicTauHybridSolver(model, data, run_timeout)
 
 
+def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
+    if solver is None:
+        solver = model.get_best_solver(precompile=False)
+
+    kwargs = {"solver":solver, "timeout":run_timeout}
+
+    variables = {} if rate1 is None else {rate1[0]:rate1[1]}
+    if rate2 is not None:
+        variables[rate2[0]] = rate2[1]
+
+    if solver.name == "VariableSSACSolver":
+        kwargs["variables"] = variables
+
+    results = model.run(**kwargs)
+    return results
+
+
 def basicODESolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicODESolver.
+    Run the model with the GillesPy2 ODESolver.
 
     Attributes
     ----------
@@ -495,7 +556,7 @@ def basicODESolver(model, data, run_timeout):
     '''
     # print("running ode solver")
     results = model.run(
-        solver = BasicTauHybridSolver,
+        solver = TauHybridSolver,
         timeout = run_timeout,
         integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
@@ -515,11 +576,12 @@ def ssaSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    print("running ssa solver")
+    solver = SSACSolver(model=model)
     seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
+        solver = solver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed
@@ -528,7 +590,6 @@ def ssaSolver(model, data, run_timeout):
 
 
 def v_ssa_solver(model, data, run_timeout, solver, rate1, rate2):
-    print("running variable ssa c solver")
     seed = data['seed']
     if seed == -1:
         seed = None
@@ -547,7 +608,7 @@ def v_ssa_solver(model, data, run_timeout, solver, rate1, rate2):
 
 def basicTauLeapingSolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicTauLeapingSolver.
+    Run the model with the GillesPy2 TauLeapingSolver.
     
     Attributes
     ----------
@@ -563,7 +624,7 @@ def basicTauLeapingSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = BasicTauLeapingSolver,
+        solver = TauLeapingSolver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,
@@ -574,7 +635,7 @@ def basicTauLeapingSolver(model, data, run_timeout):
 
 def basicTauHybridSolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicTauHybridSolver.
+    Run the model with the GillesPy2 TauHybridSolver.
     
     Attributes
     ----------
@@ -590,7 +651,7 @@ def basicTauHybridSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = BasicTauHybridSolver,
+        solver = TauHybridSolver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,
@@ -633,7 +694,9 @@ if __name__ == "__main__":
             if 'GillesPy2 simulation exceeded timeout.' in logs:
                 resp['timeout'] = True
         except ModelError as error:
-            resp['errors'] = str(error)
+            resp['errors'] = "{0}\n{1}".format(error, traceback.format_exc())
+        except SimulationError as error:
+            resp['errors'] = "{0}\n{1}".format(error, traceback.format_exc())
         with open(outfile, "w") as fd:
             json.dump(resp, fd)
         open(outfile + ".done", "w").close()

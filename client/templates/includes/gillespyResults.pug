@@ -3,11 +3,11 @@ div#workflow-results.card.card-body
   div
 
     h3.inline Results
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", data-hook="collapse", disabled) +
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", id="collapse" data-hook="collapse", disabled) +
 
   div.collapse(id="collapse-results", data-hook="workflow-results")
 
-    div.collapse(data-hook="edit-plot-args")
+    div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
 
       table.table
         thead
@@ -18,21 +18,22 @@ div#workflow-results.card.card-body
 
         tbody
           tr
-            td: div(data-hook="title")
-            td: div(data-hook="xaxis")
-            td: div(data-hook="yaxis")
+            td: div(id="title" data-hook="title")
+            td: div(id="xaxis" data-hook="xaxis")
+            td: div(id="yaxis" data-hook="yaxis")
     div.card.card-body
       div
 
         h5.inline Plot Trajectories
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", data-hook="collapse-trajectories") -
+        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", id="collapse-trajectories-btn" data-hook="collapse-trajectories") -
 
       div.collapse(class="show", id="collapse-trajectories")
 
-        div(data-hook="trajectories")
+        div(id="trajectories" data-hook="trajectories")
         button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Edit Plot
+        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="save-plot" disabled) Save Plot to Gallery
         button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-png-custom" disabled) Download PNG
         button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-json" disabled) Download JSON
 
-    button.btn.btn-primary.box-shadow(data-hook="download-results-csv") Download Results as .csv
+    button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
       

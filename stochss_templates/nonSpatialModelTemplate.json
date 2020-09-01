@@ -1,0 +1,21 @@
+{
+	"is_spatial": false,
+	"defaultID": 1,
+	"defaultMode": "",
+	"annotation": "",
+	"modelSettings": {
+		"endSim": 20,
+		"timeStep": 0.05,
+		"volume": 1
+	},
+	"meshSettings": {
+		"count": 2
+	},
+	"species": [],
+    "initialConditions": [],
+	"parameters": [],
+	"reactions": [],
+	"rules": [],
+	"eventsCollection": [],
+	"functionDefinitions": []
+}
