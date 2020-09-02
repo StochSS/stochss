@@ -37,7 +37,7 @@ let ModelEditor = PageView.extend({
     let urlParams = new URLSearchParams(window.location.search)
     var directory = urlParams.get('path');
     var modelFile = directory.split('/').pop();
-    var name = decodeURI(modelFile.split('.')[0]);
+    var name = this.getFileName(decodeURI(modelFile));
     var isSpatial = modelFile.split('.').pop().startsWith('s');
     this.model = new Model({
       name: name,
@@ -82,6 +82,18 @@ let ModelEditor = PageView.extend({
   update: function () {
   },
   updateValid: function () {
+  },
+  getFileName: function (file) {
+    if(file.endsWith('/')) {
+      file.slice(0, -1)
+    }
+    if(file.includes('/')) {
+      file = file.split('/').pop()
+    }
+    if(!file.includes('.')) {
+      return file
+    }
+    return file.split('.').slice(0, -1).join('.')
   },
   handleProjectBreadcrumbClick: function () {
     this.modelStateButtons.saveModel(_.bind(function (e) {

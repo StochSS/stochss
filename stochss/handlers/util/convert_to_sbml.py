@@ -8,7 +8,7 @@ import traceback
 from json.decoder import JSONDecodeError
 import libsbml
 
-from .rename import get_unique_file_name
+from .rename import get_unique_file_name, get_file_name
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, \
                             JSONFileNotModelError, FileNotSBMLFormatError, \
                             ImporperMathMLFormatError
@@ -19,7 +19,7 @@ def convert_to_sbml(_path, write_to_file=True):
 
     path = os.path.join(user_dir, _path)
     model_file = path.split('/').pop()
-    model_name = model_file.split('.')[0]
+    model_name = get_file_name(model_file)
     sbml_file = model_name + ".sbml"
     sbml_path, changed = get_unique_file_name(sbml_file, path.split(model_file)[0])
     if changed:

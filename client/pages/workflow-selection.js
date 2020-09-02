@@ -47,7 +47,7 @@ let workflowSelection = PageView.extend({
 
        });
     });
-    this.modelFile = this.modelDir.split('/').pop().split('.').shift();
+    this.modelFile = this.getFileName(this.modelDir)
     var isSpatial = this.modelDir.endsWith('.smdl');
     this.model = new Model({
       name: this.modelFile,
@@ -64,6 +64,18 @@ let workflowSelection = PageView.extend({
         self.validateWorkflows()
       }
     });
+  },
+  getFileName: function (file) {
+    if(file.endsWith('/')) {
+      file.slice(0, -1)
+    }
+    if(file.includes('/')) {
+      file = file.split('/').pop()
+    }
+    if(!file.includes('.')) {
+      return file
+    }
+    return file.split('.').slice(0, -1).join('.')
   },
   validateWorkflows: function () {
     if(this.model.species.length < 1 || (this.model.reactions.length < 1 && this.model.eventsCollection.length < 1 && this.model.rules.length < 1)){

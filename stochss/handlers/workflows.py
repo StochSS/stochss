@@ -58,12 +58,12 @@ class LoadWorkflowAPIHandler(APIHandler):
             resp = {"mdlPath":path, "timeStamp":stamp, "type":wkfl_type,
                     "status":"new", "titleType":title_types[wkfl_type],
                     "wkflParPath": parent_path, "startTime":None}
-            resp["wkflName"] = (path.split('/').pop().split('.')[0] +
+            resp["wkflName"] = (get_file_name(path) +
                                 name_types[wkfl_type] + stamp)
             resp["wkflDir"] = resp['wkflName'] + ".wkfl"
         elif path.endswith('.wkfl'):
             resp = {"wkflDir":path.split('/').pop(), "wkflParPath":parent_path,
-                    "wkflName":path.split('/').pop().split('.')[0]}
+                    "wkflName":get_file_name(path)}
             resp["status"] = get_status(path)
             resp["timeStamp"] = "_"+"_".join(resp['wkflName'].split('_')[-2:])
             try:
