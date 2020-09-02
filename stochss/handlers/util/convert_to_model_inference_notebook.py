@@ -6,7 +6,7 @@ import traceback
 import string
 import nbformat
 from nbformat import v4 as nbf
-from .rename import get_unique_file_name
+from .rename import get_unique_file_name, get_file_name
 from .run_model import ModelFactory
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
@@ -44,7 +44,7 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None, dest_path=
     full_path = path.join(user_dir, model_path)
     file = full_path.split('/').pop()
     if name is None:
-        name = file.split('.')[0]
+        name = get_file_name(file)
     class_name = get_class_name(name)
     if dest_path is None:
         dest_path = full_path.split(file)[0]

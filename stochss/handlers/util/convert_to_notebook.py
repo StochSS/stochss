@@ -9,7 +9,7 @@ from nbformat import v4 as nbf
 from json.decoder import JSONDecodeError
 
 from .run_model import ModelFactory
-from .rename import get_unique_file_name
+from .rename import get_unique_file_name, get_file_name
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell, generate_configure_simulation_cell, get_algorithm
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
@@ -36,7 +36,7 @@ def convert_to_notebook(_model_path, name=None, settings=None, dest_path=None):
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     if name is None:
-        name = file.split('.')[0]
+        name = get_file_name(file)
     class_name = get_class_name(name)
     if dest_path is None:
         dest_path = model_path.split(file)[0]

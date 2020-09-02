@@ -22,6 +22,7 @@ from .util.convert_to_sciope_me import convert_to_sciope_me
 from .util.convert_to_model_inference_notebook import convert_to_mdl_inference_nb
 from .util.stochss_errors import StochSSAPIError
 from .util.run_workflow import initialize
+from .util.rename import get_file_name
 
 log = logging.getLogger('stochss')
 
@@ -356,7 +357,7 @@ class WorkflowNotebookHandler(APIHandler):
         settings = None
 
         if path.endswith('.wkfl'):
-            name = path.split('/').pop().split('.')[0].replace('-', '_')
+            name = get_file_name(path)
             with open(os.path.join(path, "info.json"), "r") as info_file:
                 info = json.load(info_file)
                 workflow_type = info['type']

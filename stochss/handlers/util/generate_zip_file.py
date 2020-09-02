@@ -3,7 +3,7 @@
 import os
 import shutil
 import traceback
-from .rename import get_unique_file_name
+from .rename import get_unique_file_name, get_file_name
 from .stochss_errors import StochSSFileNotFoundError, StochSSWorkflowError, StochSSWorkflowNotCompleteError
 
 
@@ -35,7 +35,7 @@ def download_zip(path, action):
         raise StochSSFileNotFoundError("Could not find the file or directory: " + target, traceback.format_exc())
 
     if action == "generate":
-        full_path = "{0}.zip".format('.'.join(target.split('.')[:-1]))
+        full_path = "{0}.zip".format(os.path.join(os.path.dirname(target), get_file_name(target)))
 
         file_directory = os.path.dirname(full_path)
         file_name = full_path.split('/').pop()

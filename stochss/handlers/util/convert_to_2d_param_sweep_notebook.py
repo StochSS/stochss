@@ -5,7 +5,7 @@ import traceback
 import string
 from nbformat import v4 as nbf
 from os import path
-from .rename import get_unique_file_name
+from .rename import get_unique_file_name, get_file_name
 from .run_model import ModelFactory
 from json.decoder import JSONDecodeError
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
@@ -38,7 +38,7 @@ def convert_to_2d_psweep_nb(_model_path, name=None, settings=None, dest_path=Non
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     if name is None:
-        name = file.split('.')[0]
+        name = get_file_name(file)
     class_name = get_class_name(name)
     if dest_path is None:
         dest_path = model_path.split(file)[0]

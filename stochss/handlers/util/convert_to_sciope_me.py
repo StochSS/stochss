@@ -7,7 +7,7 @@ from os import path
 from nbformat import v4 as nbf
 from json.decoder import JSONDecodeError
 from .run_model import ModelFactory
-from .rename import get_unique_file_name
+from .rename import get_unique_file_name, get_file_name
 from .generate_notebook_cells import *
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
@@ -33,7 +33,7 @@ def convert_to_sciope_me(_model_path, settings=None, dest_path=None):
 
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
-    name = file.split('.')[0]
+    name = get_file_name(file)
     class_name = get_class_name(name)
     if dest_path is None:
         dest_path = model_path.split(file)[0]
