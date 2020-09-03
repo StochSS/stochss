@@ -6,7 +6,7 @@ module.exports = State.extend({
   props: {
     compID: 'number',
     name: 'string',
-    expression: 'string',
+    expression: 'number',
     annotation: 'string'
   },
   session: {

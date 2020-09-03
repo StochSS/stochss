@@ -7,6 +7,7 @@ requests without a referrer field
 import logging
 import json
 import os
+import ast
 import subprocess
 import traceback
 from json.decoder import JSONDecodeError
@@ -87,6 +88,7 @@ class LoadWorkflowAPIHandler(APIHandler):
         try:
             with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
                 resp["model"] = json.load(model_file)
+                self.update_model_data(resp["model"])
         except FileNotFoundError:
             resp["model"] = None
             resp["error"] = {"Reason":"Model Not Found",
@@ -98,6 +100,25 @@ class LoadWorkflowAPIHandler(APIHandler):
         log.debug("Response: %s", resp)
         self.write(resp)
         self.finish()
+
+
+    @classmethod
+    def update_model_data(cls, data):
+        param_ids = []
+        for param in data['parameters']:
+            param_ids.append(param['compID'])
+            if isinstance(param['expression'], str):
+                param['expression'] = ast.literal_eval(param['expression'])
+        for reaction in data['reactions']:
+            if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
+                reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+        for event in data['eventsCollection']:
+            for assignment in event['eventAssignments']:
+                if assignment['variable']['compID'] in param_ids:
+                    assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+        for rule in data['rules']:
+            if rule['variable']['compID'] in param_ids:
+                rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
 
 
     @classmethod

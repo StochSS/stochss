@@ -8,6 +8,7 @@ requests without a referrer field
 import os
 import json
 import logging
+import ast
 
 from shutil import copyfile, copytree, rmtree
 from tornado import web
@@ -99,6 +100,7 @@ class LoadProjectAPIHandler(APIHandler):
                     model = json.load(mdl_file)
                     model['name'] = item.split('.')[0]
                     model['directory'] = mdl_dir
+                    self.update_model_data(model)
                     project['models'].append(model)
             elif item.endswith('.wkgp'):
                 name = item.split('.')[0]
@@ -118,6 +120,25 @@ class LoadProjectAPIHandler(APIHandler):
         log.debug("Contents of the project: %s", project)
         self.write(project)
         self.finish()
+
+
+    @classmethod
+    def update_model_data(cls, data):
+        param_ids = []
+        for param in data['parameters']:
+            param_ids.append(param['compID'])
+            if isinstance(param['expression'], str):
+                param['expression'] = ast.literal_eval(param['expression'])
+        for reaction in data['reactions']:
+            if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
+                reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+        for event in data['eventsCollection']:
+            for assignment in event['eventAssignments']:
+                if assignment['variable']['compID'] in param_ids:
+                    assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+        for rule in data['rules']:
+            if rule['variable']['compID'] in param_ids:
+                rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
 
 
     @classmethod
