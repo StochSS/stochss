@@ -35,6 +35,7 @@ module.exports = AmpersandInputView.extend({
       ].join('')
     }
     AmpersandInputView.prototype.render.apply(this, arguments);
+    this.shouldValidate = this.required || this.tests.length > 0
   },
   changeInputHandler: function (e) {
     if(this.modelKey){

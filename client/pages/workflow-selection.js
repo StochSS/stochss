@@ -78,7 +78,8 @@ let workflowSelection = PageView.extend({
     return file.split('.').slice(0, -1).join('.')
   },
   validateWorkflows: function () {
-    if(this.model.species.length < 1 || (this.model.reactions.length < 1 && this.model.eventsCollection.length < 1 && this.model.rules.length < 1)){
+    let modelInvalid = this.checkForErrors()
+    if(this.model.species.length < 1 || (this.model.reactions.length < 1 && this.model.eventsCollection.length < 1 && this.model.rules.length < 1) || modelInvalid){
       $(this.queryByHook('stochss-es')).prop('disabled', true)
       $(this.queryByHook('stochss-ps')).prop('disabled', true)
       $(this.queryByHook('ensemble-simulation')).prop('disabled', true)
@@ -86,6 +87,9 @@ let workflowSelection = PageView.extend({
       $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
+      if(modelInvalid) {
+        $(this.queryByHook('invalid-model-message')).html('Errors were detected in you model <a href="/stochss/models/edit?path='+this.model.directory+'">click here to fix your model<a/>')
+      }
       $(this.queryByHook('invalid-model-message')).css('display', 'block')
     }else if(this.model.parameters.length < 1){
       $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
@@ -97,6 +101,12 @@ let workflowSelection = PageView.extend({
       $(this.queryByHook('psweep-workflow-message')).text('2D Parameter Sweep workflows require at least two parameters')
       $(this.queryByHook('psweep-workflow-message')).css('display', 'block')
     }
+  },
+  checkForErrors: function (e) {
+    let invalidParams = this.model.parameters.filter(function (parameter) {
+      if(typeof parameter.expression === "string") return true
+    })
+    if(invalidParams.length) {return true}
   },
   notebookWorkflow: function (e) {
     var type = e.target.dataset.type;

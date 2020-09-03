@@ -96,17 +96,29 @@ class JsonFileAPIHandler(APIHandler):
         for param in data['parameters']:
             param_ids.append(param['compID'])
             if isinstance(param['expression'], str):
-                param['expression'] = ast.literal_eval(param['expression'])
+                try:
+                    param['expression'] = ast.literal_eval(param['expression'])
+                except ValueError:
+                    pass
         for reaction in data['reactions']:
             if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
-                reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+                try:
+                    reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+                except ValueError:
+                    pass
         for event in data['eventsCollection']:
             for assignment in event['eventAssignments']:
                 if assignment['variable']['compID'] in param_ids:
-                    assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+                    try:
+                        assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+                    except ValueError:
+                        pass
         for rule in data['rules']:
             if rule['variable']['compID'] in param_ids:
-                rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
+                try:
+                    rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
+                except ValueError:
+                    pass
 
         
     @web.authenticated
