@@ -484,7 +484,8 @@ def run_model(model_path):
     model_path : str
         Path to the model file.
     '''
-    gillespy2_model, stochss_model = get_models(model_path, model_path.split('/').pop().split('.')[0])
+    from rename import get_file_name
+    gillespy2_model, stochss_model = get_models(model_path, get_file_name(model_path))
     workflow = GillesPy2Workflow(None, model_path)
     results = workflow.run_preview(gillespy2_model, stochss_model)
     return results

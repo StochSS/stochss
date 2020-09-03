@@ -44,7 +44,7 @@ def generate_imports_cell(json_data, algorithm, solv_name,
 def create_parameter_strings(json_data, padding):
     param_string = '\n' + padding + '# Parameters\n'
     for param in json_data['parameters']:
-        param_string += padding + 'self.add_parameter(Parameter(name="{0}", expression={1}))\n'.format(
+        param_string += padding + 'self.add_parameter(Parameter(name="{0}", expression="{1}"))\n'.format(
                 param['name'], 
                 param['expression'])
     return param_string

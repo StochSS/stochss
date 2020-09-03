@@ -122,6 +122,10 @@ module.exports = View.extend({
       let queryStr = "?cmd=read&outfile="+self.outfile+"&path="+model.directory
       endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
       xhr({ uri: endpoint, json: true}, function (err, response, body) {
+        if(typeof body === "string") {
+          body = body.replace(/NaN/g, null)
+          body = JSON.parse(body)
+        }
         var data = body.Results;
         if(response.statusCode >= 400){
           self.ran(false);

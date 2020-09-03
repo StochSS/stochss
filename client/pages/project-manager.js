@@ -41,7 +41,7 @@ let ProjectManager = PageView.extend({
     this.url = decodeURI(document.URL)
     let urlParams = new URLSearchParams(window.location.search)
     this.projectPath = urlParams.get('path')
-    this.projectName = this.projectPath.split('/').pop().split('.')[0]
+    this.projectName = this.getFileName(this.projectPath)
     this.model = new Project({
       directory: self.projectPath
     });
@@ -75,6 +75,18 @@ let ProjectManager = PageView.extend({
         }
       }
     });
+  },
+  getFileName: function (file) {
+    if(file.endsWith('/')) {
+      file.slice(0, -1)
+    }
+    if(file.includes('/')) {
+      file = file.split('/').pop()
+    }
+    if(!file.includes('.')) {
+      return file
+    }
+    return file.split('.').slice(0, -1).join('.')
   },
   renderSubviews: function () {
     this.renderProjectViewer();

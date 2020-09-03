@@ -59,7 +59,7 @@ module.exports = View.extend({
   expandInfoContainer: function () {
     this.enableCollapseButton();
     $(this.queryByHook('workflow-info')).collapse('show');
-    this.changeCollapseButtonText("collapse")
+    $(this.queryByHook("collapse")).click()
   },
   expandLogContainers: function () {
     if(this.listOfWarnings.length) {

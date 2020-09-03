@@ -352,8 +352,9 @@ class WorkflowNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         workflow_type = self.get_query_argument(name="type")
-        path = self.get_query_argument(name="path")
+        path = os.path.join("/home/jovyan", self.get_query_argument(name="path"))
         settings = None
 
         if path.endswith('.wkfl'):
@@ -397,6 +398,7 @@ class WorkflowNotebookHandler(APIHandler):
             log.error("Exception information: %s\n%s", error, trace)
             error['Traceback'] = trace
             self.write(error)
+        log.setLevel(logging.WARNING)
         self.finish()
 
 
