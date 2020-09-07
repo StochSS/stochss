@@ -20,7 +20,7 @@ div
 
   div.mx-5.mt-2.collapse(data-hook="collapse-annotation-container"+this.model.name.replace(/ /g,""))
 
-    div.col-md-1.inline
+    div.col-md-1.inline.align-top
 
       div.row
 
@@ -30,6 +30,6 @@ div
 
     div.collapse.show.col-md-11.inline(id="annotation-text"+this.model.name.replace(/ /g,""))
 
-        div.card.card-body.text-wrap=this.annotation
+        div: textarea(id="annotation"+this.model.name.replace(/ /g,"") data-hook="annotation" rows="7" style="width: 100%;")=this.model.annotation
 
   hr

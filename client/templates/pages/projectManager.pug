@@ -15,7 +15,7 @@ section.page
 
     div.mx-3.mt-2.collapse.verticle-space-2(data-hook="collapse-annotation-container")
 
-      div.col-md-1.inline
+      div.col-md-1.inline.align-top
 
         div.row
 
@@ -25,8 +25,8 @@ section.page
 
       div.collapse.show.col-md-11.inline(id="annotation-text")
 
-          div.card.card-body.text-wrap(data-hook="annotation-text-container")
-
+          div: textarea(id="annotation" data-hook="annotation-text-container" rows="7" style="width: 100%;")
+          
     div(id="edit-models-container" data-hook="edit-models-container")
 
     div.verticle-space-3

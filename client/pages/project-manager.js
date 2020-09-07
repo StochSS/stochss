@@ -31,7 +31,8 @@ let ProjectManager = PageView.extend({
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick',
     'click [data-hook=collapse-most-recent-plot-btn]' : 'changeCollapseButtonText',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
-    'click [data-hook="collapse-annotation-container"]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-annotation-container]' : 'changeCollapseButtonText',
+    'change [data-hook=annotation-text-container]' : 'updateAnnotation',
     'click [data-hook=upload-file-btn]' : 'handleUploadModelClick',
     'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick'
   },
@@ -177,35 +178,26 @@ let ProjectManager = PageView.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   handleEditAnnotationClick: function (e) {
-    let self = this
-    var name = this.model.name;
-    var annotation = this.model.annotation;
-    if(document.querySelector('#projectAnnotationModal')) {
-      document.querySelector('#projectAnnotationModal').remove();
+    let buttonTxt = e.target.innerText;
+    if(buttonTxt.startsWith("Add")){
+      $(this.queryByHook('collapse-annotation-container')).collapse('show')
+      $(this.queryByHook('edit-annotation-btn')).text('Edit Notes')
+    }else if(!$("#annotation-text").attr('class').includes('show')){
+      $("#annotation-text").collapse('show')
+      $(this.queryByHook("collapse-annotation-text")).text('-')
     }
-    let modal = $(modals.annotationModalHtml("project", name, annotation)).modal();
-    let okBtn = document.querySelector('#projectAnnotationModal .ok-model-btn');
-    let input = document.querySelector('#projectAnnotationModal #projectAnnotationInput');
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    okBtn.addEventListener('click', function (e) {
-      modal.modal('hide');
-      self.model.annotation = input.value;
-      $(self.queryByHook('annotation-text-container')).text(self.model.annotation)
-      if(self.model.annotation && self.model.annotation.trim() !== ""){
-        $(self.queryByHook('edit-annotation-btn')).text('Edit Notes')
-        $(self.queryByHook("collapse-annotation-container")).collapse('show')
-      }else{
-        $(self.queryByHook('edit-annotation-btn')).text('Add Notes')
-        $(self.queryByHook("collapse-annotation-container")).collapse('hide')
-      }
-      let endpoint = path.join(app.getApiPath(), "project/save-annotation")+"?path="+self.model.directory
-      xhr({uri: endpoint, json: true, method: "post", data: {'annotation': self.model.annotation}}, function (err, response, body) {})
-    });
+    document.querySelector("#annotation").focus()
+  },
+  updateAnnotation: function (e) {
+    this.model.annotation = e.target.value.trim();
+    if(this.model.annotation === ""){
+      $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
+      $(this.queryByHook("collapse-annotation-container")).collapse('hide')
+    }
+    let endpoint = path.join(app.getApiPath(), "project/save-annotation")+"?path="+this.model.directory
+    xhr({uri: endpoint, json: true, method: "post", data: {'annotation': this.model.annotation}}, function (err, response, body) {
+      console.log("Saved project notes")
+    })
   },
   handleNewModelClick: function () {
     this.addNewModel(false)

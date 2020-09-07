@@ -14,14 +14,13 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=project-workflow-open]' : 'handleOpenWorkflowClick',
-    'click [data-hook=project-workflow-export]' : 'handleExportWorkflowClick',
     'click [data-hook=edit-workflow-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=project-workflow-remove]' : 'handleDeleteWorkflowClick',
-    'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText',
+    'change [data-hook=annotation]' : 'updateAnnotation'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.annotation = this.model.annotation.replace(/\\n/g, "<br/>")
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -32,7 +31,7 @@ module.exports = View.extend({
       this.queryByHook('annotation-container').style.display = "none"
     }
     if(!this.model.annotation || !this.model.annotation.trim()){
-      $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
+      $(this.queryByHook('edit-workflow-annotation-btn')).text('Add Notes')
     }else{
       $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('show')
     }
@@ -58,9 +57,6 @@ module.exports = View.extend({
       window.location.href = endpoint
     }
   },
-  handleExportCombineClick: function (e) {
-    this.exportAsCombine(this.model.path)
-  },
   handleDeleteWorkflowClick: function (e) {
     let self = this
     if(document.querySelector('#moveToTrashConfirmModal')) {
@@ -82,36 +78,26 @@ module.exports = View.extend({
     });
   },
   handleEditAnnotationClick: function (e) {
-    let self = this
-    var name = this.model.name;
-    var annotation = this.model.annotation;
-    if(document.querySelector('#workflowAnnotationModal')) {
-      document.querySelector('#workflowAnnotationModal').remove();
+    let buttonTxt = e.target.innerText;
+    if(buttonTxt.startsWith("Add")){
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('show')
+      $(this.queryByHook('edit-workflow-annotation-btn')).text('Edit Notes')
+    }else if(!$("#annotation-text"+this.model.name.replace(/ /g,"")).attr('class').includes('show')){
+      $("#annotation-text"+this.model.name.replace(/ /g,"")).collapse('show')
+      $(this.queryByHook("collapse-annotation-text")).text('-')
     }
-    let modal = $(modals.annotationModalHtml("workflow", name, annotation)).modal();
-    let okBtn = document.querySelector('#workflowAnnotationModal .ok-model-btn');
-    let input = document.querySelector('#workflowAnnotationModal #workflowAnnotationInput');
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    okBtn.addEventListener('click', function (e) {
-      modal.modal('hide');
-      self.model.annotation = input.value;
-      let queryString = "?path="+path.join(self.model.path, "info.json")
-      let endpoint = path.join(app.getApiPath(), "workflow/save-annotation")+queryString
-      let body = {'annotation':self.model.annotation}
-      xhr({uri:endpoint, json:true, method:'post', body:body}, function (err, response, body) {
-        if(response.statusCode < 400) {
-          self.parent.renderEditWorkflowView();
-        }
-      })
-    });
+    document.querySelector("#annotation"+this.model.name.replace(/ /g,"")).focus()
   },
-  exportAsCombine: function (target) {
-    this.parent.parent.exportAsCombine(target)
+  updateAnnotation: function (e) {
+    this.model.annotation = e.target.value.trim();
+    if(this.model.annotation === "") {
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('hide')
+      $(this.queryByHook('edit-workflow-annotation-btn')).text('Add Notes')
+    }
+    let queryString = "?path="+path.join(this.model.path, "info.json")
+    let endpoint = path.join(app.getApiPath(), "workflow/save-annotation")+queryString
+    let body = {'annotation':this.model.annotation}
+    xhr({uri:endpoint, json:true, method:'post', body:body}, function (err, response, body) {console.log("Saved Notes")})
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
