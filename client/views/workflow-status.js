@@ -13,7 +13,9 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     var localDate = new Date(attrs.startTime)
+    console.log(localDate, typeof localDate)
     var localStartTime = this.getFormattedDate(localDate)
+    console.log(localStartTime, typeof localStartTime)
     this.startTime = localStartTime;
     this.status = attrs.status;
   },
@@ -49,8 +51,15 @@ module.exports = View.extend({
     hours = hours ? hours : 12; // replace 0 with 12
     var minutes = date.getMinutes();
     minutes = minutes < 10 ? '0' + minutes : minutes; // format minutes to always have two chars
-    var timeZone = date.toString().split(' ').pop() // get the timezone from the date
-    timeZone = timeZone.replace('(', '').replace(')', '') // remove the '()' from the timezone
+    var timeZone = date.toString().split('(').pop().split(')').shift() // get the timezone from the date
+    if(timeZone.includes(" ")){
+      tzparts = timeZone.split(" ")
+      tzparts = tzparts.map(function (element) {
+        return element.charAt(0)
+      })
+      timeZone = tzparts.join("")
+    }
+    // timeZone = timeZone.replace('(', '').replace(')', '') // remove the '()' from the timezone
     return  month + " " + day + ", " + year + "  " + hours + ":" + minutes + " " + ampm + " " + timeZone;
   },
 });

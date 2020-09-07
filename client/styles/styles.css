@@ -1,5 +1,5 @@
 body {
-
+  min-width: 650px
 }
 
 img.quickstart {
@@ -29,12 +29,18 @@ img.quickstart {
   display: inline-block;
 }
 
+.table {
+  table-layout: fixed;
+}
+
 span {
   font-size: 1rem;
 }
 
 select {
   margin-left: 10px;
+  width: auto;
+  max-width: 100%;
 }
 
 label {
@@ -82,6 +88,10 @@ a.disabled {
 
 .nav-link {
   padding: 0.5rem 0.25rem 0.5rem 1rem;
+}
+
+.dropdown-toggle {
+  white-space: normal;
 }
 
 .dropdown-menu li:hover {
@@ -420,8 +430,10 @@ span.checkbox {
 }
 
 .logo img {
-  width: 40em;
-  margin-left: -8em;
+  width: 95%;
+  max-height: 176px;
+  max-width: 40em;
+  margin-left: -13.5%;
 }
 
 .try-stochss-btn {
