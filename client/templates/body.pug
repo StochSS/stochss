@@ -1,9 +1,12 @@
 body
-  nav.navbar.navbar-expand-lg.p-1.navbar-light.bg-light.fixed-top
+  nav.navbar.navbar-expand-md.p-1.navbar-light.bg-light.fixed-top
     a.navbar-brand(href="/hub/spawn")
       img(style="height: 38px;margin-left: -1.2em;" src="static/stochss-logo.png")
 
-    div#navbar.collapse.navbar-collapse.justify-content-end
+    button.navbar-toggler(type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation")
+      span.navbar-toggler-icon
+
+    div#navbar.collapse.navbar-collapse.justify-content-end(role="navigation")
       ul.navbar-nav.float-right
         li.nav-item: a.nav-link(href="http://www.stochss.org", target="_blank")
           | About
