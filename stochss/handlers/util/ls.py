@@ -6,6 +6,7 @@ import traceback
 from os import path
 from .workflow_status import get_status
 from .stochss_errors import StochSSFileNotFoundError
+from .rename import get_file_name
 
 
 def get_file_system_data(full_path, p_path):
@@ -124,6 +125,6 @@ def list_files(p_path, is_root=False):
     if p_path == "none":
         data = build_root(data)
     elif is_root:
-        text = p_path.split('/').pop().split('.')[0]
+        text = get_file_name(p_path)
         data = build_root(data, _path=p_path, text=text)
     return json.dumps(data)

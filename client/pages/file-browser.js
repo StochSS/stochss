@@ -47,6 +47,13 @@ let FileBrowser = PageView.extend({
       'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
       'core': {'multiple' : false, 'animation': 0,
         'check_callback': function (op, node, par, pos, more) {
+          if(op === "rename_node" && self.validateName(pos, true) !== ""){
+            document.querySelector("#renameSpecialCharError").style.display = "block"
+            setTimeout(function () {
+              document.querySelector("#renameSpecialCharError").style.display = "none"
+            }, 5000)
+            return false
+          }
           if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
             return false
           }
@@ -83,6 +90,7 @@ let FileBrowser = PageView.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
+                $('#models-jstree').jstree().refresh_node(node);
               }else{
                 body = JSON.parse(body)
                 $('#models-jstree').jstree().refresh()
@@ -183,14 +191,22 @@ let FileBrowser = PageView.extend({
         uploadBtn.disabled = true
       }
     })
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+      var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
       var fileinfo = {"type":type,"name":"","path":"/"}
       if(o && o.original){
         fileinfo.path = o.original._path
       }
-      if(Boolean(input.value)){
+      if(Boolean(input.value) && self.validateName(input.value) === ""){
         fileinfo.name = input.value.trim()
+        console.log("Changing the name of the file")
       }
       let formData = new FormData()
       formData.append("datafile", file)
@@ -506,7 +522,23 @@ let FileBrowser = PageView.extend({
       targetPath = o.original._path
     }
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
-    window.location.href = endpoint
+    window.open(endpoint)
+  },
+  validateName(input, rename = false) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    if(rename) {
+      invalidChars += "/"
+    }
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
   },
   newProjectOrWorkflowGroup: function (o, isProject) {
     var self = this
@@ -533,6 +565,21 @@ let FileBrowser = PageView.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = ""
+      var charErrMsg = ""
+      if(isProject){
+        endErrMsg = document.querySelector('#newProjectModal #projectNameInputEndCharError')
+        charErrMsg = document.querySelector('#newProjectModal #projectNameInputSpecCharError')
+      }else{
+        endErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputEndCharError')
+        charErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputSpecCharError')
+      }
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
@@ -588,6 +635,14 @@ let FileBrowser = PageView.extend({
         okBtn.click();
       }
     });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
         let queryString = "?path="+o.original._path+"&mdlPath="+input.value.trim()
@@ -616,6 +671,14 @@ let FileBrowser = PageView.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {

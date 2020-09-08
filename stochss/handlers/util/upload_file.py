@@ -94,7 +94,8 @@ def unzip_file(full_path, dir_path):
 
     with zipfile.ZipFile(full_path, "r") as zip_file:
         zip_file.extractall(dir_path)
-    shutil.rmtree(os.path.join(dir_path, "__MACOSX"))
+    if "__MACOSX" in os.listdir(dir_path):
+        shutil.rmtree(os.path.join(dir_path, "__MACOSX"))
     
 
 def upload_file(dir_path, file_name, name, ext, body, file_type, exts):

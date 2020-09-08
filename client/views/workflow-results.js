@@ -21,9 +21,7 @@ module.exports = View.extend({
     'click [data-hook=collapse-stddev]' : 'handleCollapseStddevClick',
     'click [data-hook=collapse-trajmean]' : 'handleCollapseTrajmeanClick',
     'click [data-hook=collapse-psweep]' : 'handleCollapsePsweepClick',
-    'click [data-hook=collapse]' : function () {
-      this.changeCollapseButtonText("collapse");
-    },
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
@@ -32,6 +30,11 @@ module.exports = View.extend({
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
     'click [data-hook=plot]' : function (e) {
       $(this.queryByHook("edit-plot-args")).collapse("show");
+      $(document).ready(function () {
+      $("html, body").animate({ 
+          scrollTop: $("#edit-plot-args").offset().top - 50
+      }, false);
+    });
     },
     'click [data-hook=download-png-custom]' : function (e) {
       var type = e.target.id;
@@ -44,6 +47,7 @@ module.exports = View.extend({
     'click [data-hook=save-plot]' : function (e) {
       var type = e.target.id;
       e.target.disabled = true
+      $("button[data-hook=save-plot]").filter("#"+type).text('Saved Plot to Project Viewer')
       this.savePlot(type)
     },
     'click [data-hook=download-results-csv]' : 'handlerDownloadResultsCsvClick',
@@ -120,9 +124,14 @@ module.exports = View.extend({
   },
   updateValid: function () {
   },
-  changeCollapseButtonText: function (source) {
-    var text = $(this.queryByHook(source)).text();
-    text === '+' ? $(this.queryByHook(source)).text('-') : $(this.queryByHook(source)).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
@@ -175,9 +184,13 @@ module.exports = View.extend({
           if(plot.key === data.plt_key)
             return true
         }).length > 0)
-        if(plotSaved) {
-          $("button[data-hook=save-plot]").filter("#"+type).prop('disabled', true)
-        }
+        let saveBtn = $("button[data-hook=save-plot]").filter("#"+type)
+        if(!self.parent.wkflPath.includes('.proj')) {
+          saveBtn.hide()
+        }else if(plotSaved) {
+          saveBtn.prop('disabled', true)
+          saveBtn.text('Plot Saved to Project Viewer')
+        } 
       }
     });
   },
@@ -193,7 +206,7 @@ module.exports = View.extend({
     });
   },
   clickDownloadPNGButton: function (type) {
-    var pngButton = $('div[data-hook*='+type+'] a[data-title*="Download plot as a png"]')[0]
+    var pngButton = $('div[data-hook='+type+'] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
   },
   exportToJsonFile: function (jsonData, plotType) {
@@ -221,12 +234,13 @@ module.exports = View.extend({
   },
   exportToZipFile: function (resultsPath) {
     var endpoint = path.join("files", resultsPath);
-    window.location.href = endpoint
+    window.open(endpoint)
   },
   expandContainer: function () {
     $(this.queryByHook('workflow-results')).collapse('show');
-    $(this.queryByHook('collapse')).prop('disabled', false);
-    this.changeCollapseButtonText("collapse")
+    let collapseBtn = $(this.queryByHook('collapse'));
+    collapseBtn.prop('disabled', false)
+    collapseBtn.click()
     if(this.type === "parameterSweep"){
       this.getPlot("psweep")
     }else{
@@ -298,35 +312,35 @@ module.exports = View.extend({
     return parseInt(year+month+day+hour+minutes+seconds)
   },
   handleCollapseStddevrangeClick: function (e) {
-    this.changeCollapseButtonText("collapse-stddevrange");
+    this.changeCollapseButtonText(e)
     let type = "stddevran"
     if(!this.plots[type]){
       this.getPlot(type);
     }
   },
-  handleCollapseTrajectoriesClick: function () {
-    this.changeCollapseButtonText("collapse-trajectories");
+  handleCollapseTrajectoriesClick: function (e) {
+    this.changeCollapseButtonText(e)
     let type = "trajectories"
     if(!this.plots[type]){
       this.getPlot(type);
     }
   },
-  handleCollapseStddevClick: function () {
-    this.changeCollapseButtonText("collapse-stddev");
+  handleCollapseStddevClick: function (e) {
+    this.changeCollapseButtonText(e)
     let type = "stddev"
     if(!this.plots[type]){
       this.getPlot(type);
     }
   },
-  handleCollapseTrajmeanClick: function () {
-    this.changeCollapseButtonText("collapse-trajmean");
+  handleCollapseTrajmeanClick: function (e) {
+    this.changeCollapseButtonText(e)
     let type = "avg"
     if(!this.plots[type]){
       this.getPlot(type);
     }
   },
-  handleCollapsePsweepClick: function () {
-    this.changeCollapseButtonText("collapse-psweep");
+  handleCollapsePsweepClick: function (e) {
+    this.changeCollapseButtonText(e)
     let type = "psweep"
     if(!this.plots[type]){
       this.getPlot(type);

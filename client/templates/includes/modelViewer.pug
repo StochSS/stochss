@@ -2,10 +2,10 @@ div.card.card-body
 
   div(id="model-viewer-header")
 
-    h3.inline="Preview Model: "+this.model.name
-    button.btn.btn-outline-collapse(id=this.model.name, data-toggle="collapse", data-target="#collapse-model"+this.model.name, data-hook="collapse-model") +
+    h3.inline="Review Model: "+this.model.name
+    button.btn.btn-outline-collapse(id=this.model.name, data-toggle="collapse", data-target="#collapse-model"+this.model.name.replace(/ /g, ''), data-hook="collapse-model") +
 
-  div.collapse(id="collapse-model"+this.model.name)
+  div.collapse(id="collapse-model"+this.model.name.replace(/ /g, ''))
 
     div(data-hook="species-viewer-container")
 

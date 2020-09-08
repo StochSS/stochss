@@ -15,8 +15,10 @@ module.exports = View.extend({
   events: {
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
     'click [data-hook=project-model-workflow-option]' : 'handleNewWorkflowClick',
-    'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
-    'click [data-hook=project-model-remove]' : 'handleRemoveModelClick'
+    'click [data-hook=edit-model-annotation-btn]' : 'handleEditAnnotationClick',
+    'click [data-hook=project-model-remove]' : 'handleRemoveModelClick',
+    'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText',
+    'change [data-hook=annotation]' : 'updateAnnotation'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -27,7 +29,9 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+      $(this.queryByHook('edit-model-annotation-btn')).text('Add Notes')
+    }else{
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('show')
     }
   },
   handleEditModelClick: function (e) {
@@ -69,26 +73,31 @@ module.exports = View.extend({
     });
   },
   handleEditAnnotationClick: function (e) {
-    let self = this
-    var name = this.model.name;
-    var annotation = this.model.annotation;
-    if(document.querySelector('#modelAnnotationModal')) {
-      document.querySelector('#modelAnnotationModal').remove();
+    let buttonTxt = e.target.innerText;
+    if(buttonTxt.startsWith("Add")){
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('show')
+      $(this.queryByHook('edit-model-annotation-btn')).text('Edit Notes')
+    }else if(!$("#annotation-text"+this.model.name.replace(/ /g,"")).attr('class').includes('show')){
+      $("#annotation-text"+this.model.name.replace(/ /g,"")).collapse('show')
+      $(this.queryByHook("collapse-annotation-text")).text('-')
     }
-    let modal = $(modals.annotationModalHtml("model", name, annotation)).modal();
-    let okBtn = document.querySelector('#modelAnnotationModal .ok-model-btn');
-    let input = document.querySelector('#modelAnnotationModal #modelAnnotationInput');
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    okBtn.addEventListener('click', function (e) {
-      modal.modal('hide');
-      self.model.annotation = input.value;
-      self.model.saveModel()
-      self.parent.renderEditModelview();
-    });
+    document.querySelector("#annotation"+this.model.name.replace(/ /g,"")).focus()
+  },
+  updateAnnotation: function (e) {
+    this.model.annotation = e.target.value.trim();
+    if(this.model.annotation === "") {
+      $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('hide')
+      $(this.queryByHook('edit-model-annotation-btn')).text('Add Notes')
+    }
+    this.model.saveModel()
+  },
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 });

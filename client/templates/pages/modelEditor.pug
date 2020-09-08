@@ -10,7 +10,7 @@ section.page
       nav(aria-label="breadcrumb")
         ol.breadcrumb
           li.breadcrumb-item
-            a(href="/stochss/project/manager?path="+this.projectPath)=this.projectName
+            a.active-link(data-hook="project-breadcrumb-link")=this.projectName
           li.breadcrumb-item.active(aria-current="page")=this.model.name
 
   div(data-hook="model-name-header")

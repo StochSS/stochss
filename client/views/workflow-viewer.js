@@ -20,16 +20,21 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments)
   },
-  renderPlots: function () {
-    this.changeCollapseButtonText()
+  renderPlots: function (e) {
+    this.changeCollapseButtonText(e)
     if(this.plotsView) {
       return
     }
     var outputs = new Collection(this.model.outputs, {model: Plot})
     this.plotsView = this.renderCollection(outputs, PlotsView, this.queryByHook("workflow-plots"))
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-workflow')).text();
-    text === '+' ? $(this.queryByHook('collapse-workflow')).text('-') : $(this.queryByHook('collapse-workflow')).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 })

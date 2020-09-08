@@ -50,6 +50,7 @@ class JsonFileAPIHandler(APIHandler):
             with open(full_path, 'r') as f:
                 data = json.load(f)
             log.debug("Contents of the json file: {0}".format(data))
+            self.update_model_data(data)
             self.write(data)
         elif purpose == "edit":
             new_path ='/stochss/stochss_templates/nonSpatialModelTemplate.json'
@@ -87,6 +88,37 @@ class JsonFileAPIHandler(APIHandler):
             log.error("Exception information: {0}".format(error))
             self.write(error)
         self.finish()
+
+
+    @classmethod
+    def update_model_data(cls, data):
+        param_ids = []
+        for param in data['parameters']:
+            param_ids.append(param['compID'])
+            if isinstance(param['expression'], str):
+                try:
+                    param['expression'] = ast.literal_eval(param['expression'])
+                except ValueError:
+                    pass
+        for reaction in data['reactions']:
+            if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
+                try:
+                    reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+                except ValueError:
+                    pass
+        for event in data['eventsCollection']:
+            for assignment in event['eventAssignments']:
+                if assignment['variable']['compID'] in param_ids:
+                    try:
+                        assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+                    except ValueError:
+                        pass
+        for rule in data['rules']:
+            if rule['variable']['compID'] in param_ids:
+                try:
+                    rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
+                except ValueError:
+                    pass
 
         
     @web.authenticated

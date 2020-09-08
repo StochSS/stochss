@@ -1,5 +1,5 @@
 body {
-
+  min-width: 650px
 }
 
 img.quickstart {
@@ -26,7 +26,11 @@ img.quickstart {
 }
 
 .inline{
-  display: inline-block !important;
+  display: inline-block;
+}
+
+.table {
+  table-layout: fixed;
 }
 
 span {
@@ -35,6 +39,8 @@ span {
 
 select {
   margin-left: 10px;
+  width: auto;
+  max-width: 100%;
 }
 
 label {
@@ -55,6 +61,22 @@ div.head {
   border-bottom: 2px solid #dee2e6;
 }
 
+a.active-link:not([href]):not([tabindex]) {
+  color: #007bff;
+  text-decoration: none;
+  background-color: transparent;
+}
+
+a.active-link:not([href]):not([tabindex]):hover {
+  color: #0056b3;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+a.active-link:not([href]):not([tabindex]):focus {
+  color: rgba(0, 0, 0, 0.9);
+}
+
 a.disabled {
   pointer-events: none;
   cursor: default;
@@ -68,12 +90,28 @@ a.disabled {
   padding: 0.5rem 0.25rem 0.5rem 1rem;
 }
 
+.dropdown-toggle {
+  white-space: normal;
+}
+
 .dropdown-menu li:hover {
     cursor: pointer;
 }
 
 .name {
   width: 8rem;
+}
+
+.invalid-feedback.wkfl-name {
+  margin-top: 0;
+  margin-left: 8rem;
+  margin-bottom: 1rem;
+}
+
+.invalid-feedback.mdl-path {
+  margin-top: 0;
+  margin-left: 6rem;
+  margin-bottom: 1rem;
 }
 
 button.name {
@@ -392,8 +430,10 @@ span.checkbox {
 }
 
 .logo img {
-  width: 40em;
-  margin-left: -8em;
+  width: 95%;
+  max-height: 176px;
+  max-width: 40em;
+  margin-left: -13.5%;
 }
 
 .try-stochss-btn {
@@ -438,4 +478,26 @@ span.checkbox {
 .no-gutters-padding {
   padding-right: 0px;
   padding-left: 0px;
+}
+
+.dropbtn {
+  border: none;
+  background-color: inherit;
+}
+
+.dropdown {
+  background-color: inherit;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: rgb(248, 249, 250);
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
 }

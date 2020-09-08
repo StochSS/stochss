@@ -8,6 +8,7 @@ requests without a referrer field
 import os
 import json
 import logging
+import ast
 
 from shutil import copyfile, copytree, rmtree
 from tornado import web
@@ -89,12 +90,17 @@ class LoadProjectAPIHandler(APIHandler):
         log.debug("The path to the new project directory: %s", path)
         project = {"models": [], "workflowGroups": [], "trash_empty": True}
         for item in os.listdir(path):
-            if item.endswith('.mdl'):
+            if item == "README.md":
+                readme_path = os.path.join(path, item)
+                with open(readme_path, 'r') as readme_file:
+                    project['annotation'] = readme_file.read()
+            elif item.endswith('.mdl'):
                 mdl_dir = os.path.join(path, item)
                 with open(mdl_dir, 'r') as mdl_file:
                     model = json.load(mdl_file)
                     model['name'] = item.split('.')[0]
                     model['directory'] = mdl_dir
+                    self.update_model_data(model)
                     project['models'].append(model)
             elif item.endswith('.wkgp'):
                 name = item.split('.')[0]
@@ -114,6 +120,37 @@ class LoadProjectAPIHandler(APIHandler):
         log.debug("Contents of the project: %s", project)
         self.write(project)
         self.finish()
+
+
+    @classmethod
+    def update_model_data(cls, data):
+        param_ids = []
+        for param in data['parameters']:
+            param_ids.append(param['compID'])
+            if isinstance(param['expression'], str):
+                try:
+                    param['expression'] = ast.literal_eval(param['expression'])
+                except ValueError:
+                    pass
+        for reaction in data['reactions']:
+            if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
+                try:
+                    reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+                except ValueError:
+                    pass
+        for event in data['eventsCollection']:
+            for assignment in event['eventAssignments']:
+                if assignment['variable']['compID'] in param_ids:
+                    try:
+                        assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+                    except ValueError:
+                        pass
+        for rule in data['rules']:
+            if rule['variable']['compID'] in param_ids:
+                try:
+                    rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
+                except ValueError:
+                    pass
 
 
     @classmethod
@@ -209,6 +246,7 @@ class NewProjectAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: %s", path)
@@ -226,6 +264,7 @@ class NewProjectAPIHandler(APIHandler):
                      "Message":"Could not create your project: {0}".format(err)}
             log.error("Exception Information: %s", error)
             self.write(error)
+        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -675,4 +714,29 @@ class ExportAsCombineAPIHandler(APIHandler):
             error = {"Reason":err.reason, "Message":err.message}
             log.error("Exception Information: %s", error)
             self.write(error)
+        self.finish()
+
+
+class UpdateAnnotationAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for updating the README.md file with the projects annotation
+    ##############################################################################
+    '''
+    @web.authenticated
+    def post(self):
+        '''
+        Export a project with new or updated meta data.
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        path = os.path.join(user_dir, self.get_query_argument(name="path"), "README.md")
+        log.debug("Path to the project directory: %s", path)
+        data = json.loads(self.request.body.decode())['annotation'].strip()
+        log.debug("Annotation to be saved: %s", data)
+        log.debug(type(data))
+        with open(path, 'w') as readme_file:
+            readme_file.write(data)
         self.finish()
