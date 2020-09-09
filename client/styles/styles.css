@@ -296,8 +296,13 @@ input[type="file"]::-ms-browse {
   overflow-wrap: break-word !important;
 }
 
-.modal-content.info {
-  width: 150%;
+.modal-dialog {
+  width: 75%;
+}
+
+.modal-content .modal-dialog {
+  min-width: 487.5px;
+  max-width: 750px;
 }
 
 .modal-content.default-species {
