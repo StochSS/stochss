@@ -4,7 +4,10 @@ import os
 import json
 from .rename import get_unique_file_name
 from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
-from .stochss_erroes import FileNotZipArchiveError
+try:
+    from stochss_errors import FileNotZipArchiveError
+except:
+    from .stochss_errors import FileNotZipArchiveError
 
 
 def validate_model(body, file_name):
