@@ -2,13 +2,15 @@
 
 import os
 import json
-from .rename import get_unique_file_name
-from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
-try:
-    from stochss_errors import FileNotZipArchiveError
-except ImportError:
-    from .stochss_errors import FileNotZipArchiveError
-
+# from .rename import get_unique_file_name
+# from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
+# try:
+#     from stochss_errors import FileNotZipArchiveError
+# except ImportError:
+#     from .stochss_errors import FileNotZipArchiveError
+from stochss.handlers.util.rename import get_unique_file_name
+from stochss.handlers.util.convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
+from stochss.handlers.util.stochss_errors import FileNotZipArchiveError
 
 def validate_model(body, file_name):
     try:
@@ -96,8 +98,8 @@ def unzip_file(full_path, dir_path):
     import zipfile
     import shutil
 
-    if not zipfile.is_zipfile(full_path):
-        raise FileNotZipArchiveError("The file is not a zip archive.")
+    # if not zipfile.is_zipfile(full_path):
+    #     raise FileNotZipArchiveError("The file is not a zip archive.")
     with zipfile.ZipFile(full_path, "r") as zip_file:
         zip_file.extractall(dir_path)
     if "__MACOSX" in os.listdir(dir_path):
@@ -181,8 +183,11 @@ def upload_from_link(path):
     
     user_dir = "/home/jovyan"
     response = urllib.request.urlopen(path)
-    unzip_file(response, user_dir)
-    file_path = get_file_path(user_dir).replace(user_dir, "")
+    zip_path = os.path.join(user_dir, path.split('/').pop())
+    with open(zip_path, "wb") as zip_file:
+        zip_file.write(response.read())
+    unzip_file(zip_path, user_dir)
+    file_path = get_file_path(user_dir).replace(user_dir+"/", "")
     target_file = path.split('/').pop()
     resp = {"message":"Successfully uploaded the file {} to {}".format(target_file,
                                                                        file_path),
@@ -226,6 +231,8 @@ if __name__ == "__main__":
         if done:
             with open(args.outfile, 'r') as response_file:
                 resp = json.load(response_file)
+            os.remove(args.outfile)
+            os.remove(args.outfile+".done")
         else:
             resp = {}
         resp['done'] = done

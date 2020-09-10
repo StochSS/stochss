@@ -82,4 +82,4 @@ class ImporperMathMLFormatError(StochSSAPIError):
 class FileNotZipArchiveError(StochSSAPIError):
 
     def __init__(self, msg, trace=None):
-        super.__init__(406, "File Not Zip Archive", msg, trace)
+        super().__init__(406, "File Not Zip Archive", msg, trace)

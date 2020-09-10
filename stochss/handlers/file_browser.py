@@ -841,7 +841,7 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
         self.finish()
 
 
-class UploadFileFromLinkAPIHandler:
+class UploadFileFromLinkAPIHandler(APIHandler):
     '''
     ##############################################################################
     Handler for uploading file from a url.
