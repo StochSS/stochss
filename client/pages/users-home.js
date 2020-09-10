@@ -21,7 +21,7 @@ let usersHomePage = PageView.extend({
     'click [data-hook=quickstart-btn]' : 'handleQuickstartClick'
   },
   initialize: function (attrs, options) {
-    PageView.prototype.initiaize.apply(this, arguments)
+    PageView.prototype.initialize.apply(this, arguments)
     let urlParams = new URLSearchParams(window.location.search)
     if(urlParams.has("open")){
       let uploadPath = urlParams.get("open")

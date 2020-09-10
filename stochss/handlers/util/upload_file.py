@@ -6,7 +6,7 @@ from .rename import get_unique_file_name
 from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
 try:
     from stochss_errors import FileNotZipArchiveError
-except:
+except ImportError:
     from .stochss_errors import FileNotZipArchiveError
 
 
