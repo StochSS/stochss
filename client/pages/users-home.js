@@ -39,7 +39,7 @@ let usersHomePage = PageView.extend({
     let self = this
     setTimeout(function () {
       let endpoint = path.join(app.getApiPath(), 'file/upload-from-link')+"?path="+self.responsePath+"&cmd=read"
-      xhr({uri: endpoint, json: true} function (err, response, body) {
+      xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode >= 400) {
           console.log("error reported")
         }else if(body.done) {
