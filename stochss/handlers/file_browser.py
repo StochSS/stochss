@@ -8,6 +8,8 @@ Use finish() for json, write() for text
 '''
 import os
 import json
+import uuid
+import subprocess
 from json.decoder import JSONDecodeError
 from datetime import datetime
 import logging
@@ -24,7 +26,7 @@ from .util.convert_to_smdl_mdl import convert_model
 from .util.convert_to_sbml import convert_to_sbml
 from .util.convert_sbml_to_model import convert_sbml_to_model
 from .util.generate_zip_file import download_zip
-from .util.upload_file import upload
+from .util.upload_file import upload, upload_from_link
 from .util.workflow_status import get_status
 
 log = logging.getLogger('stochss')
@@ -836,4 +838,44 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
             log.error("Exception information: %s\n%s", error, trace)
             error['Traceback'] = trace
             self.write(error)
+        self.finish()
+
+
+class UploadFileFromLinkAPIHandler:
+    '''
+    ##############################################################################
+    Handler for uploading file from a url.
+    ##############################################################################
+    '''
+
+    async def get(self):
+        '''
+        Upload and unzip a zip file from a url.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the external file or the response file: %s", path)
+        cmd = self.get_query_argument(name="cmd", default=None)
+        log.debug("The command for the upload script: %s", cmd)
+        if cmd is None:
+            outfile = str(uuid.uuid4()).replace("-", "_")+".tmp"
+            log.debug("Response file name: %s", outfile)
+            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py', '{0}'.format(path), '{}'.format(outfile)] # Script commands for read run_cmd
+            log.debug("Exec command: %s", exec_cmd)
+            pipe = subprocess.Popen(exec_cmd)
+            resp = {"responsePath": outfile}
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        else:
+            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py', 'None', '{}'.format(path)] # Script commands for read run_cmd
+            log.debug("Exec command: %s", exec_cmd)
+            pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
+            results, error = pipe.communicate()
+            log.error("Errors trown by the subprocess: %s", error)
+            resp = json.loads(results)
+            log.debug("Response: %s", resp)
+            self.write(resp)
         self.finish()

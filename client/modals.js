@@ -20,7 +20,7 @@ let templates = {
                         <li class="invalid-feedback" id="${inputID}EndCharError">Names cannot end with a '/'</li>
                       </div>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
+                        <button type="button" class="btn btn-primary ok-model-btn box-shadow" disabled>OK</button>
                         <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
                       </div>
                     </div>

@@ -4,6 +4,7 @@ import os
 import json
 from .rename import get_unique_file_name
 from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
+from .stochss_erroes import FileNotZipArchiveError
 
 
 def validate_model(body, file_name):
@@ -92,6 +93,8 @@ def unzip_file(full_path, dir_path):
     import zipfile
     import shutil
 
+    if not zipfile.is_zipfile(full_path):
+        raise FileNotZipArchiveError("The file is not a zip archive.")
     with zipfile.ZipFile(full_path, "r") as zip_file:
         zip_file.extractall(dir_path)
     if "__MACOSX" in os.listdir(dir_path):
@@ -169,3 +172,58 @@ def upload(file_data, file_info):
     
     return resp
 
+
+def upload_from_link(path):
+    import urllib
+    
+    user_dir = "/home/jovyan"
+    response = urllib.request.urlopen(path)
+    unzip_file(response, user_dir)
+    file_path = get_file_path(user_dir).replace(user_dir, "")
+    target_file = path.split('/').pop()
+    resp = {"message":"Successfully uploaded the file {} to {}".format(target_file,
+                                                                       file_path),
+            "file_path":file_path}
+    return resp
+
+
+def get_file_path(path):
+    files = os.listdir(path)
+    paths = list(map(lambda file: os.path.join(path, file), files))
+    return max(paths, key=os.path.getctime)
+
+def get_parsed_args():
+    '''
+    Initializes an argparser to document this script and returns a dict of
+    the arguments that were passed to the script from the command line.
+
+    Attributes
+    ----------
+
+    '''
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Upload a file from an external link")
+    parser.add_argument("file_path", help="The path to the external file.")
+    parser.add_argument("outfile", help="The path to the response file")
+    args = parser.parse_args()
+
+    return  args
+
+
+if __name__ == "__main__":
+    args = get_parsed_args()
+    if args.file_path != 'None':
+        resp = upload_from_link(args.file_path)
+        with open(args.outfile, "w") as fd:
+            json.dump(resp, fd)
+        open(args.outfile + ".done", "w").close()
+    else:
+        done = os.path.exists(args.outfile + ".done")
+        if done:
+            with open(args.outfile, 'r') as response_file:
+                resp = json.load(response_file)
+        else:
+            resp = {}
+        resp['done'] = done
+        print(json.dumps(resp))

@@ -46,13 +46,19 @@ class JsonFileAPIHandler(APIHandler):
         full_path = os.path.join('/home/jovyan', file_path)
         log.debug("Full path to the file: {0}".format(full_path))
         self.set_header('Content-Type', 'application/json')
-        if os.path.exists(full_path):
+        if os.path.exists(full_path) and purpose != 'new':
             with open(full_path, 'r') as f:
                 data = json.load(f)
             log.debug("Contents of the json file: {0}".format(data))
             self.update_model_data(data)
             self.write(data)
-        elif purpose == "edit":
+        elif os.path.exists(full_path) and purpose == 'new':
+            self.set_status(406)
+            error = {"Reason":"Model Already Exists",
+                     "Message":"Could not create your model: {0}".format(err)}
+            log.error("Exception Information: %s", error)
+            self.write(error)
+        elif purpose == "edit" or purpose == "new":
             new_path ='/stochss/stochss_templates/nonSpatialModelTemplate.json'
             log.debug("Path to the model template: {0}".format(new_path))
             try:
