@@ -32,57 +32,57 @@ class TestFilesystem(unittest.TestCase):
     def test_filesystem(self):
 
         #test close button on create directory modal window
+        self.browser.find_element(By.ID, "browse-files-btn").click()
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
         self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(1)").click()
         self.browser.find_element(By.ID, "modelNameInput").send_keys("uncreated_test_dir")
         self.browser.find_element(By.CSS_SELECTOR, ".btn-secondary").click()
-        #test close button on create file modal window
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
         self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(2)").click()
-        self.browser.find_element(By.ID, "modelNameInput").send_keys("uncreated_test_model")
-        self.browser.find_element(By.CSS_SELECTOR, ".btn-secondary").click()
+        self.browser.find_element(By.ID, "projectNameInput").send_keys("test_proj")
+        self.browser.find_element(By.ID, "projectNameInput").send_keys(Keys.ENTER)
         #create new directory test_dir
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
         self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(1)").click()
         self.browser.find_element(By.ID, "modelNameInput").send_keys("test_dir")
-        self.browser.find_element(By.CSS_SELECTOR, ".ok-model-btn").click()
+        self.browser.find_element(By.ID, "modelNameInput").send_keys(Keys.ENTER)
         #create new model test_model
         self.browser.find_element(By.CSS_SELECTOR, ".page").click()
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
-        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(2)").click()
+        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(3)").click()
         self.browser.find_element(By.ID, "modelNameInput").send_keys("test_model")
-        self.browser.find_element(By.CSS_SELECTOR, ".ok-model-btn").click()
+        self.browser.find_element(By.ID, "modelNameInput").send_keys(Keys.ENTER)
+        time.sleep(0.5)
         #return from Model Editor page to File Browser page
         self.browser.back()
         self.browser.wait_for_navigation_complete()
         
         #confirm create file and create directory successful
         jstree_nodes=self.browser.find_elements_by_class_name('jstree-node')
-        print(jstree_nodes[0].text)
-       # assert (jstree_nodes[0].text==(" /" + "\n" + " test_dir" + "\n" + " test_model.mdl" + "\n" + " Examples"))
+        assert (jstree_nodes[0].text==(" /" + "\n" + " test_proj.proj" + "\n" + " test_dir" + "\n" + " test_model.mdl" + "\n" + " Examples"))
         stochss_dir_contents = (self.stochss_container.exec_run("python -c \"import os;print(os.listdir())\"", demux=False)[1])
-        assert not b"uncreated_test_model.mdl" in stochss_dir_contents
         assert not b"uncreated_test_dir" in stochss_dir_contents
         assert b"test_model.mdl" in stochss_dir_contents
         assert b"test_dir" in stochss_dir_contents
+        assert b"test_proj" in stochss_dir_contents
 
         #test upload StochSS model
         self.browser.find_element(By.CSS_SELECTOR, "b").click()
-        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(4)").click()
+        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(5)").click()
         title=self.browser.find_element_by_class_name("modal-title")
         assert title.text=='Upload a model'
         self.browser.find_element(By.CSS_SELECTOR, ".info .btn-secondary").click()
         
         #test upload SBML model
         self.browser.find_element(By.CSS_SELECTOR, "b").click()
-        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(5)").click()
+        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(6)").click()
         title=self.browser.find_element_by_class_name("modal-title")
         assert title.text=='Upload a sbml'
         self.browser.find_element(By.CSS_SELECTOR, ".info .btn-secondary").click()
 
         #test upload file
         self.browser.find_element(By.CSS_SELECTOR, "b").click()
-        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(6)").click()
+        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(7)").click()
         title=self.browser.find_element_by_class_name("modal-title")
         assert title.text=='Upload a file'
         self.browser.find_element(By.CSS_SELECTOR, ".info .btn-secondary").click()
@@ -93,11 +93,11 @@ class TestFilesystem(unittest.TestCase):
         assert 1 == len(jstree_nodes)
         self.browser.find_element(By.CSS_SELECTOR, ".jstree-ocl").click()
         jstree_nodes=self.browser.find_elements_by_class_name("jstree-node")
-        assert 4 == len(jstree_nodes)
+        assert 5 == len(jstree_nodes)
 
         #test Actions For <node> button
         #test Edit (model)
-        self.browser.find_element(By.ID, "j1_3_anchor").click()
+        self.browser.find_element(By.ID, "j1_4_anchor").click()
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
         self.browser.find_element(By.LINK_TEXT, "Edit").click()
         title=self.browser.find_element_by_class_name("modal-title")
@@ -105,16 +105,17 @@ class TestFilesystem(unittest.TestCase):
         self.browser.back()
         self.browser.wait_for_navigation_complete()
         #test New Workflow
-        self.browser.find_element(By.ID, "j1_3_anchor").click()
+        self.browser.find_element(By.ID, "j1_4_anchor").click()
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
         self.browser.find_element(By.LINK_TEXT, "New Workflow").click()
         table=self.browser.find_element_by_class_name("table")
-        assert table.text=='StochSS Workflows\nEnsemble Simulation\nParameter Sweep'
+        split_table_text=table.text.split("\n")
+        assert split_table_text==['StochSS Workflows', 'Ensemble Simulation Parameter Sweep']
         self.browser.back()
         self.browser.wait_for_navigation_complete()
 
         #test Convert To Notebook
-        self.browser.find_element(By.ID, "j1_3_anchor").click()
+        self.browser.find_element(By.ID, "j1_4_anchor").click()
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
         self.vars["window_handles"] = self.browser.window_handles
         convert_menu_element = self.browser.find_element(By.LINK_TEXT, "Convert")
@@ -132,7 +133,7 @@ class TestFilesystem(unittest.TestCase):
         assert b'test_model.ipynb' in stochss_dir_contents
 
         #test Convert to SBML Model
-        self.browser.find_element(By.ID, "j1_4_anchor").click()
+        self.browser.find_element(By.ID, "j1_5_anchor").click()
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
         convert_menu_element = self.browser.find_element(By.LINK_TEXT, "Convert")
         ActionChains(self.browser).move_to_element(convert_menu_element).perform()
