@@ -23,8 +23,7 @@ class TestModelEditor(unittest.TestCase):
     def test_model_editor(self):
 
         #create new model
-        self.browser.find_element(By.CSS_SELECTOR, "b").click()
-        self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(2)").click()
+        self.browser.find_element(By.ID, "new-model-btn").click()
         self.browser.find_element(By.ID, "modelNameInput").send_keys("test_model")
         self.browser.find_element(By.CSS_SELECTOR, ".ok-model-btn").click()
         
@@ -96,7 +95,7 @@ class TestModelEditor(unittest.TestCase):
         self.browser.find_element(By.ID, "reactionAnnotationInput").send_keys("test_reaction_annotation")
         self.browser.find_element(By.ID, "reactionAnnotationInput").send_keys(Keys.ENTER)
         annotation_tooltips = self.browser.find_elements_by_class_name("tooltip-icon-large")
-        assert annotation_tooltips[len(annotation_tooltips)-1].get_attribute("data-original-title")=="test_reaction_annotation"
+        assert annotation_tooltips[len(annotation_tooltips)-1].get_attribute("data-original-title")=="test_reaction_annotation\n"
 
         #test events editor
         self.browser.find_element(By.CSS_SELECTOR, "#events-container > .btn").click()
@@ -104,6 +103,10 @@ class TestModelEditor(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "#events-container .name .form-input").send_keys("test_event")
         assert self.browser.find_element(By.CSS_SELECTOR, "#events-container .name .form-input").get_attribute("value") == "test_event"
         self.browser.find_element(By.CSS_SELECTOR, ".col-md-6 > .table .btn-sm").click()
+        self.browser.find_element(By.ID, "eventAnnotationInput").send_keys("test_event_annotation")
+        self.browser.find_element(By.ID, "eventAnnotationInput").send_keys(Keys.ENTER)
+        annotation_tooltips = self.browser.find_elements_by_class_name("tooltip-icon-large")
+        assert annotation_tooltips[len(annotation_tooltips)-1].get_attribute("data-original-title")=="test_event_annotation\n"
         self.browser.find_element(By.NAME, "trigger-expression").clear()
         self.browser.find_element(By.NAME, "trigger-expression").send_keys("test_trigger")
         assert self.browser.find_element(By.NAME, "trigger-expression").get_attribute("value")=="test_trigger"
@@ -141,7 +144,7 @@ class TestModelEditor(unittest.TestCase):
         self.browser.find_element(By.ID, "ruleAnnotationInput").send_keys("test_rate_annotation")
         self.browser.find_element(By.ID, "ruleAnnotationInput").send_keys(Keys.ENTER)
         annotation_tooltips = self.browser.find_elements_by_class_name("tooltip-icon-large")
-        assert annotation_tooltips[len(annotation_tooltips)-2].get_attribute("data-original-title")=="test_rate_annotation"
+        assert annotation_tooltips[len(annotation_tooltips)-2].get_attribute("data-original-title")=="test_rate_annotation\n"
         self.browser.find_element(By.CSS_SELECTOR, "tr:nth-child(1) > td:nth-child(6) > .btn").click()
         self.browser.find_element(By.CSS_SELECTOR, "td:nth-child(6) > .btn").click()
         #test preview and confirm model execution
