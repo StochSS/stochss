@@ -26,7 +26,7 @@ def initialize_browser(passed_options=None):
     options=passed_options
     if (passed_options is None):
         options = Options()
-        options.headless=False
+        options.headless=True
     browser=Firefox(options=options)
     browser.implicitly_wait(10)
     return browser
