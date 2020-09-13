@@ -112,8 +112,9 @@ class TestFilesystem(unittest.TestCase):
         assert title.text=='Default Species Mode (required)'
         self.browser.back()
         self.browser.wait_for_navigation_complete()
+        
         #test New Workflow
-        self.browser.find_element(By.ID, "j1_4_anchor").click()
+        self.find_in_nodes_by_text(" test_model.mdl").click()
         self.browser.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
         self.browser.find_element(By.LINK_TEXT, "New Workflow").click()
         table=self.browser.find_element_by_class_name("table")
