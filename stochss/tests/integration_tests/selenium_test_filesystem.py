@@ -74,7 +74,6 @@ class TestFilesystem(unittest.TestCase):
         assert b"test_model.mdl" in stochss_dir_contents
         assert b"test_dir" in stochss_dir_contents
         assert b"test_proj" in stochss_dir_contents
-        assert len(stochss_dir_contents) == 187
         #test upload StochSS model
         self.browser.find_element(By.CSS_SELECTOR, "b").click()
         self.browser.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(5)").click()
