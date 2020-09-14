@@ -275,7 +275,7 @@ module.exports = {
     renderCreateModalHtml : (isModel, isSpatial) => {
         var title = 'Directory';
         if(isModel){
-            title = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
+            title = isSpatial ? 'Spatial Model' : 'Model';
         }
         title = "New " + title
         let modalID = "newModalModel"
