@@ -92,9 +92,18 @@ let usersHomePage = PageView.extend({
       if(Boolean(input.value)){
         modal.modal('hide')
         let modelPath = input.value + '.mdl'
-        let queryString = "?path="+modelPath+"&message=''"
-        let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
-        self.navToPage(endpoint)
+        let queryString = "?path="+modelPath
+        let existEP = path.join(app.getApiPath(), "model/exists")+queryString
+        xhr({uri: endpoint, json: true}, function (err, response, body) {
+          if(body.exists) {
+            let title = "Model Already Exists"
+            let message = "A model already exists with that name"
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+          }else{
+            let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
+            self.navToPage(endpoint)
+          }
+        })
       }
     });
   },

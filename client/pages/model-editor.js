@@ -36,7 +36,6 @@ let ModelEditor = PageView.extend({
     var self = this;
     let urlParams = new URLSearchParams(window.location.search)
     var directory = urlParams.get('path');
-    let loadPurpose = urlParams.has('purpose') ? urlParams.get('purpose') : 'edit'
     var modelFile = directory.split('/').pop();
     var name = this.getFileName(decodeURI(modelFile));
     var isSpatial = modelFile.split('.').pop().startsWith('s');
@@ -45,7 +44,7 @@ let ModelEditor = PageView.extend({
       directory: directory,
       is_spatial: isSpatial,
       isPreview: true,
-      for: loadPurpose,
+      for: "edit",
     });
     if(directory.includes('.proj')) {
       this.projectPath = path.dirname(directory)

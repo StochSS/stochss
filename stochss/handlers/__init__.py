@@ -42,6 +42,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/model/to-spatial\/?", ConvertToSpatialAPIHandler),
         (r"/stochss/api/model/to-sbml\/?", ModelToSBMLAPIHandler),
         (r"/stochss/api/model/run\/?", RunModelAPIHandler),
+        (r"/stochss/api/model/exists\/?", ModelExistsAPIHandler),
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),
         (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
         (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),

@@ -39,6 +39,7 @@ class JsonFileAPIHandler(APIHandler):
         ----------
         '''
         purpose = self.get_query_argument(name="for")
+        log.debug("Purpose of the handler: %s", purpose)
         file_path = self.get_query_argument(name="path")
         log.debug("Path to the file: {0}".format(file_path))
         if file_path.startswith('/'):
@@ -46,19 +47,13 @@ class JsonFileAPIHandler(APIHandler):
         full_path = os.path.join('/home/jovyan', file_path)
         log.debug("Full path to the file: {0}".format(full_path))
         self.set_header('Content-Type', 'application/json')
-        if os.path.exists(full_path) and purpose != 'new':
+        if os.path.exists(full_path):
             with open(full_path, 'r') as f:
                 data = json.load(f)
             log.debug("Contents of the json file: {0}".format(data))
             self.update_model_data(data)
             self.write(data)
-        elif os.path.exists(full_path) and purpose == 'new':
-            self.set_status(406)
-            error = {"Reason":"Model Already Exists",
-                     "Message":"Could not create your model: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
-        elif purpose == "edit" or purpose == "new":
+        elif purpose == "edit":
             new_path ='/stochss/stochss_templates/nonSpatialModelTemplate.json'
             log.debug("Path to the model template: {0}".format(new_path))
             try:
@@ -207,3 +202,27 @@ class RunModelAPIHandler(APIHandler):
             self.write(resp)
         self.finish()
 
+
+class ModelExistsAPIHandler(APIHandler):
+    '''
+    ########################################################################
+    Handler for checking if a model already exists.
+    ########################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Check if the model already exists.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        file_path = os.path.join("/home/jovyan", self.get_query_argument(name="path"))
+        log.debug("Path to the file: %s", file_path)
+        resp = {"exists":os.path.exists(path)}
+        log.debug("Response: %s", resp)
+        self.write(resp)
+        self.finish()
+
+        
