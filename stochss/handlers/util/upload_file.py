@@ -10,7 +10,7 @@ import json
 #     from .stochss_errors import FileNotZipArchiveError
 from stochss.handlers.util.rename import get_unique_file_name
 from stochss.handlers.util.convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
-from stochss.handlers.util.stochss_errors import FileNotZipArchiveError
+from stochss.handlers.util.stochss_errors import FileNotZipArchiveError, StochSSFileExistsError
 
 def validate_model(body, file_name):
     try:
@@ -98,9 +98,11 @@ def unzip_file(full_path, dir_path):
     import zipfile
     import shutil
 
-    # if not zipfile.is_zipfile(full_path):
-    #     raise FileNotZipArchiveError("The file is not a zip archive.")
     with zipfile.ZipFile(full_path, "r") as zip_file:
+        if True in list(map(lambda member: os.path.exists(member), zip_file.namelist())):
+            raise StochSSFileExistsError("Unable to upload {0} as the parent \
+                                          directory in {0} already exists.\
+                                          ".format(full_path.split("/").pop()))
         zip_file.extractall(dir_path)
     if "__MACOSX" in os.listdir(dir_path):
         shutil.rmtree(os.path.join(dir_path, "__MACOSX"))
@@ -184,9 +186,18 @@ def upload_from_link(path):
     user_dir = "/home/jovyan"
     response = urllib.request.urlopen(path)
     zip_path = os.path.join(user_dir, path.split('/').pop())
+    if os.path.exists(zip_path):
+        resp = {"message":"Could not upload this file as the {} \
+                           already exists".format(path.split("/").pop()),
+                "reason":"Zip Archive Already Exists"}
+        return resp
     with open(zip_path, "wb") as zip_file:
         zip_file.write(response.read())
-    unzip_file(zip_path, user_dir)
+    try:
+        unzip_file(zip_path, user_dir)
+    except StochSSFileExistsError as err:
+        os.remove(zip_path)
+        return {"message":err.message, "reason":err.reason}
     file_path = get_file_path(user_dir).replace(user_dir+"/", "")
     target_file = path.split('/').pop()
     resp = {"message":"Successfully uploaded the file {} to {}".format(target_file,

@@ -40,8 +40,8 @@ let usersHomePage = PageView.extend({
     setTimeout(function () {
       let endpoint = path.join(app.getApiPath(), 'file/upload-from-link')+"?path="+self.responsePath+"&cmd=read"
       xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode >= 400) {
-          console.log("error reported")
+        if(response.statusCode >= 400 || Object.keys(body).includes("reason")) {
+          let model = $(modals.projectExportErrorHtml(body.reason, body.message)).modal()
         }else if(body.done) {
           if(body.file_path.endsWith(".proj")){
             window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body.file_path

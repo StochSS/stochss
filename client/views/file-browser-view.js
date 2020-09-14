@@ -292,6 +292,8 @@ module.exports = View.extend({
       fileType = "spatial model"
     else if(fileType === "sbml-model")
       fileType = "sbml model"
+    else if(fileType === "other")
+      fileType = "file"
     var self = this
     if(document.querySelector('#deleteFileModal')) {
       document.querySelector('#deleteFileModal').remove()
