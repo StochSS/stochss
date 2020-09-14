@@ -194,9 +194,11 @@ let FileBrowser = PageView.extend({
     input.addEventListener("input", function (e) {
       var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
       var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+      var nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
       let error = self.validateName(input.value)
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+      nameUsageMsg.style.display = error !== "" ? "block" : "none"
     });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]

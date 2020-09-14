@@ -131,6 +131,7 @@ let templates = {
                         <div class="verticle-space">
                           <span class="inline" for="fileNameInput">New file name (optional): </span>
                           <input type="text" id="fileNameInput" name="fileNameInput" size="30">
+                          <li class="invalid-feedback warning" id="fileNameUsageMessage">Names that contain errors will not be used to rename the file.</li>
                           <li class="invalid-feedback" id="fileNameInputSpecCharError">Names can only include the following characters: 
                                                                                   (0-9), (a-z), (A-Z) and (., -, _, (, or ))</li>
                           <li class="invalid-feedback" id="fileNameInputEndCharError">Names cannot end with a '/'</li>

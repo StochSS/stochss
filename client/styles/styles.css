@@ -114,6 +114,10 @@ a.disabled {
   margin-bottom: 1rem;
 }
 
+.invalid-feedback.warning {
+  color: #ffc107 !important;
+}
+
 button.name {
   width: 75%;
 }
