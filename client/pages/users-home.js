@@ -94,7 +94,7 @@ let usersHomePage = PageView.extend({
         let modelPath = input.value + '.mdl'
         let queryString = "?path="+modelPath
         let existEP = path.join(app.getApiPath(), "model/exists")+queryString
-        xhr({uri: endpoint, json: true}, function (err, response, body) {
+        xhr({uri: existEP, json: true}, function (err, response, body) {
           if(body.exists) {
             let title = "Model Already Exists"
             let message = "A model already exists with that name"

@@ -684,6 +684,7 @@ let FileBrowser = PageView.extend({
     });
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
+        modal.modal('hide')
         var parentPath = ""
         if(o && o.original && o.original.type !== "root"){
           parentPath = o.original._path
@@ -693,14 +694,23 @@ let FileBrowser = PageView.extend({
           let message = modelName.split(".")[0] !== input.value.trim() ? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
           let modelPath = path.join(parentPath, modelName)
-          let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
           if(message){
-            modal.modal('hide')
             let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
             let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
             yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
           }else{
-            window.location.href = endpoint;
+            let queryString = "?path="+modelPath+"&message="+message;
+            let existEP = path.join(app.getApiPath(), "model/exists")+queryString
+            xhr({uri: existEP, json: true}, function (err, response, body) {
+              if(body.exists) {
+                let title = "Model Already Exists"
+                let message = "A model already exists with that name"
+                let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+              }else{
+                let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
+                window.location.href = endpoint
+              }
+            })
           }
         }else{
           let dirName = input.value.trim();
@@ -722,7 +732,6 @@ let FileBrowser = PageView.extend({
               let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
             }
           });
-          modal.modal('hide')
         }
       }
     });
