@@ -298,9 +298,11 @@ input[type="file"]::-ms-browse {
 
 .modal-dialog {
   width: 75%;
+  min-width: 487.5px;
+  max-width: 750px;
 }
 
-.modal-content .modal-dialog {
+.modal-content {
   min-width: 487.5px;
   max-width: 750px;
 }
