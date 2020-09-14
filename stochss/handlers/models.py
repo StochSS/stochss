@@ -220,7 +220,7 @@ class ModelExistsAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         file_path = os.path.join("/home/jovyan", self.get_query_argument(name="path"))
         log.debug("Path to the file: %s", file_path)
-        resp = {"exists":os.path.exists(path)}
+        resp = {"exists":os.path.exists(file_path)}
         log.debug("Response: %s", resp)
         self.write(resp)
         self.finish()
