@@ -700,6 +700,7 @@ class CreateDirectoryHandler(APIHandler):
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"Directory Already Exists",
                      "Message":"Could not create your directory: "+str(err)}
+            error['Message'] = error['Message'].replace("/home/jovyan/", "")
             trace = traceback.format_exc()
             log.error("Exception information: %s\n%s", error, trace)
             error['Traceback'] = trace
