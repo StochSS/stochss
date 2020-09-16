@@ -168,7 +168,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
         raise StochSSFileNotFoundError("Could not read the workflow info file: " + str(err), traceback.format_exc())
     except JSONDecodeError as err:
         raise FileNotJSONFormatError("The workflow info file is not JSON decodable: "+str(err), traceback.format_exc())
-    workflows = {"gillespy":GillesPy2Workflow,"psweep":ParameterSweep}
+    workflows = {"gillespy":GillesPy2Workflow,"parameterSweep":ParameterSweep}
     model_path = data['source_model']
     org_wkfl = workflows[data['type']](full_path, model_path)
     # Get model file from wkfl info
