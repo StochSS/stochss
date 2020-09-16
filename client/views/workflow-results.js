@@ -161,6 +161,7 @@ module.exports = View.extend({
     var self = this;
     var el = this.queryByHook(type)
     Plotly.purge(el)
+    this.queryAll("#"+type).filter(function (el) {if(el.dataset.hook === "plot-spinner") return true})[0].style.display = "block"
     var data = {}
     if(type === 'psweep'){
       let key = this.getPsweepKey()
@@ -200,7 +201,9 @@ module.exports = View.extend({
     var el = this.queryByHook(hook)
     Plotly.newPlot(el, figure)
     this.queryAll("#" + type).forEach(function (el) {
-      if(el.disabled){
+      if(el.dataset.hook === "plot-spinner"){
+        el.style.display = "none"
+      }else if(el.disabled){
         el.disabled = false;
       }
     });

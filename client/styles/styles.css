@@ -326,6 +326,21 @@ input[type="file"]::-ms-browse {
   border-right-color: #007bff;
 }
 
+.spinner-border.workflow-plot {
+  /*display: inline-block;*/
+  margin-bottom: 45px;
+}
+
+.spinner-border.status {
+  vertical-align: middle;
+  display: inline-block;
+  margin: 5px;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  border: 4px solid rgba(0, 0, 0, 0.125);
+}
+
 .errors {
   display: none;
 }

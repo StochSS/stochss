@@ -24,6 +24,9 @@ module.exports = View.extend({
     if(this.status !== 'ready' && this.status !== 'new'){
       this.expandContainer()
     }
+    if(this.status !== 'running') {
+      $(this.queryByHook('running-spinner')).css('display', "none")
+    }
   },
   expandContainer: function () {
     $(this.queryByHook('workflow-status')).collapse('show');
