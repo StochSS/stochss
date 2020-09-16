@@ -90,7 +90,9 @@ let FileBrowser = PageView.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
-                $('#models-jstree').jstree().refresh_node(node);
+                if(node.type === "folder") {
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
               }else{
                 body = JSON.parse(body)
                 $('#models-jstree').jstree().refresh()
@@ -184,21 +186,40 @@ let FileBrowser = PageView.extend({
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
+    let fileCharErrMsg = document.querySelector('#uploadFileModal #fileSpecCharError')
+    let nameEndErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+    let nameCharErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+    let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
     fileInput.addEventListener('change', function (e) {
-      if(fileInput.files.length){
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
         uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
       }else{
         uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
       }
     })
     input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
-      var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
-      var nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
-      let error = self.validateName(input.value)
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-      nameUsageMsg.style.display = error !== "" ? "block" : "none"
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
+        uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
+      }else{
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
+      }
+      nameCharErrMsg.style.display = nameErr === "both" || nameErr === "special" ? "block" : "none"
+      nameEndErrMsg.style.display = nameErr === "both" || nameErr === "forward" ? "block" : "none"
+      nameUsageMsg.style.display = nameErr !== "" ? "block" : "none"
     });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
@@ -208,7 +229,6 @@ let FileBrowser = PageView.extend({
       }
       if(Boolean(input.value) && self.validateName(input.value) === ""){
         fileinfo.name = input.value.trim()
-        console.log("Changing the name of the file")
       }
       let formData = new FormData()
       formData.append("datafile", file)

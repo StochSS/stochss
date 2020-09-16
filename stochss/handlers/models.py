@@ -51,7 +51,8 @@ class JsonFileAPIHandler(APIHandler):
             with open(full_path, 'r') as f:
                 data = json.load(f)
             log.debug("Contents of the json file: {0}".format(data))
-            self.update_model_data(data)
+            if full_path.endswith(".mdl"):
+                self.update_model_data(data)
             self.write(data)
         elif purpose == "edit":
             new_path ='/stochss/stochss_templates/nonSpatialModelTemplate.json'

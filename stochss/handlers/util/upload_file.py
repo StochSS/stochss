@@ -2,6 +2,8 @@
 
 import os
 import json
+import zipfile
+import shutil
 # from .rename import get_unique_file_name
 # from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
 # try:
@@ -18,8 +20,8 @@ def validate_model(body, file_name):
     except json.decoder.JSONDecodeError:
         return False, False, "The file {0} is not in JSON format.".format(file_name)
 
-    test_keys = ["is_spatial","defaultID","defaultMode","modelSettings","simulationSettings",
-                 "parameterSweepSettings","species","parameters","reactions","eventsCollection",
+    test_keys = ["is_spatial","defaultID","defaultMode","modelSettings",
+                 "species","parameters","reactions","eventsCollection",
                  "rules","functionDefinitions","meshSettings","initialConditions"]
     other_keys = []
     keys = list(body.keys())
@@ -95,9 +97,6 @@ def upload_sbml_file(dir_path, _file_name, name, body):
 
 
 def unzip_file(full_path, dir_path):
-    import zipfile
-    import shutil
-
     with zipfile.ZipFile(full_path, "r") as zip_file:
         if True in list(map(lambda member: os.path.exists(member), zip_file.namelist())):
             raise StochSSFileExistsError("Unable to upload {0} as the parent \
@@ -124,7 +123,10 @@ def upload_file(dir_path, file_name, name, ext, body, file_type, exts):
         else:
             file.write(body)
     if ext == "zip":
-        unzip_file(full_path, dir_path)
+        try:
+            unzip_file(full_path, dir_path)
+        except zipfile.BadZipFile as err:
+            errors.append(str(err))
     dir_path = dir_path.replace("/home/jovyan", "")
     if is_valid:
         message = "{0} was successfully uploaded to {1}".format(file_name, dir_path)
