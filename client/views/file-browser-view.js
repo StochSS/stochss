@@ -975,15 +975,6 @@ module.exports = View.extend({
               }
             }
           }
-        },
-        "New_Workflow_Group" : {
-          "label" : "New Workflow Group",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            self.newWorkflowGroup(o)
-          }
         }
       }
       // option for uploading files
@@ -1327,7 +1318,7 @@ module.exports = View.extend({
          return $.extend(commonModel, modelConvert, download, common)
       }
       if (o.type === 'workflow-group') {
-        return $.extend(refresh, workflowGroup, downloadWCombine, common)
+        return $.extend(refresh, workflowGroup, downloadWCombine)
       }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, downloadWCombine, common)
