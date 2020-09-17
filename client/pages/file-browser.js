@@ -1062,15 +1062,6 @@ let FileBrowser = PageView.extend({
               }
             }
           }
-        },
-        "New Workflow Group" : {
-          "label" : "New Workflow Group",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newProjectOrWorkflowGroup(o, false)
-          }
         }
       }
       // specific to workflows

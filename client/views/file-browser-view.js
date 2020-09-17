@@ -67,8 +67,7 @@ module.exports = View.extend({
             !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && node.type === "workflow-group" && 
-            !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
+          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && node.type === "workflow-group") {
             return false
           }
           if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && (node.type === "workflow") && 
