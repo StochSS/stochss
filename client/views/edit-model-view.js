@@ -14,7 +14,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=project-model-edit]' : 'handleEditModelClick',
-    'click [data-hook=project-model-workflow-option]' : 'handleNewWorkflowClick',
+    'click [data-hook=new-workflow-btn]' : 'handleNewWorkflowClick',
     'click [data-hook=edit-model-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=project-model-remove]' : 'handleRemoveModelClick',
     'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText',
@@ -40,15 +40,32 @@ module.exports = View.extend({
   },
   handleNewWorkflowClick: function (e) {
     let name = e.target.dataset.name
-    if(name === "invalid") {
-      this.parent.parent.addNewWorkflowGroup(_.bind(this.openWorkflowManager, this))
+    if(this.model.collection.parent.workflowGroups.length <= 0) {
+      this.addNewWorkflowGroup(_.bind(this.openWorkflowManager, this))
     }else{
-      let expFile = name + ".wkgp"
-      this.openWorkflowManager(expFile)
+      let wkgpFile = "WorkflowGroup1.wkgp"
+      this.openWorkflowManager(wkgpFile)
     }
   },
-  openWorkflowManager: function (expFile) {
-    let parentPath = path.join(path.dirname(this.model.directory), expFile)
+  addNewWorkflowGroup: function (cb) {
+    let self = this
+    let workflowGroupName = "WorkflowGroup1.wkgp"
+    let workflowGroupPath = path.join(this.parent.parent.projectPath, workflowGroupName)
+    let endpoint = path.join(app.getApiPath(), "project/new-workflow-group")+"?path="+workflowGroupPath
+    xhr({uri: endpoint,json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        if(cb) {
+          cb(workflowGroupName)
+        }else{
+          self.update("workflow-group")
+        }
+      }else{
+        let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
+      }
+    });
+  },
+  openWorkflowManager: function (wkgpFile) {
+    let parentPath = path.join(path.dirname(this.model.directory), wkgpFile)
     let queryString = "?path="+this.model.directory+"&parentPath="+parentPath
     let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
     window.location.href = endpoint

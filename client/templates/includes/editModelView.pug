@@ -7,19 +7,11 @@ div
 
     div.col-md-4
 
-      button.btn.btn-outline-secondary.inline.dropdown-toggle.box-shadow(
+      button.btn.btn-outline-secondary.inline.box-shadow(
         id="new-workflow-btn",
-        data-toggle="dropdown",
-        aria-haspopup="true",
-        aria-expanded="false",
+        data-hook="new-workflow-btn",
         type="button",
-      ) Create Workflow with Model <span class="caret"></span>
-
-      ul.dropdown-menu(aria-labelledby="new-workflow-btn" class="workflow-group-options" )
-        each workflowGroup in this.workflowGroupOptions
-          li.dropdown-item(data-hook="project-model-workflow-option" data-name=workflowGroup)="in "+workflowGroup
-        else
-          li.dropdown-item(data-hook="project-model-workflow-option" data-name="invalid")="in New Workflow Group"
+      ) New Workflow Using Model
 
     div.col-md-2
 

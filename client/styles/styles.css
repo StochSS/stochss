@@ -333,12 +333,14 @@ input[type="file"]::-ms-browse {
 
 .spinner-border.status {
   vertical-align: middle;
+  position: relative;
   display: inline-block;
   margin: 5px;
   left: 0;
   width: 30px;
   height: 30px;
   border: 4px solid rgba(0, 0, 0, 0.125);
+  border-right-color: #007bff;
 }
 
 .errors {
