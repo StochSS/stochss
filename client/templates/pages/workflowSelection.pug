@@ -8,8 +8,7 @@ section.page.col-md-10
         ol.breadcrumb
           li.breadcrumb-item
             a(href="/stochss/project/manager?path="+this.projectPath data-hook="project-breadcrumb")=this.projectName
-          li.breadcrumb-item.active=this.workflowGroupName
-
+          
   div.alert-danger(data-hook="invalid-model-message" style="display: none;")
     | You cannot create a workflow if your model does not have at least one Species and one Reaction, Event, or Rule
 

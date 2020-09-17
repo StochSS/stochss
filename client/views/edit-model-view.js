@@ -39,8 +39,10 @@ module.exports = View.extend({
     window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+queryString
   },
   handleNewWorkflowClick: function (e) {
-    let name = e.target.dataset.name
-    if(this.model.collection.parent.workflowGroups.length <= 0) {
+    let wkgpNames = this.model.collection.parent.workflowGroups.map(function (model) {
+        return model.name
+    })
+    if(this.model.collection.parent.workflowGroups.length <= 0 || !wkgpNames.includes("WorkflowGroup1")) {
       this.addNewWorkflowGroup(_.bind(this.openWorkflowManager, this))
     }else{
       let wkgpFile = "WorkflowGroup1.wkgp"

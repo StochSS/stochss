@@ -70,7 +70,6 @@ let WorkflowManager = PageView.extend({
         if(self.wkflPath.includes('.proj')) {
           self.projectPath = path.dirname(self.wkflParPath)
           $(self.queryByHook('project-breadcrumb')).text(self.projectPath.split('/').pop().split('.')[0])
-          $(self.queryByHook('workflow-group-breadcrumb')).text(self.wkflParPath.split('/').pop().split('.')[0])
           $(self.queryByHook('workflow-breadcrumb')).text(self.workflowName)
           self.queryByHook("project-breadcrumb-links").style.display = "block"
           self.queryByHook("return-to-project-btn").style.display = "inline-block"
