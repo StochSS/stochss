@@ -20,9 +20,8 @@ def validate_model(body, file_name):
     except json.decoder.JSONDecodeError:
         return False, False, "The file {0} is not in JSON format.".format(file_name)
 
-    test_keys = ["is_spatial","defaultID","defaultMode","modelSettings",
-                 "species","parameters","reactions","eventsCollection",
-                 "rules","functionDefinitions","meshSettings","initialConditions"]
+    test_keys = ["species","parameters","reactions","eventsCollection",
+                 "rules","functionDefinitions"]
     other_keys = []
     keys = list(body.keys())
     for key in keys:
@@ -30,8 +29,6 @@ def validate_model(body, file_name):
             test_keys.remove(key)
         else:
             other_keys.append(key)
-    if len(other_keys):
-        return False, True, "The following keys were found in {0} that don't exist within a StochSS model: {1}".format(file_name, ', '.join(other_keys))
     if len(test_keys):
         return False, True, "The following keys are missing from {0}: {1}".format(file_name, ', '.join(test_keys))
     return True, True, ""

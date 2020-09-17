@@ -88,7 +88,8 @@ let workflowSelection = PageView.extend({
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
       if(modelInvalid) {
-        $(this.queryByHook('invalid-model-message')).html('Errors were detected in you model <a href="/stochss/models/edit?path='+this.model.directory+'">click here to fix your model<a/>')
+        let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+'?path='+this.model.directory
+        $(this.queryByHook('invalid-model-message')).html('Errors were detected in you model <a href="'+endpoint+'">click here to fix your model<a/>')
       }
       $(this.queryByHook('invalid-model-message')).css('display', 'block')
     }else if(this.model.parameters.length < 1){
