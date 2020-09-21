@@ -281,6 +281,12 @@ let FileBrowser = PageView.extend({
           var node = $('#models-jstree').jstree().get_node(o.parent);
           if(node.type === "root"){
             self.refreshJSTree();
+            let actionsBtn = $(self.queryByHook("options-for-node"))
+            if(actionsBtn.text().endsWith(o.text)) {
+              actionsBtn.text("Actions")
+              actionsBtn.prop("disabled", true)
+              self.nodeForContextMenu = ""
+            }
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
