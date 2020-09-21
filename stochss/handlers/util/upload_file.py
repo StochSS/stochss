@@ -95,10 +95,11 @@ def upload_sbml_file(dir_path, _file_name, name, body):
 
 def unzip_file(full_path, dir_path):
     with zipfile.ZipFile(full_path, "r") as zip_file:
-        if True in list(map(lambda member: os.path.exists(member), zip_file.namelist())):
-            raise StochSSFileExistsError("Unable to upload {0} as the parent \
-                                          directory in {0} already exists.\
-                                          ".format(full_path.split("/").pop()))
+        par_path = os.path.dirname(full_path)
+        member_list = list(map(lambda member: os.path.exists(os.path.join(par_path, member)), zip_file.namelist()))
+        if True in member_list:
+            os.remove(full_path)
+            raise StochSSFileExistsError("Unable to upload {0} as the parent directory in {0} already exists.".format(full_path.split("/").pop()))
         zip_file.extractall(dir_path)
     if "__MACOSX" in os.listdir(dir_path):
         shutil.rmtree(os.path.join(dir_path, "__MACOSX"))
@@ -195,7 +196,6 @@ def upload_from_link(path):
     try:
         unzip_file(zip_path, user_dir)
     except StochSSFileExistsError as err:
-        os.remove(zip_path)
         return {"message":err.message, "reason":err.reason}
     file_path = get_file_path(user_dir).replace(user_dir+"/", "")
     target_file = path.split('/').pop()
