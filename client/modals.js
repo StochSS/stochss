@@ -303,7 +303,13 @@ module.exports = {
     },
     uploadFileErrorsHtml : (file, type, statusMessage, errors) => {
         let modalID = "sbmlToModelModal"
-        let title = `Errors uploading ${file} as a ${type} file`
+        let types = {"mdl":"model file", "sbml":"sbml file", "smdl":"spatial model file", "zip":"zip archive"}
+        if(type === "file") {
+          type = types[file.split('.').pop()]
+        }else{
+          type += " file"
+        }
+        let title = `Errors uploading ${file} as a ${type}`
         for(var i = 0; i < errors.length; i++) {
             errors[i] = "<b>Error</b>: " + errors[i]
         }
