@@ -161,7 +161,7 @@ module.exports = View.extend({
     var self = this;
     var el = this.queryByHook(type)
     Plotly.purge(el)
-    this.queryAll("#"+type).filter(function (el) {if(el.dataset.hook === "plot-spinner") return true})[0].style.display = "block"
+    this.queryAll("#"+type).filter(function (el) {return el.dataset.hook === "plot-spinner"})[0].style.display = "block"
     var data = {}
     if(type === 'psweep'){
       let key = this.getPsweepKey()
