@@ -78,3 +78,15 @@ class ImporperMathMLFormatError(StochSSAPIError):
 
     def __init__(self, msg, trace=None):
         super().__init__(406, "Imporper Math-ML Format", msg, trace)
+
+
+class FileNotZipArchiveError(StochSSAPIError):
+
+    def __init__(self, msg, trace=None):
+        super().__init__(406, "File Not Zip Archive", msg, trace)
+
+
+class StochSSFileExistsError(StochSSAPIError):
+
+    def __init__(self, msg, trace=None):
+        super().__init__(406, "File Already Exists", msg, trace)

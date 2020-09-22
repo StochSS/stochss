@@ -2,9 +2,17 @@
 
 import os
 import json
-from .rename import get_unique_file_name
-from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
-
+import zipfile
+import shutil
+# from .rename import get_unique_file_name
+# from .convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
+# try:
+#     from stochss_errors import FileNotZipArchiveError
+# except ImportError:
+#     from .stochss_errors import FileNotZipArchiveError
+from stochss.handlers.util.rename import get_unique_file_name
+from stochss.handlers.util.convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
+from stochss.handlers.util.stochss_errors import FileNotZipArchiveError, StochSSFileExistsError
 
 def validate_model(body, file_name):
     try:
@@ -12,9 +20,8 @@ def validate_model(body, file_name):
     except json.decoder.JSONDecodeError:
         return False, False, "The file {0} is not in JSON format.".format(file_name)
 
-    test_keys = ["is_spatial","defaultID","defaultMode","modelSettings","simulationSettings",
-                 "parameterSweepSettings","species","parameters","reactions","eventsCollection",
-                 "rules","functionDefinitions","meshSettings","initialConditions"]
+    test_keys = ["species","parameters","reactions","eventsCollection",
+                 "rules","functionDefinitions"]
     other_keys = []
     keys = list(body.keys())
     for key in keys:
@@ -22,8 +29,6 @@ def validate_model(body, file_name):
             test_keys.remove(key)
         else:
             other_keys.append(key)
-    if len(other_keys):
-        return False, True, "The following keys were found in {0} that don't exist within a StochSS model: {1}".format(file_name, ', '.join(other_keys))
     if len(test_keys):
         return False, True, "The following keys are missing from {0}: {1}".format(file_name, ', '.join(test_keys))
     return True, True, ""
@@ -89,10 +94,12 @@ def upload_sbml_file(dir_path, _file_name, name, body):
 
 
 def unzip_file(full_path, dir_path):
-    import zipfile
-    import shutil
-
     with zipfile.ZipFile(full_path, "r") as zip_file:
+        par_path = os.path.dirname(full_path)
+        member_list = list(map(lambda member: os.path.exists(os.path.join(par_path, member)), zip_file.namelist()))
+        if True in member_list:
+            os.remove(full_path)
+            raise StochSSFileExistsError("Unable to upload {0} as the parent directory in {0} already exists.".format(full_path.split("/").pop()))
         zip_file.extractall(dir_path)
     if "__MACOSX" in os.listdir(dir_path):
         shutil.rmtree(os.path.join(dir_path, "__MACOSX"))
@@ -114,7 +121,10 @@ def upload_file(dir_path, file_name, name, ext, body, file_type, exts):
         else:
             file.write(body)
     if ext == "zip":
-        unzip_file(full_path, dir_path)
+        try:
+            unzip_file(full_path, dir_path)
+        except zipfile.BadZipFile as err:
+            errors.append(str(err))
     dir_path = dir_path.replace("/home/jovyan", "")
     if is_valid:
         message = "{0} was successfully uploaded to {1}".format(file_name, dir_path)
@@ -169,3 +179,71 @@ def upload(file_data, file_info):
     
     return resp
 
+
+def upload_from_link(path):
+    import urllib
+    
+    user_dir = "/home/jovyan"
+    response = urllib.request.urlopen(path)
+    zip_path = os.path.join(user_dir, path.split('/').pop())
+    if os.path.exists(zip_path):
+        resp = {"message":"Could not upload this file as the {} \
+                           already exists".format(path.split("/").pop()),
+                "reason":"Zip Archive Already Exists"}
+        return resp
+    with open(zip_path, "wb") as zip_file:
+        zip_file.write(response.read())
+    try:
+        unzip_file(zip_path, user_dir)
+    except StochSSFileExistsError as err:
+        return {"message":err.message, "reason":err.reason}
+    file_path = get_file_path(user_dir).replace(user_dir+"/", "")
+    target_file = path.split('/').pop()
+    resp = {"message":"Successfully uploaded the file {} to {}".format(target_file,
+                                                                       file_path),
+            "file_path":file_path}
+    return resp
+
+
+def get_file_path(path):
+    files = os.listdir(path)
+    paths = list(map(lambda file: os.path.join(path, file), files))
+    return max(paths, key=os.path.getctime)
+
+def get_parsed_args():
+    '''
+    Initializes an argparser to document this script and returns a dict of
+    the arguments that were passed to the script from the command line.
+
+    Attributes
+    ----------
+
+    '''
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Upload a file from an external link")
+    parser.add_argument("file_path", help="The path to the external file.")
+    parser.add_argument("outfile", help="The path to the response file")
+    args = parser.parse_args()
+
+    return  args
+
+
+if __name__ == "__main__":
+    args = get_parsed_args()
+    if args.file_path != 'None':
+        resp = upload_from_link(args.file_path)
+        with open(args.outfile, "w") as fd:
+            json.dump(resp, fd)
+        open(args.outfile + ".done", "w").close()
+    else:
+        done = os.path.exists(args.outfile + ".done")
+        if done:
+            with open(args.outfile, 'r') as response_file:
+                resp = json.load(response_file)
+            os.remove(args.outfile)
+            os.remove(args.outfile+".done")
+        else:
+            resp = {}
+        resp['done'] = done
+        print(json.dumps(resp))

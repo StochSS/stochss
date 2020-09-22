@@ -26,6 +26,7 @@ def get_page_handlers(route_start):
         #
         (r"/stochss/api/file/browser-list\/?", ModelBrowserFileList),
         (r"/stochss/api/file/upload\/?", UploadFileAPIHandler),
+        (r"/stochss/api/file/upload-from-link\/?", UploadFileFromLinkAPIHandler),
         (r"/stochss/api/file/move\/?", MoveFileAPIHandler),
         (r"/stochss/api/file/delete\/?", DeleteFileAPIHandler),
         (r"/stochss/api/file/rename\/?", RenameAPIHandler),
@@ -41,6 +42,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/model/to-spatial\/?", ConvertToSpatialAPIHandler),
         (r"/stochss/api/model/to-sbml\/?", ModelToSBMLAPIHandler),
         (r"/stochss/api/model/run\/?", RunModelAPIHandler),
+        (r"/stochss/api/model/exists\/?", ModelExistsAPIHandler),
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),
         (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
         (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),

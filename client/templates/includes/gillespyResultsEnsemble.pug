@@ -31,6 +31,7 @@ div#workflow-results-ensemble.card.card-body
       div.collapse(class="show", id="collapse-stddevrange")
 
         div(id="stddevran" data-hook="stddevran")
+        div.spinner-border.workflow-plot(id="stddevran" data-hook="plot-spinner")
         button.btn.btn-primary.box-shadow(id="stddevran" data-hook="plot") Edit Plot
         button.btn.btn-primary.box-shadow(id="stddevran" data-hook="save-plot") Save Plot to Project Viewer
         button.btn.btn-primary.box-shadow(id="stddevran" data-hook="download-png-custom" disabled) Download PNG
@@ -45,6 +46,7 @@ div#workflow-results-ensemble.card.card-body
       div.collapse(id="collapse-trajectories")
 
         div(id="trajectories" data-hook="trajectories")
+        div.spinner-border.workflow-plot(id="trajectories" data-hook="plot-spinner")
         button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Edit Plot
         button.btn.btn-primary.box-shadow(id="trajectories" data-hook="save-plot" disabled) Save Plot to Project Viewer
         button.btn.btn-primary.box-shadow(id="plot-multiple" data-hook="plot-multiple", disabled) Multiple Plots
@@ -60,6 +62,7 @@ div#workflow-results-ensemble.card.card-body
       div.collapse(id="collapse-stddev")
 
         div(id="stddev" data-hook="stddev")
+        div.spinner-border.workflow-plot(id="stddev" data-hook="plot-spinner")
         button.btn.btn-primary.box-shadow(id="stddev" data-hook="plot") Edit Plot
         button.btn.btn-primary.box-shadow(id="stddev" data-hook="save-plot" disabled) Save Plot to Project Viewer
         button.btn.btn-primary.box-shadow(id="stddev" data-hook="download-png-custom" disabled) Download PNG
@@ -74,6 +77,7 @@ div#workflow-results-ensemble.card.card-body
       div.collapse(id="collapse-trajmean")
 
         div(id="avg" data-hook="avg")
+        div.spinner-border.workflow-plot(id="avg" data-hook="plot-spinner")
         button.btn.btn-primary.box-shadow(id="avg" data-hook="plot") Edit Plot
         button.btn.btn-primary.box-shadow(id="avg" data-hook="save-plot" disabled) Save Plot to Project Viewer
         button.btn.btn-primary.box-shadow(id="avg" data-hook="download-png-custom" disabled) Download PNG

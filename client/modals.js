@@ -20,7 +20,7 @@ let templates = {
                         <li class="invalid-feedback" id="${inputID}EndCharError">Names cannot end with a '/'</li>
                       </div>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-primary ok-model-btn box-shadow">OK</button>
+                        <button type="button" class="btn btn-primary ok-model-btn box-shadow" disabled>OK</button>
                         <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Cancel</button>
                       </div>
                     </div>
@@ -127,10 +127,13 @@ let templates = {
                         <div class="verticle-space">
                           <span class="inline" for="datafile">Please specify a file to import: </span>
                           <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" required>
+                          <li class="invalid-feedback" id="fileSpecCharError">Names can only include the following characters: 
+                                                                                  (0-9), (a-z), (A-Z) and (., -, _, (, or ))</li>
                         </div>
                         <div class="verticle-space">
                           <span class="inline" for="fileNameInput">New file name (optional): </span>
                           <input type="text" id="fileNameInput" name="fileNameInput" size="30">
+                          <li class="invalid-feedback warning" id="fileNameUsageMessage">Names that contain errors will not be used to rename the file.</li>
                           <li class="invalid-feedback" id="fileNameInputSpecCharError">Names can only include the following characters: 
                                                                                   (0-9), (a-z), (A-Z) and (., -, _, (, or ))</li>
                           <li class="invalid-feedback" id="fileNameInputEndCharError">Names cannot end with a '/'</li>
@@ -275,7 +278,7 @@ module.exports = {
     renderCreateModalHtml : (isModel, isSpatial) => {
         var title = 'Directory';
         if(isModel){
-            title = isSpatial ? 'Spatial Model' : 'Non-Spatial Model';
+            title = isSpatial ? 'Spatial Model' : 'Model';
         }
         title = "New " + title
         let modalID = "newModalModel"

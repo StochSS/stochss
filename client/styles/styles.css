@@ -114,6 +114,10 @@ a.disabled {
   margin-bottom: 1rem;
 }
 
+.invalid-feedback.warning {
+  color: #ffc107 !important;
+}
+
 button.name {
   width: 75%;
 }
@@ -296,8 +300,15 @@ input[type="file"]::-ms-browse {
   overflow-wrap: break-word !important;
 }
 
-.modal-content.info {
-  width: 150%;
+.modal-dialog {
+  width: 75%;
+  min-width: 487.5px;
+  max-width: 750px;
+}
+
+.modal-content {
+  min-width: 487.5px;
+  max-width: 750px;
 }
 
 .modal-content.default-species {
@@ -312,6 +323,23 @@ input[type="file"]::-ms-browse {
   width: 90px;
   height: 90px;
   border: 12px solid rgba(0, 0, 0, 0.125);
+  border-right-color: #007bff;
+}
+
+.spinner-border.workflow-plot {
+  /*display: inline-block;*/
+  margin-bottom: 45px;
+}
+
+.spinner-border.status {
+  vertical-align: middle;
+  position: relative;
+  display: inline-block;
+  margin: 5px;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  border: 4px solid rgba(0, 0, 0, 0.125);
   border-right-color: #007bff;
 }
 
@@ -500,4 +528,24 @@ span.checkbox {
 
 .dropdown:hover .dropdown-content {
   display: block;
+}
+
+#models-jstree-view .jstree-anchor {
+  white-space: normal;
+  word-break: break-word;
+  height: auto;
+}
+
+#models-jstree-view .jstree-default .jstree-anchor {
+  height: auto;
+}
+
+#models-jstree .jstree-anchor {
+  white-space: normal;
+  word-break: break-word;
+  height: auto;
+}
+
+#models-jstree .jstree-default .jstree-anchor {
+  height: auto;
 }

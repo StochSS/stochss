@@ -5,30 +5,25 @@ section.page
     
     div.col-md-10
 
-      h2 Quickstart
+      h2 Tutorial
 
-      p Welcome to the Stochastic Simulation Service! In this tutorial we'll take you through the process of creating, simulating, and analyzing a model of a biochemical system.
+      p Welcome to StochSS Live! In this tutorial we'll take you through the process of creating, simulating, and analyzing a model of a biochemical system.
 
       h4 Help and Information
 
       p As we move through the different parts of StochSS, watch for the blue <span style="color:DodgerBlue"><svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="question-circle" class="svg-inline--fa fa-question-circle fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"></path></svg></span> button by the top of each page, and the smaller blue <span style="color:DodgerBlue">i</span> tooltips in superscript throughout each page. Because StochSS supports a wide variety of features, it includes numerous “tooltips” providing helpful information. Click on the large <span style="color:DodgerBlue"><svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="question-circle" class="svg-inline--fa fa-question-circle fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"></path></svg></span> button at the top of the page for an overview of the page contents. Hovering over the blue <span style="color:DodgerBlue">i</span> icons will provide more info on an item.
 
-      h4 Creating a Model
+      h4 Create a Project
 
-      p We start our journey on the <a href="stochss/files">file browser</a>. To start, let's make a new project folder where we can keep files. You can access the root directory in two ways: either right-click on the root folder (named '/'), or click the blue + button below the file browser. To create the project folder, right-click on the root folder and click 'New Directory', or click on the blue + button and select 'Create Directory'. Let’s name the directory Quickstart. Click on the new directory so it’s selected, then click the 'Actions for Quickstart' button at the bottom of the browser. 
+      p We start our journey on the <a href="stochss/project/browser">Project Browser</a>. To start, let's make a new project where we can create models and run simulations. Click New and give your project a name. From here you’re taken to the Project Viewer. 
 
-      p Actions for a directory include renaming or duplicating the directory, as well as creating, uploading, or downloading files to the selected directory. As you've seen, you can access these options by right-clicking on a directory in the StochSS file browser, or by left-clicking the directory to select it and then clicking the 'Actions for (Name)' button below the browser. 
+      h4 Create a Model
 
-      p For now, choose the 'New Model' option, then 'Non-Spatial'.
-
-      img.quickstart(style="width: 80%;", src="static/file-browser-new-model-dropdown.png")
-
-      h4 Editing a Model
-      p From here you’re taken to the model editor. Since you're creating a new model, you'll need to choose the default species "mode" for your model. StochSS supports deterministic ODE-based simulations (concentration) as well as discrete stochastic simulations (population). An exciting feature of StochSS is the ability to run "hybrid" simulations that utilize both deterministic and probabilistic algorithms during a simulation, thanks to the powerful <a href="https://gillespy2.github.io/GillesPy2/docs/build/html/index.html">GillesPy2</a> library. If you’re unsure of which to choose, go ahead and select “Population.”
+      p Let’s create a new model by pressing the “Add Model” button and selecting “New Model” and give it a name.  Since you're creating a new model you'll need to choose the default species "mode" for your model. StochSS supports deterministic ODE-based simulations (concentration) as well as discrete stochastic simulations (population). One exciting feature of StochSS is the ability to run "hybrid" simulations that utilize both deterministic and probabilistic algorithms during a simulation, thanks to the powerful <a href="https://gillespy2.github.io/GillesPy2/docs/build/html/index.html">GillesPy2</a> library. If you’re unsure of which to choose, go ahead and select “Population.”
 
       img.quickstart(style="width: 60%;", src="static/model-editor-select-default-species-mode.png")
 
-      p Proceeding with the model editor, let’s recreate the Degradation model that’s in the Examples folder. This model contains one species, one parameter, and one reaction to represent protein decay. To start, add a new species called “protein” with an initial condition of 50, and make a parameter called “decayrate” with a value of 0.05. At this point we’re ready to create a reaction to apply the “decayrate” parameter to our “protein” species. Since we are modeling decay we’ll select the A → ∅ reaction type.
+      p Now we are ready to begin defining the model. Our model contains one species, one parameter, and one reaction to represent protein decay. To start, add a new species called “protein” with an initial condition of 50, and make a parameter called “decayrate” with a value of 0.05. At this point we’re ready to create a reaction to apply the “decayrate” parameter to our “protein” species. Since we are modeling decay we’ll select the A → ∅ reaction type.
 
       img.quickstart(style="width: 100%;", src="static/model-editor-reaction-editor.png")
 
@@ -40,13 +35,13 @@ section.page
 
       h4 Workflows
 
-      p To run a full simulation and explore the results more thoroughly, you’ll need to create a StochSS Workflow. Click New Workflow at the bottom of the page to head to the Workflow Selection page. You can also create a new workflow from the browser window by right-clicking a Model (.mdl file) or selecting it and pressing the Actions for (Name) button. From here you’ll see several different options for exploring your model, but at the moment we’re interested in the Ensemble Simulation workflow.
+      p To run a full simulation and explore the results more fully, we’ll need to create a StochSS Workflow. Click the "Return to Project" button at the bottom of the page. Now click “Add Workflow” and select “New Workflow to head to the Workflow Selection page. From here you’ll see several different options for exploring your model, but at the moment we’re interested in the Ensemble Simulation workflow.
 
       img.quickstart(style="width: 90%;", src="static/workflow-editor-ensemble-simulation.png")
 
-      p From here you’ll choose a simulation algorithm and set configuration for your workflow. By default StochSS will choose a simulation style for you, but for this example let’s go with SSA (Stochastic Simulation Algorithm). In the “Stochastic Settings” section set trajectories to 10. This will create an “ensemble” of 10 different stochastic time series. Click the “Start Workflow” button when you’re ready. Your results should appear momentarily.
+      p At this point you’ll choose a simulation algorithm and set configuration for your workflow. By default StochSS will choose a simulation style for you, but for this example let’s go with SSA (Stochastic Simulation Algorithm). In the “Stochastic Settings” section set trajectories to 10. This will create an “ensemble” of 10 different stochastic time series. Click the “Start Workflow” button when you’re ready. Your results should appear momentarily.
 
       img.quickstart(style="width: 90%;", src="static/workflow-results-std-deviation-plot.png")
 
-      p Once your workflow is complete you can explore various graphs describing the simulation results, download the raw data, and download JSON files describing each graph that you can use with the <a href="https://plotly.com/graphing-libraries/">Plotly</a> graphing library. You can also come back to your results later by accessing the .wkfl file in your quickstart project folder.
+      p Once your workflow is complete you can explore various graphs describing the simulation results, download the raw data, and download JSON files describing each graph that you can use with the <a href="https://plotly.com/graphing-libraries/">Plotly</a> graphing library.
 

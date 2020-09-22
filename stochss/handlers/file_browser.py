@@ -8,6 +8,8 @@ Use finish() for json, write() for text
 '''
 import os
 import json
+import uuid
+import subprocess
 from json.decoder import JSONDecodeError
 from datetime import datetime
 import logging
@@ -24,7 +26,7 @@ from .util.convert_to_smdl_mdl import convert_model
 from .util.convert_to_sbml import convert_to_sbml
 from .util.convert_sbml_to_model import convert_sbml_to_model
 from .util.generate_zip_file import download_zip
-from .util.upload_file import upload
+from .util.upload_file import upload, upload_from_link
 from .util.workflow_status import get_status
 
 log = logging.getLogger('stochss')
@@ -306,35 +308,37 @@ class MoveFileAPIHandler(APIHandler):
         for proj_item in os.listdir(old_path,):
             if proj_item.endswith('.wkgp'):
                 for exp_item in os.listdir(os.path.join(old_path, proj_item)):
-                    with open(os.path.join(old_path, proj_item, exp_item,
-                                           "info.json"), "r+") as info_file:
-                        info = json.load(info_file)
-                        log.debug("Old wkfl info: %s", info)
-                        if get_status(os.path.join(old_path, proj_item,
-                                                   exp_item)) == 'ready':
-                            if not old_parent_dir:
-                                src_mdl = os.path.join(new_parent_dir,
-                                                       info['source_model'])
+                    wkfl_path = os.path.join(old_path, proj_item, exp_item)
+                    if wkfl_path.endswith(".wkfl"):
+                        with open(os.path.join(wkfl_path,
+                                               "info.json"), "r+") as info_file:
+                            info = json.load(info_file)
+                            log.debug("Old wkfl info: %s", info)
+                            if get_status(os.path.join(old_path, proj_item,
+                                                       exp_item)) == 'ready':
+                                if not old_parent_dir:
+                                    src_mdl = os.path.join(new_parent_dir,
+                                                           info['source_model'])
+                                else:
+                                    src_mdl = (info['source_model']
+                                               .replace(old_parent_dir, new_parent_dir, 1))
+                                info['source_model'] = (src_mdl[1:]
+                                                        if src_mdl.startswith('/')
+                                                        else src_mdl)
                             else:
-                                src_mdl = (info['source_model']
-                                           .replace(old_parent_dir, new_parent_dir, 1))
-                            info['source_model'] = (src_mdl[1:]
-                                                    if src_mdl.startswith('/')
-                                                    else src_mdl)
-                        else:
-                            if not old_parent_dir:
-                                wkfl_mdl = os.path.join(new_parent_dir,
-                                                        info['wkfl_model'])
-                            else:
-                                wkfl_mdl = info['wkfl_model'].replace(old_parent_dir,
-                                                                      new_parent_dir, 1)
-                            info['wkfl_model'] = (wkfl_mdl[1:]
-                                                  if wkfl_mdl.startswith('/')
-                                                  else wkfl_mdl)
-                        info_file.seek(0)
-                        log.debug("New wkfl info: %s", info)
-                        json.dump(info, info_file)
-                        info_file.truncate()
+                                if not old_parent_dir:
+                                    wkfl_mdl = os.path.join(new_parent_dir,
+                                                            info['wkfl_model'])
+                                else:
+                                    wkfl_mdl = info['wkfl_model'].replace(old_parent_dir,
+                                                                          new_parent_dir, 1)
+                                info['wkfl_model'] = (wkfl_mdl[1:]
+                                                      if wkfl_mdl.startswith('/')
+                                                      else wkfl_mdl)
+                            info_file.seek(0)
+                            log.debug("New wkfl info: %s", info)
+                            json.dump(info, info_file)
+                            info_file.truncate()
 
 
 class DuplicateModelHandler(APIHandler):
@@ -698,6 +702,7 @@ class CreateDirectoryHandler(APIHandler):
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"Directory Already Exists",
                      "Message":"Could not create your directory: "+str(err)}
+            error['Message'] = error['Message'].replace("/home/jovyan/", "")
             trace = traceback.format_exc()
             log.error("Exception information: %s\n%s", error, trace)
             error['Traceback'] = trace
@@ -734,9 +739,20 @@ class UploadFileAPIHandler(APIHandler):
         file_name = file_data['filename']
         log.debug(file_name)
         log.debug(type(file_data['body']))
-        resp = upload(file_data, file_info)
-        log.debug(resp)
-        self.write(json.dumps(resp))
+        try:
+            resp = upload(file_data, file_info)
+            log.debug(resp)
+            self.write(json.dumps(resp))
+        except StochSSAPIError as err:
+            self.set_status(err.status_code)
+            error = {"Reason":err.reason, "Message":err.message}
+            if err.traceback is None:
+                trace = traceback.format_exc()
+            else:
+                trace = err.traceback
+            log.error("Exception information: %s\n%s", error, trace)
+            error['Traceback'] = trace
+            self.write(error)
         self.finish()
 
 
@@ -836,4 +852,44 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
             log.error("Exception information: %s\n%s", error, trace)
             error['Traceback'] = trace
             self.write(error)
+        self.finish()
+
+
+class UploadFileFromLinkAPIHandler(APIHandler):
+    '''
+    ##############################################################################
+    Handler for uploading file from a url.
+    ##############################################################################
+    '''
+
+    async def get(self):
+        '''
+        Upload and unzip a zip file from a url.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the external file or the response file: %s", path)
+        cmd = self.get_query_argument(name="cmd", default=None)
+        log.debug("The command for the upload script: %s", cmd)
+        if cmd is None:
+            outfile = str(uuid.uuid4()).replace("-", "_")+".tmp"
+            log.debug("Response file name: %s", outfile)
+            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py', '{0}'.format(path), '{}'.format(outfile)] # Script commands for read run_cmd
+            log.debug("Exec command: %s", exec_cmd)
+            pipe = subprocess.Popen(exec_cmd)
+            resp = {"responsePath": outfile}
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        else:
+            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py', 'None', '{}'.format(path)] # Script commands for read run_cmd
+            log.debug("Exec command: %s", exec_cmd)
+            pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
+            results, error = pipe.communicate()
+            log.error("Errors trown by the subprocess: %s", error)
+            resp = json.loads(results)
+            log.debug("Response: %s", resp)
+            self.write(resp)
         self.finish()

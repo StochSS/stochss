@@ -67,8 +67,7 @@ module.exports = View.extend({
             !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && node.type === "workflow-group" && 
-            !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
+          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && node.type === "workflow-group") {
             return false
           }
           if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && (node.type === "workflow") && 
@@ -292,6 +291,8 @@ module.exports = View.extend({
       fileType = "spatial model"
     else if(fileType === "sbml-model")
       fileType = "sbml model"
+    else if(fileType === "other")
+      fileType = "file"
     var self = this
     if(document.querySelector('#deleteFileModal')) {
       document.querySelector('#deleteFileModal').remove()
@@ -973,15 +974,6 @@ module.exports = View.extend({
               }
             }
           }
-        },
-        "New_Workflow_Group" : {
-          "label" : "New Workflow Group",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            self.newWorkflowGroup(o)
-          }
         }
       }
       // option for uploading files
@@ -1325,7 +1317,7 @@ module.exports = View.extend({
          return $.extend(commonModel, modelConvert, download, common)
       }
       if (o.type === 'workflow-group') {
-        return $.extend(refresh, workflowGroup, downloadWCombine, common)
+        return $.extend(refresh, workflowGroup, downloadWCombine)
       }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, downloadWCombine, common)

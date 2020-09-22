@@ -32,10 +32,8 @@ class TestUploadFile(unittest.TestCase):
             assert validate_model("", "") == (True, True, "")
 
     def test_validate_model_missing_keys(self):
-        test_keys = ("is_spatial", "defaultID", "defaultMode", "modelSettings",
-                     "simulationSettings", "parameterSweepSettings", "species",
-                     "parameters", "reactions", "eventsCollection", "rules",
-                     "functionDefinitions", "meshSettings", "initialConditions")
+        test_keys = ("species","parameters","reactions","eventsCollection",
+                     "rules","functionDefinitions")
 
         class TestKeychain():
             def keys(self):
@@ -45,22 +43,6 @@ class TestUploadFile(unittest.TestCase):
         with mock.patch("json.loads", return_value=complete_keychain):
             assert validate_model("", "") == (False, True, \
                     "The following keys are missing from {0}: {1}".format("", ", ".join(test_keys)))
-
-    def test_validate_model_invalid_keys(self):
-        test_keys = ("invalid_key",
-                     "is_spatial", "defaultID", "defaultMode", "modelSettings",
-                     "simulationSettings", "parameterSweepSettings", "species",
-                     "parameters", "reactions", "eventsCollection", "rules",
-                     "functionDefinitions", "meshSettings", "initialConditions")
-
-        class TestKeychain():
-            def keys(self):
-                return test_keys
-
-        complete_keychain = TestKeychain()
-        with mock.patch("json.loads", return_value=complete_keychain):
-            assert validate_model("", "") ==\
-                    (False, True, "The following keys were found in {0} that don't exist within a StochSS model: {1}".format("", "invalid_key"))
 
     #unit tests for method upload_model_file
 

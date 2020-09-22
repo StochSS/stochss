@@ -39,6 +39,7 @@ class JsonFileAPIHandler(APIHandler):
         ----------
         '''
         purpose = self.get_query_argument(name="for")
+        log.debug("Purpose of the handler: %s", purpose)
         file_path = self.get_query_argument(name="path")
         log.debug("Path to the file: {0}".format(file_path))
         if file_path.startswith('/'):
@@ -50,7 +51,8 @@ class JsonFileAPIHandler(APIHandler):
             with open(full_path, 'r') as f:
                 data = json.load(f)
             log.debug("Contents of the json file: {0}".format(data))
-            self.update_model_data(data)
+            if full_path.endswith(".mdl"):
+                self.update_model_data(data)
             self.write(data)
         elif purpose == "edit":
             new_path ='/stochss/stochss_templates/nonSpatialModelTemplate.json'
@@ -201,3 +203,27 @@ class RunModelAPIHandler(APIHandler):
             self.write(resp)
         self.finish()
 
+
+class ModelExistsAPIHandler(APIHandler):
+    '''
+    ########################################################################
+    Handler for checking if a model already exists.
+    ########################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Check if the model already exists.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        file_path = os.path.join("/home/jovyan", self.get_query_argument(name="path"))
+        log.debug("Path to the file: %s", file_path)
+        resp = {"exists":os.path.exists(file_path)}
+        log.debug("Response: %s", resp)
+        self.write(resp)
+        self.finish()
+
+        

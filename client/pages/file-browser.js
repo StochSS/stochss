@@ -90,7 +90,9 @@ let FileBrowser = PageView.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
-                $('#models-jstree').jstree().refresh_node(node);
+                if(node.type === "folder") {
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
               }else{
                 body = JSON.parse(body)
                 $('#models-jstree').jstree().refresh()
@@ -184,19 +186,40 @@ let FileBrowser = PageView.extend({
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
+    let fileCharErrMsg = document.querySelector('#uploadFileModal #fileSpecCharError')
+    let nameEndErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+    let nameCharErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+    let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
     fileInput.addEventListener('change', function (e) {
-      if(fileInput.files.length){
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
         uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
       }else{
         uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
       }
     })
     input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
-      var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
-      let error = self.validateName(input.value)
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
+        uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
+      }else{
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
+      }
+      nameCharErrMsg.style.display = nameErr === "both" || nameErr === "special" ? "block" : "none"
+      nameEndErrMsg.style.display = nameErr === "both" || nameErr === "forward" ? "block" : "none"
+      nameUsageMsg.style.display = nameErr !== "" ? "block" : "none"
     });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
@@ -206,7 +229,6 @@ let FileBrowser = PageView.extend({
       }
       if(Boolean(input.value) && self.validateName(input.value) === ""){
         fileinfo.name = input.value.trim()
-        console.log("Changing the name of the file")
       }
       let formData = new FormData()
       formData.append("datafile", file)
@@ -230,6 +252,8 @@ let FileBrowser = PageView.extend({
           if(resp.errors.length > 0){
             let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
           }
+        }else{
+          let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
         }
       }
       req.send(formData)
@@ -244,6 +268,8 @@ let FileBrowser = PageView.extend({
       fileType = "spatial model"
     else if(fileType === "sbml-model")
       fileType = "sbml model"
+    else if(fileType === "other")
+      fileType = "file"
     var self = this
     if(document.querySelector('#deleteFileModal')) {
       document.querySelector('#deleteFileModal').remove()
@@ -257,6 +283,12 @@ let FileBrowser = PageView.extend({
           var node = $('#models-jstree').jstree().get_node(o.parent);
           if(node.type === "root"){
             self.refreshJSTree();
+            let actionsBtn = $(self.queryByHook("options-for-node"))
+            if(actionsBtn.text().endsWith(o.text)) {
+              actionsBtn.text("Actions")
+              actionsBtn.prop("disabled", true)
+              self.nodeForContextMenu = ""
+            }
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
@@ -577,7 +609,7 @@ let FileBrowser = PageView.extend({
         charErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputSpecCharError')
       }
       let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
+      okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
@@ -676,12 +708,13 @@ let FileBrowser = PageView.extend({
       var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
       var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
       let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
+      okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
+        modal.modal('hide')
         var parentPath = ""
         if(o && o.original && o.original.type !== "root"){
           parentPath = o.original._path
@@ -691,14 +724,23 @@ let FileBrowser = PageView.extend({
           let message = modelName.split(".")[0] !== input.value.trim() ? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
           let modelPath = path.join(parentPath, modelName)
-          let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
           if(message){
-            modal.modal('hide')
             let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
             let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
             yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
           }else{
-            window.location.href = endpoint;
+            let queryString = "?path="+modelPath+"&message="+message;
+            let existEP = path.join(app.getApiPath(), "model/exists")+queryString
+            xhr({uri: existEP, json: true}, function (err, response, body) {
+              if(body.exists) {
+                let title = "Model Already Exists"
+                let message = "A model already exists with that name"
+                let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+              }else{
+                let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
+                window.location.href = endpoint
+              }
+            })
           }
         }else{
           let dirName = input.value.trim();
@@ -720,7 +762,6 @@ let FileBrowser = PageView.extend({
               let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
             }
           });
-          modal.modal('hide')
         }
       }
     });
@@ -1028,15 +1069,6 @@ let FileBrowser = PageView.extend({
                 self.addExistingModel(o)
               }
             }
-          }
-        },
-        "New Workflow Group" : {
-          "label" : "New Workflow Group",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newProjectOrWorkflowGroup(o, false)
           }
         }
       }

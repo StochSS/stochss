@@ -44,7 +44,7 @@ let ModelEditor = PageView.extend({
       directory: directory,
       is_spatial: isSpatial,
       isPreview: true,
-      for: 'edit',
+      for: "edit",
     });
     if(directory.includes('.proj')) {
       this.projectPath = path.dirname(directory)
