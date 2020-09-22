@@ -252,6 +252,8 @@ let FileBrowser = PageView.extend({
           if(resp.errors.length > 0){
             let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
           }
+        }else{
+          let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
         }
       }
       req.send(formData)
