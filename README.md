@@ -14,13 +14,14 @@ At the moment StochSS development on Windows is not supported. You can try using
 
 ## Quickstart
 
-- Add any existing files or directories you want to work with to the working directory, /local\_data/. This directory will be mounted into the Docker container for StochSS to access and save your work.
-
-- Build and run the stochss notebook server: `make`
+- Build and run the stochss notebook server: `make`. This starts a local docker container running StochSS.
 
 - Once your terminal calms down you'll see a link to your server that looks something like this: `127.0.0.1:8888/?token=X8dSfd...`
 
-- Navigate to that link and get started!
+- Navigate to that link and get started.
+
+- Your files are persisted on your local machine to the `local\_data/` directory by default.
+
 
 ## Setup
 
@@ -31,6 +32,9 @@ At the moment StochSS development on Windows is not supported. You can try using
 - Rebuild frontend static assets on changes to files in /client:  `make watch`.
 
 - Upon changing backend code in stochss/handlers you can update a running StochSS notebook server  with `make update`.
+
+- [Optional] By default your files are saved to your local machine at `./local\_data/`. You can change this location by the changing value of `DOCKER\_WORKING\_DIR` in the file `.env`.
+
 
 ### Add a python dependency
 
