@@ -72,9 +72,10 @@ module.exports = View.extend({
       }
     });
     okBtn.addEventListener('click', function (e) {
-      self.model.annotation = input.value;
+      self.model.annotation = input.value.trim();
       self.parent.renderRules();
       modal.modal('hide');
+      document.querySelector('#ruleAnnotationModal').remove();
     });
   },
   getOptions: function () {

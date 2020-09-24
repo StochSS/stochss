@@ -59,9 +59,10 @@ module.exports = View.extend({
       }
     });
     okBtn.addEventListener('click', function (e) {
-      self.model.annotation = input.value;
+      self.model.annotation = input.value.trim();
       self.parent.renderEditParameter();
       modal.modal('hide');
+      document.querySelector('#parameterAnnotationModal').remove();
     });
   },
   setParameterName: function (e) {

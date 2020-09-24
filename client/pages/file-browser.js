@@ -796,6 +796,12 @@ let FileBrowser = PageView.extend({
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
+      let optionsButton = $(self.queryByHook("options-for-node"))
+      if(!self.nodeForContextMenu){
+        optionsButton.prop('disabled', false)
+      }
+      optionsButton.text("Actions for " + o.original.text)
+      self.nodeForContextMenu = o;
       let nodeType = o.original.type
       let zipTypes = ["workflow", "folder", "other", "mesh", "project", "workflow-group"]
       let asZip = zipTypes.includes(nodeType)

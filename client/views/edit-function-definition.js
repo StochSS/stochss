@@ -35,9 +35,10 @@ module.exports = View.extend({
       }
     });
     okBtn.addEventListener('click', function (e) {
-      self.model.annotation = input.value;
+      self.model.annotation = input.value.trim();
       self.parent.renderEdirFunctionDefinitionView();
       modal.modal('hide');
+      document.querySelector('#functionDefinitionAnnotationModal').remove();
     });
   },
   removeFunctionDefinition: function () {
