@@ -38,6 +38,10 @@ USER jovyan
 
 ENV PATH="/usr/local/julia-1.4.2/bin:${PATH}"
 
+RUN mkdir /usr/local/julia-1.4.2/depot/ && chown -R jovyan:users /usr/local/julia-1.4.2/depot/
+ENV JULIA_DEPOT_PATH=/usr/local/julia-1.4.2/depot/
+ENV DEPOT_PATH=/usr/local/julia-1.4.2/depot/
+
 RUN julia -e 'using Pkg; Pkg.add("IJulia")'
 RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
 
