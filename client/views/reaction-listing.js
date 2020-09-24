@@ -46,6 +46,9 @@ module.exports = View.extend({
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
     if(!this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Add')
     }
@@ -81,7 +84,6 @@ module.exports = View.extend({
       self.model.annotation = input.value.trim();
       self.parent.renderReactionListingView();
       modal.modal('hide');
-      document.querySelector('#reactionAnnotationModal').remove();
     });
   },
   subviews: {

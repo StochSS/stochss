@@ -135,6 +135,9 @@ let FileBrowser = PageView.extend({
         self.refreshInitialJSTree();
       }, 3000);
     });
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
   },
   refreshJSTree: function () {
     this.jstreeIsLoaded = false

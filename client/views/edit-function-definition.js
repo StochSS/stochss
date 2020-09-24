@@ -17,6 +17,9 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
   },
   editAnnotation: function () {
     var self = this;
@@ -38,7 +41,6 @@ module.exports = View.extend({
       self.model.annotation = input.value.trim();
       self.parent.renderEdirFunctionDefinitionView();
       modal.modal('hide');
-      document.querySelector('#functionDefinitionAnnotationModal').remove();
     });
   },
   removeFunctionDefinition: function () {

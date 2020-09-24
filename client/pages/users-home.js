@@ -35,6 +35,12 @@ let usersHomePage = PageView.extend({
       })
     }
   },
+  render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments);
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
+  },
   getUploadResponse: function () {
     let self = this
     setTimeout(function () {

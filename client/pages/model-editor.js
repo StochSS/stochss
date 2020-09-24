@@ -201,6 +201,9 @@ let ModelEditor = PageView.extend({
 
        });
     });
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
