@@ -163,10 +163,11 @@ module.exports = View.extend({
     this.nodeForContextMenu = "";
     this.jstreeIsLoaded = false
     // Remove all backdrop on close
-    $(document).on('hide.bs.modal', '.modal', function () {
+    $(document).on('hide.bs.modal', '.modal', function (e) {
       if($(".modal-backdrop").length > 1) {
         $(".modal-backdrop").remove();
       }
+      e.target.remove()
     });
     window.addEventListener('pageshow', function (e) {
       var navType = window.performance.navigation.type

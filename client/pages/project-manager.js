@@ -101,6 +101,9 @@ let ProjectManager = PageView.extend({
     }else{
       $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
     }
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
   },
   renderRecentPlotView: function () {
     if(this.recentPlotView) {
