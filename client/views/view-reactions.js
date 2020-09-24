@@ -14,8 +14,9 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     katex.render(this.model.summary, this.queryByHook('summary'), {
-      displayMode: true,
-      output: 'mathml'
+      displayMode: false,
+      output: 'html',
+      throwOnError: false
     });
   },
 });

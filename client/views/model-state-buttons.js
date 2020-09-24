@@ -1,8 +1,10 @@
-var app = require('../app');
 var xhr = require('xhr');
 var path = require('path');
 var Plotly = require('../lib/plotly');
 var $ = require('jquery');
+//support file
+var app = require('../app');
+var modals = require('../modals');
 //views
 var View = require('ampersand-view');
 //templates
@@ -13,7 +15,8 @@ module.exports = View.extend({
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
-    'click [data-hook=start-workflow]' : 'clickStartWorkflowHandler',
+    'click [data-hook=new-workflow]' : 'clickNewWorkflowHandler',
+    'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -25,6 +28,9 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.togglePreviewWorkflowBtn();
+    if(this.model.directory.includes('.proj')) {
+      this.queryByHook("return-to-project-btn").style.display = "inline-block"
+    }
   },
   clickSaveHandler: function (e) {
     this.saveModel(this.saved.bind(this));
@@ -36,8 +42,26 @@ module.exports = View.extend({
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
   },
-  clickStartWorkflowHandler: function (e) {
-    window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+this.model.directory;
+  clickReturnToProjectHandler: function (e) {
+    let self = this
+    this.saveModel(function () {
+      self.saved()
+      var queryString = "?path="+path.dirname(self.model.directory)
+      window.location.href = path.join(app.getBasePath(), "/stochss/project/manager")+queryString;
+    })
+  },
+  clickNewWorkflowHandler: function (e) {
+    let self = this
+    this.saveModel(function () {
+      self.saved()
+      var queryString = "?path="+self.model.directory
+      if(self.model.directory.includes('.proj')) {
+        let parentPath = path.join(path.dirname(self.model.directory), "WorkflowGroup1.wkgp")
+        queryString += "&parentPath="+parentPath
+      }
+      let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+queryString
+      window.location.href = endpoint
+    })
   },
   togglePreviewWorkflowBtn: function () {
     var numSpecies = this.model.species.length;
@@ -45,7 +69,6 @@ module.exports = View.extend({
     var numEvents = this.model.eventsCollection.length
     var numRules = this.model.rules.length
     $(this.queryByHook('run')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
-    $(this.queryByHook('start-workflow')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
   },
   saveModel: function (cb) {
     this.saving();
@@ -114,6 +137,10 @@ module.exports = View.extend({
       let queryStr = "?cmd=read&outfile="+self.outfile+"&path="+model.directory
       endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
       xhr({ uri: endpoint, json: true}, function (err, response, body) {
+        if(typeof body === "string") {
+          body = body.replace(/NaN/g, null)
+          body = JSON.parse(body)
+        }
         var data = body.Results;
         if(response.statusCode >= 400){
           self.ran(false);

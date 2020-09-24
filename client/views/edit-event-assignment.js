@@ -37,6 +37,7 @@ module.exports = View.extend({
   removeAssignment: function () {
     this.remove();
     this.collection.removeEventAssignment(this.model)
+    this.collection.parent.collection.trigger('change')
   },
   getOptions: function () {
     var species = this.model.collection.parent.collection.parent.species;

@@ -30,6 +30,9 @@ module.exports = View.extend({
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
     if(!this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Add')
     }
@@ -49,7 +52,7 @@ module.exports = View.extend({
     if(document.querySelector('#parameterAnnotationModal')) {
       document.querySelector('#parameterAnnotationModal').remove();
     }
-    let modal = $(annotationModalHtml("parameter", name, annotation)).modal();
+    let modal = $(modals.annotationModalHtml("parameter", name, annotation)).modal();
     let okBtn = document.querySelector('#parameterAnnotationModal .ok-model-btn');
     let input = document.querySelector('#parameterAnnotationModal #parameterAnnotationInput');
     input.addEventListener("keyup", function (event) {
@@ -59,13 +62,13 @@ module.exports = View.extend({
       }
     });
     okBtn.addEventListener('click', function (e) {
-      self.model.annotation = input.value;
+      self.model.annotation = input.value.trim();
       self.parent.renderEditParameter();
       modal.modal('hide');
     });
   },
   setParameterName: function (e) {
-    this.model.name = e.target.value;
+    this.model.name = e.target.value.trim();
     this.model.collection.trigger('update-parameters', this.model.compID, this.model);
     this.model.collection.trigger('remove')
   },
@@ -93,9 +96,9 @@ module.exports = View.extend({
           required: true,
           name: 'expression',
           label: '',
-          tests: '',
+          tests: tests.valueTests,
           modelKey: 'expression',
-          valueType: 'string',
+          valueType: 'number',
           value: this.model.expression,
         });
       },

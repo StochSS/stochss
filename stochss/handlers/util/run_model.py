@@ -3,10 +3,12 @@
 import os
 import sys
 import json
+import numpy
 import argparse
 import logging
 import pickle
 import plotly
+import traceback
 
 from io import StringIO
 from gillespy2.core import log
@@ -15,16 +17,11 @@ for handler in log.handlers:
     if type(handler) is logging.StreamHandler:
         handler.stream = log_stream
 
-
-from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
-
-import numpy
 import gillespy2.core.gillespySolver
-from gillespy2.core.events import EventAssignment, EventTrigger, Event
-from gillespy2.core.gillespyError import ModelError, SolverError, DirectoryError, BuildError, ExecutionError
-from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver
-from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver
-from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver
+from gillespy2 import Species, Parameter, Reaction, RateRule, Model, AssignmentRule, FunctionDefinition
+from gillespy2 import EventAssignment, EventTrigger, Event
+from gillespy2 import ModelError, SimulationError, SolverError, DirectoryError, BuildError, ExecutionError
+from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, SSACSolver
 
 import warnings
 warnings.simplefilter("ignore")
@@ -234,7 +231,8 @@ class ModelFactory():
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
-        self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), data['eventsCollection']))
+        events = list(filter(lambda e: self.is_valid_event(e), data['eventsCollection']))
+        self.events = list(map(lambda e: self.build_event(e, self.species, self.parameters), events))
         rate_rules = list(filter(lambda rr: self.is_valid_rate_rule(rr), data['rules']))
         assignment_rules = list(filter(lambda rr: self.is_valid_assignment_rule(rr), data["rules"]))
         self.rate_rules = list(map(lambda rr: self.build_rate_rules(rr, self.species, self.parameters), rate_rules))
@@ -358,6 +356,19 @@ class ModelFactory():
         return EventAssignment(variable=variable[0], expression=expression)
         
 
+    def is_valid_event(self, event):
+        if event['triggerExpression'] != "":
+            assignments = list(filter(lambda assignment: self.is_valid_assignment(assignment), event['eventAssignments']))
+            if len(assignments) > 0:
+                event['eventAssignments'] = assignments
+                return event
+
+
+    def is_valid_assignment(self, assignment):
+        if assignment['expression'] != "":
+            return assignment
+
+
     def is_valid_rate_rule(self, rr):
         if rr['type'] == "Rate Rule" and not rr['expression'] == "":
             return rr
@@ -423,7 +434,10 @@ class ModelFactory():
         for stoich_specie in args:
             key = stoich_specie['specie']['name']
             value = stoich_specie['ratio']
-            d[key] = value
+            if key not in d.keys():
+                d[key] = value
+            else:
+                d[key] += value
         return d
 
 
@@ -450,17 +464,12 @@ def get_models(full_path, name):
             stochss_model['name'] = name
             is_ode = stochss_model['defaultMode'] == "continuous"
     except FileNotFoundError as error:
-        print(str(error))
+        print("{0}\n{1}".format(error, traceback.format_exc()))
         log.critical("Failed to find the model file: {0}".format(error))
 
-    try:
-        _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
-        gillespy2_model = _model.model
-    except Exception as error:
-        print(str(error))
-        log.error(str(error))
-        gillespy2_model = None
-
+    _model = ModelFactory(stochss_model, is_ode) # build GillesPy2 model
+    gillespy2_model = _model.model
+    
     return gillespy2_model, stochss_model
 
 
@@ -475,7 +484,8 @@ def run_model(model_path):
     model_path : str
         Path to the model file.
     '''
-    gillespy2_model, stochss_model = get_models(model_path, model_path.split('/').pop().split('.')[0])
+    from rename import get_file_name
+    gillespy2_model, stochss_model = get_models(model_path, get_file_name(model_path))
     workflow = GillesPy2Workflow(None, model_path)
     results = workflow.run_preview(gillespy2_model, stochss_model)
     return results
@@ -511,7 +521,6 @@ def run_solver(model, data, run_timeout, is_ssa=False, solver=None, rate1=None, 
 
 
 def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
-    print("running choose for me")
     if solver is None:
         solver = model.get_best_solver(precompile=False)
 
@@ -530,7 +539,7 @@ def chooseForMe(model, run_timeout, is_ssa, solver, rate1, rate2):
 
 def basicODESolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicODESolver.
+    Run the model with the GillesPy2 ODESolver.
 
     Attributes
     ----------
@@ -543,7 +552,7 @@ def basicODESolver(model, data, run_timeout):
     '''
     # print("running ode solver")
     results = model.run(
-        solver = BasicTauHybridSolver,
+        solver = TauHybridSolver,
         timeout = run_timeout,
         integrator_options = { 'atol' : data['absoluteTol'], 'rtol' : data['relativeTol']}
     )
@@ -563,11 +572,12 @@ def ssaSolver(model, data, run_timeout):
     run_timeout : int
         Number of seconds until the simulation times out.
     '''
-    print("running ssa solver")
+    solver = SSACSolver(model=model)
     seed = data['seed']
     if(seed == -1):
         seed = None
     results = model.run(
+        solver = solver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed
@@ -594,7 +604,7 @@ def v_ssa_solver(model, data, run_timeout, solver, rate1, rate2):
 
 def basicTauLeapingSolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicTauLeapingSolver.
+    Run the model with the GillesPy2 TauLeapingSolver.
     
     Attributes
     ----------
@@ -610,7 +620,7 @@ def basicTauLeapingSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = BasicTauLeapingSolver,
+        solver = TauLeapingSolver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,
@@ -621,7 +631,7 @@ def basicTauLeapingSolver(model, data, run_timeout):
 
 def basicTauHybridSolver(model, data, run_timeout):
     '''
-    Run the model with the GillesPy2 BasicTauHybridSolver.
+    Run the model with the GillesPy2 TauHybridSolver.
     
     Attributes
     ----------
@@ -637,7 +647,7 @@ def basicTauHybridSolver(model, data, run_timeout):
     if(seed == -1):
         seed = None
     results = model.run(
-        solver = BasicTauHybridSolver,
+        solver = TauHybridSolver,
         timeout = run_timeout,
         number_of_trajectories = data['realizations'],
         seed = seed,
@@ -680,7 +690,9 @@ if __name__ == "__main__":
             if 'GillesPy2 simulation exceeded timeout.' in logs:
                 resp['timeout'] = True
         except ModelError as error:
-            resp['errors'] = str(error)
+            resp['errors'] = "{0}".format(error)
+        except SimulationError as error:
+            resp['errors'] = "{0}".format(error)
         with open(outfile, "w") as fd:
             json.dump(resp, fd)
         open(outfile + ".done", "w").close()

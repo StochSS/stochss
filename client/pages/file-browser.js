@@ -13,116 +13,6 @@ let template = require('../templates/pages/fileBrowser.pug');
 
 import initPage from './page.js';
 
-let ajaxData = {
-  "url" : function (node) {
-    if(node.parent === null){
-      return path.join(app.getApiPath(), "file/browser-list")+"?path=none"
-    }
-    return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
-  },
-  "dataType" : "json",
-  "data" : function (node) {
-    return { 'id' : node.id}
-  },
-}
-
-let treeSettings = {
-  'plugins': [
-    'types',
-    'wholerow',
-    'changed',
-    'contextmenu',
-    'dnd',
-  ],
-  'core': {
-    'multiple' : false,
-    'animation': 0,
-    'check_callback': function (op, node, par, pos, more) {
-      if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
-        return false
-      }
-      if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
-        return false
-      }
-      if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
-        if(!more.ref.state.loaded){
-          return false
-        }
-        var exists = false
-        var BreakException = {}
-        try{
-          more.ref.children.forEach(function (child) {
-            var child_node = $('#models-jstree').jstree().get_node(child)
-            exists = child_node.text === node.text
-            if(exists){
-              throw BreakException;
-            }
-          })
-        }catch{
-          return false;
-        }
-      }
-      if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
-        return false
-      }
-      if(op === 'move_node' && more && more.core) {
-        var newDir = par.type !== "root" ? par.original._path : ""
-        var file = node.original._path.split('/').pop()
-        var oldPath = node.original._path
-        let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
-        var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
-        xhr({uri: endpoint}, function(err, response, body) {
-          if(response.statusCode < 400) {
-            node.original._path = path.join(newDir, file)
-          }else{
-            body = JSON.parse(body)
-            if(par.type === 'root'){
-              $('#models-jstree').jstree().refresh()
-            }else{
-              $('#models-jstree').jstree().refresh_node(par);
-            }
-          }
-        });
-      }
-      return true
-    },
-    'themes': {
-      'stripes': true,
-      'variant': 'large'
-    },
-    'data': ajaxData,
-  },
-  'types' : {
-    'root' : {
-      "icon": "jstree-icon jstree-folder"
-    },
-    'folder' : {
-      "icon": "jstree-icon jstree-folder"
-    },
-    'spatial' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'nonspatial' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'workflow' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'notebook' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'mesh' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'sbml-model' : {
-      "icon": "jstree-icon jstree-file"
-    },
-    'other' : {
-      "icon": "jstree-icon jstree-file"
-    },
-  },  
-}
-
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
   template: template,
@@ -130,11 +20,104 @@ let FileBrowser = PageView.extend({
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
+    'click [data-hook=new-project]' : 'handleCreateProjectClick',
     'click [data-hook=new-model]' : 'handleCreateModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
+  },
+  initialize: function (attrs, options) {
+    PageView.prototype.initialize.apply(this, arguments)
+    var self = this
+    this.root = "none"
+    this.ajaxData = {
+      "url" : function (node) {
+        if(node.parent === null){
+          return path.join(app.getApiPath(), "file/browser-list")+"?path="+self.root
+        }
+        return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
+      },
+      "dataType" : "json",
+      "data" : function (node) {
+        return { 'id' : node.id}
+      },
+    }
+    this.treeSettings = {
+      'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
+      'core': {'multiple' : false, 'animation': 0,
+        'check_callback': function (op, node, par, pos, more) {
+          if(op === "rename_node" && self.validateName(pos, true) !== ""){
+            document.querySelector("#renameSpecialCharError").style.display = "block"
+            setTimeout(function () {
+              document.querySelector("#renameSpecialCharError").style.display = "none"
+            }, 5000)
+            return false
+          }
+          if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
+            if(!more.ref.state.loaded){
+              return false
+            }
+            var exists = false
+            var BreakException = {}
+            try{
+              more.ref.children.forEach(function (child) {
+                var child_node = $('#models-jstree').jstree().get_node(child)
+                exists = child_node.text === node.text
+                if(exists){
+                  throw BreakException;
+                }
+              })
+            }catch{
+              return false;
+            }
+          }
+          if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
+            return false
+          }
+          if(op === 'move_node' && more && more.core) {
+            var newDir = par.type !== "root" ? par.original._path : ""
+            var file = node.original._path.split('/').pop()
+            var oldPath = node.original._path
+            let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
+            var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
+            xhr({uri: endpoint}, function(err, response, body) {
+              if(response.statusCode < 400) {
+                node.original._path = path.join(newDir, file)
+                if(node.type === "folder") {
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              }else{
+                body = JSON.parse(body)
+                $('#models-jstree').jstree().refresh()
+              }
+            });
+          }
+          return true
+        },
+        'themes': {'stripes': true, 'variant': 'large'},
+        'data': this.ajaxData,
+      },
+      'types' : {
+        'root' : {"icon": "jstree-icon jstree-folder"},
+        'folder' : {"icon": "jstree-icon jstree-folder"},
+        'spatial' : {"icon": "jstree-icon jstree-file"},
+        'nonspatial' : {"icon": "jstree-icon jstree-file"},
+        'project' : {"icon": "jstree-icon jstree-file"},
+        'workflow-group' : {"icon": "jstree-icon jstree-file"},
+        'workflow' : {"icon": "jstree-icon jstree-file"},
+        'notebook' : {"icon": "jstree-icon jstree-file"},
+        'mesh' : {"icon": "jstree-icon jstree-file"},
+        'sbml-model' : {"icon": "jstree-icon jstree-file"},
+        'other' : {"icon": "jstree-icon jstree-file"},
+      },  
+    }
   },
   render: function () {
     var self = this;
@@ -147,10 +130,14 @@ let FileBrowser = PageView.extend({
         window.location.reload()
       }
     });
-    this.setupJstree();
-    setTimeout(function () {
-      self.refreshInitialJSTree();
-    }, 3000);
+    this.setupJstree(function () {
+      setTimeout(function () {
+        self.refreshInitialJSTree();
+      }, 3000);
+    });
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
   },
   refreshJSTree: function () {
     this.jstreeIsLoaded = false
@@ -202,21 +189,49 @@ let FileBrowser = PageView.extend({
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
+    let fileCharErrMsg = document.querySelector('#uploadFileModal #fileSpecCharError')
+    let nameEndErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+    let nameCharErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+    let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
     fileInput.addEventListener('change', function (e) {
-      if(fileInput.files.length){
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
         uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
       }else{
         uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
       }
     })
+    input.addEventListener("input", function (e) {
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
+        uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
+      }else{
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
+      }
+      nameCharErrMsg.style.display = nameErr === "both" || nameErr === "special" ? "block" : "none"
+      nameEndErrMsg.style.display = nameErr === "both" || nameErr === "forward" ? "block" : "none"
+      nameUsageMsg.style.display = nameErr !== "" ? "block" : "none"
+    });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
       var fileinfo = {"type":type,"name":"","path":"/"}
       if(o && o.original){
         fileinfo.path = o.original._path
       }
-      if(Boolean(input.value)){
-        fileinfo.name = input.value
+      if(Boolean(input.value) && self.validateName(input.value) === ""){
+        fileinfo.name = input.value.trim()
       }
       let formData = new FormData()
       formData.append("datafile", file)
@@ -240,6 +255,8 @@ let FileBrowser = PageView.extend({
           if(resp.errors.length > 0){
             let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
           }
+        }else{
+          let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
         }
       }
       req.send(formData)
@@ -254,6 +271,8 @@ let FileBrowser = PageView.extend({
       fileType = "spatial model"
     else if(fileType === "sbml-model")
       fileType = "sbml model"
+    else if(fileType === "other")
+      fileType = "file"
     var self = this
     if(document.querySelector('#deleteFileModal')) {
       document.querySelector('#deleteFileModal').remove()
@@ -267,6 +286,12 @@ let FileBrowser = PageView.extend({
           var node = $('#models-jstree').jstree().get_node(o.parent);
           if(node.type === "root"){
             self.refreshJSTree();
+            let actionsBtn = $(self.queryByHook("options-for-node"))
+            if(actionsBtn.text().endsWith(o.text)) {
+              actionsBtn.text("Actions")
+              actionsBtn.prop("disabled", true)
+              self.nodeForContextMenu = ""
+            }
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
@@ -532,7 +557,141 @@ let FileBrowser = PageView.extend({
       targetPath = o.original._path
     }
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
-    window.location.href = endpoint
+    window.open(endpoint)
+  },
+  validateName(input, rename = false) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    if(rename) {
+      invalidChars += "/"
+    }
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
+  },
+  newProjectOrWorkflowGroup: function (o, isProject) {
+    var self = this
+    if(document.querySelector("#newProjectModal")) {
+      document.querySelector("#newProjectModal").remove()
+    }
+    if(document.querySelector("#newWorkflowGroupModal")) {
+      document.querySelector("#newWorkflowGroupModal").remove()
+    }
+    var modal = ""
+    var okBtn = ""
+    var input = ""
+    if(isProject) {
+      modal = $(modals.newProjectModalHtml()).modal();
+      okBtn = document.querySelector('#newProjectModal .ok-model-btn');
+      input = document.querySelector('#newProjectModal #projectNameInput');
+    }else{
+      modal = $(modals.newWorkflowGroupModalHtml()).modal();
+      okBtn = document.querySelector('#newWorkflowGroupModal .ok-model-btn');
+      input = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInput');
+    }
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = ""
+      var charErrMsg = ""
+      if(isProject){
+        endErrMsg = document.querySelector('#newProjectModal #projectNameInputEndCharError')
+        charErrMsg = document.querySelector('#newProjectModal #projectNameInputSpecCharError')
+      }else{
+        endErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputEndCharError')
+        charErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputSpecCharError')
+      }
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== "" || input.value.trim() === ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        var parentPath = ""
+        if(o && o.original && o.original.type !== "root") {
+          parentPath = o.original._path
+        }
+        var endpoint = ""
+        if(isProject){
+          var projectName = input.value.trim() + ".proj"
+          var projectPath = path.join(parentPath, projectName)
+          endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
+        }else{
+          var workflowGroupName = input.value.trim() + ".wkgp"
+          var workflowGroupPath = path.join(parentPath, workflowGroupName)
+          endpoint = path.join(app.getApiPath(), "project/new-workflow-group")+"?path="+workflowGroupPath
+        }
+        xhr({uri: endpoint,json: true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            if(isProject) {
+              if(o){//directory was created with context menu option
+                var node = $('#models-jstree').jstree().get_node(o);
+                if(node.type === "root"){
+                  self.refreshJSTree()
+                }else{          
+                  $('#models-jstree').jstree().refresh_node(node);
+                }
+              }else{//directory was created with create directory button
+                self.refreshJSTree()
+              }
+            }else{
+              let successModal = $(modals.newWorkflowGroupSuccessHtml(body.message)).modal()
+            }
+          }else{
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
+          }
+          modal.modal('hide')
+        })
+      }
+    })
+  },
+  addExistingModel: function (o) {
+    var self = this
+    if(document.querySelector('#newProjectModelModal')){
+      document.querySelector('#newProjectModelModal').remove()
+    }
+    let modal = $(modals.newProjectModelHtml()).modal()
+    let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
+    let input = document.querySelector('#newProjectModelModal #modelPathInput')
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
+    okBtn.addEventListener("click", function (e) {
+      if(Boolean(input.value)) {
+        let queryString = "?path="+o.original._path+"&mdlPath="+input.value.trim()
+        let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
+        xhr({uri:endpoint, json:true}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
+          }else{
+            let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal()
+          }
+        });
+        modal.modal('hide')
+      }
+    });
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
@@ -548,19 +707,46 @@ let FileBrowser = PageView.extend({
         okBtn.click();
       }
     });
-    let modelName;
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== "" || input.value.trim() === ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
+        modal.modal('hide')
         var parentPath = ""
         if(o && o.original && o.original.type !== "root"){
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = input.value + '.mdl';
-          var modelPath = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+path.join(parentPath, modelName);
-          window.location.href = modelPath;
+          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
+          let message = modelName.split(".")[0] !== input.value.trim() ? 
+                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
+          let modelPath = path.join(parentPath, modelName)
+          if(message){
+            let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
+            let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
+            yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
+          }else{
+            let queryString = "?path="+modelPath+"&message="+message;
+            let existEP = path.join(app.getApiPath(), "model/exists")+queryString
+            xhr({uri: existEP, json: true}, function (err, response, body) {
+              if(body.exists) {
+                let title = "Model Already Exists"
+                let message = "A model already exists with that name"
+                let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+              }else{
+                let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
+                window.location.href = endpoint
+              }
+            })
+          }
         }else{
-          let dirName = input.value;
+          let dirName = input.value.trim();
           let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
           xhr({uri:endpoint}, function (err, response, body) {
             if(response.statusCode < 400){
@@ -579,13 +765,15 @@ let FileBrowser = PageView.extend({
               let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
             }
           });
-          modal.modal('hide')
         }
       }
     });
   },
   handleCreateDirectoryClick: function (e) {
     this.newModelOrDirectory(undefined, false, false);
+  },
+  handleCreateProjectClick: function (e) {
+    this.newProjectOrWorkflowGroup(undefined, true)
   },
   handleCreateModelClick: function (e) {
     let isSpatial = false
@@ -611,8 +799,15 @@ let FileBrowser = PageView.extend({
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
+      let optionsButton = $(self.queryByHook("options-for-node"))
+      if(!self.nodeForContextMenu){
+        optionsButton.prop('disabled', false)
+      }
+      optionsButton.text("Actions for " + o.original.text)
+      self.nodeForContextMenu = o;
       let nodeType = o.original.type
-      let asZip = (nodeType === "workflow" || nodeType === "folder" || nodeType === "other" || nodeType === "mesh")
+      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "workflow-group"]
+      let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
         "Download" : {
@@ -639,7 +834,7 @@ let FileBrowser = PageView.extend({
         },
         "Duplicate" : {
           "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
-          "_disabled" : false,
+          "_disabled" : (nodeType === "project"),
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
@@ -679,6 +874,15 @@ let FileBrowser = PageView.extend({
           "separator_after" : false,
           "action" : function (data) {
             self.newModelOrDirectory(o, false, false);
+          }
+        },
+        "New Project" : {
+          "label" : "New Project",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newProjectOrWorkflowGroup(o, true)
           }
         },
         "New_model" : {
@@ -842,6 +1046,8 @@ let FileBrowser = PageView.extend({
           "action" : function (data) {
             if(nodeType === "workflow"){
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
+            }else if(nodeType === "project"){
+              window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
             }else{
               if(nodeType === "notebook") {
                 var identifier = "notebooks"
@@ -851,6 +1057,26 @@ let FileBrowser = PageView.extend({
                 var identifier = "view"
               }
               window.open(path.join(app.getBasePath(), identifier, o.original._path));
+            }
+          }
+        }
+      }
+      let project = {
+        "Add Model" : {
+          "label" : "Add Model",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : {
+            "New Model" : folder.New_model,
+            "Existing Model" : {
+              "label" : "Existing Model",
+              "_disabled" : false,
+              "separator_before" : false,
+              "separator_after" : false,
+              "action" : function (data) {
+                self.addExistingModel(o)
+              }
             }
           }
         }
@@ -943,6 +1169,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'nonspatial') {
          return $.extend(model, modelConvert, common)
       }
+      if (o.type === 'project'){
+        return $.extend(open, project, common)
+      }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, common)
       }
@@ -959,7 +1188,7 @@ let FileBrowser = PageView.extend({
     $(document).on('dnd_start.vakata', function (data, element, helper, event) {
       $('#models-jstree').jstree().load_all()
     });
-    $('#models-jstree').jstree(treeSettings).bind("loaded.jstree", function (event, data) {
+    $('#models-jstree').jstree(this.treeSettings).bind("loaded.jstree", function (event, data) {
       self.jstreeIsLoaded = true
     }).bind("refresh.jstree", function (event, data) {
       self.jstreeIsLoaded = true
@@ -991,6 +1220,8 @@ let FileBrowser = PageView.extend({
       }else if(file.endsWith('.sbml')){
         var openPath = path.join(app.getBasePath(), "edit", _path)
         window.open(openPath, '_blank')
+      }else if(file.endsWith('.proj')){
+        window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
       }else if(file.endsWith('.wkfl')){
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){

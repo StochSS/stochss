@@ -60,6 +60,9 @@ module.exports = View.extend({
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
     if(!this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Add')
     }
@@ -78,7 +81,7 @@ module.exports = View.extend({
     if(document.querySelector('#eventAnnotationModal')) {
       document.querySelector('#eventAnnotationModal').remove();
     }
-    let modal = $(annotationModalHtml("event", name, annotation)).modal();
+    let modal = $(modals.annotationModalHtml("event", name, annotation)).modal();
     let okBtn = document.querySelector('#eventAnnotationModal .ok-model-btn');
     let input = document.querySelector('#eventAnnotationModal #eventAnnotationInput');
     input.addEventListener("keyup", function (event) {
@@ -88,7 +91,7 @@ module.exports = View.extend({
       }
     });
     okBtn.addEventListener('click', function (e) {
-      self.model.annotation = input.value;
+      self.model.annotation = input.value.trim();
       self.parent.renderEventListingsView();
       modal.modal('hide');
     });
