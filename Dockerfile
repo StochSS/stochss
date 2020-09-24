@@ -1,4 +1,4 @@
-FROM jupyter/minimal-notebook:latest
+FROM jupyter/minimal-notebook:612aa5710bf9
 
 ARG STOCHSS_PIP_EDITABLE
 ARG JUPYTER_CONFIG_DIR
