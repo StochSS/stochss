@@ -17,8 +17,13 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments)
     this.renderCollection(this.collection, WorkflowViewer, this.queryByHook('workflow-container'))
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-workflows')).text();
-    text === '+' ? $(this.queryByHook('collapse-workflows')).text('-') : $(this.queryByHook('collapse-workflows')).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 })

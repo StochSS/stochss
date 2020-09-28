@@ -34,6 +34,11 @@ let workflowSelection = PageView.extend({
     }else{
       this.parentPath = path.dirname(this.modelDir)
     }
+    if(this.modelDir.includes(".proj")) {
+      this.projectPath = path.dirname(this.modelDir)
+      this.projectName = this.projectPath.split('/').pop().split('.')[0]
+      this.workflowGroupName = this.parentPath.split('/').pop().split('.')[0]
+    }
     this.tooltips = Tooltips.workflowSelection
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -42,7 +47,7 @@ let workflowSelection = PageView.extend({
 
        });
     });
-    this.modelFile = this.modelDir.split('/').pop().split('.').shift();
+    this.modelFile = this.getFileName(this.modelDir)
     var isSpatial = this.modelDir.endsWith('.smdl');
     this.model = new Model({
       name: this.modelFile,
@@ -53,18 +58,56 @@ let workflowSelection = PageView.extend({
     });
     this.model.fetch({
       success: function (model, response, options) {
+        if(self.modelDir.includes(".proj")) {
+          self.queryByHook("workflow-selection-breadcrumb-links").style.display = "block"
+        }
         self.validateWorkflows()
       }
     });
   },
-  validateWorkflows: function () {
-    if(this.model.parameters.length < 1 || this.model.species.length < 1){
-      $(this.queryByHook('oned-parameter-sweep')).addClass('disabled')
-      $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
-      $(this.queryByHook('sciope-model-exploration')).addClass('disabled')
-    }else if(this.model.parameters.length < 2){
-      $(this.queryByHook('twod-parameter-sweep')).addClass('disabled')
+  getFileName: function (file) {
+    if(file.endsWith('/')) {
+      file.slice(0, -1)
     }
+    if(file.includes('/')) {
+      file = file.split('/').pop()
+    }
+    if(!file.includes('.')) {
+      return file
+    }
+    return file.split('.').slice(0, -1).join('.')
+  },
+  validateWorkflows: function () {
+    let modelInvalid = this.checkForErrors()
+    if(this.model.species.length < 1 || (this.model.reactions.length < 1 && this.model.eventsCollection.length < 1 && this.model.rules.length < 1) || modelInvalid){
+      $(this.queryByHook('stochss-es')).prop('disabled', true)
+      $(this.queryByHook('stochss-ps')).prop('disabled', true)
+      $(this.queryByHook('ensemble-simulation')).prop('disabled', true)
+      $(this.queryByHook('model-inference')).prop('disabled', true)
+      $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
+      if(modelInvalid) {
+        let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+'?path='+this.model.directory
+        $(this.queryByHook('invalid-model-message')).html('Errors were detected in you model <a href="'+endpoint+'">click here to fix your model<a/>')
+      }
+      $(this.queryByHook('invalid-model-message')).css('display', 'block')
+    }else if(this.model.parameters.length < 1){
+      $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('stochss-ps')).prop('disabled', true)
+      $(this.queryByHook('psweep-workflow-message')).css('display', 'block')
+    }else if(this.model.parameters.length < 2){
+      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('psweep-workflow-message')).text('2D Parameter Sweep workflows require at least two parameters')
+      $(this.queryByHook('psweep-workflow-message')).css('display', 'block')
+    }
+  },
+  checkForErrors: function (e) {
+    let invalidParams = this.model.parameters.filter(function (parameter) {
+      if(typeof parameter.expression === "string") return true
+    })
+    if(invalidParams.length) {return true}
   },
   notebookWorkflow: function (e) {
     var type = e.target.dataset.type;

@@ -48,7 +48,7 @@ module.exports = View.extend({
     var value = e.target.selectedOptions.item(0).text
     var modeDict = {"Concentration":"continuous","Population":"discrete","Hybrid Concentration/Population":"dynamic"}
     this.model.mode = modeDict[value]
-    this.model.collection.trigger('update-species', this.model.compID, this.model, false);
+    this.model.collection.trigger('update-species', this.model.compID, this.model, false, false);
     this.toggleSwitchingSettings();
   },
   setSwitchingType: function (e) {

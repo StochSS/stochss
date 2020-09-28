@@ -173,7 +173,7 @@ class ParameterSweep1D():
         if stamp is None:
             now = datetime.now()
             stamp = datetime.timestamp(now)
-        directory = os.path.join(path, nametag + stamp)
+        directory = os.path.join(path, nametag + str(stamp))
         filename = os.path.join(directory, keys+".csv")
         if not os.path.exists(directory):
             os.mkdir(directory)
@@ -290,7 +290,7 @@ class ParameterSweep2D():
         if stamp is None:
             now = datetime.now()
             stamp = datetime.timestamp(now)
-        directory = os.path.join(path, nametag + stamp)
+        directory = os.path.join(path, nametag + str(stamp))
         filename = os.path.join(directory, keys+".csv")
         if not os.path.exists(directory):
             os.mkdir(directory)

@@ -20,6 +20,57 @@ let usersHomePage = PageView.extend({
     'click [data-hook=browse-files-btn]' : 'handleBrowseFilesClick',
     'click [data-hook=quickstart-btn]' : 'handleQuickstartClick'
   },
+  initialize: function (attrs, options) {
+    PageView.prototype.initialize.apply(this, arguments)
+    let urlParams = new URLSearchParams(window.location.search)
+    if(urlParams.has("open")){
+      let uploadPath = urlParams.get("open")
+      let endpoint = path.join(app.getApiPath(), 'file/upload-from-link')+"?path="+uploadPath
+      let self = this
+      xhr({uri:endpoint, json:true}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          self.responsePath = body.responsePath
+          self.getUploadResponse()
+        }
+      })
+    }
+  },
+  render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments);
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
+  },
+  getUploadResponse: function () {
+    let self = this
+    setTimeout(function () {
+      let endpoint = path.join(app.getApiPath(), 'file/upload-from-link')+"?path="+self.responsePath+"&cmd=read"
+      xhr({uri: endpoint, json: true}, function (err, response, body) {
+        if(response.statusCode >= 400 || Object.keys(body).includes("reason")) {
+          let model = $(modals.projectExportErrorHtml(body.reason, body.message)).modal()
+        }else if(body.done) {
+          if(body.file_path.endsWith(".proj")){
+            window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body.file_path
+          }
+        }else{
+          self.getUploadResponse()
+        }
+      })
+    }, 1000)
+  },
+  validateName(input) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    let invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
+  },
   handleNewModelClick: function (e) {
     let self = this
     if(document.querySelector("#newModalModel")) {
@@ -35,13 +86,30 @@ let usersHomePage = PageView.extend({
         okBtn.click();
       }
     });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== "" || input.value.trim() === ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)){
         modal.modal('hide')
         let modelPath = input.value + '.mdl'
-        let queryString = "?path="+modelPath+"&message=''"
-        let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
-        self.navToPage(endpoint)
+        let queryString = "?path="+modelPath
+        let existEP = path.join(app.getApiPath(), "model/exists")+queryString
+        xhr({uri: existEP, json: true}, function (err, response, body) {
+          if(body.exists) {
+            let title = "Model Already Exists"
+            let message = "A model already exists with that name"
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+          }else{
+            let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
+            self.navToPage(endpoint)
+          }
+        })
       }
     });
   },
@@ -59,6 +127,14 @@ let usersHomePage = PageView.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectModal #projectNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectModal #projectNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== "" || input.value.trim() === ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {

@@ -7,6 +7,24 @@ from shutil import copyfile, copytree
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, ModelNotFoundError
 
 
+def get_file_name(file):
+    '''
+    Get the name of a file object
+
+    Attributes
+    ----------
+    file : str
+        String representation of a file object
+    '''
+    if file.endswith('/'):
+        file = file[:-1]
+    if '/' in file:
+        file = file.split('/').pop()
+    if '.' not in file:
+        return file
+    return '.'.join(file.split('.')[:-1])
+
+
 def get_unique_file_name(_path):
     '''
     Gets a unique name for a file to be copied.  Accounts for a copy
@@ -25,7 +43,7 @@ def get_unique_file_name(_path):
     if '-copy' in file:
         name = file.split('-copy')[0]
     elif '.' in file:
-        name = file.split(ext)[0]
+        name = ext.join(file.split(ext)[:-1])
     else:
         name = file
 
@@ -150,7 +168,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
         raise StochSSFileNotFoundError("Could not read the workflow info file: " + str(err), traceback.format_exc())
     except JSONDecodeError as err:
         raise FileNotJSONFormatError("The workflow info file is not JSON decodable: "+str(err), traceback.format_exc())
-    workflows = {"gillespy":GillesPy2Workflow,"psweep":ParameterSweep}
+    workflows = {"gillespy":GillesPy2Workflow,"parameterSweep":ParameterSweep}
     model_path = data['source_model']
     org_wkfl = workflows[data['type']](full_path, model_path)
     # Get model file from wkfl info
@@ -165,7 +183,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
         resp = {"message":"A copy of the model in {0} has been created".format(wkfl_path),"mdlPath":model_path,"File":model_file}
     else:
         # Get base name for new workflow name (current workflow name - timestamp)
-        wkfl_base_name = full_path.split('/').pop().split('.')[0]
+        wkfl_base_name = get_file_name(full_path)
         try:
             date, time = wkfl_base_name.split('_')[-2:]
             if date.isdigit() and time.isdigit():

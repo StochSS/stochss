@@ -43,8 +43,13 @@ module.exports = View.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-project')).text();
-    text === '+' ? $(this.queryByHook('collapse-project')).text('-') : $(this.queryByHook('collapse-project')).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 });

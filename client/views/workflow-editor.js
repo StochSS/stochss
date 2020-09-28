@@ -123,12 +123,17 @@ module.exports = View.extend({
     }).length) // if true child exits within the model
     return exists
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-settings')).text();
-    text === '+' ? $(this.queryByHook('collapse-settings')).text('-') : $(this.queryByHook('collapse-settings')).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
   collapseContainer: function () {
     $(this.queryByHook("workflow-editor-container")).collapse()
-    this.changeCollapseButtonText()
+    $(this.queryByHook("collapse-settings")).click()
   },
 });

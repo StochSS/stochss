@@ -59,7 +59,7 @@ module.exports = Model.extend({
   saveModel: function () {
     var self = this;
     this.species.map(function (specie) {
-      self.species.trigger('update-species', specie.compID, specie, false);
+      self.species.trigger('update-species', specie.compID, specie, false, false);
     });
     this.parameters.map(function (parameter) {
       self.parameters.trigger('update-parameters', parameter.compID, parameter);

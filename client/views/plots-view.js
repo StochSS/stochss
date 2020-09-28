@@ -42,8 +42,12 @@ module.exports = View.extend({
     Plotly.newPlot(el, figure);
   },
   changeCollapseButtonText: function (e) {
-    var source = e.target.dataset.hook;
-    var text = $(this.queryByHook(source)).text();
-    text === '+' ? $(this.queryByHook(source)).text('-') : $(this.queryByHook(source)).text('+');
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 })

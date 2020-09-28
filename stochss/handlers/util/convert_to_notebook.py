@@ -2,15 +2,32 @@
 import json
 import nbformat
 import traceback
+import string
 
 from os import path
 from nbformat import v4 as nbf
 from json.decoder import JSONDecodeError
 
 from .run_model import ModelFactory
-from .rename import get_unique_file_name
+from .rename import get_unique_file_name, get_file_name
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_run_cell, generate_configure_simulation_cell, get_algorithm
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
+
+
+def get_class_name(name):
+    name = name.replace(" ", "")
+
+    for char in string.punctuation:
+        if char in name:
+            name = name.replace(char, "")
+
+    leading_char = name[0]
+    if leading_char in string.digits:
+        name = "M{}".format(name)
+    elif leading_char in string.ascii_lowercase:
+        name = name.replace(leading_char, leading_char.upper(), 1)
+
+    return name
 
 
 def convert_to_notebook(_model_path, name=None, settings=None, dest_path=None):
@@ -19,7 +36,8 @@ def convert_to_notebook(_model_path, name=None, settings=None, dest_path=None):
     model_path = path.join(user_dir,_model_path)
     file = model_path.split('/').pop()
     if name is None:
-        name = file.split('.')[0].replace('-', '_')
+        name = get_file_name(file)
+    class_name = get_class_name(name)
     if dest_path is None:
         dest_path = model_path.split(file)[0]
     
@@ -55,9 +73,9 @@ def convert_to_notebook(_model_path, name=None, settings=None, dest_path=None):
         # Create imports cell
         cells.append(nbf.new_code_cell(import_cell))
         # Create Model Cell
-        cells.append(nbf.new_code_cell(generate_model_cell(json_data, name)))
+        cells.append(nbf.new_code_cell(generate_model_cell(json_data, class_name)))
         # Instantiate Model Cell
-        cells.append(nbf.new_code_cell('model = {0}()'.format(name)))
+        cells.append(nbf.new_code_cell('model = {0}()'.format(class_name)))
         if settings is not None and not settings['simulationSettings']['isAutomatic'] and solv_name == "SSACSolver":
             # Instantiate Solver Cell
             cells.append(nbf.new_code_cell('solver = SSACSolver(model=model)'))

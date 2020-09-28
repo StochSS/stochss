@@ -1,11 +1,32 @@
 section.page
 
-  div.verticle-space-2
+  div.verticle-space
 
     h2.inline(id="page-title" data-hook="page-title")= "Project: "+this.projectName
 
   div.col-md-12.col-lg-10.no-gutters-padding
 
+    if !this.annotation
+      div.verticle-space-2
+        button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-annotation-btn") Edit Notes
+    else
+      div
+        button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-annotation-btn") Edit Notes
+
+    div.mx-3.mt-2.collapse.verticle-space-2(data-hook="collapse-annotation-container")
+
+      div.col-md-1.inline.align-top
+
+        div.row
+
+          div: h5="Notes: "
+
+          div: button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#annotation-text" data-hook="collapse-annotation-text") -
+
+      div.collapse.show.col-md-11.inline(id="annotation-text")
+
+          div: textarea(id="annotation" data-hook="annotation-text-container" rows="7" style="width: 100%;")
+          
     div(id="edit-models-container" data-hook="edit-models-container")
 
     div.verticle-space-3
@@ -28,11 +49,11 @@ section.page
 
     div.verticle-space(id="edit-workflow-groups-container" data-hook="edit-workflow-groups-container")
 
-    div.verticle-space-3
+    div.verticle-space-3(style="display: none;")
 
       button.btn.btn-outline-primary.inline.box-shadow(id="new-workflow-group-btn" data-hook="new-workflow-group") Add New Workflow Group
 
-    div
+    div(style="display: none;")
 
       div
 
@@ -44,7 +65,7 @@ section.page
 
         div(id="project-most-recent-plot" data-hook="project-most-recent-plot")
 
-    div(id="project-viewer" data-hook="project-viewer")
+    div(id="project-viewer" data-hook="project-viewer" style="display: none;")
 
     div.card.card-body
 

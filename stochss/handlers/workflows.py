@@ -7,6 +7,7 @@ requests without a referrer field
 import logging
 import json
 import os
+import ast
 import subprocess
 import traceback
 from json.decoder import JSONDecodeError
@@ -22,6 +23,7 @@ from .util.convert_to_sciope_me import convert_to_sciope_me
 from .util.convert_to_model_inference_notebook import convert_to_mdl_inference_nb
 from .util.stochss_errors import StochSSAPIError
 from .util.run_workflow import initialize
+from .util.rename import get_file_name
 
 log = logging.getLogger('stochss')
 
@@ -57,12 +59,12 @@ class LoadWorkflowAPIHandler(APIHandler):
             resp = {"mdlPath":path, "timeStamp":stamp, "type":wkfl_type,
                     "status":"new", "titleType":title_types[wkfl_type],
                     "wkflParPath": parent_path, "startTime":None}
-            resp["wkflName"] = (path.split('/').pop().split('.')[0] +
+            resp["wkflName"] = (get_file_name(path) +
                                 name_types[wkfl_type] + stamp)
             resp["wkflDir"] = resp['wkflName'] + ".wkfl"
         elif path.endswith('.wkfl'):
             resp = {"wkflDir":path.split('/').pop(), "wkflParPath":parent_path,
-                    "wkflName":path.split('/').pop().split('.')[0]}
+                    "wkflName":get_file_name(path)}
             resp["status"] = get_status(path)
             resp["timeStamp"] = "_"+"_".join(resp['wkflName'].split('_')[-2:])
             try:
@@ -86,6 +88,7 @@ class LoadWorkflowAPIHandler(APIHandler):
         try:
             with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
                 resp["model"] = json.load(model_file)
+                self.update_model_data(resp["model"])
         except FileNotFoundError:
             resp["model"] = None
             resp["error"] = {"Reason":"Model Not Found",
@@ -97,6 +100,37 @@ class LoadWorkflowAPIHandler(APIHandler):
         log.debug("Response: %s", resp)
         self.write(resp)
         self.finish()
+
+
+    @classmethod
+    def update_model_data(cls, data):
+        param_ids = []
+        for param in data['parameters']:
+            param_ids.append(param['compID'])
+            if isinstance(param['expression'], str):
+                try:
+                    param['expression'] = ast.literal_eval(param['expression'])
+                except ValueError:
+                    pass
+        for reaction in data['reactions']:
+            if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
+                try:
+                    reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+                except ValueError:
+                    pass
+        for event in data['eventsCollection']:
+            for assignment in event['eventAssignments']:
+                if assignment['variable']['compID'] in param_ids:
+                    try:
+                        assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+                    except ValueError:
+                        pass
+        for rule in data['rules']:
+            if rule['variable']['compID'] in param_ids:
+                try:
+                    rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
+                except ValueError:
+                    pass
 
 
     @classmethod
@@ -351,12 +385,13 @@ class WorkflowNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         workflow_type = self.get_query_argument(name="type")
-        path = self.get_query_argument(name="path")
+        path = os.path.join("/home/jovyan", self.get_query_argument(name="path"))
         settings = None
 
         if path.endswith('.wkfl'):
-            name = path.split('/').pop().split('.')[0].replace('-', '_')
+            name = get_file_name(path)
             with open(os.path.join(path, "info.json"), "r") as info_file:
                 info = json.load(info_file)
                 workflow_type = info['type']
@@ -396,6 +431,7 @@ class WorkflowNotebookHandler(APIHandler):
             log.error("Exception information: %s\n%s", error, trace)
             error['Traceback'] = trace
             self.write(error)
+        log.setLevel(logging.WARNING)
         self.finish()
 
 

@@ -15,6 +15,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
+    'click [data-hook=new-workflow]' : 'clickNewWorkflowHandler',
     'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
   },
   initialize: function (attrs, options) {
@@ -44,8 +45,22 @@ module.exports = View.extend({
   clickReturnToProjectHandler: function (e) {
     let self = this
     this.saveModel(function () {
+      self.saved()
       var queryString = "?path="+path.dirname(self.model.directory)
       window.location.href = path.join(app.getBasePath(), "/stochss/project/manager")+queryString;
+    })
+  },
+  clickNewWorkflowHandler: function (e) {
+    let self = this
+    this.saveModel(function () {
+      self.saved()
+      var queryString = "?path="+self.model.directory
+      if(self.model.directory.includes('.proj')) {
+        let parentPath = path.join(path.dirname(self.model.directory), "WorkflowGroup1.wkgp")
+        queryString += "&parentPath="+parentPath
+      }
+      let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+queryString
+      window.location.href = endpoint
     })
   },
   togglePreviewWorkflowBtn: function () {
@@ -122,6 +137,10 @@ module.exports = View.extend({
       let queryStr = "?cmd=read&outfile="+self.outfile+"&path="+model.directory
       endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
       xhr({ uri: endpoint, json: true}, function (err, response, body) {
+        if(typeof body === "string") {
+          body = body.replace(/NaN/g, null)
+          body = JSON.parse(body)
+        }
         var data = body.Results;
         if(response.statusCode >= 400){
           self.ran(false);

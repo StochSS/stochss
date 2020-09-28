@@ -7,26 +7,30 @@ div
 
     div.col-md-4
 
-      button.btn.btn-outline-secondary.inline.dropdown-toggle.box-shadow(
+      button.btn.btn-outline-secondary.inline.box-shadow(
         id="new-workflow-btn",
-        data-toggle="dropdown",
-        aria-haspopup="true",
-        aria-expanded="false",
+        data-hook="new-workflow-btn",
         type="button",
-      ) Create Workflow with Model <span class="caret"></span>
-
-      ul.dropdown-menu(aria-labelledby="new-workflow-btn" class="workflow-group-options" )
-        each workflowGroup in this.workflowGroupOptions
-          li.dropdown-item(data-hook="project-model-workflow-option" data-name=workflowGroup)="in "+workflowGroup
-        else
-          li.dropdown-item(data-hook="project-model-workflow-option" data-name="invalid")="in New Workflow Group"
+      ) New Workflow Using Model
 
     div.col-md-2
 
-        div.tooltip-icon-large(data-hook="annotation-tooltip" data-html="true" data-toggle="tooltip" title=this.model.annotation || "Click 'Add' to add an annotation") <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-alt" class="svg-inline--fa fa-file-alt fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm64 236c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-64c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-72v8c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12zm96-114.1v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"></path></svg>
-
-        button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-annotation-btn") Edit
+        button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-model-annotation-btn") Edit Notes
 
     div.col-md-1: button.btn.btn-outline-secondary.box-shadow(data-hook="project-model-remove") <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash-alt" class="svg-inline--fa fa-trash-alt fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"></path></svg>
+
+  div.mx-5.mt-4.collapse(data-hook="collapse-annotation-container"+this.model.name.replace(/ /g,""))
+
+    div.col-md-1.inline.align-top
+
+      div.row
+
+        div: h5="Notes: "
+
+        div: button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#annotation-text"+this.model.name.replace(/ /g,"") data-hook="collapse-annotation-text") -
+
+    div.collapse.show.col-md-11.inline(id="annotation-text"+this.model.name.replace(/ /g,""))
+
+        div: textarea(id="annotation"+this.model.name.replace(/ /g,"") data-hook="annotation" rows="7" style="width: 100%;")=this.model.annotation
 
   hr

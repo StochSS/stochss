@@ -12,7 +12,7 @@ module.exports = Collection.extend({
     var parameter = this.add({
       compID: id,
       name: name,
-      expression: '0.0',
+      expression: 0.0,
       annotation: "",
     });
   },

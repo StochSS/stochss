@@ -11,13 +11,16 @@ section.page
       nav(aria-label="breadcrumb")
         ol.breadcrumb
           li.breadcrumb-item
-            a(href="" data-hook="project-breadcrumb")
-          li.breadcrumb-item.active(data-hook='workflow-group-breadcrumb')
+            a.active-link(data-hook="project-breadcrumb")
           li.breadcrumb-item.active(aria-current="page" data-hook="workflow-breadcrumb")
 
   div(data-hook="workflow-name")
 
+  div.invalid-feedback.wkfl-name(id="workflowNameSpecialCharError") Names can only include the following characters: (0-9), (a-z), (A-Z) and (., -, _, (, or ))
+
   div(data-hook="model-path")
+
+  div.invalid-feedback.mdl-path(id="modelPathSpecialCharError") Names can only include the following characters: (0-9), (a-z), (A-Z) and (., -, _, (, or ))
 
   div(data-hook="workflow-editor-container")
 

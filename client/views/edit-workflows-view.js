@@ -35,6 +35,19 @@ module.exports = View.extend({
       });
     });
   },
+  validateName(input) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    let invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
+  },
   handleNewWorkflowClick: function (e) {
     let models = this.parent.parent.parent.model.models
     if(models.length > 0) {
@@ -74,6 +87,14 @@ module.exports = View.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener('click', function (e) {
       if(Boolean(input.value)) {

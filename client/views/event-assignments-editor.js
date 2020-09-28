@@ -26,5 +26,6 @@ module.exports = View.extend({
   },
   addAssignment: function () {
     this.collection.addEventAssignment();
+    this.collection.parent.collection.trigger('change')
   },
 })

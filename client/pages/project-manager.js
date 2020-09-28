@@ -31,7 +31,10 @@ let ProjectManager = PageView.extend({
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick',
     'click [data-hook=collapse-most-recent-plot-btn]' : 'changeCollapseButtonText',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
-    'click [data-hook=upload-file-btn]' : 'handleUploadModelClick'
+    'click [data-hook=collapse-annotation-container]' : 'changeCollapseButtonText',
+    'change [data-hook=annotation-text-container]' : 'updateAnnotation',
+    'click [data-hook=upload-file-btn]' : 'handleUploadModelClick',
+    'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments)
@@ -39,7 +42,7 @@ let ProjectManager = PageView.extend({
     this.url = decodeURI(document.URL)
     let urlParams = new URLSearchParams(window.location.search)
     this.projectPath = urlParams.get('path')
-    this.projectName = this.projectPath.split('/').pop().split('.')[0]
+    this.projectName = this.getFileName(this.projectPath)
     this.model = new Project({
       directory: self.projectPath
     });
@@ -58,9 +61,11 @@ let ProjectManager = PageView.extend({
       success: function (model, response, options) {
         self.renderProjectViewer()
         $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
-        if(target === "model-editor" || target === "workflow-group-editor" || 
-                          target === "workflows-editor" || target === "trash") {
+        if(target === "model-editor" || target === "workflows-editor" || target === "trash") {
           self.projectFileBrowser.refreshJSTree()
+        }else if(target === "workflow-group-editor"){
+          self.projectFileBrowser.refreshJSTree()
+          self.renderEditModelsView()
         }else if(target === "file-browser") {
           self.renderEditModelsView()
           self.renderEditWorkflowGroupsView()
@@ -72,12 +77,33 @@ let ProjectManager = PageView.extend({
       }
     });
   },
+  getFileName: function (file) {
+    if(file.endsWith('/')) {
+      file.slice(0, -1)
+    }
+    if(file.includes('/')) {
+      file = file.split('/').pop()
+    }
+    if(!file.includes('.')) {
+      return file
+    }
+    return file.split('.').slice(0, -1).join('.')
+  },
   renderSubviews: function () {
     this.renderProjectViewer();
     this.renderProjectFileBrowser();
     this.renderRecentPlotView();
     this.renderEditModelsView();
     this.renderEditWorkflowGroupsView();
+    if(this.model.annotation){
+      $(this.queryByHook('annotation-text-container')).text(this.model.annotation)
+      $(this.queryByHook("collapse-annotation-container")).collapse('show')
+    }else{
+      $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
+    }
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
   },
   renderRecentPlotView: function () {
     if(this.recentPlotView) {
@@ -154,6 +180,28 @@ let ProjectManager = PageView.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
+  handleEditAnnotationClick: function (e) {
+    let buttonTxt = e.target.innerText;
+    if(buttonTxt.startsWith("Add")){
+      $(this.queryByHook('collapse-annotation-container')).collapse('show')
+      $(this.queryByHook('edit-annotation-btn')).text('Edit Notes')
+    }else if(!$("#annotation-text").attr('class').includes('show')){
+      $("#annotation-text").collapse('show')
+      $(this.queryByHook("collapse-annotation-text")).text('-')
+    }
+    document.querySelector("#annotation").focus()
+  },
+  updateAnnotation: function (e) {
+    this.model.annotation = e.target.value.trim();
+    if(this.model.annotation === ""){
+      $(this.queryByHook('edit-annotation-btn')).text('Add Notes')
+      $(this.queryByHook("collapse-annotation-container")).collapse('hide')
+    }
+    let endpoint = path.join(app.getApiPath(), "project/save-annotation")+"?path="+this.model.directory
+    xhr({uri: endpoint, json: true, method: "post", data: {'annotation': this.model.annotation}}, function (err, response, body) {
+      console.log("Saved project notes")
+    })
+  },
   handleNewModelClick: function () {
     this.addNewModel(false)
   },
@@ -170,7 +218,7 @@ let ProjectManager = PageView.extend({
     xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400) {
         var downloadEP = path.join(app.getBasePath(), "/files", body.Path);
-        window.location.href = downloadEP
+        window.open(downloadEP)
       }
     })
   },
@@ -215,10 +263,17 @@ let ProjectManager = PageView.extend({
         uploadBtn.disabled = true
       }
     })
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+      var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
       var fileinfo = {"type":type,"name":"","path":self.projectPath}
-      if(Boolean(input.value)){
+      if(Boolean(input.value) && self.validateName(input.value) === ""){
         fileinfo.name = input.value
       }
       let formData = new FormData()
@@ -267,12 +322,33 @@ let ProjectManager = PageView.extend({
         }
       }
     });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
         event.preventDefault();
         okBtn.click();
       }
     });
+  },
+  validateName(input) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    let invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
   },
   addNewWorkflowGroup: function (cb) {
     let self = this
@@ -287,6 +363,14 @@ let ProjectManager = PageView.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
@@ -321,6 +405,14 @@ let ProjectManager = PageView.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
@@ -365,7 +457,6 @@ let ProjectManager = PageView.extend({
           if(download) {
             let downloadEP = path.join(app.getBasePath(), "/files", body.file_path);
             window.open(downloadEP)
-            xhr({uri: path.join(app.getApiPath(), "file/delete")+"?path="+body.file_path})
           }else{
             let modal = $(modals.projectExportSuccessHtml(body.file_type, body.message)).modal()
           }
@@ -376,9 +467,14 @@ let ProjectManager = PageView.extend({
     });
   },
   changeCollapseButtonText: function (e) {
-    let hook = e.target.dataset.hook
-    var text = $(this.queryByHook(hook)).text();
-    text === '+' ? $(this.queryByHook(hook)).text('-') : $(this.queryByHook(hook)).text('+');
+    let source = e.target.dataset.hook
+    let isBtn = $(this.queryByHook(source)).attr("class").includes("btn")
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(isBtn && !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   }
 });
 

@@ -34,6 +34,9 @@ let projectBrowser = PageView.extend({
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments)
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
+    });
   },
   renderProjectsView: function () {
     if(this.projectsView) {
@@ -41,6 +44,19 @@ let projectBrowser = PageView.extend({
     }
     let projects = new Collection(this.projects, {model: Project, comparator: 'parentDir'})
     this.projectsView = this.renderCollection(projects, EditProjectView, this.queryByHook("projects-view-container"))
+  },
+  validateName(input) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    let invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
   },
   handleNewProjectClick: function (e) {
     let self = this
@@ -56,6 +72,14 @@ let projectBrowser = PageView.extend({
         event.preventDefault();
         okBtn.click();
       }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newProjectModal #projectNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectModal #projectNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
