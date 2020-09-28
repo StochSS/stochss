@@ -7,6 +7,7 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--mode', default='develop', choices=['develop', 'release'],
                     help='Run tests in develop mode or release mode.')
+parser.add_argument('-b', '--browser', default='Firefox', choices=['Firefox', 'Chrome', 'Internet Explorer', 'Opera', 'Safari'], help='Run tests on Firefox, Chrome, Internet Explorer, Opera, or Safari browser.')
 
 if __name__ == '__main__':
     args = parser.parse_args()
