@@ -23,9 +23,11 @@ class TestModelEditor(unittest.TestCase):
     def test_model_editor(self):
 
         #create new model
-        self.driver.find_element(By.ID, "new-model-btn").click()
+        self.driver.find_element(By.ID, "browse-files-btn").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(3)").click()
         self.driver.find_element(By.ID, "modelNameInput").send_keys("test_model")
-        self.driver.find_element(By.CSS_SELECTOR, ".ok-model-btn").click()
+        self.driver.find_element(By.ID, "modelNameInput").send_keys(Keys.ENTER)
         
         #test species editor
         #create two species
