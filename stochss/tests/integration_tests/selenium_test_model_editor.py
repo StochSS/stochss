@@ -23,8 +23,8 @@ class TestModelEditor(unittest.TestCase):
     def test_model_editor(self):
 
         #create new model
-        self.driver.find_element(By.ID, "browse-files-btn").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
+        self.driver.find_elements_by_class_name("nav-link")[10].click()
+        self.driver.find_element_by_id("new-file-directory").click()
         self.driver.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(3)").click()
         self.driver.find_element(By.ID, "modelNameInput").send_keys("test_model")
         self.driver.find_element(By.ID, "modelNameInput").send_keys(Keys.ENTER)
