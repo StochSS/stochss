@@ -38,23 +38,23 @@ class TestFilesystem(unittest.TestCase):
     def test_filesystem(self):
 
         #test close button on create directory modal window
-        self.driver.find_element(By.ID, "browse-files-btn").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
+        self.driver.find_elements_by_class_name("nav-link")[10].click()
+        self.driver.find_element_by_id("new-file-directory").click()
         self.driver.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(1)").click()
         self.driver.find_element(By.ID, "modelNameInput").send_keys("uncreated_test_dir")
         self.driver.find_element(By.CSS_SELECTOR, ".btn-secondary").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
+        self.driver.find_element_by_id("new-file-directory").click()
         self.driver.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(2)").click()
         self.driver.find_element(By.ID, "projectNameInput").send_keys("test_proj")
         self.driver.find_element(By.ID, "projectNameInput").send_keys(Keys.ENTER)
         #create new directory test_dir
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
+        self.driver.find_element(By.ID, "new-file-directory").click()
         self.driver.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(1)").click()
         self.driver.find_element(By.ID, "modelNameInput").send_keys("test_dir")
         self.driver.find_element(By.ID, "modelNameInput").send_keys(Keys.ENTER)
         #create new model test_model
         self.driver.find_element(By.CSS_SELECTOR, ".page").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
+        self.driver.find_element(By.ID, "new-file-directory").click()
         self.driver.find_element(By.CSS_SELECTOR, ".dropdown-item:nth-child(3)").click()
         self.driver.find_element(By.ID, "modelNameInput").send_keys("test_model")
         self.driver.find_element(By.ID, "modelNameInput").send_keys(Keys.ENTER)
@@ -106,7 +106,7 @@ class TestFilesystem(unittest.TestCase):
         #test Actions For <node> button
         #test Edit (model)
         self.find_in_nodes_by_text(" test_model.mdl").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
+        self.driver.find_element(By.ID, "options-for-node").click()
         self.driver.find_element(By.LINK_TEXT, "Edit").click()
         title=self.driver.find_element_by_class_name("modal-title")
         assert title.text=='Default Species Mode (required)'
@@ -115,7 +115,7 @@ class TestFilesystem(unittest.TestCase):
         
         #test New Workflow
         self.find_in_nodes_by_text(" test_model.mdl").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
+        self.driver.find_element(By.ID, "options-for-node").click()
         self.driver.find_element(By.LINK_TEXT, "New Workflow").click()
         table=self.driver.find_element_by_class_name("table")
         split_table_text=table.text.split("\n")
@@ -125,7 +125,7 @@ class TestFilesystem(unittest.TestCase):
 
         #test Convert To Notebook
         self.find_in_nodes_by_text(" test_model.mdl").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
+        self.driver.find_element(By.ID, "options-for-node").click()
         self.vars["window_handles"] = self.driver.window_handles
         convert_menu_element = self.driver.find_element(By.LINK_TEXT, "Convert")
         ActionChains(self.driver).move_to_element(convert_menu_element).perform()
@@ -143,7 +143,7 @@ class TestFilesystem(unittest.TestCase):
 
         #test Convert to SBML Model
         self.find_in_nodes_by_text(" test_model.mdl").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
+        self.driver.find_element(By.ID, "options-for-node").click()
         convert_menu_element = self.driver.find_element(By.LINK_TEXT, "Convert")
         ActionChains(self.driver).move_to_element(convert_menu_element).perform()
         self.driver.find_element(By.LINK_TEXT, "To SBML Model").click()
@@ -152,7 +152,7 @@ class TestFilesystem(unittest.TestCase):
         
         #test Rename
         self.find_in_nodes_by_text(" test_model.mdl").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
+        self.driver.find_element(By.ID, "options-for-node").click()
         self.driver.find_element(By.LINK_TEXT, "Rename").click()
         warnings=self.driver.find_elements_by_class_name("alert-warning")
         assert warnings[0].text=='You should avoid changing the file extension unless you know what you are doing!'
@@ -160,7 +160,7 @@ class TestFilesystem(unittest.TestCase):
         
         #test Duplicate
         self.find_in_nodes_by_text(" test_model.mdl").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
+        self.driver.find_element(By.ID, "options-for-node").click()
         self.driver.find_element(By.LINK_TEXT, "Duplicate").click()
         jstree_nodes=self.driver.find_elements_by_class_name("jstree-node")
         assert " test_model-copy.mdl" in jstree_nodes[0].text
@@ -169,7 +169,7 @@ class TestFilesystem(unittest.TestCase):
         
         #test Delete
         self.find_in_nodes_by_text(" test_model.sbml").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(7)").click()
+        self.driver.find_element(By.ID, "options-for-node").click()
         self.driver.find_element(By.LINK_TEXT, "Delete").click()
         self.driver.find_element(By.CSS_SELECTOR, ".yes-modal-btn").click()
         jstree_nodes=self.driver.find_elements_by_class_name("jstree-node")
