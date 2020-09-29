@@ -26,7 +26,7 @@ def initialize_driver(passed_options=None):
     options=passed_options
     if (passed_options is None):
         options = Options()
-        options.headless=False
+        options.headless=True
     driver=Firefox(options=options)
     driver.implicitly_wait(10)
     return driver
