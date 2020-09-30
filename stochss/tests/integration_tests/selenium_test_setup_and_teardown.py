@@ -3,15 +3,18 @@ import selenium.webdriver.common.action_chains as action_chains
 import selenium.webdriver.common.touch_actions as touch_actions
 from selenium.webdriver import Firefox
 from selenium.webdriver.firefox.options import Options
+import os
+import sys
 import time
 import launch_docker_container
 
-def setup():
+def setup(self):
+    browser_string=get_browser_string();
     url_and_container=launch_docker_container.launch()
     stochss_url=url_and_container[0]
     stochss_container=url_and_container[1]
-    driver=initialize_driver()
-    add_methods(Firefox)
+    driver=initialize_driver(browser_string)
+    add_methods(driver)
     driver.get(stochss_url)
     return (driver, stochss_container)
 
@@ -21,13 +24,17 @@ def teardown(driver, container):
     time.sleep(3)
 #add shortcut clicking methods
 
+def get_browser_string():
+    if os.environ.get('TEST_BROWSER') is not None:
+        return os.environ.get('TEST_BROWSER')
+    else:
+        return "Firefox"
 
-def initialize_driver(passed_options=None):
-    options=passed_options
-    if (passed_options is None):
-        options = Options()
-        options.headless=True
-    driver=Firefox(options=options)
+def initialize_driver(browser_string="Firefox"):
+    options = Options()
+    options.headless=True
+    driver=(getattr(sys.modules[__name__], browser_string))(options=options)
+#   driver=Firefox(options=options)
     driver.implicitly_wait(10)
     return driver
 

@@ -14,7 +14,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 class TestFilesystem(unittest.TestCase):
 
     def setUp(self):
-        self.driver_and_container = selenium_test_setup_and_teardown.setup()
+        self.driver_and_container = selenium_test_setup_and_teardown.setup(self)
         self.driver=self.driver_and_container[0]
         self.stochss_container=self.driver_and_container[1]
         self.vars = {}
@@ -61,7 +61,7 @@ class TestFilesystem(unittest.TestCase):
         time.sleep(0.5)
         #return from Model Editor page to File Browser page
         self.driver.back()
-        self.driver.wait_for_navigation_complete()
+        self.driver.wait_for_navigation_complete(self.driver)
         
         #confirm create file and create directory successful
         jstree_nodes=self.driver.find_elements_by_class_name('jstree-node')
@@ -111,7 +111,7 @@ class TestFilesystem(unittest.TestCase):
         title=self.driver.find_element_by_class_name("modal-title")
         assert title.text=='Default Species Mode (required)'
         self.driver.back()
-        self.driver.wait_for_navigation_complete()
+        self.driver.wait_for_navigation_complete(self.driver)
         
         #test New Workflow
         self.find_in_nodes_by_text(" test_model.mdl").click()
@@ -121,7 +121,7 @@ class TestFilesystem(unittest.TestCase):
         split_table_text=table.text.split("\n")
         assert split_table_text==['StochSS Workflows', 'Ensemble Simulation Parameter Sweep']
         self.driver.back()
-        self.driver.wait_for_navigation_complete()
+        self.driver.wait_for_navigation_complete(self.driver)
 
         #test Convert To Notebook
         self.find_in_nodes_by_text(" test_model.mdl").click()

@@ -13,7 +13,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 class TestModelEditor(unittest.TestCase):
 
     def setUp(self):
-        self.driver_and_container = selenium_test_setup_and_teardown.setup()
+        self.driver_and_container = selenium_test_setup_and_teardown.setup(self)
         self.driver=self.driver_and_container[0]
         self.stochss_container=self.driver_and_container[1]
    

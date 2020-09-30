@@ -2,10 +2,10 @@ import time
 import selenium
 
 #utility
-def wait_for(function, timeout=5, **kwargs):
+def wait_for(self, function, timeout=5, **kwargs):
     start_time=time.time()
     while (time.time() < start_time+timeout):
-        if (function(**kwargs)):
+        if (function(self, **kwargs)):
             return True
         else:
             time.sleep(0.1)
@@ -21,6 +21,6 @@ def element_has_gone_stale(self, element):
         return True
 
 def wait_for_navigation_complete(self):
-    wait_for(function=self.element_has_gone_stale, element=self.find_element_by_id('navbar'))
+    wait_for(self, function=self.element_has_gone_stale, element=self.find_element_by_id('navbar'))
     time.sleep(3)
 
