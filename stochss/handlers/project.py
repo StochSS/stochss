@@ -328,25 +328,32 @@ class AddExistingModelAPIHandler(APIHandler):
         mdl_path = os.path.join(user_dir, self.get_query_argument(name="mdlPath"))
         log.debug("Path to the project: %s", path)
         log.debug("Path to the model: %s", mdl_path)
-        try:
-            unique_path, changed = get_unique_file_name(mdl_path.split("/").pop(), path)
-            copyfile(mdl_path, unique_path)
-            resp = {"message": "The model {0} was successfully move into \
-                                {1}".format(mdl_path.split('/').pop(), path.split("/").pop())}
-            if changed:
-                resp['message'] += " as {0}".format(unique_path.split('/').pop())
-            log.debug("Response message: %s", resp)
-            self.write(resp)
-        except IsADirectoryError as err:
+        if mdl_path.endswith('.mdl'):
+            try:
+                unique_path, changed = get_unique_file_name(mdl_path.split("/").pop(), path)
+                copyfile(mdl_path, unique_path)
+                resp = {"message": "The model {0} was successfully move into \
+                                    {1}".format(mdl_path.split('/').pop(), path.split("/").pop())}
+                if changed:
+                    resp['message'] += " as {0}".format(unique_path.split('/').pop())
+                log.debug("Response message: %s", resp)
+                self.write(resp)
+            except IsADirectoryError as err:
+                self.set_status(406)
+                error = {"Reason":"Not A Model",
+                         "Message":"Cannot move directories into StochSS Projects: {0}".format(err)}
+                log.error("Exception Information: %s", error)
+                self.write(error)
+            except FileNotFoundError as err:
+                self.set_status(404)
+                error = {"Reason":"Model Not Found",
+                         "Message":"Could not find the model: {0}".format(err)}
+                log.error("Exception Information: %s", error)
+                self.write(error)
+        else:
             self.set_status(406)
             error = {"Reason":"Not A Model",
-                     "Message":"Cannot move directories into StochSS Projects: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            error = {"Reason":"Model Not Found",
-                     "Message":"Could not find the model: {0}".format(err)}
+                     "Message":"Cannot move non-model files into StochSS Projects"}
             log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()
