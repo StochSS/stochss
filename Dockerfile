@@ -39,10 +39,12 @@ USER jovyan
 ENV PATH="/usr/local/julia-1.4.2/bin:${PATH}"
 
 RUN mkdir /usr/local/julia-1.4.2/depot/ && chown -R jovyan:users /usr/local/julia-1.4.2/depot/
+
 ENV JULIA_DEPOT_PATH=/usr/local/julia-1.4.2/depot/
 ENV DEPOT_PATH=/usr/local/julia-1.4.2/depot/
+ENV JUPYTER_PATH=/opt/conda/bin/jupyter
 
-RUN julia -e 'using Pkg; Pkg.add("IJulia")'
+RUN julia -e 'ENV["JUPYTER"]="/opt/conda/bin/jupyter"; using Pkg; Pkg.add("IJulia"); Pkg.build("IJulia")'
 RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
 
 RUN pip install --no-cache-dir -e .
