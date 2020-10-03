@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     for module in modules:
         suite = unittest.TestLoader().loadTestsFromModule(module)
-        runner = unittest.TextTestRunner(failfast=args.mode == 'develop')
+        runner = unittest.TextTestRunner(failfast=args.mode != 'develop')
 
         print("Executing: {}".format(module))
         result = runner.run(suite)

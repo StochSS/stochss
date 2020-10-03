@@ -1,14 +1,12 @@
 import selenium
 import selenium.webdriver.common.action_chains as action_chains
 import selenium.webdriver.common.touch_actions as touch_actions
-from selenium.webdriver import Firefox
-from selenium.webdriver.firefox.options import Options
 import os
 import sys
 import time
 import launch_docker_container
 
-def setup(self):
+def setup():
     browser_string=get_browser_string();
     url_and_container=launch_docker_container.launch()
     stochss_url=url_and_container[0]
@@ -31,9 +29,25 @@ def get_browser_string():
         return "Firefox"
 
 def initialize_driver(browser_string="Firefox"):
-    options = Options()
-    options.headless=True
-    driver=(getattr(sys.modules[__name__], browser_string))(options=options)
+    headless = True
+    if browser_string=="Firefox":
+        from selenium.webdriver import Firefox
+        from selenium.webdriver.firefox.options import Options
+        options = Options()
+        options.headless=headless
+        driver=Firefox(executable_path="/home/jdreeve/Downloads/chromedriver", options=options)
+    if browser_string=="Safari":
+        from selenium.webdriver import Safari
+        from selenium.webdriver.safari.options import Options
+        options = Options()
+        options.headless=headless
+        driver=Safari(options=options)
+    if browser_string=="Chrome":
+        from selenium.webdriver import Chrome
+        from selenium.webdriver.chrome.options import Options
+        options = Options()
+        options.headless=headless
+        driver=Chrome(options=options)
 #   driver=Firefox(options=options)
     driver.implicitly_wait(10)
     return driver

@@ -20,7 +20,10 @@ def element_has_gone_stale(self, element):
     except selenium.common.exceptions.StaleElementReferenceException:
         return True
 
-def wait_for_navigation_complete(self):
-    wait_for(self, function=self.element_has_gone_stale, element=self.find_element_by_id('navbar'))
+def go_back_and_wait(driver):
+
+    element=driver.find_element_by_id('navbar')
+    driver.back()
+    wait_for(driver, function=driver.element_has_gone_stale, element=element)
     time.sleep(3)
 
