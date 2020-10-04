@@ -17,6 +17,7 @@ jobs:
         pip install -r requirements.txt
         sudo apt-get update
         sudo apt-get install -y chromium-browser
+        sudo apt-get install -y chromium-chromedriver
     - name: Build Docker Image
       run: make build
     - name: Run Integration Tests
