@@ -18,10 +18,10 @@ jobs:
     - name: Build Docker Image
       run: make build
     - name: Set Test Browser
-      run: TEST_BROWSER=Chrome
     - name: Export Browser Selection
-      run: export TEST_BROWSER
     - name: Run Integration Tests
       run: |
+        TEST_BROWSER=Chrome
+        export TEST_BROWSER
         cd stochss/tests/integration_tests 
         python run_tests.py
