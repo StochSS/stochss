@@ -35,7 +35,7 @@ def initialize_driver(browser_string="Firefox"):
         from selenium.webdriver.firefox.options import Options
         options = Options()
         options.headless=headless
-        driver=Firefox(executable_path="/home/jdreeve/Downloads/chromedriver", options=options)
+        driver=Firefox(options=options)
     if browser_string=="Safari":
         from selenium.webdriver import Safari
         from selenium.webdriver.safari.options import Options
