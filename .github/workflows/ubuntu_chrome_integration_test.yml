@@ -17,8 +17,6 @@ jobs:
         pip install -r requirements.txt
     - name: Build Docker Image
       run: make build
-    - name: Set Test Browser
-    - name: Export Browser Selection
     - name: Run Integration Tests
       run: |
         TEST_BROWSER=Chrome
