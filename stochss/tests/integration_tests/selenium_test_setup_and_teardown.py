@@ -30,6 +30,7 @@ def get_browser_string():
 
 def initialize_driver(browser_string="Firefox"):
     headless = True
+    print(browser_string)
     if browser_string=="Firefox":
         from selenium.webdriver import Firefox
         from selenium.webdriver.firefox.options import Options
@@ -42,7 +43,7 @@ def initialize_driver(browser_string="Firefox"):
         options = Options()
         options.headless=headless
         driver=Safari(options=options)
-    if browser_string=="Chrome":
+    if browser_string=="Chrome"
         from selenium.webdriver import Chrome
         from selenium.webdriver.chrome.options import Options
         options = Options()
