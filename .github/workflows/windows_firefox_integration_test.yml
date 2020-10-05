@@ -1,4 +1,4 @@
-name: Ubuntu/Firefox Integration Test
+name: Windows/Firefox Integration Test
 on: [push]
 jobs:
   build:
