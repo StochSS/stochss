@@ -786,17 +786,37 @@ module.exports = View.extend({
         }
         if(isModel) {
           let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
-          let message = modelName.split(".")[0] !== input.value.trim() ? 
+          let message = modelName !== input.value.trim() + ".mdl"? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
           let modelPath = path.join(parentPath, modelName)
-          let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
+          let queryString = "?path="+modelPath+"&message="+message;
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
+          let existEP = path.join(app.getApiPath(), "model/exists")+queryString
           if(message){
-            modal.modal('hide')
             let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
             let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
-            yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
+            yesBtn.addEventListener('click', function (e) {
+              warningModal.modal('hide')
+              xhr({uri: existEP, json: true}, function (err, response, body) {
+                if(body.exists) {
+                  let title = "Model Already Exists"
+                  let message = "A model already exists with that name"
+                  let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+                }else{
+                  window.location.href = endpoint
+                }
+              })
+            })
           }else{
-            window.location.href = endpoint;
+            xhr({uri: existEP, json: true}, function (err, response, body) {
+              if(body.exists) {
+                let title = "Model Already Exists"
+                let message = "A model already exists with that name"
+                let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+              }else{
+                window.location.href = endpoint
+              }
+            })
           }
         }else{
           let dirName = input.value.trim();
