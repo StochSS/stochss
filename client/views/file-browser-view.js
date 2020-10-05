@@ -773,12 +773,13 @@ module.exports = View.extend({
       var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
       var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
       let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
+      okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
+        modal.modal('hide')
         var parentPath = self.parent.projectPath
         if(o && o.original && o.original._path !== "/"){
           parentPath = o.original._path
@@ -817,7 +818,6 @@ module.exports = View.extend({
               let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
             }
           });
-          modal.modal('hide')
         }
       }
     });
