@@ -4,6 +4,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+    - name: Check WSL
+      run: |
+        wsl
     - name: Set Up Python
       uses: actions/setup-python@v2
     - name: Checkout
