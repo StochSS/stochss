@@ -12,7 +12,6 @@ def setup():
     stochss_url=url_and_container[0]
     stochss_container=url_and_container[1]
     driver=initialize_driver(browser_string)
-    print(type(driver))
     add_methods(driver)
     driver.get(stochss_url)
     return (driver, stochss_container)
