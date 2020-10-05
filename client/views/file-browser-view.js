@@ -785,7 +785,7 @@ module.exports = View.extend({
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
+          let modelName = !o || (o && o.type === "root") ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
           let message = modelName !== input.value.trim() + ".mdl"? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
           let modelPath = path.join(parentPath, modelName)
