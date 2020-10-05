@@ -233,19 +233,40 @@ module.exports = View.extend({
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
+    let fileCharErrMsg = document.querySelector('#uploadFileModal #fileSpecCharError')
+    let nameEndErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+    let nameCharErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+    let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
     fileInput.addEventListener('change', function (e) {
-      if(fileInput.files.length){
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
         uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
       }else{
         uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
       }
     })
     input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
-      var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
-      let error = self.validateName(input.value)
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
+        uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
+      }else{
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
+      }
+      nameCharErrMsg.style.display = nameErr === "both" || nameErr === "special" ? "block" : "none"
+      nameEndErrMsg.style.display = nameErr === "both" || nameErr === "forward" ? "block" : "none"
+      nameUsageMsg.style.display = nameErr !== "" ? "block" : "none"
     });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
@@ -278,6 +299,8 @@ module.exports = View.extend({
           if(resp.errors.length > 0){
             let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
           }
+        }else{
+          let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
         }
       }
       req.send(formData)
@@ -661,7 +684,7 @@ module.exports = View.extend({
       var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
       var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
       let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
+      okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
