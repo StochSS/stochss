@@ -12,6 +12,7 @@ def setup():
     stochss_url=url_and_container[0]
     stochss_container=url_and_container[1]
     driver=initialize_driver(browser_string)
+    print(type(driver))
     add_methods(driver)
     driver.get(stochss_url)
     return (driver, stochss_container)
@@ -30,7 +31,6 @@ def get_browser_string():
 
 def initialize_driver(browser_string="Firefox"):
     headless = True
-    print(browser_string)
     if browser_string=="Firefox":
         from selenium.webdriver import Firefox
         from selenium.webdriver.firefox.options import Options
@@ -49,7 +49,6 @@ def initialize_driver(browser_string="Firefox"):
         options = Options()
         options.headless=headless
         driver=Chrome(options=options)
-#   driver=Firefox(options=options)
     driver.implicitly_wait(10)
     return driver
 
