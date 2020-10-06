@@ -8,20 +8,21 @@ var ReactionsViewer = require('./reactions-viewer');
 var EventsViewer = require('./events-viewer');
 var RulesViewer = require('./rules-viewer');
 var ModelSettingsViewer = require('./model-settings-viewer');
-//models
-var Model = require('../models/model');
 //templates
 var template = require('../templates/includes/modelViewer.pug');
 
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse-model]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-model]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.status = attrs.status;
-    this.wkflType = attrs.type;
+    if(attrs.status) {
+      this.status = attrs.status;
+    }else{
+      this.status = "complete"
+    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -49,19 +50,18 @@ module.exports = View.extend({
     this.registerRenderSubview(eventsViewer, "events-viewer-container");
     this.registerRenderSubview(rulesViewer, "rules-viewer-container");
     this.registerRenderSubview(modelSettingsViewer, "model-settings-viewer-container");
-    if(this.status === 'complete'){
-      this.enableCollapseButton();
-    }
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-model')).text();
-    text === '+' ? $(this.queryByHook('collapse-model')).text('-') : $(this.queryByHook('collapse-model')).text('+');
-  },
-  enableCollapseButton: function () {
-    $(this.queryByHook('collapse-model')).prop('disabled', false);
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
 });

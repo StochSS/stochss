@@ -18,8 +18,11 @@ div#workflow-status.card.card-body
       tbody
         tr
 
-          td=this.startTime
-          td=this.status
+          td: div=this.startTime
+          td
+            div
+              div.inline=this.status
+              div.inline.spinner-border.status(data-hook="running-spinner")
 
     div(style="display: none;")
 

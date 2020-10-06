@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import json
 
-from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
 
-
-def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False,
+def generate_imports_cell(json_data, algorithm, solv_name,
                             settings=None, interactive_backend=False):
     # Imports cell
     imports = 'import numpy as np\n'
@@ -16,19 +14,18 @@ def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False,
     else:
         # Non-Spatial
         imports += 'import gillespy2\n'
-        imports += 'from gillespy2.core import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
-        imports += 'from gillespy2.core.events import EventAssignment, EventTrigger, Event\n'
-        algorithm = get_algorithm(gillespy2_model, is_ssa_c) if settings is None or settings['isAutomatic'] else get_algorithm(gillespy2_model, is_ssa_c, algorithm=settings['algorithm'])
-        if algorithm == "SSA" and get_best_ssa_solver().name == "SSACSolver":
-            ssa = 'from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver\n'
+        imports += 'from gillespy2 import Model, Species, Reaction, Parameter, RateRule, AssignmentRule, FunctionDefinition\n'
+        imports += 'from gillespy2 import EventAssignment, EventTrigger, Event\n'
+        if solv_name == "SSACSolver":
+            ssa = 'from gillespy2 import SSACSolver\n'
         else:
             ssa = '# To run a simulation using the SSA Solver simply omit the solver argument from model.run().\n'
         algorithm_map = {
                 'SSA': ssa,
-                'V-SSA': 'from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver\n',
-                'Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_leaping_solver import BasicTauLeapingSolver\n',
-                'Hybrid-Tau-Leaping': 'from gillespy2.solvers.numpy.basic_tau_hybrid_solver import BasicTauHybridSolver\n',
-                'ODE': 'from gillespy2.solvers.numpy.basic_ode_solver import BasicODESolver'
+                'V-SSA': 'from gillespy2 import VariableSSACSolver\n',
+                'Tau-Leaping': 'from gillespy2 import TauLeapingSolver\n',
+                'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridSolver\n',
+                'ODE': 'from gillespy2 import ODESolver'
                 }
 
         for name, algorithm_import in algorithm_map.items():
@@ -47,7 +44,7 @@ def generate_imports_cell(json_data, gillespy2_model, is_ssa_c=False,
 def create_parameter_strings(json_data, padding):
     param_string = '\n' + padding + '# Parameters\n'
     for param in json_data['parameters']:
-        param_string += padding + 'self.add_parameter(Parameter(name="{0}", expression={1}))\n'.format(
+        param_string += padding + 'self.add_parameter(Parameter(name="{0}", expression="{1}"))\n'.format(
                 param['name'], 
                 param['expression'])
     return param_string
@@ -69,9 +66,15 @@ def create_reaction_strings(json_data, padding):
         products = {}
         # Parse Reactants/Products
         for reactant in reaction['reactants']:
-            reactants[reactant['specie']['name']] = reactant['ratio']
+            if reactant['specie']['name'] not in reactants.keys():
+                reactants[reactant['specie']['name']] = reactant['ratio']
+            else:
+                reactants[reactant['specie']['name']] += reactant['ratio']
         for product in reaction['products']:
-            products[product['specie']['name']] = product['ratio']
+            if product['specie']['name'] not in products.keys():
+                products[product['specie']['name']] = product['ratio']
+            else:
+                products[product['specie']['name']] += product['ratio']
 
         #If custom propensity given
         if reaction['reactionType'] == 'custom-propensity':
@@ -136,7 +139,7 @@ def create_rate_rule_strings(json_data, padding):
     if rate_rules:
         rr_string += '\n' + padding + '# Rate Rules\n'
         for rr in rate_rules:
-            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}""))\n'.format(
+            rr_string += padding + 'self.add_rate_rule(RateRule(name="{0}", formula="{1}", variable="{2}"))\n'.format(
                     rr['name'], 
                     rr['expression'], 
                     rr['variable']['name'])
@@ -213,38 +216,33 @@ def get_settings(path=None):
     return settings
 
 
-def generate_configure_simulation_cell(json_data, gillespy2_model, is_ssa_c=False, is_mdl_inf=False, show_labels=True, settings=None):
+def generate_configure_simulation_cell(json_data, algorithm, solv_name, is_psweep=False, is_mdl_inf=False, settings=None):
     padding = '    '
     
     # Get stochss simulation settings
     if settings is None:
         settings = get_settings()
-        algorithm = get_algorithm(gillespy2_model, is_ssa_c)
-    elif settings['isAutomatic']:
-        algorithm = get_algorithm(gillespy2_model, is_ssa_c)
-    else:
-        algorithm = get_algorithm(gillespy2_model, is_ssa_c, algorithm=settings['algorithm'])
-
+    
     is_automatic = settings['isAutomatic']
 
     # Get settings for model.run()
-    settings = get_run_settings(settings, show_labels, is_mdl_inf, algorithm)
+    settings = get_run_settings(settings, is_mdl_inf, algorithm, solv_name)
 
-    settings_lists = {"ODE":['"solver"','"integrator_options"','"show_labels"'],
-                      "SSA":['"seed"','"number_of_trajectories"','"show_labels"'],
-                      "V-SSA":['"solver"','"seed"','"number_of_trajectories"','"show_labels"'],
-                      "Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"show_labels"'],
-                      "Hybrid-Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"','"show_labels"']
+    settings_lists = {"ODE":['"solver"','"integrator_options"'],
+                      "SSA":['"seed"','"number_of_trajectories"'],
+                      "V-SSA":['"solver"','"seed"','"number_of_trajectories"'],
+                      "Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"'],
+                      "Hybrid-Tau-Leaping":['"solver"','"seed"','"number_of_trajectories"','"tau_tol"','"integrator_options"']
                      }
 
-    if get_best_ssa_solver().name == "SSACSolver":
+    if solv_name == "SSACSolver":
         settings_lists['SSA'].append('"solver"')
 
     settings_map = []
     for setting in settings:
-        if setting.split(':')[0] == '"solver"' and is_ssa_c:
+        if setting.split(':')[0] == '"solver"' and is_psweep:
             settings_map.append(padding*2 + setting)
-        elif (setting.split(':')[0] == '"show_labels"' or setting.split(':')[0] == '"number_of_trajectories"') and is_mdl_inf:
+        elif setting.split(':')[0] == '"number_of_trajectories"' and is_mdl_inf:
             settings_map.append(padding*2 + setting)
         elif is_automatic or setting.split(':')[0] not in settings_lists[algorithm]:
             settings_map.append(padding*2 + "# " + setting)
@@ -276,17 +274,17 @@ def generate_run_cell(json_data):
     return run_cell
 
 
-def get_algorithm(gillespy2_model, is_ssa_c=False, algorithm=None):
+def get_algorithm(gillespy2_model, is_psweep=False, is_ssa_c=False, algorithm=None):
     if algorithm is not None:
-        if algorithm == "SSA" and is_ssa_c:
-            return "V-SSA"
-        return algorithm
+        if algorithm == "SSA" and is_psweep:
+            return "V-SSA", "VariableSSACSolver"
+        return algorithm, None
 
     algorithm_map = {"SSACSolver":"SSA",
                      "VariableSSACSolver":"V-SSA",
-                     "BasicTauHybridSolver":"Hybrid-Tau-Leaping",
-                     "BasicTauLeapingSolver":"Tau-Leaping",
-                     "BasicODESolver":"ODE",
+                     "TauHybridSolver":"Hybrid-Tau-Leaping",
+                     "TauLeapingSolver":"Tau-Leaping",
+                     "ODESolver":"ODE",
                      "NumPySSASolver":"SSA"
                      }
 
@@ -294,19 +292,19 @@ def get_algorithm(gillespy2_model, is_ssa_c=False, algorithm=None):
         name = gillespy2_model.get_best_solver().name
     else:
         name = gillespy2_model.get_best_solver(precompile=False).name
+    
+    return algorithm_map[name], name
 
-    return algorithm_map[name]
 
-
-def get_run_settings(settings, show_labels, is_mdl_inf, algorithm):
+def get_run_settings(settings, is_mdl_inf, algorithm, solv_name):
     # Map algorithm for GillesPy2
     solver_map = {"SSA":"",
                   "V-SSA":'"solver":solver',
-                  "ODE":'"solver":BasicODESolver',
-                  "Tau-Leaping":'"solver":BasicTauLeapingSolver',
-                  "Hybrid-Tau-Leaping":'"solver":BasicTauHybridSolver'}
+                  "ODE":'"solver":ODESolver',
+                  "Tau-Leaping":'"solver":TauLeapingSolver',
+                  "Hybrid-Tau-Leaping":'"solver":TauHybridSolver'}
 
-    if get_best_ssa_solver().name == "SSACSolver":
+    if solv_name == "SSACSolver":
         solver_map['SSA'] = '"solver":solver'
 
     # Map seed for GillesPy2
@@ -326,8 +324,6 @@ def get_run_settings(settings, show_labels, is_mdl_inf, algorithm):
     
     #Parse settings for algorithm
     run_settings = [solver_map[algorithm]] if solver_map[algorithm] else []
-    if not show_labels:
-        run_settings.append('"show_labels":False')
     algorithm_settings =  ['"{0}":{1}'.format(key, val) for key, val in settings_map.items()]
     run_settings.extend(algorithm_settings)
     
@@ -635,20 +631,22 @@ class ParameterSweepConfig(ParameterSweep2D):
 '''
     return psweep_config_cell
 
-def generate_sciope_wrapper_cell(json_data, gillespy2_model):
+def generate_sciope_wrapper_cell(json_data, algorithm, solv_name):
     settings = get_settings()
-    algorithm = get_algorithm(gillespy2_model)
     soi = [species['name'] for species in json_data['species']]
 
+    if algorithm == "V-SSA":
+        algorithm = "SSA"
+        
     # Select Solver
     solver_map = {
         'SSA': '',
-        'Tau-Leaping': '"solver":BasicTauLeapingSolver, ',
-        'Hybrid-Tau-Leaping': '"solver":BasicTauHybridSolver, ',
-        'ODE': '"solver":BasicODESolver, '
+        'Tau-Leaping': '"solver":TauLeapingSolver, ',
+        'Hybrid-Tau-Leaping': '"solver":TauHybridSolver, ',
+        'ODE': '"solver":ODESolver, '
         }
     sciope_wrapper_cell = '''from sciope.utilities.gillespy2 import wrapper
-settings = {{{}"number_of_trajectories":10, "show_labels":True}}
+settings = {{{}"number_of_trajectories":10}}
 simulator = wrapper.get_simulator(gillespy_model=model, run_settings=settings, species_of_interest={})
 expression_array = wrapper.get_parameter_expression_array(model)'''.format(solver_map[algorithm], soi)
     return sciope_wrapper_cell
@@ -756,6 +754,7 @@ def simulator(params, model):
     model_update = set_model_parameters(params, model)
     
     res = model_update.run(**kwargs)
+    res = res.to_array()
     tot_res = np.asarray([x.T for x in res]) # reshape to (N, S, T)
     tot_res = tot_res[:,1:, :] # should not contain timepoints
 
@@ -794,6 +793,7 @@ fixed_data = model.run(**kwargs)'''
 
 def generate_mdl_inf_reshape_data_cell():
     reshape_data_cell = '''# Reshape the data to (n_points,n_species,n_timepoints) and remove timepoints array
+fixed_data = fixed_data.to_array()
 fixed_data = np.asarray([x.T for x in fixed_data])
 fixed_data = fixed_data[:,1:, :]'''
 

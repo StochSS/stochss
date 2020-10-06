@@ -13,8 +13,7 @@ try:
 except ModuleNotFoundError:
     pass
 
-from gillespy2.solvers.auto.ssa_solver import get_best_ssa_solver
-from gillespy2.solvers.cpp.variable_ssa_c_solver import VariableSSACSolver
+from gillespy2 import VariableSSACSolver
 
 
 def setup_species_results(c, is_2d):
@@ -146,8 +145,6 @@ def get_data_for_csv(c, keys):
 class ParameterSweep1D():
 
     def run(c, settings, verbose=False, is_ssa=False, solver=None):
-        if not c.ps_model:
-            raise Exception("The parameter sweep has not been configured!")
         c.verbose = verbose
         results = setup_results(c)
         for i,v1 in enumerate(c.p1_range):
@@ -176,7 +173,7 @@ class ParameterSweep1D():
         if stamp is None:
             now = datetime.now()
             stamp = datetime.timestamp(now)
-        directory = os.path.join(path, nametag + stamp)
+        directory = os.path.join(path, nametag + str(stamp))
         filename = os.path.join(directory, keys+".csv")
         if not os.path.exists(directory):
             os.mkdir(directory)
@@ -262,8 +259,6 @@ class ParameterSweepConfig1D(ParameterSweep1D):
 class ParameterSweep2D():
 
     def run(c, settings, verbose=False, is_ssa=False, solver=None):
-        if not c.ps_model:
-            raise Exception("The parameter sweep has not been configured!")
         c.verbose = verbose
         results = setup_results(c, is_2d=True)
         for i,v1 in enumerate(c.p1_range):
@@ -295,7 +290,7 @@ class ParameterSweep2D():
         if stamp is None:
             now = datetime.now()
             stamp = datetime.timestamp(now)
-        directory = os.path.join(path, nametag + stamp)
+        directory = os.path.join(path, nametag + str(stamp))
         filename = os.path.join(directory, keys+".csv")
         if not os.path.exists(directory):
             os.mkdir(directory)

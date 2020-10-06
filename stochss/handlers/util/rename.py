@@ -3,10 +3,29 @@
 import os
 import json
 import shutil
+import traceback
 try:
     from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
 except:
     from stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
+
+
+def get_file_name(file):
+    '''
+    Get the name of a file object
+
+    Attributes
+    ----------
+    file : str
+        String representation of a file object
+    '''
+    if file.endswith('/'):
+        file = file[:-1]
+    if '/' in file:
+        file = file.split('/').pop()
+    if '.' not in file:
+        return file
+    return '.'.join(file.split('.')[:-1])
 
 
 def get_unique_file_name(new_name, dir_path):
@@ -25,7 +44,7 @@ def get_unique_file_name(new_name, dir_path):
     i = 1
     if exists:
         ext = "." + new_name.split('.').pop()
-        name = new_name.split(ext)[0]
+        name = get_file_name(new_name)
         if "(" in name and ")" in name:
             _i = name.split('(').pop().split(')')[0]
             if _i.isdigit():
@@ -74,9 +93,9 @@ def rename(path, new_name):
     try:
         shutil.move(old_path, new_path)
     except FileNotFoundError as err:
-        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err))
+        raise StochSSFileNotFoundError("Could not read the file or directory: " + str(err), traceback.format_exc())
     except PermissionError as err:
-        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err))
+        raise StochSSPermissionsError("You do not have permission to copy this file or directory: " + str(err), traceback.format_exc())
     
     if old_path.endswith('/'):
         new_path = new_path[:-1]
@@ -93,6 +112,7 @@ def rename(path, new_name):
             info_file.truncate()
 
     if changed:
+        new_name = new_path.split('/').pop()
         message = "A file already exists with that name, {0} was renamed to {1} in order to prevent a file from being overwriten.".format(old_path.split('/').pop(), new_name)
     else:
         message = 'Success! {0} was renamed to {1}'.format(old_name, new_name)

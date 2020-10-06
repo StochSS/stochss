@@ -24,7 +24,7 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.collection.parent;
     this.tooltips = Tooltips.speciesEditor
-    this.collection.on('update-species', function (compID, specie, isNameUpdate) {
+    this.collection.on('update-species', function (compID, specie, isNameUpdate, isDefaultMode) {
       self.collection.parent.reactions.map(function (reaction) {
         reaction.reactants.map(function (reactant) {
           if(reactant.specie.compID === compID) {
@@ -38,7 +38,7 @@ module.exports = View.extend({
         });
         if(isNameUpdate) {
           reaction.buildSummary();
-        }else{
+        }else if(!isDefaultMode || specie.compID === self.collection.models[self.collection.length-1].compID){
           reaction.checkModes();
         }
       });
@@ -110,14 +110,15 @@ module.exports = View.extend({
   },
   getDefaultSpeciesMode: function (e) {
     var self = this;
-    this.setAllSpeciesModes(e.target.dataset.name, function () {
-      self.collection.trigger('update-species', specie.compID, specie, false)
+    this.setAllSpeciesModes(e.target.dataset.name, function (specie) {
+      self.collection.trigger('update-species', specie.compID, specie, false, true)
     });
   },
-  setAllSpeciesModes: function (defaultMode) {
+  setAllSpeciesModes: function (defaultMode, cb) {
     this.collection.parent.defaultMode = defaultMode;
     this.collection.map(function (specie) { 
       specie.mode = defaultMode
+      cb(specie)
     });
     if(defaultMode === "dynamic"){
       this.renderSpeciesAdvancedView()
@@ -170,8 +171,13 @@ module.exports = View.extend({
        });
     });
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse')).text();
-    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+');
-  },
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
+  }
 });

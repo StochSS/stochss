@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var $ = require('jquery');
+let path = require('path');
 //support files
 var app = require('../app');
 var modals = require('../modals')
@@ -28,23 +29,33 @@ let ModelEditor = PageView.extend({
     'click [data-hook=edit-model-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
+    'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     var self = this;
-    var directory = (new URLSearchParams(window.location.search)).get('path');
+    let urlParams = new URLSearchParams(window.location.search)
+    var directory = urlParams.get('path');
     var modelFile = directory.split('/').pop();
-    var name = decodeURI(modelFile.split('.')[0]);
+    var name = this.getFileName(decodeURI(modelFile));
     var isSpatial = modelFile.split('.').pop().startsWith('s');
     this.model = new Model({
       name: name,
       directory: directory,
       is_spatial: isSpatial,
       isPreview: true,
-      for: 'edit',
+      for: "edit",
     });
+    if(directory.includes('.proj')) {
+      this.projectPath = path.dirname(directory)
+      this.projectName = this.projectPath.split('/').pop().split('.')[0]
+    }
     this.model.fetch({
       success: function (model, response, options) {
+        if(directory.includes('.proj')) {
+          self.queryByHook("project-breadcrumb-links").style.display = "block"
+          self.queryByHook("model-name-header").style.display = "none"
+        }
         self.renderSubviews();
         if(!self.model.is_spatial){
           self.queryByHook('mesh-editor-container').style.display = "none";
@@ -71,6 +82,24 @@ let ModelEditor = PageView.extend({
   update: function () {
   },
   updateValid: function () {
+  },
+  getFileName: function (file) {
+    if(file.endsWith('/')) {
+      file.slice(0, -1)
+    }
+    if(file.includes('/')) {
+      file = file.split('/').pop()
+    }
+    if(!file.includes('.')) {
+      return file
+    }
+    return file.split('.').slice(0, -1).join('.')
+  },
+  handleProjectBreadcrumbClick: function () {
+    this.modelStateButtons.saveModel(_.bind(function (e) {
+      let endpoint = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+this.projectPath
+      window.location.href = endpoint
+    }, this))
   },
   updateSpeciesInUse: function () {
     var species = this.model.species;
@@ -116,7 +145,9 @@ let ModelEditor = PageView.extend({
        });
     }
     reactions.forEach(function (reaction) {
-      updateInUse(reaction.rate);
+      if(reaction.reactionType !== "custom-propensity"){
+        updateInUse(reaction.rate);
+      }
     });
     events.forEach(function (event) {
       event.eventAssignments.forEach(function (assignment) {
@@ -152,7 +183,7 @@ let ModelEditor = PageView.extend({
       parent: this,
       model: this.model.modelSettings,
     });
-    var modelStateButtons = new ModelStateButtonsView({
+    this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
     this.registerRenderSubview(meshEditor, 'mesh-editor-container');
@@ -162,13 +193,16 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
     this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
     this.registerRenderSubview(modelSettings, 'model-settings-container');
-    this.registerRenderSubview(modelStateButtons, 'model-state-buttons-container');
+    this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
 
        });
+    });
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
     });
   },
   registerRenderSubview: function (view, hook) {

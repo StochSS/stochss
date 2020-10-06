@@ -1,3 +1,4 @@
+local_data/
 node_modules/
 .power_users
 *.bundle.js
@@ -6,6 +7,7 @@ stochss-file-browser.html
 stochss-model-editor.html
 stochss-workflow-manager.html
 stochss-workflow-selection.html
+stochss-project-manager.html
 *.swp
 *.swo
 package-lock.json

@@ -39,14 +39,10 @@ module.exports = View.extend({
       this.renderWorkflowStateButtons()
     }else{
       this.collapseContainer()
-      $(this.queryByHook('collapse-settings')).prop('disabled', true);
       this.renderSimulationSettingViewer()
       if(this.type === "parameterSweep"){
         this.renderParameterSweepSettingsViewer()
       }
-    }
-    if(this.status === "complete"){
-      this.enableCollapseButton();
     }
   },
   registerRenderSubview: function (view, hook) {
@@ -84,11 +80,14 @@ module.exports = View.extend({
     this.registerRenderSubview(parameterSweepSettingsView, 'param-sweep-settings-container');
   },
   renderWorkflowStateButtons: function () {
-    let workflowStateButtons = new WorkflowStateButtonsView({
+    if(this.workflowStateButtons) {
+      this.workflowStateButtons.remove()
+    }
+    this.workflowStateButtons = new WorkflowStateButtonsView({
       model: this.model,
       type: this.type,
     });
-    this.registerRenderSubview(workflowStateButtons, 'workflow-state-buttons-container');
+    this.registerRenderSubview(this.workflowStateButtons, 'workflow-state-buttons-container');
   },
   validatePsweep: function () {
     let species = this.model.species;
@@ -124,15 +123,17 @@ module.exports = View.extend({
     }).length) // if true child exits within the model
     return exists
   },
-  changeCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse-settings')).text();
-    text === '+' ? $(this.queryByHook('collapse-settings')).text('-') : $(this.queryByHook('collapse-settings')).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
   collapseContainer: function () {
     $(this.queryByHook("workflow-editor-container")).collapse()
-    this.changeCollapseButtonText()
-  },
-  enableCollapseButton: function () {
-    $(this.queryByHook('collapse-settings')).prop('disabled', false);
+    $(this.queryByHook("collapse-settings")).click()
   },
 });

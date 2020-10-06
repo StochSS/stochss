@@ -32,9 +32,11 @@ module.exports = View.extend({
     },
     'model.hasConflict': {
       type: function (el, value, previousValue) {
-        this.model.hasConflict ? 
-          $(this.queryByHook('conflicting-modes-message')).collapse('show') : 
+        if(value) {
+          $(this.queryByHook('conflicting-modes-message')).collapse('show')
+        }else{
           $(this.queryByHook('conflicting-modes-message')).collapse('hide')
+        }
       },
       hook: 'conflicting-modes-message',
     },
@@ -49,26 +51,11 @@ module.exports = View.extend({
     this.model.on("change:reaction_type", function (model) {
       self.updateStoichSpeciesForReactionType(model.reactionType);
     });
-    this.model.collection.parent.parameters.on('add remove', this.render, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    var options = [];
-    if(this.model.collection.parent.parameters.length <= 0){
-      options = ["Custom propensity"];
-    }
-    else{
-      options = this.getReactionTypeLabels();
-    }
     var self = this;
-    var reactionTypeSelectView = new SelectView({
-      label: 'Reaction Type:',
-      name: 'reaction-type',
-      required: true,
-      idAttribute: 'cid',
-      options: options,
-      value: ReactionTypes[self.model.reactionType].label,
-    });
+    this.renderReactionTypesSelectView()
     var rateParameterView = new SelectView({
       label: '',
       name: 'rate',
@@ -109,8 +96,6 @@ module.exports = View.extend({
       fieldTitle: 'Products',
       isReactants: false
     });
-    this.registerRenderSubview(reactionTypeSelectView, 'select-reaction-type');
-    this.renderReactionTypes();
     if(this.model.reactionType === 'custom-propensity'){
       this.registerRenderSubview(propensityView, 'select-rate-parameter')
       var inputField = this.queryByHook('select-rate-parameter').children[0].children[1];
@@ -139,6 +124,31 @@ module.exports = View.extend({
   update: function () {
   },
   updateValid: function () {
+  },
+  renderReactionTypesSelectView: function () {
+    if(this.reactionTypesSelectView) {
+      this.reactionTypesSelectView.remove()
+    }
+
+    var options = [];
+    if(this.model.collection.parent.parameters.length <= 0){
+      options = ["Custom propensity"];
+    }
+    else{
+      options = this.getReactionTypeLabels();
+    }
+
+    this.reactionTypesSelectView = new SelectView({
+      label: 'Reaction Type:',
+      name: 'reaction-type',
+      required: true,
+      idAttribute: 'cid',
+      options: options,
+      value: ReactionTypes[this.model.reactionType].label,
+    });
+
+    this.registerRenderSubview(this.reactionTypesSelectView, 'select-reaction-type');
+    this.renderReactionTypes();
   },
   selectRateParam: function (e) {
     if(this.model.reactionType !== 'custom-propensity') {

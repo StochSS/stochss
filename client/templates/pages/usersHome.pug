@@ -1,0 +1,55 @@
+selction.page
+
+  div#home-wrapper.card.card-body.col-md-10
+
+    div.logo(id="stochss-logo" data-hook="stochss-logo")
+  
+      img(src="/static/stochss-logo.png")
+
+    div.centered.verticle-space-2
+  
+      h1.display-5 Welcome to the Stochastic Simulation Service!
+
+    div.row.verticle-space
+
+      div.col-md-0.col-lg-1.col-xl-2
+      
+      div.col-md-6.col-lg-5.col-xl-4.inline.text-right
+        button.btn.btn-primary.box-shadow.user-home-btn(id="new-project-btn" data-hook="new-project-btn")
+          | Create a new project
+      
+      div.col-md-6.col-lg-5.col-xl-4.inline.text-right
+        button.btn.btn-primary.box-shadow.user-home-btn(id="browse-projects-btn" data-hook="browse-projects-btn")
+          | Browse your projects
+      
+      div.col-md-0.col-lg-1.col-xl-2
+
+    div.row.verticle-space-3(style="display: none;")
+
+      div.col-md-0.col-lg-1.col-xl-2
+
+      div.col-md-6.col-lg-5.col-xl-4.inline
+        button.btn.btn-primary.box-shadow.user-home-btn(id="new-model-btn" data-hook="new-model-btn")
+          | Create a new model
+
+      div.col-md-6.col-lg-5.col-xl-4.inline
+        button.btn.btn-primary.box-shadow.user-home-btn(id="browse-files-btn" data-hook="browse-files-btn")
+          | Browse all your files
+
+      div.col-md-0.col-lg-1.col-xl-2
+
+    div.head
+
+    div.verticle-space-3
+      
+    div.centered.verticle-space-2
+      h5 Are you new to StochSS?  Do you need some help?  Learn more about StochSS with our tutorial.
+
+      div.row
+        div.col-md-2.col-lg-3.col-xl-4
+        
+        div.col-md-8.col-lg-6.col-xl-4
+          button.btn.btn-primary.box-shadow.user-home-btn(id="quickstart-btn" data-hook="quickstart-btn")
+            | Click here for a tutorial
+        
+        div.col-md-2.col-lg-3.col-xl-4

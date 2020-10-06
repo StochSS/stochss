@@ -10,12 +10,8 @@ var template = require('../templates/includes/sbmlComponentEditor.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse]' : function () {
-      this.changeCollapseButtonText('collapse');
-    },
-    'click [data-hook=collapse-function-definitions]' : function () {
-      this.changeCollapseButtonText('collapse-function-definitions');
-    },
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-function-definitions]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -42,8 +38,13 @@ module.exports = View.extend({
       });
     });
   },
-  changeCollapseButtonText: function (hook) {
-    var text = $(this.queryByHook(hook)).text();
-    text === '+' ? $(this.queryByHook(hook)).text('-') : $(this.queryByHook(hook)).text('+');
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
 });
