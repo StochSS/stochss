@@ -197,7 +197,8 @@ def upload_from_link(path):
         unzip_file(zip_path, user_dir)
     except StochSSFileExistsError as err:
         return {"message":err.message, "reason":err.reason}
-    file_path = get_file_path(user_dir).replace(user_dir+"/", "")
+    uploaded_file = zip_path.split('/').pop()
+    file_path = get_file_path(user_dir, uploaded_file).replace(user_dir+"/", "")
     target_file = path.split('/').pop()
     resp = {"message":"Successfully uploaded the file {} to {}".format(target_file,
                                                                        file_path),
@@ -205,8 +206,9 @@ def upload_from_link(path):
     return resp
 
 
-def get_file_path(path):
+def get_file_path(path, uploaded_file):
     files = os.listdir(path)
+    files.remove(uploaded_file)
     paths = list(map(lambda file: os.path.join(path, file), files))
     return max(paths, key=os.path.getctime)
 
