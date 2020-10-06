@@ -21,7 +21,7 @@ module.exports = View.extend({
     'click [data-hook=browser-new-workflow-group]' : 'handleCreateWorkflowGroupClick',
     'click [data-hook=browser-new-model]' : 'handleCreateModelClick',
     'click [data-hook=browser-existing-model]' : 'handleAddExistingModelClick',
-    'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
+    'click [data-hook=upload-file-btn-bf]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
@@ -124,7 +124,6 @@ module.exports = View.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
-                console.log((oldPath.includes('trash/') || newDir.endsWith('trash')))
                 self.updateParent(node.type, (oldPath.includes('trash/') || newDir.endsWith('trash')))
               }else{
                 body = JSON.parse(body)
@@ -162,13 +161,6 @@ module.exports = View.extend({
     var self = this;
     this.nodeForContextMenu = "";
     this.jstreeIsLoaded = false
-    // Remove all backdrop on close
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      if($(".modal-backdrop").length > 1) {
-        $(".modal-backdrop").remove();
-      }
-      e.target.remove()
-    });
     window.addEventListener('pageshow', function (e) {
       var navType = window.performance.navigation.type
       if(navType === 2){
@@ -270,42 +262,66 @@ module.exports = View.extend({
     });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
-      var fileinfo = {"type":type,"name":"","path":"/"}
+      var fileinfo = {"type":type,"name":"","path":self.parent.projectPath}
       if(o && o.original){
         fileinfo.path = o.original._path
       }
       if(Boolean(input.value) && self.validateName(input.value) === ""){
-        fileinfo.name = input.value.trim()
+        let name = input.value.trim()
+        if(file.name.endsWith(".mdl") || (type === "model" && file.name.endsWith(".json"))){
+          fileinfo.name = name.split('/').pop()
+        }else if(file.name.endsWith(".sbml") || (type === "sbml" && file.name.endsWith(".xml"))){
+          fileinfo.name = name.split('/').pop()
+        }else{
+          fileinfo.name = name
+        }
       }
       let formData = new FormData()
       formData.append("datafile", file)
       formData.append("fileinfo", JSON.stringify(fileinfo))
       let endpoint = path.join(app.getApiPath(), 'file/upload');
-      let req = new XMLHttpRequest();
-      req.open("POST", endpoint)
-      req.onload = function (e) {
-        var resp = JSON.parse(req.response)
-        if(req.status < 400) {
-          if(o){
-            var node = $('#models-jstree-view').jstree().get_node(o.parent);
-            if(node.type === "root" || node.type === "#"){
-              self.refreshJSTree();
-            }else{
-              $('#models-jstree-view').jstree().refresh_node(node);
-            }
-          }else{
-            self.refreshJSTree();
-          }
-          if(resp.errors.length > 0){
-            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
-          }
-        }else{
-          let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
-        }
+      if(Boolean(input.value) && fileinfo.name !== input.value.trim()){
+        let message = "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>"
+        let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
+        let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
+        yesBtn.addEventListener('click', function (e) {
+          warningModal.modal('hide')
+          self.openUploadRequest(endpoint, formData, o)
+        })
+      }else{
+        self.openUploadRequest(endpoint, formData, o)
       }
-      req.send(formData)
       modal.modal('hide')
     })
+  },
+  openUploadRequest: function (endpoint, formData, o) {
+    let self = this
+    let req = new XMLHttpRequest();
+    req.open("POST", endpoint)
+    req.onload = function (e) {
+      var resp = JSON.parse(req.response)
+      if(req.status < 400) {
+        if(o){
+          var node = $('#models-jstree-view').jstree().get_node(o.parent);
+          if(node.type === "root" || node.type === "#"){
+            self.refreshJSTree();
+          }else{
+            $('#models-jstree-view').jstree().refresh_node(node);
+          }
+        }else{
+          self.refreshJSTree();
+        }
+        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".sbml")) {
+          self.parent.update("file-browser")
+        }
+        if(resp.errors.length > 0){
+          let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
+        }
+      }else{
+        let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
+      }
+    }
+    req.send(formData)
   },
   deleteFile: function (o) {
     var fileType = o.type

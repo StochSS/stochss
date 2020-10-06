@@ -725,7 +725,7 @@ let FileBrowser = PageView.extend({
         if(isModel) {
           let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
           let message = modelName !== input.value.trim() + ".mdl"? 
-                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
+                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>" : ""
           let modelPath = path.join(parentPath, modelName)
           let queryString = "?path="+modelPath+"&message="+message;
           let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
