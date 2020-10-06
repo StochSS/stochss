@@ -2,7 +2,7 @@
 By contributing to StochSS, you agree to the [Code of Conduct](/CODE_OF_CONDUCT.md) and the conditions of the [GNU GPL v3](/LICENSE). Please review both of these documents before contributing.
 
 ## Making Changes
-1. Fork [the project repository]('https://github.com/StochSS/StochSS')
+1. Fork [the project repository](https://github.com/StochSS/StochSS).
 2. Create a new branch from the 'develop' branch. Use a meaningful name and include an issue number if applicable.
 3. Add your changes. Be sure to document your code and remove any dead code.
 4. Add the [COPYRIGHT](/COPYRIGHT) notice to the beginning of any new files you create.
