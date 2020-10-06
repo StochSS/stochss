@@ -5,9 +5,9 @@ StochSS provides advanced tools for simulating and analyzing biochemical systems
 ## Why use StochSS
 StochSS provides both an easy-to-use UI for constructing biochemical models as well as intuitive UIs for the most common model analysis tools such as visualization of results, parameter sweeps and parameter inference. StochSS is built on top of Jupyter Hub, and this lets you seemlessly switch between UI representations and Notebooks exposing the full backend API. In this way a user can benefit from the best of graphical representations with a clear upgrade path to modeling as code. For this reason, StochSS is also uniquely suited for the computational biologist starting out with mathematical modeling of biochemical systems. 
 
-StochSS is a sotware project involving several leading research groups in computational systems biology. We welcome collaborators to help expand the capabilities of StochSS. Read more about the project at www.stochss.org .   
+StochSS is a software project involving several leading research groups in computational systems biology. We welcome collaborators to help expand the capabilities of StochSS. Read more about the project at www.stochss.org .   
 
-*StochSS is intended to be used as Software as a Service. The instructions that follows help you set your own local development environment or deploy your own instance as SaaS. If you intend to mainly use StochSS for modeling, simulation and model analysis, consider using the hosted deployment at http://app.stochss.org which you can access without any installation. 
+StochSS is intended to be used as Software as a Service. The following instructions can help you set up your own local development environment or deploy your own instance as SaaS. If you intend to mainly use StochSS for modeling, simulation and model analysis, consider using [StochSS Live!](https://live.stochss.org)
 
 ## Requirements
 
@@ -17,7 +17,7 @@ StochSS is a sotware project involving several leading research groups in comput
 
 - [Docker Compose](https://docs.docker.com/compose/install/) (Only required if you want to run StochSS with [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#))
 
-*At the moment StochSS development on Windows is not supported. You can try using [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm), but this is untested!
+At the moment StochSS development on Windows is not supported. You can try using [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm), but this is untested!
 
 ## Quickstart
 
