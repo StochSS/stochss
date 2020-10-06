@@ -44,23 +44,21 @@ Use requirements.txt to add Python dependencies that will be installed into the 
 
 ## Deploying Multi-User StochSS
 
-- StochSS uses [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#) as the basis for the multi-user deployment.  See their documentation for more details on configuring the JupyterHub environment.
+StochSS uses [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#) as the basis for the multi-user deployment.  See their documentation for more details on configuring the JupyterHub environment.
   
-### Requirements
+### Setup
 
-In addition to the single-user requirements, you will need [Docker Compose](https://docs.docker.com/compose/install/).
-  
-#### Setup
+- In addition to the single-user requirements, you will need [Docker Compose](https://docs.docker.com/compose/install/).  
 
 - [Optional] To set admins for JupyterHub, make a file called `userlist` in the `jupyterhub/` directory. On each line of this file place a username followed by the word 'admin'. For example: `myuser admin`. If using Google OAuth, the uesername will be a gmail address. Navigate to `/hub/admin` to use the JupyterHub admin interface.
 
 - [Optional] By default multi-user StochSS is set up to allocate 2 logical cpus per user, reserving 2 logical cpus for the hub container and underlying OS. You can define a list of "power users" that are excluded from resource limitations by adding a text file called `.power_users` (note the leading period) to the `jupyterhub/` directory with one username/email address on each line of the file.
 
-#### Run Locally
+### Run Locally
 
-- To run JupyterHub locally run `make hub` and go to 127.0.0.1:8888.
+To run JupyterHub locally run `make hub` and go to 127.0.0.1:8888.
 
-#### Set Up A Staging Server
+### Set Up A Staging Server
 
 To set up the staging environment you'll need to [set up Google OAuth](https://developers.google.com/identity/protocols/oauth2) for your instance.  Once you're set up, you'll need to put your OAuth credentials in `jupyterhub/secrets/.oauth.staging.env`. Do not wrap these environment variables in quotes!
 
@@ -80,7 +78,7 @@ make build_hub
 make run_hub_staging
 ```
 
-#### Set Up A Production Server
+### Set Up A Production Server
 
 Similar to staging, except you'll need the correct Google OAuth credentials set in `jupyterhub/secrets/.oauth.prod.env`.
 
