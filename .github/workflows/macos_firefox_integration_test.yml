@@ -1,8 +1,8 @@
-name: Windows/Firefox Integration Test
+name: MacOS/Firefox Integration Test
 on: [push]
 jobs:
   build:
-        runs-on: macos-latest
+    runs-on: macos-latest
     steps:
     - name: Set Up Python
       uses: actions/setup-python@v2
