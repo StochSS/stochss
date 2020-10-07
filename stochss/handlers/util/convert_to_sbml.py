@@ -119,7 +119,10 @@ def convert_parameters(sbml_model, parameters):
         param = sbml_model.createParameter()
         param.initDefaults()
         param.setId(parameter['name'])
-        param.setValue(parameter['expression'])
+        if isinstance(parameter['name'], str):
+            param.setValue(ast.literal_eval(parameter['expression']))
+        else:
+            param.setValue(parameter['expression'])
 
 
 def convert_reactions(sbml_model, reactions):
