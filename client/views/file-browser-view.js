@@ -298,21 +298,21 @@ module.exports = View.extend({
       formData.append("datafile", file)
       formData.append("fileinfo", JSON.stringify(fileinfo))
       let endpoint = path.join(app.getApiPath(), 'file/upload');
-      if(Boolean(input.value) && fileinfo.name !== input.value.trim()){
+      if(Boolean(input.value) && self.validateName(input.value) === "" && fileinfo.name !== input.value.trim()){
         let message = "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>"
         let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
         let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
         yesBtn.addEventListener('click', function (e) {
           warningModal.modal('hide')
-          self.openUploadRequest(endpoint, formData, o)
+          self.openUploadRequest(endpoint, formData, file, type, o)
         })
       }else{
-        self.openUploadRequest(endpoint, formData, o)
+        self.openUploadRequest(endpoint, formData, file, type, o)
       }
       modal.modal('hide')
     })
   },
-  openUploadRequest: function (endpoint, formData, o) {
+  openUploadRequest: function (endpoint, formData, file, type, o) {
     let self = this
     let req = new XMLHttpRequest();
     req.open("POST", endpoint)
