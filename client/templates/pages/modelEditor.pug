@@ -29,11 +29,21 @@ section.page
 
   div(data-hook="reactions-editor-container")
 
-  div(data-hook="events-editor-container")
+  div.card.card-body
 
-  div(data-hook="rules-editor-container")
+    div
 
-  div(data-hook="sbml-component-container")
+      h3.inline Advanced
+
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#me-advanced-section", data-hook="collapse-me-advanced-section") +
+
+    div.collapse(id="me-advanced-section", data-hook="me-advanced-section")
+
+      div(data-hook="events-editor-container")
+
+      div(data-hook="rules-editor-container")
+
+      div(data-hook="sbml-component-container")
 
   div(data-hook="model-settings-container")
 
