@@ -15,6 +15,10 @@ jobs:
       run: | 
         cd stochss/tests/integration_tests
         pip install -r requirements.txt
+    - name: Disable Google Analytics
+      run: |
+        echo "127.0.0.1 google-analytics.com www.google-analytics.com ssl.google-analytics.com www.ssl.google-analytics.com statcounter.com www.statcounter.com c.statcounter.com www.c.statcounter.com" | sudo tee -a /etc/hosts
+        sudo /etc/init.d/dns-clean restart
     - name: Build Docker Image
       run: make build
     - name: Run Integration Tests
