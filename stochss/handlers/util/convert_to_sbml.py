@@ -119,9 +119,9 @@ def convert_parameters(sbml_model, parameters):
         param = sbml_model.createParameter()
         param.initDefaults()
         param.setId(parameter['name'])
-        if isinstance(parameter['name'], str):
+        try:
             param.setValue(ast.literal_eval(parameter['expression']))
-        else:
+        except ValueError:
             param.setValue(parameter['expression'])
 
 
