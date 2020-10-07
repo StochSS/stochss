@@ -1,8 +1,26 @@
 #!/usr/bin/env python3
 
+'''
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import os
 import json
-from .rename import get_unique_file_name
+from .rename import get_unique_file_name, get_file_name
 from .stochss_errors import StochSSFileNotFoundError
 # from run_model import ModelFactory
 from gillespy2.sbml.SBMLimport import convert, __read_sbml_model, __get_math
@@ -360,7 +378,7 @@ def convert_sbml_to_model(path, model_template):
     user_dir = "/home/jovyan"
     
     full_path = os.path.join(user_dir, path)
-    name = full_path.split('/').pop().split('.')[0]
+    name = get_file_name(full_path)
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)
     sbml_errors = list(map(lambda error: error[0], sbml_errors))
