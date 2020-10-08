@@ -47,17 +47,21 @@ section.page
 
   div(data-hook="model-settings-container")
 
-  div.collapse(data-hook="model-timeout-message")
+  div(class="preview-nav")
 
-    p.text-warning The model took longer than 5 seconds to run and timed out!
+    button.btn.btn-outline-secondary.box-shadow.preview-close(data-hook="toggle-preview-plot") Close
 
-  div.errors(data-hook="model-run-error-container")
+    div(data-hook="model-run-container")
 
-    p.text-danger(data-hook="model-run-error-message")
+    div.spinner-border(data-hook="plot-loader")
 
-  div(data-hook="model-run-container")
+    div.collapse(data-hook="model-timeout-message")
 
-  div.spinner-border(data-hook="plot-loader")
+      p.text-warning The model took longer than 5 seconds to run and timed out!
 
-  div(data-hook="model-state-buttons-container")
+    div.errors(data-hook="model-run-error-container")
+
+      p.text-danger(data-hook="model-run-error-message")
+
+    div(data-hook="model-state-buttons-container")
 

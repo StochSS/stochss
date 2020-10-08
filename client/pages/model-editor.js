@@ -48,7 +48,8 @@ let ModelEditor = PageView.extend({
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
     'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
-    'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick'
+    'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
+    'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -255,6 +256,27 @@ let ModelEditor = PageView.extend({
       text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
     }
   },
+  togglePreviewPlot: function (e) {
+    let action = e.target.innerText
+    console.log(action)
+    if(action === "Close") {
+      this.closePlot()
+    }else{
+      this.openPlot()
+    }
+  },
+  closePlot: function () {
+    let plot = this.queryByHook("model-run-container")
+    let button = this.queryByHook("toggle-preview-plot")
+    plot.style.display = "none"
+    button.innerText = "Open"
+  },
+  openPlot: function () {
+    let plot = this.queryByHook("model-run-container")
+    let button = this.queryByHook("toggle-preview-plot")
+    plot.style.display = "block"
+    button.innerText = "Close"
+  }
 });
 
 initPage(ModelEditor);

@@ -206,6 +206,7 @@ module.exports = View.extend({
       responsive: true,
     }
     Plotly.newPlot(el, traces, layout, config);
+    $(this.parent.queryByHook('toggle-preview-plot')).css('display', 'block')
     window.scrollTo(0, document.body.scrollHeight)
   },
 });
