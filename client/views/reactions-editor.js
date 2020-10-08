@@ -182,12 +182,12 @@ module.exports = View.extend({
       displayMode: false,
       output: 'html',
     }
-    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation'), options);
-    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction'), options);
-    katex.render(ReactionTypes['change'].label, this.queryByHook('change'), options);
-    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization'), options);
-    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge'), options);
-    katex.render(ReactionTypes['split'].label, this.queryByHook('split'), options);
-    katex.render(ReactionTypes['four'].label, this.queryByHook('four'), options);
+    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation-lb1'), options);
+    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction-lb1'), options);
+    katex.render(ReactionTypes['change'].label, this.queryByHook('change-lb1'), options);
+    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization-lb1'), options);
+    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge-lb1'), options);
+    katex.render(ReactionTypes['split'].label, this.queryByHook('split-lb1'), options);
+    katex.render(ReactionTypes['four'].label, this.queryByHook('four-lb1'), options);
   }
 });

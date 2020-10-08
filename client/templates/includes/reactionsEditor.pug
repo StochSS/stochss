@@ -54,13 +54,13 @@ div#reactions-editor.card.card-body
       ) Add Reaction <span class="caret"></span>
 
       ul.dropdown-menu(aria-labelledby="addReactionBtn")
-        li.dropdown-item(data-hook="creation")
-        li.dropdown-item(data-hook="destruction")
-        li.dropdown-item(data-hook="change")
-        li.dropdown-item(data-hook="dimerization")
-        li.dropdown-item(data-hook="merge")
-        li.dropdown-item(data-hook="split")
-        li.dropdown-item(data-hook="four")
+        li.dropdown-item(data-hook="creation") <span data-hook=creation-lb1></span><span class=reaction-lb2>Creation Reaction</span>
+        li.dropdown-item(data-hook="destruction") <span data-hook=destruction-lb1></span><span class=reaction-lb2>Destruction Reaction</span>
+        li.dropdown-item(data-hook="change") <span data-hook=change-lb1></span><span class=reaction-lb2>Transformation Reaction</span>
+        li.dropdown-item(data-hook="dimerization") <span data-hook=dimerization-lb1></span><span class=reaction-lb2>Dimerization Reaction</span>
+        li.dropdown-item(data-hook="merge") <span data-hook=merge-lb1></span><span class=reaction-lb2>Merge Reaction</span>
+        li.dropdown-item(data-hook="split") <span data-hook=split-lb1></span><span class=reaction-lb2>Split Reaction</span>
+        li.dropdown-item(data-hook="four") <span data-hook=four-lb1></span><span class=reaction-lb2>Four Reaction</span>
         li.dropdown-divider
         li.dropdown-item(data-hook="custom-massaction") Custom mass action
         li.dropdown-item(data-hook="custom-propensity") Custom propensity
