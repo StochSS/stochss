@@ -47,6 +47,7 @@ let ModelEditor = PageView.extend({
     'click [data-hook=edit-model-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
+    'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick'
   },
   initialize: function (attrs, options) {
@@ -245,7 +246,14 @@ let ModelEditor = PageView.extend({
     });
     this.registerRenderSubview(this.rulesEditor, 'rules-editor-container');
   },
-  subviews: {
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
 });
 
