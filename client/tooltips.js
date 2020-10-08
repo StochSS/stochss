@@ -39,7 +39,7 @@ module.exports = {
   parametersEditor: {
     name: "Names for species, parameters, reactions, events, and rules must be unique.",
     
-    expression: "A parameter value or a mathematical expression calculating the parameter value.",
+    expression: "A parameter value.",
     
     annotation: "An optional note about a parameter.",
     
