@@ -87,6 +87,10 @@ module.exports = View.extend({
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
     }
     this.renderReactionTypes();
+    katex.render("\\emptyset", this.queryByHook('emptyset'), {
+      displayMode: false,
+      output: 'html',
+    });
   },
   update: function () {
   },
