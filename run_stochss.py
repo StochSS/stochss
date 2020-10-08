@@ -40,3 +40,4 @@ print(jupyter_url+"\n")
 print("\nWhen you're finished using StochSS, use ctrl-C (or just close this terminal) to shut down the StochSS container.\n")
 while True:
     time.sleep(100)
+
