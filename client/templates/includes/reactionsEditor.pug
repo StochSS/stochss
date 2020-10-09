@@ -11,14 +11,7 @@ div#reactions-editor.card.card-body
   div.collapse(class="show", id="collapse-reaction")
 
     p
-      | Define reactions. Select from the given reaction templates, or use the custom types.  Using templated reaction types will help eliminate errors. 
-      | For non-linear reactions, use the custom propensity type.
-
-    p
-      | The symbol <span data-hook="emptyset"></span> represents null or emptyset.  
-      | For a species that is NOT consumed in the reaction but is part of a massaction reaction, add it as both a reactant and a product.  
-      | Mass-action reactions must also have a rate term added. 
-      | Note that the input rate represents the mass-action constant rate independent of volume.
+      | A process that transforms a set of <i>Variable</i>s (reactants) into a set of <i>Variable</i>s (products) at a rate set a <i>Parameter</i>. Select from the given reaction templates, or use the custom types.
 
     div.row
       div.col-md-7.container-part: table.table

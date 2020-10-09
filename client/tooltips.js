@@ -107,7 +107,7 @@ module.exports = {
     annotation: "An optional note about the SBML Component."
   },
   modelSettings: {
-    previewSettings: "Preview Settings are applied to the model and are used for the model preview and all workflows.",
+    previewSettings: "Model Settings are used for the preview and all workflows created using this model.",
     
     previewTime: "End time of simulation.",
     
