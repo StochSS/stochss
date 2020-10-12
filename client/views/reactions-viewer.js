@@ -37,7 +37,7 @@ module.exports = View.extend({
     this.renderCollection(this.collection, ViewReactions, this.queryByHook('reaction-list'))
   },
   switchToEditMode: function (e) {
-    this.parent.renderReactionsView();
+    this.parent.renderReactionsView("edit", true);
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

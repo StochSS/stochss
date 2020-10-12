@@ -37,7 +37,7 @@ module.exports = View.extend({
     this.renderCollection(this.collection, ViewRules, this.queryByHook('rules-list'))
   },
   switchToEditMode: function (e) {
-    this.parent.renderRulesView();
+    this.parent.renderRulesView("edit", true);
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

@@ -37,6 +37,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.eventsEditor
+    this.opened = attrs.opened
     this.collection.on("select", function (event) {
       this.setSelectedEvent(event);
       this.setDetailsView(event);
@@ -67,6 +68,9 @@ module.exports = View.extend({
       this.collection.trigger("select", this.selectedEvent);
     }
     this.toggleAddEventButton()
+    if(this.opened) {
+      this.openEventsContainer();
+    }
   },
   update: function () {
   },
@@ -127,6 +131,11 @@ module.exports = View.extend({
   },
   switchToViewMode: function (e) {
     this.parent.renderEventsView(mode="view");
+  },
+  openEventsContainer: function () {
+    $(this.queryByHook('events')).collapse('show');
+    let collapseBtn = $(this.queryByHook('collapse'))
+    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

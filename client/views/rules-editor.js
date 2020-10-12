@@ -38,11 +38,15 @@ module.exports = View.extend({
     this.collection.parent.species.on('add remove', this.toggleAddRuleButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleAddRuleButton, this);
     this.tooltips = Tooltips.rulesEditor
+    this.opened = args.opened
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderRules();
     this.toggleAddRuleButton()
+    if(this.opened) {
+      this.openRulesContainer();
+    }
   },
   update: function () {
   },
@@ -84,6 +88,11 @@ module.exports = View.extend({
   },
   switchToViewMode: function (e) {
     this.parent.renderRulesView(mode="view");
+  },
+  openRulesContainer: function () {
+    $(this.queryByHook('rules-list-container')).collapse('show');
+    let collapseBtn = $(this.queryByHook('collapse'))
+    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

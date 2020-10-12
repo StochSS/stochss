@@ -37,7 +37,7 @@ module.exports = View.extend({
     this.renderCollection(this.collection, ViewParameter, this.queryByHook('parameter-list'))
   },
   switchToEditMode: function (e) {
-    this.parent.renderParametersView();
+    this.parent.renderParametersView("edit", true);
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

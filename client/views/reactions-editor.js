@@ -50,6 +50,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.reactionsEditor
+    this.opened = attrs.opened
     this.collection.on("select", function (reaction) {
       this.setSelectedReaction(reaction);
       this.setDetailsView(reaction);
@@ -92,6 +93,9 @@ module.exports = View.extend({
       displayMode: false,
       output: 'html',
     });
+    if(this.opened) {
+      this.openReactionsContainer();
+    }
   },
   update: function () {
   },
@@ -164,6 +168,11 @@ module.exports = View.extend({
   },
   switchToViewMode: function (e) {
     this.parent.renderReactionsView(mode="view");
+  },
+  openReactionsContainer: function () {
+    $(this.queryByHook('reactions-list-container')).collapse('show');
+    let collapseBtn = $(this.queryByHook('collapse'))
+    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

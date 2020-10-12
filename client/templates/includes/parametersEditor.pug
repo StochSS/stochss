@@ -3,9 +3,9 @@ div#parameters-editor.card.card-body
   div
 
     h3.inline Parameters
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-parameters", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-parameters", data-hook="collapse") +
 
-  div.collapse(class="show", id="collapse-parameters")
+  div.collapse(id="collapse-parameters" data-hook="parameters-list-container")
     p
      | Constant values that represents an inherent properties of the system. Used to set the rate of a <i>Reaction</i>.
 

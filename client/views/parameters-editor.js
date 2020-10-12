@@ -36,6 +36,7 @@ module.exports = View.extend({
     var self = this;
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.parametersEditor
+    this.opened = attrs.opened
     this.collection.on('update-parameters', function (compID, parameter) {
       self.collection.parent.reactions.map(function (reaction) {
         if(reaction.rate && reaction.rate.compID === compID){
@@ -62,6 +63,9 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderEditParameter();
+    if(this.opened) {
+      this.openParametersContainer();
+    }
   },
   update: function () {
   },
@@ -95,6 +99,11 @@ module.exports = View.extend({
   },
   switchToViewMode: function (e) {
     this.parent.renderParametersView(mode="view");
+  },
+  openParametersContainer: function () {
+    $(this.queryByHook('parameters-list-container')).collapse('show');
+    let collapseBtn = $(this.queryByHook('collapse'))
+    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

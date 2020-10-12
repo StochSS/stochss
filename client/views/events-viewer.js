@@ -37,7 +37,7 @@ module.exports = View.extend({
     this.renderCollection(this.collection, ViewEvent, this.queryByHook('view-events-container'))
   },
   switchToEditMode: function (e) {
-    this.parent.renderEventsView();
+    this.parent.renderEventsView("edit", true);
   },
   changeSettingsCollapseButtonText: function () {
     let source = e.target.dataset.hook

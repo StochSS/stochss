@@ -235,45 +235,45 @@ let ModelEditor = PageView.extend({
     }
     this.registerRenderSubview(this.speciesEditor, 'species-editor-container');
   },
-  renderParametersView: function (mode="edit") {
+  renderParametersView: function (mode="edit", opened=false) {
     if(this.parametersEditor) {
       this.parametersEditor.remove()
     }
     if(mode === "edit") {
-      this.parametersEditor = new ParametersEditorView({collection: this.model.parameters});
+      this.parametersEditor = new ParametersEditorView({collection: this.model.parameters, opened: opened});
     }else{
       this.parametersEditor = new ParameterViewer({collection: this.model.parameters});
     }
     this.registerRenderSubview(this.parametersEditor, 'parameters-editor-container');
   },
-  renderReactionsView: function (mode="edit") {
+  renderReactionsView: function (mode="edit", opened=false) {
     if(this.reactionsEditor) {
       this.reactionsEditor.remove()
     }
     if(mode === "edit") {
-      this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions});
+      this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions, opened: opened});
     }else{
       this.reactionsEditor = new ReactionsViewer({collection: this.model.reactions});
     }
     this.registerRenderSubview(this.reactionsEditor, 'reactions-editor-container');
   },
-  renderEventsView: function (mode="edit") {
+  renderEventsView: function (mode="edit", opened=false) {
     if(this.eventsEditor){
       this.eventsEditor.remove();
     }
     if(mode === "edit") {
-      this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection});
+      this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection, opened: opened});
     }else{
       this.eventsEditor = new EventsViewer({collection: this.model.eventsCollection});
     }
     this.registerRenderSubview(this.eventsEditor, 'events-editor-container');
   },
-  renderRulesView: function (mode="edit") {
+  renderRulesView: function (mode="edit", opened=false) {
     if(this.rulesEditor){
       this.rulesEditor.remove();
     }
     if(mode === "edit") {
-      this.rulesEditor = new RulesEditorView({collection: this.model.rules});
+      this.rulesEditor = new RulesEditorView({collection: this.model.rules, opened: opened});
     }else{
       this.rulesEditor = new RulesViewer({collection: this.model.rules})
     }
