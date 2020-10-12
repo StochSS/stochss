@@ -424,8 +424,8 @@ module.exports = {
       return templates.message(modalID, title, message)
     },
     renderDefaultModeModalHtml : () => {
-        let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;
-        let populationDescription = `Population - Species will only be represented using discrete (integer count) values.`;
+        let concentrationDesciption = `Variables will only be represented using continuous (floating point) values.`;
+        let populationDescription = `Population - Variables will only be represented using discrete (integer count) values.`;
         let hybridDescription = `Allows a species to be represented using continuous and/or discrete values.`;
 
         return `
@@ -433,7 +433,7 @@ module.exports = {
               <div class="modal-dialog" role="document">
                 <div class="modal-content info">
                   <div class="modal-header">
-                    <h5 class="modal-title">Default Species Mode (required)</h5>
+                    <h5 class="modal-title">Default Variables Mode (required)</h5>
                     <button type="button" class="close close-modal" data-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -442,7 +442,7 @@ module.exports = {
                     <div>
                       <p>
                         The default mode is used to set the mode of all species added to the model.  
-                        The mode of a species is used to determine how it will be represented in a Hybrid simulation.
+                        The mode of a species is used to determine how it will be represented in a Hybrid Concentration/Population simulation.
                       </p>
                       <p>Select one of the following: </p>
                     </div>

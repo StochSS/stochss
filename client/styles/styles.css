@@ -570,7 +570,7 @@ span.checkbox {
 .preview-nav {
   position: fixed;
   width: 70%;
-  min-width: 585px;
+  min-width: 600px;
   left: 0;
   right: 0;
   margin-left: auto;
@@ -583,8 +583,8 @@ span.checkbox {
 }
 
 .preview-close {
-  position: absolute;
+  position: relative;
   display: none;
-  right: 5px;
-  bottom: 8px;
+  float: right;
+  top: 8px;
 }
