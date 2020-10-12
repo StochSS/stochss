@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 module.exports = {
   speciesEditor: {
-    name: "Names for variables, constants, reactions, events, and rules must be unique.",
+    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
 
     initialValue: "Initial population of a variables.",
 
@@ -37,7 +37,7 @@ module.exports = {
         "at which variables will be represented as Concentration."
   },
   parametersEditor: {
-    name: "Names for variables, constants, reactions, events, and rules must be unique.",
+    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
     
     expression: "A parameter value.",
     
@@ -46,7 +46,7 @@ module.exports = {
     remove: "A parameter may only be removed if it is not used in any reaction, event assignment, or rule."
   },
   reactionsEditor: {
-    name: "Names for variables, constants, reactions, events, and rules must be unique.",
+    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
     
     annotation: "An optional note about the reaction.",
     
@@ -59,12 +59,12 @@ module.exports = {
     product: "The variables that are created by the reaction event, with stoichiometry.",
   },
   eventsEditor: {
-    name: "Names for variables, constants, reactions, events, and rules must be unique.",
+    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
     
     annotation: "An optional note about an event.",
     
     triggerExpression: "The trigger expression can be any mathematical expression which evaluates to a boolean value in a python environment (i.e. t==50).  This "+
-        "expression is evaluable within the model namespace, and any variable (Variables, Constants, etc.) can be referenced in the expression.  Time is represented "+
+        "expression is evaluable within the model namespace, and any variable (Variables, Parameter, etc.) can be referenced in the expression.  Time is represented "+
         "with the lower case variable 't'. An event will begin execution of assignments (or delay, if any) once this expression changes from 'False' to 'True.'",
     
     delay: "contains math expression evaluable within model namespace. This expression designates a delay between the trigger of an event and the execution of its assignments.",
@@ -90,7 +90,7 @@ module.exports = {
         "upon event execution."
   },
   rulesEditor: {
-    name: "Names for variables, constants, reactions, events, and rules must be unique.",
+    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
     
     type: "Assignment Rules: An assignment rule describes a change to a Variables or Parameter as a function whose left-hand side is a scalar (i.e. x = f(V), where V is a "+
         "vector of symbols, not including x).<br>  Rate Rules: A rate rule describes a change to a Variables or Parameter as a function whose left-hand side is a rate of "+
@@ -147,7 +147,7 @@ module.exports = {
         "Concentration/Population.  If the model is represented as population, the SSA will be selected."
   },
   parameterSweepSettings: {
-    sweepType: "The number of constants to sweep through.",
+    sweepType: "The number of parameters to sweep through.",
 
     species: "The initial variables to view sweep data for.",
 
@@ -171,6 +171,6 @@ module.exports = {
   workflowSelection: {
     ensembleSimulation: "Produce a time-series result for one or more simulation(s) of the model.",
 
-    parameterSweep: "Produced and compare results from model simulations by varying constants over a range."
+    parameterSweep: "Produced and compare results from model simulations by varying parameters over a range."
   }
 }
