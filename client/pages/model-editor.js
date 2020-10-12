@@ -73,7 +73,7 @@ let ModelEditor = PageView.extend({
     });
     if(directory.includes('.proj')) {
       this.projectPath = path.dirname(directory)
-      this.projectName = this.projectPath.split('/').pop().split('.')[0]
+      this.projectName = this.getFileName(this.projectPath)
     }
     this.model.fetch({
       success: function (model, response, options) {

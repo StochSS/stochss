@@ -32,7 +32,7 @@ from shutil import copyfile, copytree, rmtree
 from tornado import web
 from notebook.base.handlers import APIHandler
 
-from .util.rename import get_unique_file_name
+from .util.rename import get_unique_file_name, get_file_name
 from .util.workflow_status import get_status
 from .util.generate_zip_file import download_zip
 from .util.convert_to_combine import convert
@@ -116,7 +116,7 @@ class LoadProjectAPIHandler(APIHandler):
                 mdl_dir = os.path.join(path, item)
                 with open(mdl_dir, 'r') as mdl_file:
                     model = json.load(mdl_file)
-                    model['name'] = item.split('.')[0]
+                    model['name'] = get_file_name(item)
                     model['directory'] = mdl_dir
                     self.update_model_data(model)
                     project['models'].append(model)
