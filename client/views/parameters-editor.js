@@ -29,6 +29,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=add-parameter]' : 'addParameter',
+    'click [data-hook=save-parameters]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
@@ -91,6 +92,9 @@ module.exports = View.extend({
 
        });
     });
+  },
+  switchToViewMode: function (e) {
+    this.parent.renderParametersView(mode="view");
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

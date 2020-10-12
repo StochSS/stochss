@@ -44,6 +44,7 @@ module.exports = View.extend({
     'click [data-hook=four]'                   : 'handleAddReactionClick',
     'click [data-hook=custom-massaction]'      : 'handleAddReactionClick',
     'click [data-hook=custom-propensity]'      : 'handleAddReactionClick',
+    'click [data-hook=save-reactions]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
@@ -160,6 +161,9 @@ module.exports = View.extend({
     var detailsView = new ReactionDetailsView({ model: reaction });
     detailsView.parent = this;
     return detailsView
+  },
+  switchToViewMode: function (e) {
+    this.parent.renderReactionsView(mode="view");
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

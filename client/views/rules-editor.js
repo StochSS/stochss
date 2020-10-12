@@ -30,6 +30,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=rate-rule]' : 'addRule',
     'click [data-hook=assignment-rule]' : 'addRule',
+    'click [data-hook=save-rules]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (args) {
@@ -80,6 +81,9 @@ module.exports = View.extend({
 
        });
     });
+  },
+  switchToViewMode: function (e) {
+    this.parent.renderRulesView(mode="view");
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
