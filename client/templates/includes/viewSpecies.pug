@@ -5,4 +5,5 @@ tr
 
   td=this.model.mode
 
-  td=this.switchingValWithLabel
+  if this.model.collection.parent.defaultMode === 'dynamic'
+    td=this.switchingValWithLabel

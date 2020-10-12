@@ -13,6 +13,7 @@ div#species-viewer.card.card-body
           th.col-md-3-view(scope="col") Name
           th.col-md-3-view(scope="col") Initial Condition
           th.col-md-3-view(scope="col") Mode
-          th.col-md-3-view(scope="col") Switch Tolerance/Minimum Value for Switching
+          if this.collection.parent.defaultMode === "dynamic"
+            th.col-md-3-view(scope="col") Switch Tolerance/Minimum Value for Switching
         
       tbody(data-hook="specie-list")
