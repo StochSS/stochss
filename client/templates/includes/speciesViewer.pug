@@ -17,3 +17,6 @@ div#species-viewer.card.card-body
             th.col-md-3-view(scope="col") Switch Tolerance/Minimum Value for Switching
         
       tbody(data-hook="specie-list")
+
+    if this.collection.parent.for === "edit"
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-species") Edit Variables

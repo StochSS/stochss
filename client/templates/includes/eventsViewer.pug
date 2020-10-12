@@ -26,3 +26,6 @@ div#events-viewer.card.card-body
           th(scope="col") Use Values From
 
       tbody(data-hook="view-events-container")
+
+    if this.collection.parent.for === "edit"
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-events") Edit Events

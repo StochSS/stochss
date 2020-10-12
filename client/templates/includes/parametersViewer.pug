@@ -14,3 +14,6 @@ div#parameters-viewer.card.card-body
           th.col-md-9-view(scope="col") Value
         
       tbody(data-hook="parameter-list")
+
+    if this.collection.parent.for === "edit"
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-parameters") Edit Parameters

@@ -16,3 +16,6 @@ div#rules-viewer.card.card-body
           th.col-md-3-view(scope="col") Formula
         
       tbody(data-hook="rules-list")
+
+    if this.collection.parent.for === "edit"
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-rules") Edit Rules
