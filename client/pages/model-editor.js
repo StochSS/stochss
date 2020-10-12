@@ -214,7 +214,6 @@ let ModelEditor = PageView.extend({
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
-
        });
     });
     $(document).on('hide.bs.modal', '.modal', function (e) {
