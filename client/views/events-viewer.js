@@ -27,6 +27,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=collapse]' : 'changeSettingsCollapseButtonText',
+    'click [data-hook=edit-events]' : 'switchToEditMode'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -35,8 +36,16 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     this.renderCollection(this.collection, ViewEvent, this.queryByHook('view-events-container'))
   },
+  switchToEditMode: function (e) {
+    this.parent.renderEventsView();
+  },
   changeSettingsCollapseButtonText: function () {
-    var text = $(this.queryByHook('collapse')).text();
-    text === '+' ? $(this.queryByHook('collapse')).text('-') : $(this.queryByHook('collapse')).text('+');
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
 });
