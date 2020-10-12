@@ -26,11 +26,16 @@ var modals = require('../modals')
 var PageView = require('../pages/base');
 var MeshEditorView = require('../views/mesh-editor');
 var SpeciesEditorView = require('../views/species-editor');
+var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
+var ParameterViewer = require('../views/parameters-viewer');
 var ReactionsEditorView = require('../views/reactions-editor');
+var ReactionsViewer = require('../views/reactions-viewer');
 var EventsEditorView = require('../views/events-editor');
+var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
+var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
 var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
@@ -182,20 +187,9 @@ let ModelEditor = PageView.extend({
     var meshEditor = new MeshEditorView({
       model: this.model.meshSettings
     });
-    var speciesEditor = new SpeciesEditorView({
-      collection: this.model.species
-    });
     var initialConditionsEditor = new InitialConditionsEditorView({
       collection: this.model.initialConditions
     });
-    var parametersEditor = new ParametersEditorView({
-      collection: this.model.parameters
-    });
-    var reactionsEditor = new ReactionsEditorView({
-      collection: this.model.reactions
-    });
-    this.renderEventsView();
-    this.renderRulesView();
     var sbmlComponentView = new SBMLComponentView({
       functionDefinitions: this.model.functionDefinitions,
     });
@@ -207,10 +201,12 @@ let ModelEditor = PageView.extend({
       model: this.model
     });
     this.registerRenderSubview(meshEditor, 'mesh-editor-container');
-    this.registerRenderSubview(speciesEditor, 'species-editor-container');
+    this.renderSpeciesView();
     this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
-    this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
-    this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
+    this.renderParametersView();
+    this.renderReactionsView();
+    this.renderEventsView();
+    this.renderRulesView();
     this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
     this.registerRenderSubview(modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
@@ -229,22 +225,59 @@ let ModelEditor = PageView.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
-  renderEventsView: function () {
+  renderSpeciesView: function (mode="edit") {
+    if(this.speciesEditor) {
+      this.speciesEditor.remove()
+    }
+    if(mode === "edit") {
+      this.speciesEditor = new SpeciesEditorView({collection: this.model.species});
+    }else{
+      this.speciesEditor = new SpeciesViewer({collection: this.model.species});
+    }
+    this.registerRenderSubview(this.speciesEditor, 'species-editor-container');
+  },
+  renderParametersView: function (mode="edit") {
+    if(this.parametersEditor) {
+      this.parametersEditor.remove()
+    }
+    if(mode === "edit") {
+      this.parametersEditor = new ParametersEditorView({collection: this.model.parameters});
+    }else{
+      this.parametersEditor = new ParameterViewer({collection: this.model.parameters});
+    }
+    this.registerRenderSubview(this.parametersEditor, 'parameters-editor-container');
+  },
+  renderReactionsView: function (mode="edit") {
+    if(this.reactionsEditor) {
+      this.reactionsEditor.remove()
+    }
+    if(mode === "edit") {
+      this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions});
+    }else{
+      this.reactionsEditor = new ReactionsViewer({collection: this.model.reactions});
+    }
+    this.registerRenderSubview(this.reactionsEditor, 'reactions-editor-container');
+  },
+  renderEventsView: function (mode="edit") {
     if(this.eventsEditor){
       this.eventsEditor.remove();
     }
-    this.eventsEditor = new EventsEditorView({
-      collection: this.model.eventsCollection
-    });
+    if(mode === "edit") {
+      this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection});
+    }else{
+      this.eventsEditor = new EventsViewer({collection: this.model.eventsCollection});
+    }
     this.registerRenderSubview(this.eventsEditor, 'events-editor-container');
   },
-  renderRulesView: function () {
+  renderRulesView: function (mode="edit") {
     if(this.rulesEditor){
       this.rulesEditor.remove();
     }
-    this.rulesEditor = new RulesEditorView({
-      collection: this.model.rules
-    });
+    if(mode === "edit") {
+      this.rulesEditor = new RulesEditorView({collection: this.model.rules});
+    }else{
+      this.rulesEditor = new RulesViewer({collection: this.model.rules})
+    }
     this.registerRenderSubview(this.rulesEditor, 'rules-editor-container');
   },
   changeCollapseButtonText: function (e) {
