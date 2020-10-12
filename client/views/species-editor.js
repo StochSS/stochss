@@ -191,6 +191,7 @@ module.exports = View.extend({
     });
   },
   switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
     this.parent.renderSpeciesView(mode="view");
   },
   changeCollapseButtonText: function (e) {

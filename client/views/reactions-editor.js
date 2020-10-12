@@ -167,6 +167,7 @@ module.exports = View.extend({
     return detailsView
   },
   switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
     this.parent.renderReactionsView(mode="view");
   },
   openReactionsContainer: function () {

@@ -98,6 +98,7 @@ module.exports = View.extend({
     });
   },
   switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
     this.parent.renderParametersView(mode="view");
   },
   openParametersContainer: function () {

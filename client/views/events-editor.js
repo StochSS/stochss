@@ -130,6 +130,7 @@ module.exports = View.extend({
     return detailsView
   },
   switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
     this.parent.renderEventsView(mode="view");
   },
   openEventsContainer: function () {

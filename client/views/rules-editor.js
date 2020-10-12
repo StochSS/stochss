@@ -87,6 +87,7 @@ module.exports = View.extend({
     });
   },
   switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
     this.parent.renderRulesView(mode="view");
   },
   openRulesContainer: function () {
