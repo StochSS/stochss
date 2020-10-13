@@ -32,7 +32,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=project-workflow-group-new-workflow]' : 'handleNewWorkflowClick',
-    'click [data-hook=project-workflow-group-add-workflow]' : 'handleAddWorkflowClick',
+    // 'click [data-hook=project-workflow-group-add-workflow]' : 'handleAddWorkflowClick',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments)
@@ -119,7 +119,7 @@ module.exports = View.extend({
         let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".wkgp"
         let queryString = "?path="+expPath+"&wkflPath="+input.value
         let endpoint = path.join(app.getApiPath(), "project/add-existing-workflow")+queryString
-        xhr({uri: endpoint, json: true}, function (err, response, body) {
+        xhr({uri: endpoint, json: true, method: "post"}, function (err, response, body) {
           if(response.statusCode < 400) {
             self.parent.parent.update("workflow-group-editor")
             let successModal = $(modals.addExistingWorkflowToProjectSuccessHtml(body.message)).modal()

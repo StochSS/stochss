@@ -26,11 +26,16 @@ var modals = require('../modals')
 var PageView = require('../pages/base');
 var MeshEditorView = require('../views/mesh-editor');
 var SpeciesEditorView = require('../views/species-editor');
+var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
+var ParameterViewer = require('../views/parameters-viewer');
 var ReactionsEditorView = require('../views/reactions-editor');
+var ReactionsViewer = require('../views/reactions-viewer');
 var EventsEditorView = require('../views/events-editor');
+var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
+var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
 var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
@@ -47,7 +52,9 @@ let ModelEditor = PageView.extend({
     'click [data-hook=edit-model-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
-    'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick'
+    'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
+    'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
+    'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -66,7 +73,7 @@ let ModelEditor = PageView.extend({
     });
     if(directory.includes('.proj')) {
       this.projectPath = path.dirname(directory)
-      this.projectName = this.projectPath.split('/').pop().split('.')[0]
+      this.projectName = this.getFileName(this.projectPath)
     }
     this.model.fetch({
       success: function (model, response, options) {
@@ -180,20 +187,9 @@ let ModelEditor = PageView.extend({
     var meshEditor = new MeshEditorView({
       model: this.model.meshSettings
     });
-    var speciesEditor = new SpeciesEditorView({
-      collection: this.model.species
-    });
     var initialConditionsEditor = new InitialConditionsEditorView({
       collection: this.model.initialConditions
     });
-    var parametersEditor = new ParametersEditorView({
-      collection: this.model.parameters
-    });
-    var reactionsEditor = new ReactionsEditorView({
-      collection: this.model.reactions
-    });
-    this.renderEventsView();
-    this.renderRulesView();
     var sbmlComponentView = new SBMLComponentView({
       functionDefinitions: this.model.functionDefinitions,
     });
@@ -205,10 +201,12 @@ let ModelEditor = PageView.extend({
       model: this.model
     });
     this.registerRenderSubview(meshEditor, 'mesh-editor-container');
-    this.registerRenderSubview(speciesEditor, 'species-editor-container');
+    this.renderSpeciesView();
     this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
-    this.registerRenderSubview(parametersEditor, 'parameters-editor-container');
-    this.registerRenderSubview(reactionsEditor, 'reactions-editor-container');
+    this.renderParametersView();
+    this.renderReactionsView();
+    this.renderEventsView();
+    this.renderRulesView();
     this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
     this.registerRenderSubview(modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
@@ -216,7 +214,6 @@ let ModelEditor = PageView.extend({
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
-
        });
     });
     $(document).on('hide.bs.modal', '.modal', function (e) {
@@ -227,26 +224,91 @@ let ModelEditor = PageView.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
-  renderEventsView: function () {
+  renderSpeciesView: function (mode="edit") {
+    if(this.speciesEditor) {
+      this.speciesEditor.remove()
+    }
+    if(mode === "edit") {
+      this.speciesEditor = new SpeciesEditorView({collection: this.model.species});
+    }else{
+      this.speciesEditor = new SpeciesViewer({collection: this.model.species});
+    }
+    this.registerRenderSubview(this.speciesEditor, 'species-editor-container');
+  },
+  renderParametersView: function (mode="edit", opened=false) {
+    if(this.parametersEditor) {
+      this.parametersEditor.remove()
+    }
+    if(mode === "edit") {
+      this.parametersEditor = new ParametersEditorView({collection: this.model.parameters, opened: opened});
+    }else{
+      this.parametersEditor = new ParameterViewer({collection: this.model.parameters});
+    }
+    this.registerRenderSubview(this.parametersEditor, 'parameters-editor-container');
+  },
+  renderReactionsView: function (mode="edit", opened=false) {
+    if(this.reactionsEditor) {
+      this.reactionsEditor.remove()
+    }
+    if(mode === "edit") {
+      this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions, opened: opened});
+    }else{
+      this.reactionsEditor = new ReactionsViewer({collection: this.model.reactions});
+    }
+    this.registerRenderSubview(this.reactionsEditor, 'reactions-editor-container');
+  },
+  renderEventsView: function (mode="edit", opened=false) {
     if(this.eventsEditor){
       this.eventsEditor.remove();
     }
-    this.eventsEditor = new EventsEditorView({
-      collection: this.model.eventsCollection
-    });
+    if(mode === "edit") {
+      this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection, opened: opened});
+    }else{
+      this.eventsEditor = new EventsViewer({collection: this.model.eventsCollection});
+    }
     this.registerRenderSubview(this.eventsEditor, 'events-editor-container');
   },
-  renderRulesView: function () {
+  renderRulesView: function (mode="edit", opened=false) {
     if(this.rulesEditor){
       this.rulesEditor.remove();
     }
-    this.rulesEditor = new RulesEditorView({
-      collection: this.model.rules
-    });
+    if(mode === "edit") {
+      this.rulesEditor = new RulesEditorView({collection: this.model.rules, opened: opened});
+    }else{
+      this.rulesEditor = new RulesViewer({collection: this.model.rules})
+    }
     this.registerRenderSubview(this.rulesEditor, 'rules-editor-container');
   },
-  subviews: {
+  changeCollapseButtonText: function (e) {
+    let source = e.target.dataset.hook
+    let collapseContainer = $(this.queryByHook(source).dataset.target)
+    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+      let collapseBtn = $(this.queryByHook(source))
+      let text = collapseBtn.text();
+      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    }
   },
+  togglePreviewPlot: function (e) {
+    let action = e.target.innerText
+    console.log(action)
+    if(action === "Hide Preview") {
+      this.closePlot()
+    }else{
+      this.openPlot()
+    }
+  },
+  closePlot: function () {
+    let plot = this.queryByHook("model-run-container")
+    let button = this.queryByHook("toggle-preview-plot")
+    plot.style.display = "none"
+    button.innerText = "Show Preview"
+  },
+  openPlot: function () {
+    let plot = this.queryByHook("model-run-container")
+    let button = this.queryByHook("toggle-preview-plot")
+    plot.style.display = "block"
+    button.innerText = "Hide Preview"
+  }
 });
 
 initPage(ModelEditor);

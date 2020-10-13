@@ -35,6 +35,7 @@ module.exports = View.extend({
     'change [data-hook=all-discrete]' : 'getDefaultSpeciesMode',
     'change [data-hook=advanced]' : 'getDefaultSpeciesMode',
     'click [data-hook=add-species]' : 'handleAddSpeciesClick',
+    'click [data-hook=save-species]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
@@ -188,6 +189,10 @@ module.exports = View.extend({
 
        });
     });
+  },
+  switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
+    this.parent.renderSpeciesView(mode="view");
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

@@ -15,3 +15,6 @@ div#reactions-viewer.card.card-body
           th.col-md-6-view(scope="col") Rate/Propensity
         
       tbody(data-hook="reaction-list")
+
+    if this.collection.parent.for === "edit"
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-reactions") Edit Reactions

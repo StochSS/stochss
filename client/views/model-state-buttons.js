@@ -115,6 +115,9 @@ module.exports = View.extend({
     var saved = this.queryByHook('saved-mdl');
     saving.style.display = "none";
     saved.style.display = "inline-block";
+    setTimeout(function () {
+      saved.style.display = "none";
+    }, 5000);
   },
   runModel: function () {
     this.saved();
@@ -180,32 +183,9 @@ module.exports = View.extend({
     var title = this.model.name + " Model Preview"
     this.ran(true)
     el = this.parent.queryByHook('model-run-container');
-    time = data.time
-    y_labels = Object.keys(data).filter(function (key) {
-      return key !== 'data' && key !== 'time'
-    });
-    traces = y_labels.map(function (specie) {
-      return {
-        x: time,
-        y: data[specie],
-        mode: 'lines',
-        name: specie
-      }
-    });
-    layout = { 
-      showlegend: true,
-      legend: {
-        x: 1,
-        y: 0.9
-      },
-      margin: { 
-        t: 0 
-      } 
-    }
-    config = {
-      responsive: true,
-    }
-    Plotly.newPlot(el, traces, layout, config);
+    Plotly.newPlot(el, data);
+    $(this.parent.queryByHook('toggle-preview-plot-container')).css('height', '50px')
+    $(this.parent.queryByHook('toggle-preview-plot')).css('display', 'block')
     window.scrollTo(0, document.body.scrollHeight)
   },
 });

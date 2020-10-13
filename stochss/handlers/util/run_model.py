@@ -105,18 +105,11 @@ class GillesPy2Workflow():
         with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
             sim_settings = json.load(template_file)['simulationSettings']
 
-        _results = run_solver(gillespy2_model, sim_settings, 5)
-        results = _results[0]
-        res_dict = dict(results)
-        for k, v in res_dict.items():
-            res_dict[k] = list(v)
-        results = res_dict
-        for key in results.keys():
-            if not isinstance(results[key], list):
-                # Assume it's an ndarray, use tolist()
-                results[key] = results[key].tolist()
-        results['data'] = stochss_model
-        return results
+        results = run_solver(gillespy2_model, sim_settings, 5)
+        plot = results.plotplotly(return_plotly_figure=True)
+        plot["layout"]["autosize"] = True
+        plot["config"] = {"responsive": True,}
+        return plot
 
 
     def run(self, gillespy2_model, verbose):
@@ -712,7 +705,7 @@ if __name__ == "__main__":
         except SimulationError as error:
             resp['errors'] = "{0}".format(error)
         with open(outfile, "w") as fd:
-            json.dump(resp, fd)
+            json.dump(resp, fd, cls=plotly.utils.PlotlyJSONEncoder)
         open(outfile + ".done", "w").close()
     else:
         if os.path.exists(outfile + ".done"):
