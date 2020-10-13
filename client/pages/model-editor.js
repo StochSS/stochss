@@ -301,12 +301,14 @@ let ModelEditor = PageView.extend({
     let button = this.queryByHook("toggle-preview-plot")
     plot.style.display = "none"
     button.innerText = "Show Preview"
+    $(this.queryByHook('explore-model-msg')).css('display', 'none');
   },
   openPlot: function () {
     let plot = this.queryByHook("model-run-container")
     let button = this.queryByHook("toggle-preview-plot")
     plot.style.display = "block"
     button.innerText = "Hide Preview"
+    $(this.queryByHook('explore-model-msg')).css('display', 'block');
   }
 });
 

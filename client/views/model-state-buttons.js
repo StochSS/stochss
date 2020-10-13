@@ -56,6 +56,7 @@ module.exports = View.extend({
   clickRunHandler: function (e) {
     $(this.parent.queryByHook('model-run-error-container')).collapse('hide');
     $(this.parent.queryByHook('model-timeout-message')).collapse('hide');
+    $(this.parent.queryByHook('explore-model-msg')).css('display', 'none');
     var el = this.parent.queryByHook('model-run-container');
     Plotly.purge(el)
     this.saveModel(this.runModel.bind(this));
@@ -186,6 +187,7 @@ module.exports = View.extend({
     Plotly.newPlot(el, data);
     $(this.parent.queryByHook('toggle-preview-plot-container')).css('height', '50px')
     $(this.parent.queryByHook('toggle-preview-plot')).css('display', 'block')
+    $(this.parent.queryByHook('explore-model-msg')).css('display', 'block');
     window.scrollTo(0, document.body.scrollHeight)
   },
 });

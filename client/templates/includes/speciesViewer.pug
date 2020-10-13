@@ -15,7 +15,9 @@ div#species-viewer.card.card-body
           th.col-md-3-view(scope="col") Mode
           if this.collection.parent.defaultMode === "dynamic"
             th.col-md-3-view(scope="col") Switch Tolerance/Minimum Value for Switching
-        
+          if this.containsMdlWithAnn
+            th.col-md-3-view(scope="col") Annotation
+          
       tbody(data-hook="specie-list")
 
     if this.collection.parent.for === "edit"

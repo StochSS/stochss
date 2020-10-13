@@ -25,6 +25,9 @@ div#events-viewer.card.card-body
 
           th(scope="col") Use Values From
 
+          if this.containsMdlWithAnn
+            th.col-md-3-view(scope="col") Annotation
+
       tbody(data-hook="view-events-container")
 
     if this.collection.parent.for === "edit"

@@ -587,3 +587,7 @@ span.checkbox {
 .model-state-buttons {
   float: right;
 }
+
+#explore-model-msg {
+  display: none;
+}
