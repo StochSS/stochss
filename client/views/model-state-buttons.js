@@ -115,6 +115,9 @@ module.exports = View.extend({
     var saved = this.queryByHook('saved-mdl');
     saving.style.display = "none";
     saved.style.display = "inline-block";
+    setTimeout(function () {
+      saved.style.display = "none";
+    }, 5000);
   },
   runModel: function () {
     this.saved();

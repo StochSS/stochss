@@ -585,3 +585,7 @@ span.checkbox {
   float: right;
   top: 8px;
 }
+
+.model-state-buttons {
+  float: right;
+}
