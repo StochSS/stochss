@@ -4,6 +4,8 @@ import tempfile
 import handlers.util.generate_zip_file as generate_zip_file
 import handlers.util.stochss_errors as stochss_errors
 
+workdir="/home/jovyan/stochss"
+
 class TestGenerateZipFile(unittest.TestCase):
 
     #unit tests for method generate_zip_file
@@ -52,8 +54,8 @@ class TestGenerateZipFile(unittest.TestCase):
                 with unittest.mock.patch("handlers.util.generate_zip_file.generate_zip_file")\
                         as mock_generate:
                     generate_zip_file.download_zip(test_path, test_action)
-        mock_generate.assert_called_with("t", os.path.join("/home/jovyan", "test_dir"), \
-                os.path.join("/home/jovyan", test_path))
+        mock_generate.assert_called_with("t", os.path.join(workdir, "test_dir"), \
+                os.path.join(workdir, test_path))
 
     def test_download_zip_file_action_generate(self):
         test_path = "test_dir/test_path.foo"
@@ -65,4 +67,4 @@ class TestGenerateZipFile(unittest.TestCase):
                 with unittest.mock.patch("handlers.util.generate_zip_file.generate_zip_file"):
                     assert generate_zip_file.download_zip(test_path, test_action) == test_resp
 
-    #download_zip action resultscsv is not covered pending refactor of user dir from /home/jovyan
+    #download_zip action resultscsv is not covered pending refactor of user dir from /home/jovyan/stochss

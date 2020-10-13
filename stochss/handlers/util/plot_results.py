@@ -9,6 +9,9 @@ from os import path
 from .stochss_errors import StochSSFileNotFoundError, PlotNotAvailableError
 
 
+workdir = '/home/jovyan/stochss'
+
+
 def read_plots_file(plots_file_path):
     '''
     Read the plots file and return its contents.
@@ -99,9 +102,8 @@ def edit_plot_fig(plt_fig, plt_data):
 
 
 def plot_results(plots_path, plt_key, plt_data=None):
-    user_dir = "/home/jovyan"
 
-    full_path = path.join(user_dir, plots_path)
+    full_path = path.join(workdir, plots_path)
 
     plt_fig = get_plot_fig(full_path, plt_key)
 

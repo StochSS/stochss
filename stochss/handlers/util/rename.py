@@ -10,6 +10,8 @@ except:
     from stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
 
 
+workdir='/home/jovyan/stochss'
+
 def get_file_name(file):
     '''
     Get the name of a file object
@@ -80,8 +82,7 @@ def rename(path, new_name):
     dir_path : str
         Path to the parent directory of the target file.
     '''
-    user_dir = '/home/jovyan'
-    old_path = os.path.join(user_dir, path)
+    old_path = os.path.join(workdir, path)
     old_name = old_path.split('/').pop()
     if os.path.isdir(old_path):
         old_path += "/"
@@ -101,7 +102,7 @@ def rename(path, new_name):
         new_path = new_path[:-1]
     old_name = old_name.replace('/','')
     new_name = new_name.replace('/','')
-    new_path = new_path.replace(user_dir + '/', '')
+    new_path = new_path.replace(workdir + '/', '')
 
     if path.endswith('.wkfl') and "RUNNING" in os.listdir(path=new_path):
         with open(os.path.join(new_path, "info.json"), 'r+') as info_file:

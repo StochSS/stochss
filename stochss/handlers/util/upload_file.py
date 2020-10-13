@@ -14,6 +14,8 @@ from stochss.handlers.util.rename import get_unique_file_name
 from stochss.handlers.util.convert_sbml_to_model import convert_to_gillespy_model, convert_to_stochss_model
 from stochss.handlers.util.stochss_errors import FileNotZipArchiveError, StochSSFileExistsError
 
+workdir = '/home/jovyan/stochss'
+
 def validate_model(body, file_name):
     try:
         body = json.loads(body)
@@ -44,7 +46,7 @@ def upload_model_file(dir_path, _file_name, name, body):
     full_path, changed = get_unique_file_name(file_name, dir_path)
     with open(full_path, "w") as model_file:
         json.dump(body, model_file)
-    dir_path = dir_path.replace("/home/jovyan", "")
+    dir_path = dir_path.replace(workdir, "")
     if changed:
         file_name = full_path.split('/').pop()
     if is_valid:
@@ -77,12 +79,12 @@ def upload_sbml_file(dir_path, _file_name, name, body):
         with open(template_path, "r") as template_file:
             template = json.load(template_file)
         convert_to_stochss_model(template, model, sbml_path, name)
-        message = "{0} was successfully uploaded to {1}".format(file_name, dir_path.replace("/home/jovyan", ""))
+        message = "{0} was successfully uploaded to {1}".format(file_name, dir_path.replace(workdir, ""))
     else:
         file_name = '.'.join([name,"xml"])
         xml_path, changed = get_unique_file_name(file_name, dir_path)
         os.rename(sbml_path, xml_path)
-        message = "{0} could not be validated as a SBML file and was uploaded as {1} to {2}".format(_file_name, file_name, dir_path.replace("/home/jovyan", ""))
+        message = "{0} could not be validated as a SBML file and was uploaded as {1} to {2}".format(_file_name, file_name, dir_path.replace(workdir, ""))
         if isinstance(error, list):
             errors.extend(error)
         else:
@@ -90,7 +92,7 @@ def upload_sbml_file(dir_path, _file_name, name, body):
     full_path = sbml_path if is_valid else xml_path
     if changed:
         file_name = full_path.split('/').pop()
-    return {"message":message, "path":dir_path.replace("/home/jovyan", ""), "file":file_name, "errors":errors}
+    return {"message":message, "path":dir_path.replace(workdir, ""), "file":file_name, "errors":errors}
 
 
 def unzip_file(full_path, dir_path):
@@ -125,7 +127,7 @@ def upload_file(dir_path, file_name, name, ext, body, file_type, exts):
             unzip_file(full_path, dir_path)
         except zipfile.BadZipFile as err:
             errors.append(str(err))
-    dir_path = dir_path.replace("/home/jovyan", "")
+    dir_path = dir_path.replace(workdir, "")
     if is_valid:
         message = "{0} was successfully uploaded to {1}".format(file_name, dir_path)
     else:
@@ -134,14 +136,13 @@ def upload_file(dir_path, file_name, name, ext, body, file_type, exts):
     
 
 def get_directory_path(path, name):
-    user_dir = "/home/jovyan"
 
     if path.startswith('/'):
         path = path[1:]
     target_dir = os.path.dirname(name)
     if target_dir.startswith('/'):
         target_dir = target_dir[1:]
-    dir_path = os.path.join(user_dir, path, target_dir)
+    dir_path = os.path.join(workdir, path, target_dir)
 
     return dir_path
 
@@ -183,9 +184,8 @@ def upload(file_data, file_info):
 def upload_from_link(path):
     import urllib
     
-    user_dir = "/home/jovyan"
     response = urllib.request.urlopen(path)
-    zip_path = os.path.join(user_dir, path.split('/').pop())
+    zip_path = os.path.join(workdir, path.split('/').pop())
     if os.path.exists(zip_path):
         resp = {"message":"Could not upload this file as the {} \
                            already exists".format(path.split("/").pop()),
@@ -194,11 +194,11 @@ def upload_from_link(path):
     with open(zip_path, "wb") as zip_file:
         zip_file.write(response.read())
     try:
-        unzip_file(zip_path, user_dir)
+        unzip_file(zip_path, workdir)
     except StochSSFileExistsError as err:
         return {"message":err.message, "reason":err.reason}
     uploaded_file = zip_path.split('/').pop()
-    file_path = get_file_path(user_dir, uploaded_file).replace(user_dir+"/", "")
+    file_path = get_file_path(workdir, uploaded_file).replace(workdir+"/", "")
     target_file = path.split('/').pop()
     resp = {"message":"Successfully uploaded the file {} to {}".format(target_file,
                                                                        file_path),

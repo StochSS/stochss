@@ -9,6 +9,9 @@ from gillespy2.sbml.SBMLimport import convert, __read_sbml_model, __get_math
 import gillespy2
 
 
+workdir = '/home/jovyan/stochss'
+
+
 def convert_to_gillespy_model(path):
     if os.path.exists(path):
         try:
@@ -357,9 +360,8 @@ def get_function_definitions(function_definitions, comp_id):
 
 
 def convert_sbml_to_model(path, model_template):
-    user_dir = "/home/jovyan"
     
-    full_path = os.path.join(user_dir, path)
+    full_path = os.path.join(workdir, path)
     name = full_path.split('/').pop().split('.')[0]
     template = json.loads(model_template)
     gillespy_model, sbml_errors = convert_to_gillespy_model(full_path)

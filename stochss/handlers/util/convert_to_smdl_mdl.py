@@ -7,6 +7,8 @@ from json.decoder import JSONDecodeError
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
+workdir='/home/jovyan/stochss'
+
 def is_unique(path):
     '''
     Checks if the new files name is unique and return a unique path.
@@ -43,9 +45,8 @@ def get_model_data(path, to_spatial):
 
 
 def convert_model(path, to_spatial):
-    user_dir = "/home/jovyan"
     
-    model_path = os.path.join(user_dir, path)
+    model_path = os.path.join(workdir, path)
     model_data = get_model_data(model_path, to_spatial)
     from_ext = '.mdl' if to_spatial else '.smdl'
     to_ext = '.smdl' if to_spatial else '.mdl'

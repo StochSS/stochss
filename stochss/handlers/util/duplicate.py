@@ -7,6 +7,8 @@ from shutil import copyfile, copytree
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, ModelNotFoundError
 
 
+workdir = '/home/jovyan/stochss'
+
 def get_file_name(file):
     '''
     Get the name of a file object
@@ -77,9 +79,8 @@ def duplicate(file_path, is_directory=False):
     is_directory : bool
         Flag for determining the type of object to be copied.
     '''
-    user_dir = '/home/jovyan'
 
-    full_path = path.join(user_dir, file_path)
+    full_path = path.join(workdir, file_path)
     unique_file_path = get_unique_file_name(full_path)
     try:
         if is_directory:
@@ -155,9 +156,7 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
     from .run_workflow import save_new_workflow
     from .stochss_errors import ModelNotFoundError, FileNotJSONFormatError
 
-    user_dir = '/home/jovyan'
-
-    full_path = path.join(user_dir, wkfl_path)
+    full_path = path.join(workdir, wkfl_path)
     # Get parent directory
     parent_dir = path.dirname(full_path)
     # Read workflow info file for model path and workflow type
@@ -201,8 +200,8 @@ def duplicate_wkfl_as_new(wkfl_path, only_model, time_stamp):
             copyfile(org_wkfl.wkfl_mdl_path, new_wkfl.wkfl_mdl_path)
 
         resp = {"message":"A new workflow has been created from {0}".format(wkfl_path),
-                "wkflPath":new_wkfl_path.replace(user_dir, ""),
-                "mdlPath":model_path.replace(user_dir, ""),
+                "wkflPath":new_wkfl_path.replace(workdir, ""),
+                "mdlPath":model_path.replace(workdir, ""),
                 "File":new_wkfl_dir,
                 "mdl_file":model_file}
         if error:

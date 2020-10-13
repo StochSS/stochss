@@ -7,6 +7,8 @@ from pathlib import Path
 import handlers.util.ls as ls
 from handlers.util.stochss_errors import StochSSFileNotFoundError
 
+workdir="home/jovyan/stochss"
+
 class TestLS(unittest.TestCase):
     """Unit test container for handlers.util.ls.py"""
 
@@ -219,7 +221,7 @@ class TestLS(unittest.TestCase):
     @classmethod
     def test_ls_p_path_not_none(cls):
         test_p_path = "test_p_path"
-        test_full_path = os.path.join("/home/jovyan", test_p_path)
+        test_full_path = os.path.join(workdir, test_p_path)
         with unittest.mock.patch("handlers.util.ls.build_root"):
             with unittest.mock.patch("handlers.util.ls.get_file_system_data", \
                     return_value="test_return") as mock_get_file_system_data:

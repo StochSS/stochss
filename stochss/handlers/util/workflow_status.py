@@ -3,7 +3,7 @@
 import os
 
 
-user_dir = '/home/jovyan'
+workdir = '/home/jovyan/stochss'
 
 
 def get_status(workflow_path):
@@ -15,7 +15,7 @@ def get_status(workflow_path):
     workflow_path : str
         Path to the target workflow.
     '''
-    full_path = os.path.join(user_dir, workflow_path)
+    full_path = os.path.join(workdir, workflow_path)
     workflow_dir_list = os.listdir(path=full_path)
     if "COMPLETE" in workflow_dir_list: # Workflow has completed
         status = "complete"

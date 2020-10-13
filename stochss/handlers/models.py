@@ -20,6 +20,7 @@ import logging
 
 log = logging.getLogger('stochss')
 
+workdir="/home/jovyan/stochss"
 
 class JsonFileAPIHandler(APIHandler):
     '''
@@ -44,7 +45,7 @@ class JsonFileAPIHandler(APIHandler):
         log.debug("Path to the file: {0}".format(file_path))
         if file_path.startswith('/'):
             file_path = file_path.replace('/', '', 1)
-        full_path = os.path.join('/home/jovyan', file_path)
+        full_path = os.path.join(workdir, file_path)
         log.debug("Full path to the file: {0}".format(full_path))
         self.set_header('Content-Type', 'application/json')
         if os.path.exists(full_path):
@@ -137,7 +138,7 @@ class JsonFileAPIHandler(APIHandler):
             model_path = model_path.replace('/', '', 1)
         log.debug("Path to the model: {0}".format(model_path))
         log.debug("Path with escape char spaces: {0}".format(model_path))
-        full_path = os.path.join('/home/jovyan', model_path)
+        full_path = os.path.join(workdir, model_path)
         log.debug("Full path to the model: {0}".format(full_path))
         data = self.request.body.decode()
         log.debug("Model data to be saved: {0}".format(data))
@@ -219,7 +220,7 @@ class ModelExistsAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        file_path = os.path.join("/home/jovyan", self.get_query_argument(name="path"))
+        file_path = os.path.join(workdir, self.get_query_argument(name="path"))
         log.debug("Path to the file: %s", file_path)
         resp = {"exists":os.path.exists(file_path)}
         log.debug("Response: %s", resp)

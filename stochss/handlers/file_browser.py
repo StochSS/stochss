@@ -31,6 +31,7 @@ from .util.workflow_status import get_status
 
 log = logging.getLogger('stochss')
 
+workdir = "/home/jovyan/stochss"
 
 # pylint: disable=abstract-method
 class ModelBrowserFileList(APIHandler):
@@ -122,7 +123,7 @@ class DeleteFileAPIHandler(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
-        file_path = os.path.join('/home/jovyan', path)
+        file_path = os.path.join(workdir, path)
         log.debug("Deleting  path: %s", file_path)
         try:
             try:
@@ -167,11 +168,11 @@ class MoveFileAPIHandler(APIHandler):
         '''
         src_path = self.get_query_argument(name="srcPath")
         log.debug("Path to the file: %s", src_path)
-        old_path = os.path.join("/home/jovyan", src_path)
+        old_path = os.path.join(workdir, src_path)
         log.debug("Full path to the file: %s", old_path)
         dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path: %s", dst_path)
-        new_path = self.get_new_path("/home/jovyan", dst_path)
+        new_path = self.get_new_path(workdir, dst_path)
         log.debug("Full destination path: %s", new_path)
         try:
             if os.path.isdir(old_path):
@@ -218,18 +219,18 @@ class MoveFileAPIHandler(APIHandler):
 
 
     @classmethod
-    def get_new_path(cls, user_dir, dst_path):
+    def get_new_path(cls, workdir, dst_path):
         '''
         Gets the proper destination path for the file to be moved
 
         Attributes
         ----------
-        user_dir : string
+        workdir : string
             Path to the users home directory
         dst_path : string
             New path for the file object from the users home directory
         '''
-        new_path = os.path.join(user_dir, dst_path)
+        new_path = os.path.join(workdir, dst_path)
         if new_path.split().pop().replace('.', '', 5).isdigit():
             return new_path.replace(new_path.split().pop(), "").strip()
         if 'trash/' in new_path and os.path.exists(new_path):
@@ -610,7 +611,7 @@ class DownloadAPIHandler(APIHandler):
         '''
         path = self.get_query_argument(name="path")
         log.debug("Path to the model: %s", path)
-        full_path = os.path.join("/home/jovyan", path)
+        full_path = os.path.join(workdir, path)
         log.debug("Path to the model on disk: %s", full_path)
         try:
             with open(full_path, 'r') as file:
@@ -692,7 +693,7 @@ class CreateDirectoryHandler(APIHandler):
         '''
         directories = self.get_query_argument(name="path")
         log.debug("Path of directories: %s", directories)
-        full_path = os.path.join("/home/jovyan", directories)
+        full_path = os.path.join(workdir, directories)
         log.debug("Full path of directories: %s", full_path)
         try:
             os.makedirs(full_path)
@@ -702,7 +703,7 @@ class CreateDirectoryHandler(APIHandler):
             self.set_header('Content-Type', 'application/json')
             error = {"Reason":"Directory Already Exists",
                      "Message":"Could not create your directory: "+str(err)}
-            error['Message'] = error['Message'].replace("/home/jovyan/", "")
+            error['Message'] = error['Message'].replace(workdir, "")
             trace = traceback.format_exc()
             log.error("Exception information: %s\n%s", error, trace)
             error['Traceback'] = trace
@@ -815,12 +816,11 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
 
         path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
         log.debug("The path to the workflow: %s", path)
-        full_path = os.path.join(user_dir, path, "info.json")
+        full_path = os.path.join(workdir, path, "info.json")
         log.debug("The full path to the workflow's info file: %s", full_path)
         try:
             with open(full_path, "r") as info_file:
@@ -828,8 +828,8 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
             log.debug("Workflow info: %s", info)
             model_path = info['source_model']
             log.debug("Path to the workflow's model: %s", model_path)
-            resp = {"file":model_path.replace(user_dir + "/", "")}
-            if not os.path.exists(os.path.join(user_dir, model_path)):
+            resp = {"file":model_path.replace(workdir + "/", "")}
+            if not os.path.exists(os.path.join(workdir, model_path)):
                 mdl_file = model_path.split('/').pop()
                 resp['error'] = "The model file {0} could not be found.  To edit the model you \
                                  will need to extract the model from the workflow or open the \

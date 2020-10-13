@@ -22,6 +22,7 @@ from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
 
 log = logging.getLogger('stochss')
 
+workdir = "/home/jovyan/stochss"
 
 # pylint: disable=abstract-method
 class LoadProjectBrowserAPIHandler(APIHandler):
@@ -38,10 +39,9 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
         projects = []
-        self.get_projects_from_directory(user_dir, projects)
+        self.get_projects_from_directory(workdir, projects)
         log.debug("List of projects: %s", projects)
         resp = {"projects":projects}
         self.write(resp)
@@ -63,8 +63,8 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         for item in os.listdir(path):
             new_path = os.path.join(path, item)
             if item.endswith('.proj'):
-                projects.append({'directory': new_path.replace("/home/jovyan/", ""),
-                                 'parentDir': os.path.dirname(new_path.replace("/home/jovyan/",
+                projects.append({'directory': new_path.replace(workdir, ""),
+                                 'parentDir': os.path.dirname(new_path.replace(workdir+"/",
                                                                                "")),
                                  'elementID': "p{}".format(len(projects) + 1)})
             elif not item.startswith('.') and os.path.isdir(new_path):
@@ -322,10 +322,9 @@ class AddExistingModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        mdl_path = os.path.join(user_dir, self.get_query_argument(name="mdlPath"))
+        path = os.path.join(workdir, self.get_query_argument(name="path"))
+        mdl_path = os.path.join(workdir, self.get_query_argument(name="mdlPath"))
         log.debug("Path to the project: %s", path)
         log.debug("Path to the model: %s", mdl_path)
         try:
@@ -366,10 +365,9 @@ class AddExistingWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        wkfl_path = os.path.join(user_dir, self.get_query_argument(name="wkflPath"))
+        path = os.path.join(workdir, self.get_query_argument(name="path"))
+        wkfl_path = os.path.join(workdir, self.get_query_argument(name="wkflPath"))
         log.debug("Path to the workflow group: %s", path)
         log.debug("Path to the workflow: %s", wkfl_path)
         try:
@@ -383,13 +381,13 @@ class AddExistingWorkflowAPIHandler(APIHandler):
                 info = json.load(info_file)
                 log.debug("Old workflow info: %s", info)
                 if get_status(unique_path) == "ready":
-                    info['source_model'] = os.path.join(os.path.dirname(path).replace(user_dir+"/",
+                    info['source_model'] = os.path.join(os.path.dirname(path).replace(workdir+"/",
                                                                                       ""),
                                                         info['source_model'].split('/').pop())
                 else:
                     info['wkfl_model'] = (info['wkfl_model']
                                           .replace(os.path.dirname(info['wkfl_model']),
-                                                   unique_path.replace(user_dir+"/",
+                                                   unique_path.replace(workdir+"/",
                                                                        "")))
                 log.debug("New workflow info: %s", info)
                 info_file.seek(0)
@@ -427,18 +425,17 @@ class ExtractModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
+        src_path = os.path.join(workdir, self.get_query_argument(name="srcPath"))
         log.debug("Path to the target model: %s", src_path)
-        dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
+        dst_path = os.path.join(workdir, self.get_query_argument(name="dstPath"))
         log.debug("Destination path for the target model: %s", dst_path)
         try:
             unique_path, changed = get_unique_file_name(dst_path.split('/').pop(),
                                                         os.path.dirname(dst_path))
             copyfile(src_path, unique_path)
-            export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
-                           if os.path.dirname(unique_path) != user_dir else "/")
+            export_path = (os.path.dirname(unique_path).replace(workdir+"/", "")
+                           if os.path.dirname(unique_path) != workdir else "/")
             resp = "The Model {0} was extracted to {1} in files\
                                 ".format(src_path.split('/').pop(), export_path)
             if changed:
@@ -468,10 +465,9 @@ class ExtractWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
+        src_path = os.path.join(workdir, self.get_query_argument(name="srcPath"))
         log.debug("Path to the target model: %s", src_path)
-        dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
+        dst_path = os.path.join(workdir, self.get_query_argument(name="dstPath"))
         log.debug("Destination path for the target model: %s", dst_path)
         try:
             if get_status(src_path) != "running":
@@ -480,8 +476,8 @@ class ExtractWorkflowAPIHandler(APIHandler):
                 copytree(src_path, unique_path)
                 if get_status(unique_path) != "ready":
                     self.update_workflow_path(unique_path)
-                export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
-                               if os.path.dirname(unique_path) != user_dir else "/")
+                export_path = (os.path.dirname(unique_path).replace(workdir+"/", "")
+                               if os.path.dirname(unique_path) != workdir else "/")
                 resp = "The Workflow {0} was exported to {1} in files\
                                 ".format(src_path.split('/').pop(), export_path)
                 if changed:
@@ -512,7 +508,7 @@ class ExtractWorkflowAPIHandler(APIHandler):
             info = json.load(info_file)
             log.debug("Old workflow info: %s", info)
             new_path = os.path.join(dst, info['wkfl_model'].split('/').pop())
-            info['wkfl_model'] = new_path.replace("/home/jovyan/", "")
+            info['wkfl_model'] = new_path.replace(workdir+"/", "")
             log.debug("New workflow info: %s", info)
             info_file.seek(0)
             json.dump(info, info_file)
@@ -533,9 +529,8 @@ class EmptyTrashAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        path = os.path.join(workdir, self.get_query_argument(name="path"))
         log.debug("Path to the trash directory: %s", path)
         try:
             for item in os.listdir(path):
@@ -569,9 +564,8 @@ class ProjectMetaDataAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        path = os.path.join(workdir, self.get_query_argument(name="path"))
         log.debug("Path to the project directory: %s", path)
         files = self.get_query_argument(name="files").split(',')
         log.debug("List of files: %s", files)
@@ -605,9 +599,8 @@ class ProjectMetaDataAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        path = os.path.join(workdir, self.get_query_argument(name="path"))
         log.debug("Path to the project directory: %s", path)
         data = self.request.body.decode()
         log.debug("Meta-data to be saved: %s", data)
@@ -630,10 +623,9 @@ class ExportAsCombineAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        path = os.path.join(workdir, self.get_query_argument(name="path"))
         log.debug("Path to the project/workflow group/workflow directory: %s", path)
-        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath",
+        project_path = os.path.join(workdir, self.get_query_argument(name="projectPath",
                                                                       default=""))
         log.debug("Path to the project directory: %s", project_path)
         download = bool(self.get_query_argument(name="download", default=False))
@@ -678,10 +670,9 @@ class ExportAsCombineAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        path = os.path.join(workdir, self.get_query_argument(name="path"))
         log.debug("Path to the project/workflow group/workflow directory: %s", path)
-        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath",
+        project_path = os.path.join(workdir, self.get_query_argument(name="projectPath",
                                                                       default=""))
         log.debug("Path to the project directory: %s", project_path)
         data = self.request.body.decode()
@@ -731,8 +722,7 @@ class UpdateAnnotationAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        path = os.path.join(user_dir, self.get_query_argument(name="path"), "README.md")
+        path = os.path.join(workdir, self.get_query_argument(name="path"), "README.md")
         log.debug("Path to the project directory: %s", path)
         data = json.loads(self.request.body.decode())['annotation'].strip()
         log.debug("Annotation to be saved: %s", data)

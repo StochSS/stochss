@@ -46,7 +46,7 @@ Pkg.add("IJulia"); \
 Pkg.build("IJulia"); \
 Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
 
-COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
+COPY --chown=jovyan:users public_models/ /home/jovyan/stochss/Examples
 
 COPY --chown=jovyan:users . /stochss
 
@@ -58,4 +58,4 @@ RUN pip install --no-cache-dir -e .
 
 RUN rm -r /home/jovyan/work
 
-WORKDIR /home/jovyan
+WORKDIR /home/jovyan/stochss

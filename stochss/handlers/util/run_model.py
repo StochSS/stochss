@@ -27,7 +27,7 @@ import warnings
 warnings.simplefilter("ignore")
 
 
-user_dir = '/home/jovyan'
+workdir = '/home/jovyan/stochss'
 
 
 class GillesPy2Workflow():
@@ -679,8 +679,8 @@ def get_parsed_args():
 
 if __name__ == "__main__":
     args = get_parsed_args()
-    model_path = os.path.join(user_dir, args.model_path)
-    outfile = os.path.join(user_dir, ".{0}".format(args.outfile))
+    model_path = os.path.join(workdir, args.model_path)
+    outfile = os.path.join(workdir, ".{0}".format(args.outfile))
     if not args.read:
         resp = {"timeout":False}
         try:

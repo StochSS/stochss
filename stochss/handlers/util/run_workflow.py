@@ -22,6 +22,9 @@ except ModuleNotFoundError:
     from .run_model import GillesPy2Workflow, ModelFactory, run_solver
 
 
+workdir = '/home/jovyan/stochss'
+
+
 def save_new_workflow(wkfl, wkfl_type, initialize):
     '''
     Create and save a new workflow in the same directory as the model 
@@ -102,9 +105,8 @@ def get_models(full_path, name, wkfl_path, is_ode):
 
 
 def update_info_file(wkfl, wkfl_type, initialize):
-    user_dir = "/home/jovyan"
 
-    info_data = {"source_model":"{0}".format(wkfl.mdl_path.replace(user_dir+'/',"")), "wkfl_model":None,
+    info_data = {"source_model":"{0}".format(wkfl.mdl_path.replace(workdir+'/',"")), "wkfl_model":None,
                   "type":"{0}".format(wkfl_type), "start_time":None} # updated workflow info
     
     if initialize:
@@ -116,7 +118,7 @@ def update_info_file(wkfl, wkfl_type, initialize):
         str_datetime = today.strftime("%b %d, %Y  %I:%M %p UTC") # format timestamp
         
         info_data['start_time'] = str_datetime # add start time to workflow info
-        info_data['wkfl_model'] = wkfl.wkfl_mdl_path.replace(user_dir+'/',"") # Update the location of the model
+        info_data['wkfl_model'] = wkfl.wkfl_mdl_path.replace(workdir+'/',"") # Update the location of the model
 
     # Update the workflow info file
     with open(wkfl.info_path, "w") as info_file:
@@ -206,10 +208,9 @@ def get_parsed_args():
 
 
 def initialize(mdl_path, wkfl_path, wkfl_type, settings=None, new=False, existing=False, save=False, run=False, verbose=False):
-    user_dir = "/home/jovyan"
 
-    model_path = os.path.join(user_dir, mdl_path)
-    workflow_path = os.path.join(user_dir, wkfl_path)
+    model_path = os.path.join(workdir, mdl_path)
+    workflow_path = os.path.join(workdir, wkfl_path)
     workflow_name = workflow_path.split('/').pop()
     dir_path = os.path.dirname(workflow_path)
     if new:

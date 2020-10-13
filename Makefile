@@ -119,7 +119,7 @@ test:   build
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
+		-v $(DOCKER_WORKING_DIR):/home/jovyan/stochss \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
@@ -129,7 +129,7 @@ run:    create_working_dir
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
+		-v $(DOCKER_WORKING_DIR):/home/jovyan/stochss \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
 
@@ -140,7 +140,7 @@ run_bash:
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
 		-v $(PWD):/stochss \
-		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
+		-v $(DOCKER_WORKING_DIR):/home/jovyan/stochss \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash

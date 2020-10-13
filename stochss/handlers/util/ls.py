@@ -9,6 +9,8 @@ from .stochss_errors import StochSSFileNotFoundError
 from .rename import get_file_name
 
 
+workdir = '/home/jovyan/stochss'
+
 def get_file_system_data(full_path, p_path):
     '''
     Builds a list of children for the JSTree using the contents
@@ -115,12 +117,11 @@ def list_files(p_path, is_root=False):
     p_path : str
         The path from the user directory to the target directory.
     '''
-    user_dir = '/home/jovyan'
 
     if p_path == "none":
-        full_path = user_dir
+        full_path = workdir
     else:
-        full_path = path.join(user_dir, p_path)
+        full_path = path.join(workdir, p_path)
     data = get_file_system_data(full_path, p_path)
     if p_path == "none":
         data = build_root(data)

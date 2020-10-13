@@ -7,6 +7,8 @@ from .rename import get_unique_file_name, get_file_name
 from .stochss_errors import StochSSFileNotFoundError, StochSSWorkflowError, StochSSWorkflowNotCompleteError
 
 
+workdir = '/home/jovyan/stochss'
+
 def generate_zip_file(file_path, file_directory, target):
     file_name = ".".join(file_path.split('/').pop().split('.')[:-1])
     target = target.split('/').pop()
@@ -27,9 +29,8 @@ def get_results_csv_dir(file, path):
 
 
 def download_zip(path, action):
-    user_dir = "/home/jovyan"
 
-    target = os.path.join(user_dir, path)
+    target = os.path.join(workdir, path)
 
     if not os.path.exists(target):
         raise StochSSFileNotFoundError("Could not find the file or directory: " + target, traceback.format_exc())
@@ -42,7 +43,7 @@ def download_zip(path, action):
         full_path = get_unique_file_name(file_name, file_directory)[0]
 
         generate_zip_file(full_path, file_directory, target)
-        resp = {"Message":"Successfully created {0}".format(full_path),"Path":full_path.replace(user_dir+"/", "")}
+        resp = {"Message":"Successfully created {0}".format(full_path),"Path":full_path.replace(workdir+"/", "")}
         return resp
     elif action == "resultscsv":
         error_status = os.path.join(target, "ERROR")
@@ -62,10 +63,10 @@ def download_zip(path, action):
         zip_path = "{0}.zip".format(target_path)
 
         if os.path.exists(zip_path):
-            resp = {"Message":"{0} already exists.".format(zip_path),"Path":zip_path.replace(user_dir+"/", "")}
+            resp = {"Message":"{0} already exists.".format(zip_path),"Path":zip_path.replace(workdir+"/", "")}
         else:
             generate_zip_file(zip_path, results_path, target_path)
-            resp = {"Message":"Successfully created {0}".format(zip_path),"Path":zip_path.replace(user_dir+"/", "")}
+            resp = {"Message":"Successfully created {0}".format(zip_path),"Path":zip_path.replace(workdir+"/", "")}
         return resp
     else:
         data = get_zip_file_data(target)

@@ -13,6 +13,8 @@ from .convert_to_sbml import convert_to_sbml
 from .stochss_errors import StochSSExportCombineError
 
 
+workdir = '/home/jovyan/stochss'
+
 kisao_map = {"ODE":"KISAO:0000088", "SSA":"KISAO:0000029", "Tau-Leaping":"KISAO:0000084",
              "Hybrid-Tau-Leaping":"KISAO:1000084", "seed":"KISAO:0000488",
              "realizations":"KISAO:0000498", "tauTol":"KISAO:0000228",
@@ -25,8 +27,7 @@ params_map = {"ODE":["absoluteTol", "relativeTol"],
 
 
 def convert(path, meta_data=None):
-    user_dir = "/home/jovyan"
-    path = os.path.join(user_dir, path)
+    path = os.path.join(workdir, path)
 
     # Setup combine archive
     archive = libcombine.CombineArchive()
@@ -70,7 +71,7 @@ def convert(path, meta_data=None):
                                                       path.split('/').pop(),
                                                       archive_name+".omex")
     return {"message":resp, "errors":archive_errors, "file_type":file_type,
-            "file_path":dst.replace("/home/jovyan/", "")}
+            "file_path":dst.replace(workdir + "/", "")}
 
 
 def add_meta_data(archive, archive_name, meta_data):
@@ -106,10 +107,10 @@ def create_creator(fname=None, lname=None, email=None, organization=None):
 def convert_workflow(path, archive, archive_dir, sedml_doc=None):
     with open(os.path.join(path, "info.json"), "r") as info_file:
         wkfl_info = json.load(info_file)
-        model_path = os.path.join("/home/jovyan", wkfl_info['wkfl_model'])
+        model_path = os.path.join(workdir, wkfl_info['wkfl_model'])
 
     # add model to archive as sbml file with .xml extension
-    sbml_document = convert_to_sbml(model_path.replace("/home/jovyan/", ""), write_to_file=False)
+    sbml_document = convert_to_sbml(model_path.replace(workdir, ""), write_to_file=False)
     sbml_path, _ = get_unique_file_name(model_path.split('/').pop().split('.')[0]+".xml",
                                         archive_dir.name)
     with open(sbml_path, "w") as sbml_file:
@@ -190,11 +191,10 @@ def convert_project(path, archive, archive_dir):
 
 
 def get_wkfl_data(_path, info):
-    user_dir = "/home/jovyan"
-    if _path.startswith(user_dir):
+    if _path.startswith(workdir):
         path = _path
     else:
-        path = os.path.join(user_dir, _path)
+        path = os.path.join(workdir, _path)
 
     with open(info['wkfl_model'], 'r') as mdl_file:
         mdl = json.load(mdl_file)

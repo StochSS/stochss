@@ -12,6 +12,8 @@ from .generate_notebook_cells import *
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
 
+workdir = '/home/jovyan/stochss'
+
 def get_class_name(name):
     name = name.replace(" ", "")
 
@@ -29,9 +31,8 @@ def get_class_name(name):
 
 
 def convert_to_sciope_me(_model_path, settings=None, dest_path=None):
-    user_dir = '/home/jovyan'
 
-    model_path = path.join(user_dir,_model_path)
+    model_path = path.join(workdir,_model_path)
     file = model_path.split('/').pop()
     name = get_file_name(file)
     class_name = get_class_name(name)
@@ -101,4 +102,4 @@ def convert_to_sciope_me(_model_path, settings=None, dest_path=None):
         nbformat.write(nb, f, version=4)
     f.close()
 
-    return {"Message":'{0} successfully created'.format(dest_file),"FilePath":dest_file.replace(user_dir+'/', ""),"File":dest_file.split('/').pop()}
+    return {"Message":'{0} successfully created'.format(dest_file),"FilePath":dest_file.replace(workdir+'/', ""),"File":dest_file.split('/').pop()}

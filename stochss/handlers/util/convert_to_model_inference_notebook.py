@@ -22,6 +22,8 @@ from .generate_notebook_cells import generate_mdl_inf_summary_stats_cell, \
                                      get_algorithm
 
 
+workdir = '/home/jovyan/stochss'
+
 def get_class_name(name):
     name = name.replace(" ", "")
 
@@ -39,9 +41,8 @@ def get_class_name(name):
 
 
 def convert_to_mdl_inference_nb(model_path, name=None, settings=None, dest_path=None):
-    user_dir = "/home/jovyan"
 
-    full_path = path.join(user_dir, model_path)
+    full_path = path.join(workdir, model_path)
     file = full_path.split('/').pop()
     if name is None:
         name = get_file_name(file)
@@ -133,4 +134,4 @@ def convert_to_mdl_inference_nb(model_path, name=None, settings=None, dest_path=
     nb_file.close()
 
     return {"Message":'{0} successfully created'.format(dest_file),
-            "FilePath":dest_file.replace(user_dir+'/', ""), "File":dest_file.split('/').pop()}
+            "FilePath":dest_file.replace(workdir+'/', ""), "File":dest_file.split('/').pop()}

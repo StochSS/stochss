@@ -14,10 +14,12 @@ from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, \
                             ImporperMathMLFormatError
 
 
-def convert_to_sbml(_path, write_to_file=True):
-    user_dir = "/home/jovyan"
+workdir = '/home/jovyan/stochss'
 
-    path = os.path.join(user_dir, _path)
+
+def convert_to_sbml(_path, write_to_file=True):
+
+    path = os.path.join(workdir, _path)
     model_file = path.split('/').pop()
     model_name = get_file_name(model_file)
     sbml_file = model_name + ".sbml"

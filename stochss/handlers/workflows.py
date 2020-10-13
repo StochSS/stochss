@@ -27,6 +27,8 @@ from .util.rename import get_file_name
 
 log = logging.getLogger('stochss')
 
+workdir="/home/jovyan/stochss"
+
 
 # pylint: disable=abstract-method
 class LoadWorkflowAPIHandler(APIHandler):
@@ -48,7 +50,6 @@ class LoadWorkflowAPIHandler(APIHandler):
         wkfl_type = self.get_query_argument(name="type")
         path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
-        user_dir = "/home/jovyan"
         log.debug("Time stamp of the workflow: %s", stamp)
         log.debug("The type of the workflow: %s", wkfl_type)
         log.debug("The path to the workflow/model: %s", path)
@@ -68,7 +69,7 @@ class LoadWorkflowAPIHandler(APIHandler):
             resp["status"] = get_status(path)
             resp["timeStamp"] = "_"+"_".join(resp['wkflName'].split('_')[-2:])
             try:
-                with open(os.path.join(user_dir, path, "info.json"), "r") as info_file:
+                with open(os.path.join(workdir, path, "info.json"), "r") as info_file:
                     info = json.load(info_file)
                 resp["type"] = info['type']
                 resp["startTime"] = info['start_time']
@@ -86,7 +87,7 @@ class LoadWorkflowAPIHandler(APIHandler):
                          "Message":"The workflow info file is not JSON decodable: "+str(err)}
                 self.respond_with_error(error)
         try:
-            with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
+            with open(os.path.join(workdir, resp['mdlPath']), "r") as model_file:
                 resp["model"] = json.load(model_file)
                 self.update_model_data(resp["model"])
         except FileNotFoundError:
@@ -346,7 +347,7 @@ class WorkflowLogsAPIHandler(APIHandler):
         '''
         logs_path = self.get_query_argument(name="path")
         log.debug("Path to the workflow logs file: %s", logs_path)
-        full_path = os.path.join("/home/jovyan/", logs_path)
+        full_path = os.path.join(workdir, logs_path)
         log.debug("Full path to the workflow logs file: %s", full_path)
         try:
             with open(full_path, 'r') as log_file:
@@ -387,7 +388,7 @@ class WorkflowNotebookHandler(APIHandler):
         '''
         log.setLevel(logging.DEBUG)
         workflow_type = self.get_query_argument(name="type")
-        path = os.path.join("/home/jovyan", self.get_query_argument(name="path"))
+        path = os.path.join(workdir, self.get_query_argument(name="path"))
         settings = None
 
         if path.endswith('.wkfl'):
