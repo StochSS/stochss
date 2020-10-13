@@ -549,3 +549,41 @@ span.checkbox {
 #models-jstree .jstree-default .jstree-anchor {
   height: auto;
 }
+
+.reaction-lb2 {
+  display: none;
+}
+
+.dropdown-item:hover .reaction-lb2 {
+  position: absolute;
+  left: 195px;
+  display: inline-block;
+  background-color: black;
+  color: white;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  border: .5px solid rgb(228, 229, 230) !important;
+  padding: 0px 5px;
+}
+
+.preview-nav {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgb(248, 249, 250);
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  border: .5px solid rgb(228, 229, 230) !important;
+  padding: 0px 5px;
+}
+
+.preview-close {
+  position: relative;
+  display: none;
+  float: right;
+  top: 8px;
+}
+
+.model-state-buttons {
+  float: right;
+}

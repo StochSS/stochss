@@ -2,10 +2,12 @@ div#species-editor.card.card-body
 
   div
 
-    h3.inline Species
+    h3.inline Variables
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-species", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-species")
+    p
+     | Time varying quantities of interest; e.g.: concentrations, populations, or counts of biochemical species, epidemological compartments, chemicals, proteins, or molecules.
 
     table.table
       thead
@@ -83,5 +85,6 @@ div#species-editor.card.card-body
 
         tbody(data-hook="edit-species-mode")
 
-    button.btn.btn-outline-primary.box-shadow(data-hook="add-species", type="button")
-      | Add Species
+    button.btn.btn-outline-primary.box-shadow(data-hook="add-species") Add Variable
+
+    button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-species") Save Variables

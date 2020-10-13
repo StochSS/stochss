@@ -27,6 +27,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=edit-parameters]' : 'switchToEditMode'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -34,6 +35,9 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderCollection(this.collection, ViewParameter, this.queryByHook('parameter-list'))
+  },
+  switchToEditMode: function (e) {
+    this.parent.renderParametersView("edit", true);
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

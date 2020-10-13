@@ -44,11 +44,13 @@ module.exports = View.extend({
     'click [data-hook=four]'                   : 'handleAddReactionClick',
     'click [data-hook=custom-massaction]'      : 'handleAddReactionClick',
     'click [data-hook=custom-propensity]'      : 'handleAddReactionClick',
+    'click [data-hook=save-reactions]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.reactionsEditor
+    this.opened = attrs.opened
     this.collection.on("select", function (reaction) {
       this.setSelectedReaction(reaction);
       this.setDetailsView(reaction);
@@ -87,6 +89,13 @@ module.exports = View.extend({
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
     }
     this.renderReactionTypes();
+    katex.render("\\emptyset", this.queryByHook('emptyset'), {
+      displayMode: false,
+      output: 'html',
+    });
+    if(this.opened) {
+      this.openReactionsContainer();
+    }
   },
   update: function () {
   },
@@ -157,6 +166,15 @@ module.exports = View.extend({
     detailsView.parent = this;
     return detailsView
   },
+  switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
+    this.parent.renderReactionsView(mode="view");
+  },
+  openReactionsContainer: function () {
+    $(this.queryByHook('reactions-list-container')).collapse('show');
+    let collapseBtn = $(this.queryByHook('collapse'))
+    collapseBtn.trigger('click')
+  },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
     let collapseContainer = $(this.queryByHook(source).dataset.target)
@@ -178,12 +196,12 @@ module.exports = View.extend({
       displayMode: false,
       output: 'html',
     }
-    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation'), options);
-    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction'), options);
-    katex.render(ReactionTypes['change'].label, this.queryByHook('change'), options);
-    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization'), options);
-    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge'), options);
-    katex.render(ReactionTypes['split'].label, this.queryByHook('split'), options);
-    katex.render(ReactionTypes['four'].label, this.queryByHook('four'), options);
+    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation-lb1'), options);
+    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction-lb1'), options);
+    katex.render(ReactionTypes['change'].label, this.queryByHook('change-lb1'), options);
+    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization-lb1'), options);
+    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge-lb1'), options);
+    katex.render(ReactionTypes['split'].label, this.queryByHook('split-lb1'), options);
+    katex.render(ReactionTypes['four'].label, this.queryByHook('four-lb1'), options);
   }
 });

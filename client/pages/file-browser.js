@@ -679,28 +679,15 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#newProjectModelModal')){
       document.querySelector('#newProjectModelModal').remove()
     }
-    let modal = $(modals.newProjectModelHtml()).modal()
-    let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
-    let input = document.querySelector('#newProjectModelModal #modelPathInput')
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
-      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener("click", function (e) {
-      if(Boolean(input.value)) {
-        let queryString = "?path="+o.original._path+"&mdlPath="+input.value.trim()
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+o.original._path
+    xhr({uri:mdlListEP, json:true}, function (err, response, body) {
+      let modal = $(modals.newProjectModelHtml(body.models)).modal()
+      let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
+      let select = document.querySelector('#newProjectModelModal #modelPathInput')
+      okBtn.addEventListener("click", function (e) {
+        let queryString = "?path="+o.original._path+"&mdlPath="+select.value
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
-        xhr({uri:endpoint, json:true}, function (err, response, body) {
+        xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {
             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
           }else{
@@ -708,8 +695,8 @@ let FileBrowser = PageView.extend({
           }
         });
         modal.modal('hide')
-      }
-    });
+      });
+    })
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
