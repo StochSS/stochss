@@ -291,7 +291,7 @@ let ModelEditor = PageView.extend({
   togglePreviewPlot: function (e) {
     let action = e.target.innerText
     console.log(action)
-    if(action === "Close") {
+    if(action === "Hide Preview") {
       this.closePlot()
     }else{
       this.openPlot()
@@ -301,13 +301,13 @@ let ModelEditor = PageView.extend({
     let plot = this.queryByHook("model-run-container")
     let button = this.queryByHook("toggle-preview-plot")
     plot.style.display = "none"
-    button.innerText = "Open"
+    button.innerText = "Show Preview"
   },
   openPlot: function () {
     let plot = this.queryByHook("model-run-container")
     let button = this.queryByHook("toggle-preview-plot")
     plot.style.display = "block"
-    button.innerText = "Close"
+    button.innerText = "Hide Preview"
   }
 });
 

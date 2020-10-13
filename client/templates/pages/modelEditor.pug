@@ -47,10 +47,12 @@ section.page
 
   div(data-hook="model-settings-container")
 
+  div(style="height:425px;")
+
   div(class="preview-nav")
 
     div(data-hook="toggle-preview-plot-container")
-      button.btn.btn-outline-secondary.box-shadow.preview-close(data-hook="toggle-preview-plot") Close
+      button.btn.btn-outline-secondary.box-shadow.preview-close(data-hook="toggle-preview-plot") Hide Preview
 
     div(data-hook="model-run-container")
 
@@ -64,5 +66,5 @@ section.page
 
       p.text-danger(data-hook="model-run-error-message")
 
-    div(data-hook="model-state-buttons-container")
+    div(data-hook="model-state-buttons-container" style="float: right;")
 
