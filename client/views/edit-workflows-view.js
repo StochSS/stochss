@@ -32,7 +32,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=project-workflow-group-new-workflow]' : 'handleNewWorkflowClick',
-    // 'click [data-hook=project-workflow-group-add-workflow]' : 'handleAddWorkflowClick',
+    'click [data-hook=project-workflow-group-add-workflow]' : 'handleAddWorkflowClick',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments)
@@ -97,38 +97,25 @@ module.exports = View.extend({
     if(document.querySelector("#newProjectWorkflowModal")) {
       document.querySelector("#newProjectWorkflowModal").remove()
     }
-    let modal = $(modals.addExistingWorkflowToProjectHtml()).modal()
-    let okBtn = document.querySelector("#newProjectWorkflowModal .ok-model-btn")
-    let input = document.querySelector("#newProjectWorkflowModal #workflowPathInput")
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputEndCharError')
-      var charErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener('click', function (e) {
-      if(Boolean(input.value)) {
-        let expPath = path.join(self.parent.parent.projectPath, self.model.name)+".wkgp"
-        let queryString = "?path="+expPath+"&wkflPath="+input.value
+    let wkflListEP = path.join(app.getApiPath(), "project/add-existing-workflow") + "?path="+self.parent.parent.parent.projectPath
+    xhr({uri:wkflListEP, json:true}, function (err, response, body) {
+      let modal = $(modals.addExistingWorkflowToProjectHtml(body.workflows)).modal()
+      let okBtn = document.querySelector("#newProjectWorkflowModal .ok-model-btn")
+      let select = document.querySelector("#newProjectWorkflowModal #workflowPathInput")
+      okBtn.addEventListener('click', function (e) {
+        let expPath = path.join(self.parent.parent.parent.projectPath, "WorkflowGroup1.wkgp")
+        let queryString = "?path="+expPath+"&wkflPath="+select.value
         let endpoint = path.join(app.getApiPath(), "project/add-existing-workflow")+queryString
         xhr({uri: endpoint, json: true, method: "post"}, function (err, response, body) {
           if(response.statusCode < 400) {
-            self.parent.parent.update("workflow-group-editor")
+            self.parent.parent.parent.update("workflow-group-editor")
             let successModal = $(modals.addExistingWorkflowToProjectSuccessHtml(body.message)).modal()
           }else{
             let errorModal = $(modals.addExistingWorkflowToProjectErrorHtml(body.Reason, body.Message)).modal()
           }
         });
         modal.modal('hide')
-      }
+      });
     });
   }
 });
