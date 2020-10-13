@@ -290,7 +290,6 @@ let ModelEditor = PageView.extend({
   },
   togglePreviewPlot: function (e) {
     let action = e.target.innerText
-    console.log(action)
     if(action === "Hide Preview") {
       this.closePlot()
     }else{
