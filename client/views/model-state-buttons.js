@@ -58,6 +58,7 @@ module.exports = View.extend({
     $(this.parent.queryByHook('model-timeout-message')).collapse('hide');
     var el = this.parent.queryByHook('model-run-container');
     Plotly.purge(el)
+    $(this.parent.queryByHook('toggle-preview-plot')).css("display", "none");
     this.saveModel(this.runModel.bind(this));
   },
   clickReturnToProjectHandler: function (e) {
@@ -185,7 +186,11 @@ module.exports = View.extend({
     el = this.parent.queryByHook('model-run-container');
     Plotly.newPlot(el, data);
     $(this.parent.queryByHook('toggle-preview-plot-container')).css('height', '50px')
-    $(this.parent.queryByHook('toggle-preview-plot')).css('display', 'block')
+    let plotBtn = $(this.parent.queryByHook('toggle-preview-plot'))
+    plotBtn.css('display', 'block')
+    if(plotBtn.text() === "Show Preview") {
+      plotBtn.text("Hide Preview")
+    }
     window.scrollTo(0, document.body.scrollHeight)
   },
 });

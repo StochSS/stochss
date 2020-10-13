@@ -83,7 +83,7 @@ a.disabled {
 }
 
 .nav-item {
-  display: inline-block;
+  width: fit-content;
 }
 
 .nav-link {
