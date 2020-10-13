@@ -236,14 +236,17 @@ module.exports = {
 
       return templates.input(modalID, inputID, title, label, value)
     },
-    newProjectModelHtml : () => {
+    newProjectModelHtml : (options) => {
       let modalID = "newProjectModelModal"
-      let inputID = "modelPathInput"
+      let selectID = "modelPathInput"
       let title = "Add Existing Model to Project"
       let label = "Path to the Model"
-      let value = ""
+      options = options.map(function (name) {
+        return `<option value="${name}">${name}</option>`
+      })
+      options = options.join(" ")
 
-      return templates.input(modalID, inputID, title, label, value)
+      return templates.select(modalID, selectID, title, label, options)
     },
     addExistingWorkflowToProjectHtml : () => {
       let modalID = "newProjectWorkflowModal"

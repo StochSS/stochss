@@ -328,12 +328,39 @@ class NewWorkflowGroupAPIHandler(APIHandler):
 
 class AddExistingModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for adding existing models to a project
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
+        '''
+        Get the list of models that can be added to the project
+
+        Attributes
+        ----------
+        '''
+        log.setLevel(logging.DEBUG)
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        log.debug("Path to the model: %s", path)
+        models = []
+        for root, dirs, files in os.walk("/home/jovyan"):
+            if root != path and "/." not in root and ".wkfl" not in root:
+                root = root.replace(user_dir+"/", "")
+                files = list(filter(lambda file: (not file.startswith(".") and 
+                                                  file.endswith(".mdl")), files))
+                for file in files:
+                    models.append(os.path.join(root, file))
+        log.debug("List of model that can be added to the project: %s", models)
+        self.write({"models": models})
+        log.setLevel(logging.WARNING)
+        self.finish()
+
+
+    @web.authenticated
+    def post(self):
         '''
         Add the selected model to the project.
 
@@ -385,6 +412,34 @@ class AddExistingWorkflowAPIHandler(APIHandler):
     '''
     @web.authenticated
     def get(self):
+        '''
+        Get the list of models that can be added to the project
+
+        Attributes
+        ----------
+        '''
+        log.setLevel(logging.DEBUG)
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        log.debug("Path to the model: %s", path)
+        workflows = []
+        for root, dirs, files in os.walk("/home/jovyan"):
+            if root != path and "/." not in root:
+                root = root.replace(user_dir+"/", "")
+                dirs = list(filter(lambda item: (not item.startswith(".") and 
+                                                 item.endswith(".wkfl")), dirs))
+                for item in dirs:
+                    workflows.append(os.path.join(root, item))
+        log.debug("List of workflows that can be added to the project: \
+                   %s", workflows)
+        self.write({"workflows": workflows})
+        log.setLevel(logging.WARNING)
+        self.finish()
+
+
+    @web.authenticated
+    def post(self):
         '''
         Add the selected workflow to the project.
 
