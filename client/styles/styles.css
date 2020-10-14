@@ -16,8 +16,18 @@ img.quickstart {
 .sidebar {
   padding-top: 20px;
   margin-top: 48px;
-  min-height: 8em;
+  
   padding-left: 10px
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    min-height: 8em;
+  }
+  .nav-flex-column {
+    -ms-flex-direction: column !important;
+    flex-direction: column !important;
+  }
 }
 
 [role="main"] {
@@ -318,8 +328,9 @@ input[type="file"]::-ms-browse {
 .spinner-border {
   display: none;
   position: relative;
-  margin: 15px;
-  left: 40%;
+  margin: 15px auto;
+  left: 0;
+  right: 0;
   width: 90px;
   height: 90px;
   border: 12px solid rgba(0, 0, 0, 0.125);
