@@ -67,13 +67,13 @@ module.exports = Model.extend({
     Model.prototype.initialize.apply(this, arguments);
   },
   validate: function () {
-    if(this.modelSettings.validate() === false) {
-      console.log("The model settings are invalid")
-      this.valid = false;
-    }else{ 
-      console.log("The model is valid")
-      this.valid = true;
-    }
+    if(this.species.length <= 0) return false;
+    if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) return false
+    if(this.modelSettings.validate() === false) return false;
+    return true;
+  },
+  updateValid: function () {
+    this.valid = this.validate()
   },
   getDefaultID: function () {
     var id = this.defaultID;

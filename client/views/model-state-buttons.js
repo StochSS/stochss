@@ -45,10 +45,6 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.model.species.on('add remove', this.togglePreviewWorkflowBtn, this);
-    this.model.reactions.on('add remove', this.togglePreviewWorkflowBtn, this);
-    this.model.eventsCollection.on('add remove', this.togglePreviewWorkflowBtn, this);
-    this.model.rules.on('add remove', this.togglePreviewWorkflowBtn, this);
     this.model.on('change', this.togglePreviewWorkflowBtn, this)
   },
   render: function () {

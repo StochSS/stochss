@@ -43,7 +43,7 @@ module.exports = View.extend({
   update: function (e) {
   },
   updateValid: function () {
-    this.model.parent.validate()
+    this.model.parent.updateValid()
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
