@@ -26,7 +26,7 @@ module.exports = AmpersandInputView.extend({
     valueType: 'string',
   },
   events: {
-    'change input' : 'changeInputHandler',
+    'input input' : 'changeInputHandler',
   },
   initialize: function (attrs, options) {
     AmpersandInputView.prototype.initialize.apply(this, arguments);
@@ -59,6 +59,7 @@ module.exports = AmpersandInputView.extend({
     if(this.modelKey){
       var value = this.valueType === 'number' ? Number(e.target.value.trim()) : e.target.value.trim();
       this.parent.model[this.modelKey] = value;
+      this.parent.updateValid()
     }
   },
 });

@@ -61,9 +61,19 @@ module.exports = Model.extend({
     directory: 'string',
     isPreview: 'boolean',
     for: 'string',
+    valid: 'boolean'
   },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
+  },
+  validate: function () {
+    if(this.modelSettings.validate() === false) {
+      console.log("The model settings are invalid")
+      this.valid = false;
+    }else{ 
+      console.log("The model is valid")
+      this.valid = true;
+    }
   },
   getDefaultID: function () {
     var id = this.defaultID;

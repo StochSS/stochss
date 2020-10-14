@@ -30,6 +30,13 @@ var template = require('../templates/includes/modelStateButtons.pug');
 
 module.exports = View.extend({
   template: template,
+  bindings: {
+    'model.invalid': {
+      hook: 'run',
+      type: 'booleanAttribute',
+      name: 'disabled',
+    },
+  },
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
@@ -42,6 +49,7 @@ module.exports = View.extend({
     this.model.reactions.on('add remove', this.togglePreviewWorkflowBtn, this);
     this.model.eventsCollection.on('add remove', this.togglePreviewWorkflowBtn, this);
     this.model.rules.on('add remove', this.togglePreviewWorkflowBtn, this);
+    this.model.on('change', this.togglePreviewWorkflowBtn, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -87,7 +95,8 @@ module.exports = View.extend({
     var numReactions = this.model.reactions.length
     var numEvents = this.model.eventsCollection.length
     var numRules = this.model.rules.length
-    $(this.queryByHook('run')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
+    let disabled = !(this.model.valid && numSpecies && (numReactions || numEvents || numRules))
+    $(this.queryByHook('run')).prop('disabled', disabled)
   },
   saveModel: function (cb) {
     this.saving();
