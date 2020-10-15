@@ -16,23 +16,27 @@ img.quickstart {
 .sidebar {
   padding-top: 20px;
   margin-top: 48px;
-  
   padding-left: 10px
 }
 
+[role="main"] {
+  padding-top: 20px;
+}
+
 @media (min-width: 768px) {
+  [role="main"] {
+    margin-top: 48px;
+  }
   .sidebar {
     min-height: 8em;
+  }
+  .sidebar-sticky {
+    position: fixed;
   }
   .nav-flex-column {
     -ms-flex-direction: column !important;
     flex-direction: column !important;
   }
-}
-
-[role="main"] {
-  padding-top: 20px;
-  margin-top: 48px;
 }
 
 .inline{
@@ -201,10 +205,6 @@ input[type="file"]::-ms-browse {
 
 .nav {
   font-size: 16px;
-}
-
-.sidebar-sticky {
-  position: fixed;
 }
 
 .tools {
