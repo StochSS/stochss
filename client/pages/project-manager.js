@@ -278,19 +278,40 @@ let ProjectManager = PageView.extend({
     let okBtn = document.querySelector('#newModalModel .ok-model-btn');
     let input = document.querySelector('#newModalModel #modelNameInput');
     okBtn.addEventListener('click', function (e) {
+      modal.modal('hide')
       if (Boolean(input.value)) {
         let modelName = input.value.split("/").pop() + '.mdl';
         let message = modelName.split(".")[0] !== input.value ? 
               "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
         let modelPath = path.join(self.projectPath, modelName)
-        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message
+        let queryString = "?path="+modelPath+"&message="+message
+        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+queryString
+        let existEP = path.join(app.getApiPath(), "model/exists")+queryString
         if(message){
-          modal.modal('hide')
           let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
           let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
-          yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
+          yesBtn.addEventListener('click', function (e) {
+            warningModal.modal('hide')
+            xhr({uri: existEP, json: true}, function (err, response, body) {
+              if(body.exists) {
+                let title = "Model Already Exists"
+                let message = "A model already exists with that name"
+                let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+              }else{
+                window.location.href = endpoint
+              }
+            })
+          })
         }else{
-          window.location.href = endpoint;
+          xhr({uri: existEP, json: true}, function (err, response, body) {
+            if(body.exists) {
+              let title = "Model Already Exists"
+              let message = "A model already exists with that name"
+              let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+            }else{
+              window.location.href = endpoint
+            }
+          });
         }
       }
     });
@@ -298,7 +319,7 @@ let ProjectManager = PageView.extend({
       var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
       var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
       let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
+      okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
