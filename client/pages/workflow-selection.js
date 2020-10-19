@@ -40,7 +40,8 @@ let workflowSelection = PageView.extend({
     "click [data-hook=sciope-model-exploration]" : "notebookWorkflow",
     "click [data-hook=model-inference]" : "notebookWorkflow",
     "click [data-hook=stochss-es]" : "handleEnsembleSimulationClick",
-    "click [data-hook=stochss-ps]" : "handleParameterSweepClick"
+    "click [data-hook=stochss-ps]" : "handleParameterSweepClick",
+    "click [data-hook=stochss-me]" : "handleModelExplorationClick"
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -146,6 +147,9 @@ let workflowSelection = PageView.extend({
   },
   handleParameterSweepClick: function (e) {
     this.launchStochssWorkflow("parameterSweep")
+  },
+  handleModelExplorationClick: function (e) {
+    this.launchStochssWorkflow("modelExploration")
   },
   launchStochssWorkflow: function (type) {
     let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath

@@ -1,0 +1,117 @@
+div#model-exploration-settings.card.card-body
+
+  div
+
+    h3.inline Model Explorataion Settings
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-mexplore-settings", data-hook="collapse") -
+
+  div.collapse(class="show", id="collapse-mexplore-settings")
+
+    div.row
+
+      div.col-md-4
+
+        span.inline(for="distribution-type") Distribution Type: 
+
+        div.inline(id="distribution-type" data-hook="distribution-type")
+
+      div.col-md-4(style="display: none")
+
+        span.inline(for="exploration-type") Exploration Type: 
+
+        div.inline(id="exploration-type" data-hook="exploration-type")
+
+      div.col-md-4(style="display: none")
+
+        span.inline(for="feature-extraction") Feature Extraction: 
+
+        div.inline(id="feature-extraction" data-hook="feature-extraction")
+
+    div
+
+      h5 Configure Variable(s)
+
+      div(data-hook="uniform-prior")
+
+        table.table
+          thead
+            tr
+              th(scope="col")
+                div
+                  div.inline Sweep Variable
+
+              th(scope="col")
+                div
+                  div.inline Current Value
+
+              th(scope="col")
+                div
+                  div.inline Minimum Value
+
+              th(scope="col")
+                div
+                  div.inline Maximum Value
+
+              th(scope="col")
+                div
+                  div.inline Steps
+
+          tbody(data-hook="ufp-variables")
+
+      div(data-hook="factorial" style="display: none")
+
+        table.table
+          thead
+            tr
+              th(scope="col")
+                div
+                  div.inline Sweep Variable
+
+              th(scope="col")
+                div
+                  div.inline Current Value
+
+              th(scope="col")
+                div
+                  div.inline Minimum Value
+
+              th(scope="col")
+                div
+                  div.inline Maximum Value
+
+              th(scope="col")
+                div
+                  div.inline Level
+
+              th(scope="col")
+                div
+                  div.inline Outliers
+
+          tboby(data-hook="ftl-variables")
+
+      div(data-hook="latin-hypercube" style="display: none")
+
+        table.table
+          thead
+            tr
+              th(scope="col")
+                div
+                  div.inline Sweep Variable
+
+              th(scope="col")
+                div
+                  div.inline Current Value
+
+              th(scope="col")
+                div
+                  div.inline Minimum Value
+
+              th(scope="col")
+                div
+                  div.inline Maximum Value
+
+              th(scope="col")
+                div
+                  div.inline Seed Size
+
+          tboby(data-hook="lhc-variables")
