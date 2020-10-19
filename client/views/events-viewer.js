@@ -46,7 +46,7 @@ module.exports = View.extend({
   switchToEditMode: function (e) {
     this.parent.renderEventsView("edit", true);
   },
-  changeSettingsCollapseButtonText: function () {
+  changeSettingsCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
     let collapseContainer = $(this.queryByHook(source).dataset.target)
     if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
