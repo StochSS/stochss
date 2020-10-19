@@ -56,7 +56,6 @@ module.exports = View.extend({
   clickRunHandler: function (e) {
     $(this.parent.queryByHook('model-run-error-container')).collapse('hide');
     $(this.parent.queryByHook('model-timeout-message')).collapse('hide');
-    $(this.parent.queryByHook('explore-model-msg')).css('display', 'none');
     var el = this.parent.queryByHook('model-run-container');
     Plotly.purge(el)
     $(this.parent.queryByHook('preview-plot-buttons')).css("display", "none");
@@ -196,7 +195,6 @@ module.exports = View.extend({
     el = this.parent.queryByHook('model-run-container');
     Plotly.newPlot(el, data);
     $(this.parent.queryByHook('preview-plot-buttons')).css('display', 'inline-block')
-    $(this.parent.queryByHook('explore-model-msg')).css('display', 'block');
     let plotBtn = $(this.parent.queryByHook('toggle-preview-plot'))
     if(plotBtn.text() === "Show Preview") {
       plotBtn.text("Hide Preview")

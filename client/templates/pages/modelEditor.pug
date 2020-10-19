@@ -45,6 +45,12 @@ section.page
 
       div(data-hook="sbml-component-container")
 
+      div.card.card-body.collapse.show(data-hook="system-volume-container")
+
+        p System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.
+
+        div(data-hook="volume")
+
   div(data-hook="model-settings-container")
 
   div(style="height:425px;")
@@ -52,10 +58,6 @@ section.page
   div(class="preview-nav")
 
     div(data-hook="model-run-container")
-
-    div(id="explore-model-msg" data-hook="explore-model-msg")
-
-      p.text-info You can explore this model further by clicking <b>New Workflow Using Model</b>
 
     div.spinner-border(data-hook="plot-loader")
 
