@@ -30,13 +30,6 @@ var template = require('../templates/includes/modelStateButtons.pug');
 
 module.exports = View.extend({
   template: template,
-  bindings: {
-    'model.invalid': {
-      hook: 'run',
-      type: 'booleanAttribute',
-      name: 'disabled',
-    },
-  },
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
@@ -48,6 +41,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.model.on('change', this.togglePreviewWorkflowBtn, this)
+    this.model.parameters.on('add remove', this.togglePreviewWorkflowBtn, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -90,12 +84,20 @@ module.exports = View.extend({
     })
   },
   togglePreviewWorkflowBtn: function () {
-    var numSpecies = this.model.species.length;
-    var numReactions = this.model.reactions.length
-    var numEvents = this.model.eventsCollection.length
-    var numRules = this.model.rules.length
-    let disabled = !(this.model.valid && numSpecies && (numReactions || numEvents || numRules))
-    $(this.queryByHook('run')).prop('disabled', disabled)
+    let disabled = !this.model.valid
+    $(this.queryByHook('simulate-model')).prop('disabled', disabled)
+    if(this.model.valid) {
+      if(this.model.parameters.length <= 0) {
+        $(this.queryByHook("stochss-ps")).addClass("disabled")
+      }else{
+        $(this.queryByHook("stochss-ps")).removeClass("disabled")
+      }
+      $(".disabled").click(function(event) {
+        event.preventDefaults();
+        event.stopPropagation();
+        return false;
+      });
+    }
   },
   saveModel: function (cb) {
     this.saving();
@@ -208,9 +210,16 @@ module.exports = View.extend({
     this.launchStochssWorkflow("parameterSweep")
   },
   launchStochssWorkflow: function (type) {
-    let parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp")
-    let queryString = "?type=" + type + "&path=" + this.model.directory + "&parentPath=" + parentPath
+    let queryString = "?type=" + type + "&path=" + this.model.directory
+    if(this.model.directory.includes('.proj')) {
+      var parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp")
+    }else{
+      var parentPath = path.dirname(this.model.directory)
+    }
+    queryString += "&parentPath=" + parentPath
     let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
-    window.location.href = endpoint
+    this.saveModel(function () {
+      window.location.href = endpoint
+    });
   }
 });
