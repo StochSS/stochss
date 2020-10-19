@@ -89,6 +89,7 @@ let ModelEditor = PageView.extend({
         if(!self.model.functionDefinitions.length) {
           self.queryByHook('sbml-component-container').style.display = "none";
         }
+        self.model.updateValid()
       }
     });
     this.model.reactions.on("change", function (reactions) {

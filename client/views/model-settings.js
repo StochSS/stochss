@@ -40,9 +40,10 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
   },
-  update: function () {
+  update: function (e) {
   },
   updateValid: function () {
+    this.model.parent.updateValid()
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

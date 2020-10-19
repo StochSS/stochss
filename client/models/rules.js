@@ -37,9 +37,11 @@ module.exports = Collection.extend({
     });
     rule.variable = variable;
     this.add(rule);
+    this.parent.updateValid()
   },
   removeRule: function (rule) {
     this.remove(rule);
+    this.parent.updateValid()
   },
   getDefaultName: function () {
     var i = this.length + 1;

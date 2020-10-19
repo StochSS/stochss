@@ -83,7 +83,7 @@ a.disabled {
 }
 
 .nav-item {
-  display: inline-block;
+  width: fit-content;
 }
 
 .nav-link {
@@ -444,7 +444,7 @@ span.checkbox {
 .switching {
   vertical-align: middle;
   margin-bottom: 5px;
-  height: 29px;
+  min-height: 29px;
 }
 
 #home-wrapper {

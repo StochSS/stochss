@@ -27,5 +27,11 @@ module.exports = State.extend({
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
+  },
+  validate: function () {
+    if(this.endSim == 0 || isNaN(this.endSim)) return false;
+    if(this.timeStep == 0 || isNaN(this.timeStep)) return false;
+    if(this.volume == 0 || isNaN(this.volume)) return false;
+    return true;
   }
 });
