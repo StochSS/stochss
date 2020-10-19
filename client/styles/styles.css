@@ -596,11 +596,9 @@ span.checkbox {
   padding: 0px 5px;
 }
 
-.preview-close {
-  position: relative;
+.preview-buttons {
   display: none;
-  float: right;
-  top: 8px;
+  height: 48px;
 }
 
 .model-state-buttons {

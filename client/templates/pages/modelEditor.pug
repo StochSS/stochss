@@ -69,9 +69,20 @@ section.page
 
     div
 
-      div.inline(data-hook="toggle-preview-plot-container")
+      div.preview-buttons(data-hook="preview-plot-buttons")
       
-        button.btn.btn-outline-secondary.box-shadow.preview-close(data-hook="toggle-preview-plot") Hide Preview
+        button.btn.btn-outline-secondary.box-shadow.inline.mx-2(data-hook="toggle-preview-plot") Hide Preview
 
-      div.model-state-buttons.inline(data-hook="model-state-buttons-container")
+        button.btn.btn-outline-secondary.box-shadow.inline.dropdown-toggle(
+          id="preview-options",
+          data-toggle="dropdown",
+          aria-haspopup="true",
+          aria-expanded="false",
+          type="button"
+        ) Preview Options <span class="caret"></span>
+
+        ul.dropdown-menu(aria-labelledby="preview-options")
+          li.dropdown-item(data-hook="download-png") Download as PNG
+        
+      div.model-state-buttons(data-hook="model-state-buttons-container")
 

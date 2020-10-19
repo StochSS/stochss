@@ -185,8 +185,7 @@ module.exports = View.extend({
     this.ran(true)
     el = this.parent.queryByHook('model-run-container');
     Plotly.newPlot(el, data);
-    $(this.parent.queryByHook('toggle-preview-plot-container')).css('height', '50px')
-    $(this.parent.queryByHook('toggle-preview-plot')).css('display', 'block')
+    $(this.parent.queryByHook('preview-plot-buttons')).css('display', 'inline-block')
     $(this.parent.queryByHook('explore-model-msg')).css('display', 'block');
     window.scrollTo(0, document.body.scrollHeight)
   },

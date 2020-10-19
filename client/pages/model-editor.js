@@ -54,7 +54,8 @@ let ModelEditor = PageView.extend({
     },
     'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
-    'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot'
+    'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
+    'click [data-hook=download-png]' : 'clickDownloadPNGButton'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -309,6 +310,11 @@ let ModelEditor = PageView.extend({
     plot.style.display = "block"
     button.innerText = "Hide Preview"
     $(this.queryByHook('explore-model-msg')).css('display', 'block');
+  },
+  clickDownloadPNGButton: function (e) {
+    let pngButton = $('div[data-hook=model-run-container] a[data-title*="Download plot as a png"]')[0]
+    console.log(pngButton)
+    pngButton.click()
   }
 });
 
