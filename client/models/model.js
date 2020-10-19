@@ -40,7 +40,8 @@ module.exports = Model.extend({
     is_spatial: 'boolean',
     defaultID: 'number',
     defaultMode: 'string',
-    annotation: 'string'
+    annotation: 'string',
+    volume: 'number'
   },
   collections: {
     species: Species,
@@ -67,6 +68,7 @@ module.exports = Model.extend({
     Model.prototype.initialize.apply(this, arguments);
   },
   validateModel: function () {
+    if(this.volume == 0 || isNaN(this.volume)) return false;
     if(this.species.length <= 0) return false;
     if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) return false
     if(this.modelSettings.validate() === false) return false;
