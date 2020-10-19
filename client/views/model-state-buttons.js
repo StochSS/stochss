@@ -35,6 +35,8 @@ module.exports = View.extend({
     'click [data-hook=run]'  : 'clickRunHandler',
     'click [data-hook=new-workflow]' : 'clickNewWorkflowHandler',
     'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
+    "click [data-hook=stochss-es]" : "handleEnsembleSimulationClick",
+    "click [data-hook=stochss-ps]" : "handleParameterSweepClick"
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -189,4 +191,16 @@ module.exports = View.extend({
     $(this.parent.queryByHook('explore-model-msg')).css('display', 'block');
     window.scrollTo(0, document.body.scrollHeight)
   },
+  handleEnsembleSimulationClick: function (e) {
+    this.launchStochssWorkflow("gillespy")
+  },
+  handleParameterSweepClick: function (e) {
+    this.launchStochssWorkflow("parameterSweep")
+  },
+  launchStochssWorkflow: function (type) {
+    let parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp")
+    let queryString = "?type=" + type + "&path=" + this.model.directory + "&parentPath=" + parentPath
+    let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
+    window.location.href = endpoint
+  }
 });
