@@ -30,6 +30,13 @@ var template = require('../templates/includes/modelStateButtons.pug');
 
 module.exports = View.extend({
   template: template,
+  bindings: {
+    'model.invalid': {
+      hook: 'run',
+      type: 'booleanAttribute',
+      name: 'disabled',
+    },
+  },
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
@@ -40,10 +47,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.model.species.on('add remove', this.togglePreviewWorkflowBtn, this);
-    this.model.reactions.on('add remove', this.togglePreviewWorkflowBtn, this);
-    this.model.eventsCollection.on('add remove', this.togglePreviewWorkflowBtn, this);
-    this.model.rules.on('add remove', this.togglePreviewWorkflowBtn, this);
+    this.model.on('change', this.togglePreviewWorkflowBtn, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -61,6 +65,7 @@ module.exports = View.extend({
     $(this.parent.queryByHook('explore-model-msg')).css('display', 'none');
     var el = this.parent.queryByHook('model-run-container');
     Plotly.purge(el)
+    $(this.parent.queryByHook('preview-plot-buttons')).css("display", "none");
     this.saveModel(this.runModel.bind(this));
   },
   clickReturnToProjectHandler: function (e) {
@@ -89,7 +94,8 @@ module.exports = View.extend({
     var numReactions = this.model.reactions.length
     var numEvents = this.model.eventsCollection.length
     var numRules = this.model.rules.length
-    $(this.queryByHook('run')).prop('disabled', (!numSpecies || (!numReactions && !numEvents && !numRules)))
+    let disabled = !(this.model.valid && numSpecies && (numReactions || numEvents || numRules))
+    $(this.queryByHook('run')).prop('disabled', disabled)
   },
   saveModel: function (cb) {
     this.saving();
@@ -189,6 +195,10 @@ module.exports = View.extend({
     Plotly.newPlot(el, data);
     $(this.parent.queryByHook('preview-plot-buttons')).css('display', 'inline-block')
     $(this.parent.queryByHook('explore-model-msg')).css('display', 'block');
+    let plotBtn = $(this.parent.queryByHook('toggle-preview-plot'))
+    if(plotBtn.text() === "Show Preview") {
+      plotBtn.text("Hide Preview")
+    }
     window.scrollTo(0, document.body.scrollHeight)
   },
   handleEnsembleSimulationClick: function (e) {

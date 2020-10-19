@@ -704,6 +704,8 @@ if __name__ == "__main__":
             resp['errors'] = "{0}".format(error)
         except SimulationError as error:
             resp['errors'] = "{0}".format(error)
+        except ValueError as error:
+            resp['errors'] = "{0}".format(error)
         with open(outfile, "w") as fd:
             json.dump(resp, fd, cls=plotly.utils.PlotlyJSONEncoder)
         open(outfile + ".done", "w").close()
