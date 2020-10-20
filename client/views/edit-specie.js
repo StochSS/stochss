@@ -42,6 +42,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.previousName = this.model.name
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -64,6 +65,13 @@ module.exports = View.extend({
     this.collection.removeSpecie(this.model);
   },
   setSpeciesName: function (e) {
+    if(!e.target.value) {
+      this.model.name = this.previousName;
+      this.parent.renderEditSpeciesView();
+    }else{
+      this.previousName = this.model.name;
+    }
+    this.previousName = this.model.name
     this.model.collection.trigger('update-species', this.model.compID, this.model, true, false);
     this.model.collection.trigger('remove');
   },

@@ -44,10 +44,10 @@ module.exports = State.extend({
   },
   validateComponent: function () {
     if(!this.name.trim()) return false;
-    if(!this.value || isNaN(this.value)) return false;
+    if(this.value === "" || isNaN(this.value)) return false;
     if(this.mode === "dynamic") {
-      if(this.isSwitchTol && (!this.switchTol || isNaN(this.switchTol))) return false;
-      if(!this.isSwitchTol && (!this.switchMin || isNaN(this.switchMin))) return false;
+      if(this.isSwitchTol && (this.switchTol === "" || isNaN(this.switchTol))) return false;
+      if(!this.isSwitchTol && (this.switchMin === "" || isNaN(this.switchMin))) return false;
     }
     return true;
   }
