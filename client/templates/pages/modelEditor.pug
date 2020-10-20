@@ -47,9 +47,18 @@ section.page
 
       div.card.card-body.collapse.show(data-hook="system-volume-container")
 
-        p System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.
+        div
 
-        div(data-hook="volume")
+          h3.inline System Volume
+          button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
+
+        div.collapse(id="collapse-system-volume")
+  
+          p System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.
+
+          hr
+
+          div(data-hook="volume")
 
   div(data-hook="model-settings-container")
 

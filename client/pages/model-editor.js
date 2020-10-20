@@ -57,7 +57,8 @@ let ModelEditor = PageView.extend({
     'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
-    'click [data-hook=download-png]' : 'clickDownloadPNGButton'
+    'click [data-hook=download-png]' : 'clickDownloadPNGButton',
+    'click [data-hook=collapse-system-volume]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -292,7 +293,7 @@ let ModelEditor = PageView.extend({
       parent: this,
       required: true,
       name: 'system-volume',
-      label: 'System Volume: ',
+      label: 'Volume: ',
       tests: tests.valueTests,
       modelKey: 'volume',
       valueType: 'number',
