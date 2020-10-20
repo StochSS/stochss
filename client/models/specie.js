@@ -24,10 +24,10 @@ module.exports = State.extend({
   props: {
     compID: 'number',
     name: 'string',
-    value: 'number',
+    value: 'any',
     mode: 'string',
-    switchTol: 'number',
-    switchMin: 'number',
+    switchTol: 'any',
+    switchMin: 'any',
     isSwitchTol: 'boolean',
     annotation: 'string',
     diffusionCoeff: 'number',
@@ -42,4 +42,13 @@ module.exports = State.extend({
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
+  validateComponent: function () {
+    if(!this.name.trim()) return false;
+    if(!this.value || isNaN(this.value)) return false;
+    if(this.mode === "dynamic") {
+      if(this.isSwitchTol && (!this.switchTol || isNaN(this.switchTol))) return false;
+      if(!this.isSwitchTol && (!this.switchMin || isNaN(this.switchMin))) return false;
+    }
+    return true;
+  }
 });
