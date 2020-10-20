@@ -39,6 +39,19 @@ img.quickstart {
   }
 }
 
+@media (min-width: 1450px) {
+  .col-xxl-1 {
+    -ms-flex: 0 0 12.5%;
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
+  .col-xxl-6 {
+    -ms-flex: 0 0 75%;
+    flex: 0 0 75%;
+    max-width: 75%;
+  }
+}
+
 .inline{
   display: inline-block;
 }
@@ -609,4 +622,8 @@ span.checkbox {
   border-bottom-color: rgb(222, 226, 230);
   border-bottom-style: solid;
   border-left-width: 1px;
+}
+
+#model-run-margin {
+  height: 350px;
 }
