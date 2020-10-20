@@ -40,11 +40,11 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.model.on('change', this.togglePreviewWorkflowBtn, this)
-    this.model.parameters.on('add remove', this.togglePreviewWorkflowBtn, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    this.model.on('change', this.togglePreviewWorkflowBtn, this)
+    this.model.parameters.on('add remove', this.togglePreviewWorkflowBtn, this)
     this.togglePreviewWorkflowBtn();
     if(this.model.directory.includes('.proj')) {
       this.queryByHook("return-to-project-btn").style.display = "inline-block"
