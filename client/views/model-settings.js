@@ -40,9 +40,10 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
   },
-  update: function () {
+  update: function (e) {
   },
   updateValid: function () {
+    this.model.parent.updateValid()
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
@@ -81,21 +82,6 @@ module.exports = View.extend({
           modelKey: 'timeStep',
           valueType: 'number',
           value: this.model.timeStep
-        });
-      },
-    },
-    inputVolume: {
-      hook: 'volume',
-      prepareView: function (el) {
-        return new InputView ({
-          parent: this,
-          required: true,
-          name: 'volume',
-          label: '',
-          tests: tests.valueTests,
-          modelKey: 'volume',
-          valueType: 'number',
-          value: this.model.volume,
         });
       },
     },

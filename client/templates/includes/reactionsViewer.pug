@@ -13,6 +13,8 @@ div#reactions-viewer.card.card-body
           th.col-md-3-view(scope="col") Name
           th.col-md-3-view(scope="col") Summary
           th.col-md-6-view(scope="col") Rate/Propensity
+          if this.containsMdlWithAnn
+            th.col-md-3-view(scope="col") Annotation
         
       tbody(data-hook="reaction-list")
 

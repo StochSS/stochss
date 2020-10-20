@@ -15,15 +15,14 @@ div#events-viewer.card.card-body
 
           th(scope="col") Name
 
-          th(scope="col") Delay
-
-          th(scope="col") Priority
-
-          th(scope="col") Triggger
+          th(scope="col") Trigger
 
           th(scope="col") Assignments
 
-          th(scope="col") Use Values From
+          th(scope="col") Advanced
+
+          if this.containsMdlWithAnn
+            th.col-md-3-view(scope="col") Annotation
 
       tbody(data-hook="view-events-container")
 

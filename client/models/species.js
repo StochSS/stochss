@@ -39,6 +39,7 @@ module.exports = Collection.extend({
       diffusionCoeff: 0.0,
       subdomains: subdomains
     });
+    this.parent.updateValid()
   },
   getDefaultName: function () {
     var i = this.length + 1;
@@ -52,5 +53,6 @@ module.exports = Collection.extend({
   },
   removeSpecie: function (specie) {
     this.remove(specie);
+    this.parent.updateValid()
   },
 });

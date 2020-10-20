@@ -49,6 +49,7 @@ Reactions = Collection.extend({
       reaction.rate = this.getDefaultRate();
     reaction.buildSummary()
     this.add(reaction);
+    this.parent.updateValid()
     return reaction;
   },
   getDefaultName: function () {
@@ -76,6 +77,7 @@ Reactions = Collection.extend({
   },
   removeReaction: function (reaction) {
     this.remove(reaction);
+    this.parent.updateValid()
   },
 });
 
