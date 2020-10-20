@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 module.exports = {
   speciesEditor: {
-    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Variable. Cannot share a name with other model components.",
 
     initialValue: "Initial population of a variables.",
 
@@ -37,7 +37,7 @@ module.exports = {
         "at which variables will be represented as Concentration."
   },
   parametersEditor: {
-    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Parameter. Cannot share a name with other model components.",
     
     expression: "A parameter value.",
     
@@ -46,7 +46,7 @@ module.exports = {
     remove: "A parameter may only be removed if it is not used in any reaction, event assignment, or rule."
   },
   reactionsEditor: {
-    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Reaction. Cannot share a name with other model components.",
     
     annotation: "An optional note about the reaction.",
     
@@ -59,7 +59,7 @@ module.exports = {
     product: "The variables that are created by the reaction event, with stoichiometry.",
   },
   eventsEditor: {
-    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Event. Cannot share a name with other model components.",
     
     annotation: "An optional note about an event.",
     
@@ -90,7 +90,7 @@ module.exports = {
         "upon event execution."
   },
   rulesEditor: {
-    name: "Names for variables, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Rule. Cannot share a name with other model components.",
     
     type: "Assignment Rules: An assignment rule describes a change to a Variables or Parameter as a function whose left-hand side is a scalar (i.e. x = f(V), where V is a "+
         "vector of symbols, not including x).<br>  Rate Rules: A rate rule describes a change to a Variables or Parameter as a function whose left-hand side is a rate of "+

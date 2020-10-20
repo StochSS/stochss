@@ -766,26 +766,13 @@ module.exports = View.extend({
     if(document.querySelector('#newProjectWorkflowModal')) {
       document.querySelector('#newProjectWorkflowModal').remove()
     }
-    let modal = $(modals.addExistingWorkflowToProjectHtml()).modal()
-    let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-    let input = document.querySelector('#newProjectWorkflowModal #workflowPathInput')
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputEndCharError')
-      var charErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener("click", function (e) {
-      if(Boolean(input.value)) {
-        let queryString = "?path="+o.original._path+"&wkflPath="+input.value.trim()
+    let wkflListEP = path.join(app.getApiPath(), "project/add-existing-workflow") + "?path="+self.parent.projectPath
+    xhr({uri:wkflListEP, json:true}, function (err, response, body) {
+      let modal = $(modals.addExistingWorkflowToProjectHtml(body.workflows)).modal()
+      let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
+      let select = document.querySelector('#newProjectWorkflowModal #workflowPathInput')
+      okBtn.addEventListener("click", function (e) {
+        let queryString = "?path="+o.original._path+"&wkflPath="+select.value
         let endpoint = path.join(app.getApiPath(), "project/add-existing-workflow")+queryString
         xhr({uri: endpoint, json: true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {
@@ -796,7 +783,7 @@ module.exports = View.extend({
           }
         });
         modal.modal('hide')
-      }
+      });
     });
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
@@ -1241,7 +1228,7 @@ module.exports = View.extend({
             "New Workflow" : newWorkflow.NewWorkflow,
             "Existing Workflow" : {
               "label" : "Existing Workflow",
-              "_disabled" : true,
+              "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {

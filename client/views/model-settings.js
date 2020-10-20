@@ -85,20 +85,5 @@ module.exports = View.extend({
         });
       },
     },
-    inputVolume: {
-      hook: 'volume',
-      prepareView: function (el) {
-        return new InputView ({
-          parent: this,
-          required: true,
-          name: 'volume',
-          label: '',
-          tests: tests.valueTests,
-          modelKey: 'volume',
-          valueType: 'number',
-          value: this.model.volume,
-        });
-      },
-    },
   },
 });

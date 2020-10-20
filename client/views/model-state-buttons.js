@@ -30,22 +30,18 @@ var template = require('../templates/includes/modelStateButtons.pug');
 
 module.exports = View.extend({
   template: template,
-  bindings: {
-    'model.invalid': {
-      hook: 'run',
-      type: 'booleanAttribute',
-      name: 'disabled',
-    },
-  },
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
     'click [data-hook=run]'  : 'clickRunHandler',
     'click [data-hook=new-workflow]' : 'clickNewWorkflowHandler',
     'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
+    "click [data-hook=stochss-es]" : "handleEnsembleSimulationClick",
+    "click [data-hook=stochss-ps]" : "handleParameterSweepClick"
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.model.on('change', this.togglePreviewWorkflowBtn, this)
+    this.model.parameters.on('add remove', this.togglePreviewWorkflowBtn, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -62,7 +58,7 @@ module.exports = View.extend({
     $(this.parent.queryByHook('model-timeout-message')).collapse('hide');
     var el = this.parent.queryByHook('model-run-container');
     Plotly.purge(el)
-    $(this.parent.queryByHook('toggle-preview-plot')).css("display", "none");
+    $(this.parent.queryByHook('preview-plot-buttons')).css("display", "none");
     this.saveModel(this.runModel.bind(this));
   },
   clickReturnToProjectHandler: function (e) {
@@ -87,12 +83,20 @@ module.exports = View.extend({
     })
   },
   togglePreviewWorkflowBtn: function () {
-    var numSpecies = this.model.species.length;
-    var numReactions = this.model.reactions.length
-    var numEvents = this.model.eventsCollection.length
-    var numRules = this.model.rules.length
-    let disabled = !(this.model.valid && numSpecies && (numReactions || numEvents || numRules))
-    $(this.queryByHook('run')).prop('disabled', disabled)
+    let disabled = !this.model.valid
+    $(this.queryByHook('simulate-model')).prop('disabled', disabled)
+    if(this.model.valid) {
+      if(this.model.parameters.length <= 0) {
+        $(this.queryByHook("stochss-ps")).addClass("disabled")
+      }else{
+        $(this.queryByHook("stochss-ps")).removeClass("disabled")
+      }
+      $(".disabled").click(function(event) {
+        event.preventDefaults();
+        event.stopPropagation();
+        return false;
+      });
+    }
   },
   saveModel: function (cb) {
     this.saving();
@@ -190,12 +194,30 @@ module.exports = View.extend({
     this.ran(true)
     el = this.parent.queryByHook('model-run-container');
     Plotly.newPlot(el, data);
-    $(this.parent.queryByHook('toggle-preview-plot-container')).css('height', '50px')
+    $(this.parent.queryByHook('preview-plot-buttons')).css('display', 'inline-block')
     let plotBtn = $(this.parent.queryByHook('toggle-preview-plot'))
-    plotBtn.css('display', 'block')
     if(plotBtn.text() === "Show Preview") {
       plotBtn.text("Hide Preview")
     }
     window.scrollTo(0, document.body.scrollHeight)
   },
+  handleEnsembleSimulationClick: function (e) {
+    this.launchStochssWorkflow("gillespy")
+  },
+  handleParameterSweepClick: function (e) {
+    this.launchStochssWorkflow("parameterSweep")
+  },
+  launchStochssWorkflow: function (type) {
+    let queryString = "?type=" + type + "&path=" + this.model.directory
+    if(this.model.directory.includes('.proj')) {
+      var parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp")
+    }else{
+      var parentPath = path.dirname(this.model.directory)
+    }
+    queryString += "&parentPath=" + parentPath
+    let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
+    this.saveModel(function () {
+      window.location.href = endpoint
+    });
+  }
 });

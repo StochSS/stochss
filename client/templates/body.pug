@@ -31,11 +31,11 @@ body
           | Sign Out
 
   div.container-fluid
-    div.row.flex-nowrap
-      div.col-md-2
+    div.row
+      div.col-sm-12.col-md-2.col-xxl-1
         nav.sidebar.d-md-block
           div.sidebar-sticky.tools
-            ul.nav.flex-column
+            ul.nav.nav-flex-column
               li.nav-item: a.nav-link(href="stochss/home", title="Users Home Page")
                 | Home
 
@@ -51,4 +51,4 @@ body
               li.nav-item
                 div: a.nav-link(href="stochss/quickstart", title="Quickstart") Tutorial
 
-      main.col-md-10.body(role="main"): div.container-fluid(data-hook="page-container")
+      main.col-sm-12.col-md-10.col-xl-9.col-xxl-6.body(role="main"): div.container-fluid(data-hook="page-container")

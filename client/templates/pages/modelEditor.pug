@@ -45,14 +45,26 @@ section.page
 
       div(data-hook="sbml-component-container")
 
+      div.card.card-body.collapse.show(data-hook="system-volume-container")
+
+        div
+
+          h3.inline System Volume
+          button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
+
+        div.collapse(id="collapse-system-volume")
+  
+          p System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.
+
+          hr
+
+          div(data-hook="volume")
+
   div(data-hook="model-settings-container")
 
   div(style="height:425px;")
 
   div(class="preview-nav")
-
-    div(data-hook="toggle-preview-plot-container")
-      button.btn.btn-outline-secondary.box-shadow.preview-close(data-hook="toggle-preview-plot") Hide Preview
 
     div(data-hook="model-run-container")
 
@@ -66,5 +78,22 @@ section.page
 
       p.text-danger(data-hook="model-run-error-message")
 
-    div.model-state-buttons(data-hook="model-state-buttons-container")
+    div
+
+      div.mt-1.preview-buttons(data-hook="preview-plot-buttons")
+      
+        button.btn.btn-outline-secondary.box-shadow.inline.mx-2(data-hook="toggle-preview-plot") Hide Preview
+
+        button.btn.btn-outline-secondary.box-shadow.inline.dropdown-toggle(
+          id="preview-options",
+          data-toggle="dropdown",
+          aria-haspopup="true",
+          aria-expanded="false",
+          type="button"
+        ) Preview Options <span class="caret"></span>
+
+        ul.dropdown-menu(aria-labelledby="preview-options")
+          li.dropdown-item(data-hook="download-png") Download as PNG
+        
+      div.model-state-buttons(data-hook="model-state-buttons-container")
 

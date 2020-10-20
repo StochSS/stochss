@@ -238,7 +238,7 @@ class ModelFactory():
         name = data['name']
         timeStep = (data['modelSettings']['timeStep'])
         endSim = data['modelSettings']['endSim']
-        volume = data['modelSettings']['volume']
+        volume = data['volume']
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))

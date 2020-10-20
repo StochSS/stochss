@@ -31,15 +31,22 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderCollection(this.collection, ViewEvent, this.queryByHook('view-events-container'))
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   switchToEditMode: function (e) {
     this.parent.renderEventsView("edit", true);
   },
-  changeSettingsCollapseButtonText: function () {
+  changeSettingsCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
     let collapseContainer = $(this.queryByHook(source).dataset.target)
     if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {

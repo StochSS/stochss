@@ -68,6 +68,9 @@ class JsonFileAPIHandler(APIHandler):
         if os.path.exists(full_path):
             with open(full_path, 'r') as f:
                 data = json.load(f)
+                if "volume" not in data.keys():
+                    data['volume'] = data['modelSettings']['volume']
+                    del data['modelSettings']['volume']
             log.debug("Contents of the json file: {0}".format(data))
             if full_path.endswith(".mdl"):
                 self.update_model_data(data)

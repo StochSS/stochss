@@ -12,8 +12,10 @@ div#rules-viewer.card.card-body
         tr
           th.col-md-3-view(scope="col") Name
           th.col-md-3-view(scope="col") Type
-          th.col-md-3-view(scope="col") Variable
+          th.col-md-3-view(scope="col") Target
           th.col-md-3-view(scope="col") Formula
+          if this.containsMdlWithAnn
+            th.col-md-3-view(scope="col") Annotation
         
       tbody(data-hook="rules-list")
 

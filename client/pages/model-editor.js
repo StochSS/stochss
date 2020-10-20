@@ -21,9 +21,11 @@ var $ = require('jquery');
 let path = require('path');
 //support files
 var app = require('../app');
-var modals = require('../modals')
+var modals = require('../modals');
+var tests = require('../views/tests');
 //views
 var PageView = require('../pages/base');
+var InputView = require('../views/input');
 var MeshEditorView = require('../views/mesh-editor');
 var SpeciesEditorView = require('../views/species-editor');
 var SpeciesViewer = require('../views/species-viewer');
@@ -54,7 +56,9 @@ let ModelEditor = PageView.extend({
     },
     'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
-    'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot'
+    'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
+    'click [data-hook=download-png]' : 'clickDownloadPNGButton',
+    'click [data-hook=collapse-system-volume]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -208,6 +212,7 @@ let ModelEditor = PageView.extend({
     this.renderReactionsView();
     this.renderEventsView();
     this.renderRulesView();
+    this.renderSystemVolumeView();
     this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
     this.registerRenderSubview(modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
@@ -280,6 +285,25 @@ let ModelEditor = PageView.extend({
     }
     this.registerRenderSubview(this.rulesEditor, 'rules-editor-container');
   },
+  renderSystemVolumeView: function () {
+    if(this.systemVolumeView) {
+      this.systemVolumeView.remove()
+    }
+    this.systemVolumeView = new InputView ({
+      parent: this,
+      required: true,
+      name: 'system-volume',
+      label: 'Volume: ',
+      tests: tests.valueTests,
+      modelKey: 'volume',
+      valueType: 'number',
+      value: this.model.volume,
+    });
+    this.registerRenderSubview(this.systemVolumeView, 'volume')
+    if(this.model.defaultMode === "continuous") {
+      $(this.queryByHook("system-volume-container")).collapse("hide")
+    }
+  },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
     let collapseContainer = $(this.queryByHook(source).dataset.target)
@@ -291,7 +315,6 @@ let ModelEditor = PageView.extend({
   },
   togglePreviewPlot: function (e) {
     let action = e.target.innerText
-    console.log(action)
     if(action === "Hide Preview") {
       this.closePlot()
     }else{
@@ -309,6 +332,10 @@ let ModelEditor = PageView.extend({
     let button = this.queryByHook("toggle-preview-plot")
     plot.style.display = "block"
     button.innerText = "Hide Preview"
+  },
+  clickDownloadPNGButton: function (e) {
+    let pngButton = $('div[data-hook=model-run-container] a[data-title*="Download plot as a png"]')[0]
+    pngButton.click()
   }
 });
 
