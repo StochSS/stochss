@@ -44,5 +44,16 @@ module.exports = State.extend({
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
+    this.eventAssignments.on('add change remove', this.updateValid, this)
   },
+  validateComponent: function () {
+    if(!this.name.trim() || this.name.match(/^\d/)) return false;
+    if(!this.triggerExpression.trim()) return false;
+    if(!this.priority.trim()) return false;
+    if(!this.eventAssignments.validateCollection()) return false;
+    return true;
+  },
+  updateValid: function () {
+    this.collection.parent.updateValid();
+  }
 });
