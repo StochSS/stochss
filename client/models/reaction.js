@@ -140,13 +140,13 @@ module.exports = State.extend({
     let numReactants = this.reactants.length
     let numProducts = this.products.length
     let prodRatio1 = numProducts > 0 ? this.products.models[0].ratio : 0
-    if(numReactants == 0 && numProducts == 1 && prodRatio1 == 1) return "destruction";
+    if(numReactants == 0 && numProducts == 1 && prodRatio1 == 1) return "creation";
 
     let reactRatio1 = numReactants > 0 ? this.reactants.models[0].ratio : 0
     let prodRatio2 = numProducts > 1 ? this.products.models[1].ratio : 0
     if(numReactants == 1){
       if(reactRatio1 == 1) {
-        if(numProducts == 0) return "creation";
+        if(numProducts == 0) return "destruction";
         if(numProducts == 2 && prodRatio1 == 1 && prodRatio2 == 1) return "split";
       }
       

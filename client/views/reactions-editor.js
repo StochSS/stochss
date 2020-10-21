@@ -105,6 +105,13 @@ module.exports = View.extend({
     if(this.reactionListingView){
       this.reactionListingView.remove();
     }
+    if(this.collection.parent.parameters.length <= 0) {
+      for(var i = 0; i < this.collection.length; i++) {
+        if(this.collection.models[i].reactionType !== "custom-propensity"){
+          this.collection.models[i].reactionType = "custom-propensity"
+        }
+      }
+    }
     this.reactionListingView = this.renderCollection(
       this.collection,
       ReactionListingView,

@@ -77,9 +77,6 @@ module.exports = View.extend({
       parent: this,
       isReaction: true,
     })
-    if(this.model.reactionType !== "custom-propensity" && !this.model.collection.parameters) {
-      this.model.reactionType = "custom-propensity"
-    }
     var reactantsView = new ReactantProductView({
       collection: this.model.reactants,
       species: this.model.collection.parent.species,
@@ -111,8 +108,11 @@ module.exports = View.extend({
       $(this.queryByHook('rate-parameter-label')).text('Propensity:')
       $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.propensity);
     }else{
-      // make sure the reaction has a rate
-      if(!this.model.rate.compID) {
+      // make sure the reaction has a rate and that rate exists in the parameters collection
+      let paramIDs = this.model.collection.parent.parameters.map(function (param) {
+        return param.compID
+      });
+      if(!this.model.rate.compID || !paramIDs.includes(this.model.rate.compID)) {
         this.model.rate = this.model.collection.getDefaultRate()
       }
       var rateParameterView = new SelectView({
