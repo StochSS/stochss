@@ -43,7 +43,7 @@ module.exports = State.extend({
     State.prototype.initialize.apply(this, arguments);
   },
   validateComponent: function () {
-    if(!this.name.trim()) return false;
+    if(!this.name.trim() || this.name.match(/^\d/)) return false;
     if(this.value === "" || isNaN(this.value)) return false;
     if(this.mode === "dynamic") {
       if(this.isSwitchTol && (this.switchTol === "" || isNaN(this.switchTol))) return false;

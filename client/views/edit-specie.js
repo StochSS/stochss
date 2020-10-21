@@ -65,7 +65,7 @@ module.exports = View.extend({
     this.collection.removeSpecie(this.model);
   },
   setSpeciesName: function (e) {
-    if(!e.target.value) {
+    if(!e.target.value.trim()) {
       this.model.name = this.previousName;
       this.parent.renderEditSpeciesView();
     }else{
