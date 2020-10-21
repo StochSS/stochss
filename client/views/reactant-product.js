@@ -94,10 +94,12 @@ module.exports = View.extend({
     }
   },
   toggleAddSpecieButton: function () {
-    if(!this.validateAddSpecie())
+    if(!this.validateAddSpecie()){
       $(this.queryByHook('add-selected-specie')).prop('disabled', true);
-    else
+    }else{
       $(this.queryByHook('add-selected-specie')).prop('disabled', false);
+    }
+    this.parent.toggleCustomReactionError();
   },
   validateAddSpecie: function () {
     if(this.hasSelectedSpecie){

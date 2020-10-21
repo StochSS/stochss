@@ -79,6 +79,12 @@ Reactions = Collection.extend({
     this.remove(reaction);
     this.parent.updateValid()
   },
+  validateCollection: function () {
+    for(var i = 0; i < this.length; i++) {
+      if(!this.models[i].validateComponent()) return false
+    }
+    return true
+  }
 });
 
 Events.createEmitter(Reactions);

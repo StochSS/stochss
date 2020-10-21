@@ -68,11 +68,13 @@ module.exports = Model.extend({
     Model.prototype.initialize.apply(this, arguments);
     this.species.on('add change remove', this.updateValid, this);
     this.parameters.on('add change remove', this.updateValid, this);
+    this.reactions.on('add change remove', this.updateValid, this);
   },
   validateModel: function () {
     if(this.volume == 0 || isNaN(this.volume)) return false;
     if(!this.species.validateCollection()) return false;
     if(!this.parameters.validateCollection()) return false;
+    if(!this.reactions.validateCollection()) return false;
     if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) return false
     if(this.modelSettings.validate() === false) return false;
     return true;
