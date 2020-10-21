@@ -70,10 +70,9 @@ module.exports = View.extend({
       this.parent.renderEditSpeciesView();
     }else{
       this.previousName = this.model.name;
+      this.model.collection.trigger('update-species', this.model.compID, this.model, true, false);
+      this.model.collection.trigger('remove');
     }
-    this.previousName = this.model.name
-    this.model.collection.trigger('update-species', this.model.compID, this.model, true, false);
-    this.model.collection.trigger('remove');
   },
   editAnnotation: function () {
     var self = this;

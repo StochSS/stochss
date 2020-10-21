@@ -47,4 +47,10 @@ module.exports = Collection.extend({
   removeParameter: function (parameter) {
     this.remove(parameter);
   },
+  validateCollection: function () {
+    for(var i = 0; i < this.length; i++) {
+      if(!this.models[i].validateComponent()) return false;
+    }
+    return true;
+  }
 });
