@@ -104,6 +104,7 @@ class GillesPy2Workflow():
     def run_preview(self, gillespy2_model, stochss_model):
         with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
             sim_settings = json.load(template_file)['simulationSettings']
+            sim_settings['simulationSettings']['realizations'] = 1
 
         results = run_solver(gillespy2_model, sim_settings, 5)
         plot = results.plotplotly(return_plotly_figure=True)
