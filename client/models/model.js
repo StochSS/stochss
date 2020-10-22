@@ -41,7 +41,7 @@ module.exports = Model.extend({
     defaultID: 'number',
     defaultMode: 'string',
     annotation: 'string',
-    volume: 'number'
+    volume: 'any'
   },
   collections: {
     species: Species,
@@ -62,7 +62,8 @@ module.exports = Model.extend({
     directory: 'string',
     isPreview: 'boolean',
     for: 'string',
-    valid: 'boolean'
+    valid: 'boolean',
+    error: 'object'
   },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
@@ -79,11 +80,18 @@ module.exports = Model.extend({
     if(!this.eventsCollection.validateCollection()) return false;
     if(!this.rules.validateCollection()) return false;
     if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) return false;
-    if(this.volume == 0 || isNaN(this.volume)) return false;
-    if(this.modelSettings.validate() === false) return false;
+    if(!this.volume === "" || isNaN(this.volume)) {
+      this.error = {"type":"volume"}
+      return false
+    };
+    if(this.modelSettings.validate() === false) {
+      this.error = {"type":"timespan"}
+      return false
+    };
     return true;
   },
   updateValid: function () {
+    this.error = {}
     this.valid = this.validateModel()
   },
   getDefaultID: function () {

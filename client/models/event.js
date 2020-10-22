@@ -41,15 +41,21 @@ module.exports = State.extend({
       type: 'boolean',
       default: true,
     },
+    advanced_error: 'boolean'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
     this.eventAssignments.on('add change remove', this.updateValid, this)
+    this.validateComponent()
   },
   validateComponent: function () {
+    advanced_error = false;
     if(!this.name.trim() || this.name.match(/^\d/)) return false;
     if(!this.triggerExpression.trim()) return false;
-    if(!this.priority.trim()) return false;
+    if(!this.priority.trim()) {
+      this.advanced_error = true;
+      return false;
+    };
     if(!this.eventAssignments.validateCollection()) return false;
     return true;
   },

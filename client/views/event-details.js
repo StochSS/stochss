@@ -86,6 +86,13 @@ module.exports = View.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
+  openAdvancedSection: function () {
+    if(this.model.advanced_error && !$(this.queryByHook("advanced-event-section")).hasClass('show')) {
+      let advCollapseBtn = $(this.queryByHook("advanced-event-button"))
+      advCollapseBtn.click()
+      advCollapseBtn.html('-')
+    }
+  },
   setTriggerInitialValue: function (e) {
     this.model.initialValue = e.target.checked;
   },

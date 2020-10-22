@@ -198,7 +198,7 @@ let ModelEditor = PageView.extend({
     var sbmlComponentView = new SBMLComponentView({
       functionDefinitions: this.model.functionDefinitions,
     });
-    var modelSettings = new ModelSettingsView({
+    this.modelSettings = new ModelSettingsView({
       parent: this,
       model: this.model.modelSettings,
     });
@@ -214,7 +214,7 @@ let ModelEditor = PageView.extend({
     this.renderRulesView();
     this.renderSystemVolumeView();
     this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
-    this.registerRenderSubview(modelSettings, 'model-settings-container');
+    this.registerRenderSubview(this.modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();

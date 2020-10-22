@@ -81,7 +81,10 @@ Reactions = Collection.extend({
   },
   validateCollection: function () {
     for(var i = 0; i < this.length; i++) {
-      if(!this.models[i].validateComponent()) return false
+      if(!this.models[i].validateComponent()) {
+        this.parent.error = {'id':this.models[i].compID,'type':'reaction'}
+        return false
+      }
     }
     return true
   }
