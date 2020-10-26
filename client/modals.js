@@ -248,29 +248,6 @@ module.exports = {
 
       return templates.select(modalID, selectID, title, label, options)
     },
-    addExistingWorkflowToProjectHtml : (options) => {
-      let modalID = "newProjectWorkflowModal"
-      let selectID = "workflowPathInput"
-      let title = "Add Existing Workflow to Workflow Group"
-      let label = "Path to the workflow"
-      options = options.map(function (name) {
-        return `<option value="${name}">${name}</option>`
-      })
-      options = options.join(" ")
-
-      return templates.select(modalID, selectID, title, label, options)
-    },
-    addExistingWorkflowToProjectSuccessHtml : (message) => {
-      let modalID = "newProjectModelSuccessModal"
-      let title = "Success!"
-
-      return templates.message(modalID, title, message)
-    },
-    addExistingWorkflowToProjectErrorHtml : (title, message) => {
-      let modalID = "newProjectModelErrorModal"
-
-      return templates.message(modalID, title, message)
-    },
     newProjectModelSuccessHtml : (message) => {
       let modalID = "newProjectModelSuccessModal"
       let title = "Success!"

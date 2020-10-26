@@ -6,18 +6,7 @@ div#edit-project-workflows
 
   div
 
-    button.btn.btn-outline-primary.dropdown-toggle.box-shadow(
-      id="add-workflow-btn",
-      data-hook="add-workflow-btn",
-      data-toggle="dropdown",
-      aria-haspopup="true",
-      aria-expanded="false",
-      type="button"
-    ) Add Workflow<span class="caret"></span>
-
-    ul.dropdown-menu(aria-labelledby="add-workflow-btn")
-      li.dropdown-item(id="project-workflow-group-new-workflow" data-hook="project-workflow-group-new-workflow") New Workflow
-      li.dropdown-divider
-      li.dropdown-item(id="project-workflow-group-add-workflow" data-hook="project-workflow-group-add-workflow") Existing Workflow
-          
-    
+    button.btn.btn-outline-primary.box-shadow(
+      id="project-workflow-group-new-workflow",
+      data-hook="project-workflow-group-new-workflow"
+    ) Add New Workflow
