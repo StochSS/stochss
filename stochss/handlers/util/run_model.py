@@ -108,7 +108,7 @@ class GillesPy2Workflow():
         results = run_solver(gillespy2_model, sim_settings, 5)
         plot = results.plotplotly(return_plotly_figure=True)
         plot["layout"]["autosize"] = True
-        plot["config"] = {"responsive": True,}
+        plot["config"] = {"responsive": True, "displayModeBar": True}
         return plot
 
 
