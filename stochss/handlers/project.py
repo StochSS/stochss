@@ -16,12 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-'''
-Use BaseHandler for page requests since
-the base API handler has some logic that prevents
-requests without a referrer field
-'''
-
 
 import os
 import json
@@ -36,7 +30,7 @@ from .util.rename import get_unique_file_name, get_file_name
 from .util.workflow_status import get_status
 from .util.generate_zip_file import download_zip
 from .util.convert_to_combine import convert
-from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
+from .util.stochss_errors import StochSSAPIError
 
 log = logging.getLogger('stochss')
 
@@ -153,20 +147,23 @@ class LoadProjectAPIHandler(APIHandler):
         for reaction in data['reactions']:
             if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
                 try:
-                    reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+                    value = ast.literal_eval(reaction['rate']['expression'])
+                    reaction['rate']['expression'] = value
                 except ValueError:
                     pass
         for event in data['eventsCollection']:
             for assignment in event['eventAssignments']:
                 if assignment['variable']['compID'] in param_ids:
                     try:
-                        assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+                        value = ast.literal_eval(assignment['variable']['expression'])
+                        assignment['variable']['expression'] = value
                     except ValueError:
                         pass
         for rule in data['rules']:
             if rule['variable']['compID'] in param_ids:
                 try:
-                    rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
+                    value = ast.literal_eval(rule['variable']['expression'])
+                    rule['variable']['expression'] = value
                 except ValueError:
                     pass
 
@@ -345,10 +342,10 @@ class AddExistingModelAPIHandler(APIHandler):
         path = os.path.join(user_dir, self.get_query_argument(name="path"))
         log.debug("Path to the model: %s", path)
         models = []
-        for root, dirs, files in os.walk("/home/jovyan"):
+        for root, _, files in os.walk("/home/jovyan"):
             if path not in root and "/." not in root and ".wkfl" not in root:
                 root = root.replace(user_dir+"/", "")
-                files = list(filter(lambda file: (not file.startswith(".") and 
+                files = list(filter(lambda file: (not file.startswith(".") and
                                                   file.endswith(".mdl")), files))
                 for file in files:
                     if root == user_dir:
