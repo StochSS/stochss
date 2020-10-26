@@ -68,15 +68,17 @@ section.page
 
     div(data-hook="model-run-container")
 
-    div.spinner-border(data-hook="plot-loader")
+      div(data-hook="preview-plot-container")
 
-    div.collapse(data-hook="model-timeout-message")
+      div.spinner-border(data-hook="plot-loader")
 
-      p.text-warning The model took longer than 5 seconds to run and timed out!
+      div.collapse(data-hook="model-timeout-message")
 
-    div.errors(data-hook="model-run-error-container")
+        p.text-warning The model took longer than 5 seconds to run and timed out!
 
-      p.text-danger(data-hook="model-run-error-message")
+      div.errors(data-hook="model-run-error-container")
+
+        p.text-danger(data-hook="model-run-error-message")
 
     div
 

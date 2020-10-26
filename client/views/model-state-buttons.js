@@ -56,7 +56,7 @@ module.exports = View.extend({
   clickRunHandler: function (e) {
     $(this.parent.queryByHook('model-run-error-container')).collapse('hide');
     $(this.parent.queryByHook('model-timeout-message')).collapse('hide');
-    var el = this.parent.queryByHook('model-run-container');
+    var el = this.parent.queryByHook('preview-plot-container');
     Plotly.purge(el)
     $(this.parent.queryByHook('preview-plot-buttons')).css("display", "none");
     this.saveModel(this.runModel.bind(this));
@@ -142,7 +142,7 @@ module.exports = View.extend({
     });
   },
   running: function () {
-    var plot = this.parent.queryByHook('model-run-container');
+    var plot = this.parent.queryByHook('preview-plot-container');
     var spinner = this.parent.queryByHook('plot-loader');
     var errors = this.parent.queryByHook('model-run-error-container');
     plot.style.display = "none";
@@ -150,7 +150,12 @@ module.exports = View.extend({
     errors.style.display = "none";
   },
   ran: function (noErrors) {
-    var plot = this.parent.queryByHook('model-run-container');
+    $(this.parent.queryByHook('preview-plot-buttons')).css('display', 'inline-block')
+    let plotBtn = $(this.parent.queryByHook('toggle-preview-plot'))
+    if(plotBtn.text() === "Show Preview") {
+      plotBtn.text("Hide Preview")
+    }
+    var plot = this.parent.queryByHook('preview-plot-container');
     var spinner = this.parent.queryByHook('plot-loader');
     var errors = this.parent.queryByHook('model-run-error-container');
     if(noErrors){
@@ -191,13 +196,8 @@ module.exports = View.extend({
     // TODO abstract this into an event probably
     var title = this.model.name + " Model Preview"
     this.ran(true)
-    el = this.parent.queryByHook('model-run-container');
+    el = this.parent.queryByHook('preview-plot-container');
     Plotly.newPlot(el, data);
-    $(this.parent.queryByHook('preview-plot-buttons')).css('display', 'inline-block')
-    let plotBtn = $(this.parent.queryByHook('toggle-preview-plot'))
-    if(plotBtn.text() === "Show Preview") {
-      plotBtn.text("Hide Preview")
-    }
     window.scrollTo(0, document.body.scrollHeight)
   },
   handleEnsembleSimulationClick: function (e) {
