@@ -86,7 +86,7 @@ module.exports = View.extend({
     this.toggleAddSpecieButton();
   },
   addSelectedSpecie: function () {
-    var specieName = this.specieName ? this.specieName : 'Pick a species';
+    var specieName = this.specieName ? this.specieName : 'Pick a variable';
     if(this.validateAddSpecie()) {
       this.collection.addStoichSpecie(specieName);
       this.toggleAddSpecieButton();
