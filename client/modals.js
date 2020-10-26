@@ -416,7 +416,7 @@ module.exports = {
               <div class="modal-dialog" role="document">
                 <div class="modal-content info">
                   <div class="modal-header">
-                    <h5 class="modal-title">Default Variables Mode (required)</h5>
+                    <h5 class="modal-title">Default Variable Mode (required)</h5>
                     <button type="button" class="close close-modal" data-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -424,7 +424,7 @@ module.exports = {
                   <div class="modal-body">
                     <div>
                       <p>
-                        The default mode is used to set the mode of all variable added to the model.  
+                        The default mode is used to set the mode of all variables added to the model.  
                         The mode of a variable is used to determine how it will be represented in a simulation.
                       </p>
                       <p>Select one of the following: </p>
