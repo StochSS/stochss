@@ -56,7 +56,10 @@ module.exports = Collection.extend({
     this.parent.updateValid()
   },
   validateCollection: function () {
-    if(this.length <= 0) return false;
+    if(this.length <= 0) {
+      this.parent.error = {'type':'species'}
+      return false;
+    }
     for(var i = 0; i < this.length; i++) {
       if(!this.models[i].validateComponent()) {
         this.parent.error = {'id':this.models[i].compID,'type':'species'}

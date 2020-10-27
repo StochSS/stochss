@@ -97,6 +97,7 @@ module.exports = View.extend({
     }
     this.renderEditSpeciesView();
     this.renderSpeciesAdvancedView();
+    this.toggleSpeciesCollectionError()
   },
   update: function () {
   },
@@ -187,6 +188,7 @@ module.exports = View.extend({
   addSpecies: function () {
     var subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
     this.collection.addSpecie(subdomains);
+    this.toggleSpeciesCollectionError()
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
@@ -194,6 +196,16 @@ module.exports = View.extend({
 
        });
     });
+  },
+  toggleSpeciesCollectionError: function () {
+    let errorMsg = $(this.queryByHook('species-collection-error'))
+    if(this.collection.length <= 0) {
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
+    }else{
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
+    }
   },
   switchToViewMode: function (e) {
     this.parent.modelStateButtons.clickSaveHandler(e);

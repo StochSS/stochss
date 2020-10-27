@@ -183,12 +183,14 @@ module.exports = View.extend({
     collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    if(e.target.dataset && e.target.dataset.toggle === "collapse") {
+      let source = e.target.dataset.hook
+      let collapseContainer = $(this.queryByHook(source).dataset.target)
+      if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+        let collapseBtn = $(this.queryByHook(source))
+        let text = collapseBtn.text();
+        text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+      }
     }
   },
   getDefaultSpecie: function () {

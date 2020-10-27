@@ -239,10 +239,13 @@ module.exports = View.extend({
       this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
   },
   toggleCustomReactionError: function () {
+    let errorMsg = $(this.queryByHook("custom-reaction-error"))
     if(this.model.reactants.length <= 0 && this.model.products.length <= 0) {
-      $(this.queryByHook("custom-reaction-error")).css('display', 'block')
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
     }else{
-      $(this.queryByHook("custom-reaction-error")).css('display', 'none')
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
     }
   },
   renderReactionTypes: function () {

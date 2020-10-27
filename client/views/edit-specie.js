@@ -63,6 +63,7 @@ module.exports = View.extend({
   removeSpecie: function () {
     this.remove();
     this.collection.removeSpecie(this.model);
+    this.parent.toggleSpeciesCollectionError();
   },
   setSpeciesName: function (e) {
     if(!e.target.value.trim()) {

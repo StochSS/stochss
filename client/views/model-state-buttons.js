@@ -236,6 +236,7 @@ module.exports = View.extend({
   },
   focusOnError: function (e) {
     if(this.model.error) {
+      console.log(this.model.error)
       let self = this
       if(this.model.error.type === "species") {
         this.openSpeciesSection()
@@ -253,15 +254,18 @@ module.exports = View.extend({
         this.openTimespanSection()
       }
       setTimeout(function () {
-        let fieldsWErrors = self.parent.queryAll(".input-invalid")
-        if(fieldsWErrors.length > 0) {
-          fieldsWErrors[0].focus()
+        let inputErrors = self.parent.queryAll(".input-invalid")
+        let componentErrors = self.parent.queryAll(".component-invalid")
+        if(inputErrors.length > 0) {
+          inputErrors[0].focus()
+        }else if(componentErrors.length > 0) {
+          componentErrors[0].scrollIntoView({'block':"center"})
         }
       }, 300)
     }
   },
   openSpeciesSection: function () {
-    let specSection = $(this.parent.reactionsEditor.queryByHook("species-list-container"))
+    let specSection = $(this.parent.speciesEditor.queryByHook("species-list-container"))
     if(!specSection.hasClass("show")) {
       let specCollapseBtn = $(this.parent.speciesEditor.queryByHook("collapse"))
       specCollapseBtn.click()
@@ -269,7 +273,7 @@ module.exports = View.extend({
     }
   },
   openParametersSection: function () {
-    let paramSection = $(this.parent.reactionsEditor.queryByHook("parameters-list-container"))
+    let paramSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
     if(!paramSection.hasClass("show")) {
       let paramCollapseBtn = $(this.parent.parametersEditor.queryByHook("collapse"))
       paramCollapseBtn.click()
@@ -297,7 +301,7 @@ module.exports = View.extend({
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let evtSection = $(this.parent.queryByHook("events"))
+    let evtSection = $(this.eventsEditor.queryByHook("events"))
     if(!evtSection.hasClass("show")) {
       let evtCollapseBtn = $(this.parent.eventsEditor.queryByHook("collapse"))
       evtCollapseBtn.click()
@@ -316,7 +320,7 @@ module.exports = View.extend({
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let ruleSection = $(this.parent.queryByHook("rules-list-container"))
+    let ruleSection = $(this.rulesEditor.queryByHook("rules-list-container"))
     if(!ruleSection.hasClass("show")) {
       let ruleCollapseBtn = $(this.parent.rulesEditor.queryByHook("collapse"))
       ruleCollapseBtn.click()
