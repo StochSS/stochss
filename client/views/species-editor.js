@@ -97,7 +97,7 @@ module.exports = View.extend({
     }
     this.renderEditSpeciesView();
     this.renderSpeciesAdvancedView();
-    this.toggleSpeciesCollectionError()
+    this.toggleSpeciesCollectionError();
   },
   update: function () {
   },

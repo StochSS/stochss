@@ -43,9 +43,6 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    // this.model.on('change', this.togglePreviewWorkflowBtn, this)
-    // this.model.parameters.on('add remove', this.togglePreviewWorkflowBtn, this)
-    // this.togglePreviewWorkflowBtn();
     if(this.model.directory.includes('.proj')) {
       this.queryByHook("return-to-project-btn").style.display = "inline-block"
     }
@@ -244,6 +241,8 @@ module.exports = View.extend({
         this.openParametersSection()
       }else if(this.model.error.type === "reaction") {
         this.openReactionsSection()
+      }else if(this.model.error.type === "process"){
+        this.openReactionsSection(true)
       }else if(this.model.error.type === "event") {
         this.openEventsSection()
       }else if(this.model.error.type === "rule") {
@@ -256,10 +255,10 @@ module.exports = View.extend({
       setTimeout(function () {
         let inputErrors = self.parent.queryAll(".input-invalid")
         let componentErrors = self.parent.queryAll(".component-invalid")
-        if(inputErrors.length > 0) {
-          inputErrors[0].focus()
-        }else if(componentErrors.length > 0) {
+        if(componentErrors.length > 0) {
           componentErrors[0].scrollIntoView({'block':"center"})
+        }else if(inputErrors.length > 0) {
+          inputErrors[0].focus()
         }
       }, 300)
     }
@@ -280,7 +279,7 @@ module.exports = View.extend({
       paramCollapseBtn.html('-')
     }
   },
-  openReactionsSection: function () {
+  openReactionsSection: function (isCollection = false) {
     let error = this.model.error
     let reacSection = $(this.parent.reactionsEditor.queryByHook("reactions-list-container"))
     if(!reacSection.hasClass("show")) {
@@ -288,10 +287,12 @@ module.exports = View.extend({
       reacCollapseBtn.click()
       reacCollapseBtn.html('-')
     }
-    var reaction = this.model.reactions.filter(function (r) {
-      return r.compID === error.id
-    })[0]
-    this.model.reactions.trigger("select", reaction);
+    if(!isCollection) {
+      var reaction = this.model.reactions.filter(function (r) {
+        return r.compID === error.id
+      })[0]
+      this.model.reactions.trigger("select", reaction);
+    }
   },
   openEventsSection: function () {
     let error = this.model.error

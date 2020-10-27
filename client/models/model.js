@@ -79,7 +79,10 @@ module.exports = Model.extend({
     if(!this.reactions.validateCollection()) return false;
     if(!this.eventsCollection.validateCollection()) return false;
     if(!this.rules.validateCollection()) return false;
-    if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) return false;
+    if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
+      this.error = {"type":"process"}
+      return false;
+    }
     if(!this.volume === "" || isNaN(this.volume)) {
       this.error = {"type":"volume"}
       return false

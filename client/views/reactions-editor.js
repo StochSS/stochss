@@ -68,6 +68,7 @@ module.exports = View.extend({
     }, this);
     this.collection.parent.species.on('add remove', this.toggleAddReactionButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleReactionTypes, this);
+    this.collection.parent.on('change', this.toggleProcessError, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -96,6 +97,7 @@ module.exports = View.extend({
     if(this.opened) {
       this.openReactionsContainer();
     }
+    this.toggleProcessError()
   },
   update: function () {
   },
@@ -199,6 +201,17 @@ module.exports = View.extend({
   },
   getAnnotation: function (type) {
     return ReactionTypes[type].label
+  },
+  toggleProcessError: function () {
+    let errorMsg = $(this.queryByHook('process-component-error'))
+    let model = this.collection.parent
+    if(this.collection.length <= 0 && model.eventsCollection.length <= 0 && model.rules.length <= 0) {
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
+    }else{
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
+    }
   },
   renderReactionTypes: function () {
     var options = {
