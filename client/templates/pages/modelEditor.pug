@@ -80,6 +80,8 @@ section.page
 
         p.text-danger(data-hook="model-run-error-message")
 
+    div(data-hook="error-detected-msg" style="display: none;"): p.text-danger Errors were detected in your model please ensure that your model has all required components and that all required fields are filled in correctly or click the <b>X</b> next to a component to remove it.
+
     div
 
       div.mt-1.preview-buttons(data-hook="preview-plot-buttons")

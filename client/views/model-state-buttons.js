@@ -217,23 +217,28 @@ module.exports = View.extend({
     });
   },
   handleSimulateClick: function (e) {
-    let simType = e.target.dataset.type
-    console.log(simType, this.model.valid)
+    var errorMsg = $(this.parent.queryByHook("error-detected-msg"))
+    console.log(errorMsg)
     if(!this.model.valid) {
+      $(this.parent.queryByHook('toggle-preview-plot')).click()
+      errorMsg.css('display', 'block')
       this.focusOnError(e)
-    }else if(simType === "preview") {
-      this.clickRunHandler(e)
-    }else if(simType === "ensemble") {
-      this.handleEnsembleSimulationClick(e)
-    }else if(simType === "psweep") {
-      this.handleParameterSweepClick(e)
     }else{
-      this.clickNewWorkflowHandler(e)
+      errorMsg.css('display', 'none')
+      let simType = e.target.dataset.type
+      if(simType === "preview") {
+        this.clickRunHandler(e)
+      }else if(simType === "ensemble") {
+        this.handleEnsembleSimulationClick(e)
+      }else if(simType === "psweep") {
+        this.handleParameterSweepClick(e)
+      }else{
+        this.clickNewWorkflowHandler(e)
+      }
     }
   },
   focusOnError: function (e) {
     if(this.model.error) {
-      console.log(this.model.error)
       let self = this
       if(this.model.error.type === "species") {
         this.openSpeciesSection()
