@@ -53,6 +53,7 @@ module.exports = View.extend({
       $(this.queryByHook('switching-min')).prop('checked', true);
     }
     this.toggleSwitchingSettings();
+    this.updateInputValidation();
   },
   update: function () {
   },

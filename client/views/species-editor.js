@@ -150,6 +150,7 @@ module.exports = View.extend({
       $(this.queryByHook('advanced-species')).collapse('show');
     }
     else{
+      this.speciesAdvancedView.views[0].updateInputValidation()
       $(this.queryByHook('advanced-species')).collapse('hide');
     }
   },
