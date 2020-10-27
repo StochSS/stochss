@@ -36,28 +36,28 @@ module.exports = {
         <p><b>Duplicate/Delete A File/Directory</b>: Right-click on the file/directory and click Duplicate/Delete.</p>
     `,
     'model-editor' : `
-        <p><b>Species</b>: A species refers to a pool of entities that are considered 
+        <p><b>Variale</b>: A variable refers to a pool of entities that are considered 
           indistinguishable from each other for the purposes of the model and may participate 
           in reactions.</p>
         <p><b>Parameter</b>: A Parameter is used to define a symbol associated with 
           a value; this symbol can then be used in mathematical formulas in a model.</p>
         <p><b>Reaction</b>: A reaction in SBML represents any kind of process that can change 
-          the quantity of one or more species in a model.  At least one species is required to 
+          the quantity of one or more variables in a model.  At least one variable is required to 
           add a reaction and at least one parameter is required to add a mass action reaction.</p>
         <p><b>Event</b>: Events describe the time and form of instantaneous, discontinuous state 
           changes in the model.  An Event object defines when the event can occur, the variables 
           that are affected by it, how the variables are affected, and the event’s relationship 
-          to other events.  At least one species or parameter is required to add an event.</p>
+          to other events.  At least one variable or parameter is required to add an event.</p>
         <p><b>Rule</b>: Rules provide additional ways to define the values of variables 
           in a model, their relationships, and the dynamical behaviors of those variables.  The 
           rule type Assignment Rule is used to express equations that set the values of variables.  
           The rule type Rate Rule is used to express equations that determine the rates of change 
-          of variables.  At least one species or parameter is required to add a rule.</p>
+          of variables.  At least one variable or parameter is required to add a rule.</p>
         <p><b>Preview</b>: A preview of the model shows the results of the first five seconds of a 
-          single trajectory of the model simulation.  At least one species and one reaction, event, 
+          single trajectory of the model simulation.  At least one variable and one reaction, event, 
           or rule is required to run a preview.</p>
         <p><b>Workflow</b>: A workflow allows you to run a full model with multiple trajectories with 
-          settings the will help refine the simulation.  At least one species and one reaction, event, 
+          settings the will help refine the simulation.  At least one variable and one reaction, event, 
           or rule is required to create a new workflow.</p>
     `,
     'wkfl-manager' : `

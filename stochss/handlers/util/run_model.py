@@ -108,7 +108,7 @@ class GillesPy2Workflow():
         results = run_solver(gillespy2_model, sim_settings, 5)
         plot = results.plotplotly(return_plotly_figure=True)
         plot["layout"]["autosize"] = True
-        plot["config"] = {"responsive": True,}
+        plot["config"] = {"responsive": True, "displayModeBar": True}
         return plot
 
 
@@ -238,7 +238,10 @@ class ModelFactory():
         name = data['name']
         timeStep = (data['modelSettings']['timeStep'])
         endSim = data['modelSettings']['endSim']
-        volume = data['volume']
+        if "volume" not in data.keys():
+            volume = data['modelSettings']['volume']
+        else:
+            volume = data['volume']
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))

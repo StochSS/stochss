@@ -761,31 +761,6 @@ module.exports = View.extend({
       });
     }
   },
-  addExistingWorkflow: function (o) {
-    let self = this;
-    if(document.querySelector('#newProjectWorkflowModal')) {
-      document.querySelector('#newProjectWorkflowModal').remove()
-    }
-    let wkflListEP = path.join(app.getApiPath(), "project/add-existing-workflow") + "?path="+self.parent.projectPath
-    xhr({uri:wkflListEP, json:true}, function (err, response, body) {
-      let modal = $(modals.addExistingWorkflowToProjectHtml(body.workflows)).modal()
-      let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-      let select = document.querySelector('#newProjectWorkflowModal #workflowPathInput')
-      okBtn.addEventListener("click", function (e) {
-        let queryString = "?path="+o.original._path+"&wkflPath="+select.value
-        let endpoint = path.join(app.getApiPath(), "project/add-existing-workflow")+queryString
-        xhr({uri: endpoint, json: true, method:"post"}, function (err, response, body) {
-          if(response.statusCode < 400) {
-            self.updateParent("workflow")
-            let successModal = $(modals.addExistingWorkflowToProjectSuccessHtml(body.message)).modal()
-          }else{
-            let errorModal = $(modals.addExistingWorkflowToProjectErrorHtml(body.Reason, body.Message)).modal()
-          }
-        });
-        modal.modal('hide')
-      });
-    });
-  },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
     if(document.querySelector('#newModalModel')) {
@@ -1131,7 +1106,7 @@ module.exports = View.extend({
           "label" : "New Workflow",
           "_disabled" : (nodeType === "spatial") ? true : false,
           "separator_before" : false,
-          "separator_after" : o.type !== "workflow-group",
+          "separator_after" : true,
           "action" : function (data) {
             self.addNewWorkflow(o)
           }
@@ -1219,24 +1194,7 @@ module.exports = View.extend({
       }
       // specific to workflow groups
       let workflowGroup = {
-        "Add Workflow" : {
-          "label" : "Add Workflow",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : true,
-          "submenu" : {
-            "New Workflow" : newWorkflow.NewWorkflow,
-            "Existing Workflow" : {
-              "label" : "Existing Workflow",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.addExistingWorkflow(o)
-              }
-            }
-          }
-        }
+        "Add New Workflow" : newWorkflow.NewWorkflow
       }
       // specific to workflows
       let workflow = {
