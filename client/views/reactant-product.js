@@ -86,7 +86,7 @@ module.exports = View.extend({
     this.toggleAddSpecieButton();
   },
   addSelectedSpecie: function () {
-    var specieName = this.specieName ? this.specieName : 'Pick a species';
+    var specieName = this.specieName ? this.specieName : 'Pick a variable';
     if(this.validateAddSpecie()) {
       this.collection.addStoichSpecie(specieName);
       this.toggleAddSpecieButton();
@@ -94,10 +94,12 @@ module.exports = View.extend({
     }
   },
   toggleAddSpecieButton: function () {
-    if(!this.validateAddSpecie())
+    if(!this.validateAddSpecie()){
       $(this.queryByHook('add-selected-specie')).prop('disabled', true);
-    else
+    }else{
       $(this.queryByHook('add-selected-specie')).prop('disabled', false);
+    }
+    this.parent.toggleCustomReactionError();
   },
   validateAddSpecie: function () {
     if(this.hasSelectedSpecie){

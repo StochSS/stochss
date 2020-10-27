@@ -29,6 +29,7 @@ from .run_model import ModelFactory
 from json.decoder import JSONDecodeError
 from .stochss_errors import ModelNotFoundError, ModelNotJSONFormatError, JSONFileNotModelError
 
+from gillespy2.solvers.utilities.cpp_support_test import check_cpp_support
 # imports for modal notebook
 from .generate_notebook_cells import generate_imports_cell, generate_model_cell, generate_configure_simulation_cell, get_algorithm
 # imports for parameter sweep workflow
@@ -72,13 +73,14 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None, dest_path=Non
     except JSONDecodeError as err:
         raise ModelNotJSONFormatError("The model is not JSON decodable: "+str(err), traceback.format_exc())
         
+    is_ssa_c = check_cpp_support()
     is_ode = json_data['defaultMode'] == "continuous" if settings is None else settings['simulationSettings']['algorithm'] == "ODE"
     gillespy2_model = ModelFactory(json_data, is_ode).model
 
     if settings is None or settings['simulationSettings']['isAutomatic']:
-        algorithm, solv_name = get_algorithm(gillespy2_model, is_psweep=True)
+        algorithm, solv_name = get_algorithm(gillespy2_model, is_ssa_c=is_ssa_c, is_psweep=True)
     else:
-        algorithm, solv_name = get_algorithm(gillespy2_model, is_psweep=True, algorithm=settings['simulationSettings']['algorithm'])
+        algorithm, solv_name = get_algorithm(gillespy2_model, is_ssa_c=is_ssa_c, is_psweep=True, algorithm=settings['simulationSettings']['algorithm'])
     
     # Create new notebook
     cells = []
@@ -100,8 +102,12 @@ def convert_to_1d_psweep_nb(_model_path, name=None, settings=None, dest_path=Non
         # Instantiate Model Cell
         cells.append(nbf.new_code_cell('model = {0}()'.format(class_name)))
         if solv_name == "VariableSSACSolver":
+            if settings is None or settings['simulationSettings']['isAutomatic']:
+                solver_cell = 'solver = model.get_best_solver()\nsolver = solver(model=model)'
+            else:
+                solver_cell = 'solver = VariableSSACSolver(model=model)'
             # Instantiate Solver Cell
-            cells.append(nbf.new_code_cell('solver = model.get_best_solver()\nsolver = solver(model=model)'))
+            cells.append(nbf.new_code_cell(solver_cell))
         # Configure Simulation Cell
         cells.append(nbf.new_code_cell(config_cell))
         # Feature Extraction cell

@@ -198,7 +198,7 @@ let ModelEditor = PageView.extend({
     var sbmlComponentView = new SBMLComponentView({
       functionDefinitions: this.model.functionDefinitions,
     });
-    var modelSettings = new ModelSettingsView({
+    this.modelSettings = new ModelSettingsView({
       parent: this,
       model: this.model.modelSettings,
     });
@@ -214,7 +214,7 @@ let ModelEditor = PageView.extend({
     this.renderRulesView();
     this.renderSystemVolumeView();
     this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
-    this.registerRenderSubview(modelSettings, 'model-settings-container');
+    this.registerRenderSubview(this.modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -322,19 +322,19 @@ let ModelEditor = PageView.extend({
     }
   },
   closePlot: function () {
-    let plot = this.queryByHook("model-run-container")
+    let runContainer = this.queryByHook("model-run-container")
     let button = this.queryByHook("toggle-preview-plot")
-    plot.style.display = "none"
+    runContainer.style.display = "none"
     button.innerText = "Show Preview"
   },
   openPlot: function () {
-    let plot = this.queryByHook("model-run-container")
+    let runContainer = this.queryByHook("model-run-container")
     let button = this.queryByHook("toggle-preview-plot")
-    plot.style.display = "block"
+    runContainer.style.display = "block"
     button.innerText = "Hide Preview"
   },
   clickDownloadPNGButton: function (e) {
-    let pngButton = $('div[data-hook=model-run-container] a[data-title*="Download plot as a png"]')[0]
+    let pngButton = $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
   }
 });

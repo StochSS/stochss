@@ -42,6 +42,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.previousName = this.model.name
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -86,9 +87,14 @@ module.exports = View.extend({
     });
   },
   setParameterName: function (e) {
-    this.model.name = e.target.value.trim();
-    this.model.collection.trigger('update-parameters', this.model.compID, this.model);
-    this.model.collection.trigger('remove')
+    if(!e.target.value.trim()) {
+      this.model.name = this.previousName
+      this.parent.renderEditParameter()
+    }else{
+      this.previousName = this.model.name
+      this.model.collection.trigger('update-parameters', this.model.compID, this.model);
+      this.model.collection.trigger('remove')
+    }
   },
   subviews: {
     inputName: {
@@ -100,7 +106,7 @@ module.exports = View.extend({
           name: 'name',
           label: '',
           tests: tests.nameTests,
-          modelKey: '',
+          modelKey: 'name',
           valueType: 'string',
           value: this.model.name,
         });

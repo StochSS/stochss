@@ -41,4 +41,11 @@ module.exports = Collection.extend({
   removeEventAssignment: function (eventAssignment) {
     this.remove(eventAssignment);
   },
+  validateCollection: function () {
+    if(this.length <= 0) return false;
+    for(var i = 0; i < this.length; i++) {
+      if(!this.models[i].validateComponent()) return false;
+    }
+    return true;
+  }
 });
