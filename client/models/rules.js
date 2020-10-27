@@ -61,4 +61,13 @@ module.exports = Collection.extend({
       return this.parent.parameters.at(0)
     }
   },
+  validateCollection: function () {
+    for(var i = 0; i < this.length; i++) {
+      if(!this.models[i].validateComponent()) {
+        this.parent.error = {'id':this.models[i].compID,'type':'rule'}
+        return false
+      }
+    }
+    return true;
+  }
 });

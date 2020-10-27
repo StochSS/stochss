@@ -27,4 +27,8 @@ module.exports = State.extend({
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
+  validateComponent: function() {
+    if(!this.expression.trim()) return false;
+    return true;
+  }
 });

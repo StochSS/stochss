@@ -627,3 +627,11 @@ span.checkbox {
 #model-run-margin {
   height: 350px;
 }
+
+.component-invalid {
+  display: block;
+}
+
+.component-valid {
+  display: none;
+}

@@ -155,13 +155,14 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new InputView ({
           parent: this,
-          required: false,
+          required: true,
           name: 'rule-expression',
           label: '',
           tests: '',
           modelKey: 'expression',
           valueType: 'string',
           value: this.model.expression,
+          placeholder: "--No Formula Entered--"
         });
       },
     },

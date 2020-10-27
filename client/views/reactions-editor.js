@@ -68,6 +68,7 @@ module.exports = View.extend({
     }, this);
     this.collection.parent.species.on('add remove', this.toggleAddReactionButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleReactionTypes, this);
+    this.collection.parent.on('change', this.toggleProcessError, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -96,6 +97,7 @@ module.exports = View.extend({
     if(this.opened) {
       this.openReactionsContainer();
     }
+    this.toggleProcessError()
   },
   update: function () {
   },
@@ -104,6 +106,13 @@ module.exports = View.extend({
   renderReactionListingView: function () {
     if(this.reactionListingView){
       this.reactionListingView.remove();
+    }
+    if(this.collection.parent.parameters.length <= 0) {
+      for(var i = 0; i < this.collection.length; i++) {
+        if(this.collection.models[i].reactionType !== "custom-propensity"){
+          this.collection.models[i].reactionType = "custom-propensity"
+        }
+      }
     }
     this.reactionListingView = this.renderCollection(
       this.collection,
@@ -176,12 +185,14 @@ module.exports = View.extend({
     collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    if(e.target.dataset && e.target.dataset.toggle === "collapse") {
+      let source = e.target.dataset.hook
+      let collapseContainer = $(this.queryByHook(source).dataset.target)
+      if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+        let collapseBtn = $(this.queryByHook(source))
+        let text = collapseBtn.text();
+        text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+      }
     }
   },
   getDefaultSpecie: function () {
@@ -190,6 +201,17 @@ module.exports = View.extend({
   },
   getAnnotation: function (type) {
     return ReactionTypes[type].label
+  },
+  toggleProcessError: function () {
+    let errorMsg = $(this.queryByHook('process-component-error'))
+    let model = this.collection.parent
+    if(this.collection.length <= 0 && model.eventsCollection.length <= 0 && model.rules.length <= 0) {
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
+    }else{
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
+    }
   },
   renderReactionTypes: function () {
     var options = {

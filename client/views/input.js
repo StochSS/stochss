@@ -57,7 +57,11 @@ module.exports = AmpersandInputView.extend({
   },
   changeInputHandler: function (e) {
     if(this.modelKey){
-      var value = this.valueType === 'number' ? Number(e.target.value.trim()) : e.target.value.trim();
+      if(this.valueType !== 'number' || (this.valueType === 'number' && e.target.value.trim() === "")) {
+        var value = e.target.value.trim();
+      }else{
+        var value = Number(e.target.value.trim())
+      }
       this.parent.model[this.modelKey] = value;
       this.parent.updateValid()
     }

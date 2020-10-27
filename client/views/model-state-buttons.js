@@ -32,20 +32,17 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=save]' : 'clickSaveHandler',
-    'click [data-hook=run]'  : 'clickRunHandler',
-    'click [data-hook=new-workflow]' : 'clickNewWorkflowHandler',
-    'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
-    "click [data-hook=stochss-es]" : "handleEnsembleSimulationClick",
-    "click [data-hook=stochss-ps]" : "handleParameterSweepClick"
+    'click [data-hook=run]'  : 'handleSimulateClick',
+    "click [data-hook=stochss-es]" : "handleSimulateClick",
+    "click [data-hook=stochss-ps]" : "handleSimulateClick",
+    'click [data-hook=new-workflow]' : 'handleSimulateClick',
+    'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.model.on('change', this.togglePreviewWorkflowBtn, this)
-    this.model.parameters.on('add remove', this.togglePreviewWorkflowBtn, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.togglePreviewWorkflowBtn();
     if(this.model.directory.includes('.proj')) {
       this.queryByHook("return-to-project-btn").style.display = "inline-block"
     }
@@ -83,8 +80,7 @@ module.exports = View.extend({
     })
   },
   togglePreviewWorkflowBtn: function () {
-    let disabled = !this.model.valid
-    $(this.queryByHook('simulate-model')).prop('disabled', disabled)
+    $(this.queryByHook('simulate-model')).prop('disabled', !this.model.valid)
     if(this.model.valid) {
       if(this.model.parameters.length <= 0) {
         $(this.queryByHook("stochss-ps")).addClass("disabled")
@@ -219,5 +215,144 @@ module.exports = View.extend({
     this.saveModel(function () {
       window.location.href = endpoint
     });
+  },
+  handleSimulateClick: function (e) {
+    var errorMsg = $(this.parent.queryByHook("error-detected-msg"))
+    console.log(errorMsg)
+    if(!this.model.valid) {
+      $(this.parent.queryByHook('toggle-preview-plot')).click()
+      errorMsg.css('display', 'block')
+      this.focusOnError(e)
+    }else{
+      errorMsg.css('display', 'none')
+      let simType = e.target.dataset.type
+      if(simType === "preview") {
+        this.clickRunHandler(e)
+      }else if(simType === "ensemble") {
+        this.handleEnsembleSimulationClick(e)
+      }else if(simType === "psweep") {
+        this.handleParameterSweepClick(e)
+      }else{
+        this.clickNewWorkflowHandler(e)
+      }
+    }
+  },
+  focusOnError: function (e) {
+    if(this.model.error) {
+      let self = this
+      if(this.model.error.type === "species") {
+        this.openSpeciesSection()
+      }else if(this.model.error.type === "parameter") {
+        this.openParametersSection()
+      }else if(this.model.error.type === "reaction") {
+        this.openReactionsSection()
+      }else if(this.model.error.type === "process"){
+        this.openReactionsSection(true)
+      }else if(this.model.error.type === "event") {
+        this.openEventsSection()
+      }else if(this.model.error.type === "rule") {
+        this.openRulesSection()
+      }else if(this.model.error.type === "volume") {
+        this.openVolumeSection()
+      }else if(this.model.error.type === "timespan") {
+        this.openTimespanSection()
+      }
+      setTimeout(function () {
+        let inputErrors = self.parent.queryAll(".input-invalid")
+        let componentErrors = self.parent.queryAll(".component-invalid")
+        if(componentErrors.length > 0) {
+          componentErrors[0].scrollIntoView({'block':"center"})
+        }else if(inputErrors.length > 0) {
+          inputErrors[0].focus()
+        }
+      }, 300)
+    }
+  },
+  openSpeciesSection: function () {
+    let specSection = $(this.parent.speciesEditor.queryByHook("species-list-container"))
+    if(!specSection.hasClass("show")) {
+      let specCollapseBtn = $(this.parent.speciesEditor.queryByHook("collapse"))
+      specCollapseBtn.click()
+      specCollapseBtn.html('-')
+    }
+  },
+  openParametersSection: function () {
+    let paramSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
+    if(!paramSection.hasClass("show")) {
+      let paramCollapseBtn = $(this.parent.parametersEditor.queryByHook("collapse"))
+      paramCollapseBtn.click()
+      paramCollapseBtn.html('-')
+    }
+  },
+  openReactionsSection: function (isCollection = false) {
+    let error = this.model.error
+    let reacSection = $(this.parent.reactionsEditor.queryByHook("reactions-list-container"))
+    if(!reacSection.hasClass("show")) {
+      let reacCollapseBtn = $(this.parent.reactionsEditor.queryByHook("collapse"))
+      reacCollapseBtn.click()
+      reacCollapseBtn.html('-')
+    }
+    if(!isCollection) {
+      var reaction = this.model.reactions.filter(function (r) {
+        return r.compID === error.id
+      })[0]
+      this.model.reactions.trigger("select", reaction);
+    }
+  },
+  openEventsSection: function () {
+    let error = this.model.error
+    let advSection = $(this.parent.queryByHook("me-advanced-section"))
+    if(!advSection.hasClass("show")) {
+      let advCollapseBtn = $(this.parent.queryByHook("collapse-me-advanced-section"))
+      advCollapseBtn.click()
+      advCollapseBtn.html('-')
+    }
+    let evtSection = $(this.eventsEditor.queryByHook("events"))
+    if(!evtSection.hasClass("show")) {
+      let evtCollapseBtn = $(this.parent.eventsEditor.queryByHook("collapse"))
+      evtCollapseBtn.click()
+      evtCollapseBtn.html('-')
+    }
+    var event = this.model.eventsCollection.filter(function (e) {
+      return e.compID === error.id
+    })[0]
+    this.model.eventsCollection.trigger("select", event);
+    event.detailsView.openAdvancedSection()
+  },
+  openRulesSection: function () {
+    let advSection = $(this.parent.queryByHook("me-advanced-section"))
+    if(!advSection.hasClass("show")) {
+      let advCollapseBtn = $(this.parent.queryByHook("collapse-me-advanced-section"))
+      advCollapseBtn.click()
+      advCollapseBtn.html('-')
+    }
+    let ruleSection = $(this.rulesEditor.queryByHook("rules-list-container"))
+    if(!ruleSection.hasClass("show")) {
+      let ruleCollapseBtn = $(this.parent.rulesEditor.queryByHook("collapse"))
+      ruleCollapseBtn.click()
+      ruleCollapseBtn.html('-')
+    }
+  },
+  openVolumeSection: function () {
+    let advSection = $(this.parent.queryByHook("me-advanced-section"))
+    if(!advSection.hasClass("show")) {
+      let advCollapseBtn = $(this.parent.queryByHook("collapse-me-advanced-section"))
+      advCollapseBtn.click()
+      advCollapseBtn.html('-')
+    }
+    let volSection = $(this.parent.queryByHook("system-volume-section"))
+    if(!volSection.hasClass("show")) {
+      let volCollapseBtn = $(this.parent.queryByHook("collapse-system-volume"))
+      volCollapseBtn.click()
+      volCollapseBtn.html('-')
+    }
+  },
+  openTimespanSection: function () {
+    let tspnSection = $(this.parent.modelSettings.queryByHook("timespan-container"))
+    if(!tspnSection.hasClass("show")) {
+      let tspnCollapseBtn = $(this.parent.modelSettings.queryByHook("collapse"))
+      tspnCollapseBtn.click()
+      tspnCollapseBtn.html('-')
+    }
   }
 });

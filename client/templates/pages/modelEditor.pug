@@ -52,7 +52,7 @@ section.page
           h3.inline System Volume
           button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
 
-        div.collapse(id="collapse-system-volume")
+        div.collapse(id="collapse-system-volume" data-hook="system-volume-section")
   
           p System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.
 
@@ -79,6 +79,8 @@ section.page
       div.errors(data-hook="model-run-error-container")
 
         p.text-danger(data-hook="model-run-error-message")
+
+    div(data-hook="error-detected-msg" style="display: none;"): p.text-danger Errors were detected in your model please ensure that your model has all required components and that all required fields are filled in correctly or click the <b>X</b> next to a component to remove it.
 
     div
 

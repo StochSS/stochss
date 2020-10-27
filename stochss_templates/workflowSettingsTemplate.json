@@ -3,7 +3,7 @@
         "isAutomatic": true,
         "relativeTol": 1e-3,
         "absoluteTol": 1e-6,
-        "realizations": 1,
+        "realizations": 100,
         "algorithm": "SSA",
         "seed": -1,
         "tauTol": 0.03

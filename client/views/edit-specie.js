@@ -42,6 +42,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.previousName = this.model.name
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -62,11 +63,17 @@ module.exports = View.extend({
   removeSpecie: function () {
     this.remove();
     this.collection.removeSpecie(this.model);
+    this.parent.toggleSpeciesCollectionError();
   },
   setSpeciesName: function (e) {
-    this.model.name = e.target.value.trim();
-    this.model.collection.trigger('update-species', this.model.compID, this.model, true, false);
-    this.model.collection.trigger('remove');
+    if(!e.target.value.trim()) {
+      this.model.name = this.previousName;
+      this.parent.renderEditSpeciesView();
+    }else{
+      this.previousName = this.model.name;
+      this.model.collection.trigger('update-species', this.model.compID, this.model, true, false);
+      this.model.collection.trigger('remove');
+    }
   },
   editAnnotation: function () {
     var self = this;
@@ -100,7 +107,7 @@ module.exports = View.extend({
           name: 'name',
           label: '',
           tests: tests.nameTests,
-          modelKey: '',
+          modelKey: 'name',
           valueType: 'string',
           value: this.model.name,
         });
