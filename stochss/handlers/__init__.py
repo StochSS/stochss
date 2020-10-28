@@ -27,6 +27,12 @@ from .project import *
 from .log import init_log
 
 def get_page_handlers(route_start):
+    '''
+    Get the list of all page and api handlers
+
+    Atributes
+    ---------
+    '''
     handlers = [
         #
         ## Page Handlers
