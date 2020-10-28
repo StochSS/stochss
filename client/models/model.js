@@ -40,7 +40,8 @@ module.exports = Model.extend({
     is_spatial: 'boolean',
     defaultID: 'number',
     defaultMode: 'string',
-    annotation: 'string'
+    annotation: 'string',
+    volume: 'any'
   },
   collections: {
     species: Species,
@@ -61,9 +62,40 @@ module.exports = Model.extend({
     directory: 'string',
     isPreview: 'boolean',
     for: 'string',
+    valid: 'boolean',
+    error: 'object'
   },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
+    this.species.on('add change remove', this.updateValid, this);
+    this.parameters.on('add change remove', this.updateValid, this);
+    this.reactions.on('add change remove', this.updateValid, this);
+    this.eventsCollection.on('add change remove', this.updateValid, this);
+    this.rules.on('add change remove', this.updateValid, this);
+  },
+  validateModel: function () {
+    if(!this.species.validateCollection()) return false;
+    if(!this.parameters.validateCollection()) return false;
+    if(!this.reactions.validateCollection()) return false;
+    if(!this.eventsCollection.validateCollection()) return false;
+    if(!this.rules.validateCollection()) return false;
+    if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
+      this.error = {"type":"process"}
+      return false;
+    }
+    if(!this.volume === "" || isNaN(this.volume)) {
+      this.error = {"type":"volume"}
+      return false
+    };
+    if(this.modelSettings.validate() === false) {
+      this.error = {"type":"timespan"}
+      return false
+    };
+    return true;
+  },
+  updateValid: function () {
+    this.error = {}
+    this.valid = this.validateModel()
   },
   getDefaultID: function () {
     var id = this.defaultID;

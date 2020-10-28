@@ -49,6 +49,7 @@ Reactions = Collection.extend({
       reaction.rate = this.getDefaultRate();
     reaction.buildSummary()
     this.add(reaction);
+    this.parent.updateValid()
     return reaction;
   },
   getDefaultName: function () {
@@ -76,7 +77,17 @@ Reactions = Collection.extend({
   },
   removeReaction: function (reaction) {
     this.remove(reaction);
+    this.parent.updateValid()
   },
+  validateCollection: function () {
+    for(var i = 0; i < this.length; i++) {
+      if(!this.models[i].validateComponent()) {
+        this.parent.error = {'id':this.models[i].compID,'type':'reaction'}
+        return false
+      }
+    }
+    return true
+  }
 });
 
 Events.createEmitter(Reactions);

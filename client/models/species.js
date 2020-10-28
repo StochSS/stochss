@@ -39,6 +39,7 @@ module.exports = Collection.extend({
       diffusionCoeff: 0.0,
       subdomains: subdomains
     });
+    this.parent.updateValid()
   },
   getDefaultName: function () {
     var i = this.length + 1;
@@ -52,5 +53,19 @@ module.exports = Collection.extend({
   },
   removeSpecie: function (specie) {
     this.remove(specie);
+    this.parent.updateValid()
   },
+  validateCollection: function () {
+    if(this.length <= 0) {
+      this.parent.error = {'type':'species'}
+      return false;
+    }
+    for(var i = 0; i < this.length; i++) {
+      if(!this.models[i].validateComponent()) {
+        this.parent.error = {'id':this.models[i].compID,'type':'species'}
+        return false
+      }
+    }
+    return true;
+  }
 });

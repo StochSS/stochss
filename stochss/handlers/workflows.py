@@ -16,12 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-'''
-Use BaseHandler for page requests since
-the base API handler has some logic that prevents
-requests without a referrer field
-'''
-
 import logging
 import json
 import os
@@ -114,45 +108,152 @@ class LoadWorkflowAPIHandler(APIHandler):
             trace = traceback.format_exc()
             log.error("Exception information: %s\n%s", resp["error"], trace)
         resp["settings"] = self.get_settings(os.path.join(resp['wkflParPath'], resp['wkflDir']),
-                                             resp['mdlPath'])
+                                             resp['mdlPath'], resp['type'])
         log.debug("Response: %s", resp)
         self.write(resp)
         self.finish()
 
 
     @classmethod
-    def update_model_data(cls, data):
-        param_ids = []
-        for param in data['parameters']:
+    def update_parameter(cls, param, param_ids):
+        '''
+        Evaluate the expression of all parameters if evaluable.
+
+        Attributes
+        ----------
+        param : dict
+            StochSS parameter
+        param_ids : list
+            list of StochSS parameters compIDs
+        '''
+        try:
             param_ids.append(param['compID'])
             if isinstance(param['expression'], str):
                 try:
                     param['expression'] = ast.literal_eval(param['expression'])
                 except ValueError:
                     pass
-        for reaction in data['reactions']:
-            if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
-                try:
-                    reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
-                except ValueError:
-                    pass
-        for event in data['eventsCollection']:
-            for assignment in event['eventAssignments']:
-                if assignment['variable']['compID'] in param_ids:
-                    try:
-                        assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
-                    except ValueError:
-                        pass
-        for rule in data['rules']:
-            if rule['variable']['compID'] in param_ids:
-                try:
-                    rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
-                except ValueError:
-                    pass
+        except KeyError:
+            pass
 
 
     @classmethod
-    def get_settings(cls, wkfl_path, mdl_path):
+    def update_reaction_rate(cls, reaction):
+        '''
+        Evaluate the expression of all parameters stored as reaction rates if evaluable.
+
+        Attributes
+        ----------
+        reaction : dict
+            StochSS reaction
+        '''
+        try:
+            if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
+                try:
+                    value = ast.literal_eval(reaction['rate']['expression'])
+                    reaction['rate']['expression'] = value
+                except ValueError:
+                    pass
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_event_assignment(cls, assignment, param_ids):
+        '''
+        Evaluate the expression of all parameters stored as assignment
+        variables if evaluable.
+
+        Attributes
+        ----------
+        assignment : dict
+            StochSS event assignment
+        param_ids : list
+            list of StochSS parameters compIDs
+        '''
+        try:
+            if assignment['variable']['compID'] in param_ids:
+                try:
+                    value = ast.literal_eval(assignment['variable']['expression'])
+                    assignment['variable']['expression'] = value
+                except ValueError:
+                    pass
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_event_targets(cls, event, param_ids):
+        '''
+        Update all event assignments for an event.
+
+        Attributes
+        ----------
+        event : dict
+            StochSS event
+        param_ids : list
+            list of StochSS parameters compIDs
+        '''
+        try:
+            if "eventAssignments" in event.keys():
+                for assignment in event['eventAssignments']:
+                    cls.update_event_assignment(assignment, param_ids)
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_rule_targets(cls, rule, param_ids):
+        '''
+        Evaluate the expression of all parameters stored as a rule
+        variable if evaluable.
+
+        Attributes
+        ----------
+        rule : dict
+            StochSS rule
+        param_ids : list
+            list of StochSS parameters compIDs
+        '''
+        try:
+            if rule['variable']['compID'] in param_ids:
+                try:
+                    value = ast.literal_eval(rule['variable']['expression'])
+                    rule['variable']['expression'] = value
+                except ValueError:
+                    pass
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_model_data(cls, data):
+        '''
+        Update all expression in parameters and that are used
+        in reactions, events, and rules.
+
+        Attributes
+        ----------
+        data : dict
+            StochSS model
+        '''
+        param_ids = []
+        if "parameters" in data.keys():
+            for param in data['parameters']:
+                cls.update_parameter(param, param_ids)
+        if "reactions" in data.keys():
+            for reaction in data['reactions']:
+                cls.update_reaction_rate(reaction)
+        if "eventsCollection" in data.keys():
+            for event in data['eventsCollection']:
+                cls.update_event_assignment(event, param_ids)
+        if "rules" in data.keys():
+            for rule in data['rules']:
+                cls.update_rule_targets(rule, param_ids)
+
+
+    @classmethod
+    def get_settings(cls, wkfl_path, mdl_path, wkfl_type):
         '''
         Get the settings for the workflow.
 
@@ -162,6 +263,8 @@ class LoadWorkflowAPIHandler(APIHandler):
             The path to the workflow
         mdl_path : string
             The path to the model used by the workflow
+        wkfl_type : string
+            The type of workflow
         '''
         settings_path = os.path.join(wkfl_path, "settings.json")
 
@@ -171,6 +274,8 @@ class LoadWorkflowAPIHandler(APIHandler):
 
         with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
             settings_template = json.load(template_file)
+            if wkfl_type == "parameterSweep":
+                settings_template['simulationSettings']['realizations'] = 20
 
         if os.path.exists(mdl_path):
             with open(mdl_path, "r") as mdl_file:
@@ -179,6 +284,8 @@ class LoadWorkflowAPIHandler(APIHandler):
                     settings = {"simulationSettings":mdl['simulationSettings'],
                                 "parameterSweepSettings":mdl['parameterSweepSettings'],
                                 "resultsSettings":settings_template['resultsSettings']}
+                    if wkfl_type == "parameterSweep":
+                        settings['simulationSettings']['realizations'] = 20
                     return settings
                 except KeyError:
                     return settings_template

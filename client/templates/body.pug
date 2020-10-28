@@ -32,23 +32,23 @@ body
 
   div.container-fluid
     div.row
-      div.col-xs-12.col-md-2
+      div.col-sm-12.col-md-2.col-xxl-1
         nav.sidebar.d-md-block
           div.sidebar-sticky.tools
             ul.nav.nav-flex-column
               li.nav-item: a.nav-link(href="stochss/home", title="Users Home Page")
                 | Home
 
-              li.nav-item: a.nav-link(href="stochss/project/browser", title="Explore your StochSS projects")
-                | Projects
+              li.nav-item
+                div: a.nav-link(href="stochss/project/browser", title="Explore your StochSS projects") Projects
 
-              li.nav-item: a.nav-link(href="stochss/files", title="Explore your StochSS files")
-                | Files
+              li.nav-item
+                div: a.nav-link(href="stochss/files", title="Explore your StochSS files") Files
 
-              li.nav-item: a.nav-link(target="_blank", href="tree", title="Browse your files in a Jupyter interface")
-                | Jupyter
+              li.nav-item
+                div: a.nav-link(target="_blank", href="tree", title="Browse your files in a Jupyter interface") Jupyter
 
-              li.nav-item: a.nav-link(href="stochss/quickstart", title="Quickstart")
-                | Tutorial
+              li.nav-item
+                div: a.nav-link(href="stochss/quickstart", title="Quickstart") Tutorial
 
-      main.col-xs-12.col-md-10.body(role="main"): div.container-fluid(data-hook="page-container")
+      main.col-sm-12.col-md-10.col-xl-9.col-xxl-6.body(role="main"): div.container-fluid(data-hook="page-container")

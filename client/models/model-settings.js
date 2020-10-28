@@ -21,11 +21,15 @@ var State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
-    endSim: 'number',
-    timeStep: 'number',
-    volume: 'number'
+    endSim: 'any',
+    timeStep: 'any'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
+  },
+  validate: function () {
+    if(this.endSim === "" || isNaN(this.endSim)) return false;
+    if(this.timeStep === "" || isNaN(this.timeStep)) return false;
+    return true;
   }
 });

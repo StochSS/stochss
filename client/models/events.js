@@ -39,6 +39,7 @@ module.exports = Collection.extend({
       useValuesFromTriggerTime: false,
     });
     event.eventAssignments.addEventAssignment()
+    this.parent.updateValid()
     return event
   },
   getDefaultName: function () {
@@ -53,5 +54,15 @@ module.exports = Collection.extend({
   },
   removeEvent: function (event) {
     this.remove(event);
+    this.parent.updateValid()
   },
+  validateCollection: function () {
+    for(var i = 0; i < this.length; i++) {
+      if(!this.models[i].validateComponent()) {
+        this.parent.error = {'id':this.models[i].compID,'type':'event'}
+        return false
+      }
+    }
+    return true;
+  }
 });

@@ -1,4 +1,4 @@
-section.page.col-md-10
+section.page
 
   h3="Workflow Selection for " + this.modelFile
 
@@ -10,7 +10,7 @@ section.page.col-md-10
             a(href="stochss/project/manager?path="+this.projectPath data-hook="project-breadcrumb")=this.projectName
           
   div.alert-danger(data-hook="invalid-model-message" style="display: none;")
-    | You cannot create a workflow if your model does not have at least one Species and one Reaction, Event, or Rule
+    | You cannot create a workflow if your model does not have at least one Variable and one Reaction, Event, or Rule
 
   div.alert-info(data-hook="psweep-workflow-message" style="display: none;")
     | Parameter Sweep workflows require at least one parameter

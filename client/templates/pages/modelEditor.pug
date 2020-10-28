@@ -45,6 +45,21 @@ section.page
 
       div(data-hook="sbml-component-container")
 
+      div.card.card-body.collapse.show(data-hook="system-volume-container")
+
+        div
+
+          h3.inline System Volume
+          button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
+
+        div.collapse(id="collapse-system-volume" data-hook="system-volume-section")
+  
+          p System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.
+
+          hr
+
+          div(data-hook="volume")
+
   div(data-hook="model-settings-container")
 
   div(style="height:425px;")
@@ -53,25 +68,36 @@ section.page
 
     div(data-hook="model-run-container")
 
-    div(id="explore-model-msg" data-hook="explore-model-msg")
+      div(data-hook="preview-plot-container")
 
-      p.text-info You can explore this model further by clicking <b>New Workflow Using Model</b>
+      div.spinner-border(data-hook="plot-loader")
 
-    div.spinner-border(data-hook="plot-loader")
+      div.collapse(data-hook="model-timeout-message")
 
-    div.collapse(data-hook="model-timeout-message")
+        p.text-warning The model took longer than 5 seconds to run and timed out!
 
-      p.text-warning The model took longer than 5 seconds to run and timed out!
+      div.errors(data-hook="model-run-error-container")
 
-    div.errors(data-hook="model-run-error-container")
+        p.text-danger(data-hook="model-run-error-message")
 
-      p.text-danger(data-hook="model-run-error-message")
+    div(data-hook="error-detected-msg" style="display: none;"): p.text-danger Errors were detected in your model please ensure that your model has all required components and that all required fields are filled in correctly or click the <b>X</b> next to a component to remove it.
 
     div
 
-      div.inline(data-hook="toggle-preview-plot-container")
+      div.mt-1.preview-buttons(data-hook="preview-plot-buttons")
       
-        button.btn.btn-outline-secondary.box-shadow.preview-close(data-hook="toggle-preview-plot") Hide Preview
+        button.btn.btn-outline-secondary.box-shadow.inline.mx-2(data-hook="toggle-preview-plot") Hide Preview
 
-      div.model-state-buttons.inline(data-hook="model-state-buttons-container")
+        button.btn.btn-outline-secondary.box-shadow.inline.dropdown-toggle(
+          id="preview-options",
+          data-toggle="dropdown",
+          aria-haspopup="true",
+          aria-expanded="false",
+          type="button"
+        ) Preview Options <span class="caret"></span>
+
+        ul.dropdown-menu(aria-labelledby="preview-options")
+          li.dropdown-item(data-hook="download-png") Download as PNG
+        
+      div.model-state-buttons(data-hook="model-state-buttons-container")
 

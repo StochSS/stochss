@@ -104,11 +104,12 @@ class GillesPy2Workflow():
     def run_preview(self, gillespy2_model, stochss_model):
         with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
             sim_settings = json.load(template_file)['simulationSettings']
+            sim_settings['realizations'] = 1
 
         results = run_solver(gillespy2_model, sim_settings, 5)
         plot = results.plotplotly(return_plotly_figure=True)
         plot["layout"]["autosize"] = True
-        plot["config"] = {"responsive": True,}
+        plot["config"] = {"responsive": True, "displayModeBar": True}
         return plot
 
 
@@ -238,7 +239,10 @@ class ModelFactory():
         name = data['name']
         timeStep = (data['modelSettings']['timeStep'])
         endSim = data['modelSettings']['endSim']
-        volume = data['modelSettings']['volume']
+        if "volume" not in data.keys():
+            volume = data['modelSettings']['volume']
+        else:
+            volume = data['volume']
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
@@ -703,6 +707,10 @@ if __name__ == "__main__":
         except ModelError as error:
             resp['errors'] = "{0}".format(error)
         except SimulationError as error:
+            resp['errors'] = "{0}".format(error)
+        except ValueError as error:
+            resp['errors'] = "{0}".format(error)
+        except Exception as error:
             resp['errors'] = "{0}".format(error)
         with open(outfile, "w") as fd:
             json.dump(resp, fd, cls=plotly.utils.PlotlyJSONEncoder)

@@ -1,9 +1,9 @@
 
 section.page
 
-  div.row.no-gutters
+  div.no-gutters
     
-    div.col-md-10
+    div
 
       h2 Tutorial
 
@@ -19,11 +19,11 @@ section.page
 
       h4 Create a Model
 
-      p Let’s create a new model by pressing the “Add Model” button and selecting “New Model” and give it a name.  Since you're creating a new model you'll need to choose the default species "mode" for your model. StochSS supports deterministic ODE-based simulations (concentration) as well as discrete stochastic simulations (population). One exciting feature of StochSS is the ability to run "hybrid" simulations that utilize both deterministic and probabilistic algorithms during a simulation, thanks to the powerful <a href="https://gillespy2.github.io/GillesPy2/docs/build/html/index.html">GillesPy2</a> library. If you’re unsure of which to choose, go ahead and select “Population.”
+      p Let’s create a new model by pressing the “Add Model” button and selecting “New Model” and give it a name.  Since you're creating a new model you'll need to choose the default variable "mode" for your model. StochSS supports deterministic ODE-based simulations (concentration) as well as discrete stochastic simulations (population). One exciting feature of StochSS is the ability to run "hybrid" simulations that utilize both deterministic and probabilistic algorithms during a simulation, thanks to the powerful <a href="https://gillespy2.github.io/GillesPy2/docs/build/html/index.html">GillesPy2</a> library. If you’re unsure of which to choose, go ahead and select “Population.”
 
       img.quickstart(style="width: 60%;", src="static/model-editor-select-default-species-mode.png")
 
-      p Now we are ready to begin defining the model. Our model contains one species, one parameter, and one reaction to represent protein decay. To start, add a new species called “protein” with an initial condition of 50, and make a parameter called “decayrate” with a value of 0.05. At this point we’re ready to create a reaction to apply the “decayrate” parameter to our “protein” species. Since we are modeling decay we’ll select the A → ∅ reaction type.
+      p Now we are ready to begin defining the model. Our model contains one variable, one parameter, and one reaction to represent protein decay. To start, add a new variable called “protein” with an initial condition of 50, and make a parameter called “decayrate” with a value of 0.05. At this point we’re ready to create a reaction to apply the “decayrate” parameter to our “protein” variable. Since we are modeling decay we’ll select the A → ∅ reaction type.
 
       img.quickstart(style="width: 100%;", src="static/model-editor-reaction-editor.png")
 
