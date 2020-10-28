@@ -27,7 +27,7 @@ module.exports = View.extend({
       required: true,
       idAttribute: 'cid',
       options: options,
-      value: "Uniform"
+      value: this.model.distributionType
     });
     this.registerRenderSubview(distributionTypeView, "distribution-type")
   },
@@ -63,6 +63,7 @@ module.exports = View.extend({
   selectDistributionType: function (e) {
     let typeDict = {"Uniform":"uniform-prior", "Factorial":"factorial", "Latin Hypercube":"latin-hypercube"}
     let type = e.target.selectedOptions.item(0).text;
+    this.model.distributionType = type;
     $(this.queryByHook(typeDict[type])).css("display", "block")
     if(type === "Uniform") {
       $(this.queryByHook("factorial")).css("display", "none")

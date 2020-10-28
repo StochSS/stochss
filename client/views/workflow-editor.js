@@ -104,7 +104,11 @@ module.exports = View.extend({
     if(this.modelExplorationSettings) {
       this.modelExplorationSettings.remove()
     }
-    this.modelExplorationSettings = new ModelExploreSettingsView()
+    this.modelExplorationSettings = new ModelExploreSettingsView({
+      parent: this,
+      model: this.settings.modelExplorationSettings,
+      stochssModel: this.model
+    });
     this.registerRenderSubview(this.modelExplorationSettings, 'model-exploration-settings-container')
   },
   renderWorkflowStateButtons: function () {
