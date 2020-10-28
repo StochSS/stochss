@@ -20,6 +20,10 @@
         "parameterTwo": {},
         "speciesOfInterest": {}
     },
+    "modelExplorationSettings":{
+        "distributionType":"Uniform",
+        "variables": []
+    },
     "resultsSettings":{
         "mapper":"final",
         "reducer":"avg",

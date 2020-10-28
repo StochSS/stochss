@@ -18,19 +18,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //models
 var State = require('ampersand-state');
-var SimulationSettings = require('./simulation-settings');
-var ParameterSweepSettings = require('./parameter-sweep-settings');
-var ModelExplorationSettings = require('./model-exploration-settings');
-var ResultsSettings = require('./results-settings');
+//collections
+var ModelExplorationVariables = require('./model-exploration-variables');
 
 module.exports = State.extend({
-  children: {
-    simulationSettings: SimulationSettings,
-    parameterSweepSettings: ParameterSweepSettings,
-    modelExplorationSettings: ModelExplorationSettings,
-    resultsSettings: ResultsSettings
+  props: {
+    distributionType: 'string'
+  },
+  collection: {
+    variables: ModelExplorationVariables
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
+  },
+  updateVariables: function (parameters) {
+    this.variables.forEach(function (variable) {
+      let parameter = parameters.filter(function (parameter) {
+        return parameter.compID === variable.paramID
+      })[0]
+      if(parameter === undefined) {
+        this.removeVariable(variable)
+      }else{
+        variable.updateVariable(variable)
+      }
+    })
   }
-});
+}); 
