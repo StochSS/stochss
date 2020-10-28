@@ -239,10 +239,12 @@ class ModelFactory():
         name = data['name']
         timeStep = (data['modelSettings']['timeStep'])
         endSim = data['modelSettings']['endSim']
-        if "volume" not in data.keys():
+        if "volume" in data.keys():
+            volume = data['volume']
+        elif "volume" in data['modelSettings'].keys():
             volume = data['modelSettings']['volume']
         else:
-            volume = data['volume']
+            volume = 1
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))

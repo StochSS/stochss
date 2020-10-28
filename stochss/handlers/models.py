@@ -85,9 +85,10 @@ class JsonFileAPIHandler(APIHandler):
         log.debug("Contents of the json file: %s", data)
         if full_path.endswith(".mdl"):
             self.update_model_data(data)
-            if "volume" not in data.keys():
+            if "volume" in data['modelSettings'].keys():
                 data['volume'] = data['modelSettings']['volume']
-                del data['modelSettings']['volume']
+            elif "volume" not in data.keys():
+                data['volume'] = 1
         self.write(data)
 
 
