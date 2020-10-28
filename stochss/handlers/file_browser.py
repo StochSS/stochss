@@ -16,14 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-'''
-APIHandler documentation:
-https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
-
-Note APIHandler.finish() sets Content-Type handler to 'application/json'
-
-Use finish() for json, write() for text
-'''
 import os
 import json
 import uuid
@@ -44,7 +36,7 @@ from .util.convert_to_smdl_mdl import convert_model
 from .util.convert_to_sbml import convert_to_sbml
 from .util.convert_sbml_to_model import convert_sbml_to_model
 from .util.generate_zip_file import download_zip
-from .util.upload_file import upload, upload_from_link
+from .util.upload_file import upload
 from .util.workflow_status import get_status
 
 log = logging.getLogger('stochss')
@@ -895,14 +887,18 @@ class UploadFileFromLinkAPIHandler(APIHandler):
         if cmd is None:
             outfile = str(uuid.uuid4()).replace("-", "_")+".tmp"
             log.debug("Response file name: %s", outfile)
-            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py', '{0}'.format(path), '{}'.format(outfile)] # Script commands for read run_cmd
+            # Script commands for read run_cmd
+            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py',
+                        '{0}'.format(path), '{}'.format(outfile)]
             log.debug("Exec command: %s", exec_cmd)
             pipe = subprocess.Popen(exec_cmd)
             resp = {"responsePath": outfile}
             log.debug("Response: %s", resp)
             self.write(resp)
         else:
-            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py', 'None', '{}'.format(path)] # Script commands for read run_cmd
+            # Script commands for read run_cmd
+            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py',
+                        'None', '{}'.format(path)]
             log.debug("Exec command: %s", exec_cmd)
             pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
             results, error = pipe.communicate()

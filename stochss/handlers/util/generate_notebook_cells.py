@@ -199,9 +199,10 @@ def generate_model_cell(json_data, name):
         raise Exception('Spatial not yet implemented.')
     else:
         # Non-Spatial
-        if "volume" not in json_data.keys():
+        if 'volume' in json_data['modelSettings'].keys():
             json_data['volume'] = json_data['modelSettings']['volume']
-        
+        elif "volume" not in json_data.keys():
+            json_data['volume'] = 1
         model_cell += 'class {0}(Model):\n'.format(name)
         model_cell += '    def __init__(self, parameter_values=None):\n'
         padding = '        '
