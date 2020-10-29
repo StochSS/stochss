@@ -21,23 +21,24 @@ var State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
-    paramID: 'string',
-    min: 'number',
+    paramID: 'number',
+    min: 'any',
     max: 'number',
     steps: 'number',
     level: 'number',
     outliers: 'object',
-    seedSize: 'number'
+    seedSize: 'number',
+    hasChangedRanged: 'boolean' 
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
   updateVariable: function (parameter) {
     let value = parameter.expression
-    if(this.min <= 0) {
+    if(this.min <= 0 || !this.hasChangedRanged) {
       this.min = value * 0.5
     }
-    if(this.max <= 0) {
+    if(this.max <= 0 || !this.hasChangedRanged) {
       this.max = value * 1.5
     }
   }

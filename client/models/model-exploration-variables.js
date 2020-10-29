@@ -31,7 +31,8 @@ module.exports = Collection.extend({
       steps: 11,
       level: 1,
       outliers: [],
-      seedSize: 1
+      seedSize: 1,
+      hasChangedRange: false
     });
   },
   removeVariable: function (variable) {

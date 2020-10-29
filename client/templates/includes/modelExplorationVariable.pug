@@ -1,0 +1,27 @@
+tr
+
+  td: div(data-hook="variable-target")
+
+  td: div(data-hook="target-value")=this.parameter.expression
+
+  td: div(data-hook="variable-min")
+
+  td: div TODO: Max Value
+
+  td
+
+    if(this.distributionType == "Uniform")
+      div TODO: Steps
+
+    if(this.distributionType == "Factorial")
+      div 
+        div TODO: Level
+        div Testing multi-elements
+
+    if(this.distributionType == "Latin Hypercube")
+      div TODO: Seed Size
+
+  if(this.distributionType == "Factorial")
+    td: div TODO: Outliers
+
+  td: button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X

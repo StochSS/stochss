@@ -25,7 +25,7 @@ module.exports = State.extend({
   props: {
     distributionType: 'string'
   },
-  collection: {
+  collections: {
     variables: ModelExplorationVariables
   },
   initialize: function(attrs, options) {
