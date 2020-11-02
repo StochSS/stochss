@@ -11,6 +11,9 @@ module.exports = View.extend({
   template: template,
   events: {
     'change [data-hook=variable-target]' : 'setSelectedTarget',
+    'change [data-hook=variable-min]' : 'setHasChangedRange',
+    'change [data-hook=variable-max]' : 'setHasChangedRange',
+    'click [data-hook=remove]' : 'removeVariable'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -27,23 +30,34 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     this.registerTargetSelectView()
     this.renderMinValInputView()
+    this.renderMaxValInputView()
+    if(this.parent.parent.model.distributionType === "Uniform"){
+      this.renderStepsInputView()
+    }else if(this.parent.parent.model.distributionType === "Factorial") {
+      this.renderLevelInputView()
+      this.renderOutliersInputView()
+    }else if(this.parent.parent.model.distributionType === "Latin Hypercube") {
+      this.renderSeedSizeInputView()
+    }
   },
   update: function (e) {},
   updateValid: function (e) {},
-  registerTargetSelectView: function () {
-    if(this.targetSelectView) {
-      this.targetSelectView.remove()
+  registerTargetSelectView: function (e) {
+    if(this.model.collection) {
+      if(this.targetSelectView) {
+        this.targetSelectView.remove()
+      }
+      let options = this.getAvailableParameters();
+      this.targetSelectView = new SelectView({
+        label: '',
+        name: 'variable-target',
+        required: true,
+        idAttribute: 'cid',
+        options: options,
+        value: this.parameter.name
+      });
+      this.registerRenderSubview(this.targetSelectView, "variable-target")
     }
-    let options = this.getAvailableParameters();
-    this.targetSelectView = new SelectView({
-      label: '',
-      name: 'variable-target',
-      required: true,
-      idAttribute: 'cid',
-      options: options,
-      value: this.parameter.name
-    });
-    this.registerRenderSubview(this.targetSelectView, "variable-target")
   },
   renderMinValInputView: function () {
     if(this.minValInputView) {
@@ -60,6 +74,87 @@ module.exports = View.extend({
       value: this.model.min,
     });
     this.registerRenderSubview(this.minValInputView, "variable-min")
+  },
+  renderMaxValInputView: function () {
+    if(this.maxValInputView) {
+      this.maxValInputView.remove()
+    }
+    this.maxValInputView = new InputView({
+      parent: this,
+      required: true,
+      name: 'max-value',
+      label: '',
+      tests: tests.valueTests,
+      modelKey: 'max',
+      valueType: 'number',
+      value: this.model.max,
+    });
+    this.registerRenderSubview(this.maxValInputView, "variable-max")
+  },
+  renderStepsInputView: function () {
+    if(this.stepsInputView) {
+      this.stepsInputView.remove()
+    }
+    this.stepsInputView = new InputView({
+      parent: this,
+      required: true,
+      name: 'steps',
+      label: '',
+      tests: tests.valueTests,
+      modelKey: 'steps',
+      valueType: 'number',
+      value: this.model.steps,
+    });
+    this.registerRenderSubview(this.stepsInputView, "variable-steps")
+  },
+  renderLevelInputView: function () {
+    if(this.levelInputView) {
+      this.levelInputView.remove()
+    }
+    this.levelInputView = new InputView({
+      parent: this,
+      required: true,
+      name: 'level',
+      label: '',
+      tests: tests.valueTests,
+      modelKey: 'level',
+      valueType: 'number',
+      value: this.model.level,
+    });
+    this.registerRenderSubview(this.levelInputView, "variable-level")
+  },
+  renderOutliersInputView: function () {
+    if(this.outliersInputView) {
+      this.outliersInputView.remove()
+    }
+    this.outliersInputView = new InputView({
+      parent: this,
+      required: false,
+      name: 'outliers',
+      label: '',
+      tests: [],
+      modelKey: 'outliers',
+      valueType: 'string',
+      value: this.model.outliers,
+      placeholder: "--Enter Outliers--"
+    });
+    this.registerRenderSubview(this.outliersInputView, "variable-outliers")
+  },
+  renderSeedSizeInputView: function () {
+    if(this.seedSizeInputView) {
+      this.seedSizeInputView.remove()
+    }
+    this.seedSizeInputView = new InputView({
+      parent: this,
+      required: true,
+      name: 'seed-size',
+      label: '',
+      tests: tests.valueTests,
+      modelKey: 'seedSize',
+      valueType: 'number',
+      value: this.model.seedSize,
+    });
+    this.registerRenderSubview(this.seedSizeInputView, "variable-seed-size")
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -85,10 +180,28 @@ module.exports = View.extend({
     this.updateVariableProps()
     this.model.collection.trigger('update-target')
   },
+  setHasChangedRange: function () {
+    this.model.hasChangedRange = true
+  },
   updateVariableProps: function () {
     $(this.queryByHook("target-value")).text(this.parameter.expression)
     this.model.hasChangedRange = false
     this.model.updateVariable(this.parameter)
     this.renderMinValInputView()
+    this.renderMaxValInputView()
+    if(this.parent.parent.model.distributionType === "Uniform"){
+      this.renderStepsInputView()
+    }else if(this.parent.parent.model.distributionType === "Factorial") {
+      this.renderLevelInputView()
+      this.renderOutliersInputView()
+    }else if(this.parent.parent.model.distributionType === "Latin Hypercube") {
+      this.renderSeedSizeInputView()
+    }
+  },
+  removeVariable: function () {
+    // console.log("Removing variable targeting " + this.parameter.name)
+    this.remove()
+    this.model.collection.removeVariable(this.model)
+    this.remove()
   }
 });

@@ -30,7 +30,7 @@ module.exports = Collection.extend({
       max: 0,
       steps: 11,
       level: 1,
-      outliers: [],
+      outliers: "",
       seedSize: 1,
       hasChangedRange: false
     });

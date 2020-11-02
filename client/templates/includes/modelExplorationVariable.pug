@@ -6,22 +6,20 @@ tr
 
   td: div(data-hook="variable-min")
 
-  td: div TODO: Max Value
+  td: div(data-hook="variable-max")
 
   td
 
     if(this.distributionType == "Uniform")
-      div TODO: Steps
+      div(data-hook="variable-steps")
 
     if(this.distributionType == "Factorial")
-      div 
-        div TODO: Level
-        div Testing multi-elements
+      div(data-hook="variable-level")
 
     if(this.distributionType == "Latin Hypercube")
-      div TODO: Seed Size
+      div(data-hook="variable-seed-size")
 
   if(this.distributionType == "Factorial")
-    td: div TODO: Outliers
+    td: div(data-hook="variable-outliers")
 
   td: button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X

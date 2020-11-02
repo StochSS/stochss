@@ -23,11 +23,11 @@ module.exports = State.extend({
   props: {
     paramID: 'number',
     min: 'any',
-    max: 'number',
-    steps: 'number',
-    level: 'number',
-    outliers: 'object',
-    seedSize: 'number',
+    max: 'any',
+    steps: 'any',
+    level: 'any',
+    outliers: 'string',
+    seedSize: 'any',
     hasChangedRanged: 'boolean' 
   },
   initialize: function(attrs, options) {
