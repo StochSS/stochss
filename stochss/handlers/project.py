@@ -1,7 +1,19 @@
 '''
-Use BaseHandler for page requests since
-the base API handler has some logic that prevents
-requests without a referrer field
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 
@@ -14,11 +26,11 @@ from shutil import copyfile, copytree, rmtree
 from tornado import web
 from notebook.base.handlers import APIHandler
 
-from .util.rename import get_unique_file_name
+from .util.rename import get_unique_file_name, get_file_name
 from .util.workflow_status import get_status
 from .util.generate_zip_file import download_zip
 from .util.convert_to_combine import convert
-from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
+from .util.stochss_errors import StochSSAPIError
 
 log = logging.getLogger('stochss')
 
@@ -98,7 +110,7 @@ class LoadProjectAPIHandler(APIHandler):
                 mdl_dir = os.path.join(path, item)
                 with open(mdl_dir, 'r') as mdl_file:
                     model = json.load(mdl_file)
-                    model['name'] = item.split('.')[0]
+                    model['name'] = get_file_name(item)
                     model['directory'] = mdl_dir
                     self.update_model_data(model)
                     project['models'].append(model)
@@ -135,20 +147,23 @@ class LoadProjectAPIHandler(APIHandler):
         for reaction in data['reactions']:
             if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
                 try:
-                    reaction['rate']['expression'] = ast.literal_eval(reaction['rate']['expression'])
+                    value = ast.literal_eval(reaction['rate']['expression'])
+                    reaction['rate']['expression'] = value
                 except ValueError:
                     pass
         for event in data['eventsCollection']:
             for assignment in event['eventAssignments']:
                 if assignment['variable']['compID'] in param_ids:
                     try:
-                        assignment['variable']['expression'] = ast.literal_eval(assignment['variable']['expression'])
+                        value = ast.literal_eval(assignment['variable']['expression'])
+                        assignment['variable']['expression'] = value
                     except ValueError:
                         pass
         for rule in data['rules']:
             if rule['variable']['compID'] in param_ids:
                 try:
-                    rule['variable']['expression'] = ast.literal_eval(rule['variable']['expression'])
+                    value = ast.literal_eval(rule['variable']['expression'])
+                    rule['variable']['expression'] = value
                 except ValueError:
                     pass
 
@@ -310,12 +325,40 @@ class NewWorkflowGroupAPIHandler(APIHandler):
 
 class AddExistingModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for adding existing models to a project
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
+        '''
+        Get the list of models that can be added to the project
+
+        Attributes
+        ----------
+        '''
+        user_dir = "/home/jovyan"
+        self.set_header('Content-Type', 'application/json')
+        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        log.debug("Path to the model: %s", path)
+        models = []
+        for root, _, files in os.walk("/home/jovyan"):
+            if path not in root and "/." not in root and ".wkfl" not in root:
+                root = root.replace(user_dir+"/", "")
+                files = list(filter(lambda file: (not file.startswith(".") and
+                                                  file.endswith(".mdl")), files))
+                for file in files:
+                    if root == user_dir:
+                        models.append(file)
+                    else:
+                        models.append(os.path.join(root, file))
+        log.debug("List of model that can be added to the project: %s", models)
+        self.write({"models": models})
+        self.finish()
+
+
+    @web.authenticated
+    def post(self):
         '''
         Add the selected model to the project.
 
@@ -328,86 +371,32 @@ class AddExistingModelAPIHandler(APIHandler):
         mdl_path = os.path.join(user_dir, self.get_query_argument(name="mdlPath"))
         log.debug("Path to the project: %s", path)
         log.debug("Path to the model: %s", mdl_path)
-        try:
-            unique_path, changed = get_unique_file_name(mdl_path.split("/").pop(), path)
-            copyfile(mdl_path, unique_path)
-            resp = {"message": "The model {0} was successfully move into \
-                                {1}".format(mdl_path.split('/').pop(), path.split("/").pop())}
-            if changed:
-                resp['message'] += " as {0}".format(unique_path.split('/').pop())
-            log.debug("Response message: %s", resp)
-            self.write(resp)
-        except IsADirectoryError as err:
+        if mdl_path.endswith('.mdl'):
+            try:
+                unique_path, changed = get_unique_file_name(mdl_path.split("/").pop(), path)
+                copyfile(mdl_path, unique_path)
+                resp = {"message": "The model {0} was successfully move into \
+                                    {1}".format(mdl_path.split('/').pop(), path.split("/").pop())}
+                if changed:
+                    resp['message'] += " as {0}".format(unique_path.split('/').pop())
+                log.debug("Response message: %s", resp)
+                self.write(resp)
+            except IsADirectoryError as err:
+                self.set_status(406)
+                error = {"Reason":"Not A Model",
+                         "Message":"Cannot move directories into StochSS Projects: {0}".format(err)}
+                log.error("Exception Information: %s", error)
+                self.write(error)
+            except FileNotFoundError as err:
+                self.set_status(404)
+                error = {"Reason":"Model Not Found",
+                         "Message":"Could not find the model: {0}".format(err)}
+                log.error("Exception Information: %s", error)
+                self.write(error)
+        else:
             self.set_status(406)
             error = {"Reason":"Not A Model",
-                     "Message":"Cannot move directories into StochSS Projects: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            error = {"Reason":"Model Not Found",
-                     "Message":"Could not find the model: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
-        self.finish()
-
-
-class AddExistingWorkflowAPIHandler(APIHandler):
-    '''
-    ##############################################################################
-    Handler for adding an existing workflow to a project
-    ##############################################################################
-    '''
-    @web.authenticated
-    def get(self):
-        '''
-        Add the selected workflow to the project.
-
-        Attributes
-        ----------
-        '''
-        user_dir = "/home/jovyan"
-        self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        wkfl_path = os.path.join(user_dir, self.get_query_argument(name="wkflPath"))
-        log.debug("Path to the workflow group: %s", path)
-        log.debug("Path to the workflow: %s", wkfl_path)
-        try:
-            if get_status(wkfl_path) == "running":
-                raise StochSSPermissionsError("Running workflows cannot be moved.")
-            unique_path, changed = get_unique_file_name(wkfl_path.split('/').pop(), path)
-            copytree(wkfl_path, unique_path)
-            resp = {"message": "The Workflow {0} was successfully moved into \
-                                {1}".format(wkfl_path.split('/').pop(), path.split('/').pop())}
-            with open(os.path.join(unique_path, "info.json"), 'r+') as info_file:
-                info = json.load(info_file)
-                log.debug("Old workflow info: %s", info)
-                if get_status(unique_path) == "ready":
-                    info['source_model'] = os.path.join(os.path.dirname(path).replace(user_dir+"/",
-                                                                                      ""),
-                                                        info['source_model'].split('/').pop())
-                else:
-                    info['wkfl_model'] = (info['wkfl_model']
-                                          .replace(os.path.dirname(info['wkfl_model']),
-                                                   unique_path.replace(user_dir+"/",
-                                                                       "")))
-                log.debug("New workflow info: %s", info)
-                info_file.seek(0)
-                json.dump(info, info_file)
-                info_file.truncate()
-            if changed:
-                resp['message'] += " as {0}".format(unique_path.split("/").pop())
-            log.debug("Response message: %s", resp)
-            self.write(resp)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            error = {"Reason":"Workflow Not Found",
-                     "Message":"Could not find the workflow: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
-        except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
+                     "Message":"Cannot move non-model files into StochSS Projects"}
             log.error("Exception Information: %s", error)
             self.write(error)
         self.finish()

@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 let jstree = require('jstree');
 let path = require('path');
 let xhr = require('xhr');
@@ -21,7 +39,7 @@ module.exports = View.extend({
     'click [data-hook=browser-new-workflow-group]' : 'handleCreateWorkflowGroupClick',
     'click [data-hook=browser-new-model]' : 'handleCreateModelClick',
     'click [data-hook=browser-existing-model]' : 'handleAddExistingModelClick',
-    'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
+    'click [data-hook=upload-file-btn-bf]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
@@ -124,7 +142,6 @@ module.exports = View.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
-                console.log((oldPath.includes('trash/') || newDir.endsWith('trash')))
                 self.updateParent(node.type, (oldPath.includes('trash/') || newDir.endsWith('trash')))
               }else{
                 body = JSON.parse(body)
@@ -162,13 +179,6 @@ module.exports = View.extend({
     var self = this;
     this.nodeForContextMenu = "";
     this.jstreeIsLoaded = false
-    // Remove all backdrop on close
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      if($(".modal-backdrop").length > 1) {
-        $(".modal-backdrop").remove();
-      }
-      e.target.remove()
-    });
     window.addEventListener('pageshow', function (e) {
       var navType = window.performance.navigation.type
       if(navType === 2){
@@ -233,56 +243,103 @@ module.exports = View.extend({
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
+    let fileCharErrMsg = document.querySelector('#uploadFileModal #fileSpecCharError')
+    let nameEndErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+    let nameCharErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+    let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
     fileInput.addEventListener('change', function (e) {
-      if(fileInput.files.length){
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
         uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
       }else{
         uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
       }
     })
     input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
-      var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
-      let error = self.validateName(input.value)
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+      let nameErr = self.validateName(input.value)
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'none'
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
+        uploadBtn.disabled = false
+        fileCharErrMsg.style.display = 'none'
+      }else{
+        uploadBtn.disabled = true
+        fileCharErrMsg.style.display = 'block'
+      }
+      nameCharErrMsg.style.display = nameErr === "both" || nameErr === "special" ? "block" : "none"
+      nameEndErrMsg.style.display = nameErr === "both" || nameErr === "forward" ? "block" : "none"
+      nameUsageMsg.style.display = nameErr !== "" ? "block" : "none"
     });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
-      var fileinfo = {"type":type,"name":"","path":"/"}
+      var fileinfo = {"type":type,"name":"","path":self.parent.projectPath}
       if(o && o.original){
         fileinfo.path = o.original._path
       }
       if(Boolean(input.value) && self.validateName(input.value) === ""){
-        fileinfo.name = input.value.trim()
+        let name = input.value.trim()
+        if(file.name.endsWith(".mdl") || (type === "model" && file.name.endsWith(".json"))){
+          fileinfo.name = name.split('/').pop()
+        }else if(file.name.endsWith(".sbml") || (type === "sbml" && file.name.endsWith(".xml"))){
+          fileinfo.name = name.split('/').pop()
+        }else{
+          fileinfo.name = name
+        }
       }
       let formData = new FormData()
       formData.append("datafile", file)
       formData.append("fileinfo", JSON.stringify(fileinfo))
       let endpoint = path.join(app.getApiPath(), 'file/upload');
-      let req = new XMLHttpRequest();
-      req.open("POST", endpoint)
-      req.onload = function (e) {
-        var resp = JSON.parse(req.response)
-        if(req.status < 400) {
-          if(o){
-            var node = $('#models-jstree-view').jstree().get_node(o.parent);
-            if(node.type === "root" || node.type === "#"){
-              self.refreshJSTree();
-            }else{
-              $('#models-jstree-view').jstree().refresh_node(node);
-            }
-          }else{
-            self.refreshJSTree();
-          }
-          if(resp.errors.length > 0){
-            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
-          }
-        }
+      if(Boolean(input.value) && self.validateName(input.value) === "" && fileinfo.name !== input.value.trim()){
+        let message = "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>"
+        let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
+        let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
+        yesBtn.addEventListener('click', function (e) {
+          warningModal.modal('hide')
+          self.openUploadRequest(endpoint, formData, file, type, o)
+        })
+      }else{
+        self.openUploadRequest(endpoint, formData, file, type, o)
       }
-      req.send(formData)
       modal.modal('hide')
     })
+  },
+  openUploadRequest: function (endpoint, formData, file, type, o) {
+    let self = this
+    let req = new XMLHttpRequest();
+    req.open("POST", endpoint)
+    req.onload = function (e) {
+      var resp = JSON.parse(req.response)
+      if(req.status < 400) {
+        if(o){
+          var node = $('#models-jstree-view').jstree().get_node(o.parent);
+          if(node.type === "root" || node.type === "#"){
+            self.refreshJSTree();
+          }else{
+            $('#models-jstree-view').jstree().refresh_node(node);
+          }
+        }else{
+          self.refreshJSTree();
+        }
+        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".sbml")) {
+          self.parent.update("file-browser")
+        }
+        if(resp.errors.length > 0){
+          let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
+        }
+      }else{
+        let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
+      }
+    }
+    req.send(formData)
   },
   deleteFile: function (o) {
     var fileType = o.type
@@ -648,28 +705,15 @@ module.exports = View.extend({
     if(document.querySelector('#newProjectModelModal')){
       document.querySelector('#newProjectModelModal').remove()
     }
-    let modal = $(modals.newProjectModelHtml()).modal()
-    let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
-    let input = document.querySelector('#newProjectModelModal #modelPathInput')
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
-      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener("click", function (e) {
-      if(Boolean(input.value)) {
-        let queryString = "?path="+self.parent.projectPath+"&mdlPath="+input.value.trim()
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+self.parent.projectPath
+    xhr({uri:mdlListEP, json:true}, function (err, response, body) {
+      let modal = $(modals.newProjectModelHtml(body.models)).modal()
+      let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
+      let select = document.querySelector('#newProjectModelModal #modelPathInput')
+      okBtn.addEventListener("click", function (e) {
+        let queryString = "?path="+self.parent.projectPath+"&mdlPath="+select.value
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
-        xhr({uri:endpoint, json:true}, function (err, response, body) {
+        xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {
             self.updateParent("nonspatial")
             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
@@ -679,7 +723,7 @@ module.exports = View.extend({
           }
         });
         modal.modal('hide')
-      }
+      });
     });
   },
   addNewWorkflow: function (o) {
@@ -717,44 +761,6 @@ module.exports = View.extend({
       });
     }
   },
-  addExistingWorkflow: function (o) {
-    let self = this;
-    if(document.querySelector('#newProjectWorkflowModal')) {
-      document.querySelector('#newProjectWorkflowModal').remove()
-    }
-    let modal = $(modals.addExistingWorkflowToProjectHtml()).modal()
-    let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-    let input = document.querySelector('#newProjectWorkflowModal #workflowPathInput')
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputEndCharError')
-      var charErrMsg = document.querySelector('#newProjectWorkflowModal #workflowPathInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener("click", function (e) {
-      if(Boolean(input.value)) {
-        let queryString = "?path="+o.original._path+"&wkflPath="+input.value.trim()
-        let endpoint = path.join(app.getApiPath(), "project/add-existing-workflow")+queryString
-        xhr({uri: endpoint, json: true}, function (err, response, body) {
-          if(response.statusCode < 400) {
-            self.updateParent("workflow")
-            let successModal = $(modals.addExistingWorkflowToProjectSuccessHtml(body.message)).modal()
-          }else{
-            let errorModal = $(modals.addExistingWorkflowToProjectErrorHtml(body.Reason, body.Message)).modal()
-          }
-        });
-        modal.modal('hide')
-      }
-    });
-  },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
     if(document.querySelector('#newModalModel')) {
@@ -773,29 +779,50 @@ module.exports = View.extend({
       var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
       var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
       let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
+      okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
+        modal.modal('hide')
         var parentPath = self.parent.projectPath
         if(o && o.original && o.original._path !== "/"){
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
-          let message = modelName.split(".")[0] !== input.value.trim() ? 
+          let modelName = !o || (o && o.type === "root") ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
+          let message = modelName !== input.value.trim() + ".mdl"? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
           let modelPath = path.join(parentPath, modelName)
-          let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message;
+          let queryString = "?path="+modelPath+"&message="+message;
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
+          let existEP = path.join(app.getApiPath(), "model/exists")+queryString
           if(message){
-            modal.modal('hide')
             let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
             let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
-            yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
+            yesBtn.addEventListener('click', function (e) {
+              warningModal.modal('hide')
+              xhr({uri: existEP, json: true}, function (err, response, body) {
+                if(body.exists) {
+                  let title = "Model Already Exists"
+                  let message = "A model already exists with that name"
+                  let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+                }else{
+                  window.location.href = endpoint
+                }
+              })
+            })
           }else{
-            window.location.href = endpoint;
+            xhr({uri: existEP, json: true}, function (err, response, body) {
+              if(body.exists) {
+                let title = "Model Already Exists"
+                let message = "A model already exists with that name"
+                let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+              }else{
+                window.location.href = endpoint
+              }
+            })
           }
         }else{
           let dirName = input.value.trim();
@@ -817,7 +844,6 @@ module.exports = View.extend({
               let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
             }
           });
-          modal.modal('hide')
         }
       }
     });
@@ -1080,7 +1106,7 @@ module.exports = View.extend({
           "label" : "New Workflow",
           "_disabled" : (nodeType === "spatial") ? true : false,
           "separator_before" : false,
-          "separator_after" : o.type !== "workflow-group",
+          "separator_after" : true,
           "action" : function (data) {
             self.addNewWorkflow(o)
           }
@@ -1168,24 +1194,7 @@ module.exports = View.extend({
       }
       // specific to workflow groups
       let workflowGroup = {
-        "Add Workflow" : {
-          "label" : "Add Workflow",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : true,
-          "submenu" : {
-            "New Workflow" : newWorkflow.NewWorkflow,
-            "Existing Workflow" : {
-              "label" : "Existing Workflow",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.addExistingWorkflow(o)
-              }
-            }
-          }
-        }
+        "Add New Workflow" : newWorkflow.NewWorkflow
       }
       // specific to workflows
       let workflow = {

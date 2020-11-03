@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
 
+'''
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import os
 import sys
 import json
@@ -86,19 +104,13 @@ class GillesPy2Workflow():
     def run_preview(self, gillespy2_model, stochss_model):
         with open("/stochss/stochss_templates/workflowSettingsTemplate.json", "r") as template_file:
             sim_settings = json.load(template_file)['simulationSettings']
+            sim_settings['realizations'] = 1
 
-        _results = run_solver(gillespy2_model, sim_settings, 5)
-        results = _results[0]
-        res_dict = dict(results)
-        for k, v in res_dict.items():
-            res_dict[k] = list(v)
-        results = res_dict
-        for key in results.keys():
-            if not isinstance(results[key], list):
-                # Assume it's an ndarray, use tolist()
-                results[key] = results[key].tolist()
-        results['data'] = stochss_model
-        return results
+        results = run_solver(gillespy2_model, sim_settings, 5)
+        plot = results.plotplotly(return_plotly_figure=True)
+        plot["layout"]["autosize"] = True
+        plot["config"] = {"responsive": True, "displayModeBar": True}
+        return plot
 
 
     def run(self, gillespy2_model, verbose):
@@ -227,7 +239,10 @@ class ModelFactory():
         name = data['name']
         timeStep = (data['modelSettings']['timeStep'])
         endSim = data['modelSettings']['endSim']
-        volume = data['modelSettings']['volume']
+        if "volume" not in data.keys():
+            volume = data['modelSettings']['volume']
+        else:
+            volume = data['volume']
         self.species = list(map(lambda s: self.build_specie(s, is_ode), data['species']))
         self.parameters = list(map(lambda p: self.build_parameter(p), data['parameters']))
         self.reactions = list(map(lambda r: self.build_reaction(r, self.parameters), data['reactions']))
@@ -693,8 +708,12 @@ if __name__ == "__main__":
             resp['errors'] = "{0}".format(error)
         except SimulationError as error:
             resp['errors'] = "{0}".format(error)
+        except ValueError as error:
+            resp['errors'] = "{0}".format(error)
+        except Exception as error:
+            resp['errors'] = "{0}".format(error)
         with open(outfile, "w") as fd:
-            json.dump(resp, fd)
+            json.dump(resp, fd, cls=plotly.utils.PlotlyJSONEncoder)
         open(outfile + ".done", "w").close()
     else:
         if os.path.exists(outfile + ".done"):

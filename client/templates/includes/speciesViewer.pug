@@ -2,7 +2,7 @@ div#species-viewer.card.card-body
 
   div
 
-    h3.inline Species
+    h3.inline Variables
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-species", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-species")
@@ -13,6 +13,12 @@ div#species-viewer.card.card-body
           th.col-md-3-view(scope="col") Name
           th.col-md-3-view(scope="col") Initial Condition
           th.col-md-3-view(scope="col") Mode
-          th.col-md-3-view(scope="col") Switch Tolerance/Minimum Value for Switching
-        
+          if this.collection.parent.defaultMode === "dynamic"
+            th.col-md-3-view(scope="col") Switch Tolerance/Minimum Value for Switching
+          if this.containsMdlWithAnn
+            th.col-md-3-view(scope="col") Annotation
+          
       tbody(data-hook="specie-list")
+
+    if this.collection.parent.for === "edit"
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-species") Edit Variables

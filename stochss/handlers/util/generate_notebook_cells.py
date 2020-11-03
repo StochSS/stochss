@@ -1,4 +1,23 @@
 #!/usr/bin/env python3
+
+'''
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import json
 
 
@@ -51,7 +70,7 @@ def create_parameter_strings(json_data, padding):
 
 
 def create_species_strings(json_data, padding):
-    species_string = '\n' + padding + '# Species\n'
+    species_string = '\n' + padding + '# Variables\n'
     for species in json_data['species']:
         species_string += padding + 'self.add_species(Species(name="{0}", initial_value={1}, mode="{2}"))\n'.format(
                 species['name'], 
@@ -180,12 +199,15 @@ def generate_model_cell(json_data, name):
         raise Exception('Spatial not yet implemented.')
     else:
         # Non-Spatial
+        if "volume" not in json_data.keys():
+            json_data['volume'] = json_data['modelSettings']['volume']
+        
         model_cell += 'class {0}(Model):\n'.format(name)
         model_cell += '    def __init__(self, parameter_values=None):\n'
         padding = '        '
         model_cell += padding + 'Model.__init__(self, name="{0}")\n'.format(name)
         model_cell += padding + 'self.volume = {0}\n'.format(
-                json_data['modelSettings']['volume'])
+                json_data['volume'])
 
         model_cell += create_parameter_strings(json_data, padding)
         model_cell += create_species_strings(json_data, padding)
@@ -335,8 +357,8 @@ def generate_feature_extraction_cell():
 # from the simulation trajectory
 
 def population_at_last_timepoint(c,res):
-    if c.verbose: print('population_at_last_timepoint {0}={1}'.format(c.species_of_interest,res[c.species_of_interest][-1]))
-    return res[c.species_of_interest][-1]'''
+    if c.verbose: print('population_at_last_timepoint {0}={1}'.format(c.variable_of_interest,res[c.variable_of_interest][-1]))
+    return res[c.variable_of_interest][-1]'''
     return feature_extraction_cell
 
 
@@ -417,13 +439,13 @@ def generate_1D_parameter_sweep_class_cell(json_data, algorithm):
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         import numpy
         fig, ax = plt.subplots(figsize=(8,8))
-        plt.title("Parameter Sweep - Species:{0}".format(c.species_of_interest))
+        plt.title("Parameter Sweep - Variable:{0}".format(c.variable_of_interest))
         plt.errorbar(c.p1_range,c.data[:,0],c.data[:,1])
         plt.xlabel(c.p1, fontsize=16, fontweight='bold')
         plt.ylabel("Population", fontsize=16, fontweight='bold')
 
 
-    def plotplotly(c, return_plotly_figure=False, species_of_interest=None):
+    def plotplotly(c, return_plotly_figure=False, variable_of_interest=None):
         from plotly.offline import iplot
         import plotly.graph_objs as go
 
@@ -433,7 +455,7 @@ def generate_1D_parameter_sweep_class_cell(json_data, algorithm):
 
         trace_list = [go.Scatter(x=c.p1_range, y=data[:,0], error_y=error_y)]
 
-        title = dict(text="<b>Parameter Sweep - Species: {0}</b>".format(c.species_of_interest), x=0.5)
+        title = dict(text="<b>Parameter Sweep - Variable: {0}</b>".format(c.variable_of_interest), x=0.5)
         yaxis_label = dict(title="<b>Population</b>")
         xaxis_label = dict(title="<b>{0}</b>".format(c.p1))
 
@@ -478,7 +500,7 @@ class ParameterSweepConfig(ParameterSweep1D):
     psweep_config_cell += padding + 'p1_max = {0} # ENTER END VALUE FOR P1 RANGE HERE\n'.format(p1_max)
     psweep_config_cell += padding + 'p1_steps = {0} # ENTER THE NUMBER OF STEPS FOR P1 HERE\n'.format(p1_steps)
     psweep_config_cell += padding + 'p1_range = np.linspace(p1_min,p1_max,p1_steps)\n'
-    psweep_config_cell += padding + 'species_of_interest = "{0}" # ENTER SPECIES OF INTEREST HERE\n'.format(soi)
+    psweep_config_cell += padding + 'variable_of_interest = "{0}" # ENTER VARIABLE OF INTEREST HERE\n'.format(soi)
     psweep_config_cell += padding + 'number_of_trajectories = {0}\n'.format(num_traj)
     psweep_config_cell += padding + '''# What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
@@ -544,7 +566,7 @@ def generate_2D_parameter_sweep_class_cell(json_data, algorithm):
         plt.imshow(c.data)
         ax.set_xticks(numpy.arange(c.data.shape[1])+0.5, minor=False)
         ax.set_yticks(numpy.arange(c.data.shape[0])+0.5, minor=False)
-        plt.title("Parameter Sweep - Species: {0}".format(c.species_of_interest))
+        plt.title("Parameter Sweep - Variable: {0}".format(c.variable_of_interest))
         ax.set_xticklabels(c.p1_range, minor=False, rotation=90)
         ax.set_yticklabels(c.p2_range, minor=False)
         ax.set_xlabel(c.p1, fontsize=16, fontweight='bold')
@@ -564,7 +586,7 @@ def generate_2D_parameter_sweep_class_cell(json_data, algorithm):
 
         trace_list = [go.Heatmap(z=data, x=xaxis_ticks, y=yaxis_ticks)]
 
-        title = dict(text="<b>Parameter Sweep - Species: {0}</b>".format(c.species_of_interest), x=0.5)
+        title = dict(text="<b>Parameter Sweep - Variable: {0}</b>".format(c.variable_of_interest), x=0.5)
         xaxis_label = dict(title="<b>{0}</b>".format(c.p1))
         yaxis_label = dict(title="<b>{0}</b>".format(c.p2))
 
@@ -622,7 +644,7 @@ class ParameterSweepConfig(ParameterSweep2D):
     psweep_config_cell += padding + 'p2_max = {0} # ENTER END VALUE FOR P2 RANGE HERE\n'.format(p2_max)
     psweep_config_cell += padding + 'p2_steps = {0} # ENTER THE NUMBER OF STEPS FOR P2 HERE\n'.format(p2_steps)
     psweep_config_cell += padding + 'p2_range = np.linspace(p2_min,p2_max,p2_steps)\n'
-    psweep_config_cell += padding + 'species_of_interest = "{0}" # ENTER SPECIES OF INTEREST HERE\n'.format(soi)
+    psweep_config_cell += padding + 'variable_of_interest = "{0}" # ENTER VARIABLE OF INTEREST HERE\n'.format(soi)
     psweep_config_cell += padding + 'number_of_trajectories = {0}\n'.format(num_traj)
     psweep_config_cell += padding + '''# What feature of the simulation are we examining
     feature_extraction = population_at_last_timepoint
@@ -647,7 +669,7 @@ def generate_sciope_wrapper_cell(json_data, algorithm, solv_name):
         }
     sciope_wrapper_cell = '''from sciope.utilities.gillespy2 import wrapper
 settings = {{{}"number_of_trajectories":10}}
-simulator = wrapper.get_simulator(gillespy_model=model, run_settings=settings, species_of_interest={})
+simulator = wrapper.get_simulator(gillespy_model=model, run_settings=settings, variable_of_interest={})
 expression_array = wrapper.get_parameter_expression_array(model)'''.format(solver_map[algorithm], soi)
     return sciope_wrapper_cell
 
@@ -792,7 +814,7 @@ fixed_data = model.run(**kwargs)'''
 
 
 def generate_mdl_inf_reshape_data_cell():
-    reshape_data_cell = '''# Reshape the data to (n_points,n_species,n_timepoints) and remove timepoints array
+    reshape_data_cell = '''# Reshape the data to (n_points,n_variables,n_timepoints) and remove timepoints array
 fixed_data = fixed_data.to_array()
 fixed_data = np.asarray([x.T for x in fixed_data])
 fixed_data = fixed_data[:,1:, :]'''

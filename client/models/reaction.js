@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var _ = require('underscore');
 //models
 var State = require('ampersand-state');
@@ -36,6 +54,13 @@ module.exports = State.extend({
   initialize: function (attrs, options) {
     var self = this;
     State.prototype.initialize.apply(this, arguments);
+    if(!this.reactionType.startsWith('custom')) {
+      let reactionType = this.updateReactionType();
+      if(this.reactionType !== reactionType){
+        this.reactionType = reactionType
+        this.buildSummary()
+      }
+    }
     this.on('change-reaction', function () {
       self.buildSummary();
       self.checkModes();
@@ -111,4 +136,39 @@ module.exports = State.extend({
     }
     this.hasConflict = Boolean(hasContinuous && (hasDynamic || hasDiscrete))
   },
+  updateReactionType: function () {
+    let numReactants = this.reactants.length
+    let numProducts = this.products.length
+    let prodRatio1 = numProducts > 0 ? this.products.models[0].ratio : 0
+    if(numReactants == 0 && numProducts == 1 && prodRatio1 == 1) return "creation";
+
+    let reactRatio1 = numReactants > 0 ? this.reactants.models[0].ratio : 0
+    let prodRatio2 = numProducts > 1 ? this.products.models[1].ratio : 0
+    if(numReactants == 1){
+      if(reactRatio1 == 1) {
+        if(numProducts == 0) return "destruction";
+        if(numProducts == 2 && prodRatio1 == 1 && prodRatio2 == 1) return "split";
+      }
+      
+      if(numProducts == 1 && prodRatio1 == 1){
+        if(reactRatio1 == 1) return "change";
+        if(reactRatio1 == 2) return "dimerization";
+      }
+    }
+
+    let reactRatio2 = numReactants > 1 ? this.reactants.models[1].ratio : 0
+    if(numReactants == 2 && reactRatio1 == 1 && reactRatio2 == 1){
+      if(numProducts == 1 && prodRatio1 == 1) return "merge";
+      if(numProducts == 2 && prodRatio1 == 1 && prodRatio2 == 1) return "four";
+    }
+    return "custom-massaction"
+  },
+  validateComponent: function () {
+    if(!this.name.trim() || this.name.match(/^\d/)) return false;
+    if(!this.propensity.trim() && this.reactionType === "custom-propensity") return false;
+    if(this.reactionType.startsWith('custom')) {
+      if(this.reactants.length <= 0 && this.products.length <= 0) return false;
+    }
+    return true;
+  }
 });

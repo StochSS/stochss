@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var _ = require('underscore');
 var $ = require('jquery');
 var katex = require('katex');
@@ -55,29 +73,6 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     var self = this;
-    this.renderReactionTypesSelectView()
-    var rateParameterView = new SelectView({
-      label: '',
-      name: 'rate',
-      required: true,
-      idAttribute: 'cid',
-      textAttribute: 'name',
-      eagerValidate: true,
-      options: this.model.collection.parent.parameters,
-      // For new reactions (with no rate.name) just use the first parameter in the Parameters collection
-      // Else fetch the right Parameter from Parameters based on existing rate
-      value: this.model.rate.name ? this.getRateFromParameters(this.model.rate.name) : this.model.collection.parent.parameters.at(0),
-    });
-    var propensityView = new InputView({
-      parent: this,
-      required: true,
-      name: 'rate',
-      label: '',
-      tests:'',
-      modelKey:'propensity',
-      valueType: 'string',
-      value: this.model.propensity
-    });
     var subdomainsView = new ReactionSubdomainsView({
       parent: this,
       isReaction: true,
@@ -96,13 +91,42 @@ module.exports = View.extend({
       fieldTitle: 'Products',
       isReactants: false
     });
+    this.renderReactionTypesSelectView()
     if(this.model.reactionType === 'custom-propensity'){
+      var propensityView = new InputView({
+        parent: this,
+        required: true,
+        name: 'rate',
+        label: '',
+        tests:'',
+        modelKey:'propensity',
+        valueType: 'string',
+        value: this.model.propensity,
+        placeholder: "--No Expression Entered--"
+      });
       this.registerRenderSubview(propensityView, 'select-rate-parameter')
-      var inputField = this.queryByHook('select-rate-parameter').children[0].children[1];
-      $(inputField).attr("placeholder", "---No Expression Entered---");
       $(this.queryByHook('rate-parameter-label')).text('Propensity:')
       $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.propensity);
     }else{
+      // make sure the reaction has a rate and that rate exists in the parameters collection
+      let paramIDs = this.model.collection.parent.parameters.map(function (param) {
+        return param.compID
+      });
+      if(!this.model.rate.compID || !paramIDs.includes(this.model.rate.compID)) {
+        this.model.rate = this.model.collection.getDefaultRate()
+      }
+      var rateParameterView = new SelectView({
+        label: '',
+        name: 'rate',
+        required: true,
+        idAttribute: 'cid',
+        textAttribute: 'name',
+        eagerValidate: true,
+        options: this.model.collection.parent.parameters,
+        // For new reactions (with no rate.name) just use the first parameter in the Parameters collection
+        // Else fetch the right Parameter from Parameters based on existing rate
+        value: this.model.rate.name ? this.getRateFromParameters(this.model.rate.name) : this.model.collection.parent.parameters.at(0),
+      });
       this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
       $(this.queryByHook('rate-parameter-label')).text('Rate Parameter:')
       $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.rate);
@@ -120,6 +144,7 @@ module.exports = View.extend({
 
        });
     });
+    this.toggleCustomReactionError();
   },
   update: function () {
   },
@@ -212,6 +237,16 @@ module.exports = View.extend({
       this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
     else
       this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+  },
+  toggleCustomReactionError: function () {
+    let errorMsg = $(this.queryByHook("custom-reaction-error"))
+    if(this.model.reactants.length <= 0 && this.model.products.length <= 0) {
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
+    }else{
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
+    }
   },
   renderReactionTypes: function () {
     if(this.model.collection.parent.parameters.length < 1){

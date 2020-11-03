@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var $ = require('jquery');
 //support files
 var modals = require('../modals');
@@ -17,6 +35,7 @@ module.exports = View.extend({
     'change [data-hook=all-discrete]' : 'getDefaultSpeciesMode',
     'change [data-hook=advanced]' : 'getDefaultSpeciesMode',
     'click [data-hook=add-species]' : 'handleAddSpeciesClick',
+    'click [data-hook=save-species]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
@@ -78,6 +97,7 @@ module.exports = View.extend({
     }
     this.renderEditSpeciesView();
     this.renderSpeciesAdvancedView();
+    this.toggleSpeciesCollectionError();
   },
   update: function () {
   },
@@ -116,6 +136,11 @@ module.exports = View.extend({
   },
   setAllSpeciesModes: function (defaultMode, cb) {
     this.collection.parent.defaultMode = defaultMode;
+    if(defaultMode === "continuous") {
+      $(this.parent.queryByHook("system-volume-container")).collapse("hide")
+    }else{
+      $(this.parent.queryByHook("system-volume-container")).collapse("show")
+    }
     this.collection.map(function (specie) { 
       specie.mode = defaultMode
       cb(specie)
@@ -125,6 +150,7 @@ module.exports = View.extend({
       $(this.queryByHook('advanced-species')).collapse('show');
     }
     else{
+      this.speciesAdvancedView.views[0].updateInputValidation()
       $(this.queryByHook('advanced-species')).collapse('hide');
     }
   },
@@ -163,6 +189,7 @@ module.exports = View.extend({
   addSpecies: function () {
     var subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
     this.collection.addSpecie(subdomains);
+    this.toggleSpeciesCollectionError()
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
@@ -170,6 +197,20 @@ module.exports = View.extend({
 
        });
     });
+  },
+  toggleSpeciesCollectionError: function () {
+    let errorMsg = $(this.queryByHook('species-collection-error'))
+    if(this.collection.length <= 0) {
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
+    }else{
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
+    }
+  },
+  switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
+    this.parent.renderSpeciesView(mode="view");
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

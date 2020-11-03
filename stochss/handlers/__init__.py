@@ -1,3 +1,21 @@
+'''
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import logging
 from notebook.utils import url_path_join
 
@@ -48,7 +66,6 @@ def get_page_handlers(route_start):
         (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),
         (r"/stochss/api/project/new-workflow-group\/?", NewWorkflowGroupAPIHandler),
         (r"/stochss/api/project/add-existing-model\/?", AddExistingModelAPIHandler),
-        (r"/stochss/api/project/add-existing-workflow\/?", AddExistingWorkflowAPIHandler),
         (r"/stochss/api/project/extract-model\/?", ExtractModelAPIHandler),
         (r"/stochss/api/project/extract-workflow\/?", ExtractWorkflowAPIHandler),
         (r"/stochss/api/project/empty-trash\/?", EmptyTrashAPIHandler),

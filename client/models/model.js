@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var app = require('../app');
 var path = require('path');
 var xhr = require('xhr');
@@ -22,7 +40,8 @@ module.exports = Model.extend({
     is_spatial: 'boolean',
     defaultID: 'number',
     defaultMode: 'string',
-    annotation: 'string'
+    annotation: 'string',
+    volume: 'any'
   },
   collections: {
     species: Species,
@@ -43,9 +62,40 @@ module.exports = Model.extend({
     directory: 'string',
     isPreview: 'boolean',
     for: 'string',
+    valid: 'boolean',
+    error: 'object'
   },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
+    this.species.on('add change remove', this.updateValid, this);
+    this.parameters.on('add change remove', this.updateValid, this);
+    this.reactions.on('add change remove', this.updateValid, this);
+    this.eventsCollection.on('add change remove', this.updateValid, this);
+    this.rules.on('add change remove', this.updateValid, this);
+  },
+  validateModel: function () {
+    if(!this.species.validateCollection()) return false;
+    if(!this.parameters.validateCollection()) return false;
+    if(!this.reactions.validateCollection()) return false;
+    if(!this.eventsCollection.validateCollection()) return false;
+    if(!this.rules.validateCollection()) return false;
+    if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
+      this.error = {"type":"process"}
+      return false;
+    }
+    if(!this.volume === "" || isNaN(this.volume)) {
+      this.error = {"type":"volume"}
+      return false
+    };
+    if(this.modelSettings.validate() === false) {
+      this.error = {"type":"timespan"}
+      return false
+    };
+    return true;
+  },
+  updateValid: function () {
+    this.error = {}
+    this.valid = this.validateModel()
   },
   getDefaultID: function () {
     var id = this.defaultID;

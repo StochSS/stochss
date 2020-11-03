@@ -1,7 +1,5 @@
 div.mdl-edit-btn
   
-  button.btn.btn-primary.box-shadow(data-hook="save") Save
-
   div.mdl-edit-btn.saving-status(data-hook="saving-mdl")
 
     div.spinner-grow
@@ -12,10 +10,23 @@ div.mdl-edit-btn
 
     span Saved
   
-  button.btn.btn-primary.box-shadow(data-hook="run") Run Preview
+  button.btn.btn-primary.box-shadow(data-hook="save") Save
 
-  button.btn.btn-primary.box-shadow(data-hook="new-workflow") New Workflow Using Model
-  
   button.btn.btn-primary.box-shadow(data-hook="return-to-project-btn" style="display: none;") Return to Project
 
+  button.btn.btn-primary.box-shadow.dropdown-toggle(
+    id="simulate-model",
+    data-hook="simulate-model",
+    data-toggle="dropdown",
+    aria-haspopup="true",
+    aria-expanded="false",
+    type="button"
+  ) Simulate <span class="caret"></span>
+
+  ul.dropdown-menu(aria-labelledby="preview-options")
+    li.dropdown-item(data-hook="run" data-type="preview") Preview
+    li.dropdown-divider
+    li.dropdown-item(id="stochss-es" data-hook="stochss-es" data-type="ensemble") Ensemble Simulation
+    li.dropdown-item(id="stochss-ps" data-hook="stochss-ps" data-type="psweep") Parameter Sweep
+    li.dropdown-item(data-hook="new-workflow" data-type="notebook") Jupyter Notebook
   

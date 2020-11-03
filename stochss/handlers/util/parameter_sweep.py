@@ -1,5 +1,22 @@
 #!/usr/bin/env python3
 
+'''
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
 
 import os
 import copy
@@ -201,7 +218,7 @@ class ParameterSweep1D():
         data, species_of_interest = get_data_for_plot(c, keys)
 
         fig, ax = plt.subplots(figsize=(8,8))
-        plt.title("Parameter Sweep - Species: {0}".format(species_of_interest))
+        plt.title("Parameter Sweep - Variable: {0}".format(species_of_interest))
         plt.errorbar(c.p1_range,data[:,0],data[:,1])
         plt.xlabel(c.p1, fontsize=16, fontweight='bold')
         plt.ylabel("Population", fontsize=16, fontweight='bold')
@@ -219,7 +236,7 @@ class ParameterSweep1D():
         trace_list = [go.Scatter(x=c.p1_range, y=data[:,0], error_y=error_y)]
 
         if title is None:
-            title = "<b>Parameter Sweep - Species: {0}</b>".format(species_of_interest)
+            title = "<b>Parameter Sweep - Variable: {0}</b>".format(species_of_interest)
         if xaxis_label is None:
             xaxis_label = "<b>{0}</b>".format(c.p1)
         plt_title = dict(text=title, x=0.5)
@@ -321,7 +338,7 @@ class ParameterSweep2D():
         plt.imshow(data)
         ax.set_xticks(numpy.arange(data.shape[1])+0.5, minor=False)
         ax.set_yticks(numpy.arange(data.shape[0])+0.5, minor=False)
-        plt.title("Parameter Sweep - Species: {0}".format(species_of_interest))
+        plt.title("Parameter Sweep - Variable: {0}".format(species_of_interest))
         ax.set_xticklabels(c.p1_range, minor=False, rotation=90)
         ax.set_yticklabels(c.p2_range, minor=False)
         ax.set_xlabel(c.p1, fontsize=16, fontweight='bold')
@@ -340,7 +357,7 @@ class ParameterSweep2D():
         trace_list = [go.Heatmap(z=data, x=c.p1_range, y=c.p2_range)]
 
         if title is None:
-            title = "<b>Parameter Sweep - Species: {0}</b>".format(species_of_interest)
+            title = "<b>Parameter Sweep - Variable: {0}</b>".format(species_of_interest)
         if xaxis_label is None:
             xaxis_label = "<b>{0}</b>".format(c.p1)
         if yaxis_label is None:

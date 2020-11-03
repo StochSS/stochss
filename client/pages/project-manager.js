@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var $ = require('jquery');
 var xhr = require('xhr');
 var path = require('path');
@@ -247,54 +265,8 @@ let ProjectManager = PageView.extend({
     });
   },
   handleUploadModelClick: function (e) {
-    let self = this
     let type = e.target.dataset.type
-    if(document.querySelector('#uploadFileModal')) {
-      document.querySelector('#uploadFileModal').remove()
-    }
-    let modal = $(modals.uploadFileHtml(type)).modal();
-    let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
-    let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
-    let input = document.querySelector('#uploadFileModal #fileNameInput');
-    fileInput.addEventListener('change', function (e) {
-      if(fileInput.files.length){
-        uploadBtn.disabled = false
-      }else{
-        uploadBtn.disabled = true
-      }
-    })
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
-      var charErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
-      let error = self.validateName(input.value)
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    uploadBtn.addEventListener('click', function (e) {
-      let file = fileInput.files[0]
-      var fileinfo = {"type":type,"name":"","path":self.projectPath}
-      if(Boolean(input.value) && self.validateName(input.value) === ""){
-        fileinfo.name = input.value
-      }
-      let formData = new FormData()
-      formData.append("datafile", file)
-      formData.append("fileinfo", JSON.stringify(fileinfo))
-      let endpoint = path.join(app.getApiPath(), 'file/upload');
-      let req = new XMLHttpRequest();
-      req.open("POST", endpoint)
-      req.onload = function (e) {
-        var resp = JSON.parse(req.response)
-        if(req.status < 400) {
-          if(resp.errors.length > 0){
-            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
-          }else{
-            self.update("model-editor")
-          }
-        }
-      }
-      req.send(formData)
-      modal.modal('hide')
-    })
+    this.projectFileBrowser.uploadFile(undefined, type)
   },
   addNewModel: function (isSpatial) {
     let self = this
@@ -306,19 +278,40 @@ let ProjectManager = PageView.extend({
     let okBtn = document.querySelector('#newModalModel .ok-model-btn');
     let input = document.querySelector('#newModalModel #modelNameInput');
     okBtn.addEventListener('click', function (e) {
+      modal.modal('hide')
       if (Boolean(input.value)) {
         let modelName = input.value.split("/").pop() + '.mdl';
         let message = modelName.split(".")[0] !== input.value ? 
               "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
         let modelPath = path.join(self.projectPath, modelName)
-        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+"?path="+modelPath+"&message="+message
+        let queryString = "?path="+modelPath+"&message="+message
+        let endpoint = path.join(app.getBasePath(), app.routePrefix, 'models/edit')+queryString
+        let existEP = path.join(app.getApiPath(), "model/exists")+queryString
         if(message){
-          modal.modal('hide')
           let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
           let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
-          yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
+          yesBtn.addEventListener('click', function (e) {
+            warningModal.modal('hide')
+            xhr({uri: existEP, json: true}, function (err, response, body) {
+              if(body.exists) {
+                let title = "Model Already Exists"
+                let message = "A model already exists with that name"
+                let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+              }else{
+                window.location.href = endpoint
+              }
+            })
+          })
         }else{
-          window.location.href = endpoint;
+          xhr({uri: existEP, json: true}, function (err, response, body) {
+            if(body.exists) {
+              let title = "Model Already Exists"
+              let message = "A model already exists with that name"
+              let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+            }else{
+              window.location.href = endpoint
+            }
+          });
         }
       }
     });
@@ -326,7 +319,7 @@ let ProjectManager = PageView.extend({
       var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
       var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
       let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
+      okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
     });
@@ -397,28 +390,15 @@ let ProjectManager = PageView.extend({
     if(document.querySelector('#newProjectModelModal')){
       document.querySelector('#newProjectModelModal').remove()
     }
-    let modal = $(modals.newProjectModelHtml()).modal()
-    let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
-    let input = document.querySelector('#newProjectModelModal #modelPathInput')
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
-      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener("click", function (e) {
-      if(Boolean(input.value)) {
-        let queryString = "?path="+self.projectPath+"&mdlPath="+input.value
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+self.projectPath
+    xhr({uri:mdlListEP, json:true}, function (err, response, body) {
+      let modal = $(modals.newProjectModelHtml(body.models)).modal()
+      let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
+      let select = document.querySelector('#newProjectModelModal #modelPathInput')
+      okBtn.addEventListener("click", function (e) {
+        let queryString = "?path="+self.projectPath+"&mdlPath="+select.value
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
-        xhr({uri:endpoint, json:true}, function (err, response, body) {
+        xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {
             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
           }else{
@@ -427,7 +407,7 @@ let ProjectManager = PageView.extend({
         });
         modal.modal('hide')
         self.update("existing-model")
-      }
+      });
     });
   },
   exportAsCombine: function(target, download) {

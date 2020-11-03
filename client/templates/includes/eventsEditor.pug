@@ -4,13 +4,15 @@ div#events.card.card-body
 
     h3.inline Events
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#events-container", data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#events-container", data-hook="collapse") +
 
-  div.collapse(class="show", id="events-container", data-hook="events")
+  div.collapse(id="events-container", data-hook="events")
 
     div.row
 
       div.col-md-6.container-part
+        p
+         | A discontinuous action triggered by the state of the system.
 
         table.table
 
@@ -38,5 +40,6 @@ div#events.card.card-body
 
       div.col-md-6.container-part(data-hook="event-details-container")
 
-    button.btn.btn-outline-primary.box-shadow(data-hook="add-event", type="button")
-      | Add Event
+    button.btn.btn-outline-primary.box-shadow(data-hook="add-event") Add Event
+
+    button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-events") Save Events

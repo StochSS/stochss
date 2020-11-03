@@ -3,10 +3,10 @@
 	"defaultID": 1,
 	"defaultMode": "",
 	"annotation": "",
+	"volume": 1,
 	"modelSettings": {
 		"endSim": 20,
-		"timeStep": 0.05,
-		"volume": 1
+		"timeStep": 0.05
 	},
 	"meshSettings": {
 		"count": 2

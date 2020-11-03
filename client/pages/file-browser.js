@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 let jstree = require('jstree');
 let path = require('path');
 let xhr = require('xhr');
@@ -661,28 +679,15 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#newProjectModelModal')){
       document.querySelector('#newProjectModelModal').remove()
     }
-    let modal = $(modals.newProjectModelHtml()).modal()
-    let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
-    let input = document.querySelector('#newProjectModelModal #modelPathInput')
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newProjectModelModal #modelPathInputEndCharError')
-      var charErrMsg = document.querySelector('#newProjectModelModal #modelPathInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener("click", function (e) {
-      if(Boolean(input.value)) {
-        let queryString = "?path="+o.original._path+"&mdlPath="+input.value.trim()
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+o.original._path
+    xhr({uri:mdlListEP, json:true}, function (err, response, body) {
+      let modal = $(modals.newProjectModelHtml(body.models)).modal()
+      let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
+      let select = document.querySelector('#newProjectModelModal #modelPathInput')
+      okBtn.addEventListener("click", function (e) {
+        let queryString = "?path="+o.original._path+"&mdlPath="+select.value
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
-        xhr({uri:endpoint, json:true}, function (err, response, body) {
+        xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {
             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
           }else{
@@ -690,8 +695,8 @@ let FileBrowser = PageView.extend({
           }
         });
         modal.modal('hide')
-      }
-    });
+      });
+    })
   },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
@@ -724,23 +729,34 @@ let FileBrowser = PageView.extend({
         }
         if(isModel) {
           let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
-          let message = modelName.split(".")[0] !== input.value.trim() ? 
-                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
+          let message = modelName !== input.value.trim() + ".mdl"? 
+                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>" : ""
           let modelPath = path.join(parentPath, modelName)
+          let queryString = "?path="+modelPath+"&message="+message;
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
+          let existEP = path.join(app.getApiPath(), "model/exists")+queryString
           if(message){
             let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
             let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
-            yesBtn.addEventListener('click', function (e) {window.location.href = endpoint;})
+            yesBtn.addEventListener('click', function (e) {
+              warningModal.modal('hide')
+              xhr({uri: existEP, json: true}, function (err, response, body) {
+                if(body.exists) {
+                  let title = "Model Already Exists"
+                  let message = "A model already exists with that name"
+                  let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
+                }else{
+                  window.location.href = endpoint
+                }
+              })
+            })
           }else{
-            let queryString = "?path="+modelPath+"&message="+message;
-            let existEP = path.join(app.getApiPath(), "model/exists")+queryString
             xhr({uri: existEP, json: true}, function (err, response, body) {
               if(body.exists) {
                 let title = "Model Already Exists"
                 let message = "A model already exists with that name"
                 let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
               }else{
-                let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
                 window.location.href = endpoint
               }
             })

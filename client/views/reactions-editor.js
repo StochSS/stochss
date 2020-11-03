@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var ViewSwitcher = require('ampersand-view-switcher');
 var katex = require('katex');
 var _ = require('underscore');
@@ -26,11 +44,13 @@ module.exports = View.extend({
     'click [data-hook=four]'                   : 'handleAddReactionClick',
     'click [data-hook=custom-massaction]'      : 'handleAddReactionClick',
     'click [data-hook=custom-propensity]'      : 'handleAddReactionClick',
+    'click [data-hook=save-reactions]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.reactionsEditor
+    this.opened = attrs.opened
     this.collection.on("select", function (reaction) {
       this.setSelectedReaction(reaction);
       this.setDetailsView(reaction);
@@ -48,6 +68,7 @@ module.exports = View.extend({
     }, this);
     this.collection.parent.species.on('add remove', this.toggleAddReactionButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleReactionTypes, this);
+    this.collection.parent.on('change', this.toggleProcessError, this)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -69,6 +90,14 @@ module.exports = View.extend({
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
     }
     this.renderReactionTypes();
+    katex.render("\\emptyset", this.queryByHook('emptyset'), {
+      displayMode: false,
+      output: 'html',
+    });
+    if(this.opened) {
+      this.openReactionsContainer();
+    }
+    this.toggleProcessError()
   },
   update: function () {
   },
@@ -77,6 +106,13 @@ module.exports = View.extend({
   renderReactionListingView: function () {
     if(this.reactionListingView){
       this.reactionListingView.remove();
+    }
+    if(this.collection.parent.parameters.length <= 0) {
+      for(var i = 0; i < this.collection.length; i++) {
+        if(this.collection.models[i].reactionType !== "custom-propensity"){
+          this.collection.models[i].reactionType = "custom-propensity"
+        }
+      }
     }
     this.reactionListingView = this.renderCollection(
       this.collection,
@@ -139,13 +175,24 @@ module.exports = View.extend({
     detailsView.parent = this;
     return detailsView
   },
+  switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
+    this.parent.renderReactionsView(mode="view");
+  },
+  openReactionsContainer: function () {
+    $(this.queryByHook('reactions-list-container')).collapse('show');
+    let collapseBtn = $(this.queryByHook('collapse'))
+    collapseBtn.trigger('click')
+  },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+    if(e.target.dataset && e.target.dataset.toggle === "collapse") {
+      let source = e.target.dataset.hook
+      let collapseContainer = $(this.queryByHook(source).dataset.target)
+      if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
+        let collapseBtn = $(this.queryByHook(source))
+        let text = collapseBtn.text();
+        text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+      }
     }
   },
   getDefaultSpecie: function () {
@@ -155,17 +202,28 @@ module.exports = View.extend({
   getAnnotation: function (type) {
     return ReactionTypes[type].label
   },
+  toggleProcessError: function () {
+    let errorMsg = $(this.queryByHook('process-component-error'))
+    let model = this.collection.parent
+    if(this.collection.length <= 0 && model.eventsCollection.length <= 0 && model.rules.length <= 0) {
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
+    }else{
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
+    }
+  },
   renderReactionTypes: function () {
     var options = {
       displayMode: false,
       output: 'html',
     }
-    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation'), options);
-    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction'), options);
-    katex.render(ReactionTypes['change'].label, this.queryByHook('change'), options);
-    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization'), options);
-    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge'), options);
-    katex.render(ReactionTypes['split'].label, this.queryByHook('split'), options);
-    katex.render(ReactionTypes['four'].label, this.queryByHook('four'), options);
+    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation-lb1'), options);
+    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction-lb1'), options);
+    katex.render(ReactionTypes['change'].label, this.queryByHook('change-lb1'), options);
+    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization-lb1'), options);
+    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge-lb1'), options);
+    katex.render(ReactionTypes['split'].label, this.queryByHook('split-lb1'), options);
+    katex.render(ReactionTypes['four'].label, this.queryByHook('four-lb1'), options);
   }
 });

@@ -11,6 +11,11 @@ div#parameters-viewer.card.card-body
       thead
         tr
           th.col-md-3-view(scope="col") Name
-          th.col-md-9-view(scope="col") Expression
+          th.col-md-9-view(scope="col") Value
+          if this.containsMdlWithAnn
+            th.col-md-3-view(scope="col") Annotation
         
       tbody(data-hook="parameter-list")
+
+    if this.collection.parent.for === "edit"
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-parameters") Edit Parameters

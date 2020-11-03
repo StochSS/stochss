@@ -1,34 +1,52 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 module.exports = {
   speciesEditor: {
-    name: "Names for species, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Variable. Cannot share a name with other model components.",
 
-    initialValue: "Initial population of a species.",
+    initialValue: "Initial population of a variables.",
 
-    annotation: "An optional note about the species.",
+    annotation: "An optional note about the variables.",
 
-    remove: "A species may only be removed if it is not a part of any reaction, event assignment, or rule.",
+    remove: "A variables may only be removed if it is not a part of any reaction, event assignment, or rule.",
     
-    speciesMode: "Concentration - Species will only be represented using continuous (floating point) values.<br>Population - Species will only be represented "+
-        "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a species to be represented using continuous and/or discrete values.",
+    speciesMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
+        "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
 
-    mode: "Concentration - Species will only be represented using continuous (floating point) values.<br>Population - Species will only be represented "+
-        "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a species to be represented using continuous and/or discrete values.",
+    mode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
+        "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
 
-    switchValue: "Switching Tolerance - Tolerance level for considering a dynamic species deterministically, value is compared to an estimated sd/mean population "+
-        "of a species after a given time step. This value will be used if a 'Minimum Value' not provided.<br>Minimum Value For Switching - Minimum population value "+
-        "at which species will be represented as Concentration."
+    switchValue: "Switching Tolerance - Tolerance level for considering a dynamic variables deterministically, value is compared to an estimated sd/mean population "+
+        "of a variables after a given time step. This value will be used if a 'Minimum Value' not provided.<br>Minimum Value For Switching - Minimum population value "+
+        "at which variables will be represented as Concentration."
   },
   parametersEditor: {
-    name: "Names for species, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Parameter. Cannot share a name with other model components.",
     
-    expression: "A parameter value or a mathematical expression calculating the parameter value.",
+    expression: "A parameter value.",
     
     annotation: "An optional note about a parameter.",
     
     remove: "A parameter may only be removed if it is not used in any reaction, event assignment, or rule."
   },
   reactionsEditor: {
-    name: "Names for species, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Reaction. Cannot share a name with other model components.",
     
     annotation: "An optional note about the reaction.",
     
@@ -38,15 +56,15 @@ module.exports = {
     
     reactant: "The reactants that are consumed in the reaction, with stoichiometry.",
     
-    product: "The species that are created by the reaction event, with stoichiometry.",
+    product: "The variables that are created by the reaction event, with stoichiometry.",
   },
   eventsEditor: {
-    name: "Names for species, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Event. Cannot share a name with other model components.",
     
     annotation: "An optional note about an event.",
     
     triggerExpression: "The trigger expression can be any mathematical expression which evaluates to a boolean value in a python environment (i.e. t==50).  This "+
-        "expression is evaluable within the model namespace, and any variable (Species, Parameters, etc.) can be referenced in the expression.  Time is represented "+
+        "expression is evaluable within the model namespace, and any variable (Variables, Parameter, etc.) can be referenced in the expression.  Time is represented "+
         "with the lower case variable 't'. An event will begin execution of assignments (or delay, if any) once this expression changes from 'False' to 'True.'",
     
     delay: "contains math expression evaluable within model namespace. This expression designates a delay between the trigger of an event and the execution of its assignments.",
@@ -66,16 +84,16 @@ module.exports = {
     assignments: "An Event Assignment describes a change to be performed to the current model simulation.  This assignment can either be fired at the time its associated "+
         "trigger changes from false to true, or after a specified delay, depending on the Event configuration. An event may contain one or more assignments.",
     
-    variable: "The target Species or Parameter to be modified by the event.",
+    variable: "The target Variables or Parameter to be modified by the event.",
     
     assignmentExpression: "Can be any mathematical statement which resolves to an integer or float value.  This value will be assigned to the assignment's target variable "+
         "upon event execution."
   },
   rulesEditor: {
-    name: "Names for species, parameters, reactions, events, and rules must be unique.",
+    name: "Unique identifier for Rule. Cannot share a name with other model components.",
     
-    type: "Assignment Rules: An assignment rule describes a change to a Species or Parameter as a function whose left-hand side is a scalar (i.e. x = f(V), where V is a "+
-        "vector of symbols, not including x).<br>  Rate Rules: A rate rule describes a change to a Species or Parameter as a function whose left-hand side is a rate of "+
+    type: "Assignment Rules: An assignment rule describes a change to a Variables or Parameter as a function whose left-hand side is a scalar (i.e. x = f(V), where V is a "+
+        "vector of symbols, not including x).<br>  Rate Rules: A rate rule describes a change to a Variables or Parameter as a function whose left-hand side is a rate of "+
         "change (i.e. dx/dt = f(W), where W is a vector of symbols which may include x).",
     
     variable: "Target variable to be modified by the Rule's formula.",
@@ -89,8 +107,6 @@ module.exports = {
     annotation: "An optional note about the SBML Component."
   },
   modelSettings: {
-    previewSettings: "Preview Settings are applied to the model and are used for the model preview and all workflows.",
-    
     previewTime: "End time of simulation.",
     
     timeUnits: "Save point increment for recording data.",
@@ -131,7 +147,7 @@ module.exports = {
   parameterSweepSettings: {
     sweepType: "The number of parameters to sweep through.",
 
-    species: "The initial species to view sweep data for.",
+    species: "The initial variables to view sweep data for.",
 
     variable: "The parameter(s) to sweep through.",
     
@@ -144,9 +160,9 @@ module.exports = {
     steps: "The number of steps used to determine the sweep values across the sweep range."
   },
   parameterSweepResults: {
-    species: "The species to view sweep data for",
+    species: "The variables to view sweep data for",
 
-    mapper: "The 'feature extractor' which calculates a single value from the species population/concentration data of each simulated trajectory.",
+    mapper: "The 'feature extractor' which calculates a single value from the variables population/concentration data of each simulated trajectory.",
     
     reducer: "The statistical function applied to the ensemble of values extracted by the 'feature extractor' from each simulation trajectory."
   },

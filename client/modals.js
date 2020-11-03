@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 let help = require('./page-help')
 
 let templates = {
@@ -218,34 +236,17 @@ module.exports = {
 
       return templates.input(modalID, inputID, title, label, value)
     },
-    newProjectModelHtml : () => {
+    newProjectModelHtml : (options) => {
       let modalID = "newProjectModelModal"
-      let inputID = "modelPathInput"
+      let selectID = "modelPathInput"
       let title = "Add Existing Model to Project"
       let label = "Path to the Model"
-      let value = ""
+      options = options.map(function (name) {
+        return `<option value="${name}">${name}</option>`
+      })
+      options = options.join(" ")
 
-      return templates.input(modalID, inputID, title, label, value)
-    },
-    addExistingWorkflowToProjectHtml : () => {
-      let modalID = "newProjectWorkflowModal"
-      let inputID = "workflowPathInput"
-      let title = "Add Existing Workflow to Workflow Group"
-      let label = "Path to the workflow"
-      let value = ""
-
-      return templates.input(modalID, inputID, title, label, value)
-    },
-    addExistingWorkflowToProjectSuccessHtml : (message) => {
-      let modalID = "newProjectModelSuccessModal"
-      let title = "Success!"
-
-      return templates.message(modalID, title, message)
-    },
-    addExistingWorkflowToProjectErrorHtml : (title, message) => {
-      let modalID = "newProjectModelErrorModal"
-
-      return templates.message(modalID, title, message)
+      return templates.select(modalID, selectID, title, label, options)
     },
     newProjectModelSuccessHtml : (message) => {
       let modalID = "newProjectModelSuccessModal"
@@ -406,16 +407,16 @@ module.exports = {
       return templates.message(modalID, title, message)
     },
     renderDefaultModeModalHtml : () => {
-        let concentrationDesciption = `Species will only be represented using continuous (floating point) values.`;
-        let populationDescription = `Population - Species will only be represented using discrete (integer count) values.`;
-        let hybridDescription = `Allows a species to be represented using continuous and/or discrete values.`;
+        let concentrationDesciption = `Variables will only be represented using continuous (floating point) values.`;
+        let populationDescription = `Population - Variables will only be represented using discrete (integer count) values.`;
+        let hybridDescription = `Allows a variable to be represented using continuous and/or discrete values.`;
 
         return `
             <div id="defaultModeModal" class="modal" tabindex="-1" role="dialog">
               <div class="modal-dialog" role="document">
                 <div class="modal-content info">
                   <div class="modal-header">
-                    <h5 class="modal-title">Default Species Mode (required)</h5>
+                    <h5 class="modal-title">Default Variable Mode (required)</h5>
                     <button type="button" class="close close-modal" data-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -423,8 +424,8 @@ module.exports = {
                   <div class="modal-body">
                     <div>
                       <p>
-                        The default mode is used to set the mode of all species added to the model.  
-                        The mode of a species is used to determine how it will be represented in a Hybrid simulation.
+                        The default mode is used to set the mode of all variables added to the model.  
+                        The mode of a variable is used to determine how it will be represented in a simulation.
                       </p>
                       <p>Select one of the following: </p>
                     </div>
