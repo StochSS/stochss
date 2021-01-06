@@ -69,6 +69,10 @@ let usersHomePage = PageView.extend({
         }else if(body.done) {
           if(body.file_path.endsWith(".proj")){
             window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body.file_path
+          }else if(body.file_path.endsWith(".mdl")){
+            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+body.file_path
+          }else if(body.file_path.endsWith(".ipynb")){
+            window.open(path.join(app.getBasePath(), "notebooks", body.file_path))
           }
         }else{
           self.getUploadResponse()

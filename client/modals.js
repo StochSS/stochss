@@ -130,7 +130,7 @@ let templates = {
                   </div>
                 </div>`
         },
-        upload : (modalID, title) => {
+        upload : (modalID, title, accept) => {
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
                   <div class="modal-dialog" role="document">
@@ -144,7 +144,7 @@ let templates = {
                       <div class="modal-body">
                         <div class="verticle-space">
                           <span class="inline" for="datafile">Please specify a file to import: </span>
-                          <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" required>
+                          <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" ${accept} required>
                           <li class="invalid-feedback" id="fileSpecCharError">Names can only include the following characters: 
                                                                                   (0-9), (a-z), (A-Z) and (., -, _, (, or ))</li>
                         </div>
@@ -318,11 +318,21 @@ module.exports = {
 
         return templates.message(modalID, title, message)
     },
-    uploadFileHtml : (type) => {
+    uploadFileHtml : (type, isSafariV14Plus) => {
         let modalID = "uploadFileModal"
         let title = `Upload a ${type}`
+        var accept = "";
+        if(type === "model") {
+          accept = 'accept=".json, .mdl"'
+        }else if(type === "sbml") {
+          accept = 'accept=".xml, .sbml"'
+        }else if(type === "file" && isSafariV14Plus){
+          // only used if using Safari v14+ and only needed to fix upload issue
+          accept = 'accept=".json, .mdl, .xml, .sbml, .ipynb, .zip, .mesh, .md, .csv, .p, .omex, audio/*, video/*, image/*"'
+        }
+        
 
-        return templates.upload(modalID, title)
+        return templates.upload(modalID, title, accept)
     },
     duplicateWorkflowHtml : (wkflFile, body) => {
         let modalID = "duplicateWorkflowModal"

@@ -101,6 +101,9 @@ class LoadWorkflowAPIHandler(APIHandler):
             with open(os.path.join(user_dir, resp['mdlPath']), "r") as model_file:
                 resp["model"] = json.load(model_file)
                 self.update_model_data(resp["model"])
+                if "volume" not in resp["model"].keys():
+                    resp["model"]["volume"] = resp["model"]["modelSettings"]["volume"]
+                    del resp["model"]["modelSettings"]["volume"]
         except FileNotFoundError:
             resp["model"] = None
             resp["error"] = {"Reason":"Model Not Found",
