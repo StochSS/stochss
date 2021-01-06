@@ -203,7 +203,13 @@ let FileBrowser = PageView.extend({
     if(document.querySelector('#uploadFileModal')) {
       document.querySelector('#uploadFileModal').remove()
     }
-    let modal = $(modals.uploadFileHtml(type)).modal();
+    if(this.browser == undefined) {
+      this.browser = app.getBrowser();
+    }
+    if(this.isSafariV14Plus == undefined){
+      this.isSafariV14Plus = (this.browser.name === "Safari" && this.browser.version >= 14)
+    }
+    let modal = $(modals.uploadFileHtml(type, this.isSafariV14Plus)).modal();
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
     let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
     let input = document.querySelector('#uploadFileModal #fileNameInput');
