@@ -198,26 +198,27 @@ def upload(file_data, file_info):
     return resp
 
 
-def upload_from_link(path):
+def upload_from_link(remote_path):
     import urllib
     
     user_dir = "/home/jovyan"
-    response = urllib.request.urlopen(path)
-    zip_path = os.path.join(user_dir, path.split('/').pop())
-    if os.path.exists(zip_path):
+    response = urllib.request.urlopen(remote_path)
+    path = os.path.join(user_dir, remote_path.split('/').pop())
+    if os.path.exists(path):
         resp = {"message":"Could not upload this file as the {} \
-                           already exists".format(path.split("/").pop()),
+                           already exists".format(remote_path.split("/").pop()),
                 "reason":"Zip Archive Already Exists"}
         return resp
-    with open(zip_path, "wb") as zip_file:
+    with open(path, "wb") as zip_file:
         zip_file.write(response.read())
-    try:
-        unzip_file(zip_path, user_dir)
-    except StochSSFileExistsError as err:
-        return {"message":err.message, "reason":err.reason}
-    uploaded_file = zip_path.split('/').pop()
+    if remote_path.endswith(".zip"):
+        try:
+            unzip_file(path, user_dir)
+        except StochSSFileExistsError as err:
+            return {"message":err.message, "reason":err.reason}
+    uploaded_file = path.split('/').pop()
     file_path = get_file_path(user_dir, uploaded_file).replace(user_dir+"/", "")
-    target_file = path.split('/').pop()
+    target_file = remote_path.split('/').pop()
     resp = {"message":"Successfully uploaded the file {} to {}".format(target_file,
                                                                        file_path),
             "file_path":file_path}
@@ -225,6 +226,8 @@ def upload_from_link(path):
 
 
 def get_file_path(path, uploaded_file):
+    if not uploaded_file.endswith(".zip"):
+        return uploaded_file
     files = os.listdir(path)
     files.remove(uploaded_file)
     paths = list(map(lambda file: os.path.join(path, file), files))
