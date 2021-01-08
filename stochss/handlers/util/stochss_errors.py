@@ -17,94 +17,54 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 class StochSSAPIError(Exception):
+    '''
+    ################################################################################################
+    StochSS Base Api Handler Error
+    ################################################################################################
+    '''
 
     def __init__(self, status_code, reason, msg, trace):
+        '''
+        Base error for all stochss api errors
+
+        Attributes
+        ----------
+        status_code : int
+            XML request status code
+        reason : str
+            Reason for the error
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
         super().__init__()
         self.status_code = status_code
         self.reason = reason
         self.message = msg
         self.traceback = trace
 
-
-class ModelNotFoundError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(404, "Model File Not Found", msg, trace)
-
-
-class StochSSFileNotFoundError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(404, "StochSS File or Directory Not Found", msg, trace)
-
-
-class StochSSPermissionsError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(403, "Permission Denied", msg, trace)
-
-
-class ModelNotJSONFormatError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "Model Data Not JSON Format", msg, trace)
-
-
-class FileNotJSONFormatError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "File Data Not JSON Format", msg, trace)
-
-
-class JSONFileNotModelError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "JSON File Not StochSS Model Format", msg, trace)
-
-
-class PlotNotAvailableError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "Plot Figure Not Available", msg, trace)
-
-
-class StochSSWorkflowError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(403, "Workflow Errored on Run", msg, trace)
-
-
-class StochSSWorkflowNotCompleteError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(403, "Workflow Run Not Complete", msg, trace)
-
-
-class StochSSExportCombineError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "No Completed Workflows Found", msg, trace)
-
-
-class FileNotSBMLFormatError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "File Not SBML Format", msg, trace)
-
-
-class ImporperMathMLFormatError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "Imporper Math-ML Format", msg, trace)
-
-
-class FileNotZipArchiveError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "File Not Zip Archive", msg, trace)
-
-
+'''
+####################################################################################################
+File System Errors
+####################################################################################################
+'''
 class StochSSFileExistsError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS File/Folder Exists API Handler Error
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
+        '''
+        Indicates that the file/folder with the given path already exists
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
         super().__init__(406, "File Already Exists", msg, trace)
