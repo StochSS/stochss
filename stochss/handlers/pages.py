@@ -37,6 +37,9 @@ class PageHandler(IPythonHandler):
 
     @classmethod
     def get_server_path(cls):
+        '''
+        Get the stochss server path
+        '''
         try:
             server_path = os.environ['JUPYTERHUB_SERVICE_PREFIX']
         except KeyError:
@@ -46,54 +49,108 @@ class PageHandler(IPythonHandler):
 
 
 class HomeHandler(PageHandler):
+    '''
+    Handler for rendering the stochss hub home page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss hub home page
+        '''
         self.render("stochss-home.html", server_path=self.get_server_path())
 
 
 class UserHomeHandler(PageHandler):
+    '''
+    Handler for rendering the stochss users home page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss users home page
+        '''
         self.render("stochss-user-home.html", server_path=self.get_server_path())
 
 
 class QuickstartHandler(PageHandler):
+    '''
+    Handler for rendering the stochss tutorials page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss tutorials page
+        '''
         self.render("stochss-quickstart.html", server_path=self.get_server_path())
 
 
 class ModelBrowserHandler(PageHandler):
+    '''
+    Handler for rendering the stochss file browser page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss file browser page
+        '''
         self.render("stochss-file-browser.html", server_path=self.get_server_path())
 
 
 class ModelEditorHandler(PageHandler):
+    '''
+    Handler for rendering the stochss model editor page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss model editor page
+        '''
         self.render("stochss-model-editor.html", server_path=self.get_server_path())
 
 
 class WorkflowSelectionHandler(PageHandler):
+    '''
+    Handler for rendering the stochss workflow selection page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss workflow selection page
+        '''
         self.render("stochss-workflow-selection.html", server_path=self.get_server_path())
 
 
 class WorkflowEditorHandler(PageHandler):
+    '''
+    Handler for rendering the stochss workflow manager page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss workflow manager page
+        '''
         self.render("stochss-workflow-manager.html", server_path=self.get_server_path())
 
 
 class ProjectBrowserHandler(PageHandler):
+    '''
+    Handler for rendering the stochss project browser page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss project browser page
+        '''
         self.render("stochss-project-browser.html", server_path=self.get_server_path())
 
 
 class ProjectManagerHandler(PageHandler):
+    '''
+    Handler for rendering the stochss project manager page
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the stochss project manager page
+        '''
         self.render("stochss-project-manager.html", server_path=self.get_server_path())

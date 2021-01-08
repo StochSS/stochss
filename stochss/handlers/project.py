@@ -135,37 +135,139 @@ class LoadProjectAPIHandler(APIHandler):
 
 
     @classmethod
-    def update_model_data(cls, data):
-        param_ids = []
-        for param in data['parameters']:
+    def update_parameter(cls, param, param_ids):
+        '''
+        Update the expression of a StochSS Parameter
+
+        Attributes
+        ----------
+        param : dict
+            StochSS Parameter
+        param_ids : list
+            list of compIDs for the StochSS parameters collection
+        '''
+        try:
             param_ids.append(param['compID'])
             if isinstance(param['expression'], str):
                 try:
                     param['expression'] = ast.literal_eval(param['expression'])
                 except ValueError:
                     pass
-        for reaction in data['reactions']:
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_reaction_rate(cls, reaction):
+        '''
+        Update the expression of a StochSS Reactions rate parameter
+
+        Attributes
+        ----------
+        reaction : dict
+            StochSS Reaction
+        '''
+        try:
             if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
                 try:
                     value = ast.literal_eval(reaction['rate']['expression'])
                     reaction['rate']['expression'] = value
                 except ValueError:
                     pass
-        for event in data['eventsCollection']:
-            for assignment in event['eventAssignments']:
-                if assignment['variable']['compID'] in param_ids:
-                    try:
-                        value = ast.literal_eval(assignment['variable']['expression'])
-                        assignment['variable']['expression'] = value
-                    except ValueError:
-                        pass
-        for rule in data['rules']:
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_event_assignment(cls, assignment, param_ids):
+        '''
+        Update the target of a StochSS Event Assignment in an event
+        if its a StochSS Parameter.
+
+        Attributes
+        ----------
+        assignment : dict
+            StochSS Event Assignment
+        param_ids : list
+            list of compIDs for the StochSS parameters collection
+        '''
+        try:
+            if assignment['variable']['compID'] in param_ids:
+                try:
+                    value = ast.literal_eval(assignment['variable']['expression'])
+                    assignment['variable']['expression'] = value
+                except ValueError:
+                    pass
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_event_targets(cls, event, param_ids):
+        '''
+        Update each StochSS Event Assignment in an event.
+
+        Attributes
+        ----------
+        event : dict
+            StochSS Event
+        param_ids : list
+            list of compIDs for the StochSS parameters collection
+        '''
+        try:
+            if "eventAssignments" in event.keys():
+                for assignment in event['eventAssignments']:
+                    cls.update_event_assignment(assignment, param_ids)
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_rule_targets(cls, rule, param_ids):
+        '''
+        Update the target of a StochSS Rule if its a StochSS Parameter.
+
+        Attributes
+        ----------
+        rule : dict
+            StochSS Rule
+        param_ids : list
+            list of compIDs for the StochSS parameters collection
+        '''
+        try:
             if rule['variable']['compID'] in param_ids:
                 try:
                     value = ast.literal_eval(rule['variable']['expression'])
                     rule['variable']['expression'] = value
                 except ValueError:
                     pass
+        except KeyError:
+            pass
+
+
+    @classmethod
+    def update_model_data(cls, data):
+        '''
+        Update the expressions in all Parameters, Reactions, Rules, and Events
+
+        Attributes
+        ----------
+        data : dict
+            StochSS Model
+        '''
+        param_ids = []
+        if "parameters" in data.keys():
+            for param in data['parameters']:
+                cls.update_parameter(param, param_ids)
+        if "reactions" in data.keys():
+            for reaction in data['reactions']:
+                cls.update_reaction_rate(reaction)
+        if "eventsCollection" in data.keys():
+            for event in data['eventsCollection']:
+                cls.update_event_assignment(event, param_ids)
+        if "rules" in data.keys():
+            for rule in data['rules']:
+                cls.update_rule_targets(rule, param_ids)
 
 
     @classmethod

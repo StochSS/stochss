@@ -439,6 +439,7 @@ class ParameterSweep():
                 try:
                     settings = {"simulationSettings":mdl['simulationSettings'],
                                 "parameterSweepSettings":mdl['parameterSweepSettings'],
+                                "modelExplarationSettings":settings_template['modelExplorationSettings'],
                                 "resultsSettings":settings_template['resultsSettings']}
                     return settings
                 except:

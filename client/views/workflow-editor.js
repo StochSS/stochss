@@ -27,6 +27,7 @@ var SimSettingsView = require('./simulation-settings');
 var SimulationSettingsViewer = require('./simulation-settings-viewer');
 var ParamSweepSettingsView = require('./parameter-sweep-settings');
 var ParameterSweepSettingsViewer = require('./parameter-sweep-settings-viewer');
+var ModelExploreSettingsView = require('./model-exploration-settings');
 var WorkflowStateButtonsView = require('./workflow-state-buttons');
 //templates
 var template = require('../templates/includes/workflowEditor.pug');
@@ -53,6 +54,8 @@ module.exports = View.extend({
       if(this.type === "parameterSweep"){
         this.validatePsweep()
         this.renderParameterSweepSettingsView()
+      }else if(this.type === "modelExploration") {
+        this.renderModelExplorationSettings()
       }
       this.renderWorkflowStateButtons()
     }else{
@@ -96,6 +99,17 @@ module.exports = View.extend({
       stochssModel: this.model
     });
     this.registerRenderSubview(parameterSweepSettingsView, 'param-sweep-settings-container');
+  },
+  renderModelExplorationSettings: function () {
+    if(this.modelExplorationSettings) {
+      this.modelExplorationSettings.remove()
+    }
+    this.modelExplorationSettings = new ModelExploreSettingsView({
+      parent: this,
+      model: this.settings.modelExplorationSettings,
+      stochssModel: this.model
+    });
+    this.registerRenderSubview(this.modelExplorationSettings, 'model-exploration-settings-container')
   },
   renderWorkflowStateButtons: function () {
     if(this.workflowStateButtons) {

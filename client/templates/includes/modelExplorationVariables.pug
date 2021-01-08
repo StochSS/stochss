@@ -1,0 +1,40 @@
+table.table
+  thead
+    tr
+      th(scope="col")
+        div
+          div.inline Sweep Target
+
+      th(scope="col")
+        div
+          div.inline Current Value
+
+      th(scope="col")
+        div
+          div.inline Minimum Value
+
+      th(scope="col")
+        div
+          div.inline Maximum Value
+
+      th(scope="col")
+        if(this.distributionType == "Uniform")
+          div
+            div.inline Steps
+
+        if(this.distributionType == "Factorial")
+          div
+            div.inline Level
+
+        if(this.distributionType == "Latin Hypercube")
+          div
+            div.inline Seed Size
+
+      if(this.distributionType == "Factorial")
+        th(scope="col")
+          div
+            div.inline Outliers
+
+      th(scope="col"): div Remove
+
+  tbody(data-hook="me-variables")

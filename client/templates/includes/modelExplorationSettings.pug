@@ -1,0 +1,36 @@
+div#model-exploration-settings.card.card-body
+
+  div
+
+    h3.inline Model Explorataion Settings
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-mexplore-settings", data-hook="collapse") -
+
+  div.collapse(class="show", id="collapse-mexplore-settings")
+
+    div.row
+
+      div.col-md-4
+
+        span.inline(for="distribution-type") Distribution Type: 
+
+        div.inline(id="distribution-type" data-hook="distribution-type")
+
+      div.col-md-4(style="display: none")
+
+        span.inline(for="exploration-type") Exploration Type: 
+
+        div.inline(id="exploration-type" data-hook="exploration-type")
+
+      div.col-md-4(style="display: none")
+
+        span.inline(for="feature-extraction") Feature Extraction: 
+
+        div.inline(id="feature-extraction" data-hook="feature-extraction")
+
+    div
+
+      h5 Configure Variable(s)
+
+      div(data-hook="me-variables-collection")
+
+    button.btn.btn-outline-secondary.box-shadow(data-hook="add-me-variable") Add Variable

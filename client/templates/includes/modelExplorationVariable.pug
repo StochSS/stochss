@@ -1,0 +1,25 @@
+tr
+
+  td: div(data-hook="variable-target")
+
+  td: div(data-hook="target-value")=this.parameter.expression
+
+  td: div(data-hook="variable-min")
+
+  td: div(data-hook="variable-max")
+
+  td
+
+    if(this.distributionType == "Uniform")
+      div(data-hook="variable-steps")
+
+    if(this.distributionType == "Factorial")
+      div(data-hook="variable-level")
+
+    if(this.distributionType == "Latin Hypercube")
+      div(data-hook="variable-seed-size")
+
+  if(this.distributionType == "Factorial")
+    td: div(data-hook="variable-outliers")
+
+  td: button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X

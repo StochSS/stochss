@@ -31,12 +31,9 @@ from shutil import copyfile
 from datetime import datetime, timezone, timedelta
 from gillespy2.core import log
 
-try:
-    from parameter_sweep import ParameterSweep
-    from run_model import GillesPy2Workflow, ModelFactory, run_solver
-except ModuleNotFoundError:
-    from .parameter_sweep import ParameterSweep
-    from .run_model import GillesPy2Workflow, ModelFactory, run_solver
+from stochss.handlers.util.parameter_sweep import ParameterSweep
+from stochss.handlers.util.run_model import GillesPy2Workflow, ModelFactory, run_solver
+from stochss.handlers.util.model_exploration import ModelExploration
 
 
 def save_new_workflow(wkfl, wkfl_type, initialize):
@@ -238,7 +235,8 @@ def initialize(mdl_path, wkfl_path, wkfl_type, settings=None, new=False, existin
     if not workflow_name in os.listdir(path=dir_path):
         os.mkdir(workflow_path) # make the workflow directory
 
-    workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep}
+    workflows = {"gillespy":GillesPy2Workflow, "parameterSweep":ParameterSweep,
+                 "modelExploration":ModelExploration}
 
     workflow = workflows[wkfl_type](workflow_path, model_path, settings)
 
