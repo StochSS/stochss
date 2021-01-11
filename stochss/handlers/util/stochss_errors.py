@@ -16,6 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+def report_error(handler, log):
+    handler.set_status(err.status_code)
+    error = {"Reason":err.reason, "Message":err.message}
+    if err.traceback is None:
+        trace = traceback.format_exc()
+    else:
+        trace = err.traceback
+    log.error("Exception information: %s\n%s", error, trace)
+    error['Traceback'] = trace
+    handler.write(error)
+
+
 class StochSSAPIError(Exception):
     '''
     ################################################################################################
@@ -44,6 +56,7 @@ class StochSSAPIError(Exception):
         self.message = msg
         self.traceback = trace
 
+
 '''
 ####################################################################################################
 File System Errors
@@ -68,3 +81,24 @@ class StochSSFileExistsError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(406, "File Already Exists", msg, trace)
+
+
+class StochSSFileNotFoundError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS File/Folder Not Found API Handler Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the file/folder with the given path does not exist
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(404, "StochSS File or Directory Not Found", msg, trace)
