@@ -16,9 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-# from .stochss_file import StochSSFile
+from .stochss_file import StochSSFile
 from .stochss_folder import StochSSFolder
 from .stochss_workflow import StochSSWorkflow
 from .stochss_errors import StochSSAPIError, report_error
 
-__all__ = ['StochSSFolder', 'StochSSWorkflow', 'StochSSAPIError']
+__all__ = ['StochSSFile', 'StochSSFolder', 'StochSSWorkflow', 'StochSSAPIError']

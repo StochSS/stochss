@@ -18,12 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
-# import shutil
+import shutil
 # import zipfile
 # import datetime
 import traceback
 
-from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError
+from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
+                            StochSSPermissionsError
 
 class StochSSFolder():
     '''
@@ -45,7 +46,7 @@ class StochSSFolder():
             Indicates whether or not the folder is new
         '''
         self.path = path
-        new_path = os.path.join(self.user_dir, path)
+        new_path = self.get_path(full=True)
         if new:
             try:
                 os.makedirs(new_path)
@@ -94,6 +95,20 @@ class StochSSFolder():
         return '.'.join(name.split('.')[:-1])
 
 
+    def get_path(self, full=False):
+        '''
+        Get the path to the directory
+
+        Attributes
+        ----------
+        full : bool
+            Indicates whether or not to get the full path or local path
+        '''
+        if full:
+            return os.path.join(self.user_dir, self.path)
+        return self.path
+
+
     def get_jstree_node(self, is_root=False):
         '''
         Build and return a JSTree node object the represents the file object
@@ -103,7 +118,7 @@ class StochSSFolder():
         is_root : bool
             Indicates whether or not a folder is to be treated as the root
         '''
-        path = self.user_dir if self.path == "none" else os.path.join(self.user_dir, self.path)
+        path = self.user_dir if self.path == "none" else self.get_path(full=True)
         try:
             files = list(filter(lambda file: not file.startswith('.'), os.listdir(path=path)))
             nodes = list(map(lambda file: self.__build_jstree_node(path, file), files))
@@ -119,3 +134,23 @@ class StochSSFolder():
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
+
+
+    def delete(self):
+        '''
+        Delete the directory from the file system
+
+        Attributes
+        ----------
+        '''
+        path = self.get_path(full=True)
+        try:
+            shutil.rmtree(path)
+            return "The directory {0} was successfully deleted.".format(self.get_name())
+        except FileNotFoundError as err:
+            message = f"Could not find the directory: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+        except PermissionError as err:
+            message = f"You do not have permission to delete this directory: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc())
+

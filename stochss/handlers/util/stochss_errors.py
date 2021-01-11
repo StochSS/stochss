@@ -115,3 +115,24 @@ class StochSSFileNotFoundError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(404, "StochSS File or Directory Not Found", msg, trace)
+
+
+class StochSSPermissionsError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS File/Folder Not Found API Handler Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the user does not have permission to modify the file/folder
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "Permission Denied", msg, trace)

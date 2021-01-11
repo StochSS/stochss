@@ -43,9 +43,9 @@ log = logging.getLogger('stochss')
 # pylint: disable=abstract-method
 class ModelBrowserFileList(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for interacting with the User's File Browser
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -88,9 +88,9 @@ class ModelToNotebookHandler(APIHandler):
 
 class DeleteFileAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for removing files and/or directoies from the User's file system.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -100,6 +100,15 @@ class DeleteFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        log.debug("Deleting path: %s", path)
+        try:
+            file_obj = StochSSFolder(path=path) if os.path.isdir(path) else StochSSFile(path=path)
+            resp = file_obj.delete()
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class MoveFileAPIHandler(APIHandler):
@@ -275,9 +284,9 @@ class DownloadZipFileAPIHandler(APIHandler):
 
 class CreateDirectoryHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating a new directory or path of directories.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
