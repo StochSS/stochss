@@ -17,17 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-import traceback
 
-from .stochss_base import StochSSBase
-from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
-
-class StochSSFile(StochSSBase):
+class StochSSBase():
     '''
     ################################################################################################
-    StochSS file object
+    StochSS base object
     ################################################################################################
     '''
+    user_dir = "/home/jovyan"
+
     def __init__(self, path):
         '''
         Intitialize a file object
@@ -37,23 +35,36 @@ class StochSSFile(StochSSBase):
         path : str
             Path to the folder
         '''
-        super().__init__(path=path)
+        self.path = path
 
 
-    def delete(self):
+    def get_name(self, path=None):
         '''
-        Delete the file from the file system
+        Get the file name from the file path or provided path
 
         Attributes
         ----------
+        path : str
+            Path to a file
         '''
-        path = self.get_path(full=True)
-        try:
-            os.remove(path)
-            return "The file {0} was successfully deleted.".format(self.get_name())
-        except FileNotFoundError as err:
-            message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
-        except PermissionError as err:
-            message = f"You do not have permission to delete this file: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+        name = self.path if path is None else path
+        if name.endswith("/"):
+            name = name[:-1]
+        name = name.split('/').pop()
+        if "." not in name:
+            return name
+        return '.'.join(name.split('.')[:-1])
+
+
+    def get_path(self, full=False):
+        '''
+        Get the path to the file
+
+        Attributes
+        ----------
+        full : bool
+            Indicates whether or not to get the full path or local path
+        '''
+        if full:
+            return os.path.join(self.user_dir, self.path)
+        return self.path

@@ -69,11 +69,11 @@ class StochSSAPIError(Exception):
         self.traceback = trace
 
 
-'''
+
 ####################################################################################################
-File System Errors
+# File System Errors
 ####################################################################################################
-'''
+
 
 class StochSSFileExistsError(StochSSAPIError):
     '''

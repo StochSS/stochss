@@ -23,17 +23,17 @@ import shutil
 # import datetime
 import traceback
 
+from .stochss_base import StochSSBase
+from .stochss_workflow import StochSSWorkflow
 from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
                             StochSSPermissionsError
 
-class StochSSFolder():
+class StochSSFolder(StochSSBase):
     '''
     ################################################################################################
     StochSS folder object
     ################################################################################################
     '''
-    user_dir = "/home/jovyan"
-
     def __init__(self, path, new=False):
         '''
         Intitialize a folder object and if its new create it on the users file system
@@ -45,9 +45,9 @@ class StochSSFolder():
         new : bool
             Indicates whether or not the folder is new
         '''
-        self.path = path
-        new_path = self.get_path(full=True)
+        super().__init__(path=path)
         if new:
+            new_path = self.get_path(full=True)
             try:
                 os.makedirs(new_path)
             except FileExistsError as err:
@@ -65,7 +65,6 @@ class StochSSFolder():
             file_type = types[ext]
             node['type'] = file_type
             if file_type == "workflow":
-                from .stochss_workflow import StochSSWorkflow
                 wkfl = StochSSWorkflow(path)
                 node['_status'] = wkfl.get_status()
             elif file_type == "workflow-group":
@@ -75,38 +74,6 @@ class StochSSFolder():
             node['children'] = True
 
         return node
-
-
-    def get_name(self, path=None):
-        '''
-        Get the directory name from the directory path or provided path
-
-        Attributes
-        ----------
-        path : str
-            Path to a directory
-        '''
-        name = self.path if path is None else path
-        if name.endswith("/"):
-            name = name[:-1]
-        name = name.split('/').pop()
-        if "." not in name:
-            return name
-        return '.'.join(name.split('.')[:-1])
-
-
-    def get_path(self, full=False):
-        '''
-        Get the path to the directory
-
-        Attributes
-        ----------
-        full : bool
-            Indicates whether or not to get the full path or local path
-        '''
-        if full:
-            return os.path.join(self.user_dir, self.path)
-        return self.path
 
 
     def get_jstree_node(self, is_root=False):
@@ -153,4 +120,3 @@ class StochSSFolder():
         except PermissionError as err:
             message = f"You do not have permission to delete this directory: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc())
-

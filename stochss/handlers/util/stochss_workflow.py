@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
-from .stochss_folder import StochSSFolder
+from .stochss_base import StochSSBase
 
-class StochSSWorkflow(StochSSFolder):
+class StochSSWorkflow(StochSSBase):
     '''
     ################################################################################################
     StochSS workflow object
@@ -38,7 +38,10 @@ class StochSSWorkflow(StochSSFolder):
         new : bool
             Indicates whether or not the workflow is new
         '''
-        super().__init__(path=path, new=new)
+        super().__init__(path=path)
+        if new:
+            new_path = self.get_path(full=True)
+            print(f"New workflow: {new_path}")
 
 
     def get_status(self):
