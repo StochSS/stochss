@@ -16,7 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-def report_error(handler, log):
+import traceback
+
+def report_error(handler, log, err):
+    '''
+    Report a stochss error to the front end
+
+    Attributes
+    ----------
+    handler : obj
+        Jupyter Notebook API Handler
+    log : obj
+        StochSS log
+    '''
     handler.set_status(err.status_code)
     error = {"Reason":err.reason, "Message":err.message}
     if err.traceback is None:
@@ -62,6 +74,7 @@ class StochSSAPIError(Exception):
 File System Errors
 ####################################################################################################
 '''
+
 class StochSSFileExistsError(StochSSAPIError):
     '''
     ################################################################################################

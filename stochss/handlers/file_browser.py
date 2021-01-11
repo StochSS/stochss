@@ -31,7 +31,6 @@ import subprocess
 from json.decoder import JSONDecodeError
 from datetime import datetime
 import logging
-import traceback
 from shutil import move, rmtree
 from tornado import web
 from notebook.base.handlers import APIHandler
@@ -65,16 +64,7 @@ class ModelBrowserFileList(APIHandler):
             log.debug("Contents of the directory: %s", node)
             self.write(node)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
@@ -304,7 +294,7 @@ class CreateDirectoryHandler(APIHandler):
             folder = StochSSFolder(path=directories, new=True)
             self.write("{0} was successfully created!".format(directories))
         except StochSSAPIHandler as err:
-            report_error(self, log)
+            report_error(self, log, err)
         self.finish()
 
 
