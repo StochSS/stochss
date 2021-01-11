@@ -20,7 +20,6 @@ import os
 import json
 import shutil
 # import zipfile
-# import datetime
 import traceback
 
 from .stochss_base import StochSSBase
@@ -48,6 +47,7 @@ class StochSSFolder(StochSSBase):
         super().__init__(path=path)
         if new:
             new_path = self.get_path(full=True)
+            self.log("debug", f"Full path of directories: {new_path}")
             try:
                 os.makedirs(new_path)
             except FileExistsError as err:
@@ -120,3 +120,27 @@ class StochSSFolder(StochSSBase):
         except PermissionError as err:
             message = f"You do not have permission to delete this directory: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc())
+
+
+    def move(self, location):
+        '''
+        Moves a directory and its contents to a new location.
+
+        Attributes
+        ----------
+        location : str
+            Path to the new location of the directory
+        '''
+        src_path = self.get_path(full=True)
+        self.log("debug", f"Full path to the directory: {src_path}")
+        dst_path = self.get_new_path(location)
+        self.log("debug", f"Full destination directory: {dst_path}")
+        try:
+            dst = shutil.move(src_path, dst_path)
+            self.path = dst.replace(self.user_dir + "/", "")
+            return f"Success! {self.get_name()} was moved to {self.get_dir_name()}."
+        except FileNotFoundError as err:
+            message = f"Could not find the directory: {str(err)}"
+            raise StochSSFileNotFoundError(message)
+        except PermissionError as err:
+            message = f"You do not have permission to move this directory: {str(err)}"

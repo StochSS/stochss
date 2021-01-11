@@ -57,3 +57,27 @@ class StochSSFile(StochSSBase):
         except PermissionError as err:
             message = f"You do not have permission to delete this file: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc())
+
+
+    def move(self, location):
+        '''
+        Moves a file to a new location.
+
+        Attributes
+        ----------
+        location : str
+            Path to the new location of the file
+        '''
+        src_path = self.get_path(full=True)
+        self.log("debug", f"Full path to the file: {src_path}")
+        dst_path = self.get_new_path(location)
+        self.log("debug", f"Full destination path: {dst_path}")
+        try:
+            os.rename(src_path, dst_path)
+            self.path = dst_path.replace(self.user_dir + "/", "")
+            return f"Success! {self.get_name()} was moved to {self.get_dir_name()}."
+        except FileNotFoundError as err:
+            message = f"Could not find the file: {str(err)}"
+            raise StochSSFileNotFoundError(message)
+        except PermissionError as err:
+            message = f"You do not have permission to move this file: {str(err)}"

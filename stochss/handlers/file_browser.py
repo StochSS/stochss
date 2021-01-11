@@ -103,7 +103,8 @@ class DeleteFileAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("Deleting path: %s", path)
         try:
-            file_obj = StochSSFolder(path=path) if os.path.isdir(path) else StochSSFile(path=path)
+            is_dir = os.path.isdir(path)
+            file_obj = StochSSFolder(path=path) if is_dir else StochSSFile(path=path)
             resp = file_obj.delete()
             self.write(resp)
         except StochSSAPIError as err:
@@ -113,9 +114,9 @@ class DeleteFileAPIHandler(APIHandler):
 
 class MoveFileAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler moving file locations in the User's file system.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -125,6 +126,19 @@ class MoveFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        src_path = self.get_query_argument(name="srcPath")
+        log.debug("Path to the file: %s", src_path)
+        dst_path = self.get_query_argument(name="dstPath")
+        log.debug("Destination path: %s", dst_path)
+        try:
+            is_dir = os.path.isdir(src_path)
+            file_obj = StochSSFolder(path=src_path) if is_dir else StochSSFile(path=src_path)
+            resp = file_obj.move(location=dst_path)
+            file_obj.print_logs(log)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class DuplicateModelHandler(APIHandler):
@@ -301,6 +315,7 @@ class CreateDirectoryHandler(APIHandler):
         log.debug("Path of directories: %s", directories)
         try:
             folder = StochSSFolder(path=directories, new=True)
+            folder.print_logs(log)
             self.write("{0} was successfully created!".format(directories))
         except StochSSAPIHandler as err:
             report_error(self, log, err)
