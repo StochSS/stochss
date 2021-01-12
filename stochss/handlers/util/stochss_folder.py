@@ -113,12 +113,36 @@ class StochSSFolder(StochSSBase):
         path = self.get_path(full=True)
         try:
             shutil.rmtree(path)
-            return "The directory {0} was successfully deleted.".format(self.get_name())
+            return f"The directory {self.get_file()} was successfully deleted."
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
         except PermissionError as err:
             message = f"You do not have permission to delete this directory: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc())
+
+
+    def duplicate(self):
+        '''
+        Creates a copy of the target directory in the same directory
+
+        Attributes
+        ----------
+        '''
+        src_path = self.get_path(full=True)
+        self.log("debug", f"Full path to the directory: {src_path}")
+        dst_path = self.get_unique_copy_path()
+        self.log("debug", f"Full destination directory: {dst_path}")
+        try:
+            shutil.copytree(src_path, dst_path)
+            cp_name = self.get_file(path=dst_path)
+            message = f"The file {self.get_file()} has been successfully copied as {cp_name}"
+            return {"Message":message, "File":cp_name}
+        except FileNotFoundError as err:
+            message = f"Could not find the directory: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+        except PermissionError as err:
+            message = f"You do not have permission to copy this directory: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc())
 
 
@@ -138,7 +162,7 @@ class StochSSFolder(StochSSBase):
         try:
             dst = shutil.move(src_path, dst_path)
             self.path = dst.replace(self.user_dir + "/", "")
-            return f"Success! {self.get_name()} was moved to {self.get_dir_name()}."
+            return f"Success! {self.get_file()} was moved to {self.get_dir_name()}."
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
             raise StochSSFileNotFoundError(message)

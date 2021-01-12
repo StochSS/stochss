@@ -68,7 +68,9 @@ class StochSSFile(StochSSBase):
         ----------
         '''
         src_path = self.get_path(full=True)
+        self.log("debug", f"Full path to the file: {src_path}")
         dst_path = self.get_unique_copy_path()
+        self.log("debug", f"Full destination path: {dst_path}")
         try:
             shutil.copyfile(src_path, dst_path)
             cp_name = self.get_file(path=dst_path)

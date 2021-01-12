@@ -185,6 +185,17 @@ class DuplicateDirectoryHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        self.set_header('Content-Type', 'application/json')
+        log.debug("Copying directory: %s", path)
+        try:
+            folder = StochSSFolder(path=path)
+            resp = folder.duplicate()
+            log.debug("Response message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class RenameAPIHandler(APIHandler):
