@@ -103,6 +103,25 @@ class StochSSFile(StochSSBase):
             return f"Success! {self.get_file()} was moved to {self.get_dir_name()}."
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message)
+            raise StochSSFileNotFoundError(message, traceback.format_exc)
         except PermissionError as err:
             message = f"You do not have permission to move this file: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc())
+
+
+    def read(self):
+        '''
+        Read the file and return the contents
+
+        Attributes
+        ----------
+        '''
+        path = self.get_path(full=True)
+        self.log("debug", f"Path to the model on disk: {path}")
+        try:
+            with open(path, 'r') as file:
+                resp = file.read()
+            return resp
+        except FileNotFoundError as err:
+            message = f"Could not find the file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())

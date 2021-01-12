@@ -302,9 +302,9 @@ class SBMLToModelAPIHandler(APIHandler):
 
 class DownloadAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for downloading plain text files to the users download directory.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -314,6 +314,16 @@ class DownloadAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the model: %s", path)
+        try:
+            file = StochSSFile(path=path)
+            data = file.read()
+            file.print_logs(log)
+            self.write(data)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class DownloadZipFileAPIHandler(APIHandler):
