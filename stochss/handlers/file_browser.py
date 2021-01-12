@@ -163,6 +163,7 @@ class DuplicateModelHandler(APIHandler):
         try:
             file = StochSSFile(path=path)
             resp = file.duplicate()
+            file.print_logs(log)
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -172,9 +173,9 @@ class DuplicateModelHandler(APIHandler):
 
 class DuplicateDirectoryHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating copies of a directory and its contents.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -191,6 +192,7 @@ class DuplicateDirectoryHandler(APIHandler):
         try:
             folder = StochSSFolder(path=path)
             resp = folder.duplicate()
+            folder.print_logs(log)
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -200,9 +202,9 @@ class DuplicateDirectoryHandler(APIHandler):
 
 class RenameAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for renaming files or directories.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -214,6 +216,19 @@ class RenameAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the file or directory: %s", path)
+        new_name = self.get_query_argument(name="name")
+        log.debug("New filename: %s", new_name)
+        self.set_header('Content-Type', 'application/json')
+        try:
+            file_obj = StochSSBase(path=path)
+            resp = file_obj.rename(name=new_name)
+            log.debug("Response message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class ConvertToSpatialAPIHandler(APIHandler):

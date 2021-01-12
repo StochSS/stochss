@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import shutil
 import datetime
+import traceback
 
+from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
 
 class StochSSBase():
     '''
@@ -118,6 +121,39 @@ class StochSSBase():
         return os.path.dirname(self.path)
 
 
+    def get_unique_path(self, name):
+        '''
+        Get a unique path for the file object with the target name
+
+        Attributes
+        ----------
+        name : str
+            New name for the target file
+        '''
+        dirname = self.get_dir_name(full=True)
+        exists = name in os.listdir(dirname)
+
+        i = 1
+        if exists:
+            ext = '.' + name.split('.').pop() if '.' in name else ""
+            name = self.get_name(path=name)
+            if '(' in name and ')' in name:
+                _i = name.split('(').pop().split(')')[0]
+                if _i.isdigit():
+                    name = name.replace(f"({_i})", "")
+                    if int(_i) == 1:
+                        i = 2
+        while exists:
+            proposed_name = ''.join([name, f"({i})", ext])
+            exists = proposed_name in os.listdir(dirname)
+            i += 1
+
+        changed = i > 1
+        if changed:
+            name = proposed_name
+        return os.path.join(dirname, name), changed
+
+
     def get_unique_copy_path(self):
         '''
         Gets a unique name for the file object being copied.
@@ -176,3 +212,33 @@ class StochSSBase():
         for entry in self.logs:
             log_display = displays[entry["level"]]
             log_display(entry["message"])
+
+
+    def rename(self, name):
+        '''
+        Rename the target file object with a unique name
+
+        Attributes
+        ----------
+        name : str
+            New name for the file object
+        '''
+        path = self.get_path(full=True)
+        file = self.get_file()
+        new_path, changed = self.get_unique_path(name)
+        try:
+            dst = shutil.move(path, new_path)
+            self.path = dst.replace(self.user_dir + '/', '')
+            new_file = self.get_file()
+            if changed:
+                message = f"A file already exists with that name, {file} was renamed to "
+                message += f"{new_file} in order to prevent a file from being overwritten."
+            else:
+                message = f"Success! {file} was renamed to {new_file}"
+            return {"message":message, "_path":self.path, "changed":changed}
+        except FileNotFoundError as err:
+            message = f"Could not find the file or directory: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+        except PermissionError as err:
+            message = f"You don not have permission to rename this file or directory: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc())
