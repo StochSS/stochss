@@ -16,6 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
+# import json
+# import uuid
+# import subprocess
+# from json.decoder import JSONDecodeError
+# from datetime import datetime
+import logging
+# from shutil import move, rmtree
+from tornado import web
+from notebook.base.handlers import APIHandler
+
+from .util import *
+
 '''
 APIHandler documentation:
 https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
@@ -24,18 +37,6 @@ Note APIHandler.finish() sets Content-Type handler to 'application/json'
 
 Use finish() for json, write() for text
 '''
-import os
-import json
-import uuid
-import subprocess
-from json.decoder import JSONDecodeError
-from datetime import datetime
-import logging
-from shutil import move, rmtree
-from tornado import web
-from notebook.base.handlers import APIHandler
-
-from .util import *
 
 log = logging.getLogger('stochss')
 
@@ -143,9 +144,9 @@ class MoveFileAPIHandler(APIHandler):
 
 class DuplicateModelHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating copies of a file.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -156,6 +157,17 @@ class DuplicateModelHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        self.set_header('Content-Type', 'application/json')
+        log.debug("Copying file: %s", path)
+        try:
+            file = StochSSFile(path=path)
+            resp = file.duplicate()
+            log.debug("Response message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class DuplicateDirectoryHandler(APIHandler):
@@ -317,7 +329,7 @@ class CreateDirectoryHandler(APIHandler):
             folder = StochSSFolder(path=directories, new=True)
             folder.print_logs(log)
             self.write("{0} was successfully created!".format(directories))
-        except StochSSAPIHandler as err:
+        except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
 

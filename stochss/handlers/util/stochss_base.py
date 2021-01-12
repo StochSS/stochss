@@ -59,6 +59,19 @@ class StochSSBase():
         return new_path
 
 
+    def get_file(self, path=None):
+        '''
+        Get the file from the path
+
+        Attributes
+        ----------
+        path : str
+            Path to a file object
+        '''
+        file = self.path if path is None else path
+        return file.split('/').pop()
+
+
     def get_name(self, path=None):
         '''
         Get the name from the file object's path or provided path
@@ -66,7 +79,7 @@ class StochSSBase():
         Attributes
         ----------
         path : str
-            Path to a file
+            Path to a file object
         '''
         name = self.path if path is None else path
         if name.endswith("/"):
@@ -103,6 +116,36 @@ class StochSSBase():
         if full:
             return os.path.join(self.user_dir, os.path.dirname(self.path))
         return os.path.dirname(self.path)
+
+
+    def get_unique_copy_path(self):
+        '''
+        Gets a unique name for the file object being copied.
+        Accounts for files that are already copies.
+
+        Attributes
+        ----------
+        '''
+        file = self.get_file()
+        dirname = self.get_dir_name()
+        ext = '.' + file.split('.').pop() if '.' in file else ''
+        name = file.split('-copy')[0] if '-copy' in file else self.get_name()
+
+        # Check if the file object is an original or at least the second copy
+        if not '-copy' in file or '-copy(' in file:
+            cp_file = ''.join([name, '-copy', ext])
+            if cp_file not in os.listdir(dirname):
+                return os.path.join(dirname, cp_file)
+
+        i = 2
+        cp_file = ''.join([name, f"-copy({i})", ext])
+        # Check if a copy exists with '-copy(2)' in the name
+        # If copy_file is still not unique iterate i until a unique name is found
+        while cp_file in os.listdir(dirname):
+            i += 1
+            cp_file = ''.join([name, f"-copy({i})", ext])
+
+        return os.path.join(dirname, cp_file)
 
 
     def log(self, level, message):
