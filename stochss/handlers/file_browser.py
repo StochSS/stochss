@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-# import json
+import json
 # import uuid
 # import subprocess
 # from json.decoder import JSONDecodeError
@@ -26,17 +26,13 @@ import logging
 # from shutil import move, rmtree
 from tornado import web
 from notebook.base.handlers import APIHandler
+# APIHandler documentation:
+# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
+# Note APIHandler.finish() sets Content-Type handler to 'application/json'
+# Use finish() for json, write() for text
 
 from .util import *
 
-'''
-APIHandler documentation:
-https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
-
-Note APIHandler.finish() sets Content-Type handler to 'application/json'
-
-Use finish() for json, write() for text
-'''
 
 log = logging.getLogger('stochss')
 
@@ -389,9 +385,9 @@ class CreateDirectoryHandler(APIHandler):
 
 class UploadFileAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for uploading files.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def post(self):
@@ -403,8 +399,27 @@ class UploadFileAPIHandler(APIHandler):
 
         Attributes
         ----------
-
         '''
+        file_data = self.request.files['datafile'][0]
+        log.debug(type(file_data['body']))
+        log.debug(file_data['filename'])
+        file_info = json.loads(self.request.body_arguments['fileinfo'][0].decode())
+        log.debug(file_info['type'])
+        log.debug(file_info['path'])
+        name = file_info['name'] if file_info['name'] else None
+        if name is not None:
+            log.debug(name)
+        else:
+            log.debug("No name given")
+        try:
+            folder = StochSSFolder(path=file_info['path'])
+            resp = folder.upload(file_type=file_info['type'], file=file_data['filename'],
+                                 body=file_data['body'], new_name=name)
+            log.debug(resp)
+            self.write(json.dumps(resp))
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class DuplicateWorkflowAsNewHandler(APIHandler):

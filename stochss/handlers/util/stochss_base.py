@@ -217,6 +217,18 @@ class StochSSBase():
         self.logs.append({"level":level, "message":message})
 
 
+    def make_parent_dirs(self):
+        '''
+        Make the parent directories for new file objects if they don't exist
+
+        Attributes
+        ----------
+        '''
+        dirname = self.get_dir_name(full=True)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+
     def print_logs(self, log):
         '''
         Display all internal logs to the console

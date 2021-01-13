@@ -18,10 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import shutil
+import zipfile
 import traceback
 
 from .stochss_base import StochSSBase
-from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
+from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
+                            StochSSFileExistsError
 
 class StochSSFile(StochSSBase):
     '''
@@ -29,7 +31,7 @@ class StochSSFile(StochSSBase):
     StochSS file object
     ################################################################################################
     '''
-    def __init__(self, path):
+    def __init__(self, path, new=False, body=""):
         '''
         Intitialize a file object
 
@@ -39,6 +41,14 @@ class StochSSFile(StochSSBase):
             Path to the folder
         '''
         super().__init__(path=path)
+        if new:
+            self.make_parent_dirs()
+            new_path, changed = self.get_unique_path(name=self.get_file())
+            if changed:
+                self.path = new_path.replace(self.user_dir + '/', "")
+            open_op = 'wb' if isinstance(body, bytes) else 'w'
+            with open(new_path, open_op) as file:
+                file.write(body)
 
 
     def delete(self):
@@ -125,3 +135,33 @@ class StochSSFile(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
+
+
+    def unzip(self):
+        '''
+        Extract the contents of a zip archive
+
+        Attributes
+        ----------
+        '''
+        if not self.path.endswith(".zip"):
+            return []
+
+        try:
+            path = self.get_path(full=True)
+            dirname = self.get_dir_name(full=True)
+            with zipfile.ZipFile(path, "r") as zip_file:
+                members = zip_file.namelist()
+                files = list(map(lambda file: os.path.exists(os.path.join(dirname, file)), members))
+                if True in files:
+                    self.delete()
+                    file = self.get_file()
+                    message = f"Unable to upload {file} "
+                    message += f"as the parent directory in {file} already exists."
+                    raise StochSSFileExistsError(message, traceback.format_exc())
+                zip_file.extractall(dirname)
+            if "__MACOSX" in os.listdir(dirname):
+                shutil.rmtree(os.path.join(dirname, "__MACOSX"))
+            return []
+        except zipfile.BadZipFile as err:
+            return [str(err)]
