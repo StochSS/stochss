@@ -23,7 +23,6 @@ import shutil
 import traceback
 
 from .stochss_base import StochSSBase
-from .stochss_workflow import StochSSWorkflow
 from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
                             StochSSPermissionsError
 
@@ -65,8 +64,7 @@ class StochSSFolder(StochSSBase):
             file_type = types[ext]
             node['type'] = file_type
             if file_type == "workflow":
-                wkfl = StochSSWorkflow(path)
-                node['_status'] = wkfl.get_status()
+                node['_status'] = self.get_status(path=path)
             elif file_type == "workflow-group":
                 node['children'] = True
         elif os.path.isdir(os.path.join(path, file)):
@@ -144,6 +142,29 @@ class StochSSFolder(StochSSBase):
         except PermissionError as err:
             message = f"You do not have permission to copy this directory: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc())
+
+
+    def generate_zip_file(self):
+        '''
+        Create a zip archive for download
+
+        Attributes
+        ----------
+        '''
+        path = self.get_path(full=True)
+        if not os.path.exists(path):
+            message = f"Could not find the directory: {path}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+
+        zip_file = self.get_name() + ".zip"
+        zip_path, _ = self.get_unique_path(name=zip_file)
+        name = self.get_name(path=zip_path)
+        target = self.get_file()
+        dirname = self.get_dir_name(full=True)
+        shutil.make_archive(os.path.join(dirname, name), "zip", dirname, target)
+        zip_path = zip_path.replace(self.user_dir + '/', "")
+        message = f"Successfully created {zip_path}"
+        return {"Message":message, "Path":zip_path}
 
 
     def move(self, location):

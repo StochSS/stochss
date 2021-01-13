@@ -74,7 +74,6 @@ class StochSSAPIError(Exception):
 # File System Errors
 ####################################################################################################
 
-
 class StochSSFileExistsError(StochSSAPIError):
     '''
     ################################################################################################
@@ -136,3 +135,48 @@ class StochSSPermissionsError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(403, "Permission Denied", msg, trace)
+
+####################################################################################################
+# Workflow Errors
+####################################################################################################
+
+class StochSSWorkflowError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Workflow Errored During Run Time
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the workflow experienced an error during run
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "Workflow Errored on Run", msg, trace)
+
+
+class StochSSWorkflowNotCompleteError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Workflow Has Not Completed
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the action requires a workflow to finish running before it can be executed
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "Workflow Run Not Complete", msg, trace)

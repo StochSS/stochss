@@ -121,6 +121,25 @@ class StochSSBase():
         return os.path.dirname(self.path)
 
 
+    def get_status(self, path=None):
+        '''
+        Get the current status of the workflow
+
+        Attributes
+        ----------
+        '''
+        if path is None:
+            path = os.path.join(self.user_dir, self.path)
+        files = os.listdir(path=path)
+        if "COMPLETE" in files:
+            return "complete"
+        if "ERROR" in files:
+            return "error"
+        if "RUNNING" in files:
+            return "running"
+        return "ready"
+
+
     def get_unique_path(self, name):
         '''
         Get a unique path for the file object with the target name

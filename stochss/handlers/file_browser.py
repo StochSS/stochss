@@ -328,9 +328,9 @@ class DownloadAPIHandler(APIHandler):
 
 class DownloadZipFileAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for downloading zip files to the users download directory.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -342,6 +342,23 @@ class DownloadZipFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the model: %s", path)
+        action = self.get_query_argument(name="action")
+        log.debug("Action: %s", action)
+        self.set_header('Content-Type', 'application/json')
+        try:
+            if action == "generate":
+                folder = StochSSFolder(path=path)
+                resp = folder.generate_zip_file()
+            else:
+                wkfl = StochSSWorkflow(path=path)
+                resp = wkfl.generate_csv_zip()
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class CreateDirectoryHandler(APIHandler):
