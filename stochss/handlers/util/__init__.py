@@ -20,10 +20,11 @@ from .stochss_base import StochSSBase
 from .stochss_file import StochSSFile
 from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
+from .stochss_sbml import StochSSSBMLModel
 from .stochss_notebook import StochSSNotebook
 from .stochss_workflow import StochSSWorkflow
 from .stochss_errors import StochSSAPIError, report_error
 
-__all__ = ['StochSSBase', 'StochSSFile', 'StochSSFolder', 'StochSSModel', 'StochSSNotebook',
-           'StochSSWorkflow', 'StochSSAPIError', 'report_error']
+__all__ = ['StochSSBase', 'StochSSFile', 'StochSSFolder', 'StochSSModel', 'StochSSSBMLModel',
+           'StochSSNotebook', 'StochSSWorkflow', 'StochSSAPIError', 'report_error']
     ################################################################################################

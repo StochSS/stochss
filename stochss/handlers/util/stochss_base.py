@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import json
 import shutil
 import datetime
 import traceback
@@ -73,6 +74,23 @@ class StochSSBase():
         '''
         file = self.path if path is None else path
         return file.split('/').pop()
+
+
+    def get_model_template(self, as_string=False):
+        '''
+        Get the stochss model template
+
+        Attributes
+        ----------
+        as_string : bool
+            Indicates whether or not to return the template in string format
+        '''
+        path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+        self.log("debug", f"Using model template: {path}")
+        with open(path, 'r') as template:
+            if as_string:
+                return template.read()
+            return json.load(template)
 
 
     def get_name(self, path=None):

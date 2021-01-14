@@ -23,8 +23,8 @@ import shutil
 import traceback
 
 from .stochss_base import StochSSBase
-# from .stochss_model import StochSSModel
 from .stochss_file import StochSSFile
+# from .stochss_sbml import StochSSSBMLModel
 from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
                             StochSSPermissionsError
 

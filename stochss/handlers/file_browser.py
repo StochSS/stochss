@@ -280,9 +280,9 @@ class ModelToSBMLAPIHandler(APIHandler):
 
 class SBMLToModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for converting a SBML model to a StochSS model.
-    ##############################################################################
+    ################################################################################################
     '''
 
     @web.authenticated
@@ -294,6 +294,25 @@ class SBMLToModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
+        path = self.get_query_argument(name="path")
+        log.debug("Converting SBML: %s", path)
+        self.set_header('Content-Type', 'application/json')
+        try:
+            sbml = StochSSSBMLModel(path=path)
+            convert_resp = sbml.convert_to_model(name=sbml.get_name())
+            sbml.print_logs(log)
+            resp = {"message":convert_resp['message'], "errors":convert_resp['errors'], "File":""}
+            if convert_resp['model'] is not None:
+                model = StochSSModel(path=convert_resp['path'], new=True,
+                                     model=convert_resp['model'])
+                resp['File'] = model.get_file()
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        log.setLevel(logging.WARNING)
+        self.finish()
 
 
 class DownloadAPIHandler(APIHandler):
