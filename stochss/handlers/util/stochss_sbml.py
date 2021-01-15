@@ -41,7 +41,11 @@ class StochSSSBMLModel(StochSSBase):
         Attributes
         ----------
         path : str
-            Path to the notebook
+            Path to the sbml model file
+        new : bool
+            Indicates whether or not the file is new
+        document : str
+            Contents of the sbml model file
         '''
         super().__init__(path=path)
         if new:
@@ -118,7 +122,7 @@ class StochSSSBMLModel(StochSSBase):
                                      "signature":signature,
                                      "annotation": ""}
             model['functionDefinitions'].append(s_function_definition)
-            model['defaultMode'] += 1
+            model['defaultID'] += 1
 
 
     @classmethod

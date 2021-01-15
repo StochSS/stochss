@@ -294,7 +294,6 @@ class SBMLToModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         path = self.get_query_argument(name="path")
         log.debug("Converting SBML: %s", path)
         self.set_header('Content-Type', 'application/json')
@@ -311,7 +310,6 @@ class SBMLToModelAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 

@@ -24,26 +24,10 @@ import traceback
 
 from .stochss_base import StochSSBase
 from .stochss_file import StochSSFile
-# from .stochss_sbml import StochSSSBMLModel
+from .stochss_model import StochSSModel
+from .stochss_sbml import StochSSSBMLModel
 from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
                             StochSSPermissionsError
-
-def _validate_model(body, file):
-    try:
-        body = json.loads(body)
-    except json.decoder.JSONDecodeError:
-        message = [f"The file {file} is not in JSON format."]
-        return False, message
-
-    keys = ["species", "parameters", "reactions", "eventsCollection",
-            "rules", "functionDefinitions"]
-    for key in body.keys():
-        if key in keys:
-            keys.remove(key)
-    if keys:
-        message = f"The following keys are missing from {file}: {keys}"
-        return False, [message]
-    return True, []
 
 
 class StochSSFolder(StochSSBase):
@@ -111,7 +95,7 @@ class StochSSFolder(StochSSBase):
 
 
     def __upload_model(self, file, body, new_name=None):
-        is_valid, error = _validate_model(body, file)
+        is_valid, error = self.__validate_model(body, file)
         ext = "mdl" if is_valid else "json"
         if new_name is not None:
             file = f"{new_name}.{ext}"
@@ -128,6 +112,54 @@ class StochSSFolder(StochSSBase):
             message = "The file could not be validated as a Model file "
             message += f"and was uploaded as {file} to {dirname}"
         return {"message":message, "path":dirname, "file":file, "errors":error}
+
+
+    def __upload_sbml(self, file, body, new_name=None):
+        if new_name is not None:
+            file = f"{new_name}.sbml"
+        if file.endswith(".xml"):
+            file = f"{self.get_name(path=file)}.sbml"
+        path = os.path.join(self.path, file)
+        sbml = StochSSSBMLModel(path=path, new=True, document=body)
+        dirname = sbml.get_dir_name()
+        is_valid, errors = self.__validate_sbml(sbml=sbml)
+        if is_valid:
+            convert_resp = sbml.convert_to_model(name=sbml.get_name())
+            _ = StochSSModel(path=convert_resp['path'], new=True, model=convert_resp['model'])
+            message = f"{sbml.get_file()} was successfully uploaded to {dirname}"
+        else:
+            sbml.rename(name=f"{sbml.get_name()}.xml")
+            message = "The file could not be validated as a SBML file "
+            message += f"and was uploaded as {file} to {sbml.get_dir_name()}"
+        file = sbml.get_file()
+        return {"message":message, "path":dirname, "file":file, "errors":errors}
+
+
+    @classmethod
+    def __validate_model(cls, body, file):
+        try:
+            body = json.loads(body)
+        except json.decoder.JSONDecodeError:
+            message = [f"The file {file} is not in JSON format."]
+            return False, message
+
+        keys = ["species", "parameters", "reactions", "eventsCollection",
+                "rules", "functionDefinitions"]
+        for key in body.keys():
+            if key in keys:
+                keys.remove(key)
+        if keys:
+            message = f"The following keys are missing from {file}: {keys}"
+            return False, [message]
+        return True, []
+
+
+    @classmethod
+    def __validate_sbml(cls, sbml):
+        g_model, errors = sbml.convert_to_gillespy()
+        if g_model is None:
+            return False, [f"The file {sbml.get_file()} is not in SBML format."]
+        return bool(not errors), errors
 
 
     def get_jstree_node(self, is_root=False):
@@ -270,8 +302,8 @@ class StochSSFolder(StochSSBase):
         ext = file.split('.').pop() if '.' in file else ""
         if  ext == 'mdl' or (file_type == "model" and ext in exts[file_type]):
             return self.__upload_model(file, body, new_name=new_name)
-        # if ext == 'sbml' or (file_type == "sbml" and ext in exts[file_type]):
-        #     return self.__upload_sbml(file_name, body, new_name=new_name)
+        if ext == 'sbml' or (file_type == "sbml" and ext in exts[file_type]):
+            return self.__upload_sbml(file, body, new_name=new_name)
         resp = self.__upload_file(file, body, new_name=new_name)
         if file_type != "file":
             error = f"{file} did not match one of the {file_type} file types"
