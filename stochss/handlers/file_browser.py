@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
-# import uuid
-# import subprocess
+import uuid
+import subprocess
 # from json.decoder import JSONDecodeError
 # from datetime import datetime
 import logging
@@ -418,21 +418,21 @@ class UploadFileAPIHandler(APIHandler):
         ----------
         '''
         file_data = self.request.files['datafile'][0]
-        log.debug(type(file_data['body']))
-        log.debug(file_data['filename'])
+        log.debug("Type of the files contents: %s", type(file_data['body']))
+        log.debug("Name of the file: %s", file_data['filename'])
         file_info = json.loads(self.request.body_arguments['fileinfo'][0].decode())
-        log.debug(file_info['type'])
-        log.debug(file_info['path'])
+        log.debug("Type of file to be uploaded: %s", file_info['type'])
+        log.debug("Path to the directory where the file will be uploaded: %s", file_info['path'])
         name = file_info['name'] if file_info['name'] else None
         if name is not None:
-            log.debug(name)
+            log.debug("Name with 'save as' path for the file: %s", name)
         else:
-            log.debug("No name given")
+            log.debug("No name given: %s", name)
         try:
             folder = StochSSFolder(path=file_info['path'])
             resp = folder.upload(file_type=file_info['type'], file=file_data['filename'],
                                  body=file_data['body'], new_name=name)
-            log.debug(resp)
+            log.debug("Response: %s", resp)
             self.write(json.dumps(resp))
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -475,9 +475,9 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
 
 class UploadFileFromLinkAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for uploading file from a url.
-    ##############################################################################
+    ################################################################################################
     '''
 
     async def get(self):
@@ -487,3 +487,28 @@ class UploadFileFromLinkAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the external file or the response file: %s", path)
+        cmd = self.get_query_argument(name="cmd", default=None)
+        log.debug("The command for the upload script: %s", cmd)
+        script = '/stochss/stochss/handlers/util/scripts/upload_remote_file.py'
+        if cmd is None:
+            outfile = f"{str(uuid.uuid4()).replace('-', '_')}.tmp"
+            log.debug("Response file name: %s", outfile)
+            exec_cmd = [script, f'{path}', f'{outfile}'] # Script commands for read run_cmd
+            log.debug("Exec command: %s", exec_cmd)
+            pipe = subprocess.Popen(exec_cmd)
+            resp = {"responsePath": outfile}
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        else:
+            exec_cmd = [script, 'None', f'{path}'] # Script commands for read run_cmd
+            log.debug("Exec command: %s", exec_cmd)
+            pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
+            results, error = pipe.communicate()
+            log.error("Errors trown by the subprocess: %s", error)
+            resp = json.loads(results)
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        self.finish()

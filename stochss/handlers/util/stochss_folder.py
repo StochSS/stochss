@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
-# import zipfile
+from urllib import request
 import traceback
 
 from .stochss_base import StochSSBase
@@ -58,6 +58,15 @@ class StochSSFolder(StochSSBase):
             except FileExistsError as err:
                 message = f"Could not create your directory: {str(err)}"
                 raise StochSSFileExistsError(message, traceback.format_exc())
+
+
+    def __get_rmt_upld_path(self, file):
+        if not file.endswith(".zip"):
+            return file
+        files = os.listdir(self.user_dir)
+        files.remove(file)
+        paths = list(map(lambda file: os.path.join(self.user_dir, file), files))
+        return max(paths, key=os.path.getctime)
 
 
     def __build_jstree_node(self, path, file):
@@ -310,3 +319,30 @@ class StochSSFolder(StochSSBase):
             error += f": {', '.join(exts[file_type])}."
             resp['errors'].append(error)
         return resp
+
+
+    def upload_from_link(self, remote_path):
+        '''
+        Uploads a file from a remote link to the users root directory
+
+        Attributes
+        ----------
+        remote_path : str
+            Path to the remote file
+        '''
+        response = request.urlopen(remote_path)
+        file = self.get_file(path=remote_path)
+        path = self.get_new_path(dst_path=file)
+        if os.path.exists(path):
+            message = f"Could not upload this file as {file} already exists"
+            return {"message":message, "reason":"File Already Exists"}
+        try:
+            file_types = {"mdl":"model", "sbml":"sbml"}
+            ext = file.split('.').pop()
+            file_type = file_types[ext] if ext in file_types.keys() else "file"
+            _ = self.upload(file_type=file_type, file=file, body=response.read())
+            new_path = self.__get_rmt_upld_path(file=file)
+            message = f"Successfully uploaded the file {file} to {new_path}"
+            return {"message":message, "file_path":new_path}
+        except StochSSFileExistsError as err:
+            return {"message":err.message, "reason":err.reason}
