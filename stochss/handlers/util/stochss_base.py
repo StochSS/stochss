@@ -22,7 +22,8 @@ import shutil
 import datetime
 import traceback
 
-from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError
+from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
+                            FileNotJSONFormatError
 
 class StochSSBase():
     '''
@@ -30,7 +31,7 @@ class StochSSBase():
     StochSS base object
     ################################################################################################
     '''
-    user_dir = "/home/jovyan"
+    user_dir = "/home/jovyan" # os.path.expanduser("~")
 
     def __init__(self, path):
         '''
@@ -86,11 +87,18 @@ class StochSSBase():
             Indicates whether or not to return the template in string format
         '''
         path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
-        self.log("debug", f"Using model template: {path}")
-        with open(path, 'r') as template:
-            if as_string:
-                return template.read()
-            return json.load(template)
+        self.log("debug", f"Using model template at: {path}")
+        try:
+            with open(path, 'r') as template:
+                if as_string:
+                    return template.read()
+                return json.load(template)
+        except FileNotFoundError as err:
+            message = f"Could not find the model template file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+        except json.decoder.JSONDecodeError as err:
+            message = f"Template data is not JSON decodeable: {str(err)}"
+            raise FileNotJSONFormatError(message, traceback.format_exc())
 
 
     def get_name(self, path=None):
@@ -243,6 +251,7 @@ class StochSSBase():
         ----------
         '''
         dirname = self.get_dir_name(full=True)
+        self.log("debug", f"Path of parent directories: {dirname}")
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 

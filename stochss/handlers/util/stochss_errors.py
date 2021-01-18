@@ -137,6 +137,30 @@ class StochSSPermissionsError(StochSSAPIError):
         super().__init__(403, "Permission Denied", msg, trace)
 
 ####################################################################################################
+# Model Errors
+####################################################################################################
+
+class FileNotJSONFormatError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Model/Template Not In JSON Format
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the model or template file is not in proper JSON format
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "File Data Not JSON Format", msg, trace)
+
+####################################################################################################
 # Workflow Errors
 ####################################################################################################
 
