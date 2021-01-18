@@ -23,7 +23,7 @@ import sys
 import json
 import argparse
 
-sys.path.append("/stochss/stochss/handlers/")
+sys.path.append("/stochss/stochss/handlers/") # pylint: disable=wrong-import-position
 from util.stochss_folder import StochSSFolder
 
 def get_parsed_args():

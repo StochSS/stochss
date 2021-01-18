@@ -19,11 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import uuid
-import subprocess
-# from json.decoder import JSONDecodeError
-# from datetime import datetime
 import logging
-# from shutil import move, rmtree
+import subprocess
+# from datetime import datetime
 from tornado import web
 from notebook.base.handlers import APIHandler
 # APIHandler documentation:
