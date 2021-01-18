@@ -29,7 +29,8 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import *
+from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSBMLModel, \
+                  StochSSWorkflow, StochSSAPIError, report_error
 
 
 log = logging.getLogger('stochss')
