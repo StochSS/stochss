@@ -228,9 +228,9 @@ class RenameAPIHandler(APIHandler):
 
 class ConvertToSpatialAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for converting a model to a spatial model.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -241,13 +241,25 @@ class ConvertToSpatialAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        log.debug("Converting non-spatial model to spatial model: %s", path)
+        self.set_header('Content-Type', 'application/json')
+        try:
+            model = StochSSModel(path=path)
+            resp, data = model.convert_to_spatial()
+            _ = StochSSModel(path=data['path'], new=True, model=data['spatial'])
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class ConvertToModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for converting a spatial model to a model.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -258,6 +270,18 @@ class ConvertToModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        log.debug("Converting spatial model to non-spatial model: %s", path)
+        self.set_header('Content-Type', 'application/json')
+        try:
+            s_model = StochSSModel(path=path)
+            resp, data = s_model.convert_to_model()
+            _ = StochSSModel(path=data['path'], new=True, model=data['model'])
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class ModelToSBMLAPIHandler(APIHandler):

@@ -22,7 +22,7 @@ import json
 import traceback
 
 from .stochss_base import StochSSBase
-from .stochss_errors import StochSSFileNotFoundError
+from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError
 
 class StochSSModel(StochSSBase):
     '''
@@ -68,6 +68,9 @@ class StochSSModel(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the model file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
+        except json.decoder.JSONDecodeError as err:
+            message = f"The model is not JSON decobable: {str(err)}"
+            raise FileNotJSONFormatError(message, traceback.format_exc())
 
 
     @classmethod
@@ -134,6 +137,36 @@ class StochSSModel(StochSSBase):
                 pass
             except ValueError:
                 pass
+
+
+    def convert_to_model(self):
+        '''
+        Convert a spatial model to a non_spatial model
+
+        Attributes
+        ----------
+        '''
+        s_model = self.load()
+        s_model['is_spatial'] = False
+        m_path = self.path.replace(".smdl", ".mdl")
+        m_file = self.get_file(path=m_path)
+        message = f"{self.get_file()} was successfully convert to {m_file}!"
+        return {"Message":message, "File":m_file}, {"model":s_model, "path":m_path}
+
+
+    def convert_to_spatial(self):
+        '''
+        Convert a non-spatial model to a spatial model
+
+        Attributes
+        ----------
+        '''
+        model = self.load()
+        model['is_spatial'] = True
+        s_path = self.path.replace(".mdl", ".smdl")
+        s_file = self.get_file(path=s_path)
+        message = f"{self.get_file()} was successfully convert to {s_file}!"
+        return {"Message":message, "File":s_file}, {"spatial":model, "path":s_path}
 
 
     def load(self):
