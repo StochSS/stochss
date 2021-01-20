@@ -286,9 +286,9 @@ class ConvertToModelAPIHandler(APIHandler):
 
 class ModelToSBMLAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for converting a StochSS model to a SBML model.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -299,6 +299,22 @@ class ModelToSBMLAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
+        path = self.get_query_argument(name="path")
+        log.debug("Converting to SBML: %s", path)
+        self.set_header('Content-Type', 'application/json')
+        try:
+            model = StochSSModel(path=path)
+            resp, data = model.convert_to_sbml()
+            model.print_logs(log)
+            sbml = StochSSSBMLModel(path=data['path'], new=True, document=data['document'])
+            resp["File"] = sbml.get_file()
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        log.setLevel(logging.WARNING)
+        self.finish()
 
 
 class SBMLToModelAPIHandler(APIHandler):

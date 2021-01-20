@@ -31,7 +31,7 @@ class StochSSBase():
     StochSS base object
     ################################################################################################
     '''
-    user_dir = "/home/jovyan" # os.path.expanduser("~")
+    user_dir = os.path.expanduser("~") # returns the path to the users home directory
 
     def __init__(self, path):
         '''

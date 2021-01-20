@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import os
+# import os
 # import ast
 # import uuid
 # import json
@@ -48,13 +48,11 @@ class JsonFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         purpose = self.get_query_argument(name="for")
         log.debug("Purpose of the handler: %s", purpose)
         path = self.get_query_argument(name="path")
         log.debug("Path to the file: %s", path)
         self.set_header('Content-Type', 'application/json')
-        log.debug(os.path.expanduser("~"))
         try:
             file = StochSSNotebook(path=path) if purpose == "None" else StochSSModel(path=path)
             data = file.load()
@@ -73,7 +71,6 @@ class JsonFileAPIHandler(APIHandler):
                     report_error(self, log, err)
             else:
                 report_error(self, log, err)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -85,7 +82,6 @@ class JsonFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         path = self.get_query_argument(name="path")
         log.debug("Path to the model: %s", path)
         data = self.request.body.decode()
@@ -96,7 +92,6 @@ class JsonFileAPIHandler(APIHandler):
             model.print_logs(log)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
