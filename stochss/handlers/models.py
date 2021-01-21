@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-# import os
+import os
 # import ast
 # import uuid
 # import json
@@ -114,9 +114,9 @@ class RunModelAPIHandler(APIHandler):
 
 class ModelExistsAPIHandler(APIHandler):
     '''
-    ########################################################################
+    ################################################################################################
     Handler for checking if a model already exists.
-    ########################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -126,3 +126,11 @@ class ModelExistsAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the file: %s", path)
+        model = StochSSModel(path=path)
+        resp = {"exists":os.path.exists(model.get_path(full=True))}
+        log.debug("Response: %s", resp)
+        self.write(resp)
+        self.finish()
