@@ -26,17 +26,28 @@ log = logging.getLogger('stochss')
 # pylint: disable=abstract-method
 class PageHandler(IPythonHandler):
     '''
+    ################################################################################################
     Base handler for rendering stochss pages.
+    ################################################################################################
     '''
     def get_template_path(self):
         '''
         Retrieve the location of stochss pages output by webpack.
         The html pages are located in the same directory as static assets.
+
+        Attributes
+        ----------
         '''
         return self.settings['config']['NotebookApp']['extra_static_paths'][0]
 
     @classmethod
     def get_server_path(cls):
+        '''
+        Retrieve the path to the server.
+
+        Attributes
+        ----------
+        '''
         try:
             server_path = os.environ['JUPYTERHUB_SERVICE_PREFIX']
         except KeyError:
@@ -46,54 +57,153 @@ class PageHandler(IPythonHandler):
 
 
 class HomeHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Home Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS home page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-home.html", server_path=self.get_server_path())
 
 
 class UserHomeHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS User Home Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS user home page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-user-home.html", server_path=self.get_server_path())
 
 
 class QuickstartHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Tutorials Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS tutorials page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-quickstart.html", server_path=self.get_server_path())
 
 
 class ModelBrowserHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS File Browser Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS file browser page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-file-browser.html", server_path=self.get_server_path())
 
 
 class ModelEditorHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Model Editor Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS model editor page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-model-editor.html", server_path=self.get_server_path())
 
 
 class WorkflowSelectionHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Workflow Selection Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS workflow selection page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-workflow-selection.html", server_path=self.get_server_path())
 
 
 class WorkflowEditorHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Workflow Manager Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS workflow manager page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-workflow-manager.html", server_path=self.get_server_path())
 
 
 class ProjectBrowserHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Project Browser Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS project browser page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-project-browser.html", server_path=self.get_server_path())
 
 
 class ProjectManagerHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Project Manager Page Handler
+    ################################################################################################
+    '''
     @web.authenticated
     async def get(self):
+        '''
+        Render the StochSS project manager page.
+
+        Attributes
+        ----------
+        '''
         self.render("stochss-project-manager.html", server_path=self.get_server_path())
