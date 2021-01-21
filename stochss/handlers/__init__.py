@@ -27,6 +27,14 @@ from .project import *
 from .log import init_log
 
 def get_page_handlers(route_start):
+    '''
+    Get the StochSS page handlers
+
+    Attributes
+    ----------
+    route_starts : str
+        The base url for the web app
+    '''
     handlers = [
         #
         ## Page Handlers
