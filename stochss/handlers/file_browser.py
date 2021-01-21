@@ -30,7 +30,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSBMLModel, \
-                  StochSSWorkflow, StochSSAPIError, report_error
+                  StochSSNotebook, StochSSWorkflow, StochSSAPIError, report_error
 
 
 log = logging.getLogger('stochss')
@@ -66,10 +66,10 @@ class ModelBrowserFileList(APIHandler):
 
 class ModelToNotebookHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for handling conversions from model (.mdl) file to Jupyter Notebook
     (.ipynb) file.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -80,6 +80,20 @@ class ModelToNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the model file: %s", path)
+        self.set_header('Content-Type', 'application/json')
+        try:
+            model = StochSSModel(path=path)
+            data = model.get_notebook_data()
+            log.debug("Notebook data: %s", data)
+            notebook = StochSSNotebook(**data)
+            resp = notebook.create_es_notebook()
+            log.debug("Notebook file path: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class DeleteFileAPIHandler(APIHandler):
@@ -299,7 +313,6 @@ class ModelToSBMLAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         path = self.get_query_argument(name="path")
         log.debug("Converting to SBML: %s", path)
         self.set_header('Content-Type', 'application/json')
@@ -313,7 +326,6 @@ class ModelToSBMLAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 

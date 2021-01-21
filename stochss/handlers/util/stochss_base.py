@@ -97,7 +97,31 @@ class StochSSBase():
             message = f"Could not find the model template file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
         except json.decoder.JSONDecodeError as err:
-            message = f"Template data is not JSON decodeable: {str(err)}"
+            message = f"Model template data is not JSON decodeable: {str(err)}"
+            raise FileNotJSONFormatError(message, traceback.format_exc())
+
+
+    def get_settings_template(self, as_string=False):
+        '''
+        Get the StochSS workflow settings template
+
+        Attributes
+        ----------
+        as_string : bool
+            Indicates whether or not to return the template in string format
+        '''
+        path = '/stochss/stochss_templates/workflowSettingsTemplate.json'
+        self.log("debug", f"Using settings template at: {path}")
+        try:
+            with open(path, 'r') as template:
+                if as_string:
+                    return template.read()
+                return json.load(template)
+        except FileNotFoundError as err:
+            message = f"Could not find the settings template file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+        except json.decoder.JSONDecodeError as err:
+            message = f"Settings template data is not JSON decodeable: {str(err)}"
             raise FileNotJSONFormatError(message, traceback.format_exc())
 
 

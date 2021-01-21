@@ -357,19 +357,6 @@ class StochSSModel(StochSSBase):
         return {"Message":message, "File":m_file}, {"model":s_model, "path":m_path}
 
 
-    def get_notebook_data(self):
-        '''
-        Get the needed data for converting to notebook
-
-        Attributes
-        ----------
-        '''
-        file = f"{self.get_name()}.ipynb"
-        path = os.path.join(self.get_dir_name(), file)
-        g_model = self.convert_to_gillespy2()
-        return {"path":path, "new":True, "s_model":self.model, "g_model":g_model}
-
-
     def convert_to_sbml(self):
         '''
         Convert a model to a SBML model
@@ -405,6 +392,19 @@ class StochSSModel(StochSSBase):
         s_file = self.get_file(path=s_path)
         message = f"{self.get_file()} was successfully convert to {s_file}!"
         return {"Message":message, "File":s_file}, {"spatial":model, "path":s_path}
+
+
+    def get_notebook_data(self):
+        '''
+        Get the needed data for converting to notebook
+
+        Attributes
+        ----------
+        '''
+        file = f"{self.get_name()}.ipynb"
+        path = os.path.join(self.get_dir_name(), file)
+        g_model = self.convert_to_gillespy2()
+        return {"path":path, "new":True, "models":{"s_model":self.model, "g_model":g_model}}
 
 
     def load(self):
