@@ -492,9 +492,9 @@ class UploadFileAPIHandler(APIHandler):
 
 class DuplicateWorkflowAsNewHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for duplicating a workflow as new and a workflows model.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -505,13 +505,40 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the workflow: %s", path)
+        target = self.get_query_argument(name="target")
+        log.debug("The %s is being copied", target)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            if target == "wkfl_model":
+                resp, kwargs = wkfl.extract_model()
+                model = StochSSModel(**kwargs)
+                resp['mdlPath'] = model.path
+                resp['File'] = model.get_file()
+            else:
+                time_stamp = self.get_query_argument(name="stamp")
+                if time_stamp == "None":
+                    time_stamp = None
+                log.debug("The time stamp for the new workflow: %s", time_stamp)
+                resp, kwargs = wkfl.duplicate_as_new(stamp=time_stamp)
+                new_wkfl = StochSSWorkflow(**kwargs)
+                new_wkfl.update_info(new_info={"source_model":resp['mdlPath']})
+                resp['wkflPath'] = new_wkfl.path
+                resp['File'] = new_wkfl.get_file()
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class GetWorkflowModelPathAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for getting the path to the workflow model.
-    ##############################################################################
+    ################################################################################################
     '''
 
     async def get(self):
@@ -522,6 +549,18 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow: %s", path)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            resp = wkfl.check_for_external_model()
+            wkfl.print_logs(log)
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class UploadFileFromLinkAPIHandler(APIHandler):

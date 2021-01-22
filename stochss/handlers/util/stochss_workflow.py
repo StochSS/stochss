@@ -61,21 +61,22 @@ class StochSSWorkflow(StochSSBase):
         if new:
             file = f"{self.get_name()}{self.TYPES[self.type]}{self.time_stamp}.wkfl"
             self.path = file if data['dirname'] is None else os.path.join(data['dirname'], file)
-            self.__create_new_workflow(mdl_path=path)
+            settings = data['settings'] if "settings" in data.keys() else None
+            self.__create_new_workflow(mdl_path=path, settings=settings)
 
 
-    def __create_new_workflow(self, mdl_path):
+    def __create_new_workflow(self, mdl_path, settings=None):
         path = self.get_path(full=True)
         try:
             os.makedirs(path)
             os.mkdir(self.get_results_path(full=True))
             info = {"source_model":mdl_path, "wkfl_model":None, "type":self.type, "start_time":None}
-            with open(self.get_info_path(full=True), "w") as info_file:
-                json.dump(info, info_file)
+            self.update_info(new_info=info, new=True)
             open(os.path.join(path, "logs.txt"), "w").close()
             shutil.copyfile(os.path.join(self.user_dir, mdl_path),
                             self.get_model_path(full=True))
-            self.__create_settings()
+            if settings is None:
+                self.__create_settings()
         except FileExistsError as err:
             message = f"Could not create your workflow: {str(err)}"
             raise StochSSFileExistsError(message, traceback.format_exc())
@@ -107,6 +108,7 @@ class StochSSWorkflow(StochSSBase):
     def __load_info(self):
         try:
             path = self.get_info_path(full=True)
+            self.log("debug", f"The path to the workflow's info file: {path}")
             with open(path, "r") as info_file:
                 return json.load(info_file)
         except FileNotFoundError as err:
@@ -137,6 +139,68 @@ class StochSSWorkflow(StochSSBase):
         except json.decoder.JSONDecodeError as err:
             message = f"The settings file is not JSON decobable: {str(err)}"
             raise FileNotJSONFormatError(message, traceback.format_exc())
+
+
+    def check_for_external_model(self, path=None):
+        '''
+        Check if the workflows model exists outside of the workflow and return it path
+        '''
+        if path is None:
+            path = self.get_model_path(full=True, external=True)
+        self.log("debug",
+                 f"Path to the workflow's model: {path}")
+        resp = {"file":path.replace(self.user_dir + '/', '')}
+        if not os.path.exists(path):
+            file = self.get_file(path=path)
+            error = f"The model file {file} could not be found.  "
+            error += "To edit the model you will need to extract the model from the "
+            error += "workflow or open the workflow and update the path to the model."
+            resp['error'] = error
+        return resp
+
+
+    def duplicate_as_new(self, stamp):
+        '''
+        Get all data needed to create a new workflow that
+        is a copy of this workflow in ready state.
+
+        Attributes
+        ----------
+        '''
+        wkfl = self.load()
+        if wkfl['status'] != "ready":
+            mdl_path = self.__load_info()['source_model']
+        else:
+            mdl_path = wkfl['mdlPath']
+        data = {"type":self.type, "stamp":stamp,
+                "dirname":self.get_dir_name(), "settings":wkfl['settings']}
+        kwargs = {"path":self.get_model_path(), "new":True, "data":data}
+        resp = {"message":f"A new workflow has been created from {self.path}",
+                "mdlPath":mdl_path,
+                "mdl_file":self.get_file(path=mdl_path)}
+        c_resp = self.check_for_external_model(path=os.path.join(self.user_dir, mdl_path))
+        if "error" in c_resp.keys():
+            resp['error'] = c_resp['error']
+        return resp, kwargs
+
+
+    def extract_model(self):
+        '''
+        Get all data needed to create a new model that is a copy of the workflows model
+
+        Attributes
+        ----------
+        '''
+        src_path = self.get_model_path()
+        model = StochSSModel(path=src_path).load()
+        file = self.get_file(path=src_path)
+        dst_dirname = self.get_dir_name()
+        if ".proj" in dst_dirname:
+            dst_dirname = os.path.dirname(dst_dirname)
+        dst_path = os.path.join(dst_dirname, file)
+        kwargs = {"path":dst_path, "new":True, "model":model}
+        resp = {"message":f"A copy of the model in {self.path} has been created"}
+        return resp, kwargs
 
 
     def generate_csv_zip(self):
@@ -207,7 +271,7 @@ class StochSSWorkflow(StochSSBase):
         return os.path.join(self.get_path(full=full), "log.txt")
 
 
-    def get_model_path(self, full=False):
+    def get_model_path(self, full=False, external=False):
         '''
         Return the path to the model file
 
@@ -215,12 +279,15 @@ class StochSSWorkflow(StochSSBase):
         ----------
         full : bool
             Indicates whether or not to get the full path or local path
+        external : bool
+            Indicates whether or not to consider the path to the internal model
         '''
         info = self.__load_info()
-        if info['wkfl_model'] is None:
+        self.log("debug", f"Workflow info: {info}")
+        if external or info['wkfl_model'] is None:
             file = self.get_file(path=info['source_model'])
-        else:
-            file = self.get_file(path=info['wkfl_model'])
+            return os.path.join(self.get_path(full=full), file)
+        file = self.get_file(path=info['wkfl_model'])
         return os.path.join(self.get_path(full=full), file)
 
 
@@ -290,3 +357,31 @@ class StochSSWorkflow(StochSSBase):
             if error is not None:
                 self.workflow['error'] = error
         return self.workflow
+
+
+    def update_info(self, new_info, new=False):
+        '''
+        Updates the contents of the info file. If source model is updated,
+        checks if the model exists at that path
+
+        Attributes
+        ----------
+        new_info : dict
+            Contains all data to be updated under the correct key
+        new : bool
+            Indicates whether or not an info file needs to be created
+        '''
+        if new:
+            info = new_info
+        else:
+            info = self.__load_info()
+            if "source_model" in new_info.keys():
+                info['source_model'] = new_info['source_model']
+            if "wkfl_model" in new_info.keys():
+                info['wkfl_model'] = new_info['wkfl_model']
+            if "type" in new_info.keys():
+                info['type'] = new_info['type']
+            if "start_time" in new_info.keys():
+                info['start_time'] = new_info['start_time']
+        with open(self.get_info_path(full=True), "w") as file:
+            json.dump(info, file)
