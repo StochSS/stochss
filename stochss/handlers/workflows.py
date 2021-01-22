@@ -16,17 +16,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import logging
-import json
 import os
-import ast
-import subprocess
-import traceback
-from json.decoder import JSONDecodeError
-from notebook.base.handlers import APIHandler
+# import ast
+# import json
+import logging
+# import traceback
+# import subprocess
+# from json.decoder import JSONDecodeError
 from tornado import web
+from notebook.base.handlers import APIHandler
+# APIHandler documentation:
+# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
+# Note APIHandler.finish() sets Content-Type handler to 'application/json'
+# Use finish() for json, write() for text
 
-from .util import *
+from .util import StochSSWorkflow, \
+                  StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -34,10 +39,9 @@ log = logging.getLogger('stochss')
 # pylint: disable=abstract-method
 class LoadWorkflowAPIHandler(APIHandler):
     '''
-    ########################################################################
-    Handler for getting the Workflow's status, info, type, model for the
-    Workflow manager page.
-    ########################################################################
+    ################################################################################################
+    Handler for getting the Workflow's status, info, type, model for the Workflow manager page.
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -47,6 +51,26 @@ class LoadWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow/model: %s", path)
+        wkfl_type = self.get_query_argument(name="type")
+        dirname = self.get_query_argument(name='parentPath', default=os.path.dirname(path))
+        data = {"type":wkfl_type if wkfl_type != "none" else None,
+                "stamp": self.get_query_argument(name="stamp"),
+                "dirname": None if not dirname or dirname == "." else dirname}
+        log.debug("Load data for the workflow: %s", data)
+        try:
+            new = path.endswith(".mdl")
+            wkfl = StochSSWorkflow(path=path, new=new, data=data)
+            resp = wkfl.load(new=new)
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        log.setLevel(logging.WARNING)
+        self.finish()
 
 
 class RunWorkflowAPIHandler(APIHandler):
@@ -98,12 +122,15 @@ class WorkflowStatusAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        path = self.get_query_arguments(path="path")
+        path = self.get_query_arguments(name="path")
         log.debug('Getting the status of the workflow')
-        wkfl = StochSSWorkflow(path=path)
-        status = wkfl.get_status()
-        log.debug('The status of the workflow is: %s', status)
-        self.write(status)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            status = wkfl.get_status()
+            log.debug('The status of the workflow is: %s', status)
+            self.write(status)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 

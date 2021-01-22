@@ -178,16 +178,20 @@ class StochSSBase():
         Attributes
         ----------
         '''
-        if path is None:
-            path = os.path.join(self.user_dir, self.path)
-        files = os.listdir(path=path)
-        if "COMPLETE" in files:
-            return "complete"
-        if "ERROR" in files:
-            return "error"
-        if "RUNNING" in files:
-            return "running"
-        return "ready"
+        try:
+            if path is None:
+                path = os.path.join(self.user_dir, self.path)
+            files = os.listdir(path=path)
+            if "COMPLETE" in files:
+                return "complete"
+            if "ERROR" in files:
+                return "error"
+            if "RUNNING" in files:
+                return "running"
+            return "ready"
+        except FileNotFoundError as err:
+            message = f"Could not find the workflow: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
 
 
     def get_unique_path(self, name):
