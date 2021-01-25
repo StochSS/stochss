@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 # import ast
-# import json
+import json
 import logging
 # import traceback
-# import subprocess
+import subprocess
 # from json.decoder import JSONDecodeError
 from tornado import web
 from notebook.base.handlers import APIHandler
@@ -51,7 +51,6 @@ class LoadWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the workflow/model: %s", path)
@@ -69,15 +68,14 @@ class LoadWorkflowAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
 class RunWorkflowAPIHandler(APIHandler):
     '''
-    ########################################################################
+    ################################################################################################
     Handler for running workflows.
-    ########################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -89,13 +87,32 @@ class RunWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        data = json.loads(self.get_query_argument(name="data"))
+        log.debug("Handler query string: %s", data)
+        path = data['wkflPath']
+        log.debug("Path to the workflow: %s", path)
+        wkfl_type = data['type']
+        log.debug("Type of workflow: %s", wkfl_type)
+        try:
+            # nav = f"cd {StochSSWorkflow(path=path).get_path(full=True)}"
+            script = "/stochss/stochss/handlers/util/scripts/start_job.py"
+            exec_cmd = [f"{script}", f"{path}", f"{wkfl_type}"]
+            if "v" in data['optType']:
+                exec_cmd.append("-v")
+            log.debug("Exec command sent to the subprocess: %s", exec_cmd)
+            log.debug('Sending the workflow run cmd')
+            subprocess.Popen(exec_cmd)
+            log.debug('The workflow has started')
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class SaveWorkflowAPIHandler(APIHandler):
     '''
-    ########################################################################
+    ################################################################################################
     Handler for saving workflows.
-    ########################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -106,13 +123,26 @@ class SaveWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        try:
+            data = json.loads(self.get_query_argument(name="data"))
+            log.debug("Handler query string: %s", data)
+            model_path = data['mdlPath']
+            log.debug("Path to the model: %s", model_path)
+            wkfl = StochSSWorkflow(path=data['wkflPath'])
+            resp = wkfl.save(mdl_path=model_path, settings=data['settings'],
+                             initialize="r" in data['optType'])
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class WorkflowStatusAPIHandler(APIHandler):
     '''
-    ########################################################################
+    ################################################################################################
     Handler for getting Workflow Status (checking for RUNNING and COMPLETE files.
-    ########################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -122,7 +152,8 @@ class WorkflowStatusAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        path = self.get_query_arguments(name="path")
+        path = self.get_query_argument(name="path")
+        log.debug('path to the workflow: %s', path)
         log.debug('Getting the status of the workflow')
         try:
             wkfl = StochSSWorkflow(path=path)
@@ -153,9 +184,9 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
 
 class WorkflowLogsAPIHandler(APIHandler):
     '''
-    ########################################################################
+    ################################################################################################
     Handler for getting Workflow logs.
-    ########################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -165,6 +196,17 @@ class WorkflowLogsAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = os.path.dirname(self.get_query_argument(name="path"))
+        log.debug("Path to the workflow logs file: %s", path)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            logs = wkfl.get_run_logs()
+            wkfl.print_logs(log)
+            log.debug("Response: %s", logs)
+            self.write(logs)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class WorkflowNotebookHandler(APIHandler):
@@ -203,9 +245,9 @@ class SavePlotAPIHandler(APIHandler):
 
 class SaveAnnotationAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for saving annotations for workflows.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def post(self):
@@ -215,3 +257,18 @@ class SaveAnnotationAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow info file: %s", path)
+        info = json.loads(self.request.body.decode())
+        log.debug("The annotation to be saved: %s", info['annotation'])
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            wkfl.update_info(new_info=info)
+            wkfl.print_logs(log)
+            resp = {"message":"The annotation was successfully saved", "data":info['annotation']}
+            log.debug("Response message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()

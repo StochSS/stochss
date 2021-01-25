@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
+import datetime
 import traceback
 
 from .stochss_base import StochSSBase
@@ -116,28 +117,6 @@ class StochSSWorkflow(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc())
         except json.decoder.JSONDecodeError as err:
             message = f"The info file is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
-
-
-    def __load_settings(self, model=None):
-        try:
-            path = self.get_settings_path(full=True)
-            with open(path, "r") as settings_file:
-                return json.load(settings_file)
-        except FileNotFoundError as err:
-            if model is None:
-                message = f"Could not find the settings file: {str(err)}"
-                raise StochSSFileNotFoundError(message, traceback.format_exc())
-            settings = self.get_settings_template()
-            if "simulationSettings" in model.keys():
-                settings['simulationSettings'] = model['simulationSettings']
-            elif self.type == "parameterSweep":
-                settings['simulationSettings']['realizations'] = 20
-            if "parameterSweepSettings" in model.keys():
-                settings['parameterSweepSettings'] = model['parameterSweepSettings']
-            return settings
-        except json.decoder.JSONDecodeError as err:
-            message = f"The settings file is not JSON decobable: {str(err)}"
             raise FileNotJSONFormatError(message, traceback.format_exc())
 
 
@@ -268,7 +247,7 @@ class StochSSWorkflow(StochSSBase):
         full : bool
             Indicates whether or not to get the full path or local path
         '''
-        return os.path.join(self.get_path(full=full), "log.txt")
+        return os.path.join(self.get_path(full=full), "logs.txt")
 
 
     def get_model_path(self, full=False, external=False):
@@ -301,6 +280,26 @@ class StochSSWorkflow(StochSSBase):
             Indicates whether or not to get the full path or local path
         '''
         return os.path.join(self.get_path(full=full), "results")
+
+
+    def get_run_logs(self):
+        '''
+        Return the contents of the log file'
+
+        Attributes
+        ----------
+        '''
+        path = self.get_log_path(full=True)
+        try:
+            with open(path, "r") as file:
+                logs = file.read()
+            self.log("debug", f"Contents of the log file: {logs}")
+            if logs:
+                return logs
+            return "No logs were recoded for this workflow."
+        except FileNotFoundError as err:
+            message = f"Could not find the log file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
 
 
     def get_settings_path(self, full=False):
@@ -348,7 +347,7 @@ class StochSSWorkflow(StochSSBase):
             error = {"Reason":err.reason, "Message":err.message, "traceback":err.traceback}
             self.log("error", f"Exception information: {error}")
         finally:
-            settings = self.__load_settings(model=model)
+            settings = self.load_settings(model=model)
             self.workflow = {"mdlPath":mdl_path, "model":model, "settings":settings,
                              "startTime":info['start_time'], "status":status,
                              "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
@@ -357,6 +356,71 @@ class StochSSWorkflow(StochSSBase):
             if error is not None:
                 self.workflow['error'] = error
         return self.workflow
+
+
+    def load_models(self):
+        '''
+        Load GillesPy2 and StochSS models for running
+
+        Atrributes
+        ----------
+        '''
+        path = self.get_model_path()
+        model = StochSSModel(path=path)
+        g_model = model.convert_to_gillespy2()
+        return g_model, model.model
+
+
+    def load_settings(self, model=None):
+        '''
+        Load the workflow settings from the settings file
+
+        Attributes
+        ----------
+        model : dict
+            Stochss model dict (used to backwards compatability)
+        '''
+        try:
+            path = self.get_settings_path(full=True)
+            with open(path, "r") as settings_file:
+                return json.load(settings_file)
+        except FileNotFoundError as err:
+            if model is None:
+                message = f"Could not find the settings file: {str(err)}"
+                raise StochSSFileNotFoundError(message, traceback.format_exc())
+            settings = self.get_settings_template()
+            if "simulationSettings" in model.keys():
+                settings['simulationSettings'] = model['simulationSettings']
+            elif self.type == "parameterSweep":
+                settings['simulationSettings']['realizations'] = 20
+            if "parameterSweepSettings" in model.keys():
+                settings['parameterSweepSettings'] = model['parameterSweepSettings']
+            return settings
+        except json.decoder.JSONDecodeError as err:
+            message = f"The settings file is not JSON decobable: {str(err)}"
+            raise FileNotJSONFormatError(message, traceback.format_exc())
+
+
+    def save(self, mdl_path, settings, initialize):
+        '''
+        Save the data for a new or ready state workflow
+
+        Attributes
+        ----------
+        '''
+        path = self.get_model_path(full=True)
+        new_info = {"source_model":mdl_path}
+        if initialize:
+            # If this format is not something Javascript's Date.parse() method
+            # understands then the workflow status page will be unable to correctly create a
+            # Date object from the datestring parsed from the workflow's info.json file
+            new_info['start_time'] = datetime.datetime.now().strftime("%b %d, %Y  %I:%M %p UTC")
+            new_info['wkfl_model'] = self.get_file(path=mdl_path)
+            open(os.path.join(self.path, 'RUNNING'), 'w').close()
+        self.update_info(new_info=new_info)
+        self.update_model(old_path=path, new_path=mdl_path)
+        self.update_settings(settings=settings)
+        return f"Successfully saved the workflow: {self.path}"
 
 
     def update_info(self, new_info, new=False):
@@ -383,5 +447,35 @@ class StochSSWorkflow(StochSSBase):
                 info['type'] = new_info['type']
             if "start_time" in new_info.keys():
                 info['start_time'] = new_info['start_time']
+            if "annotation" in new_info.keys():
+                info['annotation'] = new_info['annotation']
+        self.log("debug", f"New info: {info}")
         with open(self.get_info_path(full=True), "w") as file:
             json.dump(info, file)
+
+
+    def update_model(self, old_path, new_path):
+        '''
+        Remove the old model and make a fresh copy in the workflow
+
+        Attributes
+        ----------
+        '''
+        try:
+            os.remove(old_path)
+            shutil.copyfile(os.path.join(self.user_dir, new_path),
+                            self.get_model_path(full=True))
+        except FileNotFoundError as err:
+            message = f"Could not find the model file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+
+
+    def update_settings(self, settings):
+        '''
+        Update the settings file
+
+        Attributes
+        ----------
+        '''
+        with open(self.get_settings_path(full=True), "w") as file:
+            json.dump(settings, file)
