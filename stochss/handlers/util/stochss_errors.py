@@ -225,3 +225,24 @@ class StochSSWorkflowNotCompleteError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(403, "Workflow Run Not Complete", msg, trace)
+
+
+class PlotNotAvailableError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Result Plot Not Found
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the requested plot was not found in the plots.json file
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Plot Figure Not Available", msg, trace)

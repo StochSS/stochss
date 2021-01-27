@@ -27,7 +27,7 @@ from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
 from .stochss_errors import StochSSWorkflowError, StochSSWorkflowNotCompleteError, \
                             StochSSFileNotFoundError, StochSSFileExistsError, \
-                            FileNotJSONFormatError
+                            FileNotJSONFormatError, PlotNotAvailableError
 
 class StochSSWorkflow(StochSSBase):
     '''
@@ -90,7 +90,7 @@ class StochSSWorkflow(StochSSBase):
         if self.type == "parameterSweep":
             settings = self.get_settings_template()
             settings['simulationSettings']['realizations'] = 20
-            with open(self.get_settings_path(full=True)) as file:
+            with open(self.get_settings_path(full=True), "w") as file:
                 json.dump(settings, file)
         else:
             shutil.copyfile('/stochss/stochss_templates/workflowSettingsTemplate.json',
@@ -270,6 +270,18 @@ class StochSSWorkflow(StochSSBase):
         return os.path.join(self.get_path(full=full), file)
 
 
+    def get_plot_path(self, full=False):
+        '''
+        Return the path to the result plots file
+
+        Attributes
+        ----------
+        full : bool
+            Indicates whether or not to get the full path or local path
+        '''
+        return os.path.join(self.get_results_path(full=full), "plots.json")
+
+
     def get_results_path(self, full=False):
         '''
         Return the path to the results directory
@@ -280,6 +292,43 @@ class StochSSWorkflow(StochSSBase):
             Indicates whether or not to get the full path or local path
         '''
         return os.path.join(self.get_path(full=full), "results")
+
+
+    def get_results_plot(self, plt_key, plt_data):
+        '''
+        Get the plotly figure for the results of a workflow
+
+        Attributes
+        ----------
+        plt_key : str
+            Indentifier for the requested plot figure
+        plt_data : dict
+            Title and axes data for the plot
+        '''
+        self.log("debug", f"Key identifying the requested plot: {plt_key}")
+        self.log("debug", f"Title and axis data for the plot: {plt_data}")
+        path = self.get_plot_path(full=True)
+        self.log("debug", f"Path to the workflow result plot file: {path}")
+        try:
+            with open(path, "r") as plot_file:
+                fig = json.load(plot_file)[plt_key]
+            if plt_data is None:
+                return fig
+            for key in plt_data.keys():
+                if key == "title":
+                    fig['layout']['title']['text'] = plt_data[key]
+                else:
+                    fig['layout'][key]['title']['text'] = plt_data[key]
+            return fig
+        except FileNotFoundError as err:
+            message = f"Could not find the plots file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+        except json.decoder.JSONDecodeError as err:
+            message = f"The plots file is not JSON decodable: {str(err)}"
+            raise FileNotJSONFormatError(message, traceback.format_exc())
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc())
 
 
     def get_run_logs(self):
@@ -300,6 +349,34 @@ class StochSSWorkflow(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the log file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
+
+
+    @classmethod
+    def get_run_settings(cls, settings, solver_map):
+        '''
+        Get the gillespy2 run settings for model.run()
+
+        Attributes
+        ----------
+        settings : dict
+            StochSS simulation settings dict
+        need_variable_ssa : bool
+            Indicates whether or not the VariableSSACSolver is needed
+        '''
+        settings = settings['simulationSettings']
+        kwargs = {"solver":solver_map[settings['algorithm']]}
+        if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping"):
+            integrator_options = {"atol":settings['absoluteTol'], "rtol":settings['relativeTol']}
+            kwargs["integrator_options"] = integrator_options
+        if settings['algorithm'] == "ODE":
+            return kwargs
+        kwargs["number_of_trajectories"] = settings['realizations']
+        if settings['seed'] != -1:
+            kwargs['seed'] = settings['seed']
+        if settings['algorithm'] == "SSA":
+            return kwargs
+        kwargs['tau_tol'] = settings['tauTol']
+        return kwargs
 
 
     def get_settings_path(self, full=False):
@@ -418,9 +495,16 @@ class StochSSWorkflow(StochSSBase):
             new_info['wkfl_model'] = self.get_file(path=mdl_path)
             open(os.path.join(self.path, 'RUNNING'), 'w').close()
         self.update_info(new_info=new_info)
-        self.update_model(old_path=path, new_path=mdl_path)
-        self.update_settings(settings=settings)
-        return f"Successfully saved the workflow: {self.path}"
+        with open(self.get_settings_path(full=True), "w") as file:
+            json.dump(settings, file)
+        try:
+            os.remove(path)
+            shutil.copyfile(os.path.join(self.user_dir, mdl_path),
+                            self.get_model_path(full=True))
+            return f"Successfully saved the workflow: {self.path}"
+        except FileNotFoundError as err:
+            message = f"Could not find the model file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
 
 
     def update_info(self, new_info, new=False):
@@ -452,30 +536,3 @@ class StochSSWorkflow(StochSSBase):
         self.log("debug", f"New info: {info}")
         with open(self.get_info_path(full=True), "w") as file:
             json.dump(info, file)
-
-
-    def update_model(self, old_path, new_path):
-        '''
-        Remove the old model and make a fresh copy in the workflow
-
-        Attributes
-        ----------
-        '''
-        try:
-            os.remove(old_path)
-            shutil.copyfile(os.path.join(self.user_dir, new_path),
-                            self.get_model_path(full=True))
-        except FileNotFoundError as err:
-            message = f"Could not find the model file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
-
-
-    def update_settings(self, settings):
-        '''
-        Update the settings file
-
-        Attributes
-        ----------
-        '''
-        with open(self.get_settings_path(full=True), "w") as file:
-            json.dump(settings, file)

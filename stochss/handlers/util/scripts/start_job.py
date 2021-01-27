@@ -22,6 +22,7 @@ import os
 import sys
 import logging
 import argparse
+import traceback
 
 from gillespy2.core import log
 
@@ -58,6 +59,7 @@ def report_error(err):
         Error caught in the except block
     '''
     log.error("Workflow errors: %s", err)
+    log.error("Traceback:\n%s", traceback.format_exc())
     open('ERROR', 'w').close()
 
 
@@ -104,6 +106,7 @@ if __name__ == "__main__":
     try:
         wkfl.run(verbose=args.verbose)
     except Exception as error:
+        wkfl.print_logs(log)
         report_error(err=error)
     else:
         # update status to complete

@@ -167,9 +167,9 @@ class WorkflowStatusAPIHandler(APIHandler):
 
 class PlotWorkflowResultsAPIHandler(APIHandler):
     '''
-    ########################################################################
+    ################################################################################################
     Handler for getting result plots based on plot type.
-    ########################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -180,6 +180,21 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow: %s", path)
+        body = json.loads(self.get_query_argument(name='data'))
+        if body['plt_data'] == "None":
+            body['plt_data'] = None
+        log.debug("Plot args passed to the plot: %s", body)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            fig = wkfl.get_results_plot(**body)
+            log.debug("Plot figure: %s", fig)
+            self.write(fig)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class WorkflowLogsAPIHandler(APIHandler):

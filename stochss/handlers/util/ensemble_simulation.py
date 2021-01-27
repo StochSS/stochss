@@ -42,30 +42,17 @@ class EnsembleSimulation(StochSSWorkflow):
         Attributes
         ----------
         path : str
-            Path to the workflow
+            Path to the ensemble simulation workflow
         '''
         super().__init__(path=path)
-        self.g_model, self.s_model = self.load_models()
         self.settings = self.load_settings()
+        self.g_model, self.s_model = self.load_models()
 
 
     def __get_run_settings(self):
         solver_map = {"SSA":SSACSolver(model=self.g_model), "Tau-Leaping":TauLeapingSolver,
                       "ODE":TauHybridSolver, "Hybrid-Tau-Leaping":TauHybridSolver}
-        settings = self.settings['simulationSettings']
-        kwargs = {"solver":solver_map[settings['algorithm']]}
-        if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping"):
-            integrator_options = {"atol":settings['absoluteTol'], "rtol":settings['relativeTol']}
-            kwargs["integrator_options"] = integrator_options
-        if settings['algorithm'] == "ODE":
-            return kwargs
-        kwargs["number_of_trajectories"] = settings['realizations']
-        if settings['seed'] != -1:
-            kwargs['seed'] = settings['seed']
-        if settings['algorithm'] == "SSA":
-            return kwargs
-        kwargs['tau_tol'] = settings['tauTol']
-        return kwargs
+        return self.get_run_settings(settings=self.settings, solver_map=solver_map)
 
 
     @classmethod
