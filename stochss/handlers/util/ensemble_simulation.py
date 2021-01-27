@@ -35,7 +35,7 @@ class EnsembleSimulation(StochSSWorkflow):
 
     TYPE = "gillespy"
 
-    def __init__(self, path):
+    def __init__(self, path, preview=False):
         '''
         Intitialize an ensemble simulation workflow object
 
@@ -45,8 +45,9 @@ class EnsembleSimulation(StochSSWorkflow):
             Path to the ensemble simulation workflow
         '''
         super().__init__(path=path)
-        self.settings = self.load_settings()
-        self.g_model, self.s_model = self.load_models()
+        if not preview:
+            self.settings = self.load_settings()
+            self.g_model, self.s_model = self.load_models()
 
 
     def __get_run_settings(self):

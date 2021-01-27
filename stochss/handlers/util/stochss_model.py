@@ -407,6 +407,26 @@ class StochSSModel(StochSSBase):
         return {"path":path, "new":True, "models":{"s_model":self.model, "g_model":g_model}}
 
 
+    def get_preview_results(self, outfile):
+        '''
+        Get the results of a model preview
+
+        Attributes
+        ----------
+        outfile : str
+            File holding the results of the preview run
+        '''
+        path = os.path.join(self.user_dir, f".{outfile}.tmp")
+        done_path = f"{path}.done"
+        if os.path.exists(done_path):
+            with open(path, "r") as file:
+                resp = json.load(file)
+            os.remove(path)
+            os.remove(done_path)
+            return resp
+        return None
+
+
     def load(self):
         '''
         Reads the model file, updates the model to the current format, and stores it in self.model

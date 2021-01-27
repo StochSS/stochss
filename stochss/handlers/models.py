@@ -17,13 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
 # import ast
-# import uuid
+import uuid
 # import json
 import logging
 # import traceback
-# import subprocess
+import subprocess
 from tornado import web
 from notebook.base.handlers import APIHandler
+# APIHandler documentation:
+# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
+# Note APIHandler.finish() sets Content-Type handler to 'application/json'
+# Use finish() for json, write() for text
 
 from .util import StochSSModel, StochSSNotebook, StochSSAPIError, report_error
 
@@ -59,7 +63,7 @@ class JsonFileAPIHandler(APIHandler):
             log.debug("Contents of the json file: %s", data)
             file.print_logs(log)
             self.write(data)
-        except StochSSAPIError as err:
+        except StochSSAPIError as load_err:
             if purpose == "edit":
                 try:
                     model = StochSSModel(path=path, new=True)
@@ -67,10 +71,10 @@ class JsonFileAPIHandler(APIHandler):
                     log.debug("Contents of the model template: %s", data)
                     model.print_logs(log)
                     self.write(data)
-                except StochSSAPIError as err:
-                    report_error(self, log, err)
+                except StochSSAPIError as new_model_err:
+                    report_error(self, log, new_model_err)
             else:
-                report_error(self, log, err)
+                report_error(self, log, load_err)
         self.finish()
 
 
@@ -97,9 +101,9 @@ class JsonFileAPIHandler(APIHandler):
 
 class RunModelAPIHandler(APIHandler):
     '''
-    ########################################################################
+    ################################################################################################
     Handler for running a model from the model editor.
-    ########################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -110,6 +114,38 @@ class RunModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the model: %s", path)
+        run_cmd = self.get_query_argument(name="cmd")
+        log.debug("Run command sent to the script: %s", run_cmd)
+        outfile = self.get_query_argument(name="outfile")
+        # Create temporary results file it doesn't already exist
+        if outfile == 'none':
+            outfile = str(uuid.uuid4()).replace("-", "_")
+        log.debug("Temporary outfile: %s", outfile)
+        resp = {"Running":False, "Outfile":outfile, "Results":""}
+        if run_cmd == "start":
+            exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
+                        f'{path}', f'{outfile}']
+            log.debug("Script commands for running a preview: %s", exec_cmd)
+            subprocess.Popen(exec_cmd)
+            resp['Running'] = True
+            log.debug("Response to the start command: %s", resp)
+            self.write(resp)
+        else:
+            model = StochSSModel(path=path)
+            results = model.get_preview_results(outfile=outfile)
+            log.debug("Results for the model preview: %s", results)
+            if results is None:
+                resp['Running'] = True
+            else:
+                resp['Results'] = results
+            log.debug("Response to the read command: %s", resp)
+            self.write(resp)
+        log.setLevel(logging.WARNING)
+        self.finish()
 
 
 class ModelExistsAPIHandler(APIHandler):
