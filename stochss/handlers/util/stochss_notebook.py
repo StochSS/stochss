@@ -35,7 +35,10 @@ class StochSSNotebook(StochSSBase):
     '''
 
     ENSEMBLE_SIMULATION = 1
-    PARAMETER_SWEEP = 2
+    PARAMETER_SWEEP_1D = 2
+    PARAMETER_SWEEP_2D = 3
+    MODEL_EXPLORATION = 4
+    MODEL_INFERENCE = 5
     SOLVER_MAP = {"SSACSolver":"SSA", "NumPySSASolver":"SSA", "VariableSSACSolver":"V-SSA",
                   "TauLeapingSolver":"Tau-Leaping", "TauHybridSolver":"Hybrid-Tau-Leaping",
                   "ODESolver":"ODE"}
@@ -62,6 +65,16 @@ class StochSSNotebook(StochSSBase):
                 self.path = n_path.replace(self.user_dir + '/', "")
 
 
+    def __create_common_cells(self):
+        cells = [self.__create_import_cell(),
+                 nbf.new_markdown_cell(f"# {self.get_name()}"),
+                 self.__create_model_cell(),
+                 nbf.new_code_cell(f'model = {self.__get_class_name()}()'),
+                 nbf.new_markdown_cell("# Simulation Parameters"),
+                 self.__create_configuration_cell()]
+        return cells
+
+
     def __create_configuration_cell(self):
         pad = "    "
         config = ["def configure_simulation():"]
@@ -69,12 +82,13 @@ class StochSSNotebook(StochSSBase):
         instance_solvers = ["SSACSolver", "VariableSSACSolver"]
         is_automatic = self.settings['simulationSettings']['isAutomatic']
         if self.is_ssa_c and self.settings['solver'] in instance_solvers:
-            start = f"{pad}# " if is_automatic else pad
+            commented = is_automatic and self.settings['solver'] != "VariableSSACSolver"
+            start = f"{pad}# " if commented else pad
             config.append(f"{start}solver = {self.settings['solver']}(model=model)")
         config.append(pad + "kwargs = {")
         settings = self.__get_gillespy2_run_settings()
         settings_lists = {"ODE":['"solver"', '"integrator_options"'],
-                          "SSA":['"seed"', '"number_of_trajectories"'],
+                          "SSA":['"solver"', '"seed"', '"number_of_trajectories"'],
                           "V-SSA":['"solver"', '"seed"', '"number_of_trajectories"'],
                           "Tau-Leaping":['"solver"', '"seed"', '"number_of_trajectories"',
                                          '"tau_tol"'],
@@ -82,9 +96,17 @@ class StochSSNotebook(StochSSBase):
                                                 '"tau_tol"', '"integrator_options"']}
         algorithm = self.settings['simulationSettings']['algorithm']
         for setting in settings:
-            start = pad*2
-            if is_automatic or setting.split(':')[0] not in settings_lists[algorithm]:
-                start = f"{start}# "
+            key = setting.split(':')[0]
+            if self.settings['solver'] == "VariableSSACSolver" and key == '"solver"':
+                start = pad*2
+            elif key not in settings_lists[algorithm]:
+                start = f"{pad*2}# "
+            elif is_automatic and key == '"number_of_trajectories"':
+                start = pad*2
+            elif is_automatic:
+                start = f"{pad*2}# "
+            else:
+                start = pad*2
             config.append(f"{start}{setting},")
         config.extend([pad + "}", f"{pad}return kwargs"])
         return nbf.new_code_cell("\n".join(config))
@@ -173,8 +195,12 @@ class StochSSNotebook(StochSSBase):
                              'ODE': 'from gillespy2 import ODESolver'}
             is_automatic = self.settings['simulationSettings']['isAutomatic']
             algorithm = self.settings['simulationSettings']['algorithm']
+            if self.nb_type > self.ENSEMBLE_SIMULATION and algorithm == "SSA":
+                algorithm = "V-SSA"
             for name, alg_import in algorithm_map.items():
                 if not is_automatic and name == algorithm:
+                    imports.append(alg_import)
+                elif name == algorithm and algorithm == "V-SSA":
                     imports.append(alg_import)
                 else:
                     imports.append(f"# {alg_import}")
@@ -218,6 +244,263 @@ class StochSSNotebook(StochSSBase):
                 message = "Parameters are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc())
+
+
+    def __create_ps_post_process_cells(self):
+        pad = "    "
+        fe_vbs_pnt = f"{pad*2}print(f'population_at_last_timepoint"
+        fe_vbs_pnt += " {c.variable_of_interest}={res[c.variable_of_interest][-1]}')"
+        # feature extraction cell
+        fe_cell = ["# What value(s) do you want to extract from the simulation trajectory",
+                   "def population_at_last_timepoint(c, res):", f"{pad}if c.verbose:",
+                   fe_vbs_pnt, f"{pad}return res[c.variable_of_interest][-1]"]
+        # mean std aggragator cell
+        msa_cell = ["# How do we combine the values from multiple trajectores",
+                    "def mean_std_of_ensemble(c, data):", f"{pad}a = np.average(data)",
+                    f"{pad}s = np.std(data)", f"{pad}if c.verbose:",
+                    pad * 2 + "print(f'mean_std_of_ensemble m:{a} s:{s}')",
+                    f"{pad}return (a, s)"]
+        # average aggragator cell
+        aa_cell = [msa_cell[0], "def average_of_ensemble(c, data):",
+                   f"{pad}a = np.average(data)", f"{pad}if c.verbose:",
+                   pad * 2 + "print(f'average_of_ensemble = {a}')",
+                   f"{pad}return a"]
+        cells = [nbf.new_markdown_cell("# Post Processing"),
+                 nbf.new_markdown_cell("## Feature extraction function"),
+                 nbf.new_code_cell('\n'.join(fe_cell)),
+                 nbf.new_markdown_cell("## Aggregation function")]
+        if self.nb_type == self.PARAMETER_SWEEP_1D:
+            cells.append(nbf.new_code_cell('\n'.join(msa_cell)))
+        else:
+            cells.append(nbf.new_code_cell('\n'.join(aa_cell)))
+        return cells
+
+
+    def __create_ps1d_class_cell(self):
+        pad = "    "
+        run_str = self.__create_ps1d_run_str()
+        plt_strs = [f"{pad}def plot(c):", f"{pad*2}from matplotlib import pyplot as plt",
+                    f"{pad*2}from mpl_toolkits.axes_grid1 import make_axes_locatable",
+                    f"{pad*2}fig, ax = plt.subplots(figsize=(8, 8))",
+                    pad * 2 + "plt.title(f'Parameter Sweep - Variable:{c.variable_of_interest}')",
+                    f"{pad*2}plt.errorbar(c.p1_range, c.data[:, 0], c.data[:, 1])",
+                    f"{pad*2}plt.xlabel(c.p1, fontsize=16, fontweight='bold')",
+                    f"{pad*2}plt.ylabel('Population', fontsize=16, fontweight='bold')"]
+        pltly_str = self.__create_ps1d_plotly_str()
+        class_cell = ["class ParameterSweep1D():", "", run_str, "", "",
+                      "\n".join(plt_strs), "", "", pltly_str]
+        return nbf.new_code_cell("\n".join(class_cell))
+
+
+    def __create_ps1d_config_cell(self):
+        pad = "    "
+        if self.settings['solver'] == "VariableSSACSolver":
+            model_str = f"{pad}model = {self.__get_class_name()}()"
+        else:
+            model_str = f"{pad}ps_class = {self.__get_class_name()}"
+        config_cell = ["class ParameterSweepConfig(ParameterSweep1D):",
+                       f"{pad}# What class defines the GillesPy2 model", model_str]
+        settings = self.settings['parameterSweepSettings']
+        eval_str = "float(eval(model.get_parameter(p1).expression))"
+        number_of_trajectories = self.settings['simulationSettings']['realizations']
+        if not settings['parameterOne']:
+            param = self.s_model['parameters'][0]
+            p_min = f"0.5 * {eval_str}"
+            p_max = f"1.5 * {eval_str}"
+            spec_of_interest = self.s_model['species'][0]
+        else:
+            param = settings['parameterOne']
+            p_min = settings['p1Min']
+            p_max = settings['p1Max']
+            spec_of_interest = settings['speciesOfInterest']
+        config_cell.extend([f"{pad}# ENTER PARAMETER HERE", f"{pad}p1 = '{param['name']}'",
+                            f"{pad}# ENTER START VALUE FOR P1 RANGE HERE", f"{pad}p1_min = {p_min}",
+                            f"{pad}# ENTER END VALUE FOR P1 RANGE HERE", f"{pad}p1_max = {p_max}",
+                            f"{pad}# ENTER THE NUMBER OF STEPS FOR P1 HERE",
+                            f"{pad}p1_steps = {settings['p1Steps']}",
+                            f"{pad}p1_range = np.linspace(p1_min, p1_max, p1_steps)",
+                            f"{pad}# ENTER VARIABLE OF INTEREST HERE",
+                            f"{pad}variable_of_interest = '{spec_of_interest['name']}'",
+                            f"{pad}number_of_trajectories = {number_of_trajectories}",
+                            f"{pad}# What feature of the simulation are we examining",
+                            f"{pad}feature_extraction = population_at_last_timepoint",
+                            f"{pad}# for ensemble resutls: how do we aggreggate the values",
+                            f"{pad}ensemble_aggragator = mean_std_of_ensemble"])
+        return nbf.new_code_cell("\n".join(config_cell))
+
+
+    @classmethod
+    def __create_ps1d_plotly_str(cls):
+        pad = "    "
+        trace_str = f"{pad*2}trace_list = [go.Scatter(x=c.p1_range, y=c.data[:, 0]"
+        trace_str += ", error_y=error_y)]"
+        title_str = f"{pad*2}title = dict(text=f'<b>Parameter Sweep - Variable: "
+        title_str += "{c.variable_of_interest}</b>', x=0.5)"
+        lyout_str = f"{pad*2}layout = go.Layout(title=title, xaxis=xaxis_label, yaxis=yaxis_label)"
+        pltly_strs = [f"{pad}def plotplotly(c, return_plotly_figure=False):",
+                      f"{pad*2}from plotly.offline import iplot",
+                      f"{pad*2}import plotly.graph_objs as go", "",
+                      f"{pad*2}visible = c.number_of_trajectories > 1",
+                      f"{pad*2}error_y = dict(type='data', array=c.data[:, 1], visible=visible)",
+                      "", trace_str, "", title_str,
+                      f"{pad*2}yaxis_label = dict(title='<b>Population</b>')",
+                      pad * 2 + "xaxis_label = dict(title=f'<b>{c.p1}</b>')", "",
+                      lyout_str, "", f"{pad*2}fig = dict(data=trace_list, layout=layout)", "",
+                      f"{pad*2}if return_plotly_figure:",
+                      f"{pad*3}return fig", f"{pad*2}iplot(fig)"]
+        return "\n".join(pltly_strs)
+
+
+    def __create_ps1d_run_str(self):
+        pad = "    "
+        run_strs = [f"{pad}def run(c, kwargs, verbose=False):",
+                    f"{pad*2}c.verbose = verbose",
+                    f"{pad*2}fn = c.feature_extraction",
+                    f"{pad*2}ag = c.ensemble_aggragator",
+                    f"{pad*2}data = np.zeros((len(c.p1_range), 2)) # mean and std",
+                    f"{pad*2}for i, v1 in enumerate(c.p1_range):"]
+        res_str = f"{pad*4}tmp_results = "
+        if self.settings['solver'] == "VariableSSACSolver":
+            res_str += "model.run(**kwargs, variables={c.p1:v1})"
+        else:
+            res_str += "tmp_model.run(**kwargs)"
+            run_strs.extend([f"{pad*3}tmp_model = c.ps_class()",
+                             f"{pad*3}tmp_model.listOfParameters[c.p1].set_expression(v1)"])
+        run_strs.extend([f"{pad*3}if c.verbose:",
+                         pad * 4 + "print(f'running {c.p1}={v1}')",
+                         f"{pad*3}if(c.number_of_trajectories > 1):",
+                         res_str,
+                         f"{pad*4}(m, s) = ag([fn(x) for x in tmp_results])",
+                         f"{pad*4}data[i, 0] = m",
+                         f"{pad*4}data[i, 1] = s",
+                         f"{pad*3}else:",
+                         res_str.replace("results", "result"),
+                         f"{pad*4}data[i, 0] = c.feature_extraction(tmp_result)",
+                         f"{pad*2}c.data = data"])
+        return "\n".join(run_strs)
+
+
+    def __create_ps2d_class_cell(self):
+        pad = "    "
+        run_str = self.__create_ps2d_run_str()
+        plt_strs = [f"{pad}def plot(c):", f"{pad*2}from matplotlib import pyplot as plt",
+                    f"{pad*2}from mpl_toolkits.axes_grid1 import make_axes_locatable",
+                    f"{pad*2}fig, ax = plt.subplots(figsize=(8, 8))",
+                    f"{pad*2}plt.imshow(c.data)",
+                    f"{pad*2}ax.set_xticks(np.arange(c.data.shape[1]) + 0.5, minor=False)",
+                    f"{pad*2}ax.set_yticks(np.arange(c.data.shape[0]) + 0.5, minor=False)",
+                    pad * 2 + "plt.title(f'Parameter Sweep - Variable: {c.variable_of_interest}')",
+                    f"{pad*2}ax.set_xticklabels(c.p1_range, minor=False, rotation=90)",
+                    f"{pad*2}ax.set_yticklabels(c.p2_range, minor=False)",
+                    f"{pad*2}ax.set_xlabel(c.p1, fontsize=16, fontweight='bold')",
+                    f"{pad*2}ax.set_ylabel(c.p2, fontsize=16, fontweight='bold')",
+                    f"{pad*2}divider = make_axes_locatable(ax)",
+                    f"{pad*2}cax = divider.append_axes('right', size='5%', pad=0.2)",
+                    f"{pad*2}_ = plt.colorbar(ax=ax, cax=cax)"]
+        pltly_str = self.__create_ps2d_plotly_str()
+        class_cell = ["class ParameterSweep2D():", "", run_str, "", "",
+                      "\n".join(plt_strs), "", "", pltly_str]
+        return nbf.new_code_cell("\n".join(class_cell))
+
+
+    def __create_ps2d_config_cell(self):
+        pad = "    "
+        if self.settings['solver'] == "VariableSSACSolver":
+            model_str = f"{pad}model = {self.__get_class_name()}()"
+        else:
+            model_str = f"{pad}ps_class = {self.__get_class_name()}"
+        config_cell = ["class ParameterSweepConfig(ParameterSweep2D):",
+                       f"{pad}# What class defines the GillesPy2 model", model_str]
+        settings = self.settings['parameterSweepSettings']
+        p1_eval_str = "float(eval(model.get_parameter(p1).expression))"
+        p2_eval_str = "float(eval(model.get_parameter(p2).expression))"
+        number_of_trajectories = self.settings['simulationSettings']['realizations']
+        if not settings['parameterOne']:
+            param1 = self.s_model['parameters'][0]
+            p1_min = f"0.5 * {p1_eval_str}"
+            p1_max = f"1.5 * {p1_eval_str}"
+            param2 = self.s_model['parameters'][1]
+            p2_min = f"0.5 * {p2_eval_str}"
+            p2_max = f"1.5 * {p2_eval_str}"
+            spec_of_interest = self.s_model['species'][0]
+        else:
+            param1 = settings['parameterOne']
+            p1_min = settings['p1Min']
+            p1_max = settings['p1Max']
+            param2 = settings['parameterTwo']
+            p2_min = settings['p2Min']
+            p2_max = settings['p2Max']
+            spec_of_interest = settings['speciesOfInterest']
+        config_cell.extend([f"{pad}# ENTER PARAMETER 1 HERE", f"{pad}p1 = '{param1['name']}'",
+                            f"{pad}# ENTER PARAMETER 2 HERE", f"{pad}p2 = '{param2['name']}'",
+                            f"{pad}# ENTER START VALUE FOR P1 RANGE HERE",
+                            f"{pad}p1_min = {p1_min}",
+                            f"{pad}# ENTER END VALUE FOR P1 RANGE HERE", f"{pad}p1_max = {p1_max}",
+                            f"{pad}# ENTER THE NUMBER OF STEPS FOR P1 HERE",
+                            f"{pad}p1_steps = {settings['p1Steps']}",
+                            f"{pad}p1_range = np.linspace(p1_min, p1_max, p1_steps)",
+                            f"{pad}# ENTER START VALUE FOR P2 RANGE HERE",
+                            f"{pad}p2_min = {p2_min}",
+                            f"{pad}# ENTER END VALUE FOR P2 RANGE HERE", f"{pad}p2_max = {p2_max}",
+                            f"{pad}# ENTER THE NUMBER OF STEPS FOR P2 HERE",
+                            f"{pad}p2_steps = {settings['p2Steps']}",
+                            f"{pad}p2_range = np.linspace(p2_min, p2_max, p2_steps)",
+                            f"{pad}# ENTER VARIABLE OF INTEREST HERE",
+                            f"{pad}variable_of_interest = '{spec_of_interest['name']}'",
+                            f"{pad}number_of_trajectories = {number_of_trajectories}",
+                            f"{pad}# What feature of the simulation are we examining",
+                            f"{pad}feature_extraction = population_at_last_timepoint",
+                            f"{pad}# for ensemble resutls: how do we aggreggate the values",
+                            f"{pad}ensemble_aggragator = average_of_ensemble"])
+        return nbf.new_code_cell("\n".join(config_cell))
+
+
+    @classmethod
+    def __create_ps2d_plotly_str(cls):
+        pad = "    "
+        title_str = f"{pad*2}title = dict(text=f'<b>Parameter Sweep - Variable: "
+        title_str += "{c.variable_of_interest}</b>', x=0.5)"
+        lyout_str = f"{pad*2}layout = go.Layout(title=title, xaxis=xaxis_label, yaxis=yaxis_label)"
+        pltly_strs = [f"{pad}def plotplotly(c, return_plotly_figure=False):",
+                      f"{pad*2}from plotly.offline import init_notebook_mode, iplot",
+                      f"{pad*2}import plotly.graph_objs as go", "",
+                      f"{pad*2}xaxis_ticks = c.p1_range", f"{pad*2}yaxis_ticks = c.p2_range", "",
+                      f"{pad*2}trace_list = [go.Heatmap(z=c.data, x=xaxis_ticks, y=yaxis_ticks)]",
+                      title_str, pad * 2 + "xaxis_label = dict(title=f'<b>{c.p1}</b>')",
+                      pad * 2 + "yaxis_label = dict(title=f'<b>{c.p2}</b>')", "",
+                      lyout_str, "", f"{pad*2}fig = dict(data=trace_list, layout=layout)", "",
+                      f"{pad*2}if return_plotly_figure:",
+                      f"{pad*3}return fig", f"{pad*2}iplot(fig)"]
+        return "\n".join(pltly_strs)
+
+
+    def __create_ps2d_run_str(self):
+        pad = "    "
+        run_strs = [f"{pad}def run(c, kwargs, verbose=False):",
+                    f"{pad*2}c.verbose = verbose",
+                    f"{pad*2}fn = c.feature_extraction",
+                    f"{pad*2}ag = c.ensemble_aggragator",
+                    f"{pad*2}data = np.zeros((len(c.p1_range), len(c.p2_range)))",
+                    f"{pad*2}for i, v1 in enumerate(c.p1_range):",
+                    f"{pad*3}for j, v2 in enumerate(c.p2_range):"]
+        res_str = f"{pad*5}tmp_results = "
+        if self.settings['solver'] == "VariableSSACSolver":
+            res_str += "model.run(**kwargs, variables={c.p1:v1, c.p2:v2})"
+        else:
+            res_str += "tmp_model.run(**kwargs)"
+            run_strs.extend([f"{pad*4}tmp_model = c.ps_class()",
+                             f"{pad*4}tmp_model.listOfParameters[c.p1].set_expression(v1)",
+                             f"{pad*4}tmp_model.listOfParameters[c.p2].set_expression(v2)"])
+        run_strs.extend([f"{pad*4}if c.verbose:",
+                         pad * 5 + "print(f'running {c.p1}={v1}, {c.p2}={v2}')",
+                         f"{pad*4}if(c.number_of_trajectories > 1):",
+                         res_str,
+                         f"{pad*5}data[i, j] = ag([fn(x) for x in tmp_results])",
+                         f"{pad*4}else:",
+                         res_str.replace("results", "result"),
+                         f"{pad*5}data[i, j] = c.feature_extraction(tmp_result)",
+                         f"{pad*2}c.data = data"])
+        return "\n".join(run_strs)
 
 
     def __create_reaction_strings(self, model, pad):
@@ -313,8 +596,14 @@ class StochSSNotebook(StochSSBase):
         return name
 
 
-    def __get_gillespy2_run_settings(self, is_mdl_inf=False):
+    def __get_gillespy2_run_settings(self):
+        is_automatic = self.settings['simulationSettings']['isAutomatic']
+        if self.nb_type in (self.PARAMETER_SWEEP_1D, self.PARAMETER_SWEEP_2D) and is_automatic:
+            self.settings['simulationSettings']['realizations'] = 20
         settings = self.settings['simulationSettings']
+        if settings['algorithm'] == "ODE":
+            self.settings['simulationSettings']['realizations'] = 1
+            settings['realizations'] = 1
         # Map algorithm for GillesPy2
         ssa_solver = "solver" if self.is_ssa_c else "NumPySSASolver"
         solver_map = {"SSA":f'"solver":{ssa_solver}',
@@ -322,9 +611,6 @@ class StochSSNotebook(StochSSBase):
                       "ODE":'"solver":ODESolver',
                       "Tau-Leaping":'"solver":TauLeapingSolver',
                       "Hybrid-Tau-Leaping":'"solver":TauHybridSolver'}
-        # Map number_of_trajectories for model inference
-        if is_mdl_inf and settings['realizations'] < 30:
-            settings['realizations'] = 100
         # Map algorithm settings for GillesPy2. GillesPy2 requires snake case, remap camelCase
         settings_map = {"number_of_trajectories":settings['realizations'],
                         "seed":settings['seed'] if settings['seed'] != -1 else None,
@@ -339,8 +625,8 @@ class StochSSNotebook(StochSSBase):
 
 
     def __get_gillespy2_solver_name(self):
+        precompile = self.nb_type > self.ENSEMBLE_SIMULATION
         if self.settings['simulationSettings']['isAutomatic']:
-            precompile = self.nb_type > 1
             solver = self.g_model.get_best_solver(precompile=precompile).name
             self.settings['simulationSettings']['algorithm'] = self.SOLVER_MAP[solver]
             return solver
@@ -349,7 +635,59 @@ class StochSSNotebook(StochSSBase):
                          'Tau-Leaping': 'TauLeapingSolver',
                          'Hybrid-Tau-Leaping': 'TauHybridSolver',
                          'ODE': 'ODESolver'}
+        if precompile and self.settings['simulationSettings']['algorithm'] == "SSA":
+            return algorithm_map["V-SSA"]
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
+
+
+    def create_1dps_notebook(self):
+        '''
+        Create a 1D parameter sweep jupiter notebook for a StochSS model/workflow
+
+        Attributes
+        ----------
+        '''
+        self.nb_type = self.PARAMETER_SWEEP_1D
+        self.settings['solver'] = self.__get_gillespy2_solver_name()
+        run_strs = ["kwargs = configure_simulation()", "ps = ParameterSweepConfig()",
+                    "%time ps.run(kwargs)"]
+        cells = self.__create_common_cells()
+        cells.extend(self.__create_ps_post_process_cells())
+        cells.extend([nbf.new_markdown_cell("# Parameter Sweep"),
+                      self.__create_ps1d_class_cell(),
+                      self.__create_ps1d_config_cell(),
+                      nbf.new_code_cell("\n".join(run_strs)),
+                      nbf.new_markdown_cell("# Visualization"),
+                      nbf.new_code_cell("ps.plot()"),
+                      nbf.new_code_cell("ps.plotplotly()")])
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
+
+    def create_2dps_notebook(self):
+        '''
+        Create a 2D parameter sweep jupiter notebook for a StochSS model/workflow
+
+        Attributes
+        ----------
+        '''
+        self.nb_type = self.PARAMETER_SWEEP_2D
+        self.settings['solver'] = self.__get_gillespy2_solver_name()
+        run_strs = ["kwargs = configure_simulation()", "ps = ParameterSweepConfig()",
+                    "%time ps.run(kwargs)"]
+        cells = self.__create_common_cells()
+        cells.extend(self.__create_ps_post_process_cells())
+        cells.extend([nbf.new_markdown_cell("# Parameter Sweep"),
+                      self.__create_ps2d_class_cell(),
+                      self.__create_ps2d_config_cell(),
+                      nbf.new_code_cell("\n".join(run_strs)),
+                      nbf.new_markdown_cell("# Visualization"),
+                      nbf.new_code_cell("ps.plot()"),
+                      nbf.new_code_cell("ps.plotplotly()")])
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
 
     def create_es_notebook(self):
@@ -359,16 +697,43 @@ class StochSSNotebook(StochSSBase):
         Attributes
         ----------
         '''
-        self.settings['solver'] = self.__get_gillespy2_solver_name()
         self.nb_type = self.ENSEMBLE_SIMULATION
+        self.settings['solver'] = self.__get_gillespy2_solver_name()
         run_str = "kwargs = configure_simulation()\nresults = model.run(**kwargs)"
-        cells = [nbf.new_markdown_cell(f"# {self.get_name()}"),
-                 self.__create_import_cell(),
-                 self.__create_model_cell(),
-                 nbf.new_code_cell(f'model = {self.__get_class_name()}()'),
-                 self.__create_configuration_cell(),
-                 nbf.new_code_cell(run_str),
-                 nbf.new_code_cell("results.plotplotly()")]
+        cells = self.__create_common_cells()
+        cells.extend([nbf.new_code_cell(run_str),
+                      nbf.new_markdown_cell("# Visualization"),
+                      nbf.new_code_cell("results.plotplotly()")])
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
+
+    def create_sme_notebook(self):
+        '''
+        Create a model exploration jupiter notebook for a StochSS model/workflow
+
+        Attributes
+        ----------
+        '''
+        self.nb_type = self.MODEL_EXPLORATION
+        self.settings['solver'] = self.__get_gillespy2_solver_name()
+        cells = self.__create_common_cells()
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
+
+    def create_smi_notebook(self):
+        '''
+        Create a model inference jupiter notebook for a StochSS model/workflow
+
+        Attributes
+        ----------
+        '''
+        self.nb_type = self.MODEL_INFERENCE
+        self.settings['solver'] = self.__get_gillespy2_solver_name()
+        cells = self.__create_common_cells()
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}

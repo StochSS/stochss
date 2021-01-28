@@ -167,7 +167,10 @@ class StochSSBase():
             Indicates whether or not to get the full path or local path
         '''
         if full:
-            return os.path.join(self.user_dir, os.path.dirname(self.path))
+            dirname = os.path.dirname(self.path)
+            if not dirname:
+                return self.user_dir
+            return os.path.join(self.user_dir, dirname)
         return os.path.dirname(self.path)
 
 
@@ -250,7 +253,7 @@ class StochSSBase():
         cp_file = ''.join([name, f"-copy({i})", ext])
         # Check if a copy exists with '-copy(2)' in the name
         # If copy_file is still not unique iterate i until a unique name is found
-        while cp_file in os.listdir(dirname):
+        while cp_file in os.listdir(dirname if dirname else self.user_dir):
             i += 1
             cp_file = ''.join([name, f"-copy({i})", ext])
 

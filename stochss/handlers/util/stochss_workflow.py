@@ -270,16 +270,27 @@ class StochSSWorkflow(StochSSBase):
         return os.path.join(self.get_path(full=full), file)
 
 
-    def get_plot_path(self, full=False):
+    def get_notebook_data(self):
         '''
-        Return the path to the result plots file
+        Get the needed data for converting to notebook
 
         Attributes
         ----------
-        full : bool
-            Indicates whether or not to get the full path or local path
         '''
-        return os.path.join(self.get_results_path(full=full), "plots.json")
+        info = self.__load_info()
+        file = f"{self.get_name()}.ipynb"
+        path = os.path.join(self.get_dir_name(), file)
+        g_model, s_model = self.load_models()
+        settings = self.load_settings()
+        if info['type'] == "gillespy":
+            wkfl_type = info['type']
+        elif info['type'] == "parameterSweep" and settings['parameterSweepSettings']['is1D']:
+            wkfl_type = "1d_parameter_sweep"
+        else:
+            wkfl_type = "2d_parameter_sweep"
+        kwargs = {"path":path, "new":True, "settings":settings,
+                  "models":{"s_model":s_model, "g_model":g_model}}
+        return {"kwargs":kwargs, "type":wkfl_type}
 
 
     def get_results_path(self, full=False):
@@ -307,7 +318,7 @@ class StochSSWorkflow(StochSSBase):
         '''
         self.log("debug", f"Key identifying the requested plot: {plt_key}")
         self.log("debug", f"Title and axis data for the plot: {plt_data}")
-        path = self.get_plot_path(full=True)
+        path = os.path.join(self.get_results_path(full=True), "plots.json")
         self.log("debug", f"Path to the workflow result plot file: {path}")
         try:
             with open(path, "r") as plot_file:

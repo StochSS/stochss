@@ -114,7 +114,6 @@ class RunModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Path to the model: %s", path)
@@ -144,7 +143,6 @@ class RunModelAPIHandler(APIHandler):
                 resp['Results'] = results
             log.debug("Response to the read command: %s", resp)
             self.write(resp)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 

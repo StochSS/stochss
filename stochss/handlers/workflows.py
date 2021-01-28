@@ -30,7 +30,7 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSWorkflow, \
+from .util import StochSSWorkflow, StochSSModel, StochSSNotebook, \
                   StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
@@ -226,10 +226,10 @@ class WorkflowLogsAPIHandler(APIHandler):
 
 class WorkflowNotebookHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for handling conversions from model (.mdl) file or workflows (.wkfl)
     to Jupyter Notebook (.ipynb) file for notebook workflows.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -239,6 +239,32 @@ class WorkflowNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
+        # log.setLevel(logging.DEBUG)
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the model/workflow: %s", path)
+        wkfl_type = self.get_query_argument(name="type")
+        try:
+            is_model = path.endswith(".mdl")
+            file_obj = StochSSModel(path=path) if is_model else StochSSWorkflow(path=path)
+            kwargs = file_obj.get_notebook_data()
+            if "type" in kwargs.keys():
+                wkfl_type = kwargs['type']
+                kwargs = kwargs['kwargs']
+            log.debug("Type of workflow to be run: %s", wkfl_type)
+            notebook = StochSSNotebook(**kwargs)
+            notebooks = {"gillespy":notebook.create_es_notebook,
+                         "1d_parameter_sweep":notebook.create_1dps_notebook,
+                         "2d_parameter_sweep":notebook.create_2dps_notebook,
+                         "sciope_model_exploration":notebook.create_sme_notebook,
+                         "model_inference":notebook.create_smi_notebook}
+            resp = notebooks[wkfl_type]()
+            notebook.print_logs(log)
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        # log.setLevel(logging.WARNING)
+        self.finish()
 
 
 class SavePlotAPIHandler(APIHandler):
