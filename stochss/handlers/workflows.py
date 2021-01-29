@@ -17,12 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-# import ast
 import json
 import logging
-# import traceback
 import subprocess
-# from json.decoder import JSONDecodeError
 from tornado import web
 from notebook.base.handlers import APIHandler
 # APIHandler documentation:
@@ -282,6 +279,20 @@ class SavePlotAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow setting file: %s", path)
+        plot = json.loads(self.request.body.decode())
+        log.debug("The plot to be saved: %s", plot)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            resp = wkfl.save_plot(plot=plot)
+            wkfl.print_logs(log)
+            log.debug("Response message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class SaveAnnotationAPIHandler(APIHandler):

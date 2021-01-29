@@ -238,18 +238,6 @@ class StochSSWorkflow(StochSSBase):
         return os.path.join(self.get_path(full=full), "info.json")
 
 
-    def get_log_path(self, full=False):
-        '''
-        Return the path to the log.txt file
-
-        Attributes
-        ----------
-        full : bool
-            Indicates whether or not to get the full path or local path
-        '''
-        return os.path.join(self.get_path(full=full), "logs.txt")
-
-
     def get_model_path(self, full=False, external=False):
         '''
         Return the path to the model file
@@ -349,7 +337,7 @@ class StochSSWorkflow(StochSSBase):
         Attributes
         ----------
         '''
-        path = self.get_log_path(full=True)
+        path = os.path.join(self.get_path(full=True), "logs.txt")
         try:
             with open(path, "r") as file:
                 logs = file.read()
@@ -516,6 +504,24 @@ class StochSSWorkflow(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the model file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
+
+
+    def save_plot(self, plot):
+        '''
+        Save a plot to the output settings (for projects only)
+
+        Attributes
+        ----------
+        plot : dict
+            plot data used needed to look up the plot
+        '''
+        settings = self.load_settings()
+        self.log("debug", f"Original settings: {settings}")
+        settings['resultsSettings']['outputs'].append(plot)
+        self.log("debug", f"New settings: {settings}")
+        with open(self.get_settings_path(full=True), "w") as settings_file:
+            json.dump(settings, settings_file)
+        return {"message":"The plot was successfully saved", "data":plot}
 
 
     def update_info(self, new_info, new=False):
