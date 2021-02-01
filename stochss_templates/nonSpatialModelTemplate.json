@@ -8,8 +8,21 @@
 		"endSim": 20,
 		"timeStep": 0.05
 	},
-	"meshSettings": {
-		"count": 2
+	"domain": {
+		"size": null,
+        "rho_0": 1.0,
+        "c_0": 10,
+        "p_0": 10,
+        "gravity": null,
+        "x_lim": [],
+        "y_lim": [],
+        "z_lim": [],
+        "type_name": [],
+        "boundary_condition": {
+        	"reflect_x": true,
+        	"reflect_y": true,
+        	"reflect_z": true},
+        "particles": []
 	},
 	"species": [],
     "initialConditions": [],
