@@ -69,7 +69,10 @@ class StochSSWorkflow(StochSSBase):
     def __create_new_workflow(self, mdl_path, settings=None):
         path = self.get_path(full=True)
         try:
-            os.makedirs(path)
+            if not os.path.exists(self.get_dir_name(full=True)):
+                os.makedirs(path)
+            else:
+                os.mkdir(path)
             os.mkdir(self.get_results_path(full=True))
             info = {"source_model":mdl_path, "wkfl_model":None, "type":self.type, "start_time":None}
             self.update_info(new_info=info, new=True)
