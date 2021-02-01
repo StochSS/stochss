@@ -14,6 +14,14 @@ section.page
             a.active-link(data-hook="project-breadcrumb")
           li.breadcrumb-item.active(aria-current="page" data-hook="workflow-breadcrumb")
 
+  div(data-hook="load-wkfl-error" style="display: none;")
+
+    h4(data-hook="reason")
+
+    p(data-hook="message")
+
+    p(data-hook="traceback")
+
   div(data-hook="workflow-name")
 
   div.invalid-feedback.wkfl-name(id="workflowNameSpecialCharError") Names can only include the following characters: (0-9), (a-z), (A-Z) and (., -, _, (, or ))
