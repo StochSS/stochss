@@ -17,7 +17,7 @@
         "x_lim": [],
         "y_lim": [],
         "z_lim": [],
-        "type_name": [],
+        "type_names": ["Un-Assigned"],
         "boundary_condition": {
         	"reflect_x": true,
         	"reflect_y": true,

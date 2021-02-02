@@ -181,6 +181,27 @@ class StochSSModelFormatError(StochSSAPIError):
         '''
         super().__init__(406, "StochSS Model Not In Proper Format", msg, trace)
 
+
+class DomainFormatError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain File Not In Proper Format
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the domain file does not meet SpatialPy format requirements
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Domain File Not In Proper Format", msg, trace)
+
 ####################################################################################################
 # Workflow Errors
 ####################################################################################################
