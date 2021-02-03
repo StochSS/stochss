@@ -203,4 +203,12 @@ class StochSSSpatialModel(StochSSBase):
         '''
         if self.model is None:
             self.__read_model_file()
+        if "domain" not in self.model.keys():
+            self.model['domain'] = self.get_model_template()['domain']
+        for species in self.model['species']:
+            if "types" not in species.keys():
+                species['types'] = list(range(1, len(self.model['domain']['type_names'])))
+        for reaction in self.model['reactions']:
+            if "types" not in reaction.keys():
+                reaction['types'] = list(range(1, len(self.model['domain']['type_names'])))
         return self.model
