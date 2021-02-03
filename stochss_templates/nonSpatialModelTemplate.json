@@ -22,7 +22,8 @@
         	"reflect_x": true,
         	"reflect_y": true,
         	"reflect_z": true},
-        "particles": []
+        "particles": [],
+        "def_particle_id":1
 	},
 	"species": [],
     "initialConditions": [],

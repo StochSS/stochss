@@ -79,7 +79,8 @@ class StochSSSpatialModel(StochSSBase):
                       "reflect_x": True,
                       "reflect_y": True,
                       "reflect_z": True},
-                  "particles":particles}
+                  "particles":particles,
+                  "def_particle_id":len(particles) + 1}
         return domain
 
 
