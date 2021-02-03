@@ -388,6 +388,14 @@ class StochSSModel(StochSSBase):
         if self.model is None:
             model = self.load()
         model['is_spatial'] = True
+        if "domain" not in model.keys():
+            model['domain'] = self.get_model_template()['domain']
+        for species in model['species']:
+            if "types" not in species.keys():
+                species['types'] = list(range(1, len(model['domain']['type_names'])))
+        for reaction in model['reactions']:
+            if "types" not in reaction.keys():
+                reaction['types'] = list(range(1, len(model['domain']['type_names'])))
         s_path = self.path.replace(".mdl", ".smdl")
         s_file = self.get_file(path=s_path)
         message = f"{self.get_file()} was successfully convert to {s_file}!"
