@@ -192,7 +192,7 @@ class StochSSSpatialModel(StochSSBase):
             layout["xaxis"] = {"range":domain['x_lim']}
         if len(domain['y_lim']) == 2:
             layout["yaxis"] = {"range":domain['y_lim']}
-        return {"data":trace_list, "layout":layout}
+        return json.dumps({"data":trace_list, "layout":layout}, cls=plotly.utils.PlotlyJSONEncoder)
 
 
     def load(self):
@@ -204,6 +204,7 @@ class StochSSSpatialModel(StochSSBase):
         '''
         if self.model is None:
             self.__read_model_file()
+        self.model['name'] = self.get_name()
         if "domain" not in self.model.keys():
             self.model['domain'] = self.get_model_template()['domain']
         for species in self.model['species']:

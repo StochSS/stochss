@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
+import json
 import uuid
 import logging
 import subprocess
@@ -123,7 +124,7 @@ class LoadDomainEditorAPIHandler(APIHandler):
         try:
             model = StochSSSpatialModel(path=path)
             domain = model.get_domain(path=d_path, new=new)
-            fig = model.get_domain_plot(domain=domain)
+            fig = json.loads(model.get_domain_plot(domain=domain))
             resp = {"model":model.load(), "domain":domain, "fig":fig}
             log.debug("Response: %s", resp)
             self.write(resp)
