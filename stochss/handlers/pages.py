@@ -141,6 +141,23 @@ class ModelEditorHandler(PageHandler):
         self.render("stochss-model-editor.html", server_path=self.get_server_path())
 
 
+class DomainEditorHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Domain Editor Page Handler
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Render the StochSS domain editor page.
+
+        Attributes
+        ----------
+        '''
+        self.render("stochss-domain-editor.html", server_path=self.get_server_path())
+
+
 class WorkflowSelectionHandler(PageHandler):
     '''
     ################################################################################################

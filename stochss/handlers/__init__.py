@@ -42,6 +42,7 @@ def get_page_handlers(route_start):
         (r'/stochss/home\/?', UserHomeHandler),
         (r'/stochss/files\/?$', ModelBrowserHandler),
         (r'/stochss/models/edit\/?', ModelEditorHandler),
+        (r'/stochss/domain/edit\/?', DomainEditorHandler),
         (r'/stochss/workflow/selection\/?', WorkflowSelectionHandler),
         (r'/stochss/workflow/edit\/?', WorkflowEditorHandler),
         (r'/stochss/quickstart\/?', QuickstartHandler),
