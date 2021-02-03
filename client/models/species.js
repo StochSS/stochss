@@ -24,7 +24,7 @@ var Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: Specie,
-  addSpecie: function (subdomains) {
+  addSpecie: function (types) {
     var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var specie = this.add({
@@ -37,7 +37,7 @@ module.exports = Collection.extend({
       isSwitchTol: true,
       annotation: "",
       diffusionCoeff: 0.0,
-      subdomains: subdomains
+      types: types
     });
     this.parent.updateValid()
   },

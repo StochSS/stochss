@@ -17,26 +17,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //models
-var State = require('ampersand-state');
-var Subdomains = require('./subdomains');
+let Particle = require('./particle');
+//collections
+var Collection = require('ampersand-collection');
 
-module.exports = State.extend({
-  props: {
-    count: 'number'
+module.exports = Collection.extend({
+  model: Particle,
+  addParticle: function (point, vol, mass, type, nu, fixed) {
+    let id = this.parent.getDefaultID();
+    let type_index = this.parent.getTypeIndex(type);
+    var particle = new Praticle({
+        fixed: fixed,
+        mass: mass,
+        nu: nu,
+        particle_id: id,
+        point: point,
+        type: type_index,
+        volume: vol
+    });
+    this.add(particle);
   },
-  derived: {
-    uniqueSubdomains: {
-      deps: ['count'],
-      fn: function () {
-        var uniqueSubdomains = new Subdomains();
-        for(var i = 1; i <= this.count; i++){
-          uniqueSubdomains.addSubdomain('subdomain ' + i + ':');
-        }
-        return uniqueSubdomains;
-      },
-    },
+  removeParticle: function (particle) {
+    this.remove(particle);
   },
-  initialize: function (attrs, options) {
-    State.prototype.initialize.apply(this, arguments);
-  },
+  validateCollection: function () {
+    return true;
+  }
 });

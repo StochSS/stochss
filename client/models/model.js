@@ -22,7 +22,7 @@ var xhr = require('xhr');
 //models
 var Model = require('ampersand-model');
 var ModelSettings = require('./model-settings');
-var MeshSettings = require('./mesh-settings');
+var Domain = require('./domain');
 //collections
 var Species = require('./species');
 var InitialConditions = require('./initial-conditions');
@@ -54,7 +54,7 @@ module.exports = Model.extend({
   },
   children: {
     modelSettings: ModelSettings,
-    meshSettings: MeshSettings
+    domain: Domain
   },
   session: {
     name: 'string',

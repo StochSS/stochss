@@ -17,16 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //models
-var Subdomain = require('./subdomain');
-//collections
-var Collection = require('ampersand-collection');
+var State = require('ampersand-state');
 
-module.exports = Collection.extend({
-  model: Subdomain,
-  addSubdomain: function (name) {
-    this.add({name: name});
+module.exports = State.extend({
+  props: {
+    fixed: 'boolean',
+    mass: 'number',
+    nu: 'number',
+    particle_id: 'number',
+    point: 'object',
+    type: 'number',
+    volume: 'number'
   },
-  removeSubdomains: function (subdomain) {
-    this.remove(subdomain);
+  initialize: function (attrs, options) {
+    State.prototype.initialize.apply(this, arguments)
   },
+  validate: function () {
+    return true;
+  }
 });
