@@ -187,8 +187,13 @@ module.exports = View.extend({
     }
   },
   addSpecies: function () {
-    var subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
-    this.collection.addSpecie(subdomains);
+    if(this.parent.model.domain.type_names) {
+      var types = this.parent.model.domain.type_names
+      types.shift()
+    }else{
+      var types = []
+    }
+    this.collection.addSpecie(types);
     this.toggleSpeciesCollectionError()
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();

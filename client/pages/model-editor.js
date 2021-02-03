@@ -26,7 +26,7 @@ var tests = require('../views/tests');
 //views
 var PageView = require('../pages/base');
 var InputView = require('../views/input');
-var MeshEditorView = require('../views/mesh-editor');
+// var DomainEditorView = require('../views/domain-editor');
 var SpeciesEditorView = require('../views/species-editor');
 var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
@@ -87,7 +87,7 @@ let ModelEditor = PageView.extend({
         }
         self.renderSubviews();
         if(!self.model.is_spatial){
-          self.queryByHook('mesh-editor-container').style.display = "none";
+          self.queryByHook('domain-editor-container').style.display = "none";
           self.queryByHook('initial-conditions-editor-container').style.display = "none";
         }
         if(!self.model.functionDefinitions.length) {
@@ -189,9 +189,9 @@ let ModelEditor = PageView.extend({
     });
   },
   renderSubviews: function () {
-    var meshEditor = new MeshEditorView({
-      model: this.model.meshSettings
-    });
+    // var domainEditor = new DomainEditorView({
+    //   model: this.model.domain
+    // });
     var initialConditionsEditor = new InitialConditionsEditorView({
       collection: this.model.initialConditions
     });
@@ -205,7 +205,7 @@ let ModelEditor = PageView.extend({
     this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
-    this.registerRenderSubview(meshEditor, 'mesh-editor-container');
+    // this.registerRenderSubview(domainEditor, 'domain-editor-container');
     this.renderSpeciesView();
     this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.renderParametersView();

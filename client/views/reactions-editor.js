@@ -154,8 +154,13 @@ module.exports = View.extend({
   handleAddReactionClick: function (e) {
     var reactionType = e.delegateTarget.dataset.hook;
     var stoichArgs = this.getStoichArgsForReactionType(reactionType);
-    var subdomains = this.parent.model.meshSettings.uniqueSubdomains.map(function (model) {return model.name})
-    var reaction = this.collection.addReaction(reactionType, stoichArgs, subdomains);
+    if(this.parent.model.domain.type_names) {
+      var types = this.parent.model.domain.type_names
+      types.shift()
+    }else{
+      var types = []
+    }
+    var reaction = this.collection.addReaction(reactionType, stoichArgs, types);
     reaction.detailsView = this.newDetailsView(reaction);
     this.collection.trigger("select", reaction);
     $(document).ready(function () {

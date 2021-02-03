@@ -27,7 +27,7 @@ var StoichSpecie = require('../models/stoich-specie');
 var View = require('ampersand-view');
 var SelectView = require('ampersand-select-view');
 var InputView = require('./input');
-var ReactionSubdomainsView = require('./reaction-subdomains');
+// var ReactionSubdomainsView = require('./reaction-subdomains');
 var ReactantProductView = require('./reactant-product');
 //templates
 var template = require('../templates/includes/reactionDetails.pug');
@@ -73,10 +73,10 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     var self = this;
-    var subdomainsView = new ReactionSubdomainsView({
-      parent: this,
-      isReaction: true,
-    })
+    // var subdomainsView = new ReactionSubdomainsView({
+    //   parent: this,
+    //   isReaction: true,
+    // })
     var reactantsView = new ReactantProductView({
       collection: this.model.reactants,
       species: this.model.collection.parent.species,
@@ -131,7 +131,7 @@ module.exports = View.extend({
       $(this.queryByHook('rate-parameter-label')).text('Rate Parameter:')
       $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.rate);
     }
-    this.registerRenderSubview(subdomainsView, 'subdomains-editor');
+    // this.registerRenderSubview(subdomainsView, 'subdomains-editor');
     this.registerRenderSubview(reactantsView, 'reactants-editor');
     this.registerRenderSubview(productsView, 'products-editor');
     this.totalRatio = this.getTotalReactantRatio();
