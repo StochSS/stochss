@@ -439,8 +439,10 @@ class StochSSModel(StochSSBase):
         if "annotation" not in self.model.keys():
             self.model['annotation'] = ""
         if "volume" not in self.model.keys():
-            self.model['volume'] = self.model['modelSettings']['volume']
-            del self.model['modelSettings']['volume']
+            if "volume" in self.model['modelSettings'].keys():
+                self.model['volume'] = self.model['modelSettings']['volume']
+            else:
+                self.model['volume'] = 1
         param_ids = self.__update_parameters()
         self.__update_reactions()
         self.__update_events(param_ids=param_ids)
