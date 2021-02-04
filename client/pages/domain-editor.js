@@ -18,8 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let path = require('path');
 var xhr = require('xhr');
+var _ = require('underscore');
 //support files
 var app = require('../app');
+var Plotly = require('../lib/plotly');
 //views
 var PageView = require('../pages/base');
 //models
@@ -46,12 +48,33 @@ let DomainEditor = PageView.extend({
     }
     let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      console.log(body)
       self.plot = body.fig;
       self.domain = new Domain(body.domain);
-      self.model = self.buildModel(body.model, modelPath)
+      self.model = self.buildModel(body.model, modelPath);
+      self.actPart = {"part":null, "tn":0, "pn":0};
       self.renderSubviews();
     });
+  },
+  addPraticle: function (newPart) {
+    this.domain.particles.addParticle(newPart.point, newPart.vol,
+                                      newPart.mass, newPart.type,
+                                      newPart.nu, newPart.fixed);
+    let numPart = this.domain.particles.models.length
+    let particle = this.domain.particles.models[numPart-1]
+    this.plot.data[particle.type].ids.push(particle.particle_id);
+    this.plot.data[particle.type].x.push(particle.point[0]);
+    this.plot.data[particle.type].y.push(particle.point[1]);
+    this.plot.data[particle.type].z.push(particle.point[2]);
+    this.updatePlot()
+  },
+  addType: function (name) {
+    this.domain.type_names.push(name);
+    var trace = {"ids":[], "x":[], "y":[], "z":[], "name":name};
+    trace['marker'] = this.plot.data[0].marker;
+    trace['mode'] = this.plot.data[0].mode;
+    trace['type'] = this.plot.data[0].type;
+    this.plot.data.push(trace)
+    this.updatePlot()
   },
   buildModel: function (modelData, modelPath) {
     var model = new Model(modelData);
@@ -60,10 +83,103 @@ let DomainEditor = PageView.extend({
     model.directory = modelPath;
     return model;
   },
+  changeParticleLocation: function (x, y, z) {
+    this.domain.particles.models[this.actPart.part.particle_id - 1].point = [x, y, z];
+    this.plot.data[this.actPart.tn].x[this.actPart.pn] = x;
+    this.plot.data[this.actPart.tn].y[this.actPart.pn] = y;
+    this.plot.data[this.actPart.tn].z[this.actPart.pn] = z;
+    this.actPart.part.pointChanged = false;
+  },
+  changeParticleType: function (type) {
+    this.domain.particles.models[this.actPart.part.particle_id - 1].type = type
+    let id = this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1)[0];
+    let x = this.plot.data[this.actPart.tn].x.splice(this.actPart.pn, 1)[0];
+    let y = this.plot.data[this.actPart.tn].y.splice(this.actPart.pn, 1)[0];
+    let z = this.plot.data[this.actPart.tn].z.splice(this.actPart.pn, 1)[0];
+    this.plot.data[type].ids.push(id);
+    this.plot.data[type].x.push(x);
+    this.plot.data[type].y.push(y);
+    this.plot.data[type].z.push(z);
+    this.actPart.part.typeChanged = false;
+  },
+  deleteParticle: function () {
+    this.domain.particles.removeParticle(this.actPart.part);
+    this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1);
+    this.plot.data[this.actPart.tn].x.splice(this.actPart.pn, 1);
+    this.plot.data[this.actPart.tn].y.splice(this.actPart.pn, 1);
+    this.plot.data[this.actPart.tn].z.splice(this.actPart.pn, 1);
+    this.actPart.part = null;
+    this.updatePlot();
+  },
+  deleteType: function (type) {
+    this.unassignAllParticles(type, false)
+    this.plot.data.splice(type, 1);
+    this.updatePlot();
+  },
+  deleteTypeAndParticles: function (type) {
+    let self = this;
+    this.domain.particles.forEach(function (particle) {
+      if(particle.type === type) {
+        self.domain.particles.removeParticle(particle);
+      }
+    });
+    this.domain.type_names.splice(type, 1);
+    this.plot.data.splice(type, 1);
+    this.updatePlot();
+  },
+  displayDomain: function () {
+    let self = this;
+    var el = this.queryByHook("domain-plot");
+    Plotly.newPlot(el, this.plot);
+    el.on('plotly_click', _.bind(this.selectParticle, this));
+  },
+  renameType: function (oldName, newName) {
+    let index = this.domain.getTypeIndex(oldName);
+    this.domain.type_names[index] = newName;
+    this.plot.data[index].name = newName;
+    this.updatePlot();
+  },
   renderSubviews: function () {
-    console.log("Model: ", this.model)
-    console.log("Domain: ", this.domain)
-    console.log("Domain Plot: ", this.plot)
+    this.displayDomain();
+  },
+  selectParticle: function (data) {
+    let point = data.points[0];
+    this.actPart.part = this.domain.particles.models[point.id - 1];
+    this.actPart.tn = point.curveNumber;
+    this.actPart.pn = point.pointNumber;
+  },
+  unassignAllParticles: function (type, update=true) {
+    let self = this;
+    this.domain.particles.forEach(function (particle) {
+      if(particle.type === type) {
+        self.actPart.part = particle;
+        self.actPart.tn = type;
+        self.actPart.pn = self.data[type].ids.indexOf(particle.particle_id)
+        self.changeParticleType(0);
+      }
+    });
+    if(update) {
+      this.updatePlot();
+    }
+  },
+  updatePlot: function () {
+    var el = this.queryByHook("domain-plot");
+    el.removeListener('plotly_click', this.selectPoint);
+    Plotly.purge(el);
+    displayDomain();
+  },
+  updateParticle: function () {
+    if(this.actPart.part.pointChanged) {
+      let x = this.actPart.part.point[0];
+      let y = this.actPart.part.point[1];
+      let z = this.actPart.part.point[2];
+      this.changeParticleLocation(x, y, z)
+    }
+    if(this.actPart.part.typeChanged) {
+      let type = this.actPart.part.type
+      this.changeParticleType(type);
+    }
+    this.updatePlot();
   }
 });
 

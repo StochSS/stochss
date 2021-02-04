@@ -26,7 +26,7 @@ module.exports = Collection.extend({
   addParticle: function (point, vol, mass, type, nu, fixed) {
     let id = this.parent.getDefaultID();
     let type_index = this.parent.getTypeIndex(type);
-    var particle = new Praticle({
+    var particle = new Particle({
         fixed: fixed,
         mass: mass,
         nu: nu,

@@ -29,6 +29,10 @@ module.exports = State.extend({
     type: 'number',
     volume: 'number'
   },
+  session: {
+    pointChanged: 'boolean',
+    typeChanged: 'boolean'
+  },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
   },

@@ -66,7 +66,7 @@ class EnsembleSimulation(StochSSWorkflow):
             avg_res = results.average_ensemble()
             plots['avg'] = avg_res.plotplotly(return_plotly_figure=True)
         for _, plot in plots.items():
-            plot["responsive"] = True
+            plot["config"] = {"responsive":True}
         with open('results/plots.json', 'w') as plots_file:
             json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
 

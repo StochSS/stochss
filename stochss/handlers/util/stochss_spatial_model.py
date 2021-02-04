@@ -187,12 +187,13 @@ class StochSSSpatialModel(StochSSBase):
                 particles = domain['particles']
             trace = self.__get_trace_data(particles=particles, name=name)
             trace_list.append(trace)
-        layout = {"width":1000, "height":1000, "scene":{"aspectmode":'data'}}
+        layout = {"scene":{"aspectmode":'data'}}
         if len(domain['x_lim']) == 2:
             layout["xaxis"] = {"range":domain['x_lim']}
         if len(domain['y_lim']) == 2:
             layout["yaxis"] = {"range":domain['y_lim']}
-        return json.dumps({"data":trace_list, "layout":layout}, cls=plotly.utils.PlotlyJSONEncoder)
+        return json.dumps({"data":trace_list, "layout":layout, "config":{"responsive":True}},
+                          cls=plotly.utils.PlotlyJSONEncoder)
 
 
     def load(self):
