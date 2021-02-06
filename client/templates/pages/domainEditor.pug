@@ -4,6 +4,104 @@ section.page
 
   div.card.card-body
 
-    div: h4 Domain
+    div
 
-    div(data-hook="domain-plot")
+      h3.inline Properties
+
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#domain-properties", data-hook="collapse-domain-properties") -
+
+    div.collapse.show(id="domain-properties" data-hook="domain-properties")
+
+      table.table
+        thead
+          tr
+            th(scope="col") Density
+            th(scope="col") Gravity
+            th(scope="col")
+              div
+                div.inline Pressure
+
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.pressure) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            th(scope="col")
+              div
+                div.inline Size
+
+                // div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.size) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            th(scope="col")
+              div
+                div.inline Speed of Sound
+
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.speed) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        tbody
+          tr
+            td: div(data-hook="density")
+            td: div(data-hook="gravity")
+            td: div(data-hook="pressure")
+            td: div(data-hook="size")
+            td: div(data-hook="speed")
+
+      h4 Boundary Conditions
+
+      table.table
+        thead
+          tr
+            th(scope="col")
+            th(scope="col") X-Axis
+            th(scope="col") Y-Axis
+            th(scope="col") Z-Axis
+
+        tbody
+          tr
+            th(scope="row") Minimum
+            td: div(data-hook="x_lim-min" data-name="limitation")
+            td: div(data-hook="y_lim-min" data-name="limitation")
+            td: div(data-hook="z_lim-min" data-name="limitation")
+          tr
+            th(scope="row") Maximum
+            td: div(data-hook="x_lim-max" data-name="limitation")
+            td: div(data-hook="y_lim-max" data-name="limitation")
+            td: div(data-hook="z_lim-max" data-name="limitation")
+          tr
+            th(scope="row") Reflect
+            td: input(type="checkbox", id="x-reflect", data-hook="reflect_x" data-target="reflect")
+            td: input(type="checkbox", id="y-reflect", data-hook="reflect_y" data-target="reflect")
+            td: input(type="checkbox", id="z-reflect", data-hook="reflect_z" data-target="reflect")
+
+  div.card.card-body
+
+    div
+
+      h3.inline Types
+
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#domain-types", data-hook="collapse-domain-types") -
+
+    div.collapse.show(id="domain-types" data-hook="domain-types")
+
+      div
+
+        h6(data-hook="unassigned-particles")
+
+      table.table
+        thead
+          tr
+            th(scope="col") Name
+            th(scope="col") Number of Particles
+            th(scope="col")
+            th(scope="col" colspan="2") Delete
+
+        tbody(data-hook="domain-types-list")
+
+      button.btn.btn-outline-primary.box-shadow(data-hook="add-domain-type") Add Type
+  
+  div.card.card-body
+
+    div
+
+      h3.inline Domain
+    
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#domain-plot", data-hook="collapse-domain-plot") -
+
+    div.collapse.show(id="domain-plot" data-hook="domain-plot")

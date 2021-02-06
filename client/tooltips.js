@@ -170,5 +170,12 @@ module.exports = {
     ensembleSimulation: "Produce a time-series result for one or more simulation(s) of the model.",
 
     parameterSweep: "Produced and compare results from model simulations by varying parameters over a range."
+  },
+  domainEditor: {
+    pressure: "Atmospheric or background pressure.",
+
+    size: "",
+
+    speed: "Approximate or artificial speed or sound"
   }
 }

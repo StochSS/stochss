@@ -124,8 +124,7 @@ class LoadDomainEditorAPIHandler(APIHandler):
         try:
             model = StochSSSpatialModel(path=path)
             domain = model.get_domain(path=d_path, new=new)
-            fig = json.loads(model.get_domain_plot(domain=domain))
-            resp = {"model":model.load(), "domain":domain, "fig":fig}
+            resp = {"model":model.load(), "domain":domain}
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -153,9 +152,11 @@ class LoadDomainAPIHandler(APIHandler):
         d_path = self.get_query_argument(name="domain_path", default=None)
         if d_path is not None:
             log.debug("Path to the domain file: %s", d_path)
+        new = self.get_query_argument(name="new", default=False)
+        log.debug("The domain is new: %s", new)
         try:
             model = StochSSSpatialModel(path=path)
-            fig = model.get_domain_plot(path=d_path)
+            fig = json.loads(model.get_domain_plot(path=d_path))
             resp = {"fig":fig}
             log.debug("Response: %s", resp)
             self.write(resp)

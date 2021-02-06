@@ -40,6 +40,12 @@ module.exports = Collection.extend({
   removeParticle: function (particle) {
     this.remove(particle);
   },
+  removeParticles: function (particles) {
+    let self = this;
+    particles.forEach(function (particle) {
+      self.removeParticle(particle)
+    });
+  },
   validateCollection: function () {
     return true;
   }
