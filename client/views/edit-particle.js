@@ -22,6 +22,7 @@ var tests = require('../views/tests');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
+var SelectView = require('ampersand-select-view');
 //templates
 var template = require('../templates/includes/editParticle.pug');
 
@@ -32,8 +33,15 @@ module.exports = View.extend({
     'change [data-target=mass]' : 'handleUpdateMass',
     'change [data-target=volume]' : 'handleUpdateVolume',
     'change [data-target=nu]' : 'handleUpdateNu',
-    'change [data-target=fixed]' : 'handleUpdateFixed'
+    'change [data-target=fixed]' : 'handleUpdateFixed',
+    'change [data-target=type]' : 'handleUpdateType',
+    'click [data-hook=add-particle]' : 'handleAddParticle',
+    'click [data-hook=save-particle]' : 'handleSaveParticle',
+    'click [data-hook=remove-particle]' : 'handleRemoveParticle'
   },
+  handleAddParticle: function (e) {},
+  handleSaveParticle: function (e) {},
+  handleRemoveParticle: function (e) {},
   handleUpdateFixed: function (e) {
     let value = e.target.checked;
     this.model.fixed = value;
@@ -48,6 +56,7 @@ module.exports = View.extend({
     }else{
       this.model.point[2] = value;
     }
+    this.model.pointChanged = true;
   },
   handleUpdateMass: function (e) {
     let value = Number(e.target.value);
@@ -57,6 +66,25 @@ module.exports = View.extend({
     let value = Number(e.target.value);
     this.model.nu = value;
   },
+  handleUpdateType: function (e) {
+    let id = e.target.selectedOptions.item(0).value;
+    let oldType = this.parent.domain.types.get(this.model.type, "typeID");
+    let newType = this.parent.domain.types.get(id, "typeID");
+    if(this.model.mass === oldType.mass) {
+      this.model.mass = newType.mass;
+    }
+    if(this.model.volume === oldType.volume) {
+      this.model.volume = newType.volume;
+    }
+    if(this.model.nu === oldType.nu) {
+      this.model.nu = newType.nu;
+    }
+    if(this.model.fixed === oldType.fixed) {
+      this.model.fixed = newType.fixed;
+    }
+    this.model.type = id;
+    this.model.typeChanged = true;
+  },
   handleUpdateVolume: function (e) {
     let value = Number(e.target.value);
     this.model.volume = value;
@@ -65,6 +93,18 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.newParticle = attrs.newParticle;
     this.viewIndex = this.newParticle ? 0 : 1;
+  },
+  disableAll: function () {
+    $(this.queryByHook("x-coord-" + this.viewIndex)).find('input').prop('disabled', true);
+    $(this.queryByHook("y-coord-" + this.viewIndex)).find('input').prop('disabled', true);
+    $(this.queryByHook("z-coord-" + this.viewIndex)).find('input').prop('disabled', true);
+    $(this.queryByHook("type-" + this.viewIndex)).find('select').prop('disabled', true);
+    $(this.queryByHook("mass-" + this.viewIndex)).find('input').prop('disabled', true);
+    $(this.queryByHook("volume-" + this.viewIndex)).find('input').prop('disabled', true);
+    $(this.queryByHook("nu-" + this.viewIndex)).find('input').prop('disabled', true);
+    $(this.queryByHook("fixed-" + this.viewIndex)).prop('disabled', true);
+    $(this.queryByHook("save-particle")).prop('disabled', true);
+    $(this.queryByHook("remove-particle")).prop('disabled', true);
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -80,6 +120,11 @@ module.exports = View.extend({
     }
     this.renderLocation();
     this.renderProperties();
+    this.renderType();
+    if(!this.newParticle && !this.parent.actPart.part) {
+      $(this.queryByHook("select-message-" + this.viewIndex)).css('display', 'block')
+      this.disableAll();
+    }
   },
   renderLocation: function () {
     var xCoord = new InputView({parent: this, required: true,
@@ -96,20 +141,42 @@ module.exports = View.extend({
     this.registerRenderSubview(zCoord, "z-coord-" + this.viewIndex);
   },
   renderProperties: function () {
-    var massView = new InputView({parent: this, required: true,
+    if(this.massView) {
+      this.massView.remove();
+    }
+    if(this.volView) {
+      this.volView.remove();
+    }
+    if(this.nuView) {
+      this.nuView.remove();
+    }
+    this.massView = new InputView({parent: this, required: true,
                                   name: 'mass', valueType: 'number',
                                   value: this.model.mass || this.type.mass});
-    this.registerRenderSubview(massView, "mass-" + this.viewIndex);
-    var volView = new InputView({parent: this, required: true,
+    this.registerRenderSubview(this.massView, "mass-" + this.viewIndex);
+    this.volView = new InputView({parent: this, required: true,
                                  name: 'volume', valueType: 'number',
                                  value: this.model.volume || this.type.volume});
-    this.registerRenderSubview(volView, "volume-" + this.viewIndex);
-    var nuView = new InputView({parent: this, required: true,
+    this.registerRenderSubview(this.volView, "volume-" + this.viewIndex);
+    this.nuView = new InputView({parent: this, required: true,
                                 name: 'viscosity', valueType: 'number',
                                 value: this.model.nu || this.type.nu});
-    this.registerRenderSubview(nuView, "nu-" + this.viewIndex);
+    this.registerRenderSubview(this.nuView, "nu-" + this.viewIndex);
     let fixed = this.model.fixed || this.type.fixed;
     $(this.queryByHook("fixed-" + this.viewIndex)).prop("checked", fixed);
+  },
+  renderType: function () {
+    var typeView = new SelectView({
+      label: '',
+      name: 'type',
+      required: true,
+      idAttribute: 'typeID',
+      textAttribute: 'name',
+      eagerValidate: true,
+      options: this.parent.domain.types,
+      value: this.parent.domain.types.get(this.model.type, "typeID")
+    });
+    this.registerRenderSubview(typeView, "type-" + this.viewIndex)
   },
   update: function (e) {},
   updateValid: function (e) {}
