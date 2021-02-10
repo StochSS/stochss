@@ -19,31 +19,53 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //models
 var State = require('ampersand-state');
 //collections
+let Types = require('./domain-types');
 let Particles = require('./particles');
 
 module.exports = State.extend({
   props: {
     boundary_condition: 'object',
     c_0: 'number',
-    def_particle_id: 'number',
     gravity: 'number',
     p_0: 'number',
     rho_0: 'number',
     size: 'number',
-    type_names: 'object',
     x_lim: 'object',
     y_lim: 'object',
     z_lim: 'object'
   },
   collections: {
+    types: Types,
     particles: Particles
+  },
+  session: {
+    def_particle_id: 'number',
+    def_type_id: 'number'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
+    this.def_particle_id = this.particles.length;
+    this.def_type_id = this.types.length;
+    let self = this;
+    this.particles.forEach(function (particle) {
+      if(particle.particle_id >= self.def_particle_id) {
+        self.def_particle_id = particle.particle_id + 1;
+      }
+    });
+    this.types.forEach(function (type) {
+      if(type.typeID >= self.def_type_id) {
+        self.def_type_id = type.typeID + 1;
+      }
+    });
   },
   getDefaultID: function () {
     let id = this.def_particle_id;
     this.def_particle_id += 1;
+    return id;
+  },
+  getDefaultTypeID: function () {
+    let id = this.def_type_id;
+    this.def_type_id += 1;
     return id;
   },
   getTypeIndex: function (type) {
