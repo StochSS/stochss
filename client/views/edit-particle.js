@@ -39,9 +39,15 @@ module.exports = View.extend({
     'click [data-hook=save-particle]' : 'handleSaveParticle',
     'click [data-hook=remove-particle]' : 'handleRemoveParticle'
   },
-  handleAddParticle: function (e) {},
-  handleSaveParticle: function (e) {},
-  handleRemoveParticle: function (e) {},
+  handleAddParticle: function (e) {
+    this.parent.addPraticle(this.model);
+  },
+  handleSaveParticle: function (e) {
+    this.parent.updateParticle();
+  },
+  handleRemoveParticle: function (e) {
+    this.parent.deleteParticle();
+  },
   handleUpdateFixed: function (e) {
     let value = e.target.checked;
     this.model.fixed = value;
@@ -67,7 +73,7 @@ module.exports = View.extend({
     this.model.nu = value;
   },
   handleUpdateType: function (e) {
-    let id = e.target.selectedOptions.item(0).value;
+    let id = Number(e.target.selectedOptions.item(0).value);
     let oldType = this.parent.domain.types.get(this.model.type, "typeID");
     let newType = this.parent.domain.types.get(id, "typeID");
     if(this.model.mass === oldType.mass) {

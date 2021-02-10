@@ -97,9 +97,10 @@ let DomainEditor = PageView.extend({
   },
   addPraticle: function (newPart) {
     this.renderNewParticle();
-    this.domain.particles.addParticle(newPart.point, newPart.vol,
+    this.domain.particles.addParticle(newPart.point, newPart.volume,
                                       newPart.mass, newPart.type,
                                       newPart.nu, newPart.fixed);
+    this.renderDomainTypes();
     let numPart = this.domain.particles.models.length
     let particle = this.domain.particles.models[numPart-1]
     this.plot.data[particle.type].ids.push(particle.particle_id);
@@ -107,6 +108,7 @@ let DomainEditor = PageView.extend({
     this.plot.data[particle.type].y.push(particle.point[1]);
     this.plot.data[particle.type].z.push(particle.point[2]);
     this.updatePlot()
+    console.log(particle)
   },
   addType: function (name) {
     this.renderEditParticle();
@@ -163,6 +165,7 @@ let DomainEditor = PageView.extend({
     this.actPart.part = null;
     this.updatePlot();
     this.renderEditParticle();
+    this.renderDomainTypes();
   },
   deleteType: function (typeID) {
     if(this.actPart.part && this.actPart.part.type >= typeID) {
@@ -203,10 +206,10 @@ let DomainEditor = PageView.extend({
   getNewParticle: function () {
     var particle = new Particle({
       point: [0, 0, 0],
-      mass: null,
-      volume: null,
-      nu: null,
-      fixed: null,
+      mass: 1.0,
+      volume: 1.0,
+      nu: 0.0,
+      fixed: false,
       type: 0
     });
     return particle;
@@ -425,6 +428,7 @@ let DomainEditor = PageView.extend({
     if(this.actPart.part.typeChanged) {
       let type = this.actPart.part.type
       this.changeParticleType(type);
+      this.renderDomainTypes();
     }
     this.updatePlot();
   },
