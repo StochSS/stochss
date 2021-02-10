@@ -219,3 +219,17 @@ class StochSSSpatialModel(StochSSBase):
             if "types" not in reaction.keys():
                 reaction['types'] = list(range(1, len(self.model['domain']['types'])))
         return self.model
+
+
+    def save_domain(self, domain):
+        '''
+        Writes a StochSS Domain to a .domn file
+
+        Attributes
+        ----------
+        domain : str
+            Domain to be saved
+        '''
+        path = self.get_path(full=True)
+        with open(path, 'w') as file:
+            file.write(domain)

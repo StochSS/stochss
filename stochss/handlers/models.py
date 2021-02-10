@@ -91,9 +91,13 @@ class JsonFileAPIHandler(APIHandler):
         data = self.request.body.decode()
         log.debug("Model data to be saved: %s", data)
         try:
-            model = StochSSModel(path=path)
-            model.save(model=data)
-            model.print_logs(log)
+            if path.endswith(".domn"):
+                model = StochSSSpatialModel(path=path)
+                model.save_domain(domain=data)
+            else:
+                model = StochSSModel(path=path)
+                model.save(model=data)
+                model.print_logs(log)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
