@@ -74,13 +74,17 @@ class StochSSSpatialModel(StochSSBase):
                   "x_lim":s_domain.xlim,
                   "y_lim":s_domain.ylim,
                   "z_lim":s_domain.zlim,
-                  "type_names":["Un-Assigned"],
+                  "types":[{"fixed":False,
+                            "mass":1.0,
+                            "name":"Un-Assigned",
+                            "nu":0.0,
+                            "typeID":0,
+                            "volume":1.0}],
                   "boundary_condition": {
                       "reflect_x": True,
                       "reflect_y": True,
                       "reflect_z": True},
-                  "particles":particles,
-                  "def_particle_id":len(particles) + 1}
+                  "particles":particles}
         return domain
 
 
@@ -179,13 +183,13 @@ class StochSSSpatialModel(StochSSBase):
         if domain is None:
             domain = self.get_domain(path=path, new=new)
         trace_list = []
-        for i, name in enumerate(domain['type_names']):
-            if len(domain['type_names']) > 1:
+        for i, d_type in enumerate(domain['types']):
+            if len(domain['types']) > 1:
                 particles = list(filter(lambda particle, key=i: particle['type'] == key,
                                         domain['particles']))
             else:
                 particles = domain['particles']
-            trace = self.__get_trace_data(particles=particles, name=name)
+            trace = self.__get_trace_data(particles=particles, name=d_type['name'])
             trace_list.append(trace)
         layout = {"scene":{"aspectmode":'data'}}
         if len(domain['x_lim']) == 2:
@@ -210,8 +214,8 @@ class StochSSSpatialModel(StochSSBase):
             self.model['domain'] = self.get_model_template()['domain']
         for species in self.model['species']:
             if "types" not in species.keys():
-                species['types'] = list(range(1, len(self.model['domain']['type_names'])))
+                species['types'] = list(range(1, len(self.model['domain']['types'])))
         for reaction in self.model['reactions']:
             if "types" not in reaction.keys():
-                reaction['types'] = list(range(1, len(self.model['domain']['type_names'])))
+                reaction['types'] = list(range(1, len(self.model['domain']['types'])))
         return self.model
