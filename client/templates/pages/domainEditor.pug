@@ -144,3 +144,17 @@ section.page
         div.tab-pane.active(id="new-particle" data-hook="new-particle")
 
         div.tab-pane(id="edit-particle" data-hook="edit-particle")
+
+  div
+
+    button.btn.btn-primary.box-shadow.dropdown-toggle(
+      id="dave-domain",
+      data-toggle="dropdown",
+      aria-haspopup="true",
+      aria-expanded="false",
+      type="button"
+    ) Save <span class="caret"></span>
+
+    ul.dropdown-menu(aria-labelledby="save-domain")
+      li.dropdown-item(data-hook="save-to-model") to Model
+      li.dropdown-item(data-hook="save-to-file") to File (.domn)

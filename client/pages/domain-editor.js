@@ -25,6 +25,7 @@ var app = require('../app');
 var tests = require('../views/tests');
 var Plotly = require('../lib/plotly');
 var Tooltips = require('../tooltips');
+let modals = require('../modals');
 //views
 var PageView = require('../pages/base');
 var InputView = require('../views/input');
@@ -48,6 +49,12 @@ let DomainEditor = PageView.extend({
     'click [data-toggle=collapse]' : 'changeCollapseButtonText',
     'click [data-hook=add-domain-type]' : 'handleAddDomainType',
     'click [data-hook=set-type-defaults]' : 'handleSetDefaults',
+    'click [data-hook=save-to-model]' : 'handleSaveToModel',
+    'click [data-hook=save-to-file]' : 'handleSaveToFile',
+    'change [data-hook=density]' : 'setDensity',
+    'change [data-hook=gravity]' : 'setGravity',
+    'change [data-hook=pressure]' : 'setPressure',
+    'change [data-hook=speed]' : 'setSpeed',
     'change [data-name=limitation]' : 'setLimitation',
     'change [data-target=reflect]' : 'setBoundaryCondition'
   },
@@ -73,6 +80,40 @@ let DomainEditor = PageView.extend({
     this.renderDomainTypes();
     $(this.queryByHook("edit-defaults")).css("display", "none");
     console.log(this.domain.types)
+  },
+  handleSaveToModel: function () {
+    this.model.domain = this.domain;
+    this.model.saveModel();
+  },
+  handleSaveToFile: function () {
+    var self = this
+    if(document.querySelector('#newModalModel')) {
+      document.querySelector('#newModalModel').remove()
+    }
+    let modal = $(modals.renderCreateModalHtml(true, true)).modal();
+    let okBtn = document.querySelector('#newModalModel .ok-model-btn');
+    let input = document.querySelector('#newModalModel #modelNameInput');
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== "" || input.value.trim() === ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
+    okBtn.addEventListener('click', function (e) {
+      if (Boolean(input.value)) {
+        modal.modal('hide')
+        let name = input.value.trim()
+        self.saveDomain(name);
+      }
+    });
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -250,20 +291,20 @@ let DomainEditor = PageView.extend({
   },
   renderDomainProperties: function () {
     let densityView = new InputView({parent: this, required: true,
-                                     name: 'density', modelKey: 'rho_0',
-                                     valueType: 'number', value: this.domain.rho_0 || 1});
+                                     name: 'density', valueType: 'number',
+                                     value: this.domain.rho_0 || 1});
     this.registerRenderSubview(densityView, "density");
     let gravityView = new InputView({parent: this, required: true,
-                                     name: 'gravity', modelKey: 'gravity',
-                                     valueType: 'number', value: this.domain.gravity || 0});
+                                     name: 'gravity', valueType: 'number',
+                                     value: this.domain.gravity || 0});
     this.registerRenderSubview(gravityView, "gravity");
     let pressureView = new InputView({parent: this, required: true,
-                                      name: 'pressure', modelKey: 'p_0',
-                                      valueType: 'number', value: this.domain.p_0 || 0});
+                                      name: 'pressure', valueType: 'number',
+                                      value: this.domain.p_0 || 0});
     this.registerRenderSubview(pressureView, "pressure");
     let speedView = new InputView({parent: this, required: true,
-                                   name: 'speed', modelKey: 'c_0',
-                                   valueType: 'number', value: this.domain.c_0 || 0});
+                                   name: 'speed', valueType: 'number', 
+                                   value: this.domain.c_0 || 0});
     this.registerRenderSubview(speedView, "speed");
   },
   renderDomainTypes: function () {
@@ -374,6 +415,17 @@ let DomainEditor = PageView.extend({
       });
     });
   },
+  saveDomain: function (name) {
+    let domain = this.domain.toJSON();
+    let file = name + ".domn";
+    let domainPath = path.join(path.dirname(this.model.directory), file);
+    let endpoint = path.join(app.getApiPath(), "file/json-data") + "?path=" + domainPath;
+    xhr({uri: endpoint, method: "post", json: true, body: domain}, function (err, response, body) {
+      if(response.statusCode >= 400) {
+        console.log(body.message)
+      }
+    });
+  },
   selectParticle: function (data) {
     let point = data.points[0];
     this.actPart.part = this.domain.particles.get(point.id, "particle_id");
@@ -391,6 +443,22 @@ let DomainEditor = PageView.extend({
     let index = data[1] === "min" ? 0 : 1;
     let value = Number(e.target.value.trim())
     this.domain[data[0]][index] = value;
+  },
+  setDensity: function (e) {
+    let value = Number(e.target.value)
+    this.domain.rho_0 = value;
+  },
+  setGravity: function (e) {
+    let value = Number(e.target.value)
+    this.domain.gravity = value;
+  },
+  setPressure: function (e) {
+    let value = Number(e.target.value)
+    this.domain.p_0 = value;
+  },
+  setSpeed: function (e) {
+    let value = Number(e.target.value)
+    this.domain.c_0 = value;
   },
   unassignAllParticles: function (type, update=true) {
     let self = this;
@@ -432,7 +500,23 @@ let DomainEditor = PageView.extend({
     }
     this.updatePlot();
   },
-  updateValid: function () {}
+  updateValid: function () {},
+  validateName(input, rename = false) {
+    var error = ""
+    if(input.endsWith('/')) {
+      error = 'forward'
+    }
+    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    if(rename) {
+      invalidChars += "/"
+    }
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both"
+      }
+    }
+    return error
+  }
 });
 
 initPage(DomainEditor);
