@@ -174,8 +174,6 @@ module.exports = {
   domainEditor: {
     pressure: "Atmospheric or background pressure.",
 
-    size: "",
-
-    speed: "Approximate or artificial speed or sound"
+    speed: "Approximate or artificial speed of sound"
   }
 }

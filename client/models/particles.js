@@ -23,6 +23,7 @@ var Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: Particle,
+  indexes: ['particle_id'],
   addParticle: function (point, vol, mass, type, nu, fixed) {
     let id = this.parent.getDefaultID();
     let type_index = this.parent.getTypeIndex(type);

@@ -635,3 +635,7 @@ span.checkbox {
 .component-valid {
   display: none;
 }
+
+.tab {
+  padding-right: 1rem;
+}

@@ -17,14 +17,13 @@
         "x_lim": [],
         "y_lim": [],
         "z_lim": [],
-        "type_names": ["Un-Assigned"],
         "boundary_condition": {
         	"reflect_x": true,
         	"reflect_y": true,
         	"reflect_z": true},
-        "particles": [],
-        "def_particle_id":1
-	},
+        "types": [],
+        "particles": []
+    },
 	"species": [],
     "initialConditions": [],
 	"parameters": [],
