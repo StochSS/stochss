@@ -26,14 +26,13 @@ module.exports = Collection.extend({
   indexes: ['particle_id'],
   addParticle: function (point, vol, mass, type, nu, fixed) {
     let id = this.parent.getDefaultID();
-    let type_index = this.parent.getTypeIndex(type);
     var particle = new Particle({
         fixed: fixed,
         mass: mass,
         nu: nu,
         particle_id: id,
         point: point,
-        type: type_index,
+        type: type,
         volume: vol
     });
     this.add(particle);

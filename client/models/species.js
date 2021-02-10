@@ -27,7 +27,6 @@ module.exports = Collection.extend({
   addSpecie: function (types) {
     var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
-    let type_indicies = this.parent.domain.getTypeIndicies(types)
     var specie = this.add({
       compID: id,
       name: name,
@@ -38,7 +37,7 @@ module.exports = Collection.extend({
       isSwitchTol: true,
       annotation: "",
       diffusionCoeff: 0.0,
-      types: type_indicies
+      types: types
     });
     this.parent.updateValid()
   },

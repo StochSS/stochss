@@ -68,13 +68,6 @@ module.exports = State.extend({
     this.def_type_id += 1;
     return id;
   },
-  getTypeIndex: function (type) {
-    let index = this.type_names.indexOf(type)
-    return index;
-  },
-  getTypeIndicies: function (types) {
-    let indicies = types.map(this.getTypeIndex)
-  },
   validate: function () {
     return true;
   }

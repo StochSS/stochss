@@ -32,7 +32,6 @@ Reactions = Collection.extend({
     var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var massaction = reactionType === 'custom-massaction';
-    let type_indicies = this.parent.domain.getTypeIndicies(types)
     var reaction = new Reaction({
       compID: id,
       name: name,
@@ -40,7 +39,7 @@ Reactions = Collection.extend({
       massaction: massaction,
       propensity: '',
       annotation: '',
-      types: type_indicies,
+      types: types,
       reactants: stoichArgs.reactants,
       products: stoichArgs.products,
     });
