@@ -88,6 +88,7 @@ module.exports = View.extend({
     if(this.model.fixed === oldType.fixed) {
       this.model.fixed = newType.fixed;
     }
+    this.renderProperties();
     this.model.type = id;
     this.model.typeChanged = true;
   },
