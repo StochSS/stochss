@@ -130,7 +130,8 @@ let templates = {
                   </div>
                 </div>`
         },
-        upload : (modalID, title, accept) => {
+        upload : (modalID, title, accept, withName=true) => {
+            let displayNameField = withName ? "" : " style='display: none'"
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
                   <div class="modal-dialog" role="document">
@@ -148,7 +149,7 @@ let templates = {
                           <li class="invalid-feedback" id="fileSpecCharError">Names can only include the following characters: 
                                                                                   (0-9), (a-z), (A-Z) and (., -, _, (, or ))</li>
                         </div>
-                        <div class="verticle-space">
+                        <div class="verticle-space"${displayNameField}>
                           <span class="inline" for="fileNameInput">New file name (optional): </span>
                           <input type="text" id="fileNameInput" name="fileNameInput" size="30">
                           <li class="invalid-feedback warning" id="fileNameUsageMessage">Names that contain errors will not be used to rename the file.</li>
@@ -328,10 +329,9 @@ module.exports = {
           accept = 'accept=".xml, .sbml"'
         }else if(type === "file" && isSafariV14Plus){
           // only used if using Safari v14+ and only needed to fix upload issue
-          accept = 'accept=".json, .mdl, .xml, .sbml, .ipynb, .zip, .mesh, .md, .csv, .p, .omex, audio/*, video/*, image/*"'
+          accept = 'accept=".json, .mdl, .xml, .sbml, .ipynb, .zip, .md, .csv, .p, .omex, .domn, audio/*, video/*, image/*"'
         }
         
-
         return templates.upload(modalID, title, accept)
     },
     duplicateWorkflowHtml : (wkflFile, body) => {

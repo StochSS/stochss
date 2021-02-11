@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import tempfile
 import traceback
 
 import plotly
@@ -198,6 +199,24 @@ class StochSSSpatialModel(StochSSBase):
             layout["yaxis"] = {"range":domain['y_lim']}
         return json.dumps({"data":trace_list, "layout":layout, "config":{"responsive":True}},
                           cls=plotly.utils.PlotlyJSONEncoder)
+
+
+    @classmethod
+    def get_particles_from_remote(cls, mesh):
+        '''
+        Get a list of stochss particles from a mesh
+
+        Attributes
+        ----------
+        mesh : str
+            Mesh containing particle data
+        '''
+        file = tempfile.NamedTemporaryFile()
+        with open(file.name, "w") as mesh_file:
+            mesh_file.write(mesh)
+        s_domain = Mesh.read_xml_mesh(filename=file.name)
+        particles = cls.__build_stochss_domain_particles(s_domain=s_domain)
+        return {"particles":particles}
 
 
     def load(self):

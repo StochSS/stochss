@@ -238,3 +238,28 @@ class ModelExistsAPIHandler(APIHandler):
         log.debug("Response: %s", resp)
         self.write(resp)
         self.finish()
+
+
+class ImportMeshAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for importing mesh particles from remote file.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Imports particles from a mesh file to add to a domain.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        data = self.request.files['datafile'][0]['body'].decode()
+        try:
+            resp = StochSSSpatialModel.get_particles_from_remote(mesh=data)
+            log.debug("Number of Particles: %s", len(resp['particles']))
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()

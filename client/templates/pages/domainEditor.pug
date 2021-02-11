@@ -139,11 +139,27 @@ section.page
 
           a.nav-link.tab(data-toggle="tab" href="#edit-particle") Edit Selected
 
+        li.nav-item
+
+          a.nav-link.tab(data-toggle="tab" href="#import-particles") Import Mesh
+
       div.tab-content
 
         div.tab-pane.active(id="new-particle" data-hook="new-particle")
 
         div.tab-pane(id="edit-particle" data-hook="edit-particle")
+
+        div.tab-pane(id="import-particles")
+
+          div.my-3
+
+            span.inline.mr-2(for="meshfile") Please specify a mesh to import: 
+
+            input(id="meshfile" type="file" name="meshfile" size="30" accept=".xml" required)
+
+          div
+
+            button.btn.btn-outline-primary.box-shadow(data-hook="import-particles-btn" disabled) Import Mesh
 
   div
 

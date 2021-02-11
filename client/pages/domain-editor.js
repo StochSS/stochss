@@ -51,16 +51,38 @@ let DomainEditor = PageView.extend({
     'click [data-hook=set-type-defaults]' : 'handleSetDefaults',
     'click [data-hook=save-to-model]' : 'handleSaveToModel',
     'click [data-hook=save-to-file]' : 'handleSaveToFile',
+    'click [data-hook=import-particles-btn]' : 'handleImportMesh',
     'change [data-hook=density]' : 'setDensity',
     'change [data-hook=gravity]' : 'setGravity',
     'change [data-hook=pressure]' : 'setPressure',
     'change [data-hook=speed]' : 'setSpeed',
     'change [data-name=limitation]' : 'setLimitation',
-    'change [data-target=reflect]' : 'setBoundaryCondition'
+    'change [data-target=reflect]' : 'setBoundaryCondition',
+    'change #meshfile' : 'updateImportBtn'
   },
   handleAddDomainType: function () {
     this.selectedType = "new";
     this.renderEditTypeDefaults();
+  },
+  handleImportMesh: function (e) {
+    let self = this;
+    let file = $("#meshfile").prop("files")[0];
+    let formData = new FormData();
+    formData.append("datafile", file);
+    let endpoint = path.join(app.getApiPath(), 'spatial-model/import-mesh');
+    let req = new XMLHttpRequest();
+    req.open("POST", endpoint);
+    req.onload = function (e) {
+      var resp = JSON.parse(req.response);
+      if(req.status < 400) {
+        resp.particles.forEach(function (particle) {
+          self.addParticle(particle, true)
+        });
+        self.renderDomainTypes();
+        self.updatePlot();
+      }
+    }
+    req.send(formData)
   },
   handleSetDefaults: function (e) {
     let mass = Number($(this.queryByHook("td-mass")).find('input')[0].value);
@@ -79,7 +101,6 @@ let DomainEditor = PageView.extend({
     }
     this.renderDomainTypes();
     $(this.queryByHook("edit-defaults")).css("display", "none");
-    console.log(this.domain.types)
   },
   handleSaveToModel: function () {
     this.model.domain = this.domain;
@@ -115,6 +136,9 @@ let DomainEditor = PageView.extend({
       }
     });
   },
+  updateImportBtn: function (e) {
+    $(this.queryByHook("import-particles-btn")).prop("disabled", !Boolean(e.target.files.length))
+  },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.domainEditor;
@@ -136,20 +160,21 @@ let DomainEditor = PageView.extend({
       self.renderSubviews();
     });
   },
-  addPraticle: function (newPart) {
-    this.renderNewParticle();
+  addParticle: function (newPart, fromImport=false) {
     this.domain.particles.addParticle(newPart.point, newPart.volume,
                                       newPart.mass, newPart.type,
                                       newPart.nu, newPart.fixed);
-    this.renderDomainTypes();
     let numPart = this.domain.particles.models.length
     let particle = this.domain.particles.models[numPart-1]
     this.plot.data[particle.type].ids.push(particle.particle_id);
     this.plot.data[particle.type].x.push(particle.point[0]);
     this.plot.data[particle.type].y.push(particle.point[1]);
     this.plot.data[particle.type].z.push(particle.point[2]);
-    this.updatePlot()
-    console.log(particle)
+    if(!fromImport) {
+      this.renderNewParticle();
+      this.renderDomainTypes();
+      this.updatePlot();
+    }
   },
   addType: function (name) {
     this.renderEditParticle();
@@ -160,7 +185,6 @@ let DomainEditor = PageView.extend({
     trace['type'] = this.plot.data[0].type;
     this.plot.data.push(trace)
     this.updatePlot()
-    console.log(this.domain.types)
   },
   buildModel: function (modelData, modelPath) {
     var model = new Model(modelData);
@@ -219,7 +243,6 @@ let DomainEditor = PageView.extend({
     this.renderNewParticle();
     this.plot.data.splice(typeID, 1);
     this.updatePlot();
-    console.log(this.domain.types)
   },
   deleteTypeAndParticles: function (typeID) {
     if(this.actPart.part && this.actPart.part.type >= typeID) {
@@ -236,7 +259,6 @@ let DomainEditor = PageView.extend({
     this.renderNewParticle();
     this.plot.data.splice(typeID, 1);
     this.updatePlot();
-    console.log(this.domain.types)
   },
   displayDomain: function () {
     let self = this;
@@ -261,7 +283,6 @@ let DomainEditor = PageView.extend({
     this.renderNewParticle();
     this.plot.data[index].name = newName;
     this.updatePlot();
-    console.log(this.domain.types)
   },
   renderDomainLimitations: function () {
     let xLimMinView = new InputView({parent: this, required: true,
@@ -477,7 +498,6 @@ let DomainEditor = PageView.extend({
     if(update) {
       this.updatePlot();
     }
-    console.log(this.domain.types)
   },
   updatePlot: function () {
     var el = this.queryByHook("domain-plot");

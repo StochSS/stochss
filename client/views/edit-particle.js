@@ -40,7 +40,7 @@ module.exports = View.extend({
     'click [data-hook=remove-particle]' : 'handleRemoveParticle'
   },
   handleAddParticle: function (e) {
-    this.parent.addPraticle(this.model);
+    this.parent.addParticle(this.model);
   },
   handleSaveParticle: function (e) {
     this.parent.updateParticle();
