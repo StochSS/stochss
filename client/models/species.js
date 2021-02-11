@@ -36,7 +36,7 @@ module.exports = Collection.extend({
       switchMin: 100,
       isSwitchTol: true,
       annotation: "",
-      diffusionCoeff: 0.0,
+      diffusionConst: 0.0,
       types: types
     });
     this.parent.updateValid()

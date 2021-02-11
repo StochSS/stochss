@@ -86,7 +86,7 @@ module.exports = View.extend({
     this.template = this.parent.model.is_spatial ? spatialSpecieTemplate : nonspatialSpecieTemplate;
     View.prototype.render.apply(this, arguments);
     var defaultMode = this.collection.parent.defaultMode;
-    if(defaultMode === ""){
+    if(defaultMode === "" && !this.collection.parent.is_spatial){
       this.getInitialDefaultSpeciesMode();
     }else{
       var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'}
@@ -172,6 +172,9 @@ module.exports = View.extend({
     });
   },
   renderSpeciesAdvancedView: function () {
+    if(this.collection.parent.is_spatial) {
+      return
+    }
     if(this.speciesAdvancedView) {
       this.speciesAdvancedView.remove()
     }
@@ -180,7 +183,7 @@ module.exports = View.extend({
   handleAddSpeciesClick: function (e) {
     var self = this;
     var defaultMode = this.collection.parent.defaultMode;
-    if(defaultMode === ""){
+    if(defaultMode === "" && !this.collection.parent.is_spatial){
       this.getInitialDefaultSpeciesMode();
     }else{
       this.addSpecies();

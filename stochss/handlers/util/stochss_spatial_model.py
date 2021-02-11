@@ -234,6 +234,8 @@ class StochSSSpatialModel(StochSSBase):
         for species in self.model['species']:
             if "types" not in species.keys():
                 species['types'] = list(range(1, len(self.model['domain']['types'])))
+            if "diffusionConst" not in species.keys():
+                species['diffusionConst'] = species['diffusionCoeff']
         for reaction in self.model['reactions']:
             if "types" not in reaction.keys():
                 reaction['types'] = list(range(1, len(self.model['domain']['types'])))

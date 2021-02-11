@@ -208,7 +208,7 @@ class StochSSSBMLModel(StochSSBase):
                          "switchMin": 100,
                          "isSwitchTol": True,
                          "annotation": "",
-                         "diffusionCoeff":0,
+                         "diffusionConst":0,
                          "subdomains": [
                              "subdomain 1: ",
                              "subdomain 2: "

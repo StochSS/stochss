@@ -30,7 +30,7 @@ module.exports = State.extend({
     switchMin: 'any',
     isSwitchTol: 'boolean',
     annotation: 'string',
-    diffusionCoeff: 'number',
+    diffusionConst: 'number',
     types: 'object'
   },
   session: {

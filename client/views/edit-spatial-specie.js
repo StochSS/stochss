@@ -21,7 +21,7 @@ var _ = require('underscore');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
-var SubdomainsView = require('./subdomain');
+var TypesView = require('./component-types');
 //templates
 var template = require('../templates/includes/editSpatialSpecie.pug');
 
@@ -40,11 +40,11 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.baseModel = this.model.collection.parent;
-    this.baseModel.on('mesh-update', this.updateDefaultSubdomains, this);
+    this.modelType = "species";
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderSubdomains();
+    this.renderTypes();
   },
   update: function () {
   },
@@ -54,13 +54,23 @@ module.exports = View.extend({
     this.remove();
     this.collection.removeSpecie(this.model);
   },
-  updateDefaultSubdomains: function () {
-    this.model.subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
-    this.renderSubdomains();
+  renderTypes: function () {
+    if(this.typesView) {
+      this.typesView.remove();
+    }
+    this.typesView = this.renderCollection(
+      this.baseModel.domain.types,
+      TypesView,
+      this.queryByHook("species-types"),
+      {"filter": function (model) {
+        return model.typeID != 0;
+      }}
+    );
   },
   renderSubdomains: function () {
-    if(this.subdomainsView)
+    if(this.subdomainsView) {
       this.subdomainsView.remove();
+    }
     var subdomains = this.baseModel.meshSettings.uniqueSubdomains;
     this.subdomainsView = this.renderCollection(
       subdomains,
@@ -103,9 +113,9 @@ module.exports = View.extend({
           name: 'diffusion coeff',
           label: '',
           tests: tests.valueTests,
-          modelKey: 'diffusionCoeff',
+          modelKey: 'diffusionConst',
           valueType: 'number',
-          value: this.model.diffusionCoeff,
+          value: this.model.diffusionConst,
         });
       },
     },
