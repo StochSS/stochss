@@ -1,5 +1,5 @@
-div.col-md-4(class="reaction-subdomain")
+div.col-md-4
   
-  label(for=this.model.name)=this.model.name + ": "
+  span.inline.mr-2(for=this.model.name)=this.model.name + ": "
   
-  input(type="checkbox", id=this.model.name, data-hook="subdomain")
+  input(type="checkbox" data-target=this.model.typeID data-hook="reaction-types")

@@ -25,7 +25,8 @@ var reacTypeTemplate = require('../templates/includes/reactionTypeTemplate.pug')
 
 module.exports = View.extend({
   events: {
-    'change [data-hook=species-types]' : 'updateTypes'
+    'change [data-hook=species-types]' : 'updateTypes',
+    'change [data-hook=reaction-types]' : 'updateTypes'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -33,7 +34,8 @@ module.exports = View.extend({
   render: function () {
     this.template = this.parent.modelType === "species" ? specTypeTemplate : reacTypeTemplate;
     View.prototype.render.apply(this, arguments);
-    $(this.queryByHook("species-types")).prop("checked", this.parent.model.types.includes(this.model.typeID))
+    let hook = this.parent.modelType === "species" ? "species-types" : "reaction-types"
+    $(this.queryByHook(hook)).prop("checked", this.parent.model.types.includes(this.model.typeID))
   },
   updateTypes: function (e) {
     let typeID = Number(e.target.dataset.target);

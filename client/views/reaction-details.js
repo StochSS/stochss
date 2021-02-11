@@ -27,7 +27,7 @@ var StoichSpecie = require('../models/stoich-specie');
 var View = require('ampersand-view');
 var SelectView = require('ampersand-select-view');
 var InputView = require('./input');
-// var ReactionSubdomainsView = require('./reaction-subdomains');
+var ReactionTypesView = require('./reaction-types');
 var ReactantProductView = require('./reactant-product');
 //templates
 var template = require('../templates/includes/reactionDetails.pug');
@@ -73,10 +73,6 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     var self = this;
-    // var subdomainsView = new ReactionSubdomainsView({
-    //   parent: this,
-    //   isReaction: true,
-    // })
     var reactantsView = new ReactantProductView({
       collection: this.model.reactants,
       species: this.model.collection.parent.species,
@@ -131,12 +127,16 @@ module.exports = View.extend({
       $(this.queryByHook('rate-parameter-label')).text('Rate Parameter:')
       $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.rate);
     }
-    // this.registerRenderSubview(subdomainsView, 'subdomains-editor');
+    if(this.model.collection.parent.is_spatial) {
+      var typesView = new ReactionTypesView({
+        model: this.model,
+        parent: this
+      });
+      this.registerRenderSubview(typesView, 'domain-types-editor');
+    }
     this.registerRenderSubview(reactantsView, 'reactants-editor');
     this.registerRenderSubview(productsView, 'products-editor');
     this.totalRatio = this.getTotalReactantRatio();
-    if(this.parent.collection.parent.is_spatial)
-      $(this.queryByHook('subdomains-editor')).collapse();
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
@@ -228,15 +228,6 @@ module.exports = View.extend({
   },
   getTotalReactantRatio: function () {
     return this.model.reactants.length;
-  },
-  updateSubdomains: function (element) {
-    var subdomain = element.value.model;
-    var checked = element.value.checked;
-
-    if(checked)
-      this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
-    else
-      this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
   },
   toggleCustomReactionError: function () {
     let errorMsg = $(this.queryByHook("custom-reaction-error"))

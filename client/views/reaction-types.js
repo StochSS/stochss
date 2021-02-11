@@ -18,38 +18,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //views
 var View = require('ampersand-view');
-var SubdomainsView = require('./subdomain');
+var TypesView = require('./component-types');
 //templates
-var template = require('../templates/includes/reactionSubdomains.pug');
+var template = require('../templates/includes/reactionTypes.pug');
 
 module.exports = View.extend({
   template: template,
   initialize: function (args) {
     View.prototype.initialize.apply(this, arguments);
-    this.isReaction = args.isReaction;
+    this.modelType = "reaction";
     this.baseModel = this.parent.parent.collection.parent;
-    this.baseModel.on('mesh-update', this.updateDefaultSubdomains, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderSubdomains();
+    this.renderTypes();
   },
-  updateDefaultSubdomains: function () {
-    this.parent.model.subdomains = this.baseModel.meshSettings.uniqueSubdomains.map(function (model) {return model.name; });
-    this.renderSubdomains();
-  },
-  renderSubdomains: function () {
-    this.baseModel = this.parent.model.collection.parent;
-    if(this.subdomainsView)
-      this.subdomainsView.remove();
-    var subdomains = this.baseModel.meshSettings.uniqueSubdomains;
-    this.subdomainsView = this.renderCollection(
-      subdomains,
-      SubdomainsView,
-      this.queryByHook('reaction-subdomains')
+  renderTypes: function () {
+    if(this.typesView) {
+      this.typesView.remove();
+    }
+    this.typesView = this.renderCollection(
+      this.baseModel.domain.types,
+      TypesView,
+      this.queryByHook("reaction-types-container"),
+      {"filter": function (model) {
+        return model.typeID != 0;
+      }}
     );
-  },
-  updateSubdomains: function (element) {
-    this.parent.updateSubdomains(element);
-  },
+  }
 });

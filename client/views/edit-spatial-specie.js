@@ -67,27 +67,6 @@ module.exports = View.extend({
       }}
     );
   },
-  renderSubdomains: function () {
-    if(this.subdomainsView) {
-      this.subdomainsView.remove();
-    }
-    var subdomains = this.baseModel.meshSettings.uniqueSubdomains;
-    this.subdomainsView = this.renderCollection(
-      subdomains,
-      SubdomainsView,
-      this.queryByHook('subdomains')
-    );
-  },
-  updateSubdomains: function (element) {
-    if(element.name == 'subdomain') {
-      var subdomain = element.value.model;
-      var checked = element.value.checked;
-      if(checked)
-        this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
-      else
-        this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
-    }
-  },
   subviews: {
     inputName: {
       hook: 'input-name-container',
