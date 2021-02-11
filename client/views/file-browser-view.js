@@ -797,8 +797,9 @@ module.exports = View.extend({
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = !o || (o && o.type === "root") ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
-          let message = modelName !== input.value.trim() + ".mdl"? 
+          let ext = isSpatial ? ".smdl" : ".mdl";
+          let modelName = !o || (o && o.type === "root") ? input.value.trim().split("/").pop() + ext : input.value.trim() + ext;
+          let message = modelName !== input.value.trim() + ext? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
           let modelPath = path.join(parentPath, modelName)
           let queryString = "?path="+modelPath+"&message="+message;
@@ -979,11 +980,11 @@ module.exports = View.extend({
               "submenu" : {
                 "spatial" : {
                   "label" : "Spatial",
-                  "_disabled" : true,
+                  "_disabled" : false,
                   "separator_before" : false,
                   "separator_after" : false,
                   "action" : function (data) {
-                    console.log("Spatial Models Coming Soon!")
+                    self.newModelOrDirectory(o, true, true);
                   }
                 },
                 "nonspatial" : { 
@@ -1122,7 +1123,7 @@ module.exports = View.extend({
       let commonModel = {
         "Edit" : {
           "label" : "Edit",
-          "_disabled" : (nodeType === "spatial") ? true : false,
+          "_disabled" : false,
           "_class" : "font-weight-bolder",
           "separator_before" : false,
           "separator_after" : true,
@@ -1151,7 +1152,7 @@ module.exports = View.extend({
           "submenu" : {
             "Convert to Spatial" : {
               "label" : "To Spatial Model",
-              "_disabled" : true,
+              "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {

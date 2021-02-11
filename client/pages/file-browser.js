@@ -734,8 +734,9 @@ let FileBrowser = PageView.extend({
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
-          let message = modelName !== input.value.trim() + ".mdl"? 
+          let ext = isSpatial ? ".smdl" : ".mdl"
+          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + ext : input.value.trim() + ext;
+          let message = modelName !== input.value.trim() + ext? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>" : ""
           let modelPath = path.join(parentPath, modelName)
           let queryString = "?path="+modelPath+"&message="+message;
@@ -915,11 +916,11 @@ let FileBrowser = PageView.extend({
           "submenu" : {
             "spatial" : {
               "label" : "Spatial",
-              "_disabled" : true,
+              "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
-                console.log("Spatial Models Coming Soon!")
+                self.newModelOrDirectory(o, true, true);
               }
             },
             "nonspatial" : { 
@@ -973,7 +974,7 @@ let FileBrowser = PageView.extend({
       let model = {
         "Edit" : {
           "label" : "Edit",
-          "_disabled" : (nodeType === "spatial") ? true : false,
+          "_disabled" : false,
           "_class" : "font-weight-bolder",
           "separator_before" : false,
           "separator_after" : true,
@@ -1000,7 +1001,7 @@ let FileBrowser = PageView.extend({
           "separator_after" : false,
           "submenu" : {
             "Convert to Model" : {
-              "label" : "Convert to Non Spatial",
+              "label" : "Convert to Model",
               "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
@@ -1029,7 +1030,7 @@ let FileBrowser = PageView.extend({
           "submenu" : {
             "Convert to Spatial" : {
               "label" : "To Spatial Model",
-              "_disabled" : true,
+              "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
