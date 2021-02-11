@@ -160,7 +160,7 @@ class LoadDomainAPIHandler(APIHandler):
         log.debug("The domain is new: %s", new)
         try:
             model = StochSSSpatialModel(path=path)
-            fig = json.loads(model.get_domain_plot(path=d_path))
+            fig = json.loads(model.get_domain_plot(path=d_path, new=new))
             resp = {"fig":fig}
             log.debug("Response: %s", resp)
             self.write(resp)

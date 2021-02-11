@@ -167,7 +167,7 @@ module.exports = View.extend({
         'workflow-group' : {"icon": "jstree-icon jstree-folder"},
         'workflow' : {"icon": "jstree-icon jstree-file"},
         'notebook' : {"icon": "jstree-icon jstree-file"},
-        'mesh' : {"icon": "jstree-icon jstree-file"},
+        'domain' : {"icon": "jstree-icon jstree-file"},
         'sbml-model' : {"icon": "jstree-icon jstree-file"},
         'other' : {"icon": "jstree-icon jstree-file"},
       },  
@@ -918,7 +918,7 @@ module.exports = View.extend({
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       let nodeType = o.original.type
-      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "workflow-group"]
+      let zipTypes = ["workflow", "folder", "other", "project", "workflow-group"]
       let asZip = zipTypes.includes(nodeType)
       // refresh context menu option
       let refresh = {

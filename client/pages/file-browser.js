@@ -131,7 +131,7 @@ let FileBrowser = PageView.extend({
         'workflow-group' : {"icon": "jstree-icon jstree-file"},
         'workflow' : {"icon": "jstree-icon jstree-file"},
         'notebook' : {"icon": "jstree-icon jstree-file"},
-        'mesh' : {"icon": "jstree-icon jstree-file"},
+        'domain' : {"icon": "jstree-icon jstree-file"},
         'sbml-model' : {"icon": "jstree-icon jstree-file"},
         'other' : {"icon": "jstree-icon jstree-file"},
       },  
@@ -828,7 +828,7 @@ let FileBrowser = PageView.extend({
       optionsButton.text("Actions for " + o.original.text)
       self.nodeForContextMenu = o;
       let nodeType = o.original.type
-      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "workflow-group"]
+      let zipTypes = ["workflow", "folder", "other", "project", "workflow-group"]
       let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {

@@ -546,15 +546,13 @@ Navigating to the domain editor page
 ------------------------------
 - load the models domain
     queryStr = "?path=<<model path>>"
-      ex. ?path=cylinder_demo3d.smdl
+      ex. ?path=Examples/3D_Cylinder/3D_cylinder.smdl
 - load a domain from a file ie. .domn or .xml files
     queryStr = "?path=<<model path>>&domainPath=<<domain file path>>"
-      ex. ?path=cylinder_demo3d.smdl&domainPath=3D_cylinder.domn    or
-          ?path=cylinder_demo3d.smdl&domainPath=cylinder.xml
+      ex. ?path=Examples/3D_Cylinder/3D_cylinder.smdl&domainPath=Examples/3D_Cylinder/3D_cylinder.domn
 - load a new domain (domainPath will be ignored if passed)
     queryStr = "?path=<<model path>>&new"
-      ex. ?path=cylinder_demo3d.smdl&domainPath=3D_cylinder.domn&new    or
-          ?path=cylinder_demo3d.smdl&new
+      ex. ?path=Examples/3D_Cylinder/3D_cylinder.smdl&new
 
 Loading the domain editor page
 ------------------------------
