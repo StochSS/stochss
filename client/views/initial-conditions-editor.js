@@ -29,7 +29,7 @@ module.exports = View.extend({
     'click [data-hook=scatter]' : 'addInitialCondition',
     'click [data-hook=place]' : 'addInitialCondition',
     'click [data-hook=distribute-uniformly]' : 'addInitialCondition',
-    'click [data-hook=collapse]' : 'cangeCollapseButtonText',
+    'click [data-hook=initial-condition-button]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -58,5 +58,5 @@ module.exports = View.extend({
       let text = collapseBtn.text();
       text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
     }
-  },
+  }
 });
