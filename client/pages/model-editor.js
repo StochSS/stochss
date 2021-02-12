@@ -86,13 +86,6 @@ let ModelEditor = PageView.extend({
           self.queryByHook("model-name-header").style.display = "none"
         }
         self.renderSubviews();
-        if(!self.model.is_spatial){
-          self.queryByHook('domain-editor-container').style.display = "none";
-          self.queryByHook('initial-conditions-editor-container').style.display = "none";
-        }
-        if(!self.model.functionDefinitions.length) {
-          self.queryByHook('sbml-component-container').style.display = "none";
-        }
         self.model.updateValid()
       }
     });
@@ -189,15 +182,6 @@ let ModelEditor = PageView.extend({
     });
   },
   renderSubviews: function () {
-    // var domainEditor = new DomainEditorView({
-    //   model: this.model.domain
-    // });
-    var initialConditionsEditor = new InitialConditionsEditorView({
-      collection: this.model.initialConditions
-    });
-    var sbmlComponentView = new SBMLComponentView({
-      functionDefinitions: this.model.functionDefinitions,
-    });
     this.modelSettings = new ModelSettingsView({
       parent: this,
       model: this.model.modelSettings,
@@ -205,17 +189,31 @@ let ModelEditor = PageView.extend({
     this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
-    // this.registerRenderSubview(domainEditor, 'domain-editor-container');
     this.renderSpeciesView();
-    this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.renderParametersView();
     this.renderReactionsView();
-    this.renderEventsView();
-    this.renderRulesView();
     this.renderSystemVolumeView();
-    this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
     this.registerRenderSubview(this.modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
+    if(this.model.is_spatial) {
+      // var domainEditor = new DomainEditorView({
+      //   model: this.model.domain
+      // });
+      var initialConditionsEditor = new InitialConditionsEditorView({
+        collection: this.model.initialConditions
+      });
+      // this.registerRenderSubview(domainEditor, 'domain-editor-container');
+      this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
+    }else {
+      this.renderEventsView();
+      this.renderRulesView();
+      if(this.model.functionDefinitions.length) {
+        var sbmlComponentView = new SBMLComponentView({
+          functionDefinitions: this.model.functionDefinitions,
+        });
+        this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
+      }
+    }
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
