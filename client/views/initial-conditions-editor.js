@@ -48,7 +48,16 @@ module.exports = View.extend({
   },
   addInitialCondition: function (e) {
     var initialConditionType = e.target.textContent;
-    this.collection.addInitialCondition(initialConditionType);
+    if(this.collection.parent.domain.types.length > 1) {
+      var types = this.collection.parent.domain.types.map(function (type) {
+        return type.typeID;
+      });
+      types.shift();
+    }else {
+      var types = [];
+    }
+    console.log(initialConditionType, types)
+    this.collection.addInitialCondition(initialConditionType, types);
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

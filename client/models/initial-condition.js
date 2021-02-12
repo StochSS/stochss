@@ -24,7 +24,7 @@ module.exports = State.extend({
   props: {
     icType: 'string',
     count: 'number',
-    type: 'number',
+    types: 'object',
     x: 'number',
     y: 'number',
     z: 'number',

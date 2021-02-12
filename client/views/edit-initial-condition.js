@@ -16,11 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+var tests = require('./tests');
 //views
 var View = require('ampersand-view');
+var InputView = require('./input');
 var SelectView = require('ampersand-select-view');
-var ScatterDetails = require('./edit-scatter-details');
-var PlaceDetails = require('./edit-place-details');
+var TypesView = require('./component-types');
 //templates
 var template = require('../templates/includes/editInitialCondition.pug');
 
@@ -33,6 +34,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.modelType = "initial-condition";
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -44,7 +46,7 @@ module.exports = View.extend({
       required: true,
       idAttributes: 'cid',
       options: options,
-      value: self.model.type,
+      value: self.model.icType,
     });
     var speciesSelectView = new SelectView({
       label: '',
@@ -58,9 +60,9 @@ module.exports = View.extend({
       // Else fetch the right Parameter from Parameters based on existing rate
       value: this.model.specie.name ? this.getSpecieFromSpecies(this.model.specie.name) : this.model.collection.parent.species.at(0),
     });
-    this.renderDetailsView();
     this.registerRenderSubview(typeSelectView, 'initial-condition-type');
     this.registerRenderSubview(speciesSelectView, 'initial-condition-species');
+    this.renderDetailsView();
   },
   update: function () {
   },
@@ -71,15 +73,53 @@ module.exports = View.extend({
     this.renderSubview(view, this.queryByHook(hook));
   },
   renderDetailsView: function () {
-    if(this.detailsView) {
-      this.detailsView.remove();
+    if(this.model.icType === "Place") {
+      this.renderLocation();
+    }else {
+      this.renderTypes();
     }
-    var InitialConditionDetails = this.model.type === 'Place' ? PlaceDetails : ScatterDetails
-    this.detailsView = new InitialConditionDetails({
-      collection: this.collection,
-      model: this.model,
-    });
-    this.registerRenderSubview(this.detailsView, 'initial-condition-details');
+  },
+  renderLocation: function () {
+    if(this.xCoord) {
+      this.xCoord.remove();
+    }
+    if(this.yCoord) {
+      this.yCoord.remove();
+    }
+    if(this.zCoord) {
+      this.zCoord.remove();
+    }
+    this.xCoord = new InputView({parent: this, required: true,
+                                name: 'X', valueType: 'number',
+                                modelKey: "x", label: 'x: ',
+                                tests: tests.valueTests,
+                                value: this.model.x});
+    this.registerRenderSubview(this.xCoord, "x-container");
+    this.yCoord = new InputView({parent: this, required: true,
+                                name: 'Y', valueType: 'number',
+                                modelKey: "y", label: 'y: ',
+                                tests: tests.valueTests,
+                                value: this.model.y});
+    this.registerRenderSubview(this.yCoord, "y-container");
+    this.zCoord = new InputView({parent: this, required: true,
+                                name: 'Z', valueType: 'number',
+                                modelKey: "z", label: 'z: ',
+                                tests: tests.valueTests,
+                                value: this.model.z});
+    this.registerRenderSubview(this.zCoord, "z-container");
+  },
+  renderTypes: function () {
+    if(this.typesView) {
+      this.typesView.remove();
+    }
+    this.typesView = this.renderCollection(
+      this.model.collection.parent.domain.types,
+      TypesView,
+      this.queryByHook("initial-condition-types"),
+      {"filter": function (model) {
+        return model.typeID != 0;
+      }}
+    );
   },
   getSpecieFromSpecies: function (name) {
     var species = this.model.collection.parent.species.filter(function (specie) {
@@ -91,9 +131,9 @@ module.exports = View.extend({
     this.collection.removeInitialCondition(this.model);
   },
   selectInitialConditionType: function (e) {
-    var currentType = this.model.type;
+    var currentType = this.model.icType;
     var newType = e.target.selectedOptions.item(0).text;
-    this.model.type = newType;
+    this.model.icType = newType;
     if(currentType === "Place" || newType === "Place"){
       this.renderDetailsView();
     }
@@ -103,4 +143,21 @@ module.exports = View.extend({
     var specie = this.getSpecieFromSpecies(name);
     this.model.specie = specie || this.model.specie;
   },
+  subviews: {
+    inputCount: {
+      hook: 'count-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'count',
+          label: '',
+          tests: tests.valueTests,
+          modelKey: 'count',
+          valueType: 'number',
+          value: this.model.count,
+        });
+      },
+    }
+  }
 });

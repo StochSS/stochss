@@ -23,10 +23,10 @@ var InitialCondition = require('./initial-condition');
 
 module.exports = Collection.extend({
   model: InitialCondition,
-  addInitialCondition: function (initialConditionType) {
+  addInitialCondition: function (initialConditionType, types) {
     var initialCondition = new InitialCondition({
       icType: initialConditionType,
-      type: 0,
+      types: types,
       count: 0,
       x: 0,
       y: 0,
