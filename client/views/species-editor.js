@@ -190,7 +190,7 @@ module.exports = View.extend({
     }
   },
   addSpecies: function () {
-    if(this.parent.model.domain.typs) {
+    if(this.parent.model.domain.types) {
       var types = this.parent.model.domain.types.map(function (type) {
         return type.typeID;
       });
