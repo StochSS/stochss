@@ -154,7 +154,7 @@ module.exports = View.extend({
   handleAddReactionClick: function (e) {
     var reactionType = e.delegateTarget.dataset.hook;
     var stoichArgs = this.getStoichArgsForReactionType(reactionType);
-    if(this.parent.model.domain.type_names) {
+    if(this.parent.model.domain.types) {
       var types = this.parent.model.domain.types.map(function (type) {
         return type.typeID;
       });
