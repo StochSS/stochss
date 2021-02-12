@@ -32,9 +32,10 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
   },
   render: function () {
-    this.template = this.parent.modelType === "species" ? specTypeTemplate : reacTypeTemplate;
+    this.template = this.parent.modelType !== "reaction" ? specTypeTemplate : reacTypeTemplate;
     View.prototype.render.apply(this, arguments);
-    let hook = this.parent.modelType === "species" ? "species-types" : "reaction-types"
+    let hooks = {"species":"species-types", "reaction":"reaction-types", "initial-condition":"species-types"}
+    let hook = hooks[this.parent.modelType];
     $(this.queryByHook(hook)).prop("checked", this.parent.model.types.includes(this.model.typeID))
   },
   updateTypes: function (e) {
