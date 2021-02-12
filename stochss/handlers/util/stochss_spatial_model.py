@@ -192,7 +192,7 @@ class StochSSSpatialModel(StochSSBase):
                 particles = domain['particles']
             trace = self.__get_trace_data(particles=particles, name=d_type['name'])
             trace_list.append(trace)
-        layout = {"scene":{"aspectmode":'data'}}
+        layout = {"scene":{"aspectmode":'data'}, "autosize":True}
         if len(domain['x_lim']) == 2:
             layout["xaxis"] = {"range":domain['x_lim']}
         if len(domain['y_lim']) == 2:

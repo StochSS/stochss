@@ -26,7 +26,7 @@ var tests = require('../views/tests');
 //views
 var PageView = require('../pages/base');
 var InputView = require('../views/input');
-// var DomainEditorView = require('../views/domain-editor');
+var DomainViewer = require('../views/domain-viewer');
 var SpeciesEditorView = require('../views/species-editor');
 var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
@@ -196,13 +196,10 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(this.modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
-      // var domainEditor = new DomainEditorView({
-      //   model: this.model.domain
-      // });
+      this.renderDomainViewer();
       var initialConditionsEditor = new InitialConditionsEditorView({
         collection: this.model.initialConditions
       });
-      // this.registerRenderSubview(domainEditor, 'domain-editor-container');
       this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     }else {
       this.renderEventsView();
@@ -227,6 +224,20 @@ let ModelEditor = PageView.extend({
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
+  },
+  renderDomainViewer: function(domainPath=null) {
+    if(this.domainViewer) {
+      this.domainViewer.remove()
+    }
+    if(domainPath) {
+      console.log("Coming Soon: Loading external domains")
+    }else{
+      this.domainViewer = new DomainViewer({
+        parent: this,
+        model: this.model.domain
+      });
+      this.registerRenderSubview(this.domainViewer, 'domain-viewer-container');
+    }
   },
   renderSpeciesView: function (mode="edit") {
     if(this.speciesEditor) {

@@ -1,0 +1,18 @@
+div
+
+  h5 Properties
+
+  table.table
+    tbody
+      tr
+        th(scope="row") Mass
+        td=this.model.mass
+      tr
+        th(scope="row") Volume
+        td=this.model.volume
+      tr
+        th(scope="row") Viscosity
+        td=this.model.nu
+      tr
+        th(scope="row") Fixed
+        td: input(type="checkbox" checked=this.model.fixed disabled)
