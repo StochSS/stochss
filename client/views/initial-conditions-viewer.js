@@ -19,50 +19,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var $ = require('jquery');
 //views
 var View = require('ampersand-view');
-var EditInitialCondition = require('./edit-initial-condition');
+var ViewInitialCondition = require('./view-initial-condition');
 //templates
-var template = require('../templates/includes/initialConditionsEditor.pug');
+var template = require('../templates/includes/initialConditionsViewer.pug');
 
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=scatter]' : 'addInitialCondition',
-    'click [data-hook=place]' : 'addInitialCondition',
-    'click [data-hook=distribute-uniformly]' : 'addInitialCondition',
     'click [data-hook=initial-condition-button]' : 'changeCollapseButtonText',
-    'click [data-hook=save-initial-conditions]' : 'switchToViewMode',
+    'click [data-hook=edit-species]' : 'switchToEditMode'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(
-      this.collection,
-      EditInitialCondition,
-      this.queryByHook('initial-conditions-collection')
-    );
-  },
-  update: function () {
-  },
-  updateValid: function () {
-  },
-  addInitialCondition: function (e) {
-    var initialConditionType = e.target.textContent;
-    if(this.collection.parent.domain.types.length > 1) {
-      var types = this.collection.parent.domain.types.map(function (type) {
-        return type.typeID;
+    this.renderCollection(this.collection, ViewInitialCondition, this.queryByHook('initial-conditions-collection'))
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
       });
-      types.shift();
-    }else {
-      var types = [];
-    }
-    console.log(initialConditionType, types)
-    this.collection.addInitialCondition(initialConditionType, types);
+    });
   },
-  switchToViewMode: function (e) {
-    this.parent.modelStateButtons.clickSaveHandler(e);
-    this.parent.renderInitialConditions(mode="view");
+  switchToEditMode: function (e) {
+    this.parent.renderInitialConditions();
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
@@ -72,5 +54,5 @@ module.exports = View.extend({
       let text = collapseBtn.text();
       text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
     }
-  }
+  },
 });

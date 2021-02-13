@@ -31,6 +31,7 @@ var DomainViewer = require('../views/domain-viewer');
 var SpeciesEditorView = require('../views/species-editor');
 var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
+var InitialConditionsViewer = require('../views/initial-conditions-viewer');
 var ParametersEditorView = require('../views/parameters-editor');
 var ParameterViewer = require('../views/parameters-viewer');
 var ReactionsEditorView = require('../views/reactions-editor');
@@ -205,10 +206,7 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
       this.renderDomainViewer();
-      var initialConditionsEditor = new InitialConditionsEditorView({
-        collection: this.model.initialConditions
-      });
-      this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
+      this.renderInitialConditions();
     }else {
       this.renderEventsView();
       this.renderRulesView();
@@ -270,6 +268,21 @@ let ModelEditor = PageView.extend({
     }
     this.registerRenderSubview(this.speciesEditor, 'species-editor-container');
   },
+  renderInitialConditions: function (mode="edit") {
+    if(this.initialConditionsEditor) {
+      this.initialConditionsEditor.remove();
+    }
+    if(mode === "edit") {
+      this.initialConditionsEditor = new InitialConditionsEditorView({
+        collection: this.model.initialConditions
+      });
+    }else{
+      this.initialConditionsEditor = new InitialConditionsViewer({
+        collection: this.model.initialConditions
+      });
+    }
+    this.registerRenderSubview(this.initialConditionsEditor, 'initial-conditions-editor-container');
+    },
   renderParametersView: function (mode="edit", opened=false) {
     if(this.parametersEditor) {
       this.parametersEditor.remove()

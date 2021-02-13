@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //views
 var View = require('ampersand-view');
 //templates
-var template = require('../templates/includes/viewSpecies.pug');
+var template = require('../templates/includes/viewInitialCondition.pug');
 
 module.exports = View.extend({
   template: template,
@@ -31,8 +31,5 @@ module.exports = View.extend({
       let type = self.model.collection.parent.domain.types.get(index, "typeID");
       self.types.push(type.name)
     });
-    this.switchingValWithLabel = this.model.isSwitchTol ? 
-      "Switching Tolerance: " + this.model.switchTol :
-      "Minimum Value For Switching: " + this.model.switchMin
   },
 });

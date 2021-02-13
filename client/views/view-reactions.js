@@ -26,6 +26,12 @@ module.exports = View.extend({
   template: template,
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    let self = this;
+    this.types = [];
+    this.model.types.forEach(function (index) {
+      let type = self.model.collection.parent.domain.types.get(index, "typeID");
+      self.types.push(type.name)
+    });
     this.rate = this.model.reactionType === "custom-propensity" ?
       this.model.propensity : this.model.rate.name
   },
