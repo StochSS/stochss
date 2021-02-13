@@ -246,7 +246,7 @@ class StochSSBase():
         # Check if the file object is an original or at least the second copy
         if not '-copy' in file or '-copy(' in file:
             cp_file = ''.join([name, '-copy', ext])
-            if cp_file not in os.listdir(dirname):
+            if cp_file not in os.listdir(dirname if dirname else self.user_dir):
                 return os.path.join(dirname, cp_file)
 
         i = 2

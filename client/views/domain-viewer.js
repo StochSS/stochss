@@ -27,6 +27,7 @@ var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var TypesViewer = require('./view-domain-types');
+var SelectView = require('ampersand-select-view');
 var ParticleViewer = require('./view-particle');
 //templates
 var template = require('../templates/includes/domainViewer.pug');
@@ -34,11 +35,44 @@ var template = require('../templates/includes/domainViewer.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=edit-domain]' : 'editDomain',
+    'click [data-hook=create-domain]' : 'editDomain',
+    'click [data-hook=save-to-model]' : 'saveDomainToModel',
+    'change [data-hook=select-domain]' : 'handleSelectDomain',
+    'change [data-hook=select-location]' : 'handleSelectDomainLocation'
+  },
+  handleSelectDomain: function (e) {
+    let value = e.srcElement.value;
+    if(value) {
+      if(this.externalDomains[value].length <= 1) {
+        this.reloadDomain(this.externalDomains[value][0]);
+      }else{
+        $(this.queryByHook("select-location-message")).css('display', "block");
+        $(this.queryByHook("select-domain-location")).css("display", "inline-block");
+        this.renderDomainLocationSelectView(this.externalDomains[value]);
+      }
+    }else {
+      this.reloadDomain(null);
+    }
+  },
+  handleSelectDomainLocation: function (e) {
+    this.reloadDomain(e.srcElement.value);
+  },
+  reloadDomain: function (domainPath) {
+    var el = this.queryByHook("domain-plot");
+    el.removeListener('plotly_click', this.selectParticle);
+    Plotly.purge(el);
+    this.plot = null;
+    this.model.types.forEach(function (type) {
+      type.numParticles = 0;
+    });
+    this.parent.renderDomainViewer(domainPath);
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.domainEditor;
+    this.domainPath = attrs.domainPath;
     let self = this;
     this.model.particles.forEach(function (particle) {
       self.model.types.get(particle.type, "typeID").numParticles += 1;
@@ -46,9 +80,16 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    this.renderDomainSelectView();
     this.renderTypesViewer();
     let self = this;
-    let queryStr = "?path=" + this.parent.model.directory
+    var queryStr = "?path=" + this.parent.model.directory
+    if(this.domainPath) {
+      $(this.queryByHook("domain-container")).collapse("show")
+      $(this.queryByHook("collapse")).text("-")
+      $(this.queryByHook("save-to-model")).prop("disabled", false)
+      queryStr += "&domain_path=" + this.domainPath
+    }
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + queryStr;
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       self.plot = body.fig;
@@ -58,6 +99,44 @@ module.exports = View.extend({
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
+  },
+  renderDomainSelectView: function () {
+    let self = this;
+    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-list");
+    xhr({uri: endpoint, json:true}, function (err, resp, body) {
+      self.externalDomains = body.paths;
+      var domainSelectView = new SelectView({
+        label: '',
+        name: 'domains',
+        required: false,
+        idAttributes: 'cid',
+        options: body.files,
+        unselectedText: self.parent.model.name + '\'s Domain',
+        value: self.domainPath ? self.getDomainSelectValue(body.files) : null
+      });
+      self.registerRenderSubview(domainSelectView, "select-domain")
+    });
+  },
+  getDomainSelectValue: function (files) {
+    let domainFile = this.domainPath.split('/').pop();
+    let value = files.filter(function (file) {
+      return file[1] === domainFile;
+    })[0][0];
+    return value
+  },
+  renderDomainLocationSelectView: function (options) {
+    if(this.domainLocationSelectView) {
+      this.domainLocationSelectView.remove();
+    }
+    this.domainLocationSelectView = new SelectView({
+      label: '',
+      name: 'locations',
+      required: false,
+      idAttributes: 'cid',
+      options: options,
+      unselectedText: "-- Select Location --"
+    });
+    this.registerRenderSubview(this.domainLocationSelectView, "select-location")
   },
   renderParticleViewer: function (particle=null) {
     if(this.particleViewer) {
@@ -72,7 +151,10 @@ module.exports = View.extend({
     }
   },
   renderTypesViewer: function () {
-    let typesViewer = this.renderCollection(
+    if(this.typesViewer) {
+      this.typesViewer.remove()
+    }
+    this.typesViewer = this.renderCollection(
       this.model.types,
       TypesViewer,
       this.queryByHook("domain-types-list"),
@@ -91,6 +173,21 @@ module.exports = View.extend({
     let point = data.points[0];
     let particle = this.model.particles.get(point.id, "particle_id");
     this.renderParticleViewer(particle);
+  },
+  editDomain: function (e) {
+    var queryStr = "?path=" + this.parent.model.directory;
+    if(e.target.dataset.hook === "create-domain") {
+      queryStr += "&new"
+    }else if(this.domainPath) {
+      queryStr += "&domainPath=" + this.domainPath
+    }
+    let endpoint = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
+    window.location.href = endpoint;
+  },
+  saveDomainToModel: function (e) {
+    this.parent.model.domain = this.model;
+    this.parent.modelStateButtons.clickSaveHandler(e);
+    this.reloadDomain()
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

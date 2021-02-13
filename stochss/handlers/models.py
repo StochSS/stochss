@@ -27,7 +27,8 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSAPIError, report_error
+from .util import StochSSFolder, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
+                  StochSSAPIError, report_error
 
 
 log = logging.getLogger('stochss')
@@ -259,6 +260,31 @@ class ImportMeshAPIHandler(APIHandler):
         try:
             resp = StochSSSpatialModel.get_particles_from_remote(mesh=data)
             log.debug("Number of Particles: %s", len(resp['particles']))
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class LoadExternalDomains(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting external domain files.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get all domain files on disc.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        try:
+            folder = StochSSFolder(path="")
+            resp = folder.get_domain_files()
+            log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)

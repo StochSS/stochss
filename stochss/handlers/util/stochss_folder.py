@@ -171,6 +171,30 @@ class StochSSFolder(StochSSBase):
         return bool(not errors), errors
 
 
+    def get_domain_files(self):
+        '''
+        Get the list of domain file in this directory and all sub-directories
+
+        Attributes
+        ----------
+        '''
+        domain_paths = {}
+        domain_files = {}
+        for root, _, files in os.walk(self.get_path(full=True)):
+            dirname = root.replace(self.user_dir+"/", "")
+            for file in files:
+                if file.endswith(".domn"):
+                    path = os.path.join(dirname, file) if dirname else file
+                    if file in domain_files.keys():
+                        domain_paths[domain_files[file]].append(path)
+                    else:
+                        index = str(len(domain_files.keys()))
+                        domain_files[file] = index
+                        domain_paths[index] = [file]
+        options = [[index, file] for file, index in domain_files.items()]
+        return {"files":options, "paths":domain_paths}
+
+
     def get_jstree_node(self, is_root=False):
         '''
         Build and return a JSTree node object the represents the file object

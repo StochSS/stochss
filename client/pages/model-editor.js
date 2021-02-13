@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+var xhr = require('xhr');
 var _ = require('underscore');
 var $ = require('jquery');
 let path = require('path');
@@ -43,6 +44,7 @@ var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 //models
 var Model = require('../models/model');
+var Domain = require('../models/domain');
 //templates
 var template = require('../templates/pages/modelEditor.pug');
 
@@ -101,6 +103,12 @@ let ModelEditor = PageView.extend({
       this.updateSpeciesInUse();
       this.updateParametersInUse();
     }, this);
+    window.addEventListener("pageshow", function (event) {
+      var navType = window.performance.navigation.type
+      if(navType === 2){
+        window.location.reload()
+      }
+    });
   },
   update: function () {
   },
@@ -230,11 +238,23 @@ let ModelEditor = PageView.extend({
       this.domainViewer.remove()
     }
     if(domainPath) {
-      console.log("Coming Soon: Loading external domains")
+      let self = this;
+      let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath
+      let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr
+      xhr({uri: endpoint, json: true}, function (err, resp, body) {
+        let domain = new Domain(body.domain);
+        self.domainViewer = new DomainViewer({
+          parent: self,
+          model: domain,
+          domainPath: domainPath
+        });
+        self.registerRenderSubview(self.domainViewer, 'domain-viewer-container');
+      });
     }else{
       this.domainViewer = new DomainViewer({
         parent: this,
-        model: this.model.domain
+        model: this.model.domain,
+        domainPath: domainPath
       });
       this.registerRenderSubview(this.domainViewer, 'domain-viewer-container');
     }

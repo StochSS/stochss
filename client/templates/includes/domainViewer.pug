@@ -4,9 +4,24 @@ div#domain-viewer.card.card-body
 
     h3.inline Domain
 
-    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-domain" data-hook="collapse") +
+    button.btn.btn-outline-collapse(id="-btn" data-toggle="collapse" data-target="#collapse-domain" data-hook="collapse") +
 
   div.collapse(id="collapse-domain" data-hook="domain-container")
+
+    div
+
+      div.text-info(data-hook="select-location-message" style="display: none")
+        | There are multiple domain files with that name, please select a location
+
+      span.inline Select Domain: 
+
+      div.inline(data-hook="select-domain")
+
+      div.inline.ml-3(data-hook="select-domain-location" style="display: none")
+
+        span.inline Location:
+
+        div.inline(data-hook="select-location")
 
     div.row
 
@@ -96,3 +111,13 @@ div#domain-viewer.card.card-body
 
           div.text-info(data-hook="select-particle")
             | Click on a particle to view its properties.
+
+    hr
+
+    div
+
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-domain") Edit Domain
+
+      button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="create-domain") Build New Domain
+
+      button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Save to Model
