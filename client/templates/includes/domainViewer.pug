@@ -81,6 +81,8 @@ div#domain-viewer.card.card-body
 
       h6="Number of Un-Assigned Particles: " + this.model.types.get(0, "typeID").numParticles
 
+      div(data-hook="domain-error"): p.text-danger A domain cannot have any un-assigned particles.
+
       table.table
         thead
           tr

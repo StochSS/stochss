@@ -95,6 +95,7 @@ module.exports = View.extend({
       self.plot = body.fig;
       self.displayDomain();
     });
+    this.toggleDomainError();
   },
   registerRenderSubview: function (view, hook) {
     this.registerSubview(view);
@@ -188,6 +189,17 @@ module.exports = View.extend({
     this.parent.model.domain = this.model;
     this.parent.modelStateButtons.clickSaveHandler(e);
     this.reloadDomain()
+  },
+  toggleDomainError: function () {
+    let errorMsg = $(this.queryByHook('domain-error'))
+    this.model.updateValid();
+    if(!this.model.valid) {
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
+    }else{
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
+    }
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

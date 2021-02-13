@@ -46,6 +46,9 @@ module.exports = View.extend({
     if(this.model.directory.includes('.proj')) {
       this.queryByHook("return-to-project-btn").style.display = "inline-block"
     }
+    if(this.model.is_spatial) {
+      $(this.queryByHook("simulate-model")).prop("disabled", true);
+    }
   },
   clickSaveHandler: function (e) {
     this.saveModel(this.saved.bind(this));
@@ -218,7 +221,6 @@ module.exports = View.extend({
   },
   handleSimulateClick: function (e) {
     var errorMsg = $(this.parent.queryByHook("error-detected-msg"))
-    console.log(errorMsg)
     if(!this.model.valid) {
       $(this.parent.queryByHook('toggle-preview-plot')).click()
       errorMsg.css('display', 'block')
@@ -256,6 +258,8 @@ module.exports = View.extend({
         this.openVolumeSection()
       }else if(this.model.error.type === "timespan") {
         this.openTimespanSection()
+      }else if(this.model.error.type === "domain") {
+        this.openDomainSection()
       }
       setTimeout(function () {
         let inputErrors = self.parent.queryAll(".input-invalid")
@@ -274,6 +278,14 @@ module.exports = View.extend({
       let specCollapseBtn = $(this.parent.speciesEditor.queryByHook("collapse"))
       specCollapseBtn.click()
       specCollapseBtn.html('-')
+    }
+  },
+  openDomainSection: function () {
+    let domainSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
+    if(!domainSection.hasClass("show")) {
+      let domainCollapseBtn = $(this.parent.domainViewer.queryByHook("collapse"))
+      domainCollapseBtn.click()
+      domainCollapseBtn.html('-')
     }
   },
   openParametersSection: function () {

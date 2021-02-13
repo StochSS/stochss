@@ -47,6 +47,11 @@ module.exports = Collection.extend({
     });
   },
   validateCollection: function () {
+    for(var i = 0; i < this.length; i++) {
+      if(this.models[i].type < 1) {
+        return false;
+      }
+    }
     return true;
   }
 });

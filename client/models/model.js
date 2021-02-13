@@ -87,6 +87,10 @@ module.exports = Model.extend({
       this.error = {"type":"volume"}
       return false
     };
+    if(this.domain.validateModel() === false) {
+      this.error = {"type":"domain"}
+      return false
+    };
     if(this.modelSettings.validate() === false) {
       this.error = {"type":"timespan"}
       return false

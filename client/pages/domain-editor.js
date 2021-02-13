@@ -349,6 +349,7 @@ let DomainEditor = PageView.extend({
         return model.typeID != 0;
       }}
     );
+    this.toggleDomainError()
   },
   renderEditTypeDefaults: function () {
     if(this.massView) {
@@ -435,6 +436,8 @@ let DomainEditor = PageView.extend({
         $('[data-toggle="tooltip"]').tooltip("hide");
       });
     });
+    this.domain.updateValid();
+    this.toggleDomainError();
   },
   saveDomain: function (name) {
     let domain = this.domain.toJSON();
@@ -536,7 +539,18 @@ let DomainEditor = PageView.extend({
       }
     }
     return error
-  }
+  },
+  toggleDomainError: function () {
+    console.log("Updating valid", this.domain.valid)
+    let errorMsg = $(this.queryByHook('domain-error'))
+    if(!this.domain.valid) {
+      errorMsg.addClass('component-invalid')
+      errorMsg.removeClass('component-valid')
+    }else{
+      errorMsg.addClass('component-valid')
+      errorMsg.removeClass('component-invalid')
+    }
+  },
 });
 
 initPage(DomainEditor);

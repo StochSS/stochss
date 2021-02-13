@@ -44,6 +44,7 @@ module.exports = State.extend({
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
+    this.particles.on('add change remove', this.updateValid, this);
     this.def_particle_id = this.particles.length;
     this.def_type_id = this.types.length;
     let self = this;
@@ -68,7 +69,11 @@ module.exports = State.extend({
     this.def_type_id += 1;
     return id;
   },
-  validate: function () {
+  validateModel: function () {
+    if(!this.particles.validateCollection()) return false;
     return true;
-  }
+  },
+  updateValid: function () {
+    this.valid = this.validateModel()
+  },
 });
