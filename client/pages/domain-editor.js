@@ -65,6 +65,9 @@ let DomainEditor = PageView.extend({
     this.renderEditTypeDefaults();
   },
   handleImportMesh: function (e) {
+    this.importMesh()
+  },
+  importMesh: function (type=0) {
     let self = this;
     let file = $("#meshfile").prop("files")[0];
     let formData = new FormData();
@@ -159,7 +162,7 @@ let DomainEditor = PageView.extend({
         this.queryStr += "&"
       }
       this.queryStr += "new=True"
-    }else if(domainPath) {
+    }else if(domainPath && domainPath !== "viewing") {
       if(modelPath) {
         this.queryStr += "&"
       }
