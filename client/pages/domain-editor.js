@@ -103,38 +103,44 @@ let DomainEditor = PageView.extend({
     $(this.queryByHook("edit-defaults")).css("display", "none");
   },
   handleSaveToModel: function () {
-    this.model.domain = this.domain;
-    this.model.saveModel();
+    if(this.model) {
+      this.model.domain = this.domain;
+      this.model.saveModel();
+    }
   },
   handleSaveToFile: function () {
-    var self = this
-    if(document.querySelector('#newModalModel')) {
-      document.querySelector('#newModalModel').remove()
+    if(this.domain.directory && !this.domain.dirname) {
+      this.saveDomain()
+    }else{
+      var self = this
+      if(document.querySelector('#newModalModel')) {
+        document.querySelector('#newModalModel').remove()
+      }
+      let modal = $(modals.renderCreateModalHtml(true, true)).modal();
+      let okBtn = document.querySelector('#newModalModel .ok-model-btn');
+      let input = document.querySelector('#newModalModel #modelNameInput');
+      input.addEventListener("keyup", function (event) {
+        if(event.keyCode === 13){
+          event.preventDefault();
+          okBtn.click();
+        }
+      });
+      input.addEventListener("input", function (e) {
+        var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+        var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+        let error = self.validateName(input.value)
+        okBtn.disabled = error !== "" || input.value.trim() === ""
+        charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+        endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+      });
+      okBtn.addEventListener('click', function (e) {
+        if (Boolean(input.value)) {
+          modal.modal('hide')
+          let name = input.value.trim()
+          self.saveDomain(name);
+        }
+      });
     }
-    let modal = $(modals.renderCreateModalHtml(true, true)).modal();
-    let okBtn = document.querySelector('#newModalModel .ok-model-btn');
-    let input = document.querySelector('#newModalModel #modelNameInput');
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
-      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== "" || input.value.trim() === ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener('click', function (e) {
-      if (Boolean(input.value)) {
-        modal.modal('hide')
-        let name = input.value.trim()
-        self.saveDomain(name);
-      }
-    });
   },
   updateImportBtn: function (e) {
     $(this.queryByHook("import-particles-btn")).prop("disabled", !Boolean(e.target.files.length))
@@ -144,17 +150,26 @@ let DomainEditor = PageView.extend({
     this.tooltips = Tooltips.domainEditor;
     var self = this;
     let urlParams = new URLSearchParams(window.location.search)
-    let modelPath = urlParams.get("path")
+    let modelPath = urlParams.has("path") ? urlParams.get("path") : null;
+    let domainPath = urlParams.has("domainPath") ? urlParams.get("domainPath") : null;
     let newDomain = urlParams.has("new") ? true : false;
-    this.queryStr = "?path=" + modelPath
+    this.queryStr = modelPath ? "?path=" + modelPath : "?"
     if(newDomain) {
-      this.queryStr += "&new=True"
-    }else if(urlParams.has("domainPath")) {
-      this.queryStr += "&domain_path=" + urlParams.get("domainPath")
+      if(modelPath) {
+        this.queryStr += "&"
+      }
+      this.queryStr += "new=True"
+    }else if(domainPath) {
+      if(modelPath) {
+        this.queryStr += "&"
+      }
+      this.queryStr += "domain_path=" + domainPath
     }
     let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + this.queryStr
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       self.domain = new Domain(body.domain);
+      self.domain.directory = domainPath
+      self.domain.dirname = newDomain && !modelPath ? domainPath : null
       self.model = self.buildModel(body.model, modelPath);
       self.actPart = {"part":null, "tn":0, "pn":0};
       self.renderSubviews();
@@ -187,6 +202,9 @@ let DomainEditor = PageView.extend({
     this.updatePlot()
   },
   buildModel: function (modelData, modelPath) {
+    if(!modelPath) {
+      return null;
+    }
     var model = new Model(modelData);
     model.for = "domain";
     model.isPreview = false;
@@ -439,10 +457,15 @@ let DomainEditor = PageView.extend({
     this.domain.updateValid();
     this.toggleDomainError();
   },
-  saveDomain: function (name) {
+  saveDomain: function (name=null) {
     let domain = this.domain.toJSON();
-    let file = name + ".domn";
-    let domainPath = path.join(path.dirname(this.model.directory), file);
+    if(name) {
+      let file = name + ".domn";
+      var dirname = this.model ? path.dirname(this.model.directory) : this.domain.dirname;
+      var domainPath = path.join(dirname, file);
+    }else{
+      var domainPath = this.domain.directory;
+    }
     let endpoint = path.join(app.getApiPath(), "file/json-data") + "?path=" + domainPath;
     xhr({uri: endpoint, method: "post", json: true, body: domain}, function (err, response, body) {
       if(response.statusCode >= 400) {
@@ -541,7 +564,6 @@ let DomainEditor = PageView.extend({
     return error
   },
   toggleDomainError: function () {
-    console.log("Updating valid", this.domain.valid)
     let errorMsg = $(this.queryByHook('domain-error'))
     if(!this.domain.valid) {
       errorMsg.addClass('component-invalid')

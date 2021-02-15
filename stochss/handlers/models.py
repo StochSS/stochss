@@ -119,7 +119,7 @@ class LoadDomainEditorAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path")
+        path = self.get_query_argument(name="path", default=None)
         log.debug("Path to the spatial model: %s", path)
         d_path = self.get_query_argument(name="domain_path", default=None)
         if d_path is not None:
@@ -129,7 +129,8 @@ class LoadDomainEditorAPIHandler(APIHandler):
         try:
             model = StochSSSpatialModel(path=path)
             domain = model.get_domain(path=d_path, new=new)
-            resp = {"model":model.load(), "domain":domain}
+            s_model = None if path is None else model.load()
+            resp = {"model":s_model, "domain":domain}
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -152,7 +153,7 @@ class LoadDomainAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path")
+        path = self.get_query_argument(name="path", default=None)
         log.debug("Path to the spatial model: %s", path)
         d_path = self.get_query_argument(name="domain_path", default=None)
         if d_path is not None:

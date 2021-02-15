@@ -40,7 +40,9 @@ module.exports = State.extend({
   },
   session: {
     def_particle_id: 'number',
-    def_type_id: 'number'
+    def_type_id: 'number',
+    directory: 'string',
+    dirname: 'string'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
