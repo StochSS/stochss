@@ -39,8 +39,19 @@ module.exports = View.extend({
     'click [data-hook=edit-domain]' : 'editDomain',
     'click [data-hook=create-domain]' : 'editDomain',
     'click [data-hook=save-to-model]' : 'saveDomainToModel',
+    'click [data-hook=select-external-domain]' : 'handleLoadExternalDomain',
     'change [data-hook=select-domain]' : 'handleSelectDomain',
     'change [data-hook=select-location]' : 'handleSelectDomainLocation'
+  },
+  handleLoadExternalDomain: function (e) {
+    let text = e.target.textContent
+    if(text === "View External Domain") {
+      $(this.queryByHook("external-domain-select")).css("display", "block")
+      $(this.queryByHook("select-external-domain")).text("View Model's Domain")
+    }else{
+      this.reloadDomain("viewing");
+    }
+    console.log(text)
   },
   handleSelectDomain: function (e) {
     let value = e.srcElement.value;
@@ -52,22 +63,22 @@ module.exports = View.extend({
         $(this.queryByHook("select-domain-location")).css("display", "inline-block");
         this.renderDomainLocationSelectView(this.externalDomains[value]);
       }
-    }else {
-      this.reloadDomain(null);
     }
   },
   handleSelectDomainLocation: function (e) {
     this.reloadDomain(e.srcElement.value);
   },
   reloadDomain: function (domainPath) {
-    var el = this.queryByHook("domain-plot");
-    el.removeListener('plotly_click', this.selectParticle);
-    Plotly.purge(el);
-    this.plot = null;
-    this.model.types.forEach(function (type) {
-      type.numParticles = 0;
-    });
-    this.parent.renderDomainViewer(domainPath);
+    if(this.domainPath !== domainPath || domainPath === "viewing") {
+      var el = this.queryByHook("domain-plot");
+      el.removeListener('plotly_click', this.selectParticle);
+      Plotly.purge(el);
+      this.plot = null;
+      this.model.types.forEach(function (type) {
+        type.numParticles = 0;
+      });
+      this.parent.renderDomainViewer(domainPath);
+    }
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -87,8 +98,12 @@ module.exports = View.extend({
     if(this.domainPath) {
       $(this.queryByHook("domain-container")).collapse("show")
       $(this.queryByHook("collapse")).text("-")
-      $(this.queryByHook("save-to-model")).prop("disabled", false)
-      queryStr += "&domain_path=" + this.domainPath
+      if(this.domainPath !== "viewing") {
+        $(this.queryByHook("save-to-model")).prop("disabled", false)
+        $(this.queryByHook("external-domain-select")).css("display", "block")
+        $(this.queryByHook("select-external-domain")).text("View Model's Domain")
+        queryStr += "&domain_path=" + this.domainPath
+      }
     }
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + queryStr;
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
@@ -112,13 +127,16 @@ module.exports = View.extend({
         required: false,
         idAttributes: 'cid',
         options: body.files,
-        unselectedText: self.parent.model.name + '\'s Domain',
-        value: self.domainPath ? self.getDomainSelectValue(body.files) : null
+        unselectedText: "-- Select Domain --",
+        value: self.getDomainSelectValue(body.files)
       });
       self.registerRenderSubview(domainSelectView, "select-domain")
     });
   },
   getDomainSelectValue: function (files) {
+    if(!this.domainPath || this.domainPath === "viewing") {
+      return null;
+    }
     let domainFile = this.domainPath.split('/').pop();
     let value = files.filter(function (file) {
       return file[1] === domainFile;

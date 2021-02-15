@@ -10,18 +10,22 @@ div#domain-viewer.card.card-body
 
     div
 
-      div.text-info(data-hook="select-location-message" style="display: none")
-        | There are multiple domain files with that name, please select a location
+      button.btn.btn-outline-secondary.box-shadow.mb-3(data-hook="select-external-domain") View External Domain
 
-      span.inline Select Domain: 
+      div(data-hook="external-domain-select" style="display: none")
 
-      div.inline(data-hook="select-domain")
+        div.text-info(data-hook="select-location-message" style="display: none")
+          | There are multiple domain files with that name, please select a location
 
-      div.inline.ml-3(data-hook="select-domain-location" style="display: none")
+        span.inline Select External Domain: 
 
-        span.inline Location:
+        div.inline(data-hook="select-domain")
 
-        div.inline(data-hook="select-location")
+        div.inline.ml-3(data-hook="select-domain-location" style="display: none")
+
+          span.inline Location:
+
+          div.inline(data-hook="select-location")
 
     div.row
 
@@ -122,4 +126,4 @@ div#domain-viewer.card.card-body
 
       button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="create-domain") Build New Domain
 
-      button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Save to Model
+      button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Import into Model

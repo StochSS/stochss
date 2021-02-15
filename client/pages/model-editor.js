@@ -235,7 +235,7 @@ let ModelEditor = PageView.extend({
     if(this.domainViewer) {
       this.domainViewer.remove()
     }
-    if(domainPath) {
+    if(domainPath && domainPath !== "viewing") {
       let self = this;
       let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath
       let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr
