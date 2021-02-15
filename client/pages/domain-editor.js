@@ -456,6 +456,9 @@ let DomainEditor = PageView.extend({
     });
     this.domain.updateValid();
     this.toggleDomainError();
+    if(!this.model) {
+      $(this.queryByHook("save-to-model")).addClass("disabled")
+    }
   },
   saveDomain: function (name=null) {
     let domain = this.domain.toJSON();

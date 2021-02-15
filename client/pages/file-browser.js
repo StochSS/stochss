@@ -934,6 +934,16 @@ let FileBrowser = PageView.extend({
             } 
           }
         },
+        "New Domain" : {
+          "label" : "New Domain",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            let queryStr = "?domainPath=" + o.original._path + "&new"
+            window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+          }
+        },
         "Upload" : {
           "label" : "Upload File",
           "_disabled" : false,
@@ -1071,6 +1081,9 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
             }else if(nodeType === "project"){
               window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
+            }else if(nodeType === "domain") {
+              let queryStr = "?domainPath=" + o.original._path
+              window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
             }else{
               if(nodeType === "notebook") {
                 var identifier = "notebooks"
@@ -1204,6 +1217,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'sbml-model') {
         return $.extend(open, sbml, common)
       }
+      if (o.type === "domain") {
+        return $.extend(open, common)
+      }
     }
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
@@ -1247,6 +1263,9 @@ let FileBrowser = PageView.extend({
         window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
       }else if(file.endsWith('.wkfl')){
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
+      }else if(file.endsWith('.domn')) {
+        let queryStr = "?domainPath=" + _path
+        window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }else if(node.type === "other"){
