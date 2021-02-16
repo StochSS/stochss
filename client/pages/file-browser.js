@@ -546,7 +546,7 @@ let FileBrowser = PageView.extend({
       if(response.statusCode < 400) {
         if(dataType === "json") {
           let data = nodeType === "domain" ? body.domain : body
-          self.exportToJsonFile(body, o.original.text);
+          self.exportToJsonFile(data, o.original.text);
         }else if(dataType === "zip") {
           var node = $('#models-jstree').jstree().get_node(o.parent);
           if(node.type === "root"){

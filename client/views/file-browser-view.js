@@ -573,6 +573,9 @@ module.exports = View.extend({
     if(nodeType === "sbml-model"){
       var dataType = "plain-text"
       var identifier = "file/download"
+    }else if(nodeType === "domain") {
+      var dataType = "json"
+      var identifier = "spatial-model/load-domain"
     }else if(asZip) {
       var dataType = "zip"
       var identifier = "file/download-zip"
@@ -580,17 +583,22 @@ module.exports = View.extend({
       var dataType = "json"
       var identifier = "file/json-data"
     }
-    var queryStr = "?path="+o.original._path
-    if(dataType === "json"){
-      queryStr = queryStr.concat("&for=None")
-    }else if(dataType === "zip"){
-      queryStr = queryStr.concat("&action=generate")
+    if(nodeType === "domain") {
+      var queryStr = "?domain_path=" + o.original._path
+    }else{
+      var queryStr = "?path="+o.original._path
+      if(dataType === "json"){
+        queryStr = queryStr.concat("&for=None")
+      }else if(dataType === "zip"){
+        queryStr = queryStr.concat("&action=generate")
+      }
     }
     var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(dataType === "json") {
-          self.exportToJsonFile(body, o.original.text);
+          let data = nodeType === "domain" ? body.domain : body
+          self.exportToJsonFile(data, o.original.text);
         }else if(dataType === "zip") {
           var node = $('#models-jstree-view').jstree().get_node(o.parent);
           if(node.type === "root"){
