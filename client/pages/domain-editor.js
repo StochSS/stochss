@@ -29,8 +29,10 @@ let modals = require('../modals');
 //views
 var PageView = require('../pages/base');
 var InputView = require('../views/input');
+var SelectView = require('ampersand-select-view');
 var ParticleView = require('../views/edit-particle');
 var EditDomainTypeView = require('../views/edit-domain-type');
+var Create3DDomainView = require('../views/edit-3D-domain');
 //collections
 var Collection = require('ampersand-collection');
 //models
@@ -58,31 +60,40 @@ let DomainEditor = PageView.extend({
     'change [data-hook=speed]' : 'setSpeed',
     'change [data-name=limitation]' : 'setLimitation',
     'change [data-target=reflect]' : 'setBoundaryCondition',
-    'change #meshfile' : 'updateImportBtn'
+    'change #meshfile' : 'updateImportBtn',
+    'change [data-hook=mesh-type-select]' : 'updateMeshTypeAndDefaults'
   },
   handleAddDomainType: function () {
     this.selectedType = "new";
     this.renderEditTypeDefaults();
   },
   handleImportMesh: function (e) {
-    this.importMesh()
+    let data = {"type":null, "transformation":null}
+    let id = Number($(this.queryByHook("mesh-type-select")).find('select')[0].value)
+    if(id > 0) {
+      data.type = this.domain.types.get(id, "typeID").toJSON();
+    }
+    let xTrans = Number($(this.queryByHook("mesh-x-trans")).find('input')[0].value)
+    let yTrans = Number($(this.queryByHook("mesh-y-trans")).find('input')[0].value)
+    let zTrans = Number($(this.queryByHook("mesh-z-trans")).find('input')[0].value)
+    if(xTrans !== 0 || yTrans !== 0 || zTrans !== 0) {
+      data.transformation = [xTrans, yTrans, zTrans];
+    }
+    this.importMesh(data)
   },
-  importMesh: function (type=0) {
+  importMesh: function (data) {
     let self = this;
     let file = $("#meshfile").prop("files")[0];
     let formData = new FormData();
     formData.append("datafile", file);
+    formData.append("particleData", JSON.stringify(data));
     let endpoint = path.join(app.getApiPath(), 'spatial-model/import-mesh');
     let req = new XMLHttpRequest();
     req.open("POST", endpoint);
     req.onload = function (e) {
       var resp = JSON.parse(req.response);
       if(req.status < 400) {
-        resp.particles.forEach(function (particle) {
-          self.addParticle(particle, true)
-        });
-        self.renderDomainTypes();
-        self.updatePlot();
+        self.addParticles(resp.particles)
       }
     }
     req.send(formData)
@@ -194,6 +205,14 @@ let DomainEditor = PageView.extend({
       this.updatePlot();
     }
   },
+  addParticles: function (particles) {
+    let self = this;
+    particles.forEach(function (particle) {
+      self.addParticle(particle, true);
+    });
+    this.renderDomainTypes();
+    this.updatePlot();
+  },
   addType: function (name) {
     this.renderEditParticle();
     this.renderNewParticle();
@@ -304,6 +323,13 @@ let DomainEditor = PageView.extend({
     this.renderNewParticle();
     this.plot.data[index].name = newName;
     this.updatePlot();
+  },
+  renderCreate3DDomain: function () {
+    let create3DDomainView = new Create3DDomainView({
+      parent: this,
+      model: this.domain
+    });
+    this.registerRenderSubview(create3DDomainView, "add-3d-domain");
   },
   renderDomainLimitations: function () {
     let xLimMinView = new InputView({parent: this, required: true,
@@ -421,6 +447,27 @@ let DomainEditor = PageView.extend({
     });
     this.registerRenderSubview(this.editParticleView, "edit-particle");
   },
+  renderMeshTransformations: function () {
+    let xtrans = new InputView({parent: this, required: true,
+                                name: 'x-transformation', valueType: 'number',
+                                value: 0});
+    this.registerRenderSubview(xtrans, "mesh-x-trans");
+    let ytrans = new InputView({parent: this, required: true,
+                                name: 'y-transformation', valueType: 'number',
+                                value: 0});
+    this.registerRenderSubview(ytrans, "mesh-y-trans");
+    let ztrans = new InputView({parent: this, required: true,
+                                name: 'z-transformation', valueType: 'number',
+                                value: 0});
+    this.registerRenderSubview(ztrans, "mesh-z-trans");
+  },
+  renderMeshTypeDefaults: function (id) {
+    let type = this.domain.types.get(id, "typeID")
+    $(this.queryByHook("mesh-mass")).text(type.mass);
+    $(this.queryByHook("mesh-volume")).text(type.volume);
+    $(this.queryByHook("mesh-nu")).text(type.nu);
+    $(this.queryByHook("mesh-fixed")).prop("checked", type.fixed);
+  },
   renderNewParticle: function () {
     if(this.newParticleView) {
       this.newParticleView.remove();
@@ -445,6 +492,10 @@ let DomainEditor = PageView.extend({
     this.renderDomainTypes();
     this.renderNewParticle();
     this.renderEditParticle();
+    this.renderTypeSelectView();
+    this.renderMeshTypeDefaults(0);
+    this.renderMeshTransformations();
+    this.renderCreate3DDomain();
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
@@ -462,6 +513,19 @@ let DomainEditor = PageView.extend({
     if(!this.model) {
       $(this.queryByHook("save-to-model")).addClass("disabled")
     }
+  },
+  renderTypeSelectView: function () {
+    var typeView = new SelectView({
+      label: 'Type:  ',
+      name: 'type',
+      required: true,
+      idAttribute: 'typeID',
+      textAttribute: 'name',
+      eagerValidate: true,
+      options: this.domain.types,
+      value: this.domain.types.get(0, "typeID")
+    });
+    this.registerRenderSubview(typeView, "mesh-type-select")
   },
   saveDomain: function (name=null) {
     let domain = this.domain.toJSON();
@@ -538,6 +602,10 @@ let DomainEditor = PageView.extend({
     this.displayDomain();
   },
   update: function () {},
+  updateMeshTypeAndDefaults: function (e) {
+    let id = Number(e.target.selectedOptions.item(0).value);
+    this.renderMeshTypeDefaults(id);
+  },
   updateParticle: function () {
     if(this.actPart.part.pointChanged) {
       let x = this.actPart.part.point[0];

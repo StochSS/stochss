@@ -36,7 +36,7 @@ section.page
             td: div(data-hook="pressure")
             td: div(data-hook="speed")
 
-      h4 Boundary Conditions
+      h4 Domain Limits
 
       table.table
         thead
@@ -143,6 +143,10 @@ section.page
 
         li.nav-item
 
+          a.nav-link.tab(data-toggle="tab" href="#add-3d-domain") Create 3D Domain
+
+        li.nav-item
+
           a.nav-link.tab(data-toggle="tab" href="#import-particles") Import Mesh
 
       div.tab-content
@@ -151,6 +155,8 @@ section.page
 
         div.tab-pane(id="edit-particle" data-hook="edit-particle")
 
+        div.tab-pane(id="add-3d-domain" data-hook="add-3d-domain")
+
         div.tab-pane(id="import-particles")
 
           div.my-3
@@ -158,6 +164,47 @@ section.page
             span.inline.mr-2(for="meshfile") Please specify a mesh to import: 
 
             input(id="meshfile" type="file" name="meshfile" size="30" accept=".xml" required)
+
+          div
+
+            h4.inline Advanced
+
+            button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#mesh-advanced", data-hook="collapse-mesh-advanced") +
+
+          div.collapse(id="mesh-advanced" data-hook="mesh-advanced-container")
+
+            div(data-hook="mesh-type-select")
+
+            h5 Type Defaults
+
+            table.table
+              thead
+                tr
+                  th(scope="col") Mass
+                  th(scope="col") Volume
+                  th(scope="col") Nu
+                  th(scope="col") Fixed
+
+              tbody
+                tr
+                  td: div(data-hook="mesh-mass")
+                  td: div(data-hook="mesh-volume")
+                  td: div(data-hook="mesh-nu")
+                  td: input(type="checkbox" data-hook="mesh-fixed" disabled)
+
+            h5 Particle Transformations
+
+            table.table
+              thead
+                tr
+                  th(scope="col") X-Axis
+                  th(scope="col") Y-Axis
+                  th(scope="col") Z-Axis
+              tbody
+                tr
+                  td: div(data-hook="mesh-x-trans")
+                  td: div(data-hook="mesh-y-trans")
+                  td: div(data-hook="mesh-z-trans")
 
           div
 

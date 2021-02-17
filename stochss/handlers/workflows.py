@@ -236,7 +236,6 @@ class WorkflowNotebookHandler(APIHandler):
         Attributes
         ----------
         '''
-        # log.setLevel(logging.DEBUG)
         path = self.get_query_argument(name="path")
         log.debug("Path to the model/workflow: %s", path)
         wkfl_type = self.get_query_argument(name="type")
@@ -260,7 +259,6 @@ class WorkflowNotebookHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        # log.setLevel(logging.WARNING)
         self.finish()
 
 

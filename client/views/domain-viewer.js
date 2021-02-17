@@ -51,7 +51,6 @@ module.exports = View.extend({
     }else{
       this.reloadDomain("viewing");
     }
-    console.log(text)
   },
   handleSelectDomain: function (e) {
     let value = e.srcElement.value;

@@ -258,8 +258,9 @@ class ImportMeshAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         data = self.request.files['datafile'][0]['body'].decode()
+        particle_data = json.loads(self.request.body_arguments['particleData'][0].decode())
         try:
-            resp = StochSSSpatialModel.get_particles_from_remote(mesh=data)
+            resp = StochSSSpatialModel.get_particles_from_remote(mesh=data, data=particle_data)
             log.debug("Number of Particles: %s", len(resp['particles']))
             self.write(resp)
         except StochSSAPIError as err:
@@ -286,6 +287,32 @@ class LoadExternalDomains(APIHandler):
             folder = StochSSFolder(path="")
             resp = folder.get_domain_files()
             log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class Create3DDomainAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for creating a 3D domain.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Create a 3D domain and return its particles.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        data = json.loads(self.request.body.decode())
+        log.debug("Data used to create the domain: %s", data)
+        try:
+            resp = StochSSSpatialModel.get_particles_from_3d_domain(data=data)
+            log.debug("Number of Particles: %s", len(resp['particles']))
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)

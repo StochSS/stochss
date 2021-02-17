@@ -90,16 +90,27 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def __build_stochss_domain_particles(cls, s_domain):
+    def __build_stochss_domain_particles(cls, s_domain, data=None):
         particles = []
         for i, vertex in enumerate(s_domain.vertices):
+            if data is None or data['type'] is None:
+                viscosity = s_domain.nu[i]
+                fixed = bool(s_domain.fixed[i])
+                type_id = int(s_domain.type[i])
+            else:
+                viscosity = data['type']['nu']
+                fixed = data['type']['fixed']
+                type_id = data['type']['typeID']
+            point = list(vertex)
+            if data is not None and data['transformation'] is not None:
+                point = [coord + data['transformation'][i] for i, coord in enumerate(point)]
             particle = {"particle_id":i + 1,
-                        "point":list(vertex),
+                        "point":point,
                         "volume":s_domain.vol[i],
                         "mass":s_domain.mass[i],
-                        "type":int(s_domain.type[i]), # type == 0 indicates un-initialized
-                        "nu":s_domain.nu[i], # viscosity
-                        "fixed":bool(s_domain.fixed[i])}
+                        "type":type_id,
+                        "nu":viscosity,
+                        "fixed":fixed}
             particles.append(particle)
         return particles
 
@@ -202,7 +213,31 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def get_particles_from_remote(cls, mesh):
+    def get_particles_from_3d_domain(cls, data):
+        '''
+        Create a new 3D domain and return the particles
+
+        Attributes
+        ----------
+        data : dict
+            Data used to create the 3D domain
+        '''
+        if data['transformation'] is None:
+            xlim = data['xLim']
+            ylim = data['yLim']
+            zlim = data['zLim']
+        else:
+            xlim = [coord + data['transformation'][0] for coord in data['xLim']]
+            ylim = [coord + data['transformation'][1] for coord in data['yLim']]
+            zlim = [coord + data['transformation'][2] for coord in data['zLim']]
+        s_domain = Mesh.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
+                                         ny=data['ny'], nz=data['nz'], **data['type'])
+        particles = cls.__build_stochss_domain_particles(s_domain=s_domain)
+        return {"particles":particles}
+
+
+    @classmethod
+    def get_particles_from_remote(cls, mesh, data):
         '''
         Get a list of stochss particles from a mesh
 
@@ -210,12 +245,14 @@ class StochSSSpatialModel(StochSSBase):
         ----------
         mesh : str
             Mesh containing particle data
+        data : dict
+            Property and location data to be applied to each particle
         '''
         file = tempfile.NamedTemporaryFile()
         with open(file.name, "w") as mesh_file:
             mesh_file.write(mesh)
         s_domain = Mesh.read_xml_mesh(filename=file.name)
-        particles = cls.__build_stochss_domain_particles(s_domain=s_domain)
+        particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
         return {"particles":particles}
 
 
