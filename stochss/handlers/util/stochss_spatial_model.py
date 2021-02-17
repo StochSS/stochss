@@ -21,11 +21,14 @@ import json
 import tempfile
 import traceback
 
+import numpy
 import plotly
-from spatialpy import Mesh, MeshError
+from spatialpy import Model, Species, Parameter, Reaction, Mesh, MeshError, \
+                      PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
 
 from .stochss_base import StochSSBase
-from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError
+from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
+                            StochSSModelFormatError
 
 class StochSSSpatialModel(StochSSBase):
     '''
@@ -115,6 +118,144 @@ class StochSSSpatialModel(StochSSBase):
         return particles
 
 
+    def __convert_domain(self, model):
+        try:
+            num_points = len(self.model['domain']['particles'])
+            xlim = self.model['domain']['x_lim']
+            ylim = self.model['domain']['y_lim']
+            zlim = self.model['domain']['z_lim']
+            rho0 = self.model['domain']['rho_0']
+            c_0 = self.model['domain']['c_0']
+            p_0 = self.model['domain']['p_0']
+            gravity = self.model['domain']['gravity']
+            mesh = Mesh(num_points, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
+            self.__convert_particles(mesh=mesh)
+            model.mesh = mesh
+        except KeyError as err:
+            message = "Spatial model domain properties are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
+    def __convert_initial_conditions(self, model):
+        try:
+            s_species = model.get_all_species()
+            for initial_condition in self.model['initialConditions']:
+                species = s_species[initial_condition['specie']['name']]
+                count = initial_condition['count']
+                if initial_condition['icType'] == "Scatter":
+                    types = initial_condition['types']
+                    s_ic = ScatterInitialCondition(species, count, types=types)
+                elif initial_condition['icType'] == "Place":
+                    location = [initial_condition['x'],
+                                initial_condition['y'],
+                                initial_condition['z']]
+                    s_ic = PlaceInitialCondition(species, count, location)
+                else:
+                    types = initial_condition['types']
+                    s_ic = UniformInitialCondition(species, count, types=types)
+                model.add_initial_condition(s_ic)
+        except KeyError as err:
+            message = "Spatial model domain properties are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
+    def __convert_particles(self, mesh):
+        try:
+            for particle in self.model['domain']['particles']:
+                mesh.add_point(particle['point'], particle['volume'], particle['mass'],
+                               particle['type'], particle['nu'], particle['fixed'])
+        except KeyError as err:
+            message = "Spatial model domain particle properties are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
+    def __convert_model_settings(self, model):
+        try:
+            end = self.model['modelSettings']['endSim']
+            step_size = self.model['modelSettings']['timeStep']
+            tspan = numpy.arange(0, end, step_size)
+            model.timespan(tspan)
+        except KeyError as err:
+            message = "Spatial model settings are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
+    def __convert_parameters(self, model):
+        try:
+            for parameter in self.model['parameters']:
+                s_param = Parameter(name=parameter['name'], expression=parameter['expression'])
+                model.add_parameter(s_param)
+        except KeyError as err:
+            message = "Spatial model parameters are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
+    def __convert_reactions(self, model):
+        try:
+            s_params = model.get_all_parameters()
+            for reaction in self.model['reactions']:
+                reactants, products = self.__convert_stoich_species(reaction=reaction)
+                if reaction['reactionType'] != "custom-propensity":
+                    rate = s_params[reaction['rate']['name']]
+                    propensity = None
+                else:
+                    rate = None
+                    propensity = reaction['propensity']
+                s_reaction = Reaction(name=reaction['name'],
+                                      reactants=reactants,
+                                      products=products,
+                                      rate=rate,
+                                      propensity_function=propensity,
+                                      restrict_to=reaction['types'])
+                model.add_reaction(s_reaction)
+        except KeyError as err:
+            message = "Spatial model reactions are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
+    def __convert_species(self, model):
+        try:
+            for species in self.model['species']:
+                name = species['name']
+                s_species = Species(name=name, diffusion_constant=species['diffusionConst'])
+                model.add_species(s_species)
+                model.restrict(s_species, species['types'])
+        except KeyError as err:
+            message = "Spatial model species are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
+    @classmethod
+    def __convert_stoich_species(cls, reaction):
+        try:
+            products = {}
+            for stoich_species in reaction['products']:
+                name = stoich_species['specie']['name']
+                if name in products.keys():
+                    products[name] += stoich_species['ratio']
+                else:
+                    products[name] = stoich_species['ratio']
+            reactants = {}
+            for stoich_species in reaction['reactants']:
+                name = stoich_species['specie']['name']
+                if name in reactants.keys():
+                    reactants[name] += stoich_species['ratio']
+                else:
+                    reactants[name] = stoich_species['ratio']
+            return reactants, products
+        except KeyError as err:
+            message = "Spatial model stoich species are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
     @classmethod
     def __get_trace_data(cls, particles, name=""):
         ids = []
@@ -184,6 +325,23 @@ class StochSSSpatialModel(StochSSBase):
         Attributes
         ----------
         '''
+        if self.model is None:
+            _ = self.load()
+        name = self.get_name()
+        # try:
+        s_model = Model(name=name)
+        # except KeyError as err:
+        #     message = "Spatial model properties are not properly formatted or "
+        #     message += f"are referenced incorrectly: {str(err)}"
+        #     raise StochSSModelFormatError(message, traceback.format_exc())
+        self.__convert_model_settings(model=s_model)
+        self.__convert_domain(model=s_model)
+        self.__convert_species(model=s_model)
+        self.__convert_initial_conditions(model=s_model)
+        self.__convert_parameters(model=s_model)
+        self.__convert_reactions(model=s_model)
+        self.log("debug", str(s_model))
+        return s_model
 
 
     def get_domain(self, path=None, new=False):

@@ -220,14 +220,14 @@ class StochSSModel(StochSSBase):
                 if name not in reactants.keys():
                     reactants[name] = stoich_species['ratio']
                 else:
-                    reactants[name] = stoich_species['ratio']
+                    reactants[name] += stoich_species['ratio']
             products = {}
             for stoich_species in reaction['products']:
                 name = stoich_species['specie']['name']
                 if name not in products.keys():
                     products[name] = stoich_species['ratio']
                 else:
-                    products[name] = stoich_species['ratio']
+                    products[name] += stoich_species['ratio']
             return reactants, products
         except KeyError as err:
             message = "Reactants or products are not properly formatted or "
