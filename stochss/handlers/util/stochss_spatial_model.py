@@ -161,6 +161,31 @@ class StochSSSpatialModel(StochSSBase):
             raise FileNotJSONFormatError(message, traceback.format_exc())
 
 
+    def convert_to_model(self):
+        '''
+        Convert a spatial model to a non_spatial model
+
+        Attributes
+        ----------
+        '''
+        if self.model is None:
+            s_model = self.load()
+        s_model['is_spatial'] = False
+        m_path = self.path.replace(".smdl", ".mdl")
+        m_file = self.get_file(path=m_path)
+        message = f"{self.get_file()} was successfully convert to {m_file}!"
+        return {"Message":message, "File":m_file}, {"model":s_model, "path":m_path}
+
+
+    def convert_to_spatialpy(self):
+        '''
+        Convert a spatial model to a spatialpy model
+
+        Attributes
+        ----------
+        '''
+
+
     def get_domain(self, path=None, new=False):
         '''
         Get a prospective domain

@@ -28,8 +28,8 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSBMLModel, \
-                  StochSSNotebook, StochSSWorkflow, StochSSAPIError, report_error
+from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSpatialModel, \
+                  StochSSSBMLModel, StochSSNotebook, StochSSWorkflow, StochSSAPIError, report_error
 
 
 log = logging.getLogger('stochss')
@@ -287,8 +287,8 @@ class ConvertToModelAPIHandler(APIHandler):
         log.debug("Converting spatial model to non-spatial model: %s", path)
         self.set_header('Content-Type', 'application/json')
         try:
-            s_model = StochSSModel(path=path)
-            resp, data = s_model.convert_to_model()
+            model = StochSSSpatialModel(path=path)
+            resp, data = model.convert_to_model()
             _ = StochSSModel(path=data['path'], new=True, model=data['model'])
             log.debug("Response: %s", resp)
             self.write(resp)
