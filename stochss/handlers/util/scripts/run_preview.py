@@ -32,7 +32,9 @@ from gillespy2 import ModelError, SimulationError
 
 sys.path.append("/stochss/stochss/handlers/") # pylint: disable=wrong-import-position
 from util.stochss_model import StochSSModel
+from util.stochss_spatial_model import StochSSSpatialModel
 from util.ensemble_simulation import EnsembleSimulation
+from util.spatial_simulation import SpatialSimulation
 
 def setup_logger():
     '''
@@ -64,29 +66,48 @@ def get_parsed_args():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
-    args = get_parsed_args()
-    log_stm = setup_logger()
-    model = StochSSModel(path=args.path)
-    wkfl = EnsembleSimulation(path="", preview=True)
-    wkfl.g_model = model.convert_to_gillespy2()
-    outfile = os.path.join(model.user_dir, f".{args.outfile}.tmp")
+def run_preview(wkfl):
+    '''
+    Run the preview simulation
+
+    wkfl : StochSSWorkflow instance
+        The wkfl used for the preview simulation
+    '''
+    resp = {"timeout": False}
     try:
         plot = wkfl.run(preview=True)
-        resp = {"results":plot}
+        resp["results"] = plot
+    except ModelError as error:
+        resp['errors'] = f"{error}"
+    except SimulationError as error:
+        resp['errors'] = f"{error}"
+    except ValueError as error:
+        resp['errors'] = f"{error}"
+    except Exception as error:
+        resp['errors'] = f"{error}"
+    return resp
+
+
+if __name__ == "__main__":
+    args = get_parsed_args()
+    is_spatial = args.path.endswith(".smdl")
+    if is_spatial:
+        model = StochSSSpatialModel(path=args.path)
+        wkfl = SpatialSimulation(path="", preview=True)
+        wkfl.s_py_model = model.convert_to_spatialpy
+    else:
+        log_stm = setup_logger()
+        model = StochSSModel(path=args.path)
+        wkfl = EnsembleSimulation(path="", preview=True)
+        wkfl.g_model = model.convert_to_gillespy2()
+    
+    resp = run_preview(wkfl)
+    if not is_spatial:
         if 'GillesPy2 simulation exceeded timeout.' in log_stm.getvalue():
             resp['timeout'] = True
-        else:
-            resp['timeout'] = False
-        with open(outfile, "w") as file:
-            json.dump(resp, file, cls=plotly.utils.PlotlyJSONEncoder)
-        open(f"{outfile}.done", "w").close()
         log_stm.close()
-    except ModelError as error:
-        resp['errors'] = "{0}".format(error)
-    except SimulationError as error:
-        resp['errors'] = "{0}".format(error)
-    except ValueError as error:
-        resp['errors'] = "{0}".format(error)
-    except Exception as error:
-        resp['errors'] = "{0}".format(error)
+    
+    outfile = os.path.join(model.user_dir, f".{args.outfile}.tmp")
+    with open(outfile, "w") as file:
+        json.dump(resp, file, cls=plotly.utils.PlotlyJSONEncoder)
+    open(f"{outfile}.done", "w").close()

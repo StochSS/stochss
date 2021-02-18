@@ -120,15 +120,14 @@ class StochSSSpatialModel(StochSSBase):
 
     def __convert_domain(self, model):
         try:
-            num_points = len(self.model['domain']['particles'])
             xlim = self.model['domain']['x_lim']
             ylim = self.model['domain']['y_lim']
             zlim = self.model['domain']['z_lim']
             rho0 = self.model['domain']['rho_0']
             c_0 = self.model['domain']['c_0']
             p_0 = self.model['domain']['p_0']
-            gravity = self.model['domain']['gravity']
-            mesh = Mesh(num_points, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
+            # gravity = self.model['domain']['gravity']
+            mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0)#, gravity=gravity)
             self.__convert_particles(mesh=mesh)
             model.mesh = mesh
         except KeyError as err:
@@ -199,7 +198,8 @@ class StochSSSpatialModel(StochSSBase):
         try:
             s_params = model.get_all_parameters()
             for reaction in self.model['reactions']:
-                reactants, products = self.__convert_stoich_species(reaction=reaction)
+                reactants, products = self.__convert_stoich_species(model=model,
+                                                                    reaction=reaction)
                 if reaction['reactionType'] != "custom-propensity":
                     rate = s_params[reaction['rate']['name']]
                     propensity = None
@@ -233,22 +233,25 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def __convert_stoich_species(cls, reaction):
+    def __convert_stoich_species(cls, model, reaction):
+        species = model.get_all_species()
         try:
             products = {}
             for stoich_species in reaction['products']:
                 name = stoich_species['specie']['name']
-                if name in products.keys():
-                    products[name] += stoich_species['ratio']
+                specie = species[name]
+                if specie in products.keys():
+                    products[specie] += stoich_species['ratio']
                 else:
-                    products[name] = stoich_species['ratio']
+                    products[specie] = stoich_species['ratio']
             reactants = {}
             for stoich_species in reaction['reactants']:
                 name = stoich_species['specie']['name']
-                if name in reactants.keys():
-                    reactants[name] += stoich_species['ratio']
+                specie = species[name]
+                if specie in reactants.keys():
+                    reactants[specie] += stoich_species['ratio']
                 else:
-                    reactants[name] = stoich_species['ratio']
+                    reactants[specie] = stoich_species['ratio']
             return reactants, products
         except KeyError as err:
             message = "Spatial model stoich species are not properly formatted or "
