@@ -188,6 +188,9 @@ let DomainEditor = PageView.extend({
       self.actPart = {"part":null, "tn":0, "pn":0};
       self.renderSubviews();
     });
+    $(document).on('shown.bs.modal', function (e) {
+      $('[autofocus]', e.target).focus();
+    });
   },
   addParticle: function (newPart, fromImport=false) {
     this.domain.particles.addParticle(newPart.point, newPart.volume,
@@ -532,7 +535,7 @@ let DomainEditor = PageView.extend({
     if(name) {
       let file = name + ".domn";
       var dirname = this.model ? path.dirname(this.model.directory) : this.domain.dirname;
-      var domainPath = path.join(dirname, file);
+      var domainPath = dirname === "/" ? file : path.join(dirname, file);
     }else{
       var domainPath = this.domain.directory;
     }
@@ -650,26 +653,3 @@ let DomainEditor = PageView.extend({
 });
 
 initPage(DomainEditor);
-
-/*
-Navigating to the domain editor page
-------------------------------
-- load the models domain
-    queryStr = "?path=<<model path>>"
-      ex. ?path=Examples/3D_Cylinder/3D_cylinder.smdl
-- load a domain from a file ie. .domn or .xml files
-    queryStr = "?path=<<model path>>&domainPath=<<domain file path>>"
-      ex. ?path=Examples/3D_Cylinder/3D_cylinder.smdl&domainPath=Examples/3D_Cylinder/3D_cylinder.domn
-- load a new domain (domainPath will be ignored if passed)
-    queryStr = "?path=<<model path>>&new"
-      ex. ?path=Examples/3D_Cylinder/3D_cylinder.smdl&new
-
-Loading the domain editor page
-------------------------------
-- load the models domain
-    queryStr = "?path=<<model path>>"
-- load a domain from a file ie. .domn or .xml files
-    queryStr = "?path=<<model path>>&domain_path=<<domain file path>>"
-- load a new domain (domainPath will be ignored if passed)
-    queryStr = "?path=<<model path>>&new=True"
-*/
