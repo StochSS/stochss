@@ -309,6 +309,32 @@ let DomainEditor = PageView.extend({
     Plotly.newPlot(el, this.plot);
     el.on('plotly_click', _.bind(this.selectParticle, this));
   },
+  getBreadcrumbData: function () {
+    var data = {"project":null, "model":null};
+    var projEP = "stochss/project/manager?path="
+    var mdlEP = "stochss/models/edit?path="
+    if(this.model) {
+      data.model = {"name":this.model.name, "href":mdlEP + this.model.directory};
+      let dirname = path.dirname(this.model.directory);
+      if(dirname.endsWith(".proj")) {
+        let name = dirname.split("/").pop().split(".proj")[0];
+        data.project = {"name":name, "href":projEP + dirname};
+      }
+      return data;
+    }
+    if(this.domain.directory.includes(".proj")) {
+      let pathEls = this.domain.directory.split("/");
+      let proj = pathEls.filter(function (val) {
+        return val.endsWith(".proj");
+      }).pop();
+      let index = pathEls.indexOf(proj) + 1;
+      let count = pathEls.length - index;
+      pathEls.splice(index, count);
+      let projPath = pathEls.join("/");
+      data.project = {"name":proj.split(".proj")[0], "href":projEP + projPath};
+    }
+    return data
+  },
   getNewParticle: function () {
     var particle = new Particle({
       point: [0, 0, 0],
@@ -487,6 +513,26 @@ let DomainEditor = PageView.extend({
     return this.renderSubview(view, this.queryByHook(hook));
   },
   renderSubviews: function () {
+    let breadData = this.getBreadcrumbData();
+    if(breadData.model && breadData.project) {
+      $(this.queryByHook("two-parent-breadcrumb-links")).css("display", "block");
+      let projBC = $(this.queryByHook("grandparent-breadcrumb"));
+      projBC.text(breadData.project.name);
+      projBC.prop("href", breadData.project.href);
+      let mdlBC = $(this.queryByHook("parent-two-breadcrumb"));
+      mdlBC.text(breadData.model.name);
+      mdlBC.prop("href", breadData.model.href);
+    }else if(breadData.model || breadData.project) {
+      $(this.queryByHook("one-parent-breadcrumb-links")).css("display", "block");
+      let breadcrumb = $(this.queryByHook("parent-one-breadcrumb"));
+      if(breadData.project) {
+        breadcrumb.text(breadData.project.name)
+        breadcrumb.prop("href", breadData.project.href);
+      }else {
+        breadcrumb.text(breadData.model.name)
+        breadcrumb.prop("href", breadData.model.href);
+      }
+    }
     this.renderDomainProperties();
     this.renderDomainLimitations();
     $(this.queryByHook("reflect_x")).prop("checked", this.domain.boundary_condition.reflect_x);
