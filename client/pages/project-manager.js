@@ -220,8 +220,9 @@ let ProjectManager = PageView.extend({
       console.log("Saved project notes")
     })
   },
-  handleNewModelClick: function () {
-    this.addNewModel(false)
+  handleNewModelClick: function (e) {
+    let isSpatial = e.target.dataset.type === "spatial"
+    this.addNewModel(isSpatial)
   },
   handleNewWorkflowGroupClick: function () {
     this.addNewWorkflowGroup()
@@ -280,7 +281,8 @@ let ProjectManager = PageView.extend({
     okBtn.addEventListener('click', function (e) {
       modal.modal('hide')
       if (Boolean(input.value)) {
-        let modelName = input.value.split("/").pop() + '.mdl';
+        let ext = isSpatial ? ".smdl" : ".mdl"
+        let modelName = input.value.split("/").pop() + ext;
         let message = modelName.split(".")[0] !== input.value ? 
               "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
         let modelPath = path.join(self.projectPath, modelName)

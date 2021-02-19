@@ -21,15 +21,15 @@ div
 
   div.mx-5.mt-4.collapse(data-hook="collapse-annotation-container"+this.model.name.replace(/ /g,""))
 
-    div.col-md-1.inline.align-top
+    div.col-md-2.inline.align-top
 
-      div.row
+      div
 
-        div: h5="Notes: "
+        div.inline: h5="Notes: "
 
-        div: button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#annotation-text"+this.model.name.replace(/ /g,"") data-hook="collapse-annotation-text") -
+        div.inline: button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#annotation-text"+this.model.name.replace(/ /g,"") data-hook="collapse-annotation-text") -
 
-    div.collapse.show.col-md-11.inline(id="annotation-text"+this.model.name.replace(/ /g,""))
+    div.collapse.show.col-md-10.inline(id="annotation-text"+this.model.name.replace(/ /g,""))
 
         div: textarea(id="annotation"+this.model.name.replace(/ /g,"") data-hook="annotation" rows="7" style="width: 100%;")=this.model.annotation
 
