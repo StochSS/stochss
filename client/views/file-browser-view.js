@@ -38,6 +38,7 @@ module.exports = View.extend({
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
     'click [data-hook=browser-new-workflow-group]' : 'handleCreateWorkflowGroupClick',
     'click [data-hook=browser-new-model]' : 'handleCreateModelClick',
+    'click [data-hook=browser-new-domain]' : 'handelCreateDomainClick',
     'click [data-hook=browser-existing-model]' : 'handleAddExistingModelClick',
     'click [data-hook=upload-file-btn-bf]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
@@ -870,8 +871,12 @@ module.exports = View.extend({
     this.newWorkflowGroup(undefined)
   },
   handleCreateModelClick: function (e) {
-    let isSpatial = false
+    let isSpatial = e.target.dataset.type === "spatial"
     this.newModelOrDirectory(undefined, true, isSpatial);
+  },
+  handelCreateDomainClick: function (e) {
+    let queryStr = "?domainPath=" + this.parent.projectPath + "&new"
+    window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
   },
   handleExtractModelClick: function (o) {
     let self = this
