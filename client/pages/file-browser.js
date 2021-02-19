@@ -40,6 +40,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
     'click [data-hook=new-project]' : 'handleCreateProjectClick',
     'click [data-hook=new-model]' : 'handleCreateModelClick',
+    'click [data-hook=new-domain]' : 'handleCreateDomain',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
@@ -807,8 +808,12 @@ let FileBrowser = PageView.extend({
     this.newProjectOrWorkflowGroup(undefined, true)
   },
   handleCreateModelClick: function (e) {
-    let isSpatial = false
+    let isSpatial = e.target.dataset.type === "spatial"
     this.newModelOrDirectory(undefined, true, isSpatial);
+  },
+  handleCreateDomain: function (e) {
+    let queryStr = "?domainPath=/&new"
+    window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
   },
   showContextMenuForNode: function (e) {
     $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
