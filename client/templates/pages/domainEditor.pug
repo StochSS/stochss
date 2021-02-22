@@ -135,7 +135,9 @@ section.page
     
       button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#domain-plot", data-hook="collapse-domain-plot") -
 
-    div.collapse.show(id="domain-plot" data-hook="domain-plot")
+    div.collapse.show(id="domain-plot" data-hook="domain-plot-container")
+
+      div(data-hook="domain-plot" style="height: 800px")
 
   div.card.card-body
 
@@ -159,6 +161,10 @@ section.page
 
         li.nav-item
 
+          a.nav-link.tab(data-toggle="tab" href="#set-particle-types") Set Particle Types
+
+        li.nav-item
+
           a.nav-link.tab(data-toggle="tab" href="#add-3d-domain") Create 3D Domain
 
         li.nav-item
@@ -172,6 +178,29 @@ section.page
         div.tab-pane(id="edit-particle" data-hook="edit-particle")
 
         div.tab-pane(id="add-3d-domain" data-hook="add-3d-domain")
+
+        div.tab-pane(id="set-particle-types" data-hook="set-particle-types")
+
+          div.my-3
+
+            div.text-info(data-hook="type-location-message" style="display: none")
+              | There are multiple type files with that name, please select a location
+
+            div.inline.mr-3
+
+              span.inline.mr-2(for="types-file-select") Select type description file:
+
+              div.inline(id="types-file-select" data-hook="types-file-select")
+
+            div.inline(data-hook="type-location-container" style="display: none")
+
+              span.inlinemr-2(for="types-file-location-select") Location:
+
+              div.inline(id="types-file-location-select" data-hook="types-file-location-select")
+
+          div
+
+            button.btn.btn-outline-primary.box-shadow(data-hook="set-particle-types-btn" disabled) Set Types
 
         div.tab-pane(id="import-particles")
 

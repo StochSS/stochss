@@ -54,6 +54,7 @@ let DomainEditor = PageView.extend({
     'click [data-hook=save-to-model]' : 'handleSaveToModel',
     'click [data-hook=save-to-file]' : 'handleSaveToFile',
     'click [data-hook=import-particles-btn]' : 'handleImportMesh',
+    'click [data-hook=set-particle-types-btn]' : 'getTypesFromFile',
     'change [data-hook=density]' : 'setDensity',
     'change [data-hook=gravity]' : 'setGravity',
     'change [data-hook=pressure]' : 'setPressure',
@@ -61,7 +62,9 @@ let DomainEditor = PageView.extend({
     'change [data-name=limitation]' : 'setLimitation',
     'change [data-target=reflect]' : 'setBoundaryCondition',
     'change #meshfile' : 'updateImportBtn',
-    'change [data-hook=mesh-type-select]' : 'updateMeshTypeAndDefaults'
+    'change [data-hook=mesh-type-select]' : 'updateMeshTypeAndDefaults',
+    'change [data-hook=types-file-select]' : 'handleSelectTypeFile',
+    'change [data-hook=types-file-location-select]' : 'handleSelectTypeLocation'
   },
   handleAddDomainType: function () {
     this.selectedType = "new";
@@ -156,6 +159,30 @@ let DomainEditor = PageView.extend({
       });
     }
   },
+  handleSelectTypeFile: function (e) {
+    let value = e.srcElement.value;
+    if(value) {
+      if(this.typeDescriptions[value].length <= 1) {
+        this.typeDescriptionsFile = this.typeDescriptions[value][0];
+        var disabled = false;
+      }else{
+        $(this.queryByHook("type-location-message")).css('display', "block");
+        $(this.queryByHook("type-location-container")).css("display", "inline-block");
+        this.renderTypesLocationSelect(this.typeDescriptions[value]);
+        var disabled = true;
+      }
+    }else{
+      $(this.queryByHook("type-location-message")).css('display', "none");
+      $(this.queryByHook("type-location-container")).css("display", "none");
+      var disabled = true;
+    }
+    console.log(disabled)
+    $(this.queryByHook("set-particle-types-btn")).prop("disabled", disabled);
+  },
+  handleSelectTypeLocation: function (e) {
+    this.typeDescriptionsFile = e.srcElement.value;
+    $(this.queryByHook("set-particle-types-btn")).prop("disabled", false);
+  },
   updateImportBtn: function (e) {
     $(this.queryByHook("import-particles-btn")).prop("disabled", !Boolean(e.target.files.length))
   },
@@ -216,6 +243,18 @@ let DomainEditor = PageView.extend({
     this.renderDomainTypes();
     this.updatePlot();
   },
+  addMissingTypes: function (types) {
+    let self = this;
+    let defaultType = self.domain.types.get(0, "typeID");
+    types.forEach(function (type) {
+      let domainType = self.domain.types.get(type, "typeID");
+      if(!domainType) {
+        self.domain.types.addType(defaultType.volume, defaultType.mass,
+                                  defaultType.nu, defaultType.fixed);
+        self.addType(String(type));
+      }
+    });
+  },
   addType: function (name) {
     this.renderEditParticle();
     this.renderNewParticle();
@@ -251,6 +290,24 @@ let DomainEditor = PageView.extend({
     this.plot.data[this.actPart.tn].y[this.actPart.pn] = y;
     this.plot.data[this.actPart.tn].z[this.actPart.pn] = z;
     this.actPart.part.pointChanged = false;
+  },
+  changeParticleTypes: function (types) {
+    let self = this;
+    types.forEach(function (type) {
+      let particle = self.domain.particles.get(type.particle_id, "particle_id");
+      self.actPart.part = particle;
+      for(var i = 0; i < self.plot.data.length; i++) {
+        let trace = self.plot.data[i];
+        if(trace.ids.includes(String(type.particle_id))){
+          self.actPart.tn = self.plot.data.indexOf(trace);
+          self.actPart.pn = trace.ids.indexOf(String(type.particle_id));
+          break;
+        }
+      };
+      self.changeParticleType(type.typeID)
+    });
+    this.renderDomainTypes();
+    this.updatePlot();
   },
   changeParticleType: function (type) {
     this.domain.particles.get(this.actPart.part.particle_id, "particle_id").type = type
@@ -345,6 +402,19 @@ let DomainEditor = PageView.extend({
       type: 0
     });
     return particle;
+  },
+  getTypesFromFile: function (typePath) {
+    let self = this;
+    let queryStr = "?path=" + this.typeDescriptionsFile;
+    let endpoint = path.join(app.getApiPath(), "spatial-model/particle-types") + queryStr;
+    xhr({uri: endpoint, json: true}, function (err, resp, body) {
+      if(resp.statusCode < 400) {
+        self.addMissingTypes(body.names)
+        self.changeParticleTypes(body.types)
+      }else{
+        console.log(err)
+      }
+    });
   },
   renameType: function (index, newName) {
     this.domain.types.get(index, "typeID").name = newName;
@@ -544,6 +614,7 @@ let DomainEditor = PageView.extend({
     this.renderTypeSelectView();
     this.renderMeshTypeDefaults(0);
     this.renderMeshTransformations();
+    this.renderTypesFileSelect();
     this.renderCreate3DDomain();
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
@@ -562,6 +633,36 @@ let DomainEditor = PageView.extend({
     if(!this.model) {
       $(this.queryByHook("save-to-model")).addClass("disabled")
     }
+  },
+  renderTypesFileSelect: function () {
+    let self = this;
+    let endpoint = path.join(app.getApiPath(), "spatial-model/types-list");
+    xhr({uri: endpoint, json:true}, function (err, resp, body) {
+      self.typeDescriptions = body.paths;
+      var typesSelectView = new SelectView({
+        label: '',
+        name: 'type-files',
+        required: false,
+        idAttributes: 'cid',
+        options: body.files,
+        unselectedText: "-- Select Type File --",
+      });
+      self.registerRenderSubview(typesSelectView, "types-file-select")
+    });
+  },
+  renderTypesLocationSelect: function (options) {
+    if(this.typesLocationSelectView) {
+      this.typesLocationSelectView.remove();
+    }
+    this.typesLocationSelectView = new SelectView({
+      label: '',
+      name: 'type-locations',
+      required: false,
+      idAttributes: 'cid',
+      options: options,
+      unselectedText: "-- Select Location --"
+    });
+    this.registerRenderSubview(this.typesLocationSelectView, "types-file-location-select")
   },
   renderTypeSelectView: function () {
     var typeView = new SelectView({

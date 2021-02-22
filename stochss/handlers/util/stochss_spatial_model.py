@@ -455,15 +455,19 @@ class StochSSSpatialModel(StochSSBase):
         with open(path, "r") as types_file:
             lines = types_file.readlines()
         types = []
+        names = []
         for line in lines:
             if line.strip().replace(",", "", 1).isdigit():
                 part_id, type_id = line.strip().split(",")
-                types.append({"particle_id":int(part_id), "typeID":int(type_id)})
+                type_id = int(type_id)
+                if type_id not in names:
+                    names.append(type_id)
+                types.append({"particle_id":int(part_id), "typeID":type_id})
             else:
                 message = "The type descriptions are not in the proper format "
                 message += "(i.e. particle_id,type_id)"
                 raise DomainFormatError(message, traceback.format_exc())
-        return {"types":types}
+        return {"types":types, "names":sorted(names)}
 
 
     def load(self):
