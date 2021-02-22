@@ -64,7 +64,7 @@ class SpatialSimulation(StochSSWorkflow):
         if preview:
             if verbose:
                 self.log("info", "Running a preview spatial ensemble simulation")
-            results = self.s_py_model.run(timeout=60)
+            results = self.s_py_model.run(timeout=300)
             species = list(self.s_py_model.get_all_species().keys())[0]
             t_ndx_list = list(range(len(os.listdir(results.result_dir)) - 1))
             plot = results.plot_species(species=species, t_ndx_list=t_ndx_list,
