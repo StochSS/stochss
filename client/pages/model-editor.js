@@ -205,6 +205,7 @@ let ModelEditor = PageView.extend({
     this.registerRenderSubview(this.modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
+      $(this.queryByHook("spatial-beta-message")).css("display", "block")
       this.renderDomainViewer();
       this.renderInitialConditions();
     }else {

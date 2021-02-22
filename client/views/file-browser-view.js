@@ -995,7 +995,7 @@ module.exports = View.extend({
               "separator_after" : false,
               "submenu" : {
                 "spatial" : {
-                  "label" : "Spatial",
+                  "label" : "Spatial (beta)",
                   "_disabled" : false,
                   "separator_before" : false,
                   "separator_after" : false,
@@ -1080,7 +1080,7 @@ module.exports = View.extend({
           }
         },
         "New Domain" : {
-          "label" : "New Domain",
+          "label" : "New Domain (beta)",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
@@ -1123,7 +1123,7 @@ module.exports = View.extend({
             "DownloadAsZip": download.Download,
             "downloadAsCombine" : {
               "label" : "as COMBINE",
-              "_disabled" : false,
+              "_disabled" : true,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {

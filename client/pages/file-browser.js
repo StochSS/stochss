@@ -928,7 +928,7 @@ let FileBrowser = PageView.extend({
           "separator_after" : false,
           "submenu" : {
             "spatial" : {
-              "label" : "Spatial",
+              "label" : "Spatial (beta)",
               "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
@@ -948,7 +948,7 @@ let FileBrowser = PageView.extend({
           }
         },
         "New Domain" : {
-          "label" : "New Domain",
+          "label" : "New Domain (beta)",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
