@@ -74,6 +74,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/spatial-model/types-list\/?", LoadParticleTypesDescriptions),
         (r"/stochss/api/spatial-model/domain-plot\/?", LoadDomainAPIHandler),
         (r"/stochss/api/spatial-model/load-domain\/?", LoadDomainEditorAPIHandler),
+        (r"/stochss/api/spatial-model/particle-types\/?", GetParticlesTypesAPIHandler),
         (r"/stochss/api/spatial-model/import-mesh\/?", ImportMeshAPIHandler),
         (r"/stochss/api/spatial-model/3d-domain\/?", Create3DDomainAPIHandler),
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),

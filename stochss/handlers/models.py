@@ -342,3 +342,30 @@ class Create3DDomainAPIHandler(APIHandler):
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
+
+
+class GetParticlesTypesAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler getting particle types.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get particle types from a text file.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the file: %s", path)
+        try:
+            model = StochSSSpatialModel(path="")
+            resp = model.get_types_from_file(path=path)
+            log.debug("Number of Particles: %s", len(resp['types']))
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()

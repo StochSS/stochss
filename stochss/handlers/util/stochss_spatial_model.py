@@ -442,6 +442,30 @@ class StochSSSpatialModel(StochSSBase):
         return {"particles":particles}
 
 
+    def get_types_from_file(self, path):
+        '''
+        Get the type descriptions from the .txt file
+
+        Attributes
+        ----------
+        path : str
+            Path to the types description file
+        '''
+        path = os.path.join(self.user_dir, path)
+        with open(path, "r") as types_file:
+            lines = types_file.readlines()
+        types = []
+        for line in lines:
+            if line.strip().replace(",", "", 1).isdigit():
+                part_id, type_id = line.strip().split(",")
+                types.append({"particle_id":int(part_id), "typeID":int(type_id)})
+            else:
+                message = "The type descriptions are not in the proper format "
+                message += "(i.e. particle_id,type_id)"
+                raise DomainFormatError(message, traceback.format_exc())
+        return {"types":types}
+
+
     def load(self):
         '''
         Reads the spatial model file, updates it to the current format, and stores it in self.model
