@@ -285,7 +285,32 @@ class LoadExternalDomains(APIHandler):
         self.set_header('Content-Type', 'application/json')
         try:
             folder = StochSSFolder(path="")
-            resp = folder.get_domain_files()
+            resp = folder.get_file_list(ext=".domn")
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class LoadParticleTypesDescriptions(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting particle type description files.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get text files on disc for particles type description selection.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        try:
+            folder = StochSSFolder(path="")
+            resp = folder.get_file_list(ext=".txt")
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
