@@ -26,7 +26,7 @@ module.exports = State.extend({
   props: {
     boundary_condition: 'object',
     c_0: 'number',
-    gravity: 'number',
+    gravity: 'object',
     p_0: 'number',
     rho_0: 'number',
     size: 'number',
