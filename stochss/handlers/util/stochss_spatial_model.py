@@ -120,13 +120,16 @@ class StochSSSpatialModel(StochSSBase):
 
     def __convert_domain(self, model):
         try:
-            xlim = self.model['domain']['x_lim']
-            ylim = self.model['domain']['y_lim']
-            zlim = self.model['domain']['z_lim']
+            xlim = tuple(self.model['domain']['x_lim'])
+            ylim = tuple(self.model['domain']['y_lim'])
+            zlim = tuple(self.model['domain']['z_lim'])
             rho0 = self.model['domain']['rho_0']
             c_0 = self.model['domain']['c_0']
             p_0 = self.model['domain']['p_0']
             # gravity = self.model['domain']['gravity']
+            type_ids = list(map(lambda d_type: d_type['typeID'], self.model['domain']['types']))
+            type_ids.pop(0)
+            model.listOfTypeIDs = type_ids
             mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0)#, gravity=gravity)
             self.__convert_particles(mesh=mesh)
             model.mesh = mesh
@@ -160,22 +163,12 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc())
 
 
-    def __convert_particles(self, mesh):
-        try:
-            for particle in self.model['domain']['particles']:
-                mesh.add_point(particle['point'], particle['volume'], particle['mass'],
-                               particle['type'], particle['nu'], particle['fixed'])
-        except KeyError as err:
-            message = "Spatial model domain particle properties are not properly formatted or "
-            message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
-
-
     def __convert_model_settings(self, model):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
             tspan = numpy.arange(0, end, step_size)
+            model.timestep_size = step_size
             model.timespan(tspan)
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
@@ -194,6 +187,17 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc())
 
 
+    def __convert_particles(self, mesh):
+        try:
+            for particle in self.model['domain']['particles']:
+                mesh.add_point(particle['point'], particle['volume'], particle['mass'],
+                               particle['type'], particle['nu'], particle['fixed'])
+        except KeyError as err:
+            message = "Spatial model domain particle properties are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc())
+
+
     def __convert_reactions(self, model):
         try:
             s_params = model.get_all_parameters()
@@ -206,12 +210,15 @@ class StochSSSpatialModel(StochSSBase):
                 else:
                     rate = None
                     propensity = reaction['propensity']
+                types = reaction['types']
+                if len(types) == len(model.listOfTypeIDs):
+                    types = None
                 s_reaction = Reaction(name=reaction['name'],
                                       reactants=reactants,
                                       products=products,
                                       rate=rate,
                                       propensity_function=propensity,
-                                      restrict_to=reaction['types'])
+                                      restrict_to=types)
                 model.add_reaction(s_reaction)
         except KeyError as err:
             message = "Spatial model reactions are not properly formatted or "
