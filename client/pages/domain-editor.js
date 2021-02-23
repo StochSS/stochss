@@ -56,7 +56,7 @@ let DomainEditor = PageView.extend({
     'click [data-hook=import-particles-btn]' : 'handleImportMesh',
     'click [data-hook=set-particle-types-btn]' : 'getTypesFromFile',
     'change [data-hook=density]' : 'setDensity',
-    'change [data-hook=gravity]' : 'setGravity',
+    'change [data-target=gravity]' : 'setGravity',
     'change [data-hook=pressure]' : 'setPressure',
     'change [data-hook=speed]' : 'setSpeed',
     'change [data-name=limitation]' : 'setLimitation',
@@ -461,10 +461,18 @@ let DomainEditor = PageView.extend({
                                      name: 'density', valueType: 'number',
                                      value: this.domain.rho_0 || 1});
     this.registerRenderSubview(densityView, "density");
-    let gravityView = new InputView({parent: this, required: true,
-                                     name: 'gravity', valueType: 'number',
-                                     value: this.domain.gravity || 0});
-    this.registerRenderSubview(gravityView, "gravity");
+    let gravityXView = new InputView({parent: this, required: true,
+                                     name: 'gravity-x', valueType: 'number',
+                                     value: this.domain.gravity[0], label: "X:  "});
+    this.registerRenderSubview(gravityXView, "gravity-x");
+    let gravityYView = new InputView({parent: this, required: true,
+                                     name: 'gravity-y', valueType: 'number',
+                                     value: this.domain.gravity[1], label: "Y:  "});
+    this.registerRenderSubview(gravityYView, "gravity-y");
+    let gravityZView = new InputView({parent: this, required: true,
+                                     name: 'gravity-z', valueType: 'number',
+                                     value: this.domain.gravity[2], label: "Z:  "});
+    this.registerRenderSubview(gravityZView, "gravity-z");
     let pressureView = new InputView({parent: this, required: true,
                                       name: 'pressure', valueType: 'number',
                                       value: this.domain.p_0 || 0});
@@ -717,7 +725,14 @@ let DomainEditor = PageView.extend({
   },
   setGravity: function (e) {
     let value = Number(e.target.value)
-    this.domain.gravity = value;
+    let hook = e.target.parentElement.parentElement.dataset.hook;
+    if(hook.endsWith("x")){
+      this.domain.gravity[0] = value;
+    }else if(hook.endsWith("y")) {
+      this.domain.gravity[1] = value;
+    }else {
+      this.domain.gravity[2] = value;
+    }
   },
   setPressure: function (e) {
     let value = Number(e.target.value)

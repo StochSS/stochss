@@ -87,6 +87,13 @@ module.exports = View.extend({
     this.model.particles.forEach(function (particle) {
       self.model.types.get(particle.type, "typeID").numParticles += 1;
     });
+    this.gravity = this.getGravityString()
+  },
+  getGravityString: function () {
+    var gravity = "(X: " + this.model.gravity[0];
+    gravity += ", Y: " + this.model.gravity[1];
+    gravity += ", Z: " + this.model.gravity[2] + ")";
+    return gravity;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);

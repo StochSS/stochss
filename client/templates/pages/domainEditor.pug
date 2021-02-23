@@ -55,7 +55,10 @@ section.page
         tbody
           tr
             td: div(data-hook="density")
-            td: div(data-hook="gravity")
+            td
+              div(data-target="gravity" data-hook="gravity-x")
+              div(data-target="gravity" data-hook="gravity-y")
+              div(data-target="gravity" data-hook="gravity-z")
             td: div(data-hook="pressure")
             td: div(data-hook="speed")
 
