@@ -70,11 +70,12 @@ class StochSSSpatialModel(StochSSBase):
 
     def __build_stochss_domain(self, s_domain):
         particles = self.__build_stochss_domain_particles(s_domain=s_domain)
+        gravity = [0] * 3 if s_domain.gravity is None else s_domain.gravity
         domain = {"size":s_domain.mesh_size,
                   "rho_0":s_domain.rho0, # density
                   "c_0":s_domain.c0, # approx./artificial speed of sound
                   "p_0":s_domain.P0, # atmos/background pressure
-                  "gravity":s_domain.gravity,
+                  "gravity":gravity,
                   "x_lim":s_domain.xlim,
                   "y_lim":s_domain.ylim,
                   "z_lim":s_domain.zlim,
@@ -126,11 +127,13 @@ class StochSSSpatialModel(StochSSBase):
             rho0 = self.model['domain']['rho_0']
             c_0 = self.model['domain']['c_0']
             p_0 = self.model['domain']['p_0']
-            # gravity = self.model['domain']['gravity']
+            gravity = self.model['domain']['gravity']
+            if gravity == [0, 0, 0]:
+                gravity = None
             type_ids = list(map(lambda d_type: d_type['typeID'], self.model['domain']['types']))
             type_ids.pop(0)
             model.listOfTypeIDs = type_ids
-            mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0)#, gravity=gravity)
+            mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
             self.__convert_particles(mesh=mesh)
             model.mesh = mesh
         except KeyError as err:
