@@ -64,11 +64,12 @@ class SpatialSimulation(StochSSWorkflow):
         if preview:
             if verbose:
                 self.log("info", "Running a preview spatial ensemble simulation")
-            results = self.s_py_model.run(timeout=300)
+            results = self.s_py_model.run(timeout=60)
             species = list(self.s_py_model.get_all_species().keys())[0]
             t_ndx_list = list(range(len(os.listdir(results.result_dir)) - 1))
             plot = results.plot_species(species=species, t_ndx_list=t_ndx_list, animated=True,
-                                        width=None, height=None, return_plotly_figure=True)
+                                        width=None, height=None, return_plotly_figure=True,
+                                        f_duration=100, t_duration=100)
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot
