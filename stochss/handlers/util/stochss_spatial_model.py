@@ -68,8 +68,9 @@ class StochSSSpatialModel(StochSSBase):
             self.model = None
 
 
-    def __build_stochss_domain(self, s_domain):
-        particles = self.__build_stochss_domain_particles(s_domain=s_domain)
+    @classmethod
+    def __build_stochss_domain(cls, s_domain, data=None):
+        particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
         gravity = [0] * 3 if s_domain.gravity is None else s_domain.gravity
         domain = {"size":s_domain.mesh_size,
                   "rho_0":s_domain.rho0, # density
@@ -448,8 +449,9 @@ class StochSSSpatialModel(StochSSBase):
         with open(file.name, "w") as mesh_file:
             mesh_file.write(mesh)
         s_domain = Mesh.read_xml_mesh(filename=file.name)
-        particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
-        return {"particles":particles}
+        domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
+        limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
+        return {"particles":domain['particles'], "limits":limits}
 
 
     def get_types_from_file(self, path):

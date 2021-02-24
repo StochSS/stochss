@@ -96,7 +96,26 @@ let DomainEditor = PageView.extend({
     req.onload = function (e) {
       var resp = JSON.parse(req.response);
       if(req.status < 400) {
-        self.addParticles(resp.particles)
+        self.addParticles(resp.particles);
+        if(self.domain.x_lim[0] > resp.limits.x_lim[0]) {
+          self.domain.x_lim[0] = resp.limits.x_lim[0]
+        }
+        if(self.domain.y_lim[0] > resp.limits.y_lim[0]) {
+          self.domain.y_lim[0] = resp.limits.y_lim[0]
+        }
+        if(self.domain.z_lim[0] > resp.limits.z_lim[0]) {
+          self.domain.z_lim[0] = resp.limits.z_lim[0]
+        }
+        if(self.domain.x_lim[1] < resp.limits.x_lim[1]) {
+          self.domain.x_lim[1] = resp.limits.x_lim[1]
+        }
+        if(self.domain.y_lim[1] < resp.limits.y_lim[1]) {
+          self.domain.y_lim[1] = resp.limits.y_lim[1]
+        }
+        if(self.domain.z_lim[1] < resp.limits.z_lim[1]) {
+          self.domain.z_lim[1] = resp.limits.z_lim[1]
+        }
+        self.renderDomainLimitations();
       }
     }
     req.send(formData)
