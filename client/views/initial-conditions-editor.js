@@ -34,6 +34,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.opened = attrs.opened;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -42,6 +43,9 @@ module.exports = View.extend({
       EditInitialCondition,
       this.queryByHook('initial-conditions-collection')
     );
+    if(this.opened) {
+      this.openInitialConditionContainer();
+    }
   },
   update: function () {
   },
@@ -63,6 +67,11 @@ module.exports = View.extend({
   switchToViewMode: function (e) {
     this.parent.modelStateButtons.clickSaveHandler(e);
     this.parent.renderInitialConditions(mode="view");
+  },
+  openInitialConditionContainer: function () {
+    $(this.queryByHook('initial-conditions')).collapse('show');
+    let collapseBtn = $(this.queryByHook('initial-condition-button'))
+    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

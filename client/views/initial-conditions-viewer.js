@@ -44,7 +44,7 @@ module.exports = View.extend({
     });
   },
   switchToEditMode: function (e) {
-    this.parent.renderInitialConditions();
+    this.parent.renderInitialConditions("edit", true);
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook

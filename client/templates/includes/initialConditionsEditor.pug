@@ -8,6 +8,13 @@ div#initial-conditions.card.card-body
 
   div.collapse(id="initial-condition" data-hook="initial-conditions")
 
+    p
+      | Define the initial conditions for a spatial simulation
+    ul
+      li A <b>'Scatter'</b> initial condition distributes <i>Count</i> particles over the chosen types.
+      li A <b>'Place'</b> initial condition places <i>Count</i> particles at a given X, Y, Z coordinate.
+      li A <b>'Distribute Uniformly per Voxel'</b> initial condition puts <i>Count</i> particles in each voxel of the chosen types.
+
     table.table
 
       thead

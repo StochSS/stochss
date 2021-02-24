@@ -269,13 +269,14 @@ let ModelEditor = PageView.extend({
     }
     this.registerRenderSubview(this.speciesEditor, 'species-editor-container');
   },
-  renderInitialConditions: function (mode="edit") {
+  renderInitialConditions: function (mode="edit", opened=false) {
     if(this.initialConditionsEditor) {
       this.initialConditionsEditor.remove();
     }
     if(mode === "edit") {
       this.initialConditionsEditor = new InitialConditionsEditorView({
-        collection: this.model.initialConditions
+        collection: this.model.initialConditions,
+        opened: opened
       });
     }else{
       this.initialConditionsEditor = new InitialConditionsViewer({
