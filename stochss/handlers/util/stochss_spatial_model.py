@@ -467,7 +467,7 @@ class StochSSSpatialModel(StochSSBase):
         types = []
         names = []
         for line in lines:
-            if line.strip().replace(",", "", 1).isdigit():
+            if line.strip().replace(".0", "").replace(",", "", 1).isdigit():
                 part_id, type_id = line.strip().split(",")
                 type_id = int(type_id)
                 if type_id not in names:
@@ -475,7 +475,7 @@ class StochSSSpatialModel(StochSSBase):
                 types.append({"particle_id":int(part_id), "typeID":type_id})
             else:
                 message = "The type descriptions are not in the proper format "
-                message += "(i.e. particle_id,type_id)"
+                message += "(i.e. particle_id (int),type_id (int))"
                 raise DomainFormatError(message, traceback.format_exc())
         return {"types":types, "names":sorted(names)}
 
