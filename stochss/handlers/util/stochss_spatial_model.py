@@ -353,7 +353,7 @@ class StochSSSpatialModel(StochSSBase):
         self.__convert_initial_conditions(model=s_model)
         self.__convert_parameters(model=s_model)
         self.__convert_reactions(model=s_model)
-        self.log("debug", str(s_model))
+        # self.log("debug", str(s_model))
         return s_model
 
 
@@ -469,6 +469,8 @@ class StochSSSpatialModel(StochSSBase):
         for line in lines:
             if line.strip().replace(".0", "").replace(",", "", 1).isdigit():
                 part_id, type_id = line.strip().split(",")
+                if '.' in type_id:
+                    type_id = float(type_id)
                 type_id = int(type_id)
                 if type_id not in names:
                     names.append(type_id)
