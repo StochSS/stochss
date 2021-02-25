@@ -29,10 +29,12 @@ module.exports = View.extend({
     'click [data-hook=scatter]' : 'addInitialCondition',
     'click [data-hook=place]' : 'addInitialCondition',
     'click [data-hook=distribute-uniformly]' : 'addInitialCondition',
-    'click [data-hook=collapse]' : 'cangeCollapseButtonText',
+    'click [data-hook=initial-condition-button]' : 'changeCollapseButtonText',
+    'click [data-hook=save-initial-conditions]' : 'switchToViewMode',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.opened = attrs.opened;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -41,6 +43,9 @@ module.exports = View.extend({
       EditInitialCondition,
       this.queryByHook('initial-conditions-collection')
     );
+    if(this.opened) {
+      this.openInitialConditionContainer();
+    }
   },
   update: function () {
   },
@@ -48,7 +53,25 @@ module.exports = View.extend({
   },
   addInitialCondition: function (e) {
     var initialConditionType = e.target.textContent;
-    this.collection.addInitialCondition(initialConditionType);
+    if(this.collection.parent.domain.types.length > 1) {
+      var types = this.collection.parent.domain.types.map(function (type) {
+        return type.typeID;
+      });
+      types.shift();
+    }else {
+      var types = [];
+    }
+    console.log(initialConditionType, types)
+    this.collection.addInitialCondition(initialConditionType, types);
+  },
+  switchToViewMode: function (e) {
+    this.parent.modelStateButtons.clickSaveHandler(e);
+    this.parent.renderInitialConditions(mode="view");
+  },
+  openInitialConditionContainer: function () {
+    $(this.queryByHook('initial-conditions')).collapse('show');
+    let collapseBtn = $(this.queryByHook('initial-condition-button'))
+    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     let source = e.target.dataset.hook
@@ -58,5 +81,5 @@ module.exports = View.extend({
       let text = collapseBtn.text();
       text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
     }
-  },
+  }
 });

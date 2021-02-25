@@ -29,7 +29,9 @@ div#browse-files.card.card-body
 
       ul.dropdown-menu(aria-labelledby="project-browse-files-add-btn")
         li.dropdown-item(id="new-directory" data-hook="new-directory") Create Directory
-        li.dropdown-item(id="browser-new-model" data-hook="browser-new-model") Create Model
+        li.dropdown-item(id="browser-new-model" data-hook="browser-new-model" data-type="model") Create Model
+        li.dropdown-item(id="browser-new-spatial-model" data-hook="browser-new-model" data-type="spatial") Create Spatial Model (beta)
+        li.dropdown-item(id="browser-new-domain" data-hook="browser-new-domain") Create Domain (beta)
         li.dropdown-divider
         li.dropdown-item(id="browser-existing-model" data-hook="browser-existing-model") Add Existing Model
         li.dropdown-divider

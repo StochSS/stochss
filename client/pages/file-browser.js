@@ -40,6 +40,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
     'click [data-hook=new-project]' : 'handleCreateProjectClick',
     'click [data-hook=new-model]' : 'handleCreateModelClick',
+    'click [data-hook=new-domain]' : 'handleCreateDomain',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
@@ -131,7 +132,7 @@ let FileBrowser = PageView.extend({
         'workflow-group' : {"icon": "jstree-icon jstree-file"},
         'workflow' : {"icon": "jstree-icon jstree-file"},
         'notebook' : {"icon": "jstree-icon jstree-file"},
-        'mesh' : {"icon": "jstree-icon jstree-file"},
+        'domain' : {"icon": "jstree-icon jstree-file"},
         'sbml-model' : {"icon": "jstree-icon jstree-file"},
         'other' : {"icon": "jstree-icon jstree-file"},
       },  
@@ -521,6 +522,9 @@ let FileBrowser = PageView.extend({
     if(nodeType === "sbml-model"){
       var dataType = "plain-text"
       var identifier = "file/download"
+    }else if(nodeType === "domain") {
+      var dataType = "json"
+      var identifier = "spatial-model/load-domain"
     }else if(asZip) {
       var dataType = "zip"
       var identifier = "file/download-zip"
@@ -528,17 +532,22 @@ let FileBrowser = PageView.extend({
       var dataType = "json"
       var identifier = "file/json-data"
     }
-    var queryStr = "?path="+o.original._path
-    if(dataType === "json"){
-      queryStr = queryStr.concat("&for=None")
-    }else if(dataType === "zip"){
-      queryStr = queryStr.concat("&action=generate")
+    if(nodeType === "domain") {
+      var queryStr = "?domain_path=" + o.original._path
+    }else{
+      var queryStr = "?path="+o.original._path
+      if(dataType === "json"){
+        queryStr = queryStr.concat("&for=None")
+      }else if(dataType === "zip"){
+        queryStr = queryStr.concat("&action=generate")
+      }
     }
     var endpoint = path.join(app.getApiPath(), identifier)+queryStr
     xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
       if(response.statusCode < 400) {
         if(dataType === "json") {
-          self.exportToJsonFile(body, o.original.text);
+          let data = nodeType === "domain" ? body.domain : body
+          self.exportToJsonFile(data, o.original.text);
         }else if(dataType === "zip") {
           var node = $('#models-jstree').jstree().get_node(o.parent);
           if(node.type === "root"){
@@ -734,8 +743,9 @@ let FileBrowser = PageView.extend({
           parentPath = o.original._path
         }
         if(isModel) {
-          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + '.mdl' : input.value.trim() + '.mdl';
-          let message = modelName !== input.value.trim() + ".mdl"? 
+          let ext = isSpatial ? ".smdl" : ".mdl"
+          let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + ext : input.value.trim() + ext;
+          let message = modelName !== input.value.trim() + ext? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>" : ""
           let modelPath = path.join(parentPath, modelName)
           let queryString = "?path="+modelPath+"&message="+message;
@@ -798,8 +808,12 @@ let FileBrowser = PageView.extend({
     this.newProjectOrWorkflowGroup(undefined, true)
   },
   handleCreateModelClick: function (e) {
-    let isSpatial = false
+    let isSpatial = e.target.dataset.type === "spatial"
     this.newModelOrDirectory(undefined, true, isSpatial);
+  },
+  handleCreateDomain: function (e) {
+    let queryStr = "?domainPath=/&new"
+    window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
   },
   showContextMenuForNode: function (e) {
     $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
@@ -828,7 +842,7 @@ let FileBrowser = PageView.extend({
       optionsButton.text("Actions for " + o.original.text)
       self.nodeForContextMenu = o;
       let nodeType = o.original.type
-      let zipTypes = ["workflow", "folder", "other", "mesh", "project", "workflow-group"]
+      let zipTypes = ["workflow", "folder", "other", "project", "workflow-group"]
       let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
@@ -914,12 +928,12 @@ let FileBrowser = PageView.extend({
           "separator_after" : false,
           "submenu" : {
             "spatial" : {
-              "label" : "Spatial",
-              "_disabled" : true,
+              "label" : "Spatial (beta)",
+              "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
-                console.log("Spatial Models Coming Soon!")
+                self.newModelOrDirectory(o, true, true);
               }
             },
             "nonspatial" : { 
@@ -931,6 +945,16 @@ let FileBrowser = PageView.extend({
                 self.newModelOrDirectory(o, true, false);
               }
             } 
+          }
+        },
+        "New Domain" : {
+          "label" : "New Domain (beta)",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            let queryStr = "?domainPath=" + o.original._path + "&new"
+            window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
           }
         },
         "Upload" : {
@@ -973,7 +997,7 @@ let FileBrowser = PageView.extend({
       let model = {
         "Edit" : {
           "label" : "Edit",
-          "_disabled" : (nodeType === "spatial") ? true : false,
+          "_disabled" : false,
           "_class" : "font-weight-bolder",
           "separator_before" : false,
           "separator_after" : true,
@@ -1000,7 +1024,7 @@ let FileBrowser = PageView.extend({
           "separator_after" : false,
           "submenu" : {
             "Convert to Model" : {
-              "label" : "Convert to Non Spatial",
+              "label" : "Convert to Model",
               "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
@@ -1029,7 +1053,7 @@ let FileBrowser = PageView.extend({
           "submenu" : {
             "Convert to Spatial" : {
               "label" : "To Spatial Model",
-              "_disabled" : true,
+              "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
@@ -1070,6 +1094,9 @@ let FileBrowser = PageView.extend({
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
             }else if(nodeType === "project"){
               window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
+            }else if(nodeType === "domain") {
+              let queryStr = "?domainPath=" + o.original._path
+              window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
             }else{
               if(nodeType === "notebook") {
                 var identifier = "notebooks"
@@ -1203,6 +1230,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'sbml-model') {
         return $.extend(open, sbml, common)
       }
+      if (o.type === "domain") {
+        return $.extend(open, common)
+      }
     }
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
@@ -1246,6 +1276,9 @@ let FileBrowser = PageView.extend({
         window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
       }else if(file.endsWith('.wkfl')){
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
+      }else if(file.endsWith('.domn')) {
+        let queryStr = "?domainPath=" + _path
+        window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
       }else if(node.type === "folder" && $('#models-jstree').jstree().is_open(node) && $('#models-jstree').jstree().is_loaded(node)){
         $('#models-jstree').jstree().refresh_node(node)
       }else if(node.type === "other"){

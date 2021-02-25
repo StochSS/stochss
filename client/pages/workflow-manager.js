@@ -65,12 +65,15 @@ let WorkflowManager = PageView.extend({
     let type = urlParams.get('type');
     this.urlPathParam = urlParams.get('path');
     var stamp = this.getCurrentDate();
+    this.titleType = "Loading ...";
+    this.startLoadingDisplay();
     var queryStr = "?stamp="+stamp+"&type="+type+"&path="+this.urlPathParam
     if(urlParams.has('parentPath')) {
       queryStr += ("&parentPath=" + urlParams.get('parentPath'))
     }
     var endpoint = path.join(app.getApiPath(), "workflow/load-workflow")+queryStr
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
+      self.stopLoadingDisplay();
       if(resp.statusCode < 400) {
         self.settings = body.settings
         self.type = body.type
@@ -92,6 +95,8 @@ let WorkflowManager = PageView.extend({
           self.queryByHook("project-breadcrumb-links").style.display = "block"
           self.queryByHook("return-to-project-btn").style.display = "inline-block"
         }
+      }else{
+        self.renderLoadError(resp.body);
       }
     });
   },
@@ -141,6 +146,17 @@ let WorkflowManager = PageView.extend({
       seconds = "0" + seconds
     }
     return "_" + month + day + year + "_" + hours + minutes + seconds;
+  },
+  startLoadingDisplay: function () {
+  },
+  stopLoadingDisplay: function () {
+  },
+  renderLoadError: function (resp) {
+    $(this.queryByHook("page-title")).text("Workflow: Load Error")
+    $(this.queryByHook("load-wkfl-error")).css('display', 'block')
+    $(this.queryByHook("reason")).text(resp.Reason)
+    $(this.queryByHook("message")).text(resp.Message)
+    $(this.queryByHook("traceback")).text(resp.Traceback)
   },
   renderSubviews: function () {
     $(this.queryByHook("page-title")).text('Workflow: '+this.titleType)
@@ -315,7 +331,10 @@ let WorkflowManager = PageView.extend({
       }
       $(this.queryByHook('workflow-breadcrumb')).text(this.workflowName)
       this.wkflDirectory = this.workflowName + ".wkfl"
+      let queryStr = "?path=" + this.wkflPath + "&name=" + this.wkflDirectory;
       this.wkflPath = path.join(this.wkflParPath, this.wkflDirectory)
+      let endpoint = path.join(app.getApiPath(), "file/rename") + queryStr
+      xhr({uri: endpoint, json: true}, function (err, resp, body) {});
     }else{
       e.target.value = this.workflowName
       setTimeout(function (e) {

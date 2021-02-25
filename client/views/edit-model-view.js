@@ -51,6 +51,9 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('show')
     }
+    if(this.model.is_spatial) {
+      $(this.queryByHook("new-workflow-btn")).prop("disabled", true);
+    }
   },
   handleEditModelClick: function (e) {
     let queryString = "?path="+this.model.directory
