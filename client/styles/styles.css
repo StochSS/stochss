@@ -293,15 +293,6 @@ input[type="file"]::-ms-browse {
   margin: 5px 10px 5px 0px !important;
 }
 
-.reaction-subdomain {
-  padding: 0px 0px 0px 20px;
-  border: 0;
-}
-
-.reaction-details-subdomain {
-  padding: 0px 0px 0px 5px;
-}
-
 .btn-outline-tool {
   color: #007bff;
   padding: 0.5rem 1rem;
@@ -634,4 +625,8 @@ span.checkbox {
 
 .component-valid {
   display: none;
+}
+
+.tab {
+  padding-right: 1rem;
 }

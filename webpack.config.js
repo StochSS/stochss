@@ -8,6 +8,7 @@ module.exports = {
     quickstart: './client/pages/quickstart.js',
     browser: './client/pages/file-browser.js',
     editor: './client/pages/model-editor.js',
+    domainEditor: './client/pages/domain-editor.js',
     workflowSelection: './client/pages/workflow-selection.js',
     workflowEditor: './client/pages/workflow-manager.js',
     projectBrowser: './client/pages/project-browser.js',
@@ -45,6 +46,13 @@ module.exports = {
       filename: 'stochss-model-editor.html',
       template: 'page_template.pug',
       name: 'editor',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Domain Editor',
+      filename: 'stochss-domain-editor.html',
+      template: 'page_template.pug',
+      name: 'domainEditor',
       inject: false
     }),
     new HtmlWebpackPlugin({

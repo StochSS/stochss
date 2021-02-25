@@ -16,36 +16,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-'''
-APIHandler documentation:
-https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
-
-Note APIHandler.finish() sets Content-Type handler to 'application/json'
-
-Use finish() for json, write() for text
-'''
 import os
 import json
 import uuid
-import subprocess
-from json.decoder import JSONDecodeError
-from datetime import datetime
 import logging
-import traceback
-from shutil import move, rmtree
+import subprocess
 from tornado import web
 from notebook.base.handlers import APIHandler
-from .util.stochss_errors import StochSSAPIError, StochSSPermissionsError
-from .util.ls import list_files
-from .util.convert_to_notebook import convert_to_notebook
-from .util.duplicate import duplicate, duplicate_wkfl_as_new
-from .util.rename import rename
-from .util.convert_to_smdl_mdl import convert_model
-from .util.convert_to_sbml import convert_to_sbml
-from .util.convert_sbml_to_model import convert_sbml_to_model
-from .util.generate_zip_file import download_zip
-from .util.upload_file import upload, upload_from_link
-from .util.workflow_status import get_status
+# APIHandler documentation:
+# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
+# Note APIHandler.finish() sets Content-Type handler to 'application/json'
+# Use finish() for json, write() for text
+
+from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSpatialModel, \
+                  StochSSSBMLModel, StochSSNotebook, StochSSWorkflow, StochSSAPIError, report_error
+
 
 log = logging.getLogger('stochss')
 
@@ -53,9 +38,9 @@ log = logging.getLogger('stochss')
 # pylint: disable=abstract-method
 class ModelBrowserFileList(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for interacting with the User's File Browser
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -69,32 +54,21 @@ class ModelBrowserFileList(APIHandler):
         is_root = self.get_query_argument(name="isRoot", default=False)
         log.info("Path to the directory: %s", path)
         try:
-            if is_root:
-                output = list_files(path, is_root=True)
-            else:
-                output = list_files(path)
-            log.debug("Contents of the directory: %s", output)
-            self.write(output)
+            folder = StochSSFolder(path=path)
+            node = folder.get_jstree_node(is_root=is_root)
+            log.debug("Contents of the directory: %s", node)
+            self.write(node)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class ModelToNotebookHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for handling conversions from model (.mdl) file to Jupyter Notebook
     (.ipynb) file.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -106,30 +80,26 @@ class ModelToNotebookHandler(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
+        log.debug("Path to the model file: %s", path)
         self.set_header('Content-Type', 'application/json')
         try:
-            log.debug("Path to the model file: %s", path)
-            dest_file = convert_to_notebook(path)
-            log.debug("Notebook file path: %s", dest_file)
-            self.write(dest_file)
+            model = StochSSModel(path=path)
+            data = model.get_notebook_data()
+            log.debug("Notebook data: %s", data)
+            notebook = StochSSNotebook(**data)
+            resp = notebook.create_es_notebook()
+            log.debug("Notebook file path: %s", resp)
+            self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class DeleteFileAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for removing files and/or directoies from the User's file system.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -140,40 +110,22 @@ class DeleteFileAPIHandler(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
-        file_path = os.path.join('/home/jovyan', path)
-        log.debug("Deleting  path: %s", file_path)
+        log.debug("Deleting path: %s", path)
         try:
-            try:
-                os.remove(file_path)
-            except OSError:
-                rmtree(file_path)
-            self.write("The file {0} was successfully deleted.".format(path.split('/').pop()))
-        except FileNotFoundError as err:
-            self.set_status(404)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":"StochSS File Not Found",
-                     "Message":"Could not find the file or directory: {0}".format(err)}
-            trace = traceback.format_exc()
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
-        except PermissionError as err:
-            self.set_status(403)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":"Permission Denied",
-                     "Message":"You do not have permission to delete this file: {0}".format(err)}
-            trace = traceback.format_exc()
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            is_dir = os.path.isdir(path)
+            file_obj = StochSSFolder(path=path) if is_dir else StochSSFile(path=path)
+            resp = file_obj.delete()
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
 class MoveFileAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler moving file locations in the User's file system.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -185,185 +137,24 @@ class MoveFileAPIHandler(APIHandler):
         '''
         src_path = self.get_query_argument(name="srcPath")
         log.debug("Path to the file: %s", src_path)
-        old_path = os.path.join("/home/jovyan", src_path)
-        log.debug("Full path to the file: %s", old_path)
         dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path: %s", dst_path)
-        new_path = self.get_new_path("/home/jovyan", dst_path)
-        log.debug("Full destination path: %s", new_path)
         try:
-            if os.path.isdir(old_path):
-                # If directory is wkfl and has been started, update wkfl model path
-                if old_path.endswith('.wkfl') and "RUNNING" in os.listdir(path=old_path):
-                    self.update_workflow_paths(src_path, dst_path, old_path)
-                elif old_path.endswith('.proj'):
-                    self.is_project_movable(old_path)
-                    self.update_project_paths(src_path, dst_path, old_path)
-                move(old_path, new_path)
-            else:
-                os.rename(old_path, new_path)
-            self.write("Success! {0} was moved to {1}.".format(old_path, new_path))
-        except FileNotFoundError as err:
-            self.set_status(404)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":"StochSS File Not Found",
-                     "Message":"Could not find the file or directory: {0}".format(err)}
-            trace = traceback.format_exc()
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
-        except PermissionError as err:
-            self.set_status(403)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":"Permission Denied",
-                     "Message":"You do not have permission to move this file: {0}".format(err)}
-            trace = traceback.format_exc()
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            is_dir = os.path.isdir(src_path)
+            file_obj = StochSSFolder(path=src_path) if is_dir else StochSSFile(path=src_path)
+            resp = file_obj.move(location=dst_path)
+            file_obj.print_logs(log)
+            self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
-
-
-    @classmethod
-    def get_new_path(cls, user_dir, dst_path):
-        '''
-        Gets the proper destination path for the file to be moved
-
-        Attributes
-        ----------
-        user_dir : string
-            Path to the users home directory
-        dst_path : string
-            New path for the file object from the users home directory
-        '''
-        new_path = os.path.join(user_dir, dst_path)
-        if new_path.split().pop().replace('.', '', 5).isdigit():
-            return new_path.replace(new_path.split().pop(), "").strip()
-        if 'trash/' in new_path and os.path.exists(new_path):
-            stamp = datetime.now().strftime(" %y.%m.%d.%H.%M.%S")
-            return new_path + stamp
-        return new_path
-
-
-    @classmethod
-    def update_workflow_paths(cls, src, dst, old_path):
-        '''
-        Updates the wkfl_model path in the info file.
-
-        Attributes
-        ----------
-        src : string
-            The parent directory of the source path.
-        dst : string
-            The parent directory of the destination path.
-        old_path : string
-            The path to the source file or directory.
-        '''
-        old_parent_dir = os.path.dirname(src)
-        log.debug("Old parent directory: %s", old_parent_dir)
-        new_parent_dir = os.path.dirname(dst)
-        log.debug("New parent directory: %s", new_parent_dir)
-        with open(os.path.join(old_path, "info.json"), "r+") as info_file:
-            info = json.load(info_file)
-            log.debug("Old wkfl info: %s", info)
-            info['wkfl_model'] = info['wkfl_model'].replace(old_parent_dir, new_parent_dir)
-            info_file.seek(0)
-            log.debug("New wkfl info: %s", info)
-            json.dump(info, info_file)
-            info_file.truncate()
-
-
-    @classmethod
-    def is_project_movable(cls, old_path):
-        '''
-        Checks the status of each workflow in the project to determine
-        if the project is able to be moved.
-
-        Attributes
-        ----------
-        old_path : string
-            The path to the source file or directory.
-        '''
-        for proj_item in os.listdir(old_path):
-            if proj_item.endswith('.wkgp'):
-                for exp_item in os.listdir(os.path.join(old_path, proj_item)):
-                    if (exp_item.endswith('.wkfl') and
-                            get_status(os.path.join(old_path, proj_item, exp_item)) == 'running'):
-                        raise StochSSPermissionsError("This project contains a running workflow: \
-                                                      {0} in {1}".format(exp_item, proj_item))
-
-
-    @classmethod
-    def update_project_paths(cls, src, dst, old_path):
-        '''
-        Updates the wkfl_model path in the info file of each workflow
-        in the project directory.
-
-        Attributes
-        ----------
-        src : string
-            The parent directory of the source path.
-        dst : string
-            The parent directory of the destination path.
-        old_path : string
-            The path to the source file or directory.
-        '''
-        old_parent_dir = os.path.dirname(src)
-        log.debug("Old parent directory: %s", old_parent_dir)
-        new_parent_dir = os.path.dirname(dst)
-        log.debug("New parent directory: %s", new_parent_dir)
-        for proj_item in os.listdir(old_path,):
-            if proj_item.endswith('.wkgp'):
-                for exp_item in os.listdir(os.path.join(old_path, proj_item)):
-                    wkfl_path = os.path.join(old_path, proj_item, exp_item)
-                    if wkfl_path.endswith(".wkfl"):
-                        with open(os.path.join(wkfl_path,
-                                               "info.json"), "r+") as info_file:
-                            info = json.load(info_file)
-                            log.debug("Old wkfl info: %s", info)
-                            if get_status(os.path.join(old_path, proj_item,
-                                                       exp_item)) == 'ready':
-                                if not old_parent_dir:
-                                    src_mdl = os.path.join(new_parent_dir,
-                                                           info['source_model'])
-                                else:
-                                    src_mdl = (info['source_model']
-                                               .replace(old_parent_dir, new_parent_dir, 1))
-                                info['source_model'] = (src_mdl[1:]
-                                                        if src_mdl.startswith('/')
-                                                        else src_mdl)
-                            else:
-                                if not old_parent_dir:
-                                    wkfl_mdl = os.path.join(new_parent_dir,
-                                                            info['wkfl_model'])
-                                else:
-                                    wkfl_mdl = info['wkfl_model'].replace(old_parent_dir,
-                                                                          new_parent_dir, 1)
-                                info['wkfl_model'] = (wkfl_mdl[1:]
-                                                      if wkfl_mdl.startswith('/')
-                                                      else wkfl_mdl)
-                            info_file.seek(0)
-                            log.debug("New wkfl info: %s", info)
-                            json.dump(info, info_file)
-                            info_file.truncate()
 
 
 class DuplicateModelHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating copies of a file.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -378,27 +169,21 @@ class DuplicateModelHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         log.debug("Copying file: %s", path)
         try:
-            resp = duplicate(path)
+            file = StochSSFile(path=path)
+            resp = file.duplicate()
+            file.print_logs(log)
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class DuplicateDirectoryHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating copies of a directory and its contents.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -411,29 +196,23 @@ class DuplicateDirectoryHandler(APIHandler):
         '''
         path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
-        log.debug("Path to the file: %s", path)
+        log.debug("Copying directory: %s", path)
         try:
-            resp = duplicate(path, True)
+            folder = StochSSFolder(path=path)
+            resp = folder.duplicate()
+            folder.print_logs(log)
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class RenameAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for renaming files or directories.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -446,32 +225,25 @@ class RenameAPIHandler(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
-        new_name = self.get_query_argument(name="name")
         log.debug("Path to the file or directory: %s", path)
+        new_name = self.get_query_argument(name="name")
         log.debug("New filename: %s", new_name)
         self.set_header('Content-Type', 'application/json')
         try:
-            resp = rename(path, new_name)
+            file_obj = StochSSBase(path=path)
+            resp = file_obj.rename(name=new_name)
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class ConvertToSpatialAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for converting a model to a spatial model.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -486,27 +258,21 @@ class ConvertToSpatialAPIHandler(APIHandler):
         log.debug("Converting non-spatial model to spatial model: %s", path)
         self.set_header('Content-Type', 'application/json')
         try:
-            resp = convert_model(path, to_spatial=True)
+            model = StochSSModel(path=path)
+            resp, data = model.convert_to_spatial()
+            _ = StochSSModel(path=data['path'], new=True, model=data['spatial'])
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class ConvertToModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for converting a spatial model to a model.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -521,27 +287,21 @@ class ConvertToModelAPIHandler(APIHandler):
         log.debug("Converting spatial model to non-spatial model: %s", path)
         self.set_header('Content-Type', 'application/json')
         try:
-            resp = convert_model(path, to_spatial=False)
+            model = StochSSSpatialModel(path=path)
+            resp, data = model.convert_to_model()
+            _ = StochSSModel(path=data['path'], new=True, model=data['model'])
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class ModelToSBMLAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for converting a StochSS model to a SBML model.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -553,32 +313,29 @@ class ModelToSBMLAPIHandler(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
-        self.set_header('Content-Type', 'application/json')
         log.debug("Converting to SBML: %s", path)
+        self.set_header('Content-Type', 'application/json')
         try:
-            resp = convert_to_sbml(path)
+            model = StochSSModel(path=path)
+            resp, data = model.convert_to_sbml()
+            model.print_logs(log)
+            sbml = StochSSSBMLModel(path=data['path'], new=True, document=data['document'])
+            resp["File"] = sbml.get_file()
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class SBMLToModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for converting a SBML model to a StochSS model.
-    ##############################################################################
+    ################################################################################################
     '''
 
+    @web.authenticated
     async def get(self):
         '''
         Creates a StochSS model with a unique name from an sbml model and
@@ -589,34 +346,28 @@ class SBMLToModelAPIHandler(APIHandler):
         '''
         path = self.get_query_argument(name="path")
         log.debug("Converting SBML: %s", path)
-        template_path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
-        log.debug("Using model template: %s", template_path)
-        with open(template_path, "r") as template_file:
-            model_template = template_file.read()
-        log.debug("Model template: %s", model_template)
         self.set_header('Content-Type', 'application/json')
         try:
-            resp = convert_sbml_to_model(path, model_template)
+            sbml = StochSSSBMLModel(path=path)
+            convert_resp = sbml.convert_to_model(name=sbml.get_name())
+            sbml.print_logs(log)
+            resp = {"message":convert_resp['message'], "errors":convert_resp['errors'], "File":""}
+            if convert_resp['model'] is not None:
+                model = StochSSModel(path=convert_resp['path'], new=True,
+                                     model=convert_resp['model'])
+                resp['File'] = model.get_file()
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class DownloadAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for downloading plain text files to the users download directory.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -628,29 +379,21 @@ class DownloadAPIHandler(APIHandler):
         '''
         path = self.get_query_argument(name="path")
         log.debug("Path to the model: %s", path)
-        full_path = os.path.join("/home/jovyan", path)
-        log.debug("Path to the model on disk: %s", full_path)
         try:
-            with open(full_path, 'r') as file:
-                resp = file.read()
-            self.write(resp)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":"File Not Found",
-                     "Message":"Could not find file: " + str(err)}
-            trace = traceback.format_exc()
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            file = StochSSFile(path=path)
+            data = file.read()
+            file.print_logs(log)
+            self.write(data)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
 class DownloadZipFileAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for downloading zip files to the users download directory.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -663,41 +406,29 @@ class DownloadZipFileAPIHandler(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
-        action = self.get_query_argument(name="action")
         log.debug("Path to the model: %s", path)
+        action = self.get_query_argument(name="action")
         log.debug("Action: %s", action)
-        if action == "download":
-            file_name = "{0}.zip".format(path.split('/').pop().split('.')[0])
-            log.debug("Name of the download file: %s", file_name)
-            self.set_header('Content-Type', 'application/zip')
-            self.set_header('Content_Disposition', 'attachment; filename="{0}"'.format(file_name))
-        else:
-            self.set_header('Content-Type', 'application/json')
-
+        self.set_header('Content-Type', 'application/json')
         try:
-            resp = download_zip(path, action)
+            if action == "generate":
+                folder = StochSSFolder(path=path)
+                resp = folder.generate_zip_file()
+            else:
+                wkfl = StochSSWorkflow(path=path)
+                resp = wkfl.generate_csv_zip()
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            if action == "download":
-                self.set_header('Content-Type', 'application/json')
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class CreateDirectoryHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating a new directory or path of directories.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -710,29 +441,20 @@ class CreateDirectoryHandler(APIHandler):
         '''
         directories = self.get_query_argument(name="path")
         log.debug("Path of directories: %s", directories)
-        full_path = os.path.join("/home/jovyan", directories)
-        log.debug("Full path of directories: %s", full_path)
         try:
-            os.makedirs(full_path)
+            folder = StochSSFolder(path=directories, new=True)
+            folder.print_logs(log)
             self.write("{0} was successfully created!".format(directories))
-        except FileExistsError as err:
-            self.set_status(406)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":"Directory Already Exists",
-                     "Message":"Could not create your directory: "+str(err)}
-            error['Message'] = error['Message'].replace("/home/jovyan/", "")
-            trace = traceback.format_exc()
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
 class UploadFileAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for uploading files.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def post(self):
@@ -744,41 +466,34 @@ class UploadFileAPIHandler(APIHandler):
 
         Attributes
         ----------
-
         '''
         file_data = self.request.files['datafile'][0]
+        log.debug("Type of the files contents: %s", type(file_data['body']))
+        log.debug("Name of the file: %s", file_data['filename'])
         file_info = json.loads(self.request.body_arguments['fileinfo'][0].decode())
-        log.debug(file_info['type'])
-        log.debug(file_info['path'])
-        if file_info['name']:
-            log.debug(file_info['name'])
+        log.debug("Type of file to be uploaded: %s", file_info['type'])
+        log.debug("Path to the directory where the file will be uploaded: %s", file_info['path'])
+        name = file_info['name'] if file_info['name'] else None
+        if name is not None:
+            log.debug("Name with 'save as' path for the file: %s", name)
         else:
-            log.debug("No name given")
-        file_name = file_data['filename']
-        log.debug(file_name)
-        log.debug(type(file_data['body']))
+            log.debug("No name given: %s", name)
         try:
-            resp = upload(file_data, file_info)
-            log.debug(resp)
+            folder = StochSSFolder(path=file_info['path'])
+            resp = folder.upload(file_type=file_info['type'], file=file_data['filename'],
+                                 body=file_data['body'], new_name=name)
+            log.debug("Response: %s", resp)
             self.write(json.dumps(resp))
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class DuplicateWorkflowAsNewHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for duplicating a workflow as new and a workflows model.
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -789,40 +504,40 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
         Attributes
         ----------
         '''
-        path = self.get_query_argument(name="path")
-        target = self.get_query_argument(name="target")
-        time_stamp = self.get_query_argument(name="stamp")
-        log.debug("Path to the workflow: %s", path)
-        log.debug("The %s is being copied", target)
-        if time_stamp == "None":
-            time_stamp = None
-        else:
-            log.debug("The time stamp for the new workflow: %s", time_stamp)
-        only_model = target == "wkfl_model"
-        log.debug("only_model flag: %s", only_model)
         self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the workflow: %s", path)
+        target = self.get_query_argument(name="target")
+        log.debug("The %s is being copied", target)
         try:
-            resp = duplicate_wkfl_as_new(path, only_model, time_stamp)
+            wkfl = StochSSWorkflow(path=path)
+            if target == "wkfl_model":
+                resp, kwargs = wkfl.extract_model()
+                model = StochSSModel(**kwargs)
+                resp['mdlPath'] = model.path
+                resp['File'] = model.get_file()
+            else:
+                time_stamp = self.get_query_argument(name="stamp")
+                if time_stamp == "None":
+                    time_stamp = None
+                log.debug("The time stamp for the new workflow: %s", time_stamp)
+                resp, kwargs = wkfl.duplicate_as_new(stamp=time_stamp)
+                new_wkfl = StochSSWorkflow(**kwargs)
+                new_wkfl.update_info(new_info={"source_model":resp['mdlPath']})
+                resp['wkflPath'] = new_wkfl.path
+                resp['File'] = new_wkfl.get_file()
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            if err.traceback is None:
-                trace = traceback.format_exc()
-            else:
-                trace = err.traceback
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+            report_error(self, log, err)
         self.finish()
 
 
 class GetWorkflowModelPathAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for getting the path to the workflow model.
-    ##############################################################################
+    ################################################################################################
     '''
 
     async def get(self):
@@ -833,51 +548,25 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-
-        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
         log.debug("The path to the workflow: %s", path)
-        full_path = os.path.join(user_dir, path, "info.json")
-        log.debug("The full path to the workflow's info file: %s", full_path)
         try:
-            with open(full_path, "r") as info_file:
-                info = json.load(info_file)
-            log.debug("Workflow info: %s", info)
-            model_path = info['source_model']
-            log.debug("Path to the workflow's model: %s", model_path)
-            resp = {"file":model_path.replace(user_dir + "/", "")}
-            if not os.path.exists(os.path.join(user_dir, model_path)):
-                mdl_file = model_path.split('/').pop()
-                resp['error'] = "The model file {0} could not be found.  To edit the model you \
-                                 will need to extract the model from the workflow or open the \
-                                 workflow and update the path to the model.".format(mdl_file)
+            wkfl = StochSSWorkflow(path=path)
+            resp = wkfl.check_for_external_model()
+            wkfl.print_logs(log)
             log.debug("Response: %s", resp)
             self.write(resp)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            error = {"Reason":"Workflow Info File Not Found",
-                     "Message":"Could not find the workflow's info file: "+str(err)}
-            trace = traceback.format_exc()
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
-        except JSONDecodeError as err:
-            self.set_status(404)
-            error = {"Reason":"Workflow Info File Not JSON Format",
-                     "Message":"The workflow info file is not JSON decodable: "+str(err)}
-            trace = traceback.format_exc()
-            log.error("Exception information: %s\n%s", error, trace)
-            error['Traceback'] = trace
-            self.write(error)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
 class UploadFileFromLinkAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for uploading file from a url.
-    ##############################################################################
+    ################################################################################################
     '''
 
     async def get(self):
@@ -892,17 +581,18 @@ class UploadFileFromLinkAPIHandler(APIHandler):
         log.debug("The path to the external file or the response file: %s", path)
         cmd = self.get_query_argument(name="cmd", default=None)
         log.debug("The command for the upload script: %s", cmd)
+        script = '/stochss/stochss/handlers/util/scripts/upload_remote_file.py'
         if cmd is None:
-            outfile = str(uuid.uuid4()).replace("-", "_")+".tmp"
+            outfile = f"{str(uuid.uuid4()).replace('-', '_')}.tmp"
             log.debug("Response file name: %s", outfile)
-            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py', '{0}'.format(path), '{}'.format(outfile)] # Script commands for read run_cmd
+            exec_cmd = [script, f'{path}', f'{outfile}'] # Script commands for read run_cmd
             log.debug("Exec command: %s", exec_cmd)
             pipe = subprocess.Popen(exec_cmd)
             resp = {"responsePath": outfile}
             log.debug("Response: %s", resp)
             self.write(resp)
         else:
-            exec_cmd = ['/stochss/stochss/handlers/util/upload_file.py', 'None', '{}'.format(path)] # Script commands for read run_cmd
+            exec_cmd = [script, 'None', f'{path}'] # Script commands for read run_cmd
             log.debug("Exec command: %s", exec_cmd)
             pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
             results, error = pipe.communicate()

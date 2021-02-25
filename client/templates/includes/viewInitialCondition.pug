@@ -1,0 +1,17 @@
+tr
+
+  td=this.model.icType
+
+  td=this.model.specie.name
+
+  td=this.model.count
+
+  td
+
+    if this.model.icType === "Place"
+      span <b>Location:</b>
+      div="(x: "+this.model.x+", y: "+this.model.y+", z: "+this.model.z+")"
+        
+    else
+      span <b>Active in Types:</b>
+      div=this.types.join(", ")

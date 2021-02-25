@@ -1,0 +1,129 @@
+div#domain-viewer.card.card-body
+
+  div
+
+    h3.inline Domain
+
+    button.btn.btn-outline-collapse(id="-btn" data-toggle="collapse" data-target="#collapse-domain" data-hook="collapse") +
+
+  div.collapse(id="collapse-domain" data-hook="domain-container")
+
+    div
+
+      button.btn.btn-outline-secondary.box-shadow.mb-3(data-hook="select-external-domain") View External Domain
+
+      div(data-hook="external-domain-select" style="display: none")
+
+        div.text-info(data-hook="select-location-message" style="display: none")
+          | There are multiple domain files with that name, please select a location
+
+        span.inline Select External Domain: 
+
+        div.inline(data-hook="select-domain")
+
+        div.inline.ml-3(data-hook="select-domain-location" style="display: none")
+
+          span.inline Location:
+
+          div.inline(data-hook="select-location")
+
+    div.row
+
+      div.col-md-4
+
+        h4 Domain Properties
+
+        table.table
+          tbody
+            tr
+              th(scope="row") Density
+              td=this.model.rho_0
+            tr
+              th(scope="row") Gravity
+              td=this.gravity
+            tr
+              th(scope="row") Pressure
+              td=this.model.p_0
+            tr
+              th(scope="row") Speed of Sound
+              td=this.model.c_0
+
+      div.col-md-8
+
+        h4 Domain Limits
+
+        table.table
+          thead
+            tr
+              th(scope="col")
+              th(scope="col") Minimum
+              th(scope="col") Minimum
+              th(scope="col") Reflect
+
+          tbody
+            tr
+              th(scope="row") X-Axis
+              td=this.model.x_lim[0]
+              td=this.model.x_lim[1]
+              td: input(type="checkbox" checked=this.model.boundary_condition.reflect_x disabled)
+            tr
+              th(scope="row") Y-Axis
+              td=this.model.y_lim[0]
+              td=this.model.y_lim[1]
+              td: input(type="checkbox" checked=this.model.boundary_condition.reflect_y disabled)
+            tr
+              th(scope="row") Z-Axis
+              td=this.model.z_lim[0]
+              td=this.model.z_lim[1]
+              td: input(type="checkbox" checked=this.model.boundary_condition.reflect_z disabled)
+
+    div
+
+      h4 Types
+
+      hr
+
+      h6="Number of Un-Assigned Particles: " + this.model.types.get(0, "typeID").numParticles
+
+      div(data-hook="domain-error"): p.text-danger A domain cannot have any un-assigned particles.
+
+      table.table
+        thead
+          tr
+            th(scope="col") Name
+            th(scope="col") Number of Particles
+            th(scope="col") Mass
+            th(scope="col") Volume
+            th(scope="col") nu
+            th(scope="col") Fixed
+
+        tbody(data-hook="domain-types-list")
+
+    div
+
+      h4 Particles
+
+      hr
+
+      div.row
+
+        div.col-md-9
+
+          div(data-hook="domain-plot")
+
+        div.col-md-3
+
+          div(data-hook="particle-viewer")
+
+          div.text-info(data-hook="select-particle")
+            | Click on a particle to view its properties.
+
+    hr
+
+    div
+
+      button.btn.btn-outline-primary.box-shadow(data-hook="edit-domain") Edit Domain
+
+      button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="create-domain") Build New Domain
+
+      button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Import into Model

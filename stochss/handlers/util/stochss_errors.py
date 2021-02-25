@@ -16,9 +16,52 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import traceback
+
+def report_error(handler, log, err):
+    '''
+    Report a stochss error to the front end
+
+    Attributes
+    ----------
+    handler : obj
+        Jupyter Notebook API Handler
+    log : obj
+        StochSS log
+    '''
+    handler.set_status(err.status_code)
+    error = {"Reason":err.reason, "Message":err.message}
+    if err.traceback is None:
+        trace = traceback.format_exc()
+    else:
+        trace = err.traceback
+    log.error("Exception information: %s\n%s", error, trace)
+    error['Traceback'] = trace
+    handler.write(error)
+
+
 class StochSSAPIError(Exception):
+    '''
+    ################################################################################################
+    StochSS Base Api Handler Error
+    ################################################################################################
+    '''
 
     def __init__(self, status_code, reason, msg, trace):
+        '''
+        Base error for all stochss api errors
+
+        Attributes
+        ----------
+        status_code : int
+            XML request status code
+        reason : str
+            Reason for the error
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
         super().__init__()
         self.status_code = status_code
         self.reason = reason
@@ -26,85 +69,201 @@ class StochSSAPIError(Exception):
         self.traceback = trace
 
 
-class ModelNotFoundError(StochSSAPIError):
+
+####################################################################################################
+# File System Errors
+####################################################################################################
+
+class StochSSFileExistsError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS File/Folder Exists API Handler Error
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
-        super().__init__(404, "Model File Not Found", msg, trace)
+        '''
+        Indicates that the file/folder with the given path already exists
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "File Already Exists", msg, trace)
 
 
 class StochSSFileNotFoundError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS File/Folder Not Found API Handler Error
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
+        '''
+        Indicates that the file/folder with the given path does not exist
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
         super().__init__(404, "StochSS File or Directory Not Found", msg, trace)
 
 
 class StochSSPermissionsError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS File/Folder Not Found API Handler Error
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
+        '''
+        Indicates that the user does not have permission to modify the file/folder
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
         super().__init__(403, "Permission Denied", msg, trace)
 
-
-class ModelNotJSONFormatError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "Model Data Not JSON Format", msg, trace)
-
+####################################################################################################
+# Model Errors
+####################################################################################################
 
 class FileNotJSONFormatError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Model/Template Not In JSON Format
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
+        '''
+        Indicates that the model or template file is not in proper JSON format
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
         super().__init__(406, "File Data Not JSON Format", msg, trace)
 
 
-class JSONFileNotModelError(StochSSAPIError):
+class StochSSModelFormatError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Model Not In Proper Format
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
-        super().__init__(406, "JSON File Not StochSS Model Format", msg, trace)
+        '''
+        Indicates that the model does not meet the current format requirements
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "StochSS Model Not In Proper Format", msg, trace)
 
 
-class PlotNotAvailableError(StochSSAPIError):
+class DomainFormatError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain File Not In Proper Format
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
-        super().__init__(406, "Plot Figure Not Available", msg, trace)
+        '''
+        Indicates that the domain file does not meet SpatialPy format requirements
 
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Domain File Not In Proper Format", msg, trace)
+
+####################################################################################################
+# Workflow Errors
+####################################################################################################
 
 class StochSSWorkflowError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Workflow Errored During Run Time
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
+        '''
+        Indicates that the workflow experienced an error during run
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
         super().__init__(403, "Workflow Errored on Run", msg, trace)
 
 
 class StochSSWorkflowNotCompleteError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Workflow Has Not Completed
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
+        '''
+        Indicates that the action requires a workflow to finish running before it can be executed
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
         super().__init__(403, "Workflow Run Not Complete", msg, trace)
 
 
-class StochSSExportCombineError(StochSSAPIError):
+class PlotNotAvailableError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Result Plot Not Found
+    ################################################################################################
+    '''
 
     def __init__(self, msg, trace=None):
-        super().__init__(406, "No Completed Workflows Found", msg, trace)
+        '''
+        Indicates that the requested plot was not found in the plots.json file
 
-
-class FileNotSBMLFormatError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "File Not SBML Format", msg, trace)
-
-
-class ImporperMathMLFormatError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "Imporper Math-ML Format", msg, trace)
-
-
-class FileNotZipArchiveError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "File Not Zip Archive", msg, trace)
-
-
-class StochSSFileExistsError(StochSSAPIError):
-
-    def __init__(self, msg, trace=None):
-        super().__init__(406, "File Already Exists", msg, trace)
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Plot Figure Not Available", msg, trace)

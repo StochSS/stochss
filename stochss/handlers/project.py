@@ -18,19 +18,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import os
-import json
-import logging
 import ast
+import json
+import shutil
+import logging
 
-from shutil import copyfile, copytree, rmtree
+# from shutil import copyfile, copytree, rmtree
 from tornado import web
 from notebook.base.handlers import APIHandler
 
-from .util.rename import get_unique_file_name, get_file_name
-from .util.workflow_status import get_status
-from .util.generate_zip_file import download_zip
-from .util.convert_to_combine import convert
-from .util.stochss_errors import StochSSAPIError
+# from .util.rename import get_unique_file_name, get_file_name
+# from .util.workflow_status import get_status
+# from .util.generate_zip_file import download_zip
+
+from .util import StochSSBase, StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -100,37 +101,41 @@ class LoadProjectAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: %s", path)
-        project = {"models": [], "workflowGroups": [], "trash_empty": True}
-        for item in os.listdir(path):
-            if item == "README.md":
-                readme_path = os.path.join(path, item)
-                with open(readme_path, 'r') as readme_file:
-                    project['annotation'] = readme_file.read()
-            elif item.endswith('.mdl'):
-                mdl_dir = os.path.join(path, item)
-                with open(mdl_dir, 'r') as mdl_file:
-                    model = json.load(mdl_file)
-                    model['name'] = get_file_name(item)
-                    model['directory'] = mdl_dir
-                    self.update_model_data(model)
-                    project['models'].append(model)
-            elif item.endswith('.wkgp'):
-                name = item.split('.')[0]
-                workflows = []
-                for workflow in os.listdir(os.path.join(path, item)):
-                    if workflow.endswith('.wkfl'):
-                        self.get_stochss_workflow(project, workflows,
-                                                  os.path.join(path, item, workflow),
-                                                  workflow)
-                    elif workflow.endswith('.ipynb'):
-                        self.get_notebook_workflow(workflows,
-                                                   os.path.join(path, item, workflow),
-                                                   workflow)
-                project['workflowGroups'].append({"name":name, "workflows":workflows})
-            elif item == "trash":
-                project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
-        log.debug("Contents of the project: %s", project)
-        self.write(project)
+        try:
+            project = {"models": [], "workflowGroups": [], "trash_empty": True}
+            for item in os.listdir(path):
+                if item == "README.md":
+                    readme_path = os.path.join(path, item)
+                    with open(readme_path, 'r') as readme_file:
+                        project['annotation'] = readme_file.read()
+                elif item.endswith('.mdl') or item.endswith('.smdl'):
+                    mdl_dir = os.path.join(path, item)
+                    with open(mdl_dir, 'r') as mdl_file:
+                        model = json.load(mdl_file)
+                        base = StochSSBase(path=item)
+                        model['name'] = base.get_name()
+                        model['directory'] = mdl_dir
+                        self.update_model_data(model)
+                        project['models'].append(model)
+                elif item.endswith('.wkgp'):
+                    name = item.split('.')[0]
+                    workflows = []
+                    for workflow in os.listdir(os.path.join(path, item)):
+                        if workflow.endswith('.wkfl'):
+                            self.get_stochss_workflow(project, workflows,
+                                                      os.path.join(path, item, workflow),
+                                                      workflow)
+                        elif workflow.endswith('.ipynb'):
+                            self.get_notebook_workflow(workflows,
+                                                       os.path.join(path, item, workflow),
+                                                       workflow)
+                    project['workflowGroups'].append({"name":name, "workflows":workflows})
+                elif item == "trash":
+                    project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
+            log.debug("Contents of the project: %s", project)
+            self.write(project)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
@@ -230,7 +235,8 @@ class LoadProjectAPIHandler(APIHandler):
             Name of the workflow directory
         '''
         wkfl_dict = {"path":path, "name":workflow.split('.')[0]}
-        wkfl_dict['status'] = get_status(wkfl_dict['path'])
+        base = StochSSBase(path=wkfl_dict['path'])
+        wkfl_dict['status'] = base.get_status()
         with open(os.path.join(wkfl_dict['path'],
                                'settings.json'), 'r') as settings_file:
             outputs = json.load(settings_file)['resultsSettings']['outputs']
@@ -261,7 +267,6 @@ class NewProjectAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: %s", path)
@@ -279,7 +284,6 @@ class NewProjectAPIHandler(APIHandler):
                      "Message":"Could not create your project: {0}".format(err)}
             log.error("Exception Information: %s", error)
             self.write(error)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -345,7 +349,7 @@ class AddExistingModelAPIHandler(APIHandler):
         for root, _, files in os.walk("/home/jovyan"):
             if path not in root and "/." not in root and ".wkfl" not in root:
                 root = root.replace(user_dir+"/", "")
-                files = list(filter(lambda file: (not file.startswith(".") and
+                files = list(filter(lambda file: (file.endswith(".smdl") or
                                                   file.endswith(".mdl")), files))
                 for file in files:
                     if root == user_dir:
@@ -371,10 +375,11 @@ class AddExistingModelAPIHandler(APIHandler):
         mdl_path = os.path.join(user_dir, self.get_query_argument(name="mdlPath"))
         log.debug("Path to the project: %s", path)
         log.debug("Path to the model: %s", mdl_path)
-        if mdl_path.endswith('.mdl'):
+        if mdl_path.endswith('.mdl') or mdl_path.endswith('.smdl'):
             try:
-                unique_path, changed = get_unique_file_name(mdl_path.split("/").pop(), path)
-                copyfile(mdl_path, unique_path)
+                base = StochSSBase(path=os.path.join(path, mdl_path.split("/").pop()))
+                unique_path, changed = base.get_unique_path(mdl_path.split("/").pop())
+                shutil.copyfile(mdl_path, unique_path)
                 resp = {"message": "The model {0} was successfully move into \
                                     {1}".format(mdl_path.split('/').pop(), path.split("/").pop())}
                 if changed:
@@ -423,9 +428,9 @@ class ExtractModelAPIHandler(APIHandler):
         dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
         log.debug("Destination path for the target model: %s", dst_path)
         try:
-            unique_path, changed = get_unique_file_name(dst_path.split('/').pop(),
-                                                        os.path.dirname(dst_path))
-            copyfile(src_path, unique_path)
+            base = StochSSBase(path=dst_path)
+            unique_path, changed = base.get_unique_path(dst_path.split('/').pop())
+            shutil.copyfile(src_path, unique_path)
             export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
                            if os.path.dirname(unique_path) != user_dir else "/")
             resp = "The Model {0} was extracted to {1} in files\
@@ -463,11 +468,13 @@ class ExtractWorkflowAPIHandler(APIHandler):
         dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
         log.debug("Destination path for the target model: %s", dst_path)
         try:
-            if get_status(src_path) != "running":
-                unique_path, changed = get_unique_file_name(dst_path.split('/').pop(),
-                                                            os.path.dirname(dst_path))
-                copytree(src_path, unique_path)
-                if get_status(unique_path) != "ready":
+            base = StochSSBase(path=src_path)
+            if base.get_status() != "running":
+                base.path = dst_path
+                unique_path, changed = base.get_unique_path(dst_path.split('/').pop())
+                shutil.copytree(src_path, unique_path)
+                base.path = unique_path
+                if base.get_status() != "ready":
                     self.update_workflow_path(unique_path)
                 export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
                                if os.path.dirname(unique_path) != user_dir else "/")
@@ -484,6 +491,8 @@ class ExtractWorkflowAPIHandler(APIHandler):
                      "Message":"Could not find the workflow: {0}".format(err)}
             log.error("Exception Information: %s", error)
             self.write(error)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
@@ -530,7 +539,7 @@ class EmptyTrashAPIHandler(APIHandler):
             for item in os.listdir(path):
                 item_path = os.path.join(path, item)
                 if os.path.isdir(item_path):
-                    rmtree(item_path)
+                    shutil.rmtree(item_path)
                 else:
                     os.remove(item_path)
             resp = "Successfully emptied the trash"
@@ -619,44 +628,6 @@ class ExportAsCombineAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project/workflow group/workflow directory: %s", path)
-        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath",
-                                                                      default=""))
-        log.debug("Path to the project directory: %s", project_path)
-        download = bool(self.get_query_argument(name="download", default=False))
-        try:
-            if download:
-                self.set_header('Content-Type', 'application/zip')
-                self.set_header('Content_Disposition',
-                                'attachment; filename="{0}"'.format((path.split('/')
-                                                                     .pop().split('.')[0])))
-                resp = download_zip(path, "download")
-                log.debug("Response message: %s", resp)
-            else:
-                self.set_header('Content-Type', 'application/json')
-                if os.path.exists(os.path.join(project_path, ".meta-data.json")):
-                    with open(os.path.join(project_path, ".meta-data.json"), "r") as md_file:
-                        data = json.load(md_file)
-                    for _, meta_data in data['meta-data'].items():
-                        meta_data['creators'] = list(map(lambda key: data['creators'][key],
-                                                         meta_data['creators']))
-                    resp = convert(path, data["meta-data"])
-                else:
-                    resp = convert(path)
-                if resp["errors"]:
-                    log.error("Errors raised by convert process: %s", resp["errors"])
-                log.debug("Response message: %s", resp)
-            self.write(resp)
-        except StochSSAPIError as err:
-            if download:
-                self.set_header('Content-Type', 'application/json')
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception Information: %s", error)
-            self.write(error)
-        self.finish()
 
 
     @web.authenticated
@@ -667,43 +638,6 @@ class ExportAsCombineAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project/workflow group/workflow directory: %s", path)
-        project_path = os.path.join(user_dir, self.get_query_argument(name="projectPath",
-                                                                      default=""))
-        log.debug("Path to the project directory: %s", project_path)
-        data = self.request.body.decode()
-        log.debug("Meta-data to be saved: %s", data)
-        with open(os.path.join(project_path, ".meta-data.json"), "w") as md_file:
-            md_file.write(data)
-        data = json.loads(data)
-        for _, meta_data in data['meta-data'].items():
-            meta_data['creators'] = list(map(lambda key: data['creators'][key],
-                                             meta_data['creators']))
-        download = bool(self.get_query_argument(name="download", default=False))
-        try:
-            if download:
-                self.set_header('Content-Type', 'application/zip')
-                self.set_header('Content_Disposition',
-                                'attachment; filename="{0}"'.format((path.split('/')
-                                                                     .pop().split('.')[0])))
-                resp = download_zip(path, "download")
-            else:
-                self.set_header('Content-Type', 'application/json')
-                resp = convert(path, data["meta-data"])
-                if resp["errors"]:
-                    log.error("Errors raised by convert process: %s", resp["errors"])
-                log.debug("Response message: %s", resp)
-            self.write(resp)
-        except StochSSAPIError as err:
-            if download:
-                self.set_header('Content-Type', 'application/json')
-            self.set_status(err.status_code)
-            error = {"Reason":err.reason, "Message":err.message}
-            log.error("Exception Information: %s", error)
-            self.write(error)
-        self.finish()
 
 
 class UpdateAnnotationAPIHandler(APIHandler):

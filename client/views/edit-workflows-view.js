@@ -66,7 +66,12 @@ module.exports = View.extend({
     return error
   },
   handleNewWorkflowClick: function (e) {
-    let models = this.parent.parent.parent.model.models
+    let models = this.parent.parent.parent.model.models.filter(function (model) {
+      return !model.is_spatial
+    });
+    let spatial = this.parent.parent.parent.model.models.filter(function (model) {
+      return model.is_spatial
+    });
     if(models.length > 0) {
       let self = this
       if(document.querySelector("#newProjectWorkflowModal")) {
@@ -85,6 +90,10 @@ module.exports = View.extend({
         modal.modal('hide')
         window.location.href = endpoint
       });
+    }else if(spatial.length > 0) {
+      let title = "Workflow Not Available"
+      let message = "Workflows for spatial models are not currently available."
+      let modal = $(modals.noModelsMessageHtml(title, message)).modal()
     }else{
       let title = "No Models Found"
       let message = "You need to add a model before you can create a new workflow."
