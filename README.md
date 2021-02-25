@@ -22,7 +22,8 @@ At the moment StochSS development on Windows is not supported. You can try using
 
 ### Quickstart
 
-- Build and run the stochss notebook server: `make`. This starts a local docker container running StochSS.
+- Build and run the StochSS notebook server. This starts a local docker container running StochSS.    
+  `make`
 
 - Once your terminal calms down you'll see a link to your server that looks something like this: `127.0.0.1:8888/?token=X8dSfd...` Navigate to that link and get started.
 
@@ -30,19 +31,23 @@ At the moment StochSS development on Windows is not supported. You can try using
 
 ### Setup
 
-- Build the docker container: `make build`.
+- Build the docker container.   
+  `make build`
 
-- Run the container: `make run`.
+- Run the container.   
+  `make run`
 
-- Rebuild frontend static assets on changes to files in /client:  `make watch`.
+- Rebuild frontend static assets on changes to files in `/client` .  
+  `make watch`
 
-- Upon changing backend code in stochss/handlers you can update a running StochSS notebook server  with `make update`.
+- Upon changing backend code in stochss/handlers you can update a running StochSS notebook server.  
+  `make update`
 
-- [Optional] By default your files are saved to your local machine at `./local\_data/`. You can change this location by the changing value of `DOCKER\_WORKING\_DIR` in the file `.env`.
+- [Optional] By default your files are saved to your local machine at `./local\_data/` . You can change this location by the changing value of `DOCKER\_WORKING\_DIR` in the file `.env` .
 
 #### Add a python dependency
 
-Use requirements.txt to add Python dependencies that will be installed into the StochSS docker container.
+Use `requirements.txt` to add Python dependencies that will be installed into the StochSS docker container.
 
 ## Deploying Multi-User StochSS
 
@@ -52,13 +57,13 @@ StochSS uses [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#) as the 
 
 - In addition to the single-user requirements, you will need [Docker Compose](https://docs.docker.com/compose/install/).  
 
-- [Optional] To set admins for JupyterHub, make a file called `userlist` in the `jupyterhub/` directory. On each line of this file place a username followed by the word 'admin'. For example: `myuser admin`. If using Google OAuth, the uesername will be a gmail address. Navigate to `/hub/admin` to use the JupyterHub admin interface.
+- [Optional] To set admins for JupyterHub, make a file called `userlist` in the `jupyterhub/` directory. On each line of this file place a username followed by the word 'admin'. For example: `myuser admin`. If using Google OAuth, the uesername will be a Gmail address. Navigate to `/hub/admin` to use the JupyterHub admin interface.
 
 - [Optional] By default multi-user StochSS is set up to allocate 2 logical cpus per user, reserving 2 logical cpus for the hub container and underlying OS. You can define a list of "power users" that are excluded from resource limitations by adding a text file called `.power_users` (note the leading period) to the `jupyterhub/` directory with one username/email address on each line of the file.
 
 ### Run Locally
 
-To run JupyterHub locally run `make hub` and go to 127.0.0.1:8888.
+To run JupyterHub locally run `make hub` and go to `127.0.0.1:8888` .
 
 ### Set Up A Staging Server
 
