@@ -104,8 +104,12 @@ class StochSSFolder(StochSSBase):
 
 
     def __upload_model(self, file, body, new_name=None):
+        is_spatial = '"is_spatial":true' in body
         is_valid, error = self.__validate_model(body, file)
-        ext = "mdl" if is_valid else "json"
+        if is_valid:
+            ext = "mdl" if is_spatial else "smdl"
+        else:
+            ext = "json"
         if new_name is not None:
             file = f"{new_name}.{ext}"
         elif not file.endswith(ext):
@@ -331,9 +335,9 @@ class StochSSFolder(StochSSBase):
             body = body.decode()
         except UnicodeError:
             pass
-        exts = {"model":['mdl', 'json'], "sbml":['sbml', 'xml']}
+        exts = {"model":['mdl', 'smdl', 'json'], "sbml":['sbml', 'xml']}
         ext = file.split('.').pop() if '.' in file else ""
-        if  ext == 'mdl' or (file_type == "model" and ext in exts[file_type]):
+        if  ext in ('mdl', 'smdl') or (file_type == "model" and ext in exts[file_type]):
             return self.__upload_model(file, body, new_name=new_name)
         if ext == 'sbml' or (file_type == "sbml" and ext in exts[file_type]):
             return self.__upload_sbml(file, body, new_name=new_name)
@@ -361,7 +365,7 @@ class StochSSFolder(StochSSBase):
             message = f"Could not upload this file as {file} already exists"
             return {"message":message, "reason":"File Already Exists"}
         try:
-            file_types = {"mdl":"model", "sbml":"sbml"}
+            file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
             ext = file.split('.').pop()
             file_type = file_types[ext] if ext in file_types.keys() else "file"
             _ = self.upload(file_type=file_type, file=file, body=response.read())

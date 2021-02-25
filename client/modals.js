@@ -324,12 +324,12 @@ module.exports = {
         let title = `Upload a ${type}`
         var accept = "";
         if(type === "model") {
-          accept = 'accept=".json, .mdl"'
+          accept = 'accept=".json, .mdl, .smdl"'
         }else if(type === "sbml") {
           accept = 'accept=".xml, .sbml"'
         }else if(type === "file" && isSafariV14Plus){
           // only used if using Safari v14+ and only needed to fix upload issue
-          accept = 'accept=".json, .mdl, .xml, .sbml, .ipynb, .zip, .md, .csv, .p, .omex, .domn, .txt, .pdf, audio/*, video/*, image/*"'
+          accept = 'accept=".json, .mdl, .smdl, .xml, .sbml, .ipynb, .zip, .md, .csv, .p, .omex, .domn, .txt, .pdf, audio/*, video/*, image/*"'
         }
         
         return templates.upload(modalID, title, accept)
