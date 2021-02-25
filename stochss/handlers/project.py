@@ -108,7 +108,7 @@ class LoadProjectAPIHandler(APIHandler):
                     readme_path = os.path.join(path, item)
                     with open(readme_path, 'r') as readme_file:
                         project['annotation'] = readme_file.read()
-                elif item.endswith('.mdl'):
+                elif item.endswith('.mdl') or item.endswith('.smdl'):
                     mdl_dir = os.path.join(path, item)
                     with open(mdl_dir, 'r') as mdl_file:
                         model = json.load(mdl_file)
@@ -267,7 +267,6 @@ class NewProjectAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: %s", path)
@@ -285,7 +284,6 @@ class NewProjectAPIHandler(APIHandler):
                      "Message":"Could not create your project: {0}".format(err)}
             log.error("Exception Information: %s", error)
             self.write(error)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -351,7 +349,7 @@ class AddExistingModelAPIHandler(APIHandler):
         for root, _, files in os.walk("/home/jovyan"):
             if path not in root and "/." not in root and ".wkfl" not in root:
                 root = root.replace(user_dir+"/", "")
-                files = list(filter(lambda file: (not file.startswith(".") and
+                files = list(filter(lambda file: (file.endswith(".smdl") or
                                                   file.endswith(".mdl")), files))
                 for file in files:
                     if root == user_dir:
@@ -377,7 +375,7 @@ class AddExistingModelAPIHandler(APIHandler):
         mdl_path = os.path.join(user_dir, self.get_query_argument(name="mdlPath"))
         log.debug("Path to the project: %s", path)
         log.debug("Path to the model: %s", mdl_path)
-        if mdl_path.endswith('.mdl'):
+        if mdl_path.endswith('.mdl') or mdl_path.endswith('.smdl'):
             try:
                 base = StochSSBase(path=os.path.join(path, mdl_path.split("/").pop()))
                 unique_path, changed = base.get_unique_path(mdl_path.split("/").pop())

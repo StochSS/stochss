@@ -22,9 +22,9 @@ var Specie = require('./specie');
 
 module.exports = State.extend({
   props: {
-    type: 'string',
+    icType: 'string',
     count: 'number',
-    subdomain: 'string',
+    types: 'object',
     x: 'number',
     y: 'number',
     z: 'number',

@@ -220,14 +220,14 @@ class StochSSModel(StochSSBase):
                 if name not in reactants.keys():
                     reactants[name] = stoich_species['ratio']
                 else:
-                    reactants[name] = stoich_species['ratio']
+                    reactants[name] += stoich_species['ratio']
             products = {}
             for stoich_species in reaction['products']:
                 name = stoich_species['specie']['name']
                 if name not in products.keys():
                     products[name] = stoich_species['ratio']
                 else:
-                    products[name] = stoich_species['ratio']
+                    products[name] += stoich_species['ratio']
             return reactants, products
         except KeyError as err:
             message = "Reactants or products are not properly formatted or "
@@ -341,22 +341,6 @@ class StochSSModel(StochSSBase):
         return g_model
 
 
-    def convert_to_model(self):
-        '''
-        Convert a spatial model to a non_spatial model
-
-        Attributes
-        ----------
-        '''
-        if self.model is None:
-            s_model = self.load()
-        s_model['is_spatial'] = False
-        m_path = self.path.replace(".smdl", ".mdl")
-        m_file = self.get_file(path=m_path)
-        message = f"{self.get_file()} was successfully convert to {m_file}!"
-        return {"Message":message, "File":m_file}, {"model":s_model, "path":m_path}
-
-
     def convert_to_sbml(self):
         '''
         Convert a model to a SBML model
@@ -388,6 +372,14 @@ class StochSSModel(StochSSBase):
         if self.model is None:
             model = self.load()
         model['is_spatial'] = True
+        if "domain" not in model.keys():
+            model['domain'] = self.get_model_template()['domain']
+        for species in model['species']:
+            if "types" not in species.keys():
+                species['types'] = list(range(1, len(model['domain']['type_names'])))
+        for reaction in model['reactions']:
+            if "types" not in reaction.keys():
+                reaction['types'] = list(range(1, len(model['domain']['type_names'])))
         s_path = self.path.replace(".mdl", ".smdl")
         s_file = self.get_file(path=s_path)
         message = f"{self.get_file()} was successfully convert to {s_file}!"
@@ -439,8 +431,10 @@ class StochSSModel(StochSSBase):
         if "annotation" not in self.model.keys():
             self.model['annotation'] = ""
         if "volume" not in self.model.keys():
-            self.model['volume'] = self.model['modelSettings']['volume']
-            del self.model['modelSettings']['volume']
+            if "volume" in self.model['modelSettings'].keys():
+                self.model['volume'] = self.model['modelSettings']['volume']
+            else:
+                self.model['volume'] = 1
         param_ids = self.__update_parameters()
         self.__update_reactions()
         self.__update_events(param_ids=param_ids)

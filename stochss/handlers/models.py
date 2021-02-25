@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
+import json
 import uuid
 import logging
 import subprocess
@@ -26,7 +27,8 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSModel, StochSSNotebook, StochSSAPIError, report_error
+from .util import StochSSFolder, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
+                  StochSSAPIError, report_error
 
 
 log = logging.getLogger('stochss')
@@ -54,16 +56,18 @@ class JsonFileAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("Path to the file: %s", path)
         self.set_header('Content-Type', 'application/json')
+        file_objs = {"ipynb":StochSSNotebook, "mdl":StochSSModel, "smdl":StochSSSpatialModel}
+        ext = path.split(".").pop()
         try:
-            file = StochSSNotebook(path=path) if purpose == "None" else StochSSModel(path=path)
+            file = file_objs[ext](path=path)
             data = file.load()
             log.debug("Contents of the json file: %s", data)
             file.print_logs(log)
             self.write(data)
         except StochSSAPIError as load_err:
-            if purpose == "edit":
+            if purpose == "edit" and ext != "ipynb":
                 try:
-                    model = StochSSModel(path=path, new=True)
+                    model = file_objs[ext](path=path, new=True)
                     data = model.load()
                     log.debug("Contents of the model template: %s", data)
                     model.print_logs(log)
@@ -88,9 +92,80 @@ class JsonFileAPIHandler(APIHandler):
         data = self.request.body.decode()
         log.debug("Model data to be saved: %s", data)
         try:
-            model = StochSSModel(path=path)
-            model.save(model=data)
-            model.print_logs(log)
+            if path.endswith(".domn"):
+                model = StochSSSpatialModel(path=path)
+                model.save_domain(domain=data)
+            else:
+                model = StochSSModel(path=path)
+                model.save(model=data)
+                model.print_logs(log)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class LoadDomainEditorAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for loading the domain editor for spatial models.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Load and return the spatial model, domain, and domain plot.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path", default=None)
+        log.debug("Path to the spatial model: %s", path)
+        d_path = self.get_query_argument(name="domain_path", default=None)
+        if d_path is not None:
+            log.debug("Path to the domain file: %s", d_path)
+        new = self.get_query_argument(name="new", default=False)
+        log.debug("The domain is new: %s", new)
+        try:
+            model = StochSSSpatialModel(path=path)
+            domain = model.get_domain(path=d_path, new=new)
+            s_model = None if path is None else model.load()
+            resp = {"model":s_model, "domain":domain}
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class LoadDomainAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for loading the domain for the spatial model editor.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Load and return the domain plot.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path", default=None)
+        log.debug("Path to the spatial model: %s", path)
+        d_path = self.get_query_argument(name="domain_path", default=None)
+        if d_path is not None:
+            log.debug("Path to the domain file: %s", d_path)
+        new = self.get_query_argument(name="new", default=False)
+        log.debug("The domain is new: %s", new)
+        try:
+            model = StochSSSpatialModel(path=path)
+            fig = json.loads(model.get_domain_plot(path=d_path, new=new))
+            resp = {"fig":fig}
+            log.debug("Response: %s", resp)
+            self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
@@ -164,4 +239,133 @@ class ModelExistsAPIHandler(APIHandler):
         resp = {"exists":os.path.exists(model.get_path(full=True))}
         log.debug("Response: %s", resp)
         self.write(resp)
+        self.finish()
+
+
+class ImportMeshAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for importing mesh particles from remote file.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Imports particles from a mesh file to add to a domain.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        data = self.request.files['datafile'][0]['body'].decode()
+        particle_data = json.loads(self.request.body_arguments['particleData'][0].decode())
+        try:
+            resp = StochSSSpatialModel.get_particles_from_remote(mesh=data, data=particle_data)
+            log.debug("Number of Particles: %s", len(resp['particles']))
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class LoadExternalDomains(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting external domain files.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get all domain files on disc.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        try:
+            folder = StochSSFolder(path="")
+            resp = folder.get_file_list(ext=".domn")
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class LoadParticleTypesDescriptions(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting particle type description files.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get text files on disc for particles type description selection.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        try:
+            folder = StochSSFolder(path="")
+            resp = folder.get_file_list(ext=".txt")
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class Create3DDomainAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for creating a 3D domain.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Create a 3D domain and return its particles.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        data = json.loads(self.request.body.decode())
+        log.debug("Data used to create the domain: %s", data)
+        try:
+            resp = StochSSSpatialModel.get_particles_from_3d_domain(data=data)
+            log.debug("Number of Particles: %s", len(resp['particles']))
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class GetParticlesTypesAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler getting particle types.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get particle types from a text file.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the file: %s", path)
+        try:
+            model = StochSSSpatialModel(path="")
+            resp = model.get_types_from_file(path=path)
+            log.debug("Number of Particles: %s", len(resp['types']))
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()

@@ -18,25 +18,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //models
 var State = require('ampersand-state');
-var Subdomains = require('./subdomains');
 
 module.exports = State.extend({
   props: {
-    count: 'number'
+    fixed: 'boolean',
+    mass: 'number',
+    name: 'string',
+    nu: 'number',
+    typeID: 'number',
+    volume: 'number'
   },
-  derived: {
-    uniqueSubdomains: {
-      deps: ['count'],
-      fn: function () {
-        var uniqueSubdomains = new Subdomains();
-        for(var i = 1; i <= this.count; i++){
-          uniqueSubdomains.addSubdomain('subdomain ' + i + ':');
-        }
-        return uniqueSubdomains;
-      },
-    },
+  session: {
+    numParticles: 'number'
   },
   initialize: function (attrs, options) {
-    State.prototype.initialize.apply(this, arguments);
+    State.prototype.initialize.apply(this, arguments)
+    this.numParticles = 0;
   },
+  validate: function () {
+    return true;
+  }
 });

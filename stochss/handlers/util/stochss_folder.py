@@ -71,7 +71,7 @@ class StochSSFolder(StochSSBase):
 
     def __build_jstree_node(self, path, file):
         types = {"mdl":"nonspatial", "smdl":"spatial", "sbml":"sbml-model", "ipynb":"notebook",
-                 "wkfl":"workflow", "proj":"project", "wkgp":"workflow-group", "mesh":"mesh"}
+                 "wkfl":"workflow", "proj":"project", "wkgp":"workflow-group", "domn":"domain"}
         _path = file if self.path == "none" else os.path.join(self.path, file)
         ext = file.split('.').pop() if "." in file else None
         node = {"text":file, "type":"other", "_path":_path, "children":False}
@@ -104,8 +104,12 @@ class StochSSFolder(StochSSBase):
 
 
     def __upload_model(self, file, body, new_name=None):
+        is_spatial = '"is_spatial":true' in body
         is_valid, error = self.__validate_model(body, file)
-        ext = "mdl" if is_valid else "json"
+        if is_valid:
+            ext = "mdl" if is_spatial else "smdl"
+        else:
+            ext = "json"
         if new_name is not None:
             file = f"{new_name}.{ext}"
         elif not file.endswith(ext):
@@ -169,6 +173,30 @@ class StochSSFolder(StochSSBase):
         if g_model is None:
             return False, [f"The file {sbml.get_file()} is not in SBML format."]
         return bool(not errors), errors
+
+
+    def get_file_list(self, ext):
+        '''
+        Get the list of files matching the ext in this directory and all sub-directories
+
+        Attributes
+        ----------
+        '''
+        domain_paths = {}
+        domain_files = {}
+        for root, _, files in os.walk(self.get_path(full=True)):
+            dirname = root.replace(self.user_dir+"/", "")
+            for file in files:
+                if file.endswith(ext):
+                    path = os.path.join(dirname, file) if dirname else file
+                    if file in domain_files.keys():
+                        domain_paths[domain_files[file]].append(path)
+                    else:
+                        index = str(len(domain_files.keys()))
+                        domain_files[file] = index
+                        domain_paths[index] = [path]
+        options = [[index, file] for file, index in domain_files.items()]
+        return {"files":options, "paths":domain_paths}
 
 
     def get_jstree_node(self, is_root=False):
@@ -307,9 +335,9 @@ class StochSSFolder(StochSSBase):
             body = body.decode()
         except UnicodeError:
             pass
-        exts = {"model":['mdl', 'json'], "sbml":['sbml', 'xml']}
+        exts = {"model":['mdl', 'smdl', 'json'], "sbml":['sbml', 'xml']}
         ext = file.split('.').pop() if '.' in file else ""
-        if  ext == 'mdl' or (file_type == "model" and ext in exts[file_type]):
+        if  ext in ('mdl', 'smdl') or (file_type == "model" and ext in exts[file_type]):
             return self.__upload_model(file, body, new_name=new_name)
         if ext == 'sbml' or (file_type == "sbml" and ext in exts[file_type]):
             return self.__upload_sbml(file, body, new_name=new_name)
@@ -337,7 +365,7 @@ class StochSSFolder(StochSSBase):
             message = f"Could not upload this file as {file} already exists"
             return {"message":message, "reason":"File Already Exists"}
         try:
-            file_types = {"mdl":"model", "sbml":"sbml"}
+            file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
             ext = file.split('.').pop()
             file_type = file_types[ext] if ext in file_types.keys() else "file"
             _ = self.upload(file_type=file_type, file=file, body=response.read())

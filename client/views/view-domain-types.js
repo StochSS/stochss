@@ -16,17 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//models
-var Subdomain = require('./subdomain');
-//collections
-var Collection = require('ampersand-collection');
+//views
+var View = require('ampersand-view');
+//templates
+var template = require('../templates/includes/domainTypesViewer.pug');
 
-module.exports = Collection.extend({
-  model: Subdomain,
-  addSubdomain: function (name) {
-    this.add({name: name});
-  },
-  removeSubdomains: function (subdomain) {
-    this.remove(subdomain);
-  },
+module.exports = View.extend({
+  template: template,
 });

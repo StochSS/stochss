@@ -32,7 +32,7 @@ module.exports = State.extend({
     massaction: 'boolean',
     propensity: 'string',
     annotation: 'string',
-    subdomains: 'object'
+    types: 'object'
   },
   children: {
     rate: Parameter

@@ -16,11 +16,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//model
+//models
 var State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
-    name: 'string',
+    fixed: 'boolean',
+    mass: 'number',
+    nu: 'number',
+    particle_id: 'number',
+    point: 'object',
+    type: 'number',
+    volume: 'number'
   },
+  session: {
+    pointChanged: 'boolean',
+    typeChanged: 'boolean'
+  },
+  initialize: function (attrs, options) {
+    State.prototype.initialize.apply(this, arguments)
+  },
+  validate: function () {
+    return true;
+  }
 });

@@ -25,6 +25,7 @@ import traceback
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
+from .stochss_spatial_model import StochSSSpatialModel
 from .stochss_errors import StochSSWorkflowError, StochSSWorkflowNotCompleteError, \
                             StochSSFileNotFoundError, StochSSFileExistsError, \
                             FileNotJSONFormatError, PlotNotAvailableError
@@ -445,9 +446,13 @@ class StochSSWorkflow(StochSSBase):
         ----------
         '''
         path = self.get_model_path()
-        model = StochSSModel(path=path)
-        g_model = model.convert_to_gillespy2()
-        return g_model, model.model
+        if path.endswith('.mdl'):
+            model_obj = StochSSModel(path=path)
+            model = model_obj.convert_to_gillespy2()
+        else:
+            model_obj = StochSSSpatialModel(path=path)
+            model = model_obj.convert_to_spatialpy()
+        return model, model_obj.model
 
 
     def load_settings(self, model=None):
