@@ -65,8 +65,8 @@ class StochSSNotebook(StochSSBase):
                 self.path = n_path.replace(self.user_dir + '/', "")
 
 
-    def __create_common_cells(self):
-        cells = [self.__create_import_cell(),
+    def __create_common_cells(self, interactive_backend=False):
+        cells = [self.__create_import_cell(interactive_backend=interactive_backend),
                  nbf.new_markdown_cell(f"# {self.get_name()}"),
                  self.__create_model_cell(),
                  nbf.new_code_cell(f'model = {self.__get_class_name()}()'),
@@ -837,7 +837,7 @@ class StochSSNotebook(StochSSBase):
         '''
         self.nb_type = self.MODEL_EXPLORATION
         self.settings['solver'] = self.__get_gillespy2_solver_name()
-        cells = self.__create_common_cells()
+        cells = self.__create_common_cells(interactive_backend=True)
         cells.append(nbf.new_markdown_cell("# Model Exploration"))
         cells.extend(self.__create_sme_setup_cells())
         cells.extend([nbf.new_markdown_cell("## Run parameter sweep"),
