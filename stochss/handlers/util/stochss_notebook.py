@@ -35,13 +35,14 @@ class StochSSNotebook(StochSSBase):
     '''
 
     ENSEMBLE_SIMULATION = 1
-    PARAMETER_SWEEP_1D = 2
-    PARAMETER_SWEEP_2D = 3
-    MODEL_EXPLORATION = 4
-    MODEL_INFERENCE = 5
+    SPATIAL_SIMULATION = 2
+    PARAMETER_SWEEP_1D = 3
+    PARAMETER_SWEEP_2D = 4
+    MODEL_EXPLORATION = 5
+    MODEL_INFERENCE = 6
     SOLVER_MAP = {"SSACSolver":"SSA", "NumPySSASolver":"SSA", "VariableSSACSolver":"V-SSA",
                   "TauLeapingSolver":"Tau-Leaping", "TauHybridSolver":"Hybrid-Tau-Leaping",
-                  "ODESolver":"ODE"}
+                  "ODESolver":"ODE", "Solver":"SSA"}
 
     def __init__(self, path, new=False, models=None, settings=None):
         '''
@@ -823,6 +824,21 @@ class StochSSNotebook(StochSSBase):
         cells.extend([nbf.new_code_cell(run_str),
                       nbf.new_markdown_cell("# Visualization"),
                       nbf.new_code_cell("results.plotplotly()")])
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
+
+    def create_ses_notebook(self):
+        '''
+        Create a spetial ensemble simulation jupiter notebook for a StochSS model/workflow
+
+        Attributes
+        ----------
+        '''
+        self.nb_type = self.SPATIAL_SIMULATION
+        self.settings['solver'] = "Solver"
+        cells = self.__create_common_cells()
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}

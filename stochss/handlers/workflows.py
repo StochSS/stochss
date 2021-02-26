@@ -249,6 +249,7 @@ class WorkflowNotebookHandler(APIHandler):
             log.debug("Type of workflow to be run: %s", wkfl_type)
             notebook = StochSSNotebook(**kwargs)
             notebooks = {"gillespy":notebook.create_es_notebook,
+                         "spatial":notebook.create_ses_notebook,
                          "1d_parameter_sweep":notebook.create_1dps_notebook,
                          "2d_parameter_sweep":notebook.create_2dps_notebook,
                          "sciope_model_exploration":notebook.create_sme_notebook,
