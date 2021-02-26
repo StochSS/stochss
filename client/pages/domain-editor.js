@@ -439,15 +439,20 @@ let DomainEditor = PageView.extend({
     this.domain.types.get(index, "typeID").name = newName;
     this.renderEditParticle();
     this.renderNewParticle();
+    this.renderTypeSelectView();
+    this.renderCreate3DDomain();
     this.plot.data[index].name = newName;
     this.updatePlot();
   },
   renderCreate3DDomain: function () {
-    let create3DDomainView = new Create3DDomainView({
+    if(this.create3DDomainView) {
+      this.create3DDomainView.remove()
+    }
+    this.create3DDomainView = new Create3DDomainView({
       parent: this,
       model: this.domain
     });
-    this.registerRenderSubview(create3DDomainView, "add-3d-domain");
+    this.registerRenderSubview(this.create3DDomainView, "add-3d-domain");
   },
   renderDomainLimitations: function () {
     let xLimMinView = new InputView({parent: this, required: true,
@@ -692,7 +697,10 @@ let DomainEditor = PageView.extend({
     this.registerRenderSubview(this.typesLocationSelectView, "types-file-location-select")
   },
   renderTypeSelectView: function () {
-    var typeView = new SelectView({
+    if(this.typeView) {
+      this.typeView.remove()
+    }
+    this.typeView = new SelectView({
       label: 'Type:  ',
       name: 'type',
       required: true,
@@ -702,7 +710,7 @@ let DomainEditor = PageView.extend({
       options: this.domain.types,
       value: this.domain.types.get(0, "typeID")
     });
-    this.registerRenderSubview(typeView, "mesh-type-select")
+    this.registerRenderSubview(this.typeView, "mesh-type-select")
   },
   saveDomain: function (name=null) {
     let domain = this.domain.toJSON();
