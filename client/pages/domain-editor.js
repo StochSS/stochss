@@ -455,30 +455,38 @@ let DomainEditor = PageView.extend({
     this.registerRenderSubview(this.create3DDomainView, "add-3d-domain");
   },
   renderDomainLimitations: function () {
-    let xLimMinView = new InputView({parent: this, required: true,
+    if(this.xLimMinView) {
+      this.xLimMinView.remove();
+      this.yLimMinView.remove();
+      this.zLimMinView.remove();
+      this.xLimMaxView.remove();
+      this.yLimMaxView.remove();
+      this.zLimMaxView.remove();
+    }
+    this.xLimMinView = new InputView({parent: this, required: true,
                                      name: 'x-lim-min', valueType: 'number',
                                      value: this.domain.x_lim[0] || 0});
-    this.registerRenderSubview(xLimMinView, "x_lim-min");
-    let yLimMinView = new InputView({parent: this, required: true,
+    this.registerRenderSubview(this.xLimMinView, "x_lim-min");
+    this.yLimMinView = new InputView({parent: this, required: true,
                                      name: 'y-lim-min', valueType: 'number',
                                      value: this.domain.y_lim[0] || 0});
-    this.registerRenderSubview(yLimMinView, "y_lim-min");
-    let zLimMinView = new InputView({parent: this, required: true,
+    this.registerRenderSubview(this.yLimMinView, "y_lim-min");
+    this.zLimMinView = new InputView({parent: this, required: true,
                                      name: 'z-lim-min', valueType: 'number',
                                      value: this.domain.z_lim[0] || 0});
-    this.registerRenderSubview(zLimMinView, "z_lim-min");
-    let xLimMaxView = new InputView({parent: this, required: true,
+    this.registerRenderSubview(this.zLimMinView, "z_lim-min");
+    this.xLimMaxView = new InputView({parent: this, required: true,
                                      name: 'x-lim-max', valueType: 'number',
                                      value: this.domain.x_lim[1] || 0});
-    this.registerRenderSubview(xLimMaxView, "x_lim-max");
-    let yLimMaxView = new InputView({parent: this, required: true,
+    this.registerRenderSubview(this.xLimMaxView, "x_lim-max");
+    this.yLimMaxView = new InputView({parent: this, required: true,
                                      name: 'y-lim-max', valueType: 'number',
                                      value: this.domain.y_lim[1] || 0});
-    this.registerRenderSubview(yLimMaxView, "y_lim-max");
-    let zLimMaxView = new InputView({parent: this, required: true,
+    this.registerRenderSubview(this.yLimMaxView, "y_lim-max");
+    this.zLimMaxView = new InputView({parent: this, required: true,
                                      name: 'z-lim-max', valueType: 'number',
                                      value: this.domain.z_lim[1] || 0});
-    this.registerRenderSubview(zLimMaxView, "z_lim-max");
+    this.registerRenderSubview(this.zLimMaxView, "z_lim-max");
   },
   renderDomainProperties: function () {
     let densityView = new InputView({parent: this, required: true,

@@ -429,8 +429,9 @@ class StochSSSpatialModel(StochSSBase):
             zlim = [coord + data['transformation'][2] for coord in data['zLim']]
         s_domain = Mesh.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
                                          ny=data['ny'], nz=data['nz'], **data['type'])
-        particles = cls.__build_stochss_domain_particles(s_domain=s_domain)
-        return {"particles":particles}
+        domain = cls.__build_stochss_domain(s_domain=s_domain)
+        limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
+        return {"particles":domain['particles'], "limits":limits}
 
 
     @classmethod

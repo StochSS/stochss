@@ -51,6 +51,25 @@ module.exports = View.extend({
     xhr({uri: endpoint, json: true, method: "post", body: this.data}, function (err, resp, body) {
       if(resp.statusCode < 400) {
         self.parent.addParticles(body.particles);
+        if(self.parent.domain.x_lim[0] > body.limits.x_lim[0]) {
+          self.parent.domain.x_lim[0] = body.limits.x_lim[0]
+        }
+        if(self.parent.domain.y_lim[0] > body.limits.y_lim[0]) {
+          self.parent.domain.y_lim[0] = body.limits.y_lim[0]
+        }
+        if(self.parent.domain.z_lim[0] > body.limits.z_lim[0]) {
+          self.parent.domain.z_lim[0] = body.limits.z_lim[0]
+        }
+        if(self.parent.domain.x_lim[1] < body.limits.x_lim[1]) {
+          self.parent.domain.x_lim[1] = body.limits.x_lim[1]
+        }
+        if(self.parent.domain.y_lim[1] < body.limits.y_lim[1]) {
+          self.parent.domain.y_lim[1] = body.limits.y_lim[1]
+        }
+        if(self.parent.domain.z_lim[1] < body.limits.z_lim[1]) {
+          self.parent.domain.z_lim[1] = body.limits.z_lim[1]
+        }
+        self.parent.renderDomainLimitations();
       }
     });
   },
