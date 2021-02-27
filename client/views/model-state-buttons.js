@@ -152,6 +152,10 @@ module.exports = View.extend({
     errors.style.display = "none";
   },
   ran: function (noErrors) {
+    var runContainer = $(this.parent.queryByHook("model-run-container"));
+    if(runContainer.css("display") === "none") {
+      runContainer.css("display", 'block');
+    }
     $(this.parent.queryByHook('preview-plot-buttons')).css('display', 'inline-block')
     let plotBtn = $(this.parent.queryByHook('toggle-preview-plot'))
     if(plotBtn.text() === "Show Preview") {
