@@ -179,7 +179,7 @@ module.exports = View.extend({
           body = JSON.parse(body)
         }
         var data = body.Results;
-        if(response.statusCode >= 400){
+        if(response.statusCode >= 400 || data.errors){
           self.ran(false);
           $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
         }
