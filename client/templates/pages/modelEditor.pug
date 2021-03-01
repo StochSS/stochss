@@ -73,6 +73,23 @@ section.page
 
   div(class="preview-nav")
 
+    div(data-hook="domain-plot-viewer-container" style="display: none")
+
+      div: h4 Domain and Particle Preview
+
+      div.row
+
+        div.col-sm-9
+
+          div(data-hook="domain-plot-container")
+
+        div.col-sm-3
+
+          div.mt-2(data-hook="me-particle-viewer")
+
+          div.text-info(data-hook="me-select-particle")
+            | Click on a particle to view its properties.
+
     div(data-hook="model-run-container")
 
       div(data-hook="preview-plot-container")
@@ -91,8 +108,12 @@ section.page
 
     div
 
-      div.mt-1.preview-buttons(data-hook="preview-plot-buttons")
-      
+      div.inline(data-hook="preview-domain-buttons")
+
+        button.btn.btn-outline-secondary.box-shadow.mx-2(data-hook="toggle-preview-domain" style="display: none") Hide Domain
+
+      div.mt-1.preview-buttons.inline(data-hook="preview-plot-buttons")
+
         button.btn.btn-outline-secondary.box-shadow.inline.mx-2(data-hook="toggle-preview-plot") Hide Preview
 
         button.btn.btn-outline-secondary.box-shadow.inline.dropdown-toggle(

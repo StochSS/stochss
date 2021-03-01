@@ -56,6 +56,9 @@ module.exports = View.extend({
     this.saveModel(this.saved.bind(this));
   },
   clickRunHandler: function (e) {
+    if(this.model.is_spatial && $(this.queryByHook("domain-plot-viewer-container")).css("display") !== "none") {
+      this.parent.closeDomainPlot()
+    }
     $(this.parent.queryByHook('model-run-error-container')).collapse('hide');
     $(this.parent.queryByHook('model-timeout-message')).collapse('hide');
     var el = this.parent.queryByHook('preview-plot-container');
@@ -154,7 +157,7 @@ module.exports = View.extend({
       this.saved();
     }
     this.running();
-    var el = this.parent.queryByHook('model-run-container')
+    $(this.parent.queryByHook('model-run-container')).css("display", "block")
     var model = this.model
     var queryStr = "?cmd=start&outfile=none&path="+model.directory
     if(species) {

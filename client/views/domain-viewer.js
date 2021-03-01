@@ -193,11 +193,15 @@ module.exports = View.extend({
     var el = this.queryByHook("domain-plot");
     Plotly.newPlot(el, this.plot);
     el.on('plotly_click', _.bind(this.selectParticle, this));
+    var domainPreview = this.parent.queryByHook("domain-plot-container");
+    Plotly.newPlot(domainPreview, this.plot);
+    domainPreview.on('plotly_click', _.bind(this.selectParticle, this));
   },
   selectParticle: function (data) {
     let point = data.points[0];
     let particle = this.model.particles.get(point.id, "particle_id");
     this.renderParticleViewer(particle);
+    this.parent.renderParticleViewer(particle);
   },
   editDomain: function (e) {
     var queryStr = "?path=" + this.parent.model.directory;

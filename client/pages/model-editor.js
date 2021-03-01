@@ -34,6 +34,7 @@ var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var InitialConditionsViewer = require('../views/initial-conditions-viewer');
 var ParametersEditorView = require('../views/parameters-editor');
 var ParameterViewer = require('../views/parameters-viewer');
+var ParticleViewer = require('../views/view-particle');
 var ReactionsEditorView = require('../views/reactions-editor');
 var ReactionsViewer = require('../views/reactions-viewer');
 var EventsEditorView = require('../views/events-editor');
@@ -60,6 +61,7 @@ let ModelEditor = PageView.extend({
     'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
+    'click [data-hook=toggle-preview-domain]' : 'toggleDomainPlot',
     'click [data-hook=download-png]' : 'clickDownloadPNGButton',
     'click [data-hook=collapse-system-volume]' : 'changeCollapseButtonText'
   },
@@ -190,6 +192,18 @@ let ModelEditor = PageView.extend({
       updateInUse(rule.variable);
     });
   },
+  renderParticleViewer: function (particle=null) {
+    if(this.particleViewer) {
+      this.particleViewer.remove();
+    }
+    if(particle){
+      $(this.queryByHook("me-select-particle")).css("display", "none")
+      this.particleViewer = new ParticleViewer({
+        model: particle
+      });
+      this.registerRenderSubview(this.particleViewer, "me-particle-viewer")
+    }
+  },
   renderSubviews: function () {
     this.modelSettings = new ModelSettingsView({
       parent: this,
@@ -208,6 +222,8 @@ let ModelEditor = PageView.extend({
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
       this.renderDomainViewer();
       this.renderInitialConditions();
+      $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
+      this.openDomainPlot();
     }else {
       this.renderEventsView();
       this.renderRulesView();
@@ -373,10 +389,36 @@ let ModelEditor = PageView.extend({
     button.innerText = "Show Preview"
   },
   openPlot: function () {
+    if($(this.queryByHook("domain-plot-viewer-container")).css("display") !== "none") {
+      this.closeDomainPlot()
+    }
     let runContainer = this.queryByHook("model-run-container")
     let button = this.queryByHook("toggle-preview-plot")
     runContainer.style.display = "block"
     button.innerText = "Hide Preview"
+  },
+  toggleDomainPlot: function (e) {
+    let action = e.target.innerText
+    if(action === "Hide Domain") {
+      this.closeDomainPlot();
+    }else{
+      this.openDomainPlot();
+    }
+  },
+  openDomainPlot: function () {
+    if($(this.queryByHook("model-run-container")).css("display") !== "none") {
+      this.closePlot();
+    }
+    let domainView = this.queryByHook("domain-plot-viewer-container")
+    let button = this.queryByHook("toggle-preview-domain")
+    domainView.style.display = "block"
+    button.innerText = "Hide Domain"
+  },
+  closeDomainPlot: function () {
+    let domainView = this.queryByHook("domain-plot-viewer-container")
+    let button = this.queryByHook("toggle-preview-domain")
+    domainView.style.display = "none"
+    button.innerText = "Show Domain"
   },
   clickDownloadPNGButton: function (e) {
     let pngButton = $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0]
