@@ -336,7 +336,7 @@ module.exports = View.extend({
         }else{
           self.refreshJSTree();
         }
-        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".sbml")) {
+        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".smdl") ||resp.file.endsWith(".sbml")) {
           self.parent.update("file-browser")
         }
         if(resp.errors.length > 0){
