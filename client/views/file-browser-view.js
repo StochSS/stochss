@@ -190,7 +190,7 @@ module.exports = View.extend({
   updateParent: function (type, trash = false) {
     if(trash){
       this.parent.update("all")
-    }else if(type === "nonspatial" || type === "workflow" || type === "workflow-group") {
+    }else if(type === "nonspatial" || type === "spatial" || type === "workflow" || type === "workflow-group") {
       this.parent.update("file-browser")
     }
   },
