@@ -116,6 +116,9 @@ let DomainEditor = PageView.extend({
           self.domain.z_lim[1] = resp.limits.z_lim[1]
         }
         self.renderDomainLimitations();
+        $('html, body').animate({
+            scrollTop: $("#domain-plot").offset().top
+        }, 20);
       }
     }
     req.send(formData)

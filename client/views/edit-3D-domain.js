@@ -70,6 +70,9 @@ module.exports = View.extend({
           self.parent.domain.z_lim[1] = body.limits.z_lim[1]
         }
         self.parent.renderDomainLimitations();
+        $('html, body').animate({
+            scrollTop: $("#domain-plot").offset().top
+        }, 20);
       }
     });
   },
