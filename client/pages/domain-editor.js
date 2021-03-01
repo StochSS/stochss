@@ -142,6 +142,7 @@ let DomainEditor = PageView.extend({
     if(this.model) {
       this.model.domain = this.domain;
       this.model.saveModel();
+      window.history.back();
     }
   },
   handleSaveToFile: function () {
