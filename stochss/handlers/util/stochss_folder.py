@@ -104,10 +104,10 @@ class StochSSFolder(StochSSBase):
 
 
     def __upload_model(self, file, body, new_name=None):
-        is_spatial = '"is_spatial":true' in body
         is_valid, error = self.__validate_model(body, file)
         if is_valid:
-            ext = "mdl" if is_spatial else "smdl"
+            is_spatial = json.loads(body)['is_spatial']
+            ext = "smdl" if is_spatial else "mdl"
         else:
             ext = "json"
         if new_name is not None:
