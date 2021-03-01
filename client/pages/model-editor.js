@@ -201,11 +201,11 @@ let ModelEditor = PageView.extend({
     this.renderSpeciesView();
     this.renderParametersView();
     this.renderReactionsView();
-    this.renderSystemVolumeView();
     this.registerRenderSubview(this.modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
-      $(this.queryByHook("spatial-beta-message")).css("display", "block")
+      $(this.queryByHook("model-editor-advanced-container")).css("display", "none");
+      $(this.queryByHook("spatial-beta-message")).css("display", "block");
       this.renderDomainViewer();
       this.renderInitialConditions();
     }else {
@@ -217,6 +217,7 @@ let ModelEditor = PageView.extend({
         });
         this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
       }
+      this.renderSystemVolumeView();
     }
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
