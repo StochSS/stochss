@@ -61,7 +61,11 @@ module.exports = View.extend({
     var el = this.parent.queryByHook('preview-plot-container');
     Plotly.purge(el)
     $(this.parent.queryByHook('preview-plot-buttons')).css("display", "none");
-    this.saveModel(this.runModel.bind(this));
+    if(this.model.is_spatial) {
+      this.saveModel(this.getPreviewSpecies.bind(this));
+    }else{
+      this.saveModel(this.runModel.bind(this));
+    }
   },
   clickReturnToProjectHandler: function (e) {
     let self = this
@@ -83,6 +87,21 @@ module.exports = View.extend({
       let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+queryString
       window.location.href = endpoint
     })
+  },
+  getPreviewSpecies: function () {
+    this.saved();
+    let species = this.model.species.map(function (species) {
+      return species.name
+    });
+    let self = this;
+    let modal = $(modals.selectSpeciesHTML(species)).modal();
+    let okBtn = document.querySelector("#speciesSelectModal .ok-model-btn");
+    let select = document.querySelector("#speciesSelectModal #speciesSelectList");
+    okBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      let specie = select.value;
+      self.runModel(specie);
+    });
   },
   togglePreviewWorkflowBtn: function () {
     $(this.queryByHook('simulate-model')).prop('disabled', !this.model.valid)
@@ -130,12 +149,17 @@ module.exports = View.extend({
       saved.style.display = "none";
     }, 5000);
   },
-  runModel: function () {
-    this.saved();
+  runModel: function (species=undefined) {
+    if(!species) {
+      this.saved();
+    }
     this.running();
     var el = this.parent.queryByHook('model-run-container')
     var model = this.model
-    let queryStr = "?cmd=start&outfile=none&path="+model.directory
+    var queryStr = "?cmd=start&outfile=none&path="+model.directory
+    if(species) {
+      queryStr += "&species=" + species;
+    }
     var endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
     var self = this;
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
