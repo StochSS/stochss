@@ -79,16 +79,25 @@ section.page
 
       div.row
 
-        div.col-sm-9
+        div.col-sm-8
 
           div(data-hook="domain-plot-container")
 
-        div.col-sm-3
+        div.col-sm-4
 
-          div.mt-2(data-hook="me-particle-viewer")
+          div.mt-2.particle-view(data-hook="me-particle-viewer")
 
-          div.text-info(data-hook="me-select-particle")
-            | Click on a particle to view its properties.
+          div.mt-2.particle-view(data-hook="me-select-particle")
+
+            div.text-info
+              | Click on a particle to view its properties.
+
+            div.mt-2
+
+              h4 Particles per Type
+
+              table.table
+                tbody(data-hook="me-types-quick-view")
 
     div(data-hook="model-run-container")
 

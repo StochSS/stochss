@@ -44,6 +44,7 @@ var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
 var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
+var QuickviewDomainTypes = require('../views/quickview-domain-types');
 //models
 var Model = require('../models/model');
 var Domain = require('../models/domain');
@@ -196,12 +197,23 @@ let ModelEditor = PageView.extend({
     if(this.particleViewer) {
       this.particleViewer.remove();
     }
+    if(this.typeQuickViewer) {
+      this.typeQuickViewer.remove();
+    }
     if(particle){
       $(this.queryByHook("me-select-particle")).css("display", "none")
       this.particleViewer = new ParticleViewer({
         model: particle
       });
       this.registerRenderSubview(this.particleViewer, "me-particle-viewer")
+    }else{
+      $(this.queryByHook("me-select-particle")).css("display", "block")
+      this.typeQuickViewer = this.renderCollection(
+        this.domainViewer.model.types,
+        QuickviewDomainTypes,
+        this.queryByHook("me-types-quick-view")
+      );
+      console.log(this.domainViewer.model.types.models)
     }
   },
   renderSubviews: function () {
