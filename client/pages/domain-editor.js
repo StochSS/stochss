@@ -71,6 +71,7 @@ let DomainEditor = PageView.extend({
     this.renderEditTypeDefaults();
   },
   handleImportMesh: function (e) {
+    this.startAction("Importing mesh ...", "im")
     let data = {"type":null, "transformation":null}
     let id = Number($(this.queryByHook("mesh-type-select")).find('select')[0].value)
     if(id > 0) {
@@ -116,9 +117,12 @@ let DomainEditor = PageView.extend({
           self.domain.z_lim[1] = resp.limits.z_lim[1]
         }
         self.renderDomainLimitations();
+        self.completeAction("Mesh successfully imported", "im")
         $('html, body').animate({
             scrollTop: $("#domain-plot").offset().top
         }, 20);
+      }else{
+        self.errorAction(resp.Message, "im")
       }
     }
     req.send(formData)
@@ -143,12 +147,16 @@ let DomainEditor = PageView.extend({
   },
   handleSaveToModel: function () {
     if(this.model) {
+      this.startAction("Saving domain to model ...", "sd");
       this.model.domain = this.domain;
-      this.model.saveModel();
+      this.model.saveModel(_.bind(function () {
+        this.completeAction("Domain saved to model", "sd");
+      }, this));
       window.history.back();
     }
   },
   handleSaveToFile: function () {
+    this.startAction("Saving the domain to file (.domn) ...", "sd")
     if(this.domain.directory && !this.domain.dirname) {
       this.saveDomain()
     }else{
@@ -186,6 +194,8 @@ let DomainEditor = PageView.extend({
     let value = e.srcElement.value;
     if(value) {
       if(this.typeDescriptions[value].length <= 1) {
+        $(this.queryByHook("type-location-message")).css('display', "none");
+        $(this.queryByHook("type-location-container")).css("display", "none");
         this.typeDescriptionsFile = this.typeDescriptions[value][0];
         var disabled = false;
       }else{
@@ -242,7 +252,7 @@ let DomainEditor = PageView.extend({
       $('[autofocus]', e.target).focus();
     });
   },
-  addParticle: function (newPart, fromImport=false) {
+  addParticle: function (newPart, {fromImport=false, cb=null}={}) {
     this.domain.particles.addParticle(newPart.point, newPart.volume,
                                       newPart.mass, newPart.type,
                                       newPart.nu, newPart.fixed);
@@ -253,15 +263,19 @@ let DomainEditor = PageView.extend({
     this.plot.data[particle.type].y.push(particle.point[1]);
     this.plot.data[particle.type].z.push(particle.point[2]);
     if(!fromImport) {
-      this.renderNewParticle();
       this.renderDomainTypes();
       this.updatePlot();
+    }else{
+      console.log("From Imports")
+    }
+    if(cb) {
+      cb();
     }
   },
   addParticles: function (particles) {
     let self = this;
     particles.forEach(function (particle) {
-      self.addParticle(particle, true);
+      self.addParticle(particle, {fromImport: true});
     });
     this.renderDomainTypes();
     this.updatePlot();
@@ -344,6 +358,16 @@ let DomainEditor = PageView.extend({
     this.plot.data[type].z.push(z);
     this.actPart.part.typeChanged = false;
   },
+  completeAction: function (action, src) {
+    $(this.queryByHook(src + "-in-progress")).css("display", "none");
+    $(this.queryByHook(src + "-action-complete")).text(action);
+    $(this.queryByHook(src + "-complete")).css("display", "inline-block");
+    console.log(action)
+    let self = this
+    setTimeout(function () {
+      $(self.queryByHook(src + "-complete")).css("display", "none");
+    }, 5000);
+  },
   deleteParticle: function () {
     this.domain.particles.removeParticle(this.actPart.part);
     this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1);
@@ -354,6 +378,9 @@ let DomainEditor = PageView.extend({
     this.updatePlot();
     this.renderEditParticle();
     this.renderDomainTypes();
+    $('html, body').animate({
+        scrollTop: $("#domain-plot").offset().top
+    }, 20);
   },
   deleteType: function (typeID) {
     if(this.actPart.part && this.actPart.part.type >= typeID) {
@@ -388,6 +415,12 @@ let DomainEditor = PageView.extend({
     var el = this.queryByHook("domain-plot");
     Plotly.newPlot(el, this.plot);
     el.on('plotly_click', _.bind(this.selectParticle, this));
+  },
+  errorAction: function (action, src) {
+    $(this.queryByHook(src + "-in-progress")).css("display", "none");
+    $(this.queryByHook(src + "-action-error")).text(action);
+    $(this.queryByHook(src + "-error")).css("display", "block");
+    console.log(action)
   },
   getBreadcrumbData: function () {
     var data = {"project":null, "model":null};
@@ -427,6 +460,7 @@ let DomainEditor = PageView.extend({
     return particle;
   },
   getTypesFromFile: function (typePath) {
+    this.startAction("Setting types ...", "st")
     let self = this;
     let queryStr = "?path=" + this.typeDescriptionsFile;
     let endpoint = path.join(app.getApiPath(), "spatial-model/particle-types") + queryStr;
@@ -434,7 +468,9 @@ let DomainEditor = PageView.extend({
       if(resp.statusCode < 400) {
         self.addMissingTypes(body.names)
         self.changeParticleTypes(body.types)
+        self.completeAction("Types set", "st")
       }else{
+        self.errorAction(body.Message, "st")
         console.log(err)
       }
     });
@@ -733,10 +769,14 @@ let DomainEditor = PageView.extend({
     }else{
       var domainPath = this.domain.directory;
     }
+    let self = this;
     let endpoint = path.join(app.getApiPath(), "file/json-data") + "?path=" + domainPath;
     xhr({uri: endpoint, method: "post", json: true, body: domain}, function (err, response, body) {
       if(response.statusCode >= 400) {
+        self.errorAction(body.Message, "sd");
         console.log(body.message)
+      }else{
+        self.completeAction("Domain save to file (.domn)", "sd");
       }
     });
   },
@@ -781,6 +821,12 @@ let DomainEditor = PageView.extend({
     let value = Number(e.target.value)
     this.domain.c_0 = value;
   },
+  startAction: function (action, src) {
+    $(this.queryByHook(src + "-complete")).css("display", "none");
+    $(this.queryByHook(src + "-action-in-progress")).text(action);
+    $(this.queryByHook(src + "-in-progress")).css("display", "inline-block");
+    console.log(action)
+  },
   unassignAllParticles: function (type, update=true) {
     let self = this;
     this.domain.particles.forEach(function (particle) {
@@ -810,7 +856,7 @@ let DomainEditor = PageView.extend({
     let id = Number(e.target.selectedOptions.item(0).value);
     this.renderMeshTypeDefaults(id);
   },
-  updateParticle: function () {
+  updateParticle: function ({cb=null}={}) {
     if(this.actPart.part.pointChanged) {
       let x = this.actPart.part.point[0];
       let y = this.actPart.part.point[1];
@@ -823,6 +869,9 @@ let DomainEditor = PageView.extend({
       this.renderDomainTypes();
     }
     this.updatePlot();
+    if(cb) {
+      cb()
+    }
   },
   updateValid: function () {},
   validateName(input, rename = false) {

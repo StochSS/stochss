@@ -196,9 +196,23 @@ section.page
 
               div.inline(id="types-file-location-select" data-hook="types-file-location-select")
 
-          div
+          div.inline
 
             button.btn.btn-outline-primary.box-shadow(data-hook="set-particle-types-btn" disabled) Set Types
+
+          div.mdl-edit-btn.saving-status.inline(data-hook="st-in-progress")
+
+            div.spinner-grow.mr-2
+
+            span(data-hook="st-action-in-progress")
+
+          div.mdl-edit-btn.saved-status.inline(data-hook="st-complete")
+
+            span(data-hook="st-action-complete")
+
+          div.mdl-edit-btn.save-error-status(data-hook="st-error")
+
+            span(data-hook="st-action-error")
 
         div.tab-pane(id="import-particles")
 
@@ -249,9 +263,23 @@ section.page
                   td: div(data-hook="mesh-y-trans")
                   td: div(data-hook="mesh-z-trans")
 
-          div
+          div.inline
 
             button.btn.btn-outline-primary.box-shadow(data-hook="import-particles-btn" disabled) Import Mesh
+
+          div.mdl-edit-btn.saving-status.inline(data-hook="im-in-progress")
+
+            div.spinner-grow.mr-2
+
+            span(data-hook="im-action-in-progress")
+
+          div.mdl-edit-btn.saved-status.inline(data-hook="im-complete")
+
+            span(data-hook="im-action-complete")
+
+          div.mdl-edit-btn.save-error-status(data-hook="im-error")
+
+            span(data-hook="im-action-error")
 
   div.card.card-body
 
@@ -265,7 +293,7 @@ section.page
 
       div(id="domain-plot" data-hook="domain-plot" style="height: 800px")
 
-  div
+  div.inline
 
     button.btn.btn-primary.box-shadow.dropdown-toggle(
       id="dave-domain",
@@ -278,3 +306,17 @@ section.page
     ul.dropdown-menu(aria-labelledby="save-domain")
       li.dropdown-item(data-hook="save-to-model") to Model
       li.dropdown-item(data-hook="save-to-file") to File (.domn)
+
+  div.mdl-edit-btn.saving-status.inline(data-hook="sd-in-progress")
+
+    div.spinner-grow.mr-2
+
+    span(data-hook="sd-action-in-progress")
+
+  div.mdl-edit-btn.saved-status.inline(data-hook="sd-complete")
+
+    span(data-hook="sd-action-complete")
+
+  div.mdl-edit-btn.save-error-status(data-hook="sd-error")
+
+    span(data-hook="sd-action-error")

@@ -110,7 +110,7 @@ module.exports = Model.extend({
     //TODO: implement auto save
   },
   //called when save button is clicked
-  saveModel: function () {
+  saveModel: function (cb=null) {
     var self = this;
     this.species.map(function (specie) {
       self.species.trigger('update-species', specie.compID, specie, false, false);
@@ -118,6 +118,10 @@ module.exports = Model.extend({
     this.parameters.map(function (parameter) {
       self.parameters.trigger('update-parameters', parameter.compID, parameter);
     });
-    this.save();
+    if(cb) {
+      this.save({success: cb});
+    }else{
+      this.save()
+    }
   },
 });
