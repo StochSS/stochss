@@ -125,7 +125,7 @@ section.page
             tr
               th(scope="col") Mass
               th(scope="col") Volume
-              th(scope="col") Nu
+              th(scope="col") Viscosity
               th(scope="col") Fixed
 
           tbody
@@ -137,18 +137,6 @@ section.page
 
         button.btn.btn-outline-primary.box-shadow(data-hook="set-type-defaults") Submit
   
-  div.card.card-body
-
-    div
-
-      h3.inline Domain
-    
-      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#domain-plot", data-hook="collapse-domain-plot") -
-
-    div.collapse.show(id="domain-plot" data-hook="domain-plot-container")
-
-      div(id="domain-plot" data-hook="domain-plot" style="height: 800px")
-
   div.card.card-body
 
     div
@@ -237,7 +225,7 @@ section.page
                 tr
                   th(scope="col") Mass
                   th(scope="col") Volume
-                  th(scope="col") Nu
+                  th(scope="col") Viscosity
                   th(scope="col") Fixed
 
               tbody
@@ -264,6 +252,18 @@ section.page
           div
 
             button.btn.btn-outline-primary.box-shadow(data-hook="import-particles-btn" disabled) Import Mesh
+
+  div.card.card-body
+
+    div
+
+      h3.inline Domain
+    
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#domain-plot", data-hook="collapse-domain-plot") -
+
+    div.collapse.show(id="domain-plot" data-hook="domain-plot-container")
+
+      div(id="domain-plot" data-hook="domain-plot" style="height: 800px")
 
   div
 

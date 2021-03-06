@@ -83,7 +83,7 @@ section.page
 
           div(data-hook="domain-plot-container")
 
-        div.col-sm-4
+        div.col-sm-4.overflow-auto(style="max-height:450px;")
 
           div.mt-2.particle-view(data-hook="me-particle-viewer")
 
@@ -117,7 +117,7 @@ section.page
 
     div
 
-      div.inline(data-hook="preview-domain-buttons")
+      div.mt-1.inline(data-hook="preview-domain-buttons")
 
         button.btn.btn-outline-secondary.box-shadow.mx-2(data-hook="toggle-preview-domain" style="display: none") Hide Domain
 
