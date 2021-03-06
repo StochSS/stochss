@@ -190,7 +190,7 @@ module.exports = View.extend({
   updateParent: function (type, trash = false) {
     if(trash){
       this.parent.update("all")
-    }else if(type === "nonspatial" || type === "workflow" || type === "workflow-group") {
+    }else if(type === "nonspatial" || type === "spatial" || type === "workflow" || type === "workflow-group") {
       this.parent.update("file-browser")
     }
   },
@@ -336,7 +336,7 @@ module.exports = View.extend({
         }else{
           self.refreshJSTree();
         }
-        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".sbml")) {
+        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".smdl") ||resp.file.endsWith(".sbml")) {
           self.parent.update("file-browser")
         }
         if(resp.errors.length > 0){

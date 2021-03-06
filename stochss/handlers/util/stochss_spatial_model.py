@@ -131,12 +131,9 @@ class StochSSSpatialModel(StochSSBase):
             gravity = self.model['domain']['gravity']
             if gravity == [0, 0, 0]:
                 gravity = None
-            type_ids = list(map(lambda d_type: d_type['typeID'], self.model['domain']['types']))
-            type_ids.pop(0)
-            model.listOfTypeIDs = type_ids
             mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
             self.__convert_particles(mesh=mesh)
-            model.mesh = mesh
+            model.add_mesh(mesh)
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -172,8 +169,7 @@ class StochSSSpatialModel(StochSSBase):
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
             tspan = numpy.arange(0, end, step_size)
-            model.timestep_size = step_size
-            model.timespan(tspan)
+            model.timespan(tspan, timestep_size=step_size)
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -342,12 +338,7 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             _ = self.load()
         name = self.get_name()
-        # try:
         s_model = Model(name=name)
-        # except KeyError as err:
-        #     message = "Spatial model properties are not properly formatted or "
-        #     message += f"are referenced incorrectly: {str(err)}"
-        #     raise StochSSModelFormatError(message, traceback.format_exc())
         self.__convert_model_settings(model=s_model)
         self.__convert_domain(model=s_model)
         self.__convert_species(model=s_model)
@@ -429,8 +420,9 @@ class StochSSSpatialModel(StochSSBase):
             zlim = [coord + data['transformation'][2] for coord in data['zLim']]
         s_domain = Mesh.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
                                          ny=data['ny'], nz=data['nz'], **data['type'])
-        particles = cls.__build_stochss_domain_particles(s_domain=s_domain)
-        return {"particles":particles}
+        domain = cls.__build_stochss_domain(s_domain=s_domain)
+        limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
+        return {"particles":domain['particles'], "limits":limits}
 
 
     @classmethod

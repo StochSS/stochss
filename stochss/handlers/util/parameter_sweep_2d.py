@@ -112,7 +112,7 @@ class ParameterSweep2D():
             Existing layout data
         '''
         if "yaxis_label" not in plt_data:
-            plt_data['xaxis_label'] = f"<b>{self.params[1]['parameter']}</b>"
+            plt_data['yaxis_label'] = f"<b>{self.params[1]['parameter']}</b>"
         if "xaxis_label" not in plt_data:
             plt_data['xaxis_label'] = f"<b>{self.params[0]['parameter']}</b>"
 

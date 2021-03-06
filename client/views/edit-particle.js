@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var $ = require('jquery');
+var _ = require('underscore');
 //support files
 var tests = require('../views/tests');
 //views
@@ -40,10 +41,16 @@ module.exports = View.extend({
     'click [data-hook=remove-particle]' : 'handleRemoveParticle'
   },
   handleAddParticle: function (e) {
-    this.parent.addParticle(this.model);
+    this.startAction("Adding particle ...")
+    this.parent.addParticle(this.model, {cb: _.bind(function () {
+      this.completeAction("Particle Added")
+    }, this)});
   },
   handleSaveParticle: function (e) {
-    this.parent.updateParticle();
+    this.startAction("Saving particle ...")
+    this.parent.updateParticle({cb: _.bind(function () {
+      this.completeAction("Particle Saved")
+    }, this)});
   },
   handleRemoveParticle: function (e) {
     this.parent.deleteParticle();
@@ -100,6 +107,16 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.newParticle = attrs.newParticle;
     this.viewIndex = this.newParticle ? 0 : 1;
+  },
+  completeAction: function (action) {
+    $(this.queryByHook("ep-in-progress")).css("display", "none");
+    $(this.queryByHook("ep-action-complete")).text(action);
+    $(this.queryByHook("ep-complete")).css("display", "inline-block");
+    console.log(action)
+    let self = this
+    setTimeout(function () {
+      $(self.queryByHook("ep-complete")).css("display", "none");
+    }, 5000);
   },
   disableAll: function () {
     $(this.queryByHook("x-coord-" + this.viewIndex)).find('input').prop('disabled', true);
@@ -184,6 +201,12 @@ module.exports = View.extend({
       value: this.parent.domain.types.get(this.model.type, "typeID")
     });
     this.registerRenderSubview(typeView, "type-" + this.viewIndex)
+  },
+  startAction: function (action) {
+    $(this.queryByHook("ep-complete")).css("display", "none");
+    $(this.queryByHook("ep-action-in-progress")).text(action);
+    $(this.queryByHook("ep-in-progress")).css("display", "inline-block");
+    console.log(action)
   },
   update: function (e) {},
   updateValid: function (e) {}
