@@ -287,7 +287,7 @@ let DomainEditor = PageView.extend({
       let domainType = self.domain.types.get(type, "typeID");
       if(!domainType) {
         self.domain.types.addType(defaultType.volume, defaultType.mass,
-                                  defaultType.nu, defaultType.fixed);
+                                  defaultType.nu, defaultType.fixed, type);
         self.addType(String(type));
       }
     });
