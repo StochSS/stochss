@@ -1034,10 +1034,11 @@ let FileBrowser = PageView.extend({
             },
             "Convert to Notebook" : {
               "label" : "Convert to Notebook",
-              "_disabled" : true,
+              "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
+                self.toNotebook(o, "model")
               }
             }
           }

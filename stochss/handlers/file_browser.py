@@ -83,11 +83,12 @@ class ModelToNotebookHandler(APIHandler):
         log.debug("Path to the model file: %s", path)
         self.set_header('Content-Type', 'application/json')
         try:
-            model = StochSSModel(path=path)
+            is_spatial = path.endswith(".smdl")
+            model = StochSSSpatialModel(path=path) if is_spatial else StochSSModel(path=path)
             data = model.get_notebook_data()
             log.debug("Notebook data: %s", data)
             notebook = StochSSNotebook(**data)
-            resp = notebook.create_es_notebook()
+            resp = notebook.create_ses_notebook() if is_spatial else notebook.create_es_notebook()
             log.debug("Notebook file path: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:

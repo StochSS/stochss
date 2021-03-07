@@ -25,7 +25,7 @@ from nbformat import v4 as nbf
 from gillespy2.solvers.utilities.cpp_support_test import check_cpp_support
 
 from .stochss_base import StochSSBase
-from .stochss_errors import StochSSAPIError, StochSSFileNotFoundError, StochSSModelFormatError
+from .stochss_errors import StochSSFileNotFoundError, StochSSModelFormatError
 
 class StochSSNotebook(StochSSBase):
     '''
@@ -33,7 +33,6 @@ class StochSSNotebook(StochSSBase):
     StochSS notebook object
     ################################################################################################
     '''
-
     ENSEMBLE_SIMULATION = 1
     SPATIAL_SIMULATION = 2
     PARAMETER_SWEEP_1D = 3
@@ -58,7 +57,7 @@ class StochSSNotebook(StochSSBase):
             self.is_ssa_c = check_cpp_support()
             self.nb_type = 0
             self.s_model = models["s_model"]
-            self.g_model = models["g_model"]
+            self.model = models["model"]
             self.settings = self.get_settings_template() if settings is None else settings
             self.make_parent_dirs()
             n_path, changed = self.get_unique_path(name=self.get_file())
@@ -75,19 +74,21 @@ class StochSSNotebook(StochSSBase):
                  self.__create_configuration_cell()]
         return cells
 
-
     def __create_configuration_cell(self):
         pad = "    "
         config = ["def configure_simulation():"]
         # Add solver instantiation line if the c solver are available
-        instance_solvers = ["SSACSolver", "VariableSSACSolver"]
+        instance_solvers = ["SSACSolver", "VariableSSACSolver", "Solver"]
         is_automatic = self.settings['simulationSettings']['isAutomatic']
         if self.is_ssa_c and self.settings['solver'] in instance_solvers:
             commented = is_automatic and self.settings['solver'] != "VariableSSACSolver"
             start = f"{pad}# " if commented else pad
             config.append(f"{start}solver = {self.settings['solver']}(model=model)")
         config.append(pad + "kwargs = {")
-        settings = self.__get_gillespy2_run_settings()
+        if self.s_model['is_spatial']:
+            settings = self.__get_spatialpy_run_setting()
+        else:
+            settings = self.__get_gillespy2_run_settings()
         settings_lists = {"ODE":['"solver"', '"integrator_options"'],
                           "SSA":['"solver"', '"seed"', '"number_of_trajectories"'],
                           "V-SSA":['"solver"', '"seed"', '"number_of_trajectories"'],
@@ -96,13 +97,14 @@ class StochSSNotebook(StochSSBase):
                           "Hybrid-Tau-Leaping":['"solver"', '"seed"', '"number_of_trajectories"',
                                                 '"tau_tol"', '"integrator_options"']}
         algorithm = self.settings['simulationSettings']['algorithm']
+        is_spatial = self.s_model['is_spatial']
         for setting in settings:
             key = setting.split(':')[0]
             if self.settings['solver'] == "VariableSSACSolver" and key == '"solver"':
                 start = pad*2
             elif key not in settings_lists[algorithm]:
                 start = f"{pad*2}# "
-            elif is_automatic and key == '"number_of_trajectories"':
+            elif is_automatic and not is_spatial and key == '"number_of_trajectories"':
                 start = pad*2
             elif is_automatic:
                 start = f"{pad*2}# "
@@ -111,7 +113,6 @@ class StochSSNotebook(StochSSBase):
             config.append(f"{start}{setting},")
         config.extend([pad + "}", f"{pad}return kwargs"])
         return nbf.new_code_cell("\n".join(config))
-
 
     def __create_event_strings(self, model, pad):
         if self.s_model['eventsCollection']:
@@ -138,7 +139,6 @@ class StochSSNotebook(StochSSBase):
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc())
 
-
     @classmethod
     def __create_event_assignment_strings(cls, assignments, event, pad):
         names = []
@@ -150,7 +150,6 @@ class StochSSNotebook(StochSSBase):
             assignments.append(assign_str)
         return ', '.join(names)
 
-
     @classmethod
     def __create_event_trigger_string(cls, triggers, event, pad):
         name = f'{event["name"]}_trig'
@@ -158,7 +157,6 @@ class StochSSNotebook(StochSSBase):
         trig_str += f'initial_value={event["initialValue"]}, persistent={event["persistent"]})'
         triggers.append(trig_str)
         return name
-
 
     def __create_function_definition_strings(self, model, pad):
         if self.s_model['functionDefinitions']:
@@ -175,14 +173,23 @@ class StochSSNotebook(StochSSBase):
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc())
 
-
     def __create_import_cell(self, interactive_backend=False):
         try:
-            imports = ["import numpy as np"]
+            is_automatic = self.settings['simulationSettings']['isAutomatic']
+            if self.nb_type == self.SPATIAL_SIMULATION:
+                imports = ["%load_ext autoreload", "%autoreload 2", "", "import numpy as np"]
+            else:
+                imports = ["import numpy as np"]
             if interactive_backend:
                 imports.append("%matplotlib notebook")
             if self.s_model['is_spatial']:
-                imports.append("import spatialPy")
+                imports.append("import spatialpy")
+                imports.append("from spatialpy import Model, Species, Parameter, Reaction, Mesh,\\")
+                imports.append("                      PlaceInitialCondition, \\")
+                imports.append("                      UniformInitialCondition, \\")
+                imports.append("                      ScatterInitialCondition")
+                start = "# " if is_automatic else ""
+                imports.append(f"{start}from spatialpy import Solver")
                 return nbf.new_code_cell("\n".join(imports))
             imports.append("import gillespy2")
             imports.append("from gillespy2 import Model, Species, Parameter, Reaction, Event, \\")
@@ -194,7 +201,6 @@ class StochSSNotebook(StochSSBase):
                              'Tau-Leaping': 'from gillespy2 import TauLeapingSolver',
                              'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridSolver',
                              'ODE': 'from gillespy2 import ODESolver'}
-            is_automatic = self.settings['simulationSettings']['isAutomatic']
             algorithm = self.settings['simulationSettings']['algorithm']
             if self.nb_type > self.ENSEMBLE_SIMULATION and algorithm == "SSA":
                 algorithm = "V-SSA"
@@ -211,41 +217,81 @@ class StochSSNotebook(StochSSBase):
             message += f"are referenced incorrectly for notebooks: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc())
 
+    def __create_initial_condition_strings(self, model, pad):
+        if self.s_model['initialConditions']:
+            ic_types = {"Place":"PlaceInitialCondition", "Scatter":"ScatterInitialCondition",
+                        "Distribute Uniformly per Voxel":"UniformInitialCondition"}
+            initial_conditions = ["", f"{pad}# Initial Conditions"]
+            try:
+                for init_cond in self.s_model['initialConditions']:
+                    ic_str = f'{pad}self.add_initial_condition({ic_types[init_cond["icType"]]}('
+                    ic_str += f'species={init_cond["specie"]["name"]}, count={init_cond["count"]},'
+                    if init_cond["icType"] == "Place":
+                        place = f'{init_cond["x"]}, {init_cond["y"]}, {init_cond["z"]}'
+                        ic_str += f' location=[{place}]))'
+                    else:
+                        ic_str += f' types={str(init_cond["types"])}))'
+                    initial_conditions.append(ic_str)
+                model.extend(initial_conditions)
+            except KeyError as err:
+                message = "Initial conditions are not properly formatted or "
+                message += f"are referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc())
+
+    def __create_mesh_string(self, model, pad):
+        mesh = ["", f"{pad}# Domain",
+                f"{pad}mesh = Mesh.read_stochss_domain('{self.s_model['path']}')",
+                f"{pad}self.add_mesh(mesh)"]
+        model.extend(mesh)
 
     def __create_model_cell(self):
-        if self.s_model['is_spatial']:
-            reason = "Function Not Supported"
-            message = "Spatial not yet implemented."
-            raise StochSSAPIError(403, reason, message, traceback.format_exc())
         pad = '        '
-        model = [f"class {self.__get_class_name()}(Model):",
-                 "    def __init__(self, parameter_values=None):",
-                 f'{pad}Model.__init__(self, name="{self.get_name()}")',
-                 f"{pad}self.volume = {self.s_model['volume']}"]
-        self.__create_parameter_strings(model=model, pad=pad)
-        self.__create_species_strings(model=model, pad=pad)
-        self.__create_reaction_strings(model=model, pad=pad)
-        self.__create_event_strings(model=model, pad=pad)
-        self.__create_rules_strings(model=model, pad=pad)
-        self.__create_function_definition_strings(model=model, pad=pad)
-        self.__create_tspan_string(model=model, pad=pad)
+        if self.s_model['is_spatial']:
+            model = [f"class {self.__get_class_name()}(Model):",
+                     "    def __init__(self):",
+                     f'{pad}Model.__init__(self, name="{self.get_name()}")']
+            self.__create_mesh_string(model=model, pad=pad)
+            self.__create_species_strings(model=model, pad=pad)
+            self.__create_initial_condition_strings(model=model, pad=pad)
+            self.__create_parameter_strings(model=model, pad=pad)
+            self.__create_reaction_strings(model=model, pad=pad)
+            self.__create_tspan_string(model=model, pad=pad)
+        else:
+            model = [f"class {self.__get_class_name()}(Model):",
+                     "    def __init__(self, parameter_values=None):",
+                     f'{pad}Model.__init__(self, name="{self.get_name()}")',
+                     f"{pad}self.volume = {self.s_model['volume']}"]
+            self.__create_parameter_strings(model=model, pad=pad)
+            self.__create_species_strings(model=model, pad=pad)
+            self.__create_reaction_strings(model=model, pad=pad)
+            self.__create_event_strings(model=model, pad=pad)
+            self.__create_rules_strings(model=model, pad=pad)
+            self.__create_function_definition_strings(model=model, pad=pad)
+            self.__create_tspan_string(model=model, pad=pad)
         return nbf.new_code_cell("\n".join(model))
-
 
     def __create_parameter_strings(self, model, pad):
         if self.s_model['parameters']:
             parameters = ["", f"{pad}# Parameters"]
+            if self.s_model['is_spatial']:
+                names = []
             try:
                 for param in self.s_model['parameters']:
-                    param_str = f'{pad}self.add_parameter(Parameter(name="{param["name"]}", '
-                    param_str += f'expression="{param["expression"]}"))'
+                    if self.s_model['is_spatial']:
+                        names.append(param['name'])
+                        param_str = f'{pad}{param["name"]} = Parameter(name="{param["name"]}", '
+                        param_str += f'expression="{param["expression"]}")'
+                    else:
+                        param_str = f'{pad}self.add_parameter(Parameter(name="{param["name"]}", '
+                        param_str += f'expression="{param["expression"]}"))'
                     parameters.append(param_str)
                 model.extend(parameters)
+                if self.s_model['is_spatial']:
+                    model.append(f"{pad}self.add_parameter([{', '.join(names)}])")
             except KeyError as err:
                 message = "Parameters are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc())
-
 
     def __create_ps_post_process_cells(self):
         pad = "    "
@@ -276,7 +322,6 @@ class StochSSNotebook(StochSSBase):
             cells.append(nbf.new_code_cell('\n'.join(aa_cell)))
         return cells
 
-
     def __create_ps1d_class_cell(self):
         pad = "    "
         run_str = self.__create_ps1d_run_str()
@@ -291,7 +336,6 @@ class StochSSNotebook(StochSSBase):
         class_cell = ["class ParameterSweep1D():", "", run_str, "", "",
                       "\n".join(plt_strs), "", "", pltly_str]
         return nbf.new_code_cell("\n".join(class_cell))
-
 
     def __create_ps1d_config_cell(self):
         pad = "    "
@@ -329,7 +373,6 @@ class StochSSNotebook(StochSSBase):
                             f"{pad}ensemble_aggragator = mean_std_of_ensemble"])
         return nbf.new_code_cell("\n".join(config_cell))
 
-
     @classmethod
     def __create_ps1d_plotly_str(cls):
         pad = "    "
@@ -350,7 +393,6 @@ class StochSSNotebook(StochSSBase):
                       f"{pad*2}if return_plotly_figure:",
                       f"{pad*3}return fig", f"{pad*2}iplot(fig)"]
         return "\n".join(pltly_strs)
-
 
     def __create_ps1d_run_str(self):
         pad = "    "
@@ -380,7 +422,6 @@ class StochSSNotebook(StochSSBase):
                          f"{pad*2}c.data = data"])
         return "\n".join(run_strs)
 
-
     def __create_ps2d_class_cell(self):
         pad = "    "
         run_str = self.__create_ps2d_run_str()
@@ -402,7 +443,6 @@ class StochSSNotebook(StochSSBase):
         class_cell = ["class ParameterSweep2D():", "", run_str, "", "",
                       "\n".join(plt_strs), "", "", pltly_str]
         return nbf.new_code_cell("\n".join(class_cell))
-
 
     def __create_ps2d_config_cell(self):
         pad = "    "
@@ -455,7 +495,6 @@ class StochSSNotebook(StochSSBase):
                             f"{pad}ensemble_aggragator = average_of_ensemble"])
         return nbf.new_code_cell("\n".join(config_cell))
 
-
     @classmethod
     def __create_ps2d_plotly_str(cls):
         pad = "    "
@@ -473,7 +512,6 @@ class StochSSNotebook(StochSSBase):
                       f"{pad*2}if return_plotly_figure:",
                       f"{pad*3}return fig", f"{pad*2}iplot(fig)"]
         return "\n".join(pltly_strs)
-
 
     def __create_ps2d_run_str(self):
         pad = "    "
@@ -503,27 +541,37 @@ class StochSSNotebook(StochSSBase):
                          f"{pad*2}c.data = data"])
         return "\n".join(run_strs)
 
-
     def __create_reaction_strings(self, model, pad):
         if self.s_model['reactions']:
             reactions = ["", f"{pad}# Reactions"]
+            if self.s_model['is_spatial']:
+                names = []
             try:
                 for reac in self.s_model['reactions']:
                     react_str = self.__create_stoich_spec_string(stoich_species=reac['reactants'])
                     prod_str = self.__create_stoich_spec_string(stoich_species=reac['products'])
-                    reac_str = f'{pad}self.add_reaction(Reaction(name="{reac["name"]}", '
+                    if self.s_model['is_spatial']:
+                        names.append(reac['name'])
+                        reac_str = f'{pad}{reac["name"]} = Reaction(name="{reac["name"]}", '
+                        if len(reac['types']) < len(self.s_model['domain']['types']) - 1:
+                            reac_str += f'restrict_to={str(reac["types"])}, '
+                    else:
+                        reac_str = f'{pad}self.add_reaction(Reaction(name="{reac["name"]}", '
                     reac_str += f'reactants={react_str}, products={prod_str}, '
                     if reac['reactionType'] == 'custom-propensity':
-                        reac_str += f'propensity_function="{reac["propensity"]}"))'
+                        reac_str += f'propensity_function="{reac["propensity"]}")'
                     else:
-                        reac_str += f'rate=self.listOfParameters["{reac["rate"]["name"]}"]))'
+                        reac_str += f'rate=self.listOfParameters["{reac["rate"]["name"]}"])'
+                    if not self.s_model['is_spatial']:
+                        reac_str += ")"
                     reactions.append(reac_str)
                 model.extend(reactions)
+                if self.s_model['is_spatial']:
+                    model.append(f"{pad}self.add_reaction([{', '.join(names)}])")
             except KeyError as err:
                 message = "Reactions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc())
-
 
     def __create_rules_strings(self, model, pad):
         if self.s_model['rules']:
@@ -548,7 +596,6 @@ class StochSSNotebook(StochSSBase):
                 message = "Rules are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc())
-
 
     @classmethod
     def __create_sme_expres_cells(cls):
@@ -584,9 +631,8 @@ class StochSSNotebook(StochSSBase):
                  nbf.new_code_cell("met.data.user_labels = user_labels")]
         return cells
 
-
     def __create_sme_setup_cells(self):
-        spec_of_interest = list(self.g_model.get_all_species().keys())
+        spec_of_interest = list(self.model.get_all_species().keys())
         # Wrapper cell
         sim_str = "simulator = wrapper.get_simulator(gillespy_model=model, "
         sim_str += f"run_settings=settings, species_of_interest={spec_of_interest})"
@@ -616,7 +662,6 @@ class StochSSNotebook(StochSSBase):
                  nbf.new_code_cell("\n".join(ism_strs))]
         return cells
 
-
     def __create_smi_setup_cells(self):
         pad = "    "
         priors = ["# take default from mode 1 as reference",
@@ -636,7 +681,6 @@ class StochSSNotebook(StochSSBase):
                  nbf.new_markdown_cell("## Define summary statistics and distance function"),
                  nbf.new_code_cell("\n".join(stat_dist))]
         return cells
-
 
     def __create_smi_simulator_cell(self):
         pad = "    "
@@ -668,24 +712,36 @@ class StochSSNotebook(StochSSBase):
         sim_strs.extend(simulator2)
         return nbf.new_code_cell("\n".join(sim_strs))
 
-
     def __create_species_strings(self, model, pad):
         if self.s_model['species']:
             species = ["", f"{pad}# Variables"]
+            if self.s_model['is_spatial']:
+                names = []
+                types_str = [""]
             try:
                 for spec in self.s_model['species']:
-                    spec_str = f'{pad}self.add_species(Species(name="{spec["name"]}", '
-                    spec_str += f'initial_value={spec["value"]}, mode="{spec["mode"]}"))'
+                    if self.s_model['is_spatial']:
+                        names.append(spec["name"])
+                        spec_str = f'{pad}{spec["name"]} = Species(name="{spec["name"]}", '
+                        spec_str += f"diffusion_constant={spec['diffusionConst']})"
+                        if len(spec['types']) < len(self.s_model['domain']['types']) - 1:
+                            type_str = f"{pad}self.restrict({spec['name']}, {str(spec['types'])})"
+                            types_str.append(type_str)
+                    else:
+                        spec_str = f'{pad}self.add_species(Species(name="{spec["name"]}", '
+                        spec_str += f'initial_value={spec["value"]}, mode="{spec["mode"]}"))'
                     species.append(spec_str)
                 model.extend(species)
+                if self.s_model['is_spatial']:
+                    model.append(f"{pad}self.add_species([{', '.join(names)}])")
+                    if len(types_str) > 1:
+                        model.extend(types_str)
             except KeyError as err:
                 message = "Species are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc())
 
-
-    @classmethod
-    def __create_stoich_spec_string(cls, stoich_species):
+    def __create_stoich_spec_string(self, stoich_species):
         species = {}
         for stoich_spec in stoich_species:
             name = stoich_spec['specie']['name']
@@ -693,16 +749,24 @@ class StochSSNotebook(StochSSBase):
                 species[name] += stoich_spec['ratio']
             else:
                 species[name] = stoich_spec['ratio']
-        return str(species)
-
+        spec_list = []
+        for name, ratio in species.items():
+            if not self.s_model['is_spatial']:
+                name = f"'{name}'"
+            spec_list.append(f"{name}: {ratio}")
+        return "{" + ", ".join(spec_list) + "}"
 
     def __create_tspan_string(self, model, pad):
         end = self.s_model['modelSettings']['endSim']
         step = self.s_model['modelSettings']['timeStep']
-        tspan = ["", f"{pad}# Timespan",
-                 f'{pad}self.timespan(np.arange(0, {end}, {step}))']
+        tspan = ["", f"{pad}# Timespan"]
+        ts_str = f'{pad}self.timespan(np.arange(0, {end}, {step})'
+        if self.s_model['is_spatial']:
+            ts_str += f", timestep_size={step})"
+        else:
+            ts_str += ")"
+        tspan.append(ts_str)
         model.extend(tspan)
-
 
     def __get_class_name(self):
         name = self.get_name()
@@ -714,7 +778,6 @@ class StochSSNotebook(StochSSBase):
         if l_char in string.ascii_lowercase:
             return name.replace(l_char, l_char.upper(), 1)
         return name
-
 
     def __get_gillespy2_run_settings(self):
         is_automatic = self.settings['simulationSettings']['isAutomatic']
@@ -743,11 +806,17 @@ class StochSSNotebook(StochSSBase):
         run_settings.extend(algorithm_settings)
         return run_settings
 
+    def __get_spatialpy_run_setting(self):
+        self.settings['simulationSettings']['realizations'] = 1
+        settings = self.settings['simulationSettings']
+        settings_map = {"solver":"solver", "number_of_trajectories":settings['realizations'],
+                        "seed":settings['seed'] if settings['seed'] != -1 else None}
+        return [f'"{key}":{val}' for key, val in settings_map.items()]
 
     def __get_gillespy2_solver_name(self):
         precompile = self.nb_type > self.ENSEMBLE_SIMULATION
         if self.settings['simulationSettings']['isAutomatic']:
-            solver = self.g_model.get_best_solver(precompile=precompile).name
+            solver = self.model.get_best_solver(precompile=precompile).name
             self.settings['simulationSettings']['algorithm'] = self.SOLVER_MAP[solver]
             return solver
         algorithm_map = {'SSA': "SSACSolver" if self.is_ssa_c else "NumPySSASolver",
@@ -759,14 +828,11 @@ class StochSSNotebook(StochSSBase):
             return algorithm_map["V-SSA"]
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
 
-
     def create_1dps_notebook(self):
-        '''
-        Create a 1D parameter sweep jupiter notebook for a StochSS model/workflow
+        '''Create a 1D parameter sweep jupiter notebook for a StochSS model/workflow
 
         Attributes
-        ----------
-        '''
+        ----------'''
         self.nb_type = self.PARAMETER_SWEEP_1D
         self.settings['solver'] = self.__get_gillespy2_solver_name()
         run_strs = ["kwargs = configure_simulation()", "ps = ParameterSweepConfig()",
@@ -784,14 +850,11 @@ class StochSSNotebook(StochSSBase):
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-
     def create_2dps_notebook(self):
-        '''
-        Create a 2D parameter sweep jupiter notebook for a StochSS model/workflow
+        '''Create a 2D parameter sweep jupiter notebook for a StochSS model/workflow
 
         Attributes
-        ----------
-        '''
+        ----------'''
         self.nb_type = self.PARAMETER_SWEEP_2D
         self.settings['solver'] = self.__get_gillespy2_solver_name()
         run_strs = ["kwargs = configure_simulation()", "ps = ParameterSweepConfig()",
@@ -809,14 +872,11 @@ class StochSSNotebook(StochSSBase):
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-
     def create_es_notebook(self):
-        '''
-        Create an ensemble simulation jupiter notebook for a StochSS model/workflow
+        '''Create an ensemble simulation jupiter notebook for a StochSS model/workflow
 
         Attributes
-        ----------
-        '''
+        ----------'''
         self.nb_type = self.ENSEMBLE_SIMULATION
         self.settings['solver'] = self.__get_gillespy2_solver_name()
         run_str = "kwargs = configure_simulation()\nresults = model.run(**kwargs)"
@@ -828,29 +888,29 @@ class StochSSNotebook(StochSSBase):
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-
     def create_ses_notebook(self):
-        '''
-        Create a spetial ensemble simulation jupiter notebook for a StochSS model/workflow
+        '''Create a spetial ensemble simulation jupiter notebook for a StochSS model/workflow
 
         Attributes
-        ----------
-        '''
+        ----------'''
         self.nb_type = self.SPATIAL_SIMULATION
         self.settings['solver'] = "Solver"
+        run_str = "kwargs = configure_simulation()\nresults = model.run(**kwargs)"
+        species = self.s_model['species'][0]['name']
+        plot_str = f"results.plot_species('{species}', animated=True, width=None, height=None)"
         cells = self.__create_common_cells()
+        cells.extend([nbf.new_code_cell(run_str),
+                      nbf.new_markdown_cell("# Visualization"),
+                      nbf.new_code_cell(plot_str)])
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-
     def create_sme_notebook(self):
-        '''
-        Create a model exploration jupiter notebook for a StochSS model/workflow
+        '''Create a model exploration jupiter notebook for a StochSS model/workflow
 
         Attributes
-        ----------
-        '''
+        ----------'''
         self.nb_type = self.MODEL_EXPLORATION
         self.settings['solver'] = self.__get_gillespy2_solver_name()
         cells = self.__create_common_cells(interactive_backend=True)
@@ -863,14 +923,11 @@ class StochSSNotebook(StochSSBase):
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-
     def create_smi_notebook(self):
-        '''
-        Create a model inference jupiter notebook for a StochSS model/workflow
+        '''Create a model inference jupiter notebook for a StochSS model/workflow
 
         Attributes
-        ----------
-        '''
+        ----------'''
         self.nb_type = self.MODEL_INFERENCE
         self.settings['solver'] = self.__get_gillespy2_solver_name()
         cells = self.__create_common_cells()
@@ -910,14 +967,11 @@ class StochSSNotebook(StochSSBase):
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-
     def load(self):
-        '''
-        Read the notebook file and return as a dict
+        '''Read the notebook file and return as a dict
 
         Attributes
-        ----------
-        '''
+        ----------'''
         try:
             with open(self.get_path(full=True), "r") as notebook_file:
                 return json.load(notebook_file)
@@ -925,16 +979,13 @@ class StochSSNotebook(StochSSBase):
             message = f"Could not find the notebook file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
 
-
     def write_notebook_file(self, cells):
-        '''
-        Write the new notebook file to disk
+        '''Write the new notebook file to disk
 
         Attributes
         ----------
         cells : list
-            List of cells for the new notebook
-        '''
+            List of cells for the new notebook'''
         path = self.get_path(full=True)
         notebook = nbf.new_notebook(cells=cells)
         with open(path, 'w') as file:
