@@ -188,9 +188,10 @@ module.exports = View.extend({
     });
   },
   updateParent: function (type, trash = false) {
+    let types = ["nonspatial", "spatial", "workflow", "workflow-group", "notebook"]
     if(trash){
       this.parent.update("all")
-    }else if(type === "nonspatial" || type === "spatial" || type === "workflow" || type === "workflow-group") {
+    }else if(types.includes(type)) {
       this.parent.update("file-browser")
     }
   },
@@ -492,6 +493,9 @@ module.exports = View.extend({
             var msg = body.message
             var errors = body.errors
             let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
+          }else{
+            console.log(node.type, o.type)
+            self.updateParent(o.type)
           }
         }
       }
@@ -1210,7 +1214,7 @@ module.exports = View.extend({
           "separator_after" : true,
           "submenu" : {
             "Convert to Model" : {
-              "label" : "Convert to Non Spatial",
+              "label" : "Convert to Model",
               "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
