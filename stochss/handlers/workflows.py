@@ -27,7 +27,7 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSWorkflow, StochSSModel, StochSSNotebook, \
+from .util import StochSSWorkflow, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
                   StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
@@ -240,8 +240,12 @@ class WorkflowNotebookHandler(APIHandler):
         log.debug("Path to the model/workflow: %s", path)
         wkfl_type = self.get_query_argument(name="type")
         try:
-            is_model = path.endswith(".mdl")
-            file_obj = StochSSModel(path=path) if is_model else StochSSWorkflow(path=path)
+            if path.endswith(".mdl"):
+                file_obj = StochSSModel(path=path)
+            elif path.endswith(".smdl"):
+                file_obj = StochSSSpatialModel(path=path)
+            else:
+                file_obj = StochSSWorkflow(path=path)
             kwargs = file_obj.get_notebook_data()
             if "type" in kwargs.keys():
                 wkfl_type = kwargs['type']
