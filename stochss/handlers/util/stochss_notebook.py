@@ -78,7 +78,7 @@ class StochSSNotebook(StochSSBase):
         pad = "    "
         config = ["def configure_simulation():"]
         # Add solver instantiation line if the c solver are available
-        instance_solvers = ["SSACSolver", "VariableSSACSolver", "Solver"]
+        instance_solvers = ["SSACSolver", "VariableSSACSolver"]
         is_automatic = self.settings['simulationSettings']['isAutomatic']
         if self.is_ssa_c and self.settings['solver'] in instance_solvers:
             commented = is_automatic and self.settings['solver'] != "VariableSSACSolver"
@@ -188,8 +188,6 @@ class StochSSNotebook(StochSSBase):
                 imports.append("                      PlaceInitialCondition, \\")
                 imports.append("                      UniformInitialCondition, \\")
                 imports.append("                      ScatterInitialCondition")
-                start = "# " if is_automatic else ""
-                imports.append(f"{start}from spatialpy import Solver")
                 return nbf.new_code_cell("\n".join(imports))
             imports.append("import gillespy2")
             imports.append("from gillespy2 import Model, Species, Parameter, Reaction, Event, \\")
@@ -809,7 +807,7 @@ class StochSSNotebook(StochSSBase):
     def __get_spatialpy_run_setting(self):
         self.settings['simulationSettings']['realizations'] = 1
         settings = self.settings['simulationSettings']
-        settings_map = {"solver":"solver", "number_of_trajectories":settings['realizations'],
+        settings_map = {"number_of_trajectories":settings['realizations'],
                         "seed":settings['seed'] if settings['seed'] != -1 else None}
         return [f'"{key}":{val}' for key, val in settings_map.items()]
 
