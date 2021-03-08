@@ -400,6 +400,20 @@ class StochSSSpatialModel(StochSSBase):
                           cls=plotly.utils.PlotlyJSONEncoder)
 
 
+    def get_notebook_data(self):
+        '''
+        Get the needed data for converting to notebook
+
+        Attributes
+        ----------
+        '''
+        file = f"{self.get_name()}.ipynb"
+        path = os.path.join(self.get_dir_name(), file)
+        s_model = self.convert_to_spatialpy()
+        self.model['path'] = self.get_file()
+        return {"path":path, "new":True, "models":{"s_model":self.model, "model":s_model}}
+
+
     @classmethod
     def get_particles_from_3d_domain(cls, data):
         '''

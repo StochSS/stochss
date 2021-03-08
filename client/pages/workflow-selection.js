@@ -35,6 +35,7 @@ let workflowSelection = PageView.extend({
   template: template,
   events: {
     "click [data-hook=ensemble-simulation]" : "notebookWorkflow",
+    "click [data-hook=spatial-simulation]" : "notebookWorkflow",
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=sciope-model-exploration]" : "notebookWorkflow",
@@ -101,6 +102,7 @@ let workflowSelection = PageView.extend({
       $(this.queryByHook('stochss-es')).prop('disabled', true)
       $(this.queryByHook('stochss-ps')).prop('disabled', true)
       $(this.queryByHook('ensemble-simulation')).prop('disabled', true)
+      $(this.queryByHook('spatial-simulation')).prop('disabled', true)
       $(this.queryByHook('model-inference')).prop('disabled', true)
       $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
@@ -110,6 +112,14 @@ let workflowSelection = PageView.extend({
         $(this.queryByHook('invalid-model-message')).html('Errors were detected in you model <a href="'+endpoint+'">click here to fix your model<a/>')
       }
       $(this.queryByHook('invalid-model-message')).css('display', 'block')
+    }else if(this.model.is_spatial){
+      $(this.queryByHook('stochss-es')).prop('disabled', true)
+      $(this.queryByHook('stochss-ps')).prop('disabled', true)
+      $(this.queryByHook('ensemble-simulation')).prop('disabled', true)
+      $(this.queryByHook('model-inference')).prop('disabled', true)
+      $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
+      $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
     }else if(this.model.parameters.length < 1){
       $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
       $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
@@ -133,7 +143,7 @@ let workflowSelection = PageView.extend({
   },
   toNotebook: function (type) {
     let queryString = "?type="+type+"&path="+this.modelDir+"&parentPath="+this.parentPath
-    var endpoint = path.join(app.getApiPath(), "/workflow/notebook")+queryString
+    var endpoint = path.join(app.getApiPath(), "workflow/notebook")+queryString
     xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400){
         var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
