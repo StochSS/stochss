@@ -769,8 +769,12 @@ module.exports = View.extend({
       let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
       let select = document.querySelector('#newProjectWorkflowModal #select')
       okBtn.addEventListener("click", function (e) {
+          modal.modal('hide')
+          let mdlFile = o.type === "workflow-group" ? self.parent.model.models.filter(function (model) {
+            return model.name === select.value;
+          })[0].directory.split("/").pop() : null;
           let parentPath = o.type === "workflow-group" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".wkgp")
-          let modelPath = o.type === "workflow-group" ? path.join(path.dirname(o.original._path), select.value + ".mdl") : o.original._path
+          let modelPath = o.type === "workflow-group" ? path.join(path.dirname(o.original._path), mdlFile) : o.original._path
           let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
           window.location.href = endpoint
       });
@@ -1137,7 +1141,7 @@ module.exports = View.extend({
       let newWorkflow = {
         "NewWorkflow" : {
           "label" : "New Workflow",
-          "_disabled" : (nodeType === "spatial") ? true : false,
+          "_disabled" : false,
           "separator_before" : false,
           "separator_after" : true,
           "action" : function (data) {
@@ -1212,14 +1216,6 @@ module.exports = View.extend({
               "separator_after" : false,
               "action" : function (data) {
                 self.toModel(o, "Spatial");
-              }
-            },
-            "Convert to Notebook" : {
-              "label" : "Convert to Notebook",
-              "_disabled" : true,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
               }
             }
           }

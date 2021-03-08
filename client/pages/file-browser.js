@@ -459,7 +459,9 @@ let FileBrowser = PageView.extend({
         }
         var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
         self.selectNode(node, body.File)
-        window.open(notebookPath, '_blank')
+        console.log(notebookPath)
+        window.open(notebookPath)
+        console.log("Opened new window")
       }
     });
   },
@@ -1007,7 +1009,7 @@ let FileBrowser = PageView.extend({
         },
         "New Workflow" : {
           "label" : "New Workflow",
-          "_disabled" : (nodeType === "spatial") ? true : false,
+          "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {

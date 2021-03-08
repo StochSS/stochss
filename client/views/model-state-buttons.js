@@ -49,7 +49,6 @@ module.exports = View.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("stochss-es")).addClass("disabled");
       $(this.queryByHook("stochss-ps")).addClass("disabled");
-      $(this.queryByHook("new-workflow")).addClass("disabled");
     }
   },
   clickSaveHandler: function (e) {
@@ -263,13 +262,13 @@ module.exports = View.extend({
       let simType = e.target.dataset.type
       if(simType === "preview") {
         this.clickRunHandler(e)
+      }else if(simType === "notebook"){
+        this.clickNewWorkflowHandler(e)
       }else if(!this.model.is_spatial) {
         if(simType === "ensemble") {
           this.handleEnsembleSimulationClick(e)
         }else if(simType === "psweep") {
           this.handleParameterSweepClick(e)
-        }else{
-          this.clickNewWorkflowHandler(e)
         }
       }
     }
