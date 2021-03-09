@@ -42,12 +42,22 @@ div.card.card-body
 
   div
 
-    div(data-hook="new-particle-btns-" + this.viewIndex)
+    div.inline(data-hook="new-particle-btns-" + this.viewIndex)
 
       button.btn.btn-outline-primary.box-shadow(data-hook="add-particle") Add Particle
 
-    div(data-hook="edit-particle-btns-" + this.viewIndex)
+    div.inline(data-hook="edit-particle-btns-" + this.viewIndex)
 
       button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-particle") Save Particle
 
       button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="remove-particle") Remove Particle
+
+    div.mdl-edit-btn.saving-status.inline(data-hook="ep-in-progress")
+
+      div.spinner-grow.mr-2
+
+      span(data-hook="ep-action-in-progress")
+
+    div.mdl-edit-btn.saved-status.inline(data-hook="ep-complete")
+
+      span(data-hook="ep-action-complete")

@@ -49,19 +49,25 @@ module.exports = View.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("stochss-es")).addClass("disabled");
       $(this.queryByHook("stochss-ps")).addClass("disabled");
-      $(this.queryByHook("new-workflow")).addClass("disabled");
     }
   },
   clickSaveHandler: function (e) {
     this.saveModel(this.saved.bind(this));
   },
   clickRunHandler: function (e) {
+    if(this.model.is_spatial && $(this.queryByHook("domain-plot-viewer-container")).css("display") !== "none") {
+      this.parent.closeDomainPlot()
+    }
     $(this.parent.queryByHook('model-run-error-container')).collapse('hide');
     $(this.parent.queryByHook('model-timeout-message')).collapse('hide');
     var el = this.parent.queryByHook('preview-plot-container');
     Plotly.purge(el)
     $(this.parent.queryByHook('preview-plot-buttons')).css("display", "none");
-    this.saveModel(this.runModel.bind(this));
+    if(this.model.is_spatial) {
+      this.saveModel(this.getPreviewSpecies.bind(this));
+    }else{
+      this.saveModel(this.runModel.bind(this));
+    }
   },
   clickReturnToProjectHandler: function (e) {
     let self = this
@@ -83,6 +89,21 @@ module.exports = View.extend({
       let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+queryString
       window.location.href = endpoint
     })
+  },
+  getPreviewSpecies: function () {
+    this.saved();
+    let species = this.model.species.map(function (species) {
+      return species.name
+    });
+    let self = this;
+    let modal = $(modals.selectSpeciesHTML(species)).modal();
+    let okBtn = document.querySelector("#speciesSelectModal .ok-model-btn");
+    let select = document.querySelector("#speciesSelectModal #speciesSelectList");
+    okBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      let specie = select.value;
+      self.runModel(specie);
+    });
   },
   togglePreviewWorkflowBtn: function () {
     $(this.queryByHook('simulate-model')).prop('disabled', !this.model.valid)
@@ -130,12 +151,17 @@ module.exports = View.extend({
       saved.style.display = "none";
     }, 5000);
   },
-  runModel: function () {
-    this.saved();
+  runModel: function (species=undefined) {
+    if(!species) {
+      this.saved();
+    }
     this.running();
-    var el = this.parent.queryByHook('model-run-container')
+    $(this.parent.queryByHook('model-run-container')).css("display", "block")
     var model = this.model
-    let queryStr = "?cmd=start&outfile=none&path="+model.directory
+    var queryStr = "?cmd=start&outfile=none&path="+model.directory
+    if(species) {
+      queryStr += "&species=" + species;
+    }
     var endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
     var self = this;
     xhr({ uri: endpoint, json: true}, function (err, response, body) {
@@ -152,6 +178,10 @@ module.exports = View.extend({
     errors.style.display = "none";
   },
   ran: function (noErrors) {
+    var runContainer = $(this.parent.queryByHook("model-run-container"));
+    if(runContainer.css("display") === "none") {
+      runContainer.css("display", 'block');
+    }
     $(this.parent.queryByHook('preview-plot-buttons')).css('display', 'inline-block')
     let plotBtn = $(this.parent.queryByHook('toggle-preview-plot'))
     if(plotBtn.text() === "Show Preview") {
@@ -179,7 +209,7 @@ module.exports = View.extend({
           body = JSON.parse(body)
         }
         var data = body.Results;
-        if(response.statusCode >= 400){
+        if(response.statusCode >= 400 || data.errors){
           self.ran(false);
           $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
         }
@@ -232,13 +262,13 @@ module.exports = View.extend({
       let simType = e.target.dataset.type
       if(simType === "preview") {
         this.clickRunHandler(e)
+      }else if(simType === "notebook"){
+        this.clickNewWorkflowHandler(e)
       }else if(!this.model.is_spatial) {
         if(simType === "ensemble") {
           this.handleEnsembleSimulationClick(e)
         }else if(simType === "psweep") {
           this.handleParameterSweepClick(e)
-        }else{
-          this.clickNewWorkflowHandler(e)
         }
       }
     }

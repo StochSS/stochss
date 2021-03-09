@@ -38,6 +38,7 @@ module.exports = View.extend({
     'click [data-hook=build-domain]' : 'handleBuildDomain'
   },
   handleBuildDomain: function (e) {
+    this.startAction("Creating domain ...")
     this.data.type = {"type_id":this.type.typeID, "mass":this.type.mass, "nu":this.type.nu, "fixed":this.type.fixed};
     this.data.volume = this.type.volume;
     let xtrans = Number($(this.queryByHook("domain-x-trans")).find('input')[0].value);
@@ -51,6 +52,31 @@ module.exports = View.extend({
     xhr({uri: endpoint, json: true, method: "post", body: this.data}, function (err, resp, body) {
       if(resp.statusCode < 400) {
         self.parent.addParticles(body.particles);
+        if(self.parent.domain.x_lim[0] > body.limits.x_lim[0]) {
+          self.parent.domain.x_lim[0] = body.limits.x_lim[0]
+        }
+        if(self.parent.domain.y_lim[0] > body.limits.y_lim[0]) {
+          self.parent.domain.y_lim[0] = body.limits.y_lim[0]
+        }
+        if(self.parent.domain.z_lim[0] > body.limits.z_lim[0]) {
+          self.parent.domain.z_lim[0] = body.limits.z_lim[0]
+        }
+        if(self.parent.domain.x_lim[1] < body.limits.x_lim[1]) {
+          self.parent.domain.x_lim[1] = body.limits.x_lim[1]
+        }
+        if(self.parent.domain.y_lim[1] < body.limits.y_lim[1]) {
+          self.parent.domain.y_lim[1] = body.limits.y_lim[1]
+        }
+        if(self.parent.domain.z_lim[1] < body.limits.z_lim[1]) {
+          self.parent.domain.z_lim[1] = body.limits.z_lim[1]
+        }
+        self.parent.renderDomainLimitations();
+        self.completeAction("Domain successfully created")
+        $('html, body').animate({
+            scrollTop: $("#domain-plot").offset().top
+        }, 20);
+      }else{
+        self.errorAction(body.Message)
       }
     });
   },
@@ -85,6 +111,22 @@ module.exports = View.extend({
     this.renderType();
     this.renderTypeDefaults();
     this.renderDomainTransformations();
+  },
+  completeAction: function (action) {
+    $(this.queryByHook("cd-in-progress")).css("display", "none");
+    $(this.queryByHook("cd-action-complete")).text(action);
+    $(this.queryByHook("cd-complete")).css("display", "inline-block");
+    console.log(action)
+    let self = this
+    setTimeout(function () {
+      $(self.queryByHook("cd-complete")).css("display", "none");
+    }, 5000);
+  },
+  errorAction: function (action) {
+    $(this.queryByHook("cd-in-progress")).css("display", "none");
+    $(this.queryByHook("cd-action-error")).text(action);
+    $(this.queryByHook("cd-error")).css("display", "block");
+    console.log(action)
   },
   renderDomainTransformations: function () {
     let xtrans = new InputView({parent: this, required: true,
@@ -161,6 +203,12 @@ module.exports = View.extend({
     $(this.queryByHook("volume")).text(this.type.volume)
     $(this.queryByHook("nu")).text(this.type.nu)
     $(this.queryByHook("fixed")).prop("checked", this.type.fixed)
+  },
+  startAction: function (action) {
+    $(this.queryByHook("cd-complete")).css("display", "none");
+    $(this.queryByHook("cd-action-in-progress")).text(action);
+    $(this.queryByHook("cd-in-progress")).css("display", "inline-block");
+    console.log(action)
   },
   update: function (e) {},
   updateTotalParticles: function (e) {

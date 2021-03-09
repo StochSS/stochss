@@ -385,6 +385,18 @@ module.exports = {
 
         return templates.select(modalID, selectID, title, label, options)
     },
+    selectSpeciesHTML : (species) => {
+      let modalID = "speciesSelectModal";
+      let selectID = "speciesSelectList";
+      let title = "Preview Variable Selection";
+      let label = "Select a variable to preview: ";
+      var options = species.map(function (name) {
+        return `<option value="${name}">${name}</option>`
+      });
+      options = options.join(" ");
+
+      return templates.select(modalID, selectID, title, label, options)
+    },
     projectExportSuccessHtml : (fileType, message) => {
       let modalID = "projectExportSuccessModal"
       let title = `Successfully Exported the ${fileType}`
