@@ -1,9 +1,14 @@
 tr
   td=this.model.name
 
-  td=this.model.value
+  if this.model.collection.parent.is_spatial
+    td=this.model.diffusionConst
 
-  td=this.model.mode
+    td=this.types.join(", ")
+  else
+    td=this.model.value
+
+    td=this.model.mode
 
   if this.model.collection.parent.defaultMode === 'dynamic'
     td=this.switchingValWithLabel

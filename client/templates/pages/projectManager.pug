@@ -41,11 +41,12 @@ section.page
       ) Add Model <span class="caret"></span>
 
       ul.dropdown-menu(aria-labelledby="project-manager-add-model-btn")
-        li.dropdown-item(id="new-model" data-hook="new-model") New Model
+        li.dropdown-item(id="new-model" data-hook="new-model" data-type="model") New Model
+        li.dropdown-item(id="new-model" data-hook="new-model" data-type="spatial") New Spatial Model (beta)
         li.dropdown-divider
         li.dropdown-item(id="existing-model" data-hook="existing-model") Existing Model
         li.dropdown-divider
-        li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model (.mdl)
+        li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model (.mdl or .smdl)
 
     div.verticle-space(id="edit-workflow-groups-container" data-hook="edit-workflow-groups-container")
 
@@ -91,7 +92,7 @@ section.page
 
           ul.dropdown-menu(aria-labelledby="download-project-btn")
             li.dropdown-item(id="export-project-as-zip" data-hook="export-project-as-zip") as .zip
-            li.dropdown-item(id="export-project-as-combine" data-hook="export-project-as-combine") as COMBINE
+            li.dropdown-item.disabled(id="export-project-as-combine" data-hook="export-project-as-combine") as COMBINE
 
           button.btn.btn-primary.inline.box-shadow(id="empty-project-trash" data-hook="empty-project-trash") Empty Trash
 

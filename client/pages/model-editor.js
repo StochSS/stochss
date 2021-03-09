@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+var xhr = require('xhr');
 var _ = require('underscore');
 var $ = require('jquery');
 let path = require('path');
@@ -26,10 +27,11 @@ var tests = require('../views/tests');
 //views
 var PageView = require('../pages/base');
 var InputView = require('../views/input');
-var MeshEditorView = require('../views/mesh-editor');
+var DomainViewer = require('../views/domain-viewer');
 var SpeciesEditorView = require('../views/species-editor');
 var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
+var InitialConditionsViewer = require('../views/initial-conditions-viewer');
 var ParametersEditorView = require('../views/parameters-editor');
 var ParameterViewer = require('../views/parameters-viewer');
 var ReactionsEditorView = require('../views/reactions-editor');
@@ -43,6 +45,7 @@ var ModelSettingsView = require('../views/model-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 //models
 var Model = require('../models/model');
+var Domain = require('../models/domain');
 //templates
 var template = require('../templates/pages/modelEditor.pug');
 
@@ -86,13 +89,6 @@ let ModelEditor = PageView.extend({
           self.queryByHook("model-name-header").style.display = "none"
         }
         self.renderSubviews();
-        if(!self.model.is_spatial){
-          self.queryByHook('mesh-editor-container').style.display = "none";
-          self.queryByHook('initial-conditions-editor-container').style.display = "none";
-        }
-        if(!self.model.functionDefinitions.length) {
-          self.queryByHook('sbml-component-container').style.display = "none";
-        }
         self.model.updateValid()
       }
     });
@@ -108,6 +104,12 @@ let ModelEditor = PageView.extend({
       this.updateSpeciesInUse();
       this.updateParametersInUse();
     }, this);
+    window.addEventListener("pageshow", function (event) {
+      var navType = window.performance.navigation.type
+      if(navType === 2){
+        window.location.reload()
+      }
+    });
   },
   update: function () {
   },
@@ -189,15 +191,6 @@ let ModelEditor = PageView.extend({
     });
   },
   renderSubviews: function () {
-    var meshEditor = new MeshEditorView({
-      model: this.model.meshSettings
-    });
-    var initialConditionsEditor = new InitialConditionsEditorView({
-      collection: this.model.initialConditions
-    });
-    var sbmlComponentView = new SBMLComponentView({
-      functionDefinitions: this.model.functionDefinitions,
-    });
     this.modelSettings = new ModelSettingsView({
       parent: this,
       model: this.model.modelSettings,
@@ -205,17 +198,26 @@ let ModelEditor = PageView.extend({
     this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
-    this.registerRenderSubview(meshEditor, 'mesh-editor-container');
     this.renderSpeciesView();
-    this.registerRenderSubview(initialConditionsEditor, 'initial-conditions-editor-container');
     this.renderParametersView();
     this.renderReactionsView();
-    this.renderEventsView();
-    this.renderRulesView();
     this.renderSystemVolumeView();
-    this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
     this.registerRenderSubview(this.modelSettings, 'model-settings-container');
     this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
+    if(this.model.is_spatial) {
+      $(this.queryByHook("spatial-beta-message")).css("display", "block")
+      this.renderDomainViewer();
+      this.renderInitialConditions();
+    }else {
+      this.renderEventsView();
+      this.renderRulesView();
+      if(this.model.functionDefinitions.length) {
+        var sbmlComponentView = new SBMLComponentView({
+          functionDefinitions: this.model.functionDefinitions,
+        });
+        this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
+      }
+    }
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
@@ -230,6 +232,32 @@ let ModelEditor = PageView.extend({
     this.registerSubview(view);
     this.renderSubview(view, this.queryByHook(hook));
   },
+  renderDomainViewer: function(domainPath=null) {
+    if(this.domainViewer) {
+      this.domainViewer.remove()
+    }
+    if(domainPath && domainPath !== "viewing") {
+      let self = this;
+      let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath
+      let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr
+      xhr({uri: endpoint, json: true}, function (err, resp, body) {
+        let domain = new Domain(body.domain);
+        self.domainViewer = new DomainViewer({
+          parent: self,
+          model: domain,
+          domainPath: domainPath
+        });
+        self.registerRenderSubview(self.domainViewer, 'domain-viewer-container');
+      });
+    }else{
+      this.domainViewer = new DomainViewer({
+        parent: this,
+        model: this.model.domain,
+        domainPath: domainPath
+      });
+      this.registerRenderSubview(this.domainViewer, 'domain-viewer-container');
+    }
+  },
   renderSpeciesView: function (mode="edit") {
     if(this.speciesEditor) {
       this.speciesEditor.remove()
@@ -241,6 +269,22 @@ let ModelEditor = PageView.extend({
     }
     this.registerRenderSubview(this.speciesEditor, 'species-editor-container');
   },
+  renderInitialConditions: function (mode="edit", opened=false) {
+    if(this.initialConditionsEditor) {
+      this.initialConditionsEditor.remove();
+    }
+    if(mode === "edit") {
+      this.initialConditionsEditor = new InitialConditionsEditorView({
+        collection: this.model.initialConditions,
+        opened: opened
+      });
+    }else{
+      this.initialConditionsEditor = new InitialConditionsViewer({
+        collection: this.model.initialConditions
+      });
+    }
+    this.registerRenderSubview(this.initialConditionsEditor, 'initial-conditions-editor-container');
+    },
   renderParametersView: function (mode="edit", opened=false) {
     if(this.parametersEditor) {
       this.parametersEditor.remove()

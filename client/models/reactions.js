@@ -28,7 +28,7 @@ Reactions = Collection.extend({
   initialize: function (attrs, options) {
     Collection.prototype.initialize.apply(this, arguments);
   },
-  addReaction: function (reactionType, stoichArgs, subdomains) {
+  addReaction: function (reactionType, stoichArgs, types) {
     var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var massaction = reactionType === 'custom-massaction';
@@ -39,7 +39,7 @@ Reactions = Collection.extend({
       massaction: massaction,
       propensity: '',
       annotation: '',
-      subdomains: subdomains,
+      types: types,
       reactants: stoichArgs.reactants,
       products: stoichArgs.products,
     });

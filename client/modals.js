@@ -130,7 +130,8 @@ let templates = {
                   </div>
                 </div>`
         },
-        upload : (modalID, title) => {
+        upload : (modalID, title, accept, withName=true) => {
+            let displayNameField = withName ? "" : " style='display: none'"
             return `
                 <div id=${modalID} class="modal" tabindex="-1" role="dialog">
                   <div class="modal-dialog" role="document">
@@ -144,11 +145,11 @@ let templates = {
                       <div class="modal-body">
                         <div class="verticle-space">
                           <span class="inline" for="datafile">Please specify a file to import: </span>
-                          <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" required>
+                          <input id="fileForUpload" type="file" id="datafile" name="datafile" size="30" ${accept} required>
                           <li class="invalid-feedback" id="fileSpecCharError">Names can only include the following characters: 
                                                                                   (0-9), (a-z), (A-Z) and (., -, _, (, or ))</li>
                         </div>
-                        <div class="verticle-space">
+                        <div class="verticle-space"${displayNameField}>
                           <span class="inline" for="fileNameInput">New file name (optional): </span>
                           <input type="text" id="fileNameInput" name="fileNameInput" size="30">
                           <li class="invalid-feedback warning" id="fileNameUsageMessage">Names that contain errors will not be used to rename the file.</li>
@@ -318,11 +319,20 @@ module.exports = {
 
         return templates.message(modalID, title, message)
     },
-    uploadFileHtml : (type) => {
+    uploadFileHtml : (type, isSafariV14Plus) => {
         let modalID = "uploadFileModal"
         let title = `Upload a ${type}`
-
-        return templates.upload(modalID, title)
+        var accept = "";
+        if(type === "model") {
+          accept = 'accept=".json, .mdl, .smdl"'
+        }else if(type === "sbml") {
+          accept = 'accept=".xml, .sbml"'
+        }else if(type === "file" && isSafariV14Plus){
+          // only used if using Safari v14+ and only needed to fix upload issue
+          accept = 'accept=".json, .mdl, .smdl, .xml, .sbml, .ipynb, .zip, .md, .csv, .p, .omex, .domn, .txt, .pdf, audio/*, video/*, image/*"'
+        }
+        
+        return templates.upload(modalID, title, accept)
     },
     duplicateWorkflowHtml : (wkflFile, body) => {
         let modalID = "duplicateWorkflowModal"
