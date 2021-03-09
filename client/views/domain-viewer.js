@@ -69,7 +69,7 @@ module.exports = View.extend({
   },
   reloadDomain: function (domainPath) {
     if(this.domainPath !== domainPath || domainPath === "viewing") {
-      var el = this.queryByHook("domain-plot");
+      var el = this.parent.queryByHook("domain-plot-container");
       el.removeListener('plotly_click', this.selectParticle);
       Plotly.purge(el);
       this.plot = null;
@@ -111,6 +111,7 @@ module.exports = View.extend({
         queryStr += "&domain_path=" + this.domainPath
       }
     }
+    this.parent.renderParticleViewer(null);
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + queryStr;
     xhr({uri: endpoint, json: true}, function (err, resp, body) {
       self.plot = body.fig;
@@ -163,18 +164,6 @@ module.exports = View.extend({
     });
     this.registerRenderSubview(this.domainLocationSelectView, "select-location")
   },
-  renderParticleViewer: function (particle=null) {
-    if(this.particleViewer) {
-      this.particleViewer.remove();
-    }
-    if(particle){
-      $(this.queryByHook("select-particle")).css("display", "none")
-      this.particleViewer = new ParticleViewer({
-        model: particle
-      });
-      this.registerRenderSubview(this.particleViewer, "particle-viewer")
-    }
-  },
   renderTypesViewer: function () {
     if(this.typesViewer) {
       this.typesViewer.remove()
@@ -190,14 +179,14 @@ module.exports = View.extend({
   },
   displayDomain: function () {
     let self = this;
-    var el = this.queryByHook("domain-plot");
-    Plotly.newPlot(el, this.plot);
-    el.on('plotly_click', _.bind(this.selectParticle, this));
+    var domainPreview = this.parent.queryByHook("domain-plot-container");
+    Plotly.newPlot(domainPreview, this.plot);
+    domainPreview.on('plotly_click', _.bind(this.selectParticle, this));
   },
   selectParticle: function (data) {
     let point = data.points[0];
     let particle = this.model.particles.get(point.id, "particle_id");
-    this.renderParticleViewer(particle);
+    this.parent.renderParticleViewer(particle);
   },
   editDomain: function (e) {
     var queryStr = "?path=" + this.parent.model.directory;

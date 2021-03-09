@@ -104,7 +104,7 @@ class ParameterSweep(StochSSWorkflow):
             wkfl.get_plotly_layout_data(plt_data=plt_data)
             layout = plotly.graph_objs.Layout(title=dict(text=plt_data['title'], x=0.5),
                                               xaxis=dict(title=plt_data['xaxis_label']),
-                                              yaxis=dict(title=plt_data['xaxis_label']))
+                                              yaxis=dict(title=plt_data['yaxis_label']))
 
             fig = dict(data=trace_list, layout=layout, config={"responsive": True})
             plot_figs['-'.join(key)] = fig

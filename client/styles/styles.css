@@ -630,3 +630,8 @@ span.checkbox {
 .tab {
   padding-right: 1rem;
 }
+
+.particle-view {
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}

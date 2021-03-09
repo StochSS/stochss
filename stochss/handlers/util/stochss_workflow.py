@@ -281,7 +281,7 @@ class StochSSWorkflow(StochSSBase):
         else:
             wkfl_type = "2d_parameter_sweep"
         kwargs = {"path":path, "new":True, "settings":settings,
-                  "models":{"s_model":s_model, "g_model":g_model}}
+                  "models":{"s_model":s_model, "model":g_model}}
         return {"kwargs":kwargs, "type":wkfl_type}
 
 

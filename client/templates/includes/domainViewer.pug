@@ -94,29 +94,10 @@ div#domain-viewer.card.card-body
             th(scope="col") Number of Particles
             th(scope="col") Mass
             th(scope="col") Volume
-            th(scope="col") nu
+            th(scope="col") Viscosity
             th(scope="col") Fixed
 
         tbody(data-hook="domain-types-list")
-
-    div
-
-      h4 Particles
-
-      hr
-
-      div.row
-
-        div.col-md-9
-
-          div(data-hook="domain-plot")
-
-        div.col-md-3
-
-          div(data-hook="particle-viewer")
-
-          div.text-info(data-hook="select-particle")
-            | Click on a particle to view its properties.
 
     hr
 

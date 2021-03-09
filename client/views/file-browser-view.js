@@ -188,9 +188,10 @@ module.exports = View.extend({
     });
   },
   updateParent: function (type, trash = false) {
+    let types = ["nonspatial", "spatial", "workflow", "workflow-group", "notebook"]
     if(trash){
       this.parent.update("all")
-    }else if(type === "nonspatial" || type === "workflow" || type === "workflow-group") {
+    }else if(types.includes(type)) {
       this.parent.update("file-browser")
     }
   },
@@ -336,7 +337,7 @@ module.exports = View.extend({
         }else{
           self.refreshJSTree();
         }
-        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".sbml")) {
+        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".smdl") ||resp.file.endsWith(".sbml")) {
           self.parent.update("file-browser")
         }
         if(resp.errors.length > 0){
@@ -492,6 +493,9 @@ module.exports = View.extend({
             var msg = body.message
             var errors = body.errors
             let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
+          }else{
+            console.log(node.type, o.type)
+            self.updateParent(o.type)
           }
         }
       }
@@ -769,8 +773,12 @@ module.exports = View.extend({
       let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
       let select = document.querySelector('#newProjectWorkflowModal #select')
       okBtn.addEventListener("click", function (e) {
+          modal.modal('hide')
+          let mdlFile = o.type === "workflow-group" ? self.parent.model.models.filter(function (model) {
+            return model.name === select.value;
+          })[0].directory.split("/").pop() : null;
           let parentPath = o.type === "workflow-group" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".wkgp")
-          let modelPath = o.type === "workflow-group" ? path.join(path.dirname(o.original._path), select.value + ".mdl") : o.original._path
+          let modelPath = o.type === "workflow-group" ? path.join(path.dirname(o.original._path), mdlFile) : o.original._path
           let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
           window.location.href = endpoint
       });
@@ -1137,7 +1145,7 @@ module.exports = View.extend({
       let newWorkflow = {
         "NewWorkflow" : {
           "label" : "New Workflow",
-          "_disabled" : (nodeType === "spatial") ? true : false,
+          "_disabled" : false,
           "separator_before" : false,
           "separator_after" : true,
           "action" : function (data) {
@@ -1206,20 +1214,12 @@ module.exports = View.extend({
           "separator_after" : true,
           "submenu" : {
             "Convert to Model" : {
-              "label" : "Convert to Non Spatial",
+              "label" : "Convert to Model",
               "_disabled" : false,
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
                 self.toModel(o, "Spatial");
-              }
-            },
-            "Convert to Notebook" : {
-              "label" : "Convert to Notebook",
-              "_disabled" : true,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
               }
             }
           }

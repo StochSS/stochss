@@ -60,7 +60,7 @@ div
         tr
           th(scope="col") Mass
           th(scope="col") Volume
-          th(scope="col") Nu
+          th(scope="col") Viscosity
           th(scope="col") Fixed
 
       tbody
@@ -84,4 +84,20 @@ div
           td: div(data-hook="domain-y-trans")
           td: div(data-hook="domain-z-trans")
 
-  button.btn.btn-outline-primary(data-hook="build-domain") Build Domain
+  div.inline
+
+    button.btn.btn-outline-primary(data-hook="build-domain") Build Domain
+
+  div.mdl-edit-btn.saving-status.inline(data-hook="cd-in-progress")
+
+    div.spinner-grow.mr-2
+
+    span(data-hook="cd-action-in-progress")
+
+  div.mdl-edit-btn.saved-status.inline(data-hook="cd-complete")
+
+    span(data-hook="cd-action-complete")
+
+  div.mdl-edit-btn.save-error-status(data-hook="cd-error")
+
+    span(data-hook="cd-action-error")

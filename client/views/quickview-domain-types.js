@@ -16,34 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//models
-let Type = require('./domain-type');
-//collections
-var Collection = require('ampersand-collection');
+//views
+var View = require('ampersand-view');
+//templates
+var template = require('../templates/includes/quickviewDomainTypes.pug');
 
-module.exports = Collection.extend({
-  model: Type,
-  indexes: ['typeID'],
-  addType: function (vol, mass, nu, fixed, id=null) {
-    if(!id) {
-      id = this.parent.getDefaultTypeID();
-    }
-    let name = String(id);
-    var type = new Type({
-        fixed: fixed,
-        mass: mass,
-        nu: nu,
-        typeID: id,
-        name: name,
-        volume: vol
-    });
-    this.add(type);
-    return name;
-  },
-  removeType: function (type) {
-    this.remove(type);
-  },
-  validateCollection: function () {
-    return true;
-  }
+module.exports = View.extend({
+  template: template,
 });

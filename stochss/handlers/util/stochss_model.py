@@ -396,7 +396,7 @@ class StochSSModel(StochSSBase):
         file = f"{self.get_name()}.ipynb"
         path = os.path.join(self.get_dir_name(), file)
         g_model = self.convert_to_gillespy2()
-        return {"path":path, "new":True, "models":{"s_model":self.model, "g_model":g_model}}
+        return {"path":path, "new":True, "models":{"s_model":self.model, "model":g_model}}
 
 
     def get_preview_results(self, outfile):
