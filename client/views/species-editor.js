@@ -136,22 +136,24 @@ module.exports = View.extend({
   },
   setAllSpeciesModes: function (defaultMode, cb) {
     this.collection.parent.defaultMode = defaultMode;
-    if(defaultMode === "continuous") {
-      $(this.parent.queryByHook("system-volume-container")).collapse("hide")
-    }else{
-      $(this.parent.queryByHook("system-volume-container")).collapse("show")
-    }
-    this.collection.map(function (specie) { 
-      specie.mode = defaultMode
-      cb(specie)
-    });
-    if(defaultMode === "dynamic"){
-      this.renderSpeciesAdvancedView()
-      $(this.queryByHook('advanced-species')).collapse('show');
-    }
-    else{
-      this.speciesAdvancedView.views[0].updateInputValidation()
-      $(this.queryByHook('advanced-species')).collapse('hide');
+    if(!this.collection.parent.is_spatial) {
+      if(defaultMode === "continuous") {
+        $(this.parent.queryByHook("system-volume-container")).collapse("hide")
+      }else{
+        $(this.parent.queryByHook("system-volume-container")).collapse("show")
+      }
+      this.collection.map(function (specie) { 
+        specie.mode = defaultMode
+        cb(specie)
+      });
+      if(defaultMode === "dynamic"){
+        this.renderSpeciesAdvancedView()
+        $(this.queryByHook('advanced-species')).collapse('show');
+      }
+      else{
+        this.speciesAdvancedView.views[0].updateInputValidation()
+        $(this.queryByHook('advanced-species')).collapse('hide');
+      }
     }
   },
   renderEditSpeciesView: function () {
