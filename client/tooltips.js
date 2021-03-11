@@ -29,6 +29,9 @@ module.exports = {
     speciesMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
         "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
 
+    spatialSpeciesMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
+        "using discrete (integer count) values.",
+
     mode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
         "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
 
