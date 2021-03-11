@@ -30,7 +30,7 @@ class SpatialSimulation(StochSSWorkflow):
 
     TYPE = "spatial"
 
-    def __init__(self, path, preview=False):
+    def __init__(self, path, preview=False, species=None):
         '''
         Intitialize a spatial ensemble simulation workflow object
 
@@ -43,6 +43,8 @@ class SpatialSimulation(StochSSWorkflow):
         if not preview:
             self.settings = self.load_settings()
             self.s_py_model, self.s_model = self.load_models()
+        else:
+            self.species = species
 
 
     def __get_run_settings(self):
@@ -65,9 +67,12 @@ class SpatialSimulation(StochSSWorkflow):
             if verbose:
                 self.log("info", "Running a preview spatial ensemble simulation")
             results = self.s_py_model.run(timeout=60)
-            species = list(self.s_py_model.get_all_species().keys())[0]
+            # if self.species is None:
+            #     self.species = list(self.s_py_model.get_all_species().keys())[0]
             t_ndx_list = list(range(len(os.listdir(results.result_dir)) - 1))
-            plot = results.plot_species(species=species, t_ndx_list=t_ndx_list, animated=True,
+            plot = results.plot_species(species=self.species, t_ndx_list=t_ndx_list, animated=True,
+                                        concentration=self.s_model['defaultMode'] == "continuous",
+                                        deterministic=self.s_model['defaultMode'] == "discrete",
                                         width=None, height=None, return_plotly_figure=True,
                                         f_duration=100, t_duration=100)
             plot["layout"]["autosize"] = True

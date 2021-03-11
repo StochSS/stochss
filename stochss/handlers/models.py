@@ -196,10 +196,13 @@ class RunModelAPIHandler(APIHandler):
         if outfile == 'none':
             outfile = str(uuid.uuid4()).replace("-", "_")
         log.debug("Temporary outfile: %s", outfile)
+        species = self.get_query_argument(name="species", default=None)
         resp = {"Running":False, "Outfile":outfile, "Results":""}
         if run_cmd == "start":
             exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
                         f'{path}', f'{outfile}']
+            if species is not None:
+                exec_cmd.append(f"{species}")
             log.debug("Script commands for running a preview: %s", exec_cmd)
             subprocess.Popen(exec_cmd)
             resp['Running'] = True

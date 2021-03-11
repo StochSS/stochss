@@ -13,10 +13,12 @@ RUN apt-get update  && apt-get install -yq --no-install-recommends \
         locales \
         python3-pip \
         python3-pycurl \
-        nodejs \
-        npm \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+
+RUN apt-get install -y nodejs
 
 ENV SHELL=/bin/bash LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
 
