@@ -441,7 +441,7 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def get_particles_from_remote(cls, mesh, data):
+    def get_particles_from_remote(cls, mesh, data, types):
         '''
         Get a list of stochss particles from a mesh
 
@@ -451,17 +451,28 @@ class StochSSSpatialModel(StochSSBase):
             Mesh containing particle data
         data : dict
             Property and location data to be applied to each particle
+        types : list
+            List of type discriptions (lines from an uploaded file)
         '''
         file = tempfile.NamedTemporaryFile()
         with open(file.name, "w") as mesh_file:
             mesh_file.write(mesh)
         s_domain = Mesh.read_xml_mesh(filename=file.name)
         domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
+        if types is not None:
+            type_data = cls.get_types_from_file(lines=types)
+            for data in type_data['types']:
+                if data['particle_id'] < len(domain['particles']):
+                    domain['particles'][data['particle_id']]['type'] = data['typeID']
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
-        return {"particles":domain['particles'], "limits":limits}
+        resp = {"particles":domain['particles'], "limits":limits}
+        if types is not None:
+            resp['types'] = type_data['names']
+        return resp
 
 
-    def get_types_from_file(self, path):
+    @classmethod
+    def get_types_from_file(cls, path=None, lines=None):
         '''
         Get the type descriptions from the .txt file
 
@@ -469,10 +480,13 @@ class StochSSSpatialModel(StochSSBase):
         ----------
         path : str
             Path to the types description file
+        lines : list
+            Lines from an uploaded file
         '''
-        path = os.path.join(self.user_dir, path)
-        with open(path, "r") as types_file:
-            lines = types_file.readlines()
+        if lines is None:
+            path = os.path.join(cls.user_dir, path)
+            with open(path, "r") as types_file:
+                lines = types_file.readlines()
         types = []
         names = []
         for line in lines:

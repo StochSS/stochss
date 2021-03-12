@@ -89,15 +89,22 @@ let DomainEditor = PageView.extend({
   importMesh: function (data) {
     let self = this;
     let file = $("#meshfile").prop("files")[0];
+    let typeFiles = $("#typefile").prop("files")
     let formData = new FormData();
     formData.append("datafile", file);
     formData.append("particleData", JSON.stringify(data));
+    if(typeFiles.length) {
+      formData.append("typefile", typeFiles[0]);
+    }
     let endpoint = path.join(app.getApiPath(), 'spatial-model/import-mesh');
     let req = new XMLHttpRequest();
     req.open("POST", endpoint);
     req.onload = function (e) {
       var resp = JSON.parse(req.response);
       if(req.status < 400) {
+        if(resp.types) {
+          self.addMissingTypes(resp.types)
+        }
         self.addParticles(resp.particles);
         if(self.domain.x_lim[0] > resp.limits.x_lim[0]) {
           self.domain.x_lim[0] = resp.limits.x_lim[0]

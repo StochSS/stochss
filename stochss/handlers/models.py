@@ -261,9 +261,14 @@ class ImportMeshAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         data = self.request.files['datafile'][0]['body'].decode()
+        if "typefile" in self.request.files.keys():
+            types = self.request.files['typefile'][0]['body'].decode().strip().split("\n")
+        else:
+            types = None
         particle_data = json.loads(self.request.body_arguments['particleData'][0].decode())
         try:
-            resp = StochSSSpatialModel.get_particles_from_remote(mesh=data, data=particle_data)
+            resp = StochSSSpatialModel.get_particles_from_remote(mesh=data, data=particle_data,
+                                                                 types=types)
             log.debug("Number of Particles: %s", len(resp['particles']))
             self.write(resp)
         except StochSSAPIError as err:
