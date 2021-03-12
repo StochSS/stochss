@@ -239,7 +239,8 @@ class StochSSNotebook(StochSSBase):
     def __create_mesh_string(self, model, pad):
         mesh = ["", f"{pad}# Domain",
                 f"{pad}mesh = Mesh.read_stochss_domain('{self.s_model['path']}')",
-                f"{pad}self.add_mesh(mesh)"]
+                f"{pad}self.add_mesh(mesh)",
+                "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
         model.extend(mesh)
 
     def __create_model_cell(self):
@@ -247,8 +248,7 @@ class StochSSNotebook(StochSSBase):
         if self.s_model['is_spatial']:
             model = [f"class {self.__get_class_name()}(Model):",
                      "    def __init__(self):",
-                     f'{pad}Model.__init__(self, name="{self.get_name()}")',
-                     "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
+                     f'{pad}Model.__init__(self, name="{self.get_name()}")']
             self.__create_mesh_string(model=model, pad=pad)
             self.__create_species_strings(model=model, pad=pad)
             self.__create_initial_condition_strings(model=model, pad=pad)
