@@ -38,6 +38,7 @@ section.page
       table.table
         thead
           tr
+            th(scope="col") Static Domain
             th(scope="col") Density
             th(scope="col") Gravity
             th(scope="col")
@@ -54,6 +55,7 @@ section.page
 
         tbody
           tr
+            td: input(type="checkbox", id="static-domain", data-hook="static-domain" checked=this.model.static)
             td: div(data-hook="density")
             td
               div(data-target="gravity" data-hook="gravity-x")

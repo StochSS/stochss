@@ -55,6 +55,7 @@ let DomainEditor = PageView.extend({
     'click [data-hook=save-to-file]' : 'handleSaveToFile',
     'click [data-hook=import-particles-btn]' : 'handleImportMesh',
     'click [data-hook=set-particle-types-btn]' : 'getTypesFromFile',
+    'change [data-hook=static-domain]' : 'setStaticDomain',
     'change [data-hook=density]' : 'setDensity',
     'change [data-target=gravity]' : 'setGravity',
     'change [data-hook=pressure]' : 'setPressure',
@@ -820,6 +821,10 @@ let DomainEditor = PageView.extend({
   setSpeed: function (e) {
     let value = Number(e.target.value)
     this.domain.c_0 = value;
+  },
+  setStaticDomain: function (e) {
+    let value = e.target.checked;
+    this.domain.statis = value;
   },
   startAction: function (action, src) {
     $(this.queryByHook(src + "-complete")).css("display", "none");

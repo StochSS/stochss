@@ -247,7 +247,8 @@ class StochSSNotebook(StochSSBase):
         if self.s_model['is_spatial']:
             model = [f"class {self.__get_class_name()}(Model):",
                      "    def __init__(self):",
-                     f'{pad}Model.__init__(self, name="{self.get_name()}")']
+                     f'{pad}Model.__init__(self, name="{self.get_name()}")',
+                     "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
             self.__create_mesh_string(model=model, pad=pad)
             self.__create_species_strings(model=model, pad=pad)
             self.__create_initial_condition_strings(model=model, pad=pad)

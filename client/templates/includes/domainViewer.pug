@@ -36,6 +36,9 @@ div#domain-viewer.card.card-body
         table.table
           tbody
             tr
+              th(scope="row") Static Domain
+              td: input(type="checkbox" id="static-domain" data-hook="static-domain" checked=this.model.static disabled)
+            tr
               th(scope="row") Density
               td=this.model.rho_0
             tr

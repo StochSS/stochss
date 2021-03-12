@@ -32,7 +32,8 @@ module.exports = State.extend({
     size: 'number',
     x_lim: 'object',
     y_lim: 'object',
-    z_lim: 'object'
+    z_lim: 'object',
+    static: 'boolean'
   },
   collections: {
     types: Types,

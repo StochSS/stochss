@@ -134,6 +134,7 @@ class StochSSSpatialModel(StochSSBase):
             mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
             self.__convert_particles(mesh=mesh)
             model.add_mesh(mesh)
+            model.staticDomain = self.model['domain']['static']
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -500,8 +501,12 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             self.__read_model_file()
         self.model['name'] = self.get_name()
+        if not self.model['defaultMode']:
+            self.model['defaultMode'] = "discrete"
         if "domain" not in self.model.keys():
             self.model['domain'] = self.get_model_template()['domain']
+        elif "static" not in self.model['domain'].keys():
+            self.model['domain']['static'] = True
         for species in self.model['species']:
             if "types" not in species.keys():
                 species['types'] = list(range(1, len(self.model['domain']['types'])))
