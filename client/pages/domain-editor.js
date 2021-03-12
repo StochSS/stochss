@@ -530,6 +530,7 @@ let DomainEditor = PageView.extend({
     this.registerRenderSubview(this.zLimMaxView, "z_lim-max");
   },
   renderDomainProperties: function () {
+    $(this.queryByHook("static-domain")).prop("checked", this.domain.static);
     let densityView = new InputView({parent: this, required: true,
                                      name: 'density', valueType: 'number',
                                      value: this.domain.rho_0 || 1});
