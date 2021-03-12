@@ -67,26 +67,26 @@ def get_parsed_args():
     return parser.parse_args()
 
 
-def run_preview(wkfl):
+def run_preview(workflow):
     '''
     Run the preview simulation
 
     wkfl : StochSSWorkflow instance
         The wkfl used for the preview simulation
     '''
-    resp = {"timeout": False}
+    response = {"timeout": False}
     try:
-        plot = wkfl.run(preview=True)
-        resp["results"] = plot
+        plot = workflow.run(preview=True)
+        response["results"] = plot
     except ModelError as error:
-        resp['errors'] = f"{error}"
+        response['errors'] = f"{error}"
     except SimulationError as error:
-        resp['errors'] = f"{error}"
+        response['errors'] = f"{error}"
     except ValueError as error:
-        resp['errors'] = f"{error}"
+        response['errors'] = f"{error}"
     except Exception as error:
-        resp['errors'] = f"{error}"
-    return resp
+        response['errors'] = f"{error}"
+    return response
 
 
 if __name__ == "__main__":
@@ -102,13 +102,13 @@ if __name__ == "__main__":
         model = StochSSModel(path=args.path)
         wkfl = EnsembleSimulation(path="", preview=True)
         wkfl.g_model = model.convert_to_gillespy2()
-    
+
     resp = run_preview(wkfl)
     if not is_spatial:
         if 'GillesPy2 simulation exceeded timeout.' in log_stm.getvalue():
             resp['timeout'] = True
         log_stm.close()
-    
+
     outfile = os.path.join(model.user_dir, f".{args.outfile}.tmp")
     with open(outfile, "w") as file:
         json.dump(resp, file, cls=plotly.utils.PlotlyJSONEncoder)

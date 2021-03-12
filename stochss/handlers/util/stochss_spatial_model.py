@@ -461,9 +461,9 @@ class StochSSSpatialModel(StochSSBase):
         domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
         if types is not None:
             type_data = cls.get_types_from_file(lines=types)
-            for data in type_data['types']:
-                if data['particle_id'] < len(domain['particles']):
-                    domain['particles'][data['particle_id']]['type'] = data['typeID']
+            for t_data in type_data['types']:
+                if t_data['particle_id'] < len(domain['particles']):
+                    domain['particles'][t_data['particle_id']]['type'] = t_data['typeID']
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
         resp = {"particles":domain['particles'], "limits":limits}
         if types is not None:
