@@ -31,7 +31,7 @@ from notebook.base.handlers import APIHandler
 # from .util.workflow_status import get_status
 # from .util.generate_zip_file import download_zip
 
-from .util import StochSSBase, StochSSAPIError, report_error
+from .util import StochSSBase, StochSSFolder, StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -51,37 +51,14 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
+        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
-        projects = []
-        self.get_projects_from_directory(user_dir, projects)
-        log.debug("List of projects: %s", projects)
-        resp = {"projects":projects}
-        self.write(resp)
+        folder = StochSSFolder(path="")
+        data = folder.get_file_list(ext=".proj", folder=True)
+        log.debug("List of projects: %s", data)
+        self.write(data)
+        log.setLevel(logging.WARNING)
         self.finish()
-
-
-    @classmethod
-    def get_projects_from_directory(cls, path, projects):
-        '''
-        Get the projects in the directory if any exist.
-
-        Attributes
-        ----------
-        path : string
-            Path the target directory
-        projects : list
-            List of project dictionaries
-        '''
-        for item in os.listdir(path):
-            new_path = os.path.join(path, item)
-            if item.endswith('.proj'):
-                projects.append({'directory': new_path.replace("/home/jovyan/", ""),
-                                 'parentDir': os.path.dirname(new_path.replace("/home/jovyan/",
-                                                                               "")),
-                                 'elementID': "p{}".format(len(projects) + 1)})
-            elif not item.startswith('.') and os.path.isdir(new_path):
-                cls.get_projects_from_directory(new_path, projects)
 
 
 class LoadProjectAPIHandler(APIHandler):

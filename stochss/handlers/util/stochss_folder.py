@@ -175,7 +175,7 @@ class StochSSFolder(StochSSBase):
         return bool(not errors), errors
 
 
-    def get_file_list(self, ext):
+    def get_file_list(self, ext, folder=False):
         '''
         Get the list of files matching the ext in this directory and all sub-directories
 
@@ -184,9 +184,10 @@ class StochSSFolder(StochSSBase):
         '''
         domain_paths = {}
         domain_files = {}
-        for root, _, files in os.walk(self.get_path(full=True)):
+        for root, folders, files in os.walk(self.get_path(full=True)):
             dirname = root.replace(self.user_dir+"/", "")
-            for file in files:
+            file_list = folders if folder else files
+            for file in file_list:
                 if file.endswith(ext):
                     path = os.path.join(dirname, file) if dirname else file
                     if file in domain_files.keys():

@@ -45,7 +45,14 @@ let projectBrowser = PageView.extend({
     let endpoint = path.join(app.getApiPath(), "project/load-browser")
     xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400) {
-        self.projects = body.projects
+        self.projects = []
+        body.files.forEach(function (file) {
+          body.paths[file[0]].forEach(function (projPath) {
+            self.projects.push({"directory":projPath,
+                                "parentDir":path.dirname(projPath),
+                                "elementID":"p" + (self.projects.length + 1)})
+          });
+        });
         self.renderProjectsView()
       }
     });
