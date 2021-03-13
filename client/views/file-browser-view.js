@@ -726,7 +726,7 @@ module.exports = View.extend({
     }
     let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+self.parent.projectPath
     xhr({uri:mdlListEP, json:true}, function (err, response, body) {
-      let modal = $(modals.newProjectModelHtml(body.models)).modal()
+      let modal = $(modals.newProjectModelHtml(body.files)).modal()
       let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
       let select = document.querySelector('#newProjectModelModal #modelFileInput')
       let location = document.querySelector('#newProjectModelModal #modelPathInput')
@@ -750,7 +750,7 @@ module.exports = View.extend({
       });
       okBtn.addEventListener("click", function (e) {
         let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value
-        let queryString = "?path="+self.projectPath+"&mdlPath="+mdlPath
+        let queryString = "?path="+self.parent.projectPath+"&mdlPath="+mdlPath
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
         xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {
@@ -802,6 +802,37 @@ module.exports = View.extend({
       });
     }
   },
+  addModel: function (parentPath, modelName, message) {
+    var endpoint = path.join(app.getBasePath(), "stochss/models/edit")
+    if(parentPath.endsWith(".proj")) {
+      let queryString = "?path=" + parentPath + "&mdlFile=" + modelName
+      let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryString
+      xhr({uri: newMdlEP, json: true}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          endpoint += "?path="+body.path
+          window.location.href = endpoint;
+        }else{
+          let title = "Model Already Exists";
+          let message = "A model already exists with that name";
+          let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+        }
+      });
+    }else{
+      let modelPath = path.join(parentPath, modelName)
+      let queryString = "?path="+modelPath+"&message="+message;
+      endpoint += queryString
+      let existEP = path.join(app.getApiPath(), "model/exists")+queryString
+      xhr({uri: existEP, json: true}, function (err, response, body) {
+        if(body.exists) {
+          let title = "Model Already Exists";
+          let message = "A model already exists with that name";
+          let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+        }else{
+          window.location.href = endpoint;
+        }
+      });
+    }
+  },
   newModelOrDirectory: function (o, isModel, isSpatial) {
     var self = this
     if(document.querySelector('#newModalModel')) {
@@ -836,35 +867,15 @@ module.exports = View.extend({
           let modelName = !o || (o && o.type === "root") ? input.value.trim().split("/").pop() + ext : input.value.trim() + ext;
           let message = modelName !== input.value.trim() + ext? 
                 "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
-          let modelPath = path.join(parentPath, modelName)
-          let queryString = "?path="+modelPath+"&message="+message;
-          let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
-          let existEP = path.join(app.getApiPath(), "model/exists")+queryString
           if(message){
             let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
             let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
             yesBtn.addEventListener('click', function (e) {
-              warningModal.modal('hide')
-              xhr({uri: existEP, json: true}, function (err, response, body) {
-                if(body.exists) {
-                  let title = "Model Already Exists"
-                  let message = "A model already exists with that name"
-                  let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
-                }else{
-                  window.location.href = endpoint
-                }
-              })
-            })
+              warningModal.modal('hide');
+              self.addModel(parentPath, modelName, message);
+            });
           }else{
-            xhr({uri: existEP, json: true}, function (err, response, body) {
-              if(body.exists) {
-                let title = "Model Already Exists"
-                let message = "A model already exists with that name"
-                let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
-              }else{
-                window.location.href = endpoint
-              }
-            })
+            self.addModel(parentPath, modelName, message);
           }
         }else{
           let dirName = input.value.trim();

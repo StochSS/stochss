@@ -73,7 +73,11 @@ module.exports = View.extend({
     let self = this
     this.saveModel(function () {
       self.saved()
-      var queryString = "?path="+path.dirname(self.model.directory)
+      var dirname = path.dirname(self.model.directory)
+      if(dirname.endsWith(".wkgp")) {
+        dirname = path.dirname(dirname)
+      }
+      var queryString = "?path="+dirname
       window.location.href = path.join(app.getBasePath(), "/stochss/project/manager")+queryString;
     })
   },

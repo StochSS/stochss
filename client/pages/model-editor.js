@@ -83,6 +83,9 @@ let ModelEditor = PageView.extend({
     });
     if(directory.includes('.proj')) {
       this.projectPath = path.dirname(directory)
+      if(this.projectPath.endsWith(".wkgp")) {
+        this.projectPath = path.dirname(this.projectPath)
+      }
       this.projectName = this.getFileName(this.projectPath)
     }
     this.model.fetch({
