@@ -136,6 +136,20 @@ class AddExistingModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the model: %s", path)
+        try:
+            folder = StochSSFolder(path="")
+            # file will be excluded if test passes
+            test = lambda ext, root, file: bool(".wkfl" in root or f"{path}" in root or \
+                                                "trash" in root)
+            data = folder.get_file_list(ext=[".mdl", ".smdl"], test=test)
+            log.debug("List of models: %s", data)
+            self.write(data)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
     @web.authenticated

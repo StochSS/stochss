@@ -175,21 +175,28 @@ class StochSSFolder(StochSSBase):
         return bool(not errors), errors
 
 
-    def get_file_list(self, ext, folder=False):
+    def get_file_list(self, ext, folder=False, test=None):
         '''
         Get the list of files matching the ext in this directory and all sub-directories
 
         Attributes
         ----------
+        ext : str or list
+            Extension of file object to search for
+        folder : bool
+            Indicates whether or not the file object is a folder
+        test : func
+            Function that determines if a file object should be excluded
         '''
         domain_paths = {}
         domain_files = {}
         for root, folders, files in os.walk(self.get_path(full=True)):
-            dirname = root.replace(self.user_dir+"/", "")
+            root = root.replace(self.user_dir+"/", "")
             file_list = folders if folder else files
             for file in file_list:
-                if file.endswith(ext):
-                    path = os.path.join(dirname, file) if dirname else file
+                exclude = False if test is None else test(ext, root, file)
+                if not exclude and '.' in file and f".{file.split('.').pop()}" in ext:
+                    path = os.path.join(root, file) if root else file
                     if file in domain_files.keys():
                         domain_paths[domain_files[file]].append(path)
                     else:
