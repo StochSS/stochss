@@ -31,7 +31,8 @@ from notebook.base.handlers import APIHandler
 # from .util.workflow_status import get_status
 # from .util.generate_zip_file import download_zip
 
-from .util import StochSSFolder, StochSSProject, StochSSAPIError, report_error
+from .util import StochSSFolder, StochSSProject, StochSSModel, StochSSSpatialModel, \
+                  StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -106,20 +107,33 @@ class NewProjectAPIHandler(APIHandler):
         self.finish()
 
 
-class NewWorkflowGroupAPIHandler(APIHandler):
+class NewModelAPIHandler(APIHandler):
     '''
     ##############################################################################
-    Handler for creating new StochSS Workflow Groups
+    Handler for creating new StochSS Models in StochSS Projects
     ##############################################################################
     '''
     @web.authenticated
     def get(self):
         '''
-        Create a new workflow group directory.
+        Create a new model in the project.
 
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the project: %s", path)
+        file = self.get_query_argument(name="mdlFile")
+        log.debug("Name to the file: %s", file)
+        try:
+            project = StochSSProject(path=path)
+            resp = project.add_model(file=file, new=True)
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class AddExistingModelAPIHandler(APIHandler):
@@ -160,6 +174,21 @@ class AddExistingModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the project: %s", path)
+        mdl_path = self.get_query_argument(name="mdlPath")
+        log.debug("Path to the model: %s", mdl_path)
+        try:
+            project = StochSSProject(path=path)
+            model_class = StochSSModel if mdl_path.endswith(".mdl") else StochSSSpatialModel
+            model = model_class(path=mdl_path)
+            resp = project.add_model(file=model.get_file(), model=model.load())
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class ExtractModelAPIHandler(APIHandler):
