@@ -700,9 +700,29 @@ let FileBrowser = PageView.extend({
     xhr({uri:mdlListEP, json:true}, function (err, response, body) {
       let modal = $(modals.newProjectModelHtml(body.models)).modal()
       let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
-      let select = document.querySelector('#newProjectModelModal #modelPathInput')
+      let select = document.querySelector('#newProjectModelModal #modelFileInput')
+      let location = document.querySelector('#newProjectModelModal #modelPathInput')
+      select.addEventListener("change", function (e) {
+        okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2
+        if(body.paths[e.target.value].length >= 2) {
+          var locations = body.paths[e.target.value].map(function (path) {
+            return `<option>${path}</option>`
+          });
+          locations.unshift(`<option value="">Select a location</option>`)
+          locations = locations.join(" ")
+          $("#modelPathInput").find('option').remove().end().append(locations)
+          $("#location-container").css("display", "block")
+        }else{
+          $("#location-container").css("display", "none")
+          $("#modelPathInput").find('option').remove().end()
+        }
+      });
+      location.addEventListener("change", function (e) {
+        okBtn.disabled = !Boolean(e.target.value)
+      });
       okBtn.addEventListener("click", function (e) {
-        let queryString = "?path="+o.original._path+"&mdlPath="+select.value
+        let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value
+        let queryString = "?path="+self.projectPath+"&mdlPath="+mdlPath
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
         xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {

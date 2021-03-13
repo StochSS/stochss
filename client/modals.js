@@ -190,6 +190,39 @@ let templates = {
                     </div>
                   </div>
                 </div>`
+        },
+        fileSelect : (modalID, fileID, locationID, title, label, files) => {
+            return `
+                <div id=${modalID} class="modal" tabindex="-1" role="dialog">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <div>
+                          <label for=${fileID}>${label}</label>
+                          <select id=${fileID} name=${fileID} autofocus>
+                            ${files}
+                          </select>
+                        </div>
+                        <div id="location-container" style="display: none;">
+                          <div class="text-info">This model was found in multiple locations</div>
+                          <label for=${locationID}>Location: </label>
+                          <select id=${locationID} name=${locationID} autofocus>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-primary ok-model-btn box-shadow" disabled>OK</button>
+                        <button type="button" class="btn btn-secondary box-shadow" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>`
         }
     }
 
@@ -237,17 +270,19 @@ module.exports = {
 
       return templates.input(modalID, inputID, title, label, value)
     },
-    newProjectModelHtml : (options) => {
+    newProjectModelHtml : (files) => {
       let modalID = "newProjectModelModal"
-      let selectID = "modelPathInput"
+      let fileID = "modelFileInput"
+      let locationID = "modelPathInput"
       let title = "Add Existing Model to Project"
-      let label = "Path to the Model"
-      options = options.map(function (name) {
-        return `<option value="${name}">${name}</option>`
+      let label = "Models: "
+      files = files.map(function (file) {
+        return `<option value="${file[0]}">${file[1]}</option>`
       })
-      options = options.join(" ")
+      files.unshift(`<option value="">-- Select a model --</option>`)
+      files = files.join(" ")
 
-      return templates.select(modalID, selectID, title, label, options)
+      return templates.fileSelect(modalID, fileID, locationID, title, label, files)
     },
     newProjectModelSuccessHtml : (message) => {
       let modalID = "newProjectModelSuccessModal"
