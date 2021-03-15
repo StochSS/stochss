@@ -179,7 +179,7 @@ class StochSSWorkflow(StochSSBase):
         model = StochSSModel(path=src_path).load()
         file = self.get_file(path=src_path)
         dst_dirname = self.get_dir_name()
-        if ".proj" in dst_dirname:
+        if ".proj" in dst_dirname and dst_dirname.endswith("WorkflowGroup1.wkgp"):
             dst_dirname = os.path.dirname(dst_dirname)
         dst_path = os.path.join(dst_dirname, file)
         kwargs = {"path":dst_path, "new":True, "model":model}

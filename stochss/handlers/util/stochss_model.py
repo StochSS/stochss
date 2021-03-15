@@ -350,7 +350,10 @@ class StochSSModel(StochSSBase):
         '''
         name = self.get_name()
         s_file = f"{name}.sbml"
-        s_path = os.path.join(self.get_dir_name(), s_file)
+        dirname = self.get_dir_name()
+        if ".proj" in dirname and ".wkgp" in dirname:
+            dirname = os.path.dirname(dirname)
+        s_path = os.path.join(dirname, s_file)
 
         g_model = self.convert_to_gillespy2()
         tmp_path = export(g_model, path=tempfile.NamedTemporaryFile().name)

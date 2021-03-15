@@ -230,18 +230,20 @@ class StochSSBase():
         return os.path.join(dirname, name), changed
 
 
-    def get_unique_copy_path(self):
+    def get_unique_copy_path(self, path=None):
         '''
         Gets a unique name for the file object being copied.
         Accounts for files that are already copies.
 
         Attributes
         ----------
+        path : str
+            Path to the file object
         '''
-        file = self.get_file()
-        dirname = self.get_dir_name()
+        file = self.get_file(path=path)
+        dirname = self.get_dir_name() if path is None else os.path.dirname(path)
         ext = '.' + file.split('.').pop() if '.' in file else ''
-        name = file.split('-copy')[0] if '-copy' in file else self.get_name()
+        name = file.split('-copy')[0] if '-copy' in file else self.get_name(path=path)
 
         # Check if the file object is an original or at least the second copy
         if not '-copy' in file or '-copy(' in file:
