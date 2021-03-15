@@ -95,11 +95,15 @@ class StochSSWorkflow(StochSSBase):
         if self.type == "parameterSweep":
             settings = self.get_settings_template()
             settings['simulationSettings']['realizations'] = 20
-            with open(self.get_settings_path(full=True), "w") as file:
+            with open(self.__get_settings_path(full=True), "w") as file:
                 json.dump(settings, file)
         else:
             shutil.copyfile('/stochss/stochss_templates/workflowSettingsTemplate.json',
-                            self.get_settings_path(full=True))
+                            self.__get_settings_path(full=True))
+
+
+    def __get_settings_path(self, full=False):
+        return os.path.join(self.get_path(full=full), "settings.json")
 
 
     def __is_csv_dir(self, file):
@@ -109,20 +113,6 @@ class StochSSWorkflow(StochSSBase):
         if not os.path.isdir(path):
             return False
         return True
-
-
-    def __load_info(self):
-        try:
-            path = self.get_info_path(full=True)
-            self.log("debug", f"The path to the workflow's info file: {path}")
-            with open(path, "r") as info_file:
-                return json.load(info_file)
-        except FileNotFoundError as err:
-            message = f"Could not find the info file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
-        except json.decoder.JSONDecodeError as err:
-            message = f"The info file is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
 
 
     def check_for_external_model(self, path=None):
@@ -153,7 +143,7 @@ class StochSSWorkflow(StochSSBase):
         '''
         wkfl = self.load()
         if wkfl['status'] != "ready":
-            mdl_path = self.__load_info()['source_model']
+            mdl_path = self.load_info()['source_model']
         else:
             mdl_path = wkfl['mdlPath']
         data = {"type":self.type, "stamp":stamp,
@@ -254,7 +244,7 @@ class StochSSWorkflow(StochSSBase):
         external : bool
             Indicates whether or not to consider the path to the internal model
         '''
-        info = self.__load_info()
+        info = self.load_info()
         self.log("debug", f"Workflow info: {info}")
         if external or info['wkfl_model'] is None:
             file = self.get_file(path=info['source_model'])
@@ -270,7 +260,7 @@ class StochSSWorkflow(StochSSBase):
         Attributes
         ----------
         '''
-        info = self.__load_info()
+        info = self.load_info()
         file = f"{self.get_name()}.ipynb"
         path = os.path.join(self.get_dir_name(), file)
         g_model, s_model = self.load_models()
@@ -383,18 +373,6 @@ class StochSSWorkflow(StochSSBase):
         return kwargs
 
 
-    def get_settings_path(self, full=False):
-        '''
-        Return the path to the settings.json file
-
-        Attributes
-        ----------
-        full : bool
-            Indicates whether or not to get the full path or local path
-        '''
-        return os.path.join(self.get_path(full=full), "settings.json")
-
-
     def get_time_stamp(self):
         '''
         Get the time stamp from the workflow name
@@ -414,7 +392,7 @@ class StochSSWorkflow(StochSSBase):
         ----------
         '''
         error = None
-        info = self.__load_info()
+        info = self.load_info()
         self.type = info['type']
         status = "new" if new else self.get_status()
         if status in ("new", "ready"):
@@ -437,6 +415,26 @@ class StochSSWorkflow(StochSSBase):
             if error is not None:
                 self.workflow['error'] = error
         return self.workflow
+
+
+    def load_info(self):
+        '''
+        Reads the workflows load function
+
+        Attributes
+        ----------
+        '''
+        try:
+            path = self.get_info_path(full=True)
+            self.log("debug", f"The path to the workflow's info file: {path}")
+            with open(path, "r") as info_file:
+                return json.load(info_file)
+        except FileNotFoundError as err:
+            message = f"Could not find the info file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+        except json.decoder.JSONDecodeError as err:
+            message = f"The info file is not JSON decobable: {str(err)}"
+            raise FileNotJSONFormatError(message, traceback.format_exc())
 
 
     def load_models(self):
@@ -466,7 +464,7 @@ class StochSSWorkflow(StochSSBase):
             Stochss model dict (used to backwards compatability)
         '''
         try:
-            path = self.get_settings_path(full=True)
+            path = self.__get_settings_path(full=True)
             with open(path, "r") as settings_file:
                 return json.load(settings_file)
         except FileNotFoundError as err:
@@ -503,7 +501,7 @@ class StochSSWorkflow(StochSSBase):
             new_info['wkfl_model'] = self.get_file(path=mdl_path)
             open(os.path.join(self.path, 'RUNNING'), 'w').close()
         self.update_info(new_info=new_info)
-        with open(self.get_settings_path(full=True), "w") as file:
+        with open(self.__get_settings_path(full=True), "w") as file:
             json.dump(settings, file)
         try:
             os.remove(path)
@@ -528,7 +526,7 @@ class StochSSWorkflow(StochSSBase):
         self.log("debug", f"Original settings: {settings}")
         settings['resultsSettings']['outputs'].append(plot)
         self.log("debug", f"New settings: {settings}")
-        with open(self.get_settings_path(full=True), "w") as settings_file:
+        with open(self.__get_settings_path(full=True), "w") as settings_file:
             json.dump(settings, settings_file)
         return {"message":"The plot was successfully saved", "data":plot}
 
@@ -548,7 +546,7 @@ class StochSSWorkflow(StochSSBase):
         if new:
             info = new_info
         else:
-            info = self.__load_info()
+            info = self.load_info()
             if "source_model" in new_info.keys():
                 info['source_model'] = new_info['source_model']
             if "wkfl_model" in new_info.keys():

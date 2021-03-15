@@ -64,14 +64,14 @@ let ProjectManager = PageView.extend({
     this.model = new Project({
       directory: self.projectPath
     });
-    // this.model.fetch({
-    //   success: function (model, response, options) {
-    //     if(response.trash_empty) {
-    //       $(self.queryByHook('empty-project-trash')).prop('disabled', true)
-    //     }
-    //     self.renderSubviews()
-    //   }
-    // });
+    this.model.fetch({
+      success: function (model, response, options) {
+        if(response.trash_empty) {
+          $(self.queryByHook('empty-project-trash')).prop('disabled', true)
+        }
+        self.renderSubviews()
+      }
+    });
   },
   update: function (target) {
     let self = this
