@@ -60,7 +60,10 @@ module.exports = View.extend({
     let wkgpNames = this.model.collection.parent.workflowGroups.map(function (model) {
         return model.name
     })
-    if(this.model.collection.parent.workflowGroups.length <= 0 || !wkgpNames.includes("WorkflowGroup1")) {
+    console.log(this.model.name)
+    if(this.model.directory.includes(".wkgp")) {
+      this.openWorkflowManager()
+    }else if(this.model.collection.parent.workflowGroups.length <= 0 || !wkgpNames.includes("WorkflowGroup1")) {
       this.addNewWorkflowGroup(_.bind(this.openWorkflowManager, this))
     }else{
       let wkgpFile = "WorkflowGroup1.wkgp"
@@ -85,7 +88,10 @@ module.exports = View.extend({
     });
   },
   openWorkflowManager: function (wkgpFile) {
-    let parentPath = path.join(path.dirname(this.model.directory), wkgpFile)
+    var parentPath = path.dirname(this.model.directory)
+    if(wkgpFile) {
+      parentPath = path.join(parentPath, wkgpFile)
+    }
     let queryString = "?path="+this.model.directory+"&parentPath="+parentPath
     let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
     window.location.href = endpoint
@@ -98,7 +104,9 @@ module.exports = View.extend({
     let modal = $(modals.moveToTrashConfirmHtml("model")).modal();
     let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
-      let trashPath = path.join(path.dirname(self.model.directory), "trash", self.model.directory.split('/').pop())
+      let index = self.model.directory.indexOf(".proj") + 5
+      let trashPath = path.join(self.model.directory.slice(0, index), "trash", self.model.directory.split("/").pop());
+      console.log(trashPath)
       let queryString = "?srcPath="+self.model.directory+"&dstPath="+trashPath
       let endpoint = path.join(app.getApiPath(), 'file/move')+queryString
       xhr({uri: endpoint, json: true}, function (err, response, body) {

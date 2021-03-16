@@ -87,7 +87,8 @@ module.exports = View.extend({
       self.saved()
       var queryString = "?path="+self.model.directory
       if(self.model.directory.includes('.proj')) {
-        let parentPath = path.join(path.dirname(self.model.directory), "WorkflowGroup1.wkgp")
+        let wkgp = self.model.directory.includes('.wkgp') ? self.model.name + ".wkgp" : "WorkflowGroup1.wkgp"
+        let parentPath = path.join(path.dirname(self.model.directory), wkgp)
         queryString += "&parentPath="+parentPath
       }
       let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+queryString
@@ -245,7 +246,8 @@ module.exports = View.extend({
   launchStochssWorkflow: function (type) {
     let queryString = "?type=" + type + "&path=" + this.model.directory
     if(this.model.directory.includes('.proj')) {
-      var parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp")
+      let wkgp = self.model.directory.includes('.wkgp') ? self.model.name + ".wkgp" : "WorkflowGroup1.wkgp"
+      var parentPath = path.join(path.dirname(this.model.directory), wkgp)
     }else{
       var parentPath = path.dirname(this.model.directory)
     }

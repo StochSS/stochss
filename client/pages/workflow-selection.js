@@ -55,6 +55,9 @@ let workflowSelection = PageView.extend({
     }
     if(this.modelDir.includes(".proj")) {
       this.projectPath = path.dirname(this.modelDir)
+      if(this.modelDir.includes(".wkgp")) {
+        this.projectPath = path.dirname(this.projectPath)
+      }
       this.projectName = this.projectPath.split('/').pop().split('.')[0]
       this.workflowGroupName = this.parentPath.split('/').pop().split('.')[0]
     }
