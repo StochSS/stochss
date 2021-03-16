@@ -428,7 +428,10 @@ class StochSSWorkflow(StochSSBase):
             path = self.get_info_path(full=True)
             self.log("debug", f"The path to the workflow's info file: {path}")
             with open(path, "r") as info_file:
-                return json.load(info_file)
+                info = json.load(info_file)
+                if "annotation" not in info:
+                    info['annotation'] = ""
+                return info
         except FileNotFoundError as err:
             message = f"Could not find the info file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())

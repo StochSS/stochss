@@ -65,9 +65,9 @@ class LoadProjectBrowserAPIHandler(APIHandler):
 
 class LoadProjectAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating new StochSS Projects
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
@@ -77,6 +77,17 @@ class LoadProjectAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the project directory: %s", path)
+        try:
+            project = StochSSProject(path=path)
+            s_project = project.load()
+            log.debug("Contents of the project: %s", s_project)
+            self.write(s_project)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class NewProjectAPIHandler(APIHandler):
