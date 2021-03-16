@@ -167,7 +167,7 @@ class StochSSProject(StochSSBase):
         self.project = {"models":[], "newFormat": current_format,
                         "workflowGroups":[{"name":"WorkflowGroup1", "workflows":[]}]}
         if os.path.exists(trash_path):
-            self.project['trash_empty'] = os.listdir(trash_path) == 0
+            self.project['trash_empty'] = len(os.listdir(trash_path)) == 0
         else:
             self.project['trash_empty'] = True
             os.mkdir(trash_path)
