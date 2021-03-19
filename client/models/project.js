@@ -37,6 +37,7 @@ module.exports = Model.extend({
     directory: 'string',
     parentDir: 'string',
     plot: 'object',
-    annotation: 'string'
+    annotation: 'string',
+    newFormat: 'boolean'
   }
 })

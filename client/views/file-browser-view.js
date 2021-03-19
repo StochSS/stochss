@@ -79,61 +79,6 @@ module.exports = View.extend({
             }, 5000)
             return false
           }
-          if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && (node.type === "nonspatial" || node.type === "spatial") && 
-            !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && node.type === "workflow-group") {
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.original && node && node.type && (node.type === "workflow") && 
-            !(node.original._path.includes("trash") || more.ref.original.text === "trash")) {
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.type && node.original._path.includes("trash") && 
-            ((node.type === "workflow" && more.ref.type !== 'workflow-group') || 
-            ((node.type === "nonspatial" || node.type === "spatial" || node.type === "workflow-group") && more.ref.type !== 'root'))){
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.type && !(node.type === "workflow" || node.type === "notebook") && !(more.ref.type == 'folder' || more.ref.type == 'root')){
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.type && node.type === "notebook" && !(more.ref.type == 'folder' || more.ref.type == 'root' || more.ref.type == 'workflow-group')) {
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.type && node.original._path.includes("trash") && more.ref.original.text == 'trash') {
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.type && (more.ref.type === 'folder' || more.ref.type === 'root')){
-            if(!more.ref.state.loaded){
-              return false
-            }
-            var exists = false
-            var BreakException = {}
-            var text = node.text
-            if(!isNaN(text.split(' ').pop().split('.').join(""))){
-              text = text.replace(text.split(' ').pop(), '').trim()
-            }
-            if(more.ref.text !== "trash"){
-              try{
-                more.ref.children.forEach(function (child) {
-                  var child_node = $('#models-jstree-view').jstree().get_node(child)
-                  exists = child_node.text === text
-                  if(exists){
-                    throw BreakException;
-                  }
-                })
-              }catch{
-                return false;
-              }
-            }
-          }
-          if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
-            return false
-          }
           if(op === 'move_node' && more && more.core) {
             var newDir = par.original._path !== "/" ? par.original._path : ""
             var file = node.original._path.split('/').pop()
@@ -153,8 +98,61 @@ module.exports = View.extend({
                 }
               }
             });
+          }else{
+            let isMove = op === 'move_node'
+            let validSrc = Boolean(node && node.type && node.original && node.original.text !== "trash")
+            let validDst = Boolean(more && more.ref && more.ref.type && more.ref.original)
+            let validDsts = ["root", "folder"]
+            let isModel = Boolean(validSrc && (node.type === "nonspatial" || node.type === "spatial"))
+            let isWorkflow = Boolean(validSrc && node.type === "workflow")
+            let isWkgp = Boolean(validSrc && node.type === "workflow-group")
+            let isNotebook = Boolean(validSrc && node.type === "notebook")
+            let isOther = Boolean(validSrc && !isModel && !isWorkflow && !isWkgp && !isNotebook)
+            let trashAction = Boolean((validSrc && node.original._path.includes("trash")) || (validDst && more.ref.original.text === "trash"))
+            // Check if files are being move directly into the trash and remain static with respect to the trash
+            if(isMove && validDst && path.dirname(more.ref.original._path).includes("trash")) { return false }
+            if(isMove && validSrc && validDst && node.original._path.includes("trash") && more.ref.original.text === 'trash') { return false }
+            // Check if workflow is running
+            if(isMove && isWorkflow && node.original._status && node.original._status === "running") { return false };
+            // Check if model, workflow, or workflow group is moving to or from trash
+            if(isMove && (isModel || isWorkflow) && !trashAction) { return false };
+            if(isMove && isWkgp && !(self.parent.model.newFormat && trashAction)) { return false };
+            // Check if model, workflow, or workflow group is moving from trash to the correct location
+            if(isMove && validSrc && node.original._path.includes("trash")) {
+              if(isWkgp && (!self.parent.model.newFormat || (validDst && more.ref.type !== "root"))) { return false };
+              if(isWorkflow && validDst && more.ref.type !== "workflow-group") { return false };
+              if(isModel && validDst) {
+                if(!self.parent.model.newFormat && more.ref.type !== "root") { return false };
+                let length = node.original.text.split(".").length;
+                let modelName = node.original.text.split(".").slice(0, length - 1).join(".")
+                if(self.parent.model.newFormat && (more.ref.type !== "workflow-group" || !more.ref.original.text.startsWith(modelName))) { return false };
+              }
+            }
+            // Check if notebook or other file is moving to a valid location.
+            if(isOther && validDst && !validDsts.includes(more.ref.type)) { return false };
+            validDsts.push("workflow-group")
+            if(isNotebook && validDst && !validDsts.includes(more.ref.type)) { return false };
+            if(isMove && more && more.ref && more.ref.type && (more.ref.type === 'folder' || more.ref.type === 'root')){
+              if(!more.ref.state.loaded) { return false };
+              var exists = false
+              var BreakException = {}
+              var text = node.text
+              if(!isNaN(text.split(' ').pop().split('.').join(""))){
+                text = text.replace(text.split(' ').pop(), '').trim()
+              }
+              if(more.ref.text !== "trash"){
+                try{
+                  more.ref.children.forEach(function (child) {
+                    var child_node = $('#models-jstree-view').jstree().get_node(child)
+                    exists = child_node.text === text
+                    if(exists) { throw BreakException; };
+                  })
+                }catch { return false; };
+              }
+            }
+            if(isMove && more && (pos != 0 || more.pos !== "i") && !more.core) { return false }
+            return true
           }
-          return true
         },
         'themes': {'stripes': true, 'variant': 'large'},
         'data': self.ajaxData,
