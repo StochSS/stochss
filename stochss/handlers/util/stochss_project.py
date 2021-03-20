@@ -116,13 +116,31 @@ class StochSSProject(StochSSBase):
         new : bool
             Indicates whether or not the model is new
         '''
-        if new:
-            wkgp = os.path.join(self.path, f"{self.get_name(path=file)}.wkgp")
-        else:
-            wkgp, _ = self.get_unique_path(name=f"{self.get_name(path=file)}.wkgp")
         try:
-            os.mkdir(wkgp)
-            path = os.path.join(wkgp if self.check_format() else self.path, file)
+            self.log("debug", f"Original file name: {file}")
+            if self.check_format():
+                wkgp_file = f"{self.get_name(path=file)}.wkgp"
+                self.log("debug", f"Original workflow group folder name: {wkgp_file}")
+                if new:
+                    wkgp_path = os.path.join(self.get_path(full=True), wkgp_file)
+                else:
+                    wkgp_path, changed = self.get_unique_path(name=wkgp_file)
+                    if changed:
+                        file = f"{self.get_name(path=wkgp_path)}.{file.split('.').pop()}"
+                self.log("debug", f"Final file name: {file}")
+                self.log("debug", f"Final workflow group folder name: {wkgp_file}")
+                self.log("debug", f"Workflow group path: {wkgp_path}")
+                os.mkdir(wkgp_path)
+                path = os.path.join(wkgp_path, file)
+            else:
+                if new:
+                    path = os.path.join(self.get_path(full=True), file)
+                else:
+                    path, _ = self.get_unique_path(name=file)
+            if new and os.path.exists(path):
+                message = f"Could not create your model: {file}"
+                raise StochSSFileExistsError(message, traceback.format_exc())
+            self.log("debug", f"Path to the model: {path}")
             if model is None:
                 model = self.get_model_template()
             with open(path, "w") as model_file:

@@ -156,8 +156,8 @@ module.exports = View.extend({
       saved.style.display = "none";
     }, 5000);
   },
-  runModel: function (species=undefined) {
-    if(!species) {
+  runModel: function (species=null) {
+    if(typeof species !== "string") {
       this.saved();
     }
     this.running();
@@ -245,9 +245,8 @@ module.exports = View.extend({
   },
   launchStochssWorkflow: function (type) {
     let queryString = "?type=" + type + "&path=" + this.model.directory
-    if(this.model.directory.includes('.proj')) {
-      let wkgp = self.model.directory.includes('.wkgp') ? self.model.name + ".wkgp" : "WorkflowGroup1.wkgp"
-      var parentPath = path.join(path.dirname(this.model.directory), wkgp)
+    if(this.model.directory.includes('.proj') && !this.model.directory.includes('.wkgp')) {
+      var parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp")
     }else{
       var parentPath = path.dirname(this.model.directory)
     }

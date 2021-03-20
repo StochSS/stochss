@@ -132,6 +132,7 @@ class NewModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Path to the project: %s", path)
@@ -140,10 +141,12 @@ class NewModelAPIHandler(APIHandler):
         try:
             project = StochSSProject(path=path)
             resp = project.add_model(file=file, new=True)
+            project.print_logs(log)
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -185,6 +188,7 @@ class AddExistingModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Path to the project: %s", path)
@@ -195,10 +199,12 @@ class AddExistingModelAPIHandler(APIHandler):
             model_class = StochSSModel if mdl_path.endswith(".mdl") else StochSSSpatialModel
             model = model_class(path=mdl_path)
             resp = project.add_model(file=model.get_file(), model=model.load())
+            project.print_logs(log)
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -216,6 +222,7 @@ class ExtractModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Extract model function has not been cleaned up")
 
 
 class ExtractWorkflowAPIHandler(APIHandler):
@@ -232,6 +239,7 @@ class ExtractWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Extract workflow function has not been cleaned up")
 
 
 class EmptyTrashAPIHandler(APIHandler):
@@ -248,6 +256,7 @@ class EmptyTrashAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Empty trash function has not been cleaned up")
 
 
 class ProjectMetaDataAPIHandler(APIHandler):
@@ -264,6 +273,7 @@ class ProjectMetaDataAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Get meta data function has not been cleaned up")
 
 
     @web.authenticated
@@ -274,6 +284,7 @@ class ProjectMetaDataAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Save meta data function has not been cleaned up")
 
 
 class ExportAsCombineAPIHandler(APIHandler):
@@ -290,6 +301,7 @@ class ExportAsCombineAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Export as combine function has not been cleaned up")
 
 
     @web.authenticated
@@ -300,6 +312,7 @@ class ExportAsCombineAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Export as combine w/meta data function has not been cleaned up")
 
 
 class UpdateAnnotationAPIHandler(APIHandler):
@@ -316,3 +329,4 @@ class UpdateAnnotationAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Save annotation function has not been cleaned up")
