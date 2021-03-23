@@ -85,10 +85,10 @@ class StochSSWorkflow(StochSSBase):
                 self.__create_settings()
         except FileExistsError as err:
             message = f"Could not create your workflow: {str(err)}"
-            raise StochSSFileExistsError(message, traceback.format_exc())
+            raise StochSSFileExistsError(message, traceback.format_exc()) from err
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     def __create_settings(self):
@@ -218,7 +218,7 @@ class StochSSWorkflow(StochSSBase):
             return os.path.join(res_path, csv_path)
         except IndexError as err:
             message = f"Could not find the workflow results csv directory: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     def get_info_path(self, full=False):
@@ -316,13 +316,13 @@ class StochSSWorkflow(StochSSBase):
             return fig
         except FileNotFoundError as err:
             message = f"Could not find the plots file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"The plots file is not JSON decodable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
         except KeyError as err:
             message = f"The requested plot is not available: {str(err)}"
-            raise PlotNotAvailableError(message, traceback.format_exc())
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
     def get_run_logs(self):
@@ -342,7 +342,7 @@ class StochSSWorkflow(StochSSBase):
             return "No logs were recoded for this workflow."
         except FileNotFoundError as err:
             message = f"Could not find the log file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -396,7 +396,13 @@ class StochSSWorkflow(StochSSBase):
         self.type = info['type']
         status = "new" if new else self.get_status()
         if status in ("new", "ready"):
-            mdl_path = info['source_model']
+            if ".proj" in self.path:
+                mdl_dirname = self.get_dir_name()
+                if "WorkflowGroup1" in self.path:
+                    mdl_dirname = os.path.dirname(mdl_dirname)
+                mdl_path = os.path.join(mdl_dirname, self.get_file(path=info['source_model']))
+            else:
+                mdl_path = info['source_model']
         else:
             mdl_path = self.get_model_path()
         try:
@@ -434,10 +440,10 @@ class StochSSWorkflow(StochSSBase):
                 return info
         except FileNotFoundError as err:
             message = f"Could not find the info file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"The info file is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     def load_models(self):
@@ -473,7 +479,7 @@ class StochSSWorkflow(StochSSBase):
         except FileNotFoundError as err:
             if model is None:
                 message = f"Could not find the settings file: {str(err)}"
-                raise StochSSFileNotFoundError(message, traceback.format_exc())
+                raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
             settings = self.get_settings_template()
             if "simulationSettings" in model.keys():
                 settings['simulationSettings'] = model['simulationSettings']
@@ -484,7 +490,7 @@ class StochSSWorkflow(StochSSBase):
             return settings
         except json.decoder.JSONDecodeError as err:
             message = f"The settings file is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     def save(self, mdl_path, settings, initialize):
@@ -513,7 +519,7 @@ class StochSSWorkflow(StochSSBase):
             return f"Successfully saved the workflow: {self.path}"
         except FileNotFoundError as err:
             message = f"Could not find the model file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     def save_plot(self, plot):

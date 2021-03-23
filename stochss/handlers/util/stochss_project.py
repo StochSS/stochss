@@ -131,7 +131,6 @@ class StochSSProject(StochSSBase):
                 self.log("debug", f"Final file name: {file}")
                 self.log("debug", f"Final workflow group folder name: {wkgp_file}")
                 self.log("debug", f"Workflow group path: {wkgp_path}")
-                os.mkdir(wkgp_path)
                 path = os.path.join(self.path, wkgp_file, file)
             else:
                 path = os.path.join(self.path, file)
