@@ -99,6 +99,7 @@ module.exports = View.extend({
     let buttonTxt = e.target.innerText;
     if(buttonTxt.startsWith("Add")){
       $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('show')
+      $("#annotation-text"+this.model.name.replace(/ /g,"")).collapse('show')
       $(this.queryByHook('edit-workflow-annotation-btn')).text('Edit Notes')
     }else if(!$("#annotation-text"+this.model.name.replace(/ /g,"")).attr('class').includes('show')){
       $("#annotation-text"+this.model.name.replace(/ /g,"")).collapse('show')
@@ -112,7 +113,7 @@ module.exports = View.extend({
       $(this.queryByHook('collapse-annotation-container'+this.model.name.replace(/ /g,""))).collapse('hide')
       $(this.queryByHook('edit-workflow-annotation-btn')).text('Add Notes')
     }
-    let queryString = "?path="+path.join(this.model.path, "info.json")
+    let queryString = "?path="+path.join(this.model.path)
     let endpoint = path.join(app.getApiPath(), "workflow/save-annotation")+queryString
     let body = {'annotation':this.model.annotation}
     xhr({uri:endpoint, json:true, method:'post', body:body}, function (err, response, body) {console.log("Saved Notes")})
