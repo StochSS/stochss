@@ -52,9 +52,9 @@ class StochSSProject(StochSSBase):
         if new:
             try:
                 os.makedirs(os.path.join(self.get_path(full=True), "trash"))
-            except FileExistsError:
+            except FileExistsError as err:
                 message = f"Could not create your project: {self.path}"
-                raise StochSSFileExistsError(message, traceback.format_exc())
+                raise StochSSFileExistsError(message, traceback.format_exc()) from err
 
 
     def __load_model(self, dirname, file):
@@ -118,58 +118,38 @@ class StochSSProject(StochSSBase):
         '''
         try:
             self.log("debug", f"Original file name: {file}")
-            if self.check_format():
+            if self.check_project_format():
                 wkgp_file = f"{self.get_name(path=file)}.wkgp"
                 self.log("debug", f"Original workflow group folder name: {wkgp_file}")
                 if new:
                     wkgp_path = os.path.join(self.get_path(full=True), wkgp_file)
                 else:
-                    wkgp_path, changed = self.get_unique_path(name=wkgp_file)
+                    wkgp_path, changed = self.get_unique_path(name=wkgp_file, dirname=self.path)
                     if changed:
+                        wkgp_file = self.get_file(path=wkgp_path)
                         file = f"{self.get_name(path=wkgp_path)}.{file.split('.').pop()}"
                 self.log("debug", f"Final file name: {file}")
                 self.log("debug", f"Final workflow group folder name: {wkgp_file}")
                 self.log("debug", f"Workflow group path: {wkgp_path}")
                 os.mkdir(wkgp_path)
-                path = os.path.join(wkgp_path, file)
+                path = os.path.join(self.path, wkgp_file, file)
             else:
-                if new:
-                    path = os.path.join(self.get_path(full=True), file)
-                else:
-                    path, _ = self.get_unique_path(name=file)
+                path = os.path.join(self.path, file)
             if new and os.path.exists(path):
                 message = f"Could not create your model: {file}"
                 raise StochSSFileExistsError(message, traceback.format_exc())
             self.log("debug", f"Path to the model: {path}")
             if model is None:
                 model = self.get_model_template()
-            with open(path, "w") as model_file:
-                json.dump(model, model_file)
+            model_class = StochSSModel if path.endswith(".mdl") else StochSSSpatialModel
+            model = model_class(path=path, new=True, model=model)
             if new:
                 return {"path":path}
             message = f"{file} was successfully added to the project."
             return {"message":message}
-        except FileExistsError:
+        except FileExistsError as err:
             message = f"Could not create your model: {file}"
-            raise StochSSFileExistsError(message, traceback.format_exc())
-
-
-    def check_format(self):
-        '''
-        Determine if the format of the project is out of date
-
-        Attributes
-        ----------
-        '''
-        files = os.listdir(self.path)
-        wkgp_test = lambda file: file.endswith(".wkgp")
-        models = list(filter(self.MODEL_TEST, files))
-        wkgps = list(filter(wkgp_test, files))
-        if len(models) > 0:
-            return False
-        if len(wkgps) == 1 and wkgps[0] == "WorkflowGroup1.wkgp":
-            return False
-        return True
+            raise StochSSFileExistsError(message, traceback.format_exc()) from err
 
 
     def load(self):
@@ -180,7 +160,7 @@ class StochSSProject(StochSSBase):
         Attributes
         ----------
         '''
-        current_format = self.check_format()
+        current_format = self.check_project_format()
         trash_path = os.path.join(self.get_path(full=True), "trash")
         self.project = {"models":[], "newFormat": current_format,
                         "workflowGroups":[{"name":"WorkflowGroup1", "workflows":[]}]}

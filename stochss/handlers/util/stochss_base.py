@@ -46,6 +46,25 @@ class StochSSBase():
         self.logs = []
 
 
+    def check_project_format(self):
+        '''
+        Determine if the format of the project is out of date
+
+        Attributes
+        ----------
+        '''
+        files = os.listdir(self.path)
+        model_test = lambda file: file.endswith(".mdl") or file.endswith(".smdl")
+        wkgp_test = lambda file: file.endswith(".wkgp")
+        models = list(filter(model_test, files))
+        wkgps = list(filter(wkgp_test, files))
+        if len(models) > 0:
+            return False
+        if len(wkgps) == 1 and wkgps[0] == "WorkflowGroup1.wkgp":
+            return False
+        return True
+
+
     def get_new_path(self, dst_path):
         '''
         Gets the proper destination path for the file object to be moved
@@ -95,10 +114,10 @@ class StochSSBase():
                 return json.load(template)
         except FileNotFoundError as err:
             message = f"Could not find the model template file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"Model template data is not JSON decodeable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     def get_settings_template(self, as_string=False):
@@ -119,10 +138,10 @@ class StochSSBase():
                 return json.load(template)
         except FileNotFoundError as err:
             message = f"Could not find the settings template file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"Settings template data is not JSON decodeable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     def get_name(self, path=None):
@@ -194,10 +213,10 @@ class StochSSBase():
             return "ready"
         except FileNotFoundError as err:
             message = f"Could not find the workflow: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
-    def get_unique_path(self, name):
+    def get_unique_path(self, name, dirname=None):
         '''
         Get a unique path for the file object with the target name
 
@@ -206,7 +225,8 @@ class StochSSBase():
         name : str
             New name for the target file
         '''
-        dirname = self.get_dir_name(full=True)
+        if dirname is None:
+            dirname = self.get_dir_name(full=True)
         exists = name in os.listdir(dirname)
 
         i = 1
@@ -329,7 +349,7 @@ class StochSSBase():
             return {"message":message, "_path":self.path, "changed":changed}
         except FileNotFoundError as err:
             message = f"Could not find the file or directory: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You don not have permission to rename this file or directory: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err

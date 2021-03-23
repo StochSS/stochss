@@ -57,7 +57,7 @@ class StochSSFolder(StochSSBase):
                 os.makedirs(new_path)
             except FileExistsError as err:
                 message = f"Could not create your directory: {str(err)}"
-                raise StochSSFileExistsError(message, traceback.format_exc())
+                raise StochSSFileExistsError(message, traceback.format_exc()) from err
 
 
     def __get_rmt_upld_path(self, file):
@@ -115,7 +115,14 @@ class StochSSFolder(StochSSBase):
         elif not file.endswith(ext):
             _ext = file.split('.').pop()
             file = file.replace(_ext, ext)
-        path = os.path.join(self.path, file)
+        if self.path.endswith(".proj") and ext != "json" and self.check_project_format():
+            wkgp_file = f"{self.get_name(path=file)}.wkgp"
+            wkgp_path, changed = self.get_unique_path(name=wkgp_file, dirname=self.path)
+            if changed:
+                file = f"{self.get_name(path=wkgp_path)}.{ext}"
+            path = os.path.join(wkgp_path, file)
+        else:
+            path = os.path.join(self.path, file)
         new_file = StochSSFile(path=path, new=True, body=body)
         file = new_file.get_file()
         dirname = new_file.get_dir_name()
@@ -137,7 +144,11 @@ class StochSSFolder(StochSSBase):
         dirname = sbml.get_dir_name()
         is_valid, errors = self.__validate_sbml(sbml=sbml)
         if is_valid:
-            convert_resp = sbml.convert_to_model(name=sbml.get_name())
+            if self.path.endswith(".proj") and self.check_project_status():
+                wkgp_path, _ = self.get_unique_path(name=f"{sbml.get_name()}.wkgp", dirname=self.path)
+                convert_resp = sbml.convert_to_model(name=self.get_name(wkgp_path), wkgp=True)
+            else:
+                convert_resp = sbml.convert_to_model(name=sbml.get_name())
             _ = StochSSModel(path=convert_resp['path'], new=True, model=convert_resp['model'])
             message = f"{sbml.get_file()} was successfully uploaded to {dirname}"
         else:
@@ -231,7 +242,7 @@ class StochSSFolder(StochSSBase):
             return json.dumps(nodes)
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     def delete(self):
@@ -247,10 +258,10 @@ class StochSSFolder(StochSSBase):
             return f"The directory {self.get_file()} was successfully deleted."
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You do not have permission to delete this directory: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def duplicate(self):
@@ -271,10 +282,10 @@ class StochSSFolder(StochSSBase):
             return {"Message":message, "File":cp_name}
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You do not have permission to copy this directory: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def generate_zip_file(self):
@@ -319,9 +330,10 @@ class StochSSFolder(StochSSBase):
             return f"Success! {self.get_file()} was moved to {self.get_dir_name()}."
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
-            raise StochSSFileNotFoundError(message)
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You do not have permission to move this directory: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def upload(self, file_type, file, body, new_name=None):
