@@ -323,8 +323,15 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             s_model = self.load()
         s_model['is_spatial'] = False
-        m_path = self.path.replace(".smdl", ".mdl")
-        m_file = self.get_file(path=m_path)
+        if ".wkgp" in self.path:
+            wkgp_path = self.get_dir_name()
+            wkgp_path, changed = self.get_unique_path(name=self.get_file(path=wkgp_path),
+                                                      dirname=os.path.dirname(wkgp_path))
+            m_file = self.get_file(path=wkgp_path).replace(".wkgp", ".mdl")
+            m_path = os.path.join(wkgp_path, m_file)
+        else:
+            m_path = self.path.replace(".smdl", ".mdl")
+            m_file = self.get_file(path=m_path)
         message = f"{self.get_file()} was successfully convert to {m_file}!"
         return {"Message":message, "File":m_file}, {"model":s_model, "path":m_path}
 

@@ -480,11 +480,7 @@ module.exports = View.extend({
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree-view').jstree().get_node(parentID);
-          if(node.type === "root"){
-            self.refreshJSTree()
-          }else{          
-            $('#models-jstree-view').jstree().refresh_node(node);
-          }
+          self.refreshJSTree()
           self.selectNode(node, body.File)
           if(from === "SBML" && body.errors.length > 0){
             var title = ""
