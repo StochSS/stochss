@@ -106,8 +106,7 @@ class StochSSFolder(StochSSBase):
     def __upload_model(self, file, body, new_name=None):
         is_valid, error = self.__validate_model(body, file)
         if is_valid:
-            is_spatial = json.loads(body)['is_spatial']
-            ext = "smdl" if is_spatial else "mdl"
+            ext = "smdl" if json.loads(body)['is_spatial'] else "mdl"
         else:
             ext = "json"
         if new_name is not None:
@@ -144,8 +143,9 @@ class StochSSFolder(StochSSBase):
         dirname = sbml.get_dir_name()
         is_valid, errors = self.__validate_sbml(sbml=sbml)
         if is_valid:
-            if self.path.endswith(".proj") and self.check_project_status():
-                wkgp_path, _ = self.get_unique_path(name=f"{sbml.get_name()}.wkgp", dirname=self.path)
+            if self.path.endswith(".proj") and self.check_project_format():
+                wkgp_path, _ = self.get_unique_path(name=f"{sbml.get_name()}.wkgp",
+                                                    dirname=self.path)
                 convert_resp = sbml.convert_to_model(name=self.get_name(wkgp_path), wkgp=True)
             else:
                 convert_resp = sbml.convert_to_model(name=sbml.get_name())

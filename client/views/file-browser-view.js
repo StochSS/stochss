@@ -132,7 +132,7 @@ module.exports = View.extend({
             if(isOther && validDst && !validDsts.includes(more.ref.type)) { return false };
             validDsts.push("workflow-group")
             if(isNotebook && validDst && !validDsts.includes(more.ref.type)) { return false };
-            if(isMove && more && more.ref && more.ref.type && (more.ref.type === 'folder' || more.ref.type === 'root')){
+            if(isMove && validDst && validDsts.includes(more.ref.type)){
               if(!more.ref.state.loaded) { return false };
               var exists = false
               var BreakException = {}
@@ -753,6 +753,8 @@ module.exports = View.extend({
         xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {
             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
+            self.updateParent("nonspatial")
+            self.refreshJSTree()
           }else{
             let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal()
           }

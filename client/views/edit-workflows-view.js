@@ -77,11 +77,15 @@ module.exports = View.extend({
       let okBtn = document.querySelector("#newProjectWorkflowModal .ok-model-btn")
       let select = document.querySelector("#newProjectWorkflowModal #select")
       okBtn.addEventListener('click', function (e) {
-        let mdlFile = models.filter(function (model) {
+        let mdlPath = models.filter(function (model) {
           return model.name === select.value;
-        })[0].directory.split("/").pop();
-        let mdlPath =  path.join(self.parent.parent.parent.projectPath, mdlFile)
-        let parentPath = path.join(self.parent.parent.parent.projectPath, self.parent.model.name)+".wkgp"
+        })[0].directory;
+        let projectPath = self.parent.parent.parent.projectPath;
+        if(mdlPath.includes(".wkgp")) {
+          var parentPath = path.dirname(mdlPath)
+        }else {
+          var parentPath = path.join(projectPath, self.parent.model.name)+".wkgp"
+        }
         let queryString = "?path="+mdlPath+"&parentPath="+parentPath
         let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection')+queryString
         modal.modal('hide')
