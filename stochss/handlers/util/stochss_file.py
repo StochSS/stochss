@@ -64,10 +64,10 @@ class StochSSFile(StochSSBase):
             return "The file {0} was successfully deleted.".format(self.get_file())
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You do not have permission to delete this file: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def duplicate(self):
@@ -98,10 +98,10 @@ class StochSSFile(StochSSBase):
             return {"Message":message, "File":cp_name}
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You do not have permission to copy this file: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def move(self, location):
@@ -123,10 +123,10 @@ class StochSSFile(StochSSBase):
             return f"Success! {self.get_file()} was moved to {self.get_dir_name()}."
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc)
+            raise StochSSFileNotFoundError(message, traceback.format_exc) from err
         except PermissionError as err:
             message = f"You do not have permission to move this file: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def read(self):
@@ -144,7 +144,7 @@ class StochSSFile(StochSSBase):
             return resp
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     def unzip(self):

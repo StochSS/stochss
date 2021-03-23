@@ -34,6 +34,7 @@ from .util import StochSSFolder, StochSSModel, StochSSSpatialModel, StochSSNoteb
 log = logging.getLogger('stochss')
 
 # pylint: disable=abstract-method
+# pylint: disable=too-few-public-methods
 class JsonFileAPIHandler(APIHandler):
     '''
     ################################################################################################

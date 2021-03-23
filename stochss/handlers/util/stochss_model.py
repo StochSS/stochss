@@ -84,7 +84,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Event assignments are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -113,7 +113,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Events are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_function_definitions(self, model):
@@ -126,7 +126,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Function definitions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_model_settings(self):
@@ -137,7 +137,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_parameters(self, model):
@@ -149,7 +149,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Parameters are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_reactions(self, model):
@@ -172,15 +172,15 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Reactions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_rules(self, model):
         try:
             for rule in self.model['rules']:
                 if rule['expression'].strip() != "":
-                    G_Rule = RateRule if rule['type'] == "Rate Rule" else AssignmentRule
-                    g_rule = G_Rule(name=rule['name'].strip(),
+                    rule_class = RateRule if rule['type'] == "Rate Rule" else AssignmentRule
+                    g_rule = rule_class(name=rule['name'].strip(),
                                     variable=rule['variable']['name'],
                                     formula=rule['expression'].strip())
                     if rule['type'] == "Rate Rule":
@@ -190,7 +190,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Rules are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_species(self, model):
@@ -208,7 +208,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Species are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -232,7 +232,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Reactants or products are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __read_model_file(self):
@@ -241,10 +241,10 @@ class StochSSModel(StochSSBase):
                 self.model = json.load(mdl_file)
         except FileNotFoundError as err:
             message = f"Could not find the model file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"The model is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -330,7 +330,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Model properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
         self.__convert_species(model=g_model)
         self.__convert_parameters(model=g_model)
         self.__convert_reactions(model=g_model)

@@ -137,7 +137,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Events are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     @classmethod
     def __create_event_assignment_strings(cls, assignments, event, pad):
@@ -171,7 +171,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Function definitions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_import_cell(self, interactive_backend=False):
         try:
@@ -213,7 +213,7 @@ class StochSSNotebook(StochSSBase):
         except KeyError as err:
             message = "Workflow settings are not properly formatted or "
             message += f"are referenced incorrectly for notebooks: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_initial_condition_strings(self, model, pad):
         if self.s_model['initialConditions']:
@@ -234,7 +234,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Initial conditions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_mesh_string(self, model, pad):
         mesh = ["", f"{pad}# Domain",
@@ -290,7 +290,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Parameters are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_ps_post_process_cells(self):
         pad = "    "
@@ -570,7 +570,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Reactions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_rules_strings(self, model, pad):
         if self.s_model['rules']:
@@ -594,7 +594,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Rules are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     @classmethod
     def __create_sme_expres_cells(cls):
@@ -738,7 +738,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Species are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_stoich_spec_string(self, stoich_species):
         species = {}
@@ -976,7 +976,7 @@ class StochSSNotebook(StochSSBase):
                 return json.load(notebook_file)
         except FileNotFoundError as err:
             message = f"Could not find the notebook file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
     def write_notebook_file(self, cells):
         '''Write the new notebook file to disk

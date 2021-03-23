@@ -34,6 +34,7 @@ log = logging.getLogger('stochss')
 
 
 # pylint: disable=abstract-method
+# pylint: disable=too-few-public-methods
 class LoadWorkflowAPIHandler(APIHandler):
     '''
     ################################################################################################

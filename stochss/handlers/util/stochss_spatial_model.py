@@ -138,7 +138,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_initial_conditions(self, model):
@@ -162,7 +162,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_model_settings(self, model):
@@ -174,7 +174,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_parameters(self, model):
@@ -185,7 +185,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model parameters are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_particles(self, mesh):
@@ -196,7 +196,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model domain particle properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_reactions(self, model):
@@ -224,7 +224,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model reactions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_species(self, model):
@@ -237,7 +237,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model species are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -264,7 +264,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model stoich species are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -292,13 +292,13 @@ class StochSSSpatialModel(StochSSBase):
             return self.__build_stochss_domain(s_domain=s_domain)
         except FileNotFoundError as err:
             message = f"Could not find the domain file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"The domain file is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
         except MeshError as err:
             message = f"The domain file is not in proper format: {str(err)}"
-            raise DomainFormatError(message, traceback.format_exc())
+            raise DomainFormatError(message, traceback.format_exc()) from err
 
 
     def __read_model_file(self):
@@ -307,10 +307,10 @@ class StochSSSpatialModel(StochSSBase):
                 self.model = json.load(smdl_file)
         except FileNotFoundError as err:
             message = f"Could not find the spatial model file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"The spatial model is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     def convert_to_model(self):
