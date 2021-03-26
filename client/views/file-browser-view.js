@@ -537,7 +537,8 @@ module.exports = View.extend({
     extensionWarning.collapse('show')
     $('#models-jstree-view').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
-        var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+node.text
+        let name = node.type === "root" ? node.text + ".proj" : node.text
+        var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+name
         xhr({uri: endpoint, json: true}, function (err, response, body){
           if(response.statusCode < 400) {
             if(body.changed) {
@@ -546,7 +547,11 @@ module.exports = View.extend({
               window.scrollTo(0,0)
               setTimeout(_.bind(self.hideNameWarning, self), 10000);
             }
-            node.original._path = body._path
+            if(node.type === "root") {
+              window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body._path
+            }else{
+              node.original._path = body._path
+            }
           }
           if(text.split('.').pop() != node.text.split('.').pop()){
             if(parent.type === "root"){
@@ -764,38 +769,48 @@ module.exports = View.extend({
       let title = "No Workflow Groups Found"
       let message = "You need to create an workflow group before you can create a new workflow."
       let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
-    }else if(o.type === "workflow-group" && this.parent.model.models.length <= 0) {
-      let title = "No Models Found"
-      let message = "You need to add a model before you can create a new workflow."
-      let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
-    }else if(o.type !== "workflow-group" && this.parent.model.workflowGroups.length == 1) {
-      let expName = this.parent.model.workflowGroups.models[0].name
-      let parentPath = path.join(path.dirname(o.original._path), expName + ".wkgp")
-      let modelPath = o.original._path
-      let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
-      window.location.href = endpoint
-    }else{
-      let self = this
-      if(document.querySelector('#newProjectWorkflowModal')){
-        document.querySelector('#newProjectWorkflowModal').remove()
+    }else if(!this.parent.model.newFormat) {
+      if(o.type === "workflow-group" && this.parent.model.models.length <= 0) {
+        let title = "No Models Found"
+        let message = "You need to add a model before you can create a new workflow."
+        let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
+      }else if(o.type !== "workflow-group" && this.parent.model.workflowGroups.length == 1) {
+        let expName = this.parent.model.workflowGroups.models[0].name
+        let parentPath = path.join(path.dirname(o.original._path), expName + ".wkgp")
+        let modelPath = o.original._path
+        let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
+        window.location.href = endpoint
+      }else{
+        let self = this
+        if(document.querySelector('#newProjectWorkflowModal')){
+          document.querySelector('#newProjectWorkflowModal').remove()
+        }
+        let options = o.type === "workflow-group" ?
+                      this.parent.model.models.map(function (model) {return model.name}) :
+                      this.parent.model.workflowGroups.map(function (workflowGroup) {return workflowGroup.name})
+        let label = o.type === "workflow-group" ? "Model file name: " : "Workflow Group file name: "
+        let modal = $(modals.newProjectWorkflowHtml(label, options)).modal()
+        let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
+        let select = document.querySelector('#newProjectWorkflowModal #select')
+        okBtn.addEventListener("click", function (e) {
+            modal.modal('hide')
+            let mdlFile = o.type === "workflow-group" ? self.parent.model.models.filter(function (model) {
+              return model.name === select.value;
+            })[0].directory.split("/").pop() : null;
+            let parentPath = o.type === "workflow-group" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".wkgp")
+            let modelPath = o.type === "workflow-group" ? path.join(path.dirname(o.original._path), mdlFile) : o.original._path
+            let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
+            window.location.href = endpoint
+        });
       }
-      let options = o.type === "workflow-group" ?
-                    this.parent.model.models.map(function (model) {return model.name}) :
-                    this.parent.model.workflowGroups.map(function (workflowGroup) {return workflowGroup.name})
-      let label = o.type === "workflow-group" ? "Model file name: " : "Workflow Group file name: "
-      let modal = $(modals.newProjectWorkflowHtml(label, options)).modal()
-      let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-      let select = document.querySelector('#newProjectWorkflowModal #select')
-      okBtn.addEventListener("click", function (e) {
-          modal.modal('hide')
-          let mdlFile = o.type === "workflow-group" ? self.parent.model.models.filter(function (model) {
-            return model.name === select.value;
-          })[0].directory.split("/").pop() : null;
-          let parentPath = o.type === "workflow-group" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".wkgp")
-          let modelPath = o.type === "workflow-group" ? path.join(path.dirname(o.original._path), mdlFile) : o.original._path
-          let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
-          window.location.href = endpoint
-      });
+    }else{
+      let mdlPath = o.type === "workflow-group" ? this.parent.model.models.filter(function (model) {
+        return o.text.startsWith(model.name)
+      })[0].directory : o.original._path;
+      let dirname = o.type === "workflow-group" ? o.original._path : path.dirname(o.original._path);
+      let queryString = "?path=" + mdlPath + "&parentPath=" + dirname;
+      let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection") + queryString;
+      window.location.href = endpoint;
     }
   },
   addModel: function (parentPath, modelName, message) {
@@ -965,7 +980,7 @@ module.exports = View.extend({
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
       let nodeType = o.original.type
-      let zipTypes = ["workflow", "folder", "other", "project", "workflow-group"]
+      let zipTypes = ["workflow", "folder", "other", "root", "workflow-group"]
       let asZip = zipTypes.includes(nodeType)
       // refresh context menu option
       let refresh = {
