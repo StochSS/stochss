@@ -437,6 +437,9 @@ let DomainEditor = PageView.extend({
     if(this.model) {
       data.model = {"name":this.model.name, "href":mdlEP + this.model.directory};
       let dirname = path.dirname(this.model.directory);
+      if(dirname.includes(".wkgp")) {
+        dirname = path.dirname(dirname);
+      }
       if(dirname.endsWith(".proj")) {
         let name = dirname.split("/").pop().split(".proj")[0];
         data.project = {"name":name, "href":projEP + dirname};

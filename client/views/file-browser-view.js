@@ -1372,11 +1372,14 @@ module.exports = View.extend({
       if (o.type === 'root'){
         return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
       }
-      if (o.type ===  'folder' && o.text !== "trash") {
-        return $.extend(refresh, commonFolder, download, common)
-      }
       if (o.text === "trash"){
         return refresh
+      }
+      if (o.original._path.includes("trash")) {
+        return {"Delete": common.Delete}
+      }
+      if (o.type ===  'folder') {
+        return $.extend(refresh, commonFolder, download, common)
       }
       if (o.type === 'spatial') {
         return $.extend(commonModel, spatialConvert, download, common)
