@@ -292,7 +292,7 @@ class StochSSSBMLModel(StochSSBase):
 
         s_file = f"{g_model.name}.mdl" if name is None else f"{name}.mdl"
         if wkgp:
-            s_path = os.path.join(self.get_dir_name(), f"{self.get_file(path=s_file)}.wkgp", s_file)
+            s_path = os.path.join(self.get_dir_name(), f"{self.get_name(path=s_file)}.wkgp", s_file)
         else:
             s_path = os.path.join(self.get_dir_name(), s_file)
 
