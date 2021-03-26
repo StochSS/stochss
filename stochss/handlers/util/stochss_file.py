@@ -79,15 +79,10 @@ class StochSSFile(StochSSBase):
         '''
         src_path = self.get_path(full=True)
         self.log("debug", f"Full path to the file: {src_path}")
-        if ".proj" in src_path and ".wkgp" in src_path:
+        if ".proj" in src_path and ".wkgp" in src_path and not src_path.endswith(".ipynb"):
             wkgp = self.get_unique_copy_path(path=self.get_dir_name())
             os.mkdir(wkgp)
-            dirname = os.path.dirname(wkgp)
-            if self.get_name() == self.get_name(path=self.get_dir_name()):
-                file = self.get_file().replace(self.get_name(), self.get_name(path=wkgp))
-                dst_path = os.path.join(dirname, wkgp, file)
-            else:
-                dst_path = os.path.join(dirname, wkgp, self.get_file())
+            dst_path = os.path.join(wkgp, f"{self.get_name(path=wkgp)}.{src_path.split('.').pop()}")
         else:
             dst_path = self.get_unique_copy_path()
         self.log("debug", f"Full destination path: {dst_path}")

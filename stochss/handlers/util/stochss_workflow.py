@@ -121,8 +121,7 @@ class StochSSWorkflow(StochSSBase):
         '''
         if path is None:
             path = self.get_model_path(full=True, external=True)
-        self.log("debug",
-                 f"Path to the workflow's model: {path}")
+        self.log("debug", f"Path to the workflow's model: {path}")
         resp = {"file":path.replace(self.user_dir + '/', '')}
         if not os.path.exists(path):
             file = self.get_file(path=path)
@@ -169,8 +168,14 @@ class StochSSWorkflow(StochSSBase):
         model = StochSSModel(path=src_path).load()
         file = self.get_file(path=src_path)
         dst_dirname = self.get_dir_name()
-        if ".proj" in dst_dirname and dst_dirname.endswith("WorkflowGroup1.wkgp"):
+        if ".proj" in dst_dirname:
+            old_format = dst_dirname.endswith("WorkflowGroup1.wkgp")
             dst_dirname = os.path.dirname(dst_dirname)
+            if not old_format:
+                dst_dirname, changed = self.get_unique_path(name=f"{self.get_name(path=file)}.wkgp",
+                                                            dirname=dst_dirname)
+                if changed:
+                    file = f"{self.get_name(path=dst_dirname)}.{file.split('.').pop()}"
         dst_path = os.path.join(dst_dirname, file)
         kwargs = {"path":dst_path, "new":True, "model":model}
         resp = {"message":f"A copy of the model in {self.path} has been created"}
@@ -246,7 +251,9 @@ class StochSSWorkflow(StochSSBase):
         '''
         info = self.load_info()
         self.log("debug", f"Workflow info: {info}")
-        if external or info['wkfl_model'] is None:
+        if external:
+            return info['source_model']
+        if info['wkfl_model'] is None:
             file = self.get_file(path=info['source_model'])
             return os.path.join(self.get_path(full=full), file)
         file = self.get_file(path=info['wkfl_model'])

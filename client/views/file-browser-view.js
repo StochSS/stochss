@@ -405,11 +405,7 @@ module.exports = View.extend({
     xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree-view').jstree().get_node(parentID);
-          if(node.type === "root" || type === "wkfl_model"){
-            self.refreshJSTree()
-          }else{          
-            $('#models-jstree-view').jstree().refresh_node(node);
-          }
+          self.refreshJSTree()
           if(type === "workflow"){
             var message = ""
             if(body.error){
@@ -1376,7 +1372,7 @@ module.exports = View.extend({
         },
         "Delete" : {
           "label" : "Delete",
-          "_disabled" : o.type === 'workflow-group' && self.parent.model.workflowGroups.length === 1 ? true : false,
+          "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
           "action" : function (data) {
