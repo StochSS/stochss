@@ -454,11 +454,8 @@ module.exports = View.extend({
       function (err, response, body) {
         if(response.statusCode < 400) {
           var node = $('#models-jstree-view').jstree().get_node(parentID);
-          if(node.type === "root"){
-            self.refreshJSTree()
-          }else{          
-            $('#models-jstree-view').jstree().refresh_node(node);
-          }
+          self.refreshJSTree()
+          self.updateParent("spatial")
           self.selectNode(node, body.File)
         }
       }
@@ -484,8 +481,7 @@ module.exports = View.extend({
             var errors = body.errors
             let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
           }else{
-            console.log(node.type, o.type)
-            self.updateParent(o.type)
+            self.updateParent("nonspatial")
           }
         }
       }
@@ -515,11 +511,7 @@ module.exports = View.extend({
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
         var node = $('#models-jstree-view').jstree().get_node(parentID);
-        if(node.type === "root"){
-          self.refreshJSTree()
-        }else{          
-          $('#models-jstree-view').jstree().refresh_node(node);
-        }
+        self.refreshJSTree()
         self.selectNode(node, body.File)
       }
     });
@@ -545,6 +537,8 @@ module.exports = View.extend({
             }
             if(node.type === "root") {
               window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body._path
+            }else if(self.parent.model.newFormat) {
+              self.refreshJSTree()
             }else{
               node.original._path = body._path
             }

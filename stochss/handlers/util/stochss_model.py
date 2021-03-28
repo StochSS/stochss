@@ -379,12 +379,19 @@ class StochSSModel(StochSSBase):
             model['domain'] = self.get_model_template()['domain']
         for species in model['species']:
             if "types" not in species.keys():
-                species['types'] = list(range(1, len(model['domain']['type_names'])))
+                species['types'] = list(range(1, len(model['domain']['types'])))
         for reaction in model['reactions']:
             if "types" not in reaction.keys():
-                reaction['types'] = list(range(1, len(model['domain']['type_names'])))
-        s_path = self.path.replace(".mdl", ".smdl")
-        s_file = self.get_file(path=s_path)
+                reaction['types'] = list(range(1, len(model['domain']['types'])))
+        if ".wkgp" in self.path:
+            wkgp_path = self.get_dir_name()
+            wkgp_path, _ = self.get_unique_path(name=self.get_file(path=wkgp_path),
+                                                dirname=os.path.dirname(wkgp_path))
+            s_file = self.get_file(path=wkgp_path).replace(".wkgp", ".mdl")
+            s_path = os.path.join(wkgp_path, s_file)
+        else:
+            s_path = self.path.replace(".mdl", ".smdl")
+            s_file = self.get_file(path=s_path)
         message = f"{self.get_file()} was successfully convert to {s_file}!"
         return {"Message":message, "File":s_file}, {"spatial":model, "path":s_path}
 

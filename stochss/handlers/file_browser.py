@@ -29,7 +29,8 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSpatialModel, \
-                  StochSSSBMLModel, StochSSNotebook, StochSSWorkflow, StochSSAPIError, report_error
+                  StochSSSBMLModel, StochSSNotebook, StochSSWorkflow, StochSSProject, \
+                  StochSSAPIError, report_error
 
 
 log = logging.getLogger('stochss')
@@ -232,8 +233,15 @@ class RenameAPIHandler(APIHandler):
         log.debug("New filename: %s", new_name)
         self.set_header('Content-Type', 'application/json')
         try:
-            file_obj = StochSSBase(path=path)
-            resp = file_obj.rename(name=new_name)
+            is_model = path.endswith(".mdl") or path.endswith(".smdl")
+            if ".proj" in path and ".wkgp" in path and is_model:
+                wkgp = StochSSBase(path=os.path.dirname(path))
+                wkgp.rename(name=f"{wkgp.get_name(path=new_name)}.wkgp")
+                file_obj = StochSSBase(path=os.path.join(wkgp.path, wkgp.get_file(path=path)))
+                resp = file_obj.rename(name=f"{wkgp.get_name()}.{path.split('.').pop()}")
+            else:
+                file_obj = StochSSBase(path=path)
+                resp = file_obj.rename(name=new_name)
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -351,7 +359,11 @@ class SBMLToModelAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         try:
             sbml = StochSSSBMLModel(path=path)
-            convert_resp = sbml.convert_to_model(name=sbml.get_name())
+            if ".proj" in path:
+                wkgp = StochSSProject(path=sbml.get_dir_name()).check_project_format()
+            else:
+                wkgp = False
+            convert_resp = sbml.convert_to_model(name=sbml.get_name(), wkgp=wkgp)
             sbml.print_logs(log)
             resp = {"message":convert_resp['message'], "errors":convert_resp['errors'], "File":""}
             if convert_resp['model'] is not None:

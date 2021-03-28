@@ -325,8 +325,8 @@ class StochSSSpatialModel(StochSSBase):
         s_model['is_spatial'] = False
         if ".wkgp" in self.path:
             wkgp_path = self.get_dir_name()
-            wkgp_path, changed = self.get_unique_path(name=self.get_file(path=wkgp_path),
-                                                      dirname=os.path.dirname(wkgp_path))
+            wkgp_path, _ = self.get_unique_path(name=self.get_file(path=wkgp_path),
+                                                dirname=os.path.dirname(wkgp_path))
             m_file = self.get_file(path=wkgp_path).replace(".wkgp", ".mdl")
             m_path = os.path.join(wkgp_path, m_file)
         else:
@@ -532,7 +532,8 @@ class StochSSSpatialModel(StochSSBase):
             if "types" not in species.keys():
                 species['types'] = list(range(1, len(self.model['domain']['types'])))
             if "diffusionConst" not in species.keys():
-                species['diffusionConst'] = species['diffusionCoeff']
+                diff = 0.0 if "diffusionCoeff" not in species.keys() else species['diffusionCoeff']
+                species['diffusionConst'] = diff
         for reaction in self.model['reactions']:
             if "types" not in reaction.keys():
                 reaction['types'] = list(range(1, len(self.model['domain']['types'])))
