@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import shutil
 import traceback
 
 from .stochss_base import StochSSBase
@@ -25,7 +26,8 @@ from .stochss_model import StochSSModel
 from .stochss_spatial_model import StochSSSpatialModel
 from .stochss_workflow import StochSSWorkflow
 from .stochss_notebook import StochSSNotebook
-from .stochss_errors import StochSSFileExistsError
+from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
+                            StochSSPermissionsError
 
 class StochSSProject(StochSSBase):
     '''
@@ -149,6 +151,34 @@ class StochSSProject(StochSSBase):
         except FileExistsError as err:
             message = f"Could not create your model: {file}"
             raise StochSSFileExistsError(message, traceback.format_exc()) from err
+
+
+    def extract_workflow(self, src, dst):
+        '''
+        Make a copy of the target workflow and place it in the parent directory of the project.
+
+        Attributes
+        ----------
+        src : str
+            Path to the target workflow
+        dst : str
+            Proposed path for the workflows copy
+        '''
+        dirname = os.path.dirname(dst)
+        dst, _ = self.get_unique_path(name=self.get_file(path=dst), dirname=dirname)
+        try:
+            shutil.copytree(src, dst)
+            if not dirname:
+                dirname = "/"
+            resp = f"The Workflow {self.get_file(path=src)} was exported to {dirname}"
+            resp += f" in files as {self.get_file(path=dst)}"
+            return resp
+        except FileNotFoundError as err:
+            message = f"Could not find the directory: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except PermissionError as err:
+            message = f"You do not have permission to copy this directory: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def load(self):

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 
-# import os
+import os
 # import ast
 # import json
 # import shutil
@@ -245,9 +245,9 @@ class ExtractModelAPIHandler(APIHandler):
 
 class ExtractWorkflowAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for extracting workflows from a project
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
@@ -257,7 +257,19 @@ class ExtractWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.warning("Extract workflow function has not been cleaned up")
+        self.set_header('Content-Type', 'application/json')
+        src_path = self.get_query_argument(name="srcPath")
+        log.debug("Path to the target model: %s", src_path)
+        dst_path = self.get_query_argument(name="dstPath")
+        log.debug("Destination path for the target model: %s", dst_path)
+        try:
+            project = StochSSProject(path=os.path.dirname(os.path.dirname(src_path)))
+            resp = project.extract_workflow(src=src_path, dst=dst_path)
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class EmptyTrashAPIHandler(APIHandler):

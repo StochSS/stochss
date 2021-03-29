@@ -227,7 +227,7 @@ class StochSSBase():
         '''
         if dirname is None:
             dirname = self.get_dir_name(full=True)
-        exists = name in os.listdir(dirname)
+        exists = name in os.listdir(dirname if dirname else self.user_dir)
 
         i = 1
         if exists:
@@ -241,7 +241,7 @@ class StochSSBase():
                         i = 2
         while exists:
             proposed_name = ''.join([name, f"({i})", ext])
-            exists = proposed_name in os.listdir(dirname)
+            exists = proposed_name in os.listdir(dirname if dirname else self.user_dir)
             i += 1
 
         changed = i > 1
