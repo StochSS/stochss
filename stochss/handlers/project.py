@@ -56,7 +56,7 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         try:
             self.set_header('Content-Type', 'application/json')
             folder = StochSSFolder(path="")
-            data = folder.get_file_list(ext=".proj", folder=True)
+            data = folder.get_project_list()
             log.debug("List of projects: %s", data)
             self.write(data)
         except StochSSAPIError as err:

@@ -186,65 +186,6 @@ class StochSSFolder(StochSSBase):
         return bool(not errors), errors
 
 
-    def get_file_list(self, ext, folder=False, test=None):
-        '''
-        Get the list of files matching the ext in this directory and all sub-directories
-
-        Attributes
-        ----------
-        ext : str or list
-            Extension of file object to search for
-        folder : bool
-            Indicates whether or not the file object is a folder
-        test : func
-            Function that determines if a file object should be excluded
-        '''
-        domain_paths = {}
-        domain_files = {}
-        for root, folders, files in os.walk(self.get_path(full=True)):
-            root = root.replace(self.user_dir+"/", "")
-            file_list = folders if folder else files
-            for file in file_list:
-                exclude = False if test is None else test(ext, root, file)
-                if not exclude and '.' in file and f".{file.split('.').pop()}" in ext:
-                    path = os.path.join(root, file) if root else file
-                    if file in domain_files.keys():
-                        domain_paths[domain_files[file]].append(path)
-                    else:
-                        index = str(len(domain_files.keys()))
-                        domain_files[file] = index
-                        domain_paths[index] = [path]
-        options = [[index, file] for file, index in domain_files.items()]
-        return {"files":options, "paths":domain_paths}
-
-
-    def get_jstree_node(self, is_root=False):
-        '''
-        Build and return a JSTree node object the represents the file object
-
-        Attributes
-        ----------
-        is_root : bool
-            Indicates whether or not a folder is to be treated as the root
-        '''
-        path = self.user_dir if self.path == "none" else self.get_path(full=True)
-        try:
-            files = list(filter(lambda file: not file.startswith('.'), os.listdir(path=path)))
-            nodes = list(map(lambda file: self.__build_jstree_node(path, file), files))
-            if self.path == "none":
-                state = {"opened":True}
-                root = {"text":"/", "type":"root", "_path":"/", "children":nodes, "state":state}
-                return json.dumps([root])
-            if is_root:
-                root = {"text":self.get_name(), "type":"root", "_path":self.path, "children":nodes,
-                        "state":{"opened":True}}
-                return json.dumps([root])
-            return json.dumps(nodes)
-        except FileNotFoundError as err:
-            message = f"Could not find the directory: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
-
-
     def delete(self):
         '''
         Delete the directory from the file system
@@ -327,6 +268,81 @@ class StochSSFolder(StochSSBase):
         zip_path = zip_path.replace(self.user_dir + '/', "")
         message = f"Successfully created {zip_path}"
         return {"Message":message, "Path":zip_path}
+
+
+    def get_file_list(self, ext, folder=False, test=None):
+        '''
+        Get the list of files matching the ext in this directory and all sub-directories
+
+        Attributes
+        ----------
+        ext : str or list
+            Extension of file object to search for
+        folder : bool
+            Indicates whether or not the file object is a folder
+        test : func
+            Function that determines if a file object should be excluded
+        '''
+        domain_paths = {}
+        domain_files = {}
+        for root, folders, files in os.walk(self.get_path(full=True)):
+            root = root.replace(self.user_dir+"/", "")
+            file_list = folders if folder else files
+            for file in file_list:
+                exclude = False if test is None else test(ext, root, file)
+                if not exclude and '.' in file and f".{file.split('.').pop()}" in ext:
+                    path = os.path.join(root, file) if root else file
+                    if file in domain_files.keys():
+                        domain_paths[domain_files[file]].append(path)
+                    else:
+                        index = str(len(domain_files.keys()))
+                        domain_files[file] = index
+                        domain_paths[index] = [path]
+        options = [[index, file] for file, index in domain_files.items()]
+        return {"files":options, "paths":domain_paths}
+
+
+    def get_jstree_node(self, is_root=False):
+        '''
+        Build and return a JSTree node object the represents the file object
+
+        Attributes
+        ----------
+        is_root : bool
+            Indicates whether or not a folder is to be treated as the root
+        '''
+        path = self.user_dir if self.path == "none" else self.get_path(full=True)
+        try:
+            files = list(filter(lambda file: not file.startswith('.'), os.listdir(path=path)))
+            nodes = list(map(lambda file: self.__build_jstree_node(path, file), files))
+            if self.path == "none":
+                state = {"opened":True}
+                root = {"text":"/", "type":"root", "_path":"/", "children":nodes, "state":state}
+                return json.dumps([root])
+            if is_root:
+                root = {"text":self.get_name(), "type":"root", "_path":self.path, "children":nodes,
+                        "state":{"opened":True}}
+                return json.dumps([root])
+            return json.dumps(nodes)
+        except FileNotFoundError as err:
+            message = f"Could not find the directory: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+
+
+    def get_project_list(self):
+        '''
+        Get the list of project on the users disk
+
+        Attributes
+        ----------
+        '''
+        data = self.get_file_list(ext=".proj", folder=True)
+        projects = []
+        for i, file in enumerate(data['files']):
+            for j, path in enumerate(data['paths'][file[0]]):
+                projects.append({"directory":path, "dirname":os.path.dirname(path),
+                                 "elementID":f"p{i + j + 1}"})
+        return {"projects":projects}
 
 
     def move(self, location):
