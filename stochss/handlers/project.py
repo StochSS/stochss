@@ -265,7 +265,7 @@ class ExtractWorkflowAPIHandler(APIHandler):
         try:
             project = StochSSProject(path=os.path.dirname(os.path.dirname(src_path)))
             resp = project.extract_workflow(src=src_path, dst=dst_path)
-            log.debug("Response: %s", resp)
+            log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -286,7 +286,17 @@ class EmptyTrashAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.warning("Empty trash function has not been cleaned up")
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the trash directory: %s", path)
+        try:
+            folder = StochSSFolder(path=path)
+            resp = folder.empty()
+            log.debug("Response message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class ProjectMetaDataAPIHandler(APIHandler):

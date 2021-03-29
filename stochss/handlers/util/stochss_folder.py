@@ -288,6 +288,24 @@ class StochSSFolder(StochSSBase):
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
+    def empty(self):
+        '''
+        Delete the contents of the folder
+
+        Attribites
+        ----------
+        '''
+        path = self.get_path(full=True)
+        if not os.path.exists(path):
+            os.mkdir(path)
+            return "The trash directory was removed."
+        for item in os.listdir(path):
+            item_path = os.path.join(self.path, item)
+            item_class = StochSSFolder if os.path.isdir(item_path) else StochSSFile
+            item_class(path=item_path).delete()
+        return "Successfully emptied the trash."
+
+
     def generate_zip_file(self):
         '''
         Create a zip archive for download
