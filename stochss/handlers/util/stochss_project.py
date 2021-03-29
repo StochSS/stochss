@@ -215,3 +215,17 @@ class StochSSProject(StochSSBase):
                         self.__load_workflow_group(current_format=current_format,
                                                    wkgp_path=wkgp_path, file=file)
         return self.project
+
+
+    def update_annotation(self, annotation):
+        '''
+        Updates the projects annotation file
+
+        Attributes
+        ----------
+        annotation : str
+            The annotations to be saved.
+        '''
+        path = os.path.join(self.get_path(full=True), "README.md")
+        with open(path, 'w') as readme_file:
+            readme_file.write(annotation)

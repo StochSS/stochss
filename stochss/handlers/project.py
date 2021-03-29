@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 # import ast
-# import json
+import json
 # import shutil
 import logging
 
@@ -369,4 +369,13 @@ class UpdateAnnotationAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.warning("Save annotation function has not been cleaned up")
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the project directory: %s", path)
+        data = json.loads(self.request.body.decode())['annotation'].strip()
+        log.debug("Annotation to be saved: %s", data)
+        try:
+            project = StochSSProject(path=path)
+            project.update_annotation(annotation=data)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
