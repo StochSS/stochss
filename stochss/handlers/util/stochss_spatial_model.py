@@ -524,7 +524,7 @@ class StochSSSpatialModel(StochSSBase):
         self.model['name'] = self.get_name()
         if not self.model['defaultMode']:
             self.model['defaultMode'] = "discrete"
-        if "domain" not in self.model.keys():
+        if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
             self.model['domain'] = self.get_model_template()['domain']
         elif "static" not in self.model['domain'].keys():
             self.model['domain']['static'] = True

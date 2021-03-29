@@ -338,8 +338,8 @@ class StochSSBase():
         file = self.get_file()
         new_path, changed = self.get_unique_path(name)
         try:
-            dst = shutil.move(path, new_path)
-            self.path = dst.replace(self.user_dir + '/', '')
+            shutil.move(path, new_path)
+            self.path = new_path.replace(self.user_dir + '/', '')
             new_file = self.get_file()
             if changed:
                 message = f"A file already exists with that name, {file} was renamed to "
