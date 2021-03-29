@@ -313,7 +313,19 @@ class ProjectMetaDataAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.warning("Get meta data function has not been cleaned up")
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the project directory: %s", path)
+        files = self.get_query_argument(name="files").split(',')
+        log.debug("List of files: %s", files)
+        try:
+            project = StochSSProject(path=path)
+            resp = project.get_meta_data(files=files)
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
     @web.authenticated
@@ -324,7 +336,17 @@ class ProjectMetaDataAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.warning("Save meta data function has not been cleaned up")
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the project directory: %s", path)
+        data = self.request.body.decode()
+        log.debug("Meta-data to be saved: %s", data)
+        try:
+            project = StochSSProject(path=path)
+            project.update_meta_data(meta_data=data)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class ExportAsCombineAPIHandler(APIHandler):
@@ -342,6 +364,7 @@ class ExportAsCombineAPIHandler(APIHandler):
         ----------
         '''
         log.warning("Export as combine function has not been cleaned up")
+        self.finish()
 
 
     @web.authenticated
@@ -353,6 +376,7 @@ class ExportAsCombineAPIHandler(APIHandler):
         ----------
         '''
         log.warning("Export as combine w/meta data function has not been cleaned up")
+        self.finish()
 
 
 class UpdateAnnotationAPIHandler(APIHandler):

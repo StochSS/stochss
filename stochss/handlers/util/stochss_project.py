@@ -181,6 +181,36 @@ class StochSSProject(StochSSBase):
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
+    def get_meta_data(self, files):
+        '''
+        Get the projects meta data
+
+        Attributes
+        ----------
+        files : list
+            List of files for that have meta data
+        '''
+        path = os.path.join(self.get_path(full=True), ".meta_data.json")
+        self.log("debug", f"Path to the meta-data file: {path}")
+        if os.path.exists(path):
+            with open(path, "r") as md_file:
+                data = json.load(md_file)
+                meta_data = data['meta-data']
+                creators = data['creators']
+        else:
+            meta_data = {}
+            creators = {}
+        self.log("debug", f"Creators for the project: {creators}")
+        if len(meta_data.keys()) < len(files):
+            self.log("debug", f"Meta-data for the project: {meta_data}")
+            return {"meta_data":meta_data, "creators":creators}
+        for file in files:
+            if file not in meta_data.keys():
+                meta_data[file] = {"description":"", "creators":[]}
+        self.log("debug", f"Meta-data for the project: {meta_data}")
+        return {"meta_data":meta_data, "creators":creators}
+
+
     def load(self):
         '''
         Determines the project format, gets all models and workflows
@@ -229,3 +259,17 @@ class StochSSProject(StochSSBase):
         path = os.path.join(self.get_path(full=True), "README.md")
         with open(path, 'w') as readme_file:
             readme_file.write(annotation)
+
+
+    def update_meta_data(self, meta_data):
+        '''
+        Updates the projects meta-data file.
+
+        Attributes
+        ----------
+        meta-data : str
+            Meta-Data to be saved
+        '''
+        path = os.path.join(self.get_path(full=True), ".meta-data.json")
+        with open(path, "w") as md_file:
+            md_file.write(meta_data)
