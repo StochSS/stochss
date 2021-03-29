@@ -121,9 +121,9 @@ class NewProjectAPIHandler(APIHandler):
 
 class NewModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating new StochSS Models in StochSS Projects
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
@@ -211,9 +211,9 @@ class AddExistingModelAPIHandler(APIHandler):
 
 class ExtractModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for extracting models from a project
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
@@ -223,7 +223,24 @@ class ExtractModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.warning("Extract model function has not been cleaned up")
+        self.set_header('Content-Type', 'application/json')
+        src_path = self.get_query_argument(name="srcPath")
+        log.debug("Path to the target model: %s", src_path)
+        dst_path = self.get_query_argument(name="dstPath")
+        log.debug("Destination path for the target model: %s", dst_path)
+        try:
+            src_model = StochSSModel(path=src_path)
+            dst_model = StochSSModel(path=dst_path, new=True, model=src_model.load())
+            dirname = dst_model.get_dir_name()
+            if not dirname:
+                dirname = "/"
+            message = f"The Model {src_model.get_file()} was extracted to "
+            message += f"{dirname} in files as {dst_model.get_file()}"
+            log.debug("Response message: %s", message)
+            self.write(message)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class ExtractWorkflowAPIHandler(APIHandler):
