@@ -88,6 +88,11 @@ let changeCollapseButtonText = (view, e) => {
   }
 };
 
+let registerRenderSubview = (parent, view, hook) => {
+  parent.registerSubview(view);
+  parent.renderSubview(view, parent.queryByHook(hook));
+};
+
 let getBrowser = () => {
   BrowserDetect.init();
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
@@ -98,6 +103,7 @@ module.exports = {
     getApiPath: getApiPath,
     getBasePath: getBasePath,
     getBrowser: getBrowser,
+    registerRenderSubview: registerRenderSubview,
     changeCollapseButtonText: changeCollapseButtonText
 };
 

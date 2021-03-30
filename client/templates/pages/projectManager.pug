@@ -6,23 +6,56 @@ section.page
 
   div.no-gutters-padding
 
-    div.verticle-space-2
-      button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-annotation-btn") Add Notes
-    
-    div.mx-3.mt-2.collapse.verticle-space-2(data-hook="collapse-annotation-container")
+    div(id=this.model.elementID+"-annotation-section")
 
-      div.col-md-2.inline.align-top
+      div.verticle-space-2
+        button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-annotation-btn") Add Notes
+      
+      div.mx-3.mt-2.collapse.verticle-space-2(data-hook="collapse-annotation-container")
 
-        div.row
+        div.col-md-2.inline.align-top
 
-          div
-            h5="Notes: "
+          div.row
 
-          div
-            button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#annotation-text" data-hook="collapse-annotation-text") -
+            div
+              h5="Notes: "
 
-      div.collapse.show.col-md-10.inline(id="annotation-text")
+            div
+              button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#annotation-text" data-hook="collapse-annotation-text") +
 
-          div
-            textarea(id="annotation" data-hook="annotation-text-container" rows="7" style="width: 100%;")
+        div.collapse.col-md-10.inline(id="annotation-text")
+
+            div
+              textarea(id="annotation" data-hook="annotation-text-container" rows="7" style="width: 100%;")
+
+    div.card.card-body(id=this.model.elementID+"-advanced-section")
+
+      div
+
+        h3.inline Advanced
+
+        button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#project-manager-advanced" data-hook="project-manager-advanced-btn") +
+
+      div.collapse(id="project-manager-advanced" data-hook="project-manager-advanced")
+
+        div(id="project-meta-data-container" data-hook="project-meta-data-container")
+
+        div(id="project-manager-file-browser" data-hook="file-browser")
+
+        div
+
+          button.btn.btn-primary.inline.dropdown-toggle.box-shadow(
+            id="download-project-btn",
+            data-hook="download-project-btn",
+            data-toggle="dropdown",
+            aria-haspopup="true",
+            aria-expanded="false",
+            type="button"
+          ) Download <span class="caret"></span>
+
+          ul.dropdown-menu(aria-labelledby="download-project-btn")
+            li.dropdown-item(id="export-project-as-zip" data-hook="export-project-as-zip") as .zip
+            li.dropdown-item.disabled(id="export-project-as-combine" data-hook="export-project-as-combine") as COMBINE
+
+          button.btn.btn-primary.inline.box-shadow(id="empty-project-trash" data-hook="empty-project-trash") Empty Trash
 

@@ -30,7 +30,8 @@ module.exports = Model.extend({
     annotation: 'string',
     directory: 'string',
     dirname: 'string',
-    name: 'string'
+    name: 'string',
+    newFormat: 'boolean'
   },
   derived: {
   	elementID: {

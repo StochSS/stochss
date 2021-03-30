@@ -231,14 +231,14 @@ class StochSSProject(StochSSBase):
         trash_path = os.path.join(self.get_path(full=True), "trash")
         annotation = self.__load_annotation()
         self.project = {"name":self.get_name(), "directory":self.path, "annotation":annotation,
-                        "dirname":self.get_dir_name()}
+                        "dirname":self.get_dir_name(), "newFormat": current_format}
+        if os.path.exists(trash_path):
+            self.project['trash_empty'] = len(os.listdir(trash_path)) == 0
+        else:
+            self.project['trash_empty'] = True
+            os.mkdir(trash_path)
         # self.project = {"models":[], "newFormat": current_format,
         #                 "workflowGroups":[{"name":"WorkflowGroup1", "workflows":[]}]}
-        # if os.path.exists(trash_path):
-        #     self.project['trash_empty'] = len(os.listdir(trash_path)) == 0
-        # else:
-        #     self.project['trash_empty'] = True
-        #     os.mkdir(trash_path)
         # wkgp_test = lambda folder: folder.endswith(".wkgp")
         # if current_format:
         #     for wkgp in filter(wkgp_test, os.listdir(self.get_path(full=True))):

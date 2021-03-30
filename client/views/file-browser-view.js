@@ -88,7 +88,9 @@ module.exports = View.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
-                self.updateParent(node.type, (oldPath.includes('trash/') || newDir.endsWith('trash')))
+                if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.inculdes(".wkgp")) {
+                  self.updateParent(node.type)
+                }
               }else{
                 body = JSON.parse(body)
                 if(par.type === 'root'){
@@ -185,12 +187,15 @@ module.exports = View.extend({
       }
     });
   },
-  updateParent: function (type, trash = false) {
-    let types = ["nonspatial", "spatial", "workflow", "workflow-group", "notebook"]
-    if(trash){
-      this.parent.update("all")
-    }else if(types.includes(type)) {
-      this.parent.update("file-browser")
+  updateParent: function (type) {
+    let models = ["nonspatial", "spatial", "sbml", "model"]
+    let workflows = ["workflow", "notebook"]
+    if(models.includes(type)) {
+      this.parent.update("Model")
+    }else if(workflows.includes(type)) {
+      this.parent.update("Workflow")
+    }else if(type === "workflow-group") {
+      this.parent.update("WorkflowGroup")
     }
   },
   refreshJSTree: function () {
@@ -286,7 +291,7 @@ module.exports = View.extend({
     });
     uploadBtn.addEventListener('click', function (e) {
       let file = fileInput.files[0]
-      var fileinfo = {"type":type,"name":"","path":self.parent.projectPath}
+      var fileinfo = {"type":type,"name":"","path":self.parent.model.directory}
       if(o && o.original){
         fileinfo.path = o.original._path
       }
@@ -336,7 +341,7 @@ module.exports = View.extend({
           self.refreshJSTree();
         }
         if(resp.file.endsWith(".mdl") || resp.file.endsWith(".smdl") ||resp.file.endsWith(".sbml")) {
-          self.parent.update("file-browser")
+          self.updateParent("model")
         }
         if(resp.errors.length > 0){
           let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
@@ -378,7 +383,9 @@ module.exports = View.extend({
         }
       })
       modal.modal('hide')
-      self.updateParent(o.type)
+      if(o.type !== "notebook" || o.original._path.includes(".wkgp")) {
+        self.updateParent(o.type)
+      }
     });
   },
   duplicateFileOrDirectory: function(o, type) {
@@ -416,7 +423,9 @@ module.exports = View.extend({
             let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal()
           }
           self.selectNode(node, body.File)
-          self.updateParent(o.type)
+          if(o.type !== "notebook" || o.original._path.includes(".wkgp")) {
+            self.updateParent(o.type)
+          }
         }
       }
     );
@@ -550,7 +559,9 @@ module.exports = View.extend({
               $('#models-jstree-view').jstree().refresh_node(parent);
             }
           }
-          self.updateParent(o.type)
+          if(o.type !== "notebook" || o.original._path.includes(".wkgp")) {
+            self.updateParent(o.type)
+          }
         })
       }
       extensionWarning.collapse('hide');
@@ -678,7 +689,7 @@ module.exports = View.extend({
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
         modal.modal('hide')
-        var parentPath = self.parent.projectPath
+        var parentPath = self.parent.model.directory
         if(o && o.original && o.original._path !== "/") {
           parentPath = o.original._path
         }
@@ -713,7 +724,7 @@ module.exports = View.extend({
     if(document.querySelector('#newProjectModelModal')){
       document.querySelector('#newProjectModelModal').remove()
     }
-    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+self.parent.projectPath
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+self.parent.model.directory
     xhr({uri:mdlListEP, json:true}, function (err, response, body) {
       let modal = $(modals.newProjectModelHtml(body.files)).modal()
       let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
@@ -739,12 +750,12 @@ module.exports = View.extend({
       });
       okBtn.addEventListener("click", function (e) {
         let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value
-        let queryString = "?path="+self.parent.projectPath+"&mdlPath="+mdlPath
+        let queryString = "?path="+self.parent.model.directory+"&mdlPath="+mdlPath
         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
         xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
           if(response.statusCode < 400) {
             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
-            self.updateParent("nonspatial")
+            self.updateParent("model")
             self.refreshJSTree()
           }else{
             let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal()
@@ -760,7 +771,7 @@ module.exports = View.extend({
       let message = "You need to create an workflow group before you can create a new workflow."
       let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
     }else if(!this.parent.model.newFormat) {
-      if(o.type === "workflow-group" && this.parent.model.models.length <= 0) {
+      if(o.type === "workflow-group" && this.parent.models.length <= 0) {
         let title = "No Models Found"
         let message = "You need to add a model before you can create a new workflow."
         let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
@@ -776,7 +787,7 @@ module.exports = View.extend({
           document.querySelector('#newProjectWorkflowModal').remove()
         }
         let options = o.type === "workflow-group" ?
-                      this.parent.model.models.map(function (model) {return model.name}) :
+                      this.parent.models.map(function (model) {return model.name}) :
                       this.parent.model.workflowGroups.map(function (workflowGroup) {return workflowGroup.name})
         let label = o.type === "workflow-group" ? "Model file name: " : "Workflow Group file name: "
         let modal = $(modals.newProjectWorkflowHtml(label, options)).modal()
@@ -784,7 +795,7 @@ module.exports = View.extend({
         let select = document.querySelector('#newProjectWorkflowModal #select')
         okBtn.addEventListener("click", function (e) {
             modal.modal('hide')
-            let mdlFile = o.type === "workflow-group" ? self.parent.model.models.filter(function (model) {
+            let mdlFile = o.type === "workflow-group" ? self.parent.models.filter(function (model) {
               return model.name === select.value;
             })[0].directory.split("/").pop() : null;
             let parentPath = o.type === "workflow-group" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".wkgp")
@@ -794,7 +805,7 @@ module.exports = View.extend({
         });
       }
     }else{
-      let mdlPath = o.type === "workflow-group" ? this.parent.model.models.filter(function (model) {
+      let mdlPath = o.type === "workflow-group" ? this.parent.models.filter(function (model) {
         return o.text.startsWith(model.name)
       })[0].directory : o.original._path;
       let dirname = o.type === "workflow-group" ? o.original._path : path.dirname(o.original._path);
@@ -859,7 +870,7 @@ module.exports = View.extend({
     okBtn.addEventListener('click', function (e) {
       if (Boolean(input.value)) {
         modal.modal('hide')
-        var parentPath = self.parent.projectPath
+        var parentPath = self.parent.model.directory
         if(o && o.original && o.original._path !== "/"){
           parentPath = o.original._path
         }
@@ -913,12 +924,12 @@ module.exports = View.extend({
     this.newModelOrDirectory(undefined, true, isSpatial);
   },
   handelCreateDomainClick: function (e) {
-    let queryStr = "?domainPath=" + this.parent.projectPath + "&new"
+    let queryStr = "?domainPath=" + this.parent.model.directory + "&new"
     window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
   },
   handleExtractModelClick: function (o) {
     let self = this
-    let projectParent = path.dirname(this.parent.projectPath) === '.' ? "" : path.dirname(this.parent.projectPath)
+    let projectParent = path.dirname(this.parent.model.directory) === '.' ? "" : path.dirname(this.parent.model.directory)
     let queryString = "?srcPath="+o.original._path+"&dstPath="+path.join(projectParent, o.original._path.split('/').pop())
     let endpoint = path.join(app.getApiPath(), "project/extract-model")+queryString
     xhr({uri: endpoint}, function (err, response, body) {
@@ -932,7 +943,7 @@ module.exports = View.extend({
   },
   handleExportWorkflowClick: function (o) {
     let self = this
-    let projectParent = path.dirname(this.parent.projectPath) === '.' ? "" : path.dirname(this.parent.projectPath)
+    let projectParent = path.dirname(this.parent.model.directory) === '.' ? "" : path.dirname(this.parent.model.directory)
     let queryString = "?srcPath="+o.original._path+"&dstPath="+path.join(projectParent, o.original._path.split('/').pop())
     let endpoint = path.join(app.getApiPath(), "project/extract-workflow")+queryString
     xhr({uri: endpoint}, function (err, response, body) {
@@ -947,7 +958,7 @@ module.exports = View.extend({
   },
   handleExportCombineClick: function (o, download) {
     let target = o.original._path
-    this.parent.exportAsCombine(target, download)
+    this.parent.exportAsCombine()
   },
   showContextMenuForNode: function (e) {
     $('#models-jstree-view').jstree().show_contextmenu(this.nodeForContextMenu)
