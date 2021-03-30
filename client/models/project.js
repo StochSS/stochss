@@ -19,9 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var path = require('path');
 //Support Files
 var app = require('../app.js');
-//Collections
-var ModelsCollection = require('./models');
-var WorkflowGroupsCollection = require('./workflow-groups');
 //Models
 var Model = require('ampersand-model');
 
@@ -29,15 +26,35 @@ module.exports = Model.extend({
   url: function () {
     return path.join(app.getApiPath(), "project/load-project")+"?path="+this.directory;
   },
-  collections: {
-    models: ModelsCollection,
-    workflowGroups: WorkflowGroupsCollection
-  },
   session: {
     directory: 'string',
-    parentDir: 'string',
-    plot: 'object',
-    annotation: 'string',
-    newFormat: 'boolean'
+    dirname: 'string',
+    name: 'string'
+  },
+  derived: {
+  	elementID: {
+  	  deps: [],
+  	  fn: function () {
+  	  	if(this.collection) {
+  	  	  return "P" + (this.collection.indexOf(this) + 1);
+	  	}
+	  	return "P-";
+  	  }
+  	},
+  	location: {
+  	  deps: ["dirname"],
+  	  fn: function () {
+  	  	if(this.dirname) {
+  	  	  return "Location: " + this.dirname;
+  	  	}
+  	  	return "";
+  	  }
+  	},
+  	open: {
+  	  deps: ["directory"],
+  	  fn: function () {
+  	  	return path.join(app.getBasePath(), "stochss/project/manager")+"?path="+this.directory
+  	  }
+  	}
   }
-})
+});

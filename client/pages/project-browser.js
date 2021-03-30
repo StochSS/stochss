@@ -22,10 +22,15 @@ let path = require('path');
 //support files
 let app = require('../app');
 let modals = require('../modals');
+//models
+let Project = require('../models/project');
+//collections
+let Collection = require('ampersand-collection');
 //views
-var PageView = require('./base');
+let PageView = require('./base');
+let EditProjectView = require('../views/edit-project');
 //templates
-var template = require('../templates/pages/projectBrowser.pug');
+let template = require('../templates/pages/projectBrowser.pug');
 
 import initPage from './page.js';
 
@@ -41,9 +46,14 @@ let projectBrowser = PageView.extend({
     xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400) {
         self.projects = body.projects;
-        console.log(self.projects)
-        // self.renderProjectsView()
+        self.renderProjectsView()
       }
+    });
+  },
+  render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments)
+    $(document).on('hide.bs.modal', '.modal', function (e) {
+      e.target.remove()
     });
   },
   handleNewProjectClick: function (e) {
@@ -83,6 +93,13 @@ let projectBrowser = PageView.extend({
         });
       }
     });
+  },
+  renderProjectsView: function () {
+    if(this.projectsView) {
+      this.projectsView.remove()
+    }
+    let projects = new Collection(this.projects, {model: Project, comparator: 'parentDir'})
+    this.projectsView = this.renderCollection(projects, EditProjectView, this.queryByHook("projects-view-container"))
   },
   validateName(input) {
     var error = "";

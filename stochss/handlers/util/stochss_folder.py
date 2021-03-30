@@ -341,7 +341,7 @@ class StochSSFolder(StochSSBase):
         for i, file in enumerate(data['files']):
             for j, path in enumerate(data['paths'][file[0]]):
                 projects.append({"directory":path, "dirname":os.path.dirname(path),
-                                 "elementID":f"p{i + j + 1}"})
+                                 "name":self.get_name(path=path)})
         return {"projects":projects}
 
 
