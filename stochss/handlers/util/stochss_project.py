@@ -59,6 +59,14 @@ class StochSSProject(StochSSBase):
                 raise StochSSFileExistsError(message, traceback.format_exc()) from err
 
 
+    def __load_annotation(self):
+        path = os.path.join(self.get_path(full=True), "README.md")
+        if not os.path.exists(path):
+            return ""
+        with open(path, "r") as rdme_file:
+            return rdme_file.read()
+
+
     def __load_model(self, dirname, file):
         classes = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
         model_class = classes[file.split('.').pop()]
@@ -221,29 +229,32 @@ class StochSSProject(StochSSBase):
         '''
         current_format = self.check_project_format()
         trash_path = os.path.join(self.get_path(full=True), "trash")
-        self.project = {"models":[], "newFormat": current_format,
-                        "workflowGroups":[{"name":"WorkflowGroup1", "workflows":[]}]}
-        if os.path.exists(trash_path):
-            self.project['trash_empty'] = len(os.listdir(trash_path)) == 0
-        else:
-            self.project['trash_empty'] = True
-            os.mkdir(trash_path)
-        wkgp_test = lambda folder: folder.endswith(".wkgp")
-        if current_format:
-            for wkgp in filter(wkgp_test, os.listdir(self.get_path(full=True))):
-                wkgp_path = os.path.join(self.path, wkgp)
-                for file in os.listdir(wkgp_path):
-                    self.__load_workflow_group(current_format=current_format,
-                                               wkgp_path=wkgp_path, file=file)
-        else:
-            for file_obj in os.listdir(self.get_path(full=True)):
-                if self.MODEL_TEST(file_obj):
-                    self.__load_model(dirname=self.path, file=file_obj)
-                elif wkgp_test(file_obj):
-                    wkgp_path = os.path.join(self.path, file_obj)
-                    for file in os.listdir(wkgp_path):
-                        self.__load_workflow_group(current_format=current_format,
-                                                   wkgp_path=wkgp_path, file=file)
+        annotation = self.__load_annotation()
+        self.project = {"name":self.get_name(), "directory":self.path, "annotation":annotation,
+                        "dirname":self.get_dir_name()}
+        # self.project = {"models":[], "newFormat": current_format,
+        #                 "workflowGroups":[{"name":"WorkflowGroup1", "workflows":[]}]}
+        # if os.path.exists(trash_path):
+        #     self.project['trash_empty'] = len(os.listdir(trash_path)) == 0
+        # else:
+        #     self.project['trash_empty'] = True
+        #     os.mkdir(trash_path)
+        # wkgp_test = lambda folder: folder.endswith(".wkgp")
+        # if current_format:
+        #     for wkgp in filter(wkgp_test, os.listdir(self.get_path(full=True))):
+        #         wkgp_path = os.path.join(self.path, wkgp)
+        #         for file in os.listdir(wkgp_path):
+        #             self.__load_workflow_group(current_format=current_format,
+        #                                        wkgp_path=wkgp_path, file=file)
+        # else:
+        #     for file_obj in os.listdir(self.get_path(full=True)):
+        #         if self.MODEL_TEST(file_obj):
+        #             self.__load_model(dirname=self.path, file=file_obj)
+        #         elif wkgp_test(file_obj):
+        #             wkgp_path = os.path.join(self.path, file_obj)
+        #             for file in os.listdir(wkgp_path):
+        #                 self.__load_workflow_group(current_format=current_format,
+        #                                            wkgp_path=wkgp_path, file=file)
         return self.project
 
 

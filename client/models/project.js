@@ -27,6 +27,7 @@ module.exports = Model.extend({
     return path.join(app.getApiPath(), "project/load-project")+"?path="+this.directory;
   },
   session: {
+    annotation: 'string',
     directory: 'string',
     dirname: 'string',
     name: 'string'

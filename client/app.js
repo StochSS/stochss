@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //var config = require('./config.js')(process.env.NODE_ENV);
+let $ = require('jquery');
 let path = require('path');
-
 let routePrefix = 'stochss';
 let apiPrefix =  path.join(routePrefix, 'api');
 let getBasePath = () => {
@@ -77,6 +77,17 @@ var BrowserDetect = {
   ]
 };
 
+let changeCollapseButtonText = (view, e) => {
+  let source = e.target.dataset.hook
+  let isBtn = $(view.queryByHook(source)).attr("class").includes("btn")
+  let collapseContainer = $(view.queryByHook(source).dataset.target)
+  if(isBtn && !collapseContainer.attr("class").includes("collapsing")) {
+    let collapseBtn = $(view.queryByHook(source))
+    let text = collapseBtn.text();
+    text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+  }
+};
+
 let getBrowser = () => {
   BrowserDetect.init();
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
@@ -86,5 +97,8 @@ module.exports = {
     routePrefix: routePrefix,
     getApiPath: getApiPath,
     getBasePath: getBasePath,
-    getBrowser: getBrowser
+    getBrowser: getBrowser,
+    changeCollapseButtonText: changeCollapseButtonText
 };
+
+
