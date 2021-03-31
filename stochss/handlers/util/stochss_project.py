@@ -66,7 +66,10 @@ class StochSSProject(StochSSBase):
             return {"description":"", "creators":[]}, []
         with open(path, "r") as md_file:
             data = json.load(md_file)
-        creators = data['creators'] if "creators" in data.keys() else []
+        creators = []
+        if "creators" in data.keys():
+            for _, info in data['creators'].items():
+                creators.append(info)
         return data['meta_data'], creators
 
 
