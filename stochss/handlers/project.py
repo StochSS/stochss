@@ -306,29 +306,6 @@ class ProjectMetaDataAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    def get(self):
-        '''
-        Get the projects meta data if it exists else create a meta data dictionary.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path")
-        log.debug("Path to the project directory: %s", path)
-        files = self.get_query_argument(name="files").split(',')
-        log.debug("List of files: %s", files)
-        try:
-            project = StochSSProject(path=path)
-            resp = project.get_meta_data(files=files)
-            log.debug("Response Message: %s", resp)
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
-    @web.authenticated
     def post(self):
         '''
         Save the projects meta data.

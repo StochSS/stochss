@@ -59,6 +59,17 @@ class StochSSProject(StochSSBase):
                 raise StochSSFileExistsError(message, traceback.format_exc()) from err
 
 
+    def __get_meta_data(self, path=None):
+        if path is None:
+            path = os.path.join(self.get_path(full=True), ".metadata.json")
+        if not os.path.exists(path):
+            return {"description":"", "creators":[]}, []
+        with open(path, "r") as md_file:
+            data = json.load(md_file)
+        creators = data['creators'] if "creators" in data.keys() else []
+        return data['meta_data'], creators
+
+
     def __load_annotation(self):
         path = os.path.join(self.get_path(full=True), "README.md")
         if not os.path.exists(path):
@@ -96,9 +107,12 @@ class StochSSProject(StochSSBase):
         return wkfl
 
 
-    def __load_workflow_group(self, current_format, file):
+    def __load_workflow_group(self, current_format, file, metadata=None):
         path = os.path.join(self.get_path(full=True), file)
-        wkgp = {"name": self.get_name(path=file), "workflows": [], "model": None}
+        if metadata is None:
+            metadata, _ = self.__get_meta_data(path=os.path.join(path, ".metadata.json"))
+        wkgp = {"name": self.get_name(path=file), "workflows": [], "model": None,
+                "metadata": metadata}
         for file_obj in os.listdir(path):
             if current_format and self.MODEL_TEST(file_obj):
                 wkgp['model'] = self.__load_model(dirname=path, file=file_obj)
@@ -185,36 +199,6 @@ class StochSSProject(StochSSBase):
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
-    def get_meta_data(self, files):
-        '''
-        Get the projects meta data
-
-        Attributes
-        ----------
-        files : list
-            List of files for that have meta data
-        '''
-        path = os.path.join(self.get_path(full=True), ".meta_data.json")
-        self.log("debug", f"Path to the meta-data file: {path}")
-        if os.path.exists(path):
-            with open(path, "r") as md_file:
-                data = json.load(md_file)
-                meta_data = data['meta-data']
-                creators = data['creators']
-        else:
-            meta_data = {}
-            creators = {}
-        self.log("debug", f"Creators for the project: {creators}")
-        if len(meta_data.keys()) < len(files):
-            self.log("debug", f"Meta-data for the project: {meta_data}")
-            return {"meta_data":meta_data, "creators":creators}
-        for file in files:
-            if file not in meta_data.keys():
-                meta_data[file] = {"description":"", "creators":[]}
-        self.log("debug", f"Meta-data for the project: {meta_data}")
-        return {"meta_data":meta_data, "creators":creators}
-
-
     def load(self):
         '''
         Determines the project format, gets all models and workflows
@@ -226,9 +210,14 @@ class StochSSProject(StochSSBase):
         current_format = self.check_project_format()
         trash_path = os.path.join(self.get_path(full=True), "trash")
         annotation = self.__load_annotation()
+        metadata, creators = self.__get_meta_data()
         self.project = {"name":self.get_name(), "directory":self.path, "annotation":annotation,
                         "dirname":self.get_dir_name(), "newFormat": current_format,
-                        "workflowGroups": []}
+                        "creators": creators, "workflowGroups": []}
+        if "description" in metadata.keys():
+            self.project['metadata'] = metadata
+        else:
+            self.project['metadata'] = metadata[self.get_file()]
         if os.path.exists(trash_path):
             self.project['trash_empty'] = len(os.listdir(trash_path)) == 0
         else:
@@ -236,7 +225,8 @@ class StochSSProject(StochSSBase):
             os.mkdir(trash_path)
         wkgp_test = lambda folder: folder.endswith(".wkgp")
         for wkgp in filter(wkgp_test, os.listdir(self.get_path(full=True))):
-            self.__load_workflow_group(current_format=current_format, file=wkgp)
+            wkgp_md = metadata[wkgp] if wkgp in metadata.keys() else None
+            self.__load_workflow_group(current_format=current_format, file=wkgp, metadata=wkgp_md)
         # else:
         #     for file_obj in os.listdir(self.get_path(full=True)):
         #         if self.MODEL_TEST(file_obj):
