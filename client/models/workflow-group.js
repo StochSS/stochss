@@ -23,6 +23,7 @@ let app = require('../app.js');
 let Workflows = require('./workflows');
 //models
 let Model = require('./model');
+let Metadata = require('./metadata');
 let State = require('ampersand-state');
 
 module.exports = State.extend({
