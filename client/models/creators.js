@@ -22,5 +22,6 @@ let Collection = require('ampersand-collection');
 let Creator = require('./creator');
 
 module.exports = Collection.extend({
-  model: Creator
+  model: Creator,
+  indexes: ["email"]
 });

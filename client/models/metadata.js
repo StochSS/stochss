@@ -16,16 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//Collections
-let Creators = require('./creators');
 //models
 let State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
-    description: 'string'
-  },
-  collections: {
-    creators: Creators
+    description: 'string',
+    creators: 'object'
   }
 });
