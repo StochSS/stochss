@@ -16,19 +16,39 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//collections
+let path = require('path');
+//Support Files
+let app = require('../app.js');
 //models
 var State = require('ampersand-state');
 
 module.exports = State.extend({
-  props: {
-    path: 'string',
+  session: {
     annotation: 'string',
-    outputs: 'object',
+    directory: 'string',
+    name: 'string',
+    status: 'string',
     type: 'string'
   },
-  session: {
-    name: 'string',
-    status: 'string'
+  derived: {
+    elementID: {
+      deps: [],
+      fn: function () {
+        if(this.collection) {
+          return this.collection.parent.elementID + "W" + (this.collection.indexOf(this) + 1)
+        }
+        return "W-"
+      }
+    },
+    open: {
+      deps: ["directory", "type"],
+      fn: function () {
+        if(this.type === "Notebook") {
+          return path.join(app.getBasePath(), "notebooks", this.directory)
+        }
+        let queryStr = "?path=" + this.directory + "&type=none"
+        return path.join(app.getBasePath(), "stochss/workflow/edit") + queryStr
+      }
+    }
   }
 });

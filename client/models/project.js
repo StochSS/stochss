@@ -16,15 +16,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var path = require('path');
+let path = require('path');
 //Support Files
-var app = require('../app.js');
+let app = require('../app.js');
+//Collections
+let WorkflowGroups = require('./workflow-groups');
 //Models
-var Model = require('ampersand-model');
+let Model = require('ampersand-model');
 
 module.exports = Model.extend({
   url: function () {
     return path.join(app.getApiPath(), "project/load-project")+"?path="+this.directory;
+  },
+  children: {
+    // metadata: Metadata
+  },
+  collections: {
+    workflowGroups: WorkflowGroups
+    // creators: Creators
   },
   session: {
     annotation: 'string',
@@ -39,8 +48,8 @@ module.exports = Model.extend({
   	  fn: function () {
   	  	if(this.collection) {
   	  	  return "P" + (this.collection.indexOf(this) + 1);
-	  	}
-	  	return "P-";
+  	  	}
+  	  	return "P-";
   	  }
   	},
   	location: {
