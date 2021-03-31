@@ -16,25 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+//Collections
+let Creators = require('./creators');
 //models
-var State = require('ampersand-state');
+let State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
-    fname: 'string',
-    lname: 'string',
-    email: 'string',
-    organization: 'string'
+    description: 'string'
   },
-  derived: {
-    elementID: {
-      deps: [],
-      fn: function () {
-        return "C" + (this.collection.indexOf(this) + 1)
-      }
-    }
-  },
-  initialize: function(attrs, options) {
-    State.prototype.initialize.apply(this, arguments)
+  collections: {
+    creators: Creators
   }
 });

@@ -20,8 +20,10 @@ let path = require('path');
 //Support Files
 let app = require('../app.js');
 //Collections
+let Creators = require('./creators');
 let WorkflowGroups = require('./workflow-groups');
 //Models
+let Metadata = require('./metadata');
 let Model = require('ampersand-model');
 
 module.exports = Model.extend({
@@ -29,11 +31,11 @@ module.exports = Model.extend({
     return path.join(app.getApiPath(), "project/load-project")+"?path="+this.directory;
   },
   children: {
-    // metadata: Metadata
+    metadata: Metadata
   },
   collections: {
-    workflowGroups: WorkflowGroups
-    // creators: Creators
+    workflowGroups: WorkflowGroups,
+    creators: Creators
   },
   session: {
     annotation: 'string',
