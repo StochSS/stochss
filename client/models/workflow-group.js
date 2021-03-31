@@ -20,7 +20,7 @@ let path = require('path');
 //Support Files
 let app = require('../app.js');
 //collections
-let Workflow = require('./workflows');
+let Workflows = require('./workflows');
 //models
 let Model = require('./model');
 let State = require('ampersand-state');
@@ -49,8 +49,11 @@ module.exports = State.extend({
     open: {
       deps: ["model"],
       fn: function () {
-        let queryStr = "?path" + this.model.directory;
-        return path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+        if(this.model.directory){
+          let queryStr = "?path=" + this.model.directory;
+          return path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+        }
+        return null
       }
     }
   }

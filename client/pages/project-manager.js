@@ -60,6 +60,9 @@ let ProjectManager = PageView.extend({
           $(self.queryByHook("collapse-annotation-container")).collapse('show');
         }
         $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
+        if(!self.model.newFormat) {
+          self.model.workflowGroups.models[0].model = null;
+        }
         self.renderSubviews()
       }
     });
@@ -131,6 +134,7 @@ let ProjectManager = PageView.extend({
     app.registerRenderSubview(this, this.projectFileBrowser, "file-browser");
   },
   renderSubviews: function () {
+    console.log(this.model)
     this.renderMetaDataView();
     this.renderProjectFileBrowser();
     $(document).on('hide.bs.modal', '.modal', function (e) {
