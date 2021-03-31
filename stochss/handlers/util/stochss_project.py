@@ -74,43 +74,39 @@ class StochSSProject(StochSSBase):
         model = model_class(path=mdl_path).load()
         model['name'] = self.get_name(path=file)
         model['directory'] = mdl_path
-        self.project['models'].append(model)
+        return model
 
 
     def __load_notebook(self, dirname, file):
         path = os.path.join(dirname, file)
         notebook = json.dumps(StochSSNotebook(path=path).load())
         status = "error" if "Traceback (most recent call last)" in notebook else "ready"
-        nb_wkfl = {"path":path, "annotation":"", "name":self.get_name(path=path),
-                   "status":status, "outputs":[], "type":"notebook"}
-        self.project['workflowGroups'][0]['workflows'].append(nb_wkfl)
+        nb_wkfl = {"directory":path, "annotation":"", "name":self.get_name(path=path),
+                   "status":status, "type":"Notebook"}
+        return nb_wkfl
 
 
     def __load_workflow(self, dirname, folder):
         path = os.path.join(dirname, folder)
         workflow = StochSSWorkflow(path=path)
         info = workflow.load_info()
-        outputs = workflow.load_settings()['resultsSettings']['outputs']
-        if outputs:
-            output = max(outputs, key=lambda output: output['stamp'])
-            if "plot" in self.project.keys():
-                if output['stamp'] > self.project['plot']['output']['stamp']:
-                    self.project['plot'] = {"path":path, "output":output}
-            else:
-                self.project['plot'] = {"path":path, "output":output}
-        wkfl = {"path":path, "annotation":info['annotation'],
+        wkfl = {"directory":path, "annotation":info['annotation'],
                 "name":self.get_name(path=path), "status":workflow.get_status(),
-                "type":workflow.TITLES[info['type']], "outputs":outputs}
-        self.project['workflowGroups'][0]['workflows'].append(wkfl)
+                "type":workflow.TITLES[info['type']]}
+        return wkfl
 
 
-    def __load_workflow_group(self, current_format, wkgp_path, file):
-        if current_format and self.MODEL_TEST(file):
-            self.__load_model(dirname=wkgp_path, file=file)
-        elif file.endswith(".wkfl"):
-            self.__load_workflow(dirname=wkgp_path, folder=file)
-        elif file.endswith(".ipynb"):
-            self.__load_notebook(dirname=wkgp_path, file=file)
+    def __load_workflow_group(self, current_format, file):
+        path = os.path.join(self.get_path(full=True), file)
+        wkgp = {"name": self.get_name(path=file), "workflows": [], "model": None}
+        for file_obj in os.listdir(path):
+            if current_format and self.MODEL_TEST(file_obj):
+                wkgp['model'] = self.__load_model(dirname=path, file=file_obj)
+            elif file_obj.endswith(".wkfl"):
+                wkgp['workflows'].append(self.__load_workflow(dirname=path, folder=file_obj))
+            elif file_obj.endswith(".ipynb"):
+                wkgp['workflows'].append(self.__load_notebook(dirname=path, file=file_obj))
+        self.project['workflowGroups'].append(wkgp)
 
 
     def add_model(self, file, model=None, new=False):
@@ -231,21 +227,16 @@ class StochSSProject(StochSSBase):
         trash_path = os.path.join(self.get_path(full=True), "trash")
         annotation = self.__load_annotation()
         self.project = {"name":self.get_name(), "directory":self.path, "annotation":annotation,
-                        "dirname":self.get_dir_name(), "newFormat": current_format}
+                        "dirname":self.get_dir_name(), "newFormat": current_format,
+                        "workflowGroups": []}
         if os.path.exists(trash_path):
             self.project['trash_empty'] = len(os.listdir(trash_path)) == 0
         else:
             self.project['trash_empty'] = True
             os.mkdir(trash_path)
-        # self.project = {"models":[], "newFormat": current_format,
-        #                 "workflowGroups":[{"name":"WorkflowGroup1", "workflows":[]}]}
-        # wkgp_test = lambda folder: folder.endswith(".wkgp")
-        # if current_format:
-        #     for wkgp in filter(wkgp_test, os.listdir(self.get_path(full=True))):
-        #         wkgp_path = os.path.join(self.path, wkgp)
-        #         for file in os.listdir(wkgp_path):
-        #             self.__load_workflow_group(current_format=current_format,
-        #                                        wkgp_path=wkgp_path, file=file)
+        wkgp_test = lambda folder: folder.endswith(".wkgp")
+        for wkgp in filter(wkgp_test, os.listdir(self.get_path(full=True))):
+            self.__load_workflow_group(current_format=current_format, file=wkgp)
         # else:
         #     for file_obj in os.listdir(self.get_path(full=True)):
         #         if self.MODEL_TEST(file_obj):
