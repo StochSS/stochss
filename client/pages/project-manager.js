@@ -21,12 +21,13 @@ let $ = require('jquery');
 let path = require('path');
 //support files
 let app = require('../app');
-var modals = require('../modals');
+let modals = require('../modals');
 //models
 let Project = require('../models/project');
 //views
 let PageView = require('./base');
-var FileBrowser = require('../views/file-browser-view');
+let MetaDataView = require('../views/meta-data');
+let FileBrowser = require('../views/file-browser-view');
 //templates
 let template = require('../templates/pages/projectManager.pug');
 
@@ -110,6 +111,15 @@ let ProjectManager = PageView.extend({
       }
     });
   },
+  renderMetaDataView: function () {
+    if(this.metaDataView) {
+      this.metaDataView.remove();
+    }
+    this.metaDataView = new MetaDataView({
+      model: this.model
+    });
+    app.registerRenderSubview(this, this.metaDataView, "project-meta-data-container");
+  },
   renderProjectFileBrowser: function () {
     if(this.projectFileBrowser) {
       this.projectFileBrowser.remove();
@@ -121,6 +131,7 @@ let ProjectManager = PageView.extend({
     app.registerRenderSubview(this, this.projectFileBrowser, "file-browser");
   },
   renderSubviews: function () {
+    this.renderMetaDataView();
     this.renderProjectFileBrowser();
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
