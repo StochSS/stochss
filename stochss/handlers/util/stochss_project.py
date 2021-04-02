@@ -67,10 +67,14 @@ class StochSSProject(StochSSBase):
         with open(path, "r") as md_file:
             data = json.load(md_file)
         creators = []
+        metadata = data['meta_data'] if "meta_data" in data.keys() else data['metadata']
         if "creators" in data.keys():
-            for _, info in data['creators'].items():
-                creators.append(info)
-        return data['meta_data'], creators
+            if isinstance(data['creators'], dict):
+                for _, info in data['creators'].items():
+                    creators.append(info)
+            else:
+                creators = data['creators']
+        return metadata, creators
 
 
     def __load_annotation(self):
@@ -124,6 +128,17 @@ class StochSSProject(StochSSBase):
             elif file_obj.endswith(".ipynb"):
                 wkgp['workflows'].append(self.__load_notebook(dirname=path, file=file_obj))
         self.project['workflowGroups'].append(wkgp)
+
+
+    @classmethod
+    def __update_metadata(cls, metadata, creators):
+        creator_ids = []
+        for email in metadata['creators']:
+            for i, creator in enumerate(creators):
+                if creator['email'] == email:
+                    creator_ids.append(f"C{i + 1}")
+        metadata['creators'] = creator_ids
+        return metadata
 
 
     def add_model(self, file, model=None, new=False):
@@ -220,7 +235,9 @@ class StochSSProject(StochSSBase):
         if "description" in metadata.keys():
             self.project['metadata'] = metadata
         else:
-            self.project['metadata'] = metadata[self.get_file()]
+            new_metadata = self.__update_metadata(metadata=metadata[self.get_file()],
+                                                  creators=creators)
+            self.project['metadata'] = new_metadata
         if os.path.exists(trash_path):
             self.project['trash_empty'] = len(os.listdir(trash_path)) == 0
         else:
@@ -228,7 +245,10 @@ class StochSSProject(StochSSBase):
             os.mkdir(trash_path)
         wkgp_test = lambda folder: folder.endswith(".wkgp")
         for wkgp in filter(wkgp_test, os.listdir(self.get_path(full=True))):
-            wkgp_md = metadata[wkgp] if wkgp in metadata.keys() else None
+            if wkgp in metadata.keys():
+                wkgp_md = self.__update_metadata(metadata=metadata[wkgp], creators=creators)
+            else:
+                wkgp_md = None
             self.__load_workflow_group(current_format=current_format, file=wkgp, metadata=wkgp_md)
         # else:
         #     for file_obj in os.listdir(self.get_path(full=True)):
@@ -256,7 +276,7 @@ class StochSSProject(StochSSBase):
             readme_file.write(annotation)
 
 
-    def update_meta_data(self, meta_data):
+    def update_meta_data(self, data):
         '''
         Updates the projects meta-data file.
 
@@ -265,6 +285,10 @@ class StochSSProject(StochSSBase):
         meta-data : str
             Meta-Data to be saved
         '''
-        path = os.path.join(self.get_path(full=True), ".meta-data.json")
-        with open(path, "w") as md_file:
-            md_file.write(meta_data)
+        for file, metadata in data.items():
+            if file.endswith(".proj"):
+                path = os.path.join(self.get_path(full=True), ".metadata.json")
+            else:
+                path = os.path.join(self.get_path(full=True), file, ".metadata.json")
+            with open(path, "w") as metadata_file:
+                json.dump(metadata, metadata_file)

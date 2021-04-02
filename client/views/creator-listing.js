@@ -33,6 +33,8 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
   },
   removeCreator: function (e) {
-    this.model.collection.remove(this.model);
+    let index = this.parent.metadata.creators.indexOf(this.model.elementID);
+    this.parent.metadata.creators.splice(index, 1);
+    this.parent.renderCreatorListingView();
   }
 });

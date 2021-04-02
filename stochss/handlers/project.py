@@ -316,11 +316,11 @@ class ProjectMetaDataAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Path to the project directory: %s", path)
-        data = self.request.body.decode()
+        data = json.loads(self.request.body.decode())
         log.debug("Meta-data to be saved: %s", data)
         try:
             project = StochSSProject(path=path)
-            project.update_meta_data(meta_data=data)
+            project.update_meta_data(data=data)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()

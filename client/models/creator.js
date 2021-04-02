@@ -24,15 +24,8 @@ module.exports = State.extend({
     fname: 'string',
     lname: 'string',
     email: 'string',
-    organization: 'string'
-  },
-  derived: {
-    elementID: {
-      deps: [],
-      fn: function () {
-        return "C" + (this.collection.indexOf(this) + 1)
-      }
-    }
+    organization: 'string',
+    elementID: 'string'
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments)

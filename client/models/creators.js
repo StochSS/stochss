@@ -23,5 +23,17 @@ let Creator = require('./creator');
 
 module.exports = Collection.extend({
   model: Creator,
-  indexes: ["email"]
+  indexes: ["elementID"],
+  addCreator: function (creatorInfo) {
+  	let elementID = "C" + (this.length + 1);
+  	let creator = new Creator({
+  	  fname: creatorInfo.fname,
+  	  lname: creatorInfo.lname,
+  	  email: creatorInfo.email,
+  	  organization: creatorInfo.organization,
+  	  elementID: elementID
+  	});
+  	this.add(creator);
+  	return creator;
+  }
 });
