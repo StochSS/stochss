@@ -231,7 +231,7 @@ class StochSSProject(StochSSBase):
         metadata, creators = self.__get_meta_data()
         self.project = {"name":self.get_name(), "directory":self.path, "annotation":annotation,
                         "dirname":self.get_dir_name(), "newFormat": current_format,
-                        "creators": creators, "workflowGroups": []}
+                        "creators": creators, "workflowGroups": [], "models": []}
         if "description" in metadata.keys():
             self.project['metadata'] = metadata
         else:
@@ -250,15 +250,9 @@ class StochSSProject(StochSSBase):
             else:
                 wkgp_md = None
             self.__load_workflow_group(current_format=current_format, file=wkgp, metadata=wkgp_md)
-        # else:
-        #     for file_obj in os.listdir(self.get_path(full=True)):
-        #         if self.MODEL_TEST(file_obj):
-        #             self.__load_model(dirname=self.path, file=file_obj)
-        #         elif wkgp_test(file_obj):
-        #             wkgp_path = os.path.join(self.path, file_obj)
-        #             for file in os.listdir(wkgp_path):
-        #                 self.__load_workflow_group(current_format=current_format,
-        #                                            wkgp_path=wkgp_path, file=file)
+        if not current_format:
+            for mdl in filter(self.MODEL_TEST, os.listdir(self.get_path(full=True))):
+                self.project['models'].append(self.__load_model(dirname=self.path, file=mdl))
         return self.project
 
 
