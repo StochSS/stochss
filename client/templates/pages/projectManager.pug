@@ -28,6 +28,44 @@ section.page
             div
               textarea(id="annotation" data-hook="annotation-text-container" rows="7" style="width: 100%;")
 
+    div.verticle-space-3(id=this.model.elementID+"-models-section")
+
+      div
+
+        button.btn.btn-outline-primary.inline.dropdown-toggle.box-shadow(
+          id="project-manager-add-model-btn",
+          data-hook="add-element-btn",
+          data-toggle="dropdown",
+          aria-haspopup="true",
+          aria-expanded="false",
+          type="button"
+        ) Add Model <span class="caret"></span>
+
+        ul.dropdown-menu(aria-labelledby="project-manager-add-model-btn")
+          li.dropdown-item(id="new-model" data-hook="new-model" data-type="model") New Model
+          li.dropdown-item(id="new-model" data-hook="new-model" data-type="spatial") New Spatial Model (beta)
+          li.dropdown-divider
+          li.dropdown-item(id="existing-model" data-hook="existing-model") Existing Model
+          li.dropdown-divider
+          li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model (.mdl or .smdl)
+
+    div.verticle-space-3(id=this.model.elementID+"-workflows-section" style="display: none;")
+
+      div
+
+        h3.inline Workflows
+
+      div.mx-1.row.head
+
+      div.mt-3(id=this.model.elementID + "-workflows-list" data-hook="workflow-listing")
+
+      div
+
+        button.btn.btn-outline-primary.box-shadow(
+          id=this.model.elementID + "-new-workflow",
+          data-hook="new-workflow"
+        ) Add New Workflow
+
     div.card.card-body(id=this.model.elementID+"-advanced-section")
 
       div

@@ -28,6 +28,7 @@ let Project = require('../models/project');
 let PageView = require('./base');
 let MetaDataView = require('../views/meta-data');
 let FileBrowser = require('../views/file-browser-view');
+let WorkflowListing = require('../views/workflow-listing');
 //templates
 let template = require('../templates/pages/projectManager.pug');
 
@@ -39,6 +40,7 @@ let ProjectManager = PageView.extend({
     'change [data-hook=annotation-text-container]' : 'updateAnnotation',
     'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=collapse-annotation-container]' : 'changeCollapseButtonText',
+    'click [data-hook=new-workflow]' : 'handleNewWorkflowClick',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
     'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
@@ -114,6 +116,34 @@ let ProjectManager = PageView.extend({
       }
     });
   },
+  handleNewWorkflowClick: function (e) {
+    let models = this.models;
+    if(models && models.length > 0) {
+      let self = this;
+      if(document.querySelector("#newProjectWorkflowModal")) {
+        document.querySelector("#newProjectWorkflowModal").remove();
+      }
+      let options = models.map(function (model) { return model.name });
+      let modal = $(modals.newProjectWorkflowHtml("Name of the model: ", options)).modal();
+      let okBtn = document.querySelector("#newProjectWorkflowModal .ok-model-btn");
+      let select = document.querySelector("#newProjectWorkflowModal #select");
+      okBtn.addEventListener('click', function (e) {
+        modal.modal('hide');
+        let mdlPath = models.filter(function (model) {
+          return model.name === select.value;
+        })[0].directory;
+        let projectPath = self.model.directory;
+        var parentPath = mdlPath.includes(".wkgp") ? path.dirname(mdlPath) : path.join(projectPath, "WorkflowGroup1.wkgp");
+        let queryString = "?path="+mdlPath+"&parentPath="+parentPath;
+        console.log(queryString)
+        // window.location.href = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
+      });
+    }else{
+      let title = "No Models Found";
+      let message = "You need to add a model before you can create a new workflow.";
+      let modal = $(modals.noModelsMessageHtml(title, message)).modal();
+    }
+  },
   renderMetaDataView: function () {
     if(this.metaDataView) {
       this.metaDataView.remove();
@@ -134,16 +164,55 @@ let ProjectManager = PageView.extend({
     app.registerRenderSubview(this, this.projectFileBrowser, "file-browser");
   },
   renderSubviews: function () {
-    console.log(this.model)
+    PageView.prototype.render.apply(this, arguments);
+    if(this.model.newFormat) {
+      console.log("TODO: Render Workflow Groups Collection")
+      console.log("TODO: Render Archives Collection")
+    }else{
+      $("#"+this.model.elementID+"-workflows-section").css("display", "block");
+      this.renderWorkflowsCollection();
+      console.log("TODO: Render Models collection")
+    }
+    // console.log(this.model.workflowGroups.models[0].workflows)
     this.renderMetaDataView();
     this.renderProjectFileBrowser();
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderWorkflowsCollection: function () {
+    if(this.workflowsCollectionView) {
+      this.workflowsCollectionView.remove();
+    }
+    this.workflowsCollectionView = this.renderCollection(
+      this.model.workflowGroups.models[0].workflows,
+      WorkflowListing,
+      this.queryByHook("workflow-listing")
+    );
   },
   update: function (target) {
-    if(target === "trash"){
-      this.projectFileBrowser.refreshJSTree();
+    this.projectFileBrowser.refreshJSTree();
+    let fetchTypes = ["Model", "Workflow", "WorkflowGroup"];
+    if(fetchTypes.includes(target)) {
+      let self = this;
+      this.model.fetch({
+        success: function (model, response, options) {
+          if(model.newFormat) {
+            console.log("TODO")
+          }else{
+            if(target === "Workflow"){
+              self.renderWorkflowsCollection();
+            }
+          }
+          $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
+        }
+      });
     }
   },
   updateAnnotation: function (e) {
