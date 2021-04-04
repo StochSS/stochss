@@ -32,7 +32,7 @@ module.exports = State.extend({
   },
   derived: {
     elementID: {
-      deps: [],
+      deps: ["collection"],
       fn: function () {
         if(this.collection) {
           return this.collection.parent.elementID + "W" + (this.collection.indexOf(this) + 1)

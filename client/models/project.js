@@ -46,7 +46,7 @@ module.exports = Model.extend({
   },
   derived: {
   	elementID: {
-  	  deps: [],
+  	  deps: ["collection"],
   	  fn: function () {
   	  	if(this.collection) {
   	  	  return "P" + (this.collection.indexOf(this) + 1);
