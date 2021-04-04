@@ -70,7 +70,7 @@ module.exports = Model.extend({
       deps: ["collection"],
       fn: function () {
         if(this.collection) {
-          return "M" + this.collection.indexOf(this);
+          return "M" + (this.collection.indexOf(this) + 1);
         }
         return "M-";
       }

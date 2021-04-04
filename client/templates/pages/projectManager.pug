@@ -28,7 +28,15 @@ section.page
             div
               textarea(id="annotation" data-hook="annotation-text-container" rows="7" style="width: 100%;")
 
-    div.verticle-space-3(id=this.model.elementID+"-models-section")
+    div.verticle-space-3(id=this.model.elementID + "-models-section")
+
+      div
+
+        h3.inline Models
+
+      div.mx-1.row.head
+
+      div.mt-3(id=this.model.elementID + "-models-list" data-hook="model-listing")
 
       div
 
@@ -49,7 +57,7 @@ section.page
           li.dropdown-divider
           li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model (.mdl or .smdl)
 
-    div.verticle-space-3(id=this.model.elementID+"-workflows-section" style="display: none;")
+    div.verticle-space-3(id=this.model.elementID + "-workflows-section" style="display: none;")
 
       div
 

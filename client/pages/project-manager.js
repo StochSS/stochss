@@ -22,11 +22,15 @@ let path = require('path');
 //support files
 let app = require('../app');
 let modals = require('../modals');
+//collection
+let Collection = require('ampersand-collection');
 //models
+let Model = require('../models/model');
 let Project = require('../models/project');
 //views
 let PageView = require('./base');
 let MetaDataView = require('../views/meta-data');
+let ModelListing = require('../views/model-listing');
 let FileBrowser = require('../views/file-browser-view');
 let WorkflowListing = require('../views/workflow-listing');
 //templates
@@ -61,6 +65,7 @@ let ProjectManager = PageView.extend({
           $(self.queryByHook('annotation-text-container')).text(model.annotation);
           $(self.queryByHook("collapse-annotation-container")).collapse('show');
         }
+        self.models = new Collection(response.models, {model: Model});
         $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
         if(!self.model.newFormat) {
           self.model.workflowGroups.models[0].model = null;
@@ -153,6 +158,16 @@ let ProjectManager = PageView.extend({
     });
     app.registerRenderSubview(this, this.metaDataView, "project-meta-data-container");
   },
+  renderModelsCollection: function () {
+    if(this.modelCollectionView){
+      this.modelCollectionView.remove();
+    }
+    this.modelCollectionView = this.renderCollection(
+      this.models,
+      ModelListing,
+      this.queryByHook("model-listing")
+    );
+  },
   renderProjectFileBrowser: function () {
     if(this.projectFileBrowser) {
       this.projectFileBrowser.remove();
@@ -170,10 +185,9 @@ let ProjectManager = PageView.extend({
       console.log("TODO: Render Archives Collection")
     }else{
       $("#"+this.model.elementID+"-workflows-section").css("display", "block");
+      this.renderModelsCollection();
       this.renderWorkflowsCollection();
-      console.log("TODO: Render Models collection")
     }
-    // console.log(this.model.workflowGroups.models[0].workflows)
     this.renderMetaDataView();
     this.renderProjectFileBrowser();
     $(document).on('hide.bs.modal', '.modal', function (e) {
@@ -187,10 +201,10 @@ let ProjectManager = PageView.extend({
     });
   },
   renderWorkflowsCollection: function () {
-    if(this.workflowsCollectionView) {
-      this.workflowsCollectionView.remove();
+    if(this.workflowCollectionView) {
+      this.workflowCollectionView.remove();
     }
-    this.workflowsCollectionView = this.renderCollection(
+    this.workflowCollectionView = this.renderCollection(
       this.model.workflowGroups.models[0].workflows,
       WorkflowListing,
       this.queryByHook("workflow-listing")
@@ -208,6 +222,10 @@ let ProjectManager = PageView.extend({
           }else{
             if(target === "Workflow"){
               self.renderWorkflowsCollection();
+            }
+            if(target === "Model"){
+              self.models = new Collection(response.models, {model: Model});
+              self.renderModelsCollection();
             }
           }
           $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
