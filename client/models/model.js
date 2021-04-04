@@ -65,6 +65,24 @@ module.exports = Model.extend({
     valid: 'boolean',
     error: 'object'
   },
+  derived: {
+    elementID: {
+      deps: ["collection"],
+      fn: function () {
+        if(this.collection) {
+          return this.collection.parent.elementID + "M" + this.collection.indexOf(this);
+        }
+        return "M-";
+      }
+    },
+    open: {
+      deps: ["directory"],
+      fn: function () {
+        let queryStr = "?path=" + this.directory;
+        return path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+      }
+    }
+  }
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
     this.species.on('add change remove', this.updateValid, this);
