@@ -70,7 +70,7 @@ module.exports = Model.extend({
       deps: ["collection"],
       fn: function () {
         if(this.collection) {
-          return this.collection.parent.elementID + "M" + this.collection.indexOf(this);
+          return "M" + this.collection.indexOf(this);
         }
         return "M-";
       }
@@ -82,7 +82,7 @@ module.exports = Model.extend({
         return path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
       }
     }
-  }
+  },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
     this.species.on('add change remove', this.updateValid, this);
