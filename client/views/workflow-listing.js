@@ -44,7 +44,11 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     if(this.model.collection.parent.collection.parent.newFormat) {
-      $(self.queryByHook(this.model.elementID + "-status")).css("display", "none");
+      $(this.queryByHook(this.model.elementID + "-status")).css("display", "none");
+      if(this.model.collection.indexOf(this.model) === this.model.collection.length - 1) {
+        console.log($("#" + this.model.elementID + "-divider"), "#" + this.model.elementID + "-divider")
+        $(this.queryByHook(this.model.elementID + "-divider")).css("display", "none");
+      }
     }else if(this.model.status === "running"){
       this.getStatus();
     }

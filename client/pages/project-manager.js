@@ -33,6 +33,7 @@ let MetaDataView = require('../views/meta-data');
 let ModelListing = require('../views/model-listing');
 let FileBrowser = require('../views/file-browser-view');
 let WorkflowListing = require('../views/workflow-listing');
+let WorkflowGroupListing = require('../views/workflow-group-listing');
 //templates
 let template = require('../templates/pages/projectManager.pug');
 
@@ -181,7 +182,7 @@ let ProjectManager = PageView.extend({
   renderSubviews: function () {
     PageView.prototype.render.apply(this, arguments);
     if(this.model.newFormat) {
-      console.log("TODO: Render Workflow Groups Collection")
+      this.renderWorkflowGroupCollection();
       console.log("TODO: Render Archives Collection")
     }else{
       $("#"+this.model.elementID+"-workflows-section").css("display", "block");
@@ -208,6 +209,16 @@ let ProjectManager = PageView.extend({
       this.model.workflowGroups.models[0].workflows,
       WorkflowListing,
       this.queryByHook("workflow-listing")
+    );
+  },
+  renderWorkflowGroupCollection: function () {
+    if(this.workflowGroupCollection) {
+      this.workflowGroupCollection.remaove();
+    }
+    this.workflowGroupCollection = this.renderCollection(
+      this.model.workflowGroups,
+      WorkflowGroupListing,
+      this.queryByHook("model-listing")
     );
   },
   update: function (target) {
