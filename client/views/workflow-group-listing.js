@@ -82,6 +82,9 @@ module.exports = View.extend({
       this.queryByHook("workflow-listing")
     );
   },
+  update: function (target) {
+    this.parent.update(target);
+  },
   updateAnnotation: function (e) {
     this.model.model.annotation = e.target.value.trim();
     this.model.model.saveModel();
