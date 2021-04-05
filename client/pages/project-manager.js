@@ -65,18 +65,11 @@ let ProjectManager = PageView.extend({
     });
     this.model.fetch({
       success: function (model, response, options) {
-        $("#page-title").text("Project: " + model.name);
-        if(model.annotation){
-          $(self.queryByHook('edit-annotation-btn')).text('Edit Notes');
-          $(self.queryByHook('annotation-text-container')).text(model.annotation);
-          $(self.queryByHook("collapse-annotation-container")).collapse('show');
-        }
         self.models = new Collection(response.models, {model: Model});
-        $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
         if(!self.model.newFormat) {
           self.model.workflowGroups.models[0].model = null;
         }
-        self.renderSubviews()
+        self.renderSubviews(response.trash_empty);
       }
     });
   },
@@ -322,8 +315,14 @@ let ProjectManager = PageView.extend({
     });
     app.registerRenderSubview(this, this.projectFileBrowser, "file-browser");
   },
-  renderSubviews: function () {
+  renderSubviews: function (emptyTrash) {
     PageView.prototype.render.apply(this, arguments);
+    $("#page-title").text("Project: " + this.model.name);
+    if(this.model.annotation){
+      $(self.queryByHook('edit-annotation-btn')).text('Edit Notes');
+      $(self.queryByHook('annotation-text-container')).text(this.model.annotation);
+      $(self.queryByHook("collapse-annotation-container")).collapse('show');
+    }
     if(this.model.newFormat) {
       $("#" + this.model.elementID + "-archive-section").css("display", "block");
       this.renderWorkflowGroupCollection();
@@ -335,6 +334,7 @@ let ProjectManager = PageView.extend({
     }
     this.renderMetaDataView();
     this.renderProjectFileBrowser();
+    $(this.queryByHook('empty-project-trash')).prop('disabled', emptyTrash);
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });

@@ -90,7 +90,7 @@ module.exports = View.extend({
                 node.original._path = path.join(newDir, file)
                 if((node.type === "nonspatial" || node.type === "spatial") && (oldPath.includes("trash") || newDir.includes("trash"))) {
                   self.updateParent("Archive");
-                }else if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.inculdes(".wkgp")) {
+                }else if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.includes(".wkgp")) {
                   self.updateParent(node.type)
                 }
               }else{
@@ -809,9 +809,9 @@ module.exports = View.extend({
         });
       }
     }else{
-      let mdlPath = o.type === "workflow-group" ? this.parent.models.filter(function (model) {
-        return o.text.startsWith(model.name)
-      })[0].directory : o.original._path;
+      let mdlPath = o.type === "workflow-group" ? this.parent.model.workflowGroups.filter(function (wkgp) {
+        return o.text.startsWith(wkgp.name)
+      })[0].model.directory : o.original._path;
       let dirname = o.type === "workflow-group" ? o.original._path : path.dirname(o.original._path);
       let queryString = "?path=" + mdlPath + "&parentPath=" + dirname;
       let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection") + queryString;

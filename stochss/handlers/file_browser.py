@@ -236,9 +236,11 @@ class RenameAPIHandler(APIHandler):
             is_model = path.endswith(".mdl") or path.endswith(".smdl")
             if ".proj" in path and ".wkgp" in path and is_model:
                 wkgp = StochSSBase(path=os.path.dirname(path))
-                wkgp.rename(name=f"{wkgp.get_name(path=new_name)}.wkgp")
+                new_path, _ = wkgp.get_unique_path(name=f"{wkgp.get_name(path=new_name)}.wkgp")
+                wkgp.rename(name=wkgp.get_file(path=new_path))
                 file_obj = StochSSBase(path=os.path.join(wkgp.path, wkgp.get_file(path=path)))
-                resp = file_obj.rename(name=f"{wkgp.get_name()}.{path.split('.').pop()}")
+                file_name = f"{wkgp.get_name(path=new_path)}.{path.split('.').pop()}"
+                resp = file_obj.rename(name=file_name)
             else:
                 file_obj = StochSSBase(path=path)
                 resp = file_obj.rename(name=new_name)
