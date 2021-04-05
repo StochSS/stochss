@@ -45,6 +45,9 @@ let ProjectManager = PageView.extend({
     'change [data-hook=annotation-text-container]' : 'updateAnnotation',
     'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
     'click [data-hook=collapse-annotation-container]' : 'changeCollapseButtonText',
+    'click [data-hook=new-model]' : 'handleNewModelClick',
+    'click [data-hook=existing-model]' : 'handleExistingModelClick',
+    'click [data-hook=upload-file-btn]' : 'handleUploadModelClick',
     'click [data-hook=new-workflow]' : 'handleNewWorkflowClick',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
     'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
@@ -72,6 +75,124 @@ let ProjectManager = PageView.extend({
           self.model.workflowGroups.models[0].model = null;
         }
         self.renderSubviews()
+      }
+    });
+  },
+  addExistingModel: function () {
+    if(document.querySelector('#newProjectModelModal')){
+      document.querySelector('#newProjectModelModal').remove();
+    }
+    let self = this
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path=" + self.model.directory;
+    xhr({uri:mdlListEP, json:true}, function (err, response, body) {
+      let modal = $(modals.newProjectModelHtml(body.files)).modal();
+      let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
+      let select = document.querySelector('#newProjectModelModal #modelFileInput');
+      let location = document.querySelector('#newProjectModelModal #modelPathInput');
+      select.addEventListener("change", function (e) {
+        okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
+        if(body.paths[e.target.value].length >= 2) {
+          var locations = body.paths[e.target.value].map(function (path) {
+            return `<option>${path}</option>`;
+          });
+          locations.unshift(`<option value="">Select a location</option>`);
+          locations = locations.join(" ");
+          $("#modelPathInput").find('option').remove().end().append(locations);
+          $("#location-container").css("display", "block");
+        }else{
+          $("#location-container").css("display", "none");
+          $("#modelPathInput").find('option').remove().end();
+        }
+      });
+      location.addEventListener("change", function (e) {
+        okBtn.disabled = !Boolean(e.target.value);
+      });
+      okBtn.addEventListener("click", function (e) {
+        modal.modal('hide');
+        let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
+        let queryString = "?path=" + self.model.directory + "&mdlPath=" + mdlPath;
+        let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
+        xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
+          if(response.statusCode < 400) {
+            let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
+          }else{
+            let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+          }
+        });
+        self.update("Model");
+      });
+    });
+  },
+  addModel: function (parentPath, modelName, message) {
+    var endpoint = path.join(app.getBasePath(), "stochss/models/edit");
+    if(parentPath.endsWith(".proj")) {
+      let queryString = "?path=" + parentPath + "&mdlFile=" + modelName;
+      let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryString;
+      xhr({uri: newMdlEP, json: true}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          endpoint += "?path="+body.path;
+          window.location.href = endpoint;
+        }else{
+          let title = "Model Already Exists";
+          let message = "A model already exists with that name";
+          let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+        }
+      });
+    }else{
+      let modelPath = path.join(parentPath, modelName);
+      let queryString = "?path="+modelPath+"&message="+message;
+      endpoint += queryString;
+      let existEP = path.join(app.getApiPath(), "model/exists")+queryString;
+      xhr({uri: existEP, json: true}, function (err, response, body) {
+        if(body.exists) {
+          let title = "Model Already Exists";
+          let message = "A model already exists with that name";
+          let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+        }else{
+          window.location.href = endpoint;
+        }
+      });
+    }
+  },
+  addNewModel: function (isSpatial) {
+    if(document.querySelector('#newModalModel')) {
+      document.querySelector('#newModalModel').remove();
+    }
+    let self = this;
+    let modal = $(modals.renderCreateModalHtml(true, isSpatial)).modal();
+    let okBtn = document.querySelector('#newModalModel .ok-model-btn');
+    let input = document.querySelector('#newModalModel #modelNameInput');
+    okBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      if (Boolean(input.value)) {
+        let ext = isSpatial ? ".smdl" : ".mdl";
+        let modelName = input.value.split("/").pop() + ext;
+        let message = modelName.split(".")[0] !== input.value ? 
+              "Warning: The save as feature is not available for models in projects." : "";
+        if(message){
+          let warningModal = $(modals.newProjectModelWarningHtml(message)).modal();
+          let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
+          yesBtn.addEventListener('click', function (e) {
+            warningModal.modal('hide');
+            self.addModel(self.model.directory, modelName, message);
+          });
+        }else{
+          self.addModel(self.model.directory, modelName, message);
+        }
+      }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== "" || input.value.trim() === ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
       }
     });
   },
@@ -108,6 +229,9 @@ let ProjectManager = PageView.extend({
       });
     });
   },
+  handleExistingModelClick: function () {
+    this.addExistingModel()
+  },
   handleExportCombineClick: function () {
     this.exportAsCombine();
   },
@@ -121,6 +245,10 @@ let ProjectManager = PageView.extend({
         window.open(downloadEP);
       }
     });
+  },
+  handleNewModelClick: function (e) {
+    let isSpatial = e.target.dataset.type === "spatial";
+    this.addNewModel(isSpatial);
   },
   handleNewWorkflowClick: function (e) {
     let models = this.models;
@@ -141,14 +269,17 @@ let ProjectManager = PageView.extend({
         let projectPath = self.model.directory;
         var parentPath = mdlPath.includes(".wkgp") ? path.dirname(mdlPath) : path.join(projectPath, "WorkflowGroup1.wkgp");
         let queryString = "?path="+mdlPath+"&parentPath="+parentPath;
-        console.log(queryString)
-        // window.location.href = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
+        window.location.href = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
       });
     }else{
       let title = "No Models Found";
       let message = "You need to add a model before you can create a new workflow.";
       let modal = $(modals.noModelsMessageHtml(title, message)).modal();
     }
+  },
+  handleUploadModelClick: function (e) {
+    let type = e.target.dataset.type
+    this.projectFileBrowser.uploadFile(undefined, type)
   },
   renderMetaDataView: function () {
     if(this.metaDataView) {
@@ -253,6 +384,19 @@ let ProjectManager = PageView.extend({
     }
     let endpoint = path.join(app.getApiPath(), "project/save-annotation")+"?path="+this.model.directory;
     xhr({uri: endpoint, json: true, method: "post", data: {'annotation': this.model.annotation}});
+  },
+  validateName(input) {
+    var error = "";
+    if(input.endsWith('/')) {
+      error = 'forward';
+    }
+    let invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
+    for(var i = 0; i < input.length; i++) {
+      if(invalidChars.includes(input.charAt(i))) {
+        error = error === "" || error === "special" ? "special" : "both";
+      }
+    }
+    return error;
   }
 });
 
