@@ -41,10 +41,11 @@ module.exports = State.extend({
     elementID: {
       deps: ["collection"],
       fn: function () {
+        let identifier = Boolean(this.model.name) ? "WG" : "AW"
         if(this.collection) {
-          return this.collection.parent.elementID + "WG" + (this.collection.indexOf(this) + 1)
+          return this.collection.parent.elementID + identifier + (this.collection.indexOf(this) + 1)
         }
-        return "WG-"
+        return identifier + "-"
       }
     },
     open: {

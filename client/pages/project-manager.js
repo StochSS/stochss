@@ -32,6 +32,7 @@ let PageView = require('./base');
 let MetaDataView = require('../views/meta-data');
 let ModelListing = require('../views/model-listing');
 let FileBrowser = require('../views/file-browser-view');
+let ArchiveListing = require('../views/archive-listing');
 let WorkflowListing = require('../views/workflow-listing');
 let WorkflowGroupListing = require('../views/workflow-group-listing');
 //templates
@@ -50,6 +51,7 @@ let ProjectManager = PageView.extend({
     'click [data-hook=upload-file-btn]' : 'handleUploadModelClick',
     'click [data-hook=new-workflow]' : 'handleNewWorkflowClick',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
+    'click [data-hook=archive-btn]' : 'changeCollapseButtonText',
     'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick'
@@ -281,6 +283,16 @@ let ProjectManager = PageView.extend({
     let type = e.target.dataset.type
     this.projectFileBrowser.uploadFile(undefined, type)
   },
+  renderArchiveCollection: function () {
+    if(this.archiveCollectionView) {
+      this.archiveCollectionView.remove();
+    }
+    this.archiveCollectionView = this.renderCollection(
+      this.model.archive,
+      ArchiveListing,
+      this.queryByHook("archive-listing")
+    );
+  },
   renderMetaDataView: function () {
     if(this.metaDataView) {
       this.metaDataView.remove();
@@ -313,10 +325,11 @@ let ProjectManager = PageView.extend({
   renderSubviews: function () {
     PageView.prototype.render.apply(this, arguments);
     if(this.model.newFormat) {
+      $("#" + this.model.elementID + "-archive-section").css("display", "block");
       this.renderWorkflowGroupCollection();
-      console.log("TODO: Render Archives Collection")
+      this.renderArchiveCollection();
     }else{
-      $("#"+this.model.elementID+"-workflows-section").css("display", "block");
+      $("#" + this.model.elementID + "-workflows-section").css("display", "block");
       this.renderModelsCollection();
       this.renderWorkflowsCollection();
     }

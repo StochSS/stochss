@@ -74,7 +74,7 @@ section.page
           data-hook="new-workflow"
         ) Add New Workflow
 
-    div.card.card-body(id=this.model.elementID+"-advanced-section")
+    div.card.card-body(id=this.model.elementID + "-advanced-section")
 
       div
 
@@ -83,6 +83,20 @@ section.page
         button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#project-manager-advanced" data-hook="project-manager-advanced-btn") +
 
       div.collapse(id="project-manager-advanced" data-hook="project-manager-advanced")
+
+        div.card.card-body(id=this.model.elementID + "-archive-section" style="display: none;")
+
+          div
+
+            h3.inline Archived Workflows
+
+            button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "-archive-container" data-hook="archive-btn") +
+
+          div.collapse(id=this.model.elementID + "-archive-container")
+          
+            div.mt-1.mb-3.head
+
+            div(id=this.model.elementID + "-archive-list" data-hook="archive-listing")
 
         div(id="project-meta-data-container" data-hook="project-meta-data-container")
 

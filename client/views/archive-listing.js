@@ -26,13 +26,12 @@ let modals = require('../modals');
 let View = require('ampersand-view');
 let WorkflowListing = require("./workflow-listing");
 //templates
-let template = require('../templates/includes/workflowGroupListing.pug');
+let template = require('../templates/includes/archiveListing.pug');
 
 module.exports = View.extend({
   template: template,
   events: function () {
     let events = {};
-    events['change [data-hook=' + this.model.elementID + '-annotation'] = 'updateAnnotation';
     events['click [data-hook=' + this.model.elementID + '-remove'] = 'handleTrashModelClick';
     events['click [data-hook=' + this.model.elementID + '-tab-btn'] = 'changeCollapseButtonText';
     return events;
@@ -42,10 +41,6 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
-    let parentPath = path.dirname(this.model.model.directory);
-    let queryString = "?path=" + this.model.model.directory + "&parentPath=" + parentPath;
-    let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
-    $(this.queryByHook(this.model.elementID + "-workflow-btn")).prop("href", endpoint);
     this.renderWorkflowCollection();
   },
   changeCollapseButtonText: function (e) {
@@ -56,14 +51,14 @@ module.exports = View.extend({
       document.querySelector('#moveToTrashConfirmModal').remove();
     }
     let self = this;
-    let modal = $(modals.moveToTrashConfirmHtml("model", true)).modal();
+    let modal = $(modals.moveToTrashConfirmHtml("Archive")).modal();
     let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       modal.modal('hide');
-      let file = self.model.model.directory.split('/').pop();
+      let file = self.model.name + ".wkgp";
       let projectPath = self.parent.model.directory;
       let trashPath = path.join(projectPath, "trash", file);
-      let queryString = "?srcPath=" + self.model.model.directory + "&dstPath=" + trashPath;
+      let queryString = "?srcPath=" + path.join(projectPath, file) + "&dstPath=" + trashPath;
       let endpoint = path.join(app.getApiPath(), 'file/move') + queryString;
       xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode < 400) {
@@ -84,9 +79,5 @@ module.exports = View.extend({
   },
   update: function (target) {
     this.parent.update(target);
-  },
-  updateAnnotation: function (e) {
-    this.model.model.annotation = e.target.value.trim();
-    this.model.model.saveModel();
   }
 });
