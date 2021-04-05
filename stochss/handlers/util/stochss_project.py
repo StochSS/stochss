@@ -127,7 +127,10 @@ class StochSSProject(StochSSBase):
                 wkgp['workflows'].append(self.__load_workflow(dirname=path, folder=file_obj))
             elif file_obj.endswith(".ipynb"):
                 wkgp['workflows'].append(self.__load_notebook(dirname=path, file=file_obj))
-        self.project['workflowGroups'].append(wkgp)
+        if current_format and wkgp['model'] is None:
+            self.project['archive'].append(wkgp)
+        else:
+            self.project['workflowGroups'].append(wkgp)
 
 
     @classmethod
@@ -231,7 +234,7 @@ class StochSSProject(StochSSBase):
         metadata, creators = self.__get_meta_data()
         self.project = {"name":self.get_name(), "directory":self.path, "annotation":annotation,
                         "dirname":self.get_dir_name(), "newFormat": current_format,
-                        "creators": creators, "workflowGroups": [], "models": []}
+                        "creators": creators, "workflowGroups": [], "archive":[], "models": []}
         if "description" in metadata.keys():
             self.project['metadata'] = metadata
         else:

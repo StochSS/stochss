@@ -35,6 +35,7 @@ module.exports = Model.extend({
   },
   collections: {
     workflowGroups: WorkflowGroups,
+    archive: WorkflowGroups,
     creators: Creators
   },
   session: {
