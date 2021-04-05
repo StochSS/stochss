@@ -233,10 +233,14 @@ module.exports = {
 
         return templates.confirmation(modalID, title)
     },
-    moveToTrashConfirmHtml : (fileType) => {
+    moveToTrashConfirmHtml : (fileType, newProjectFormat=false) => {
         let modalID = "moveToTrashConfirmModal"
         let title = `Move this ${fileType} to trash?`
 
+        if(newProjectFormat) {
+          let message = "The workflows for this model will be archived"
+          return templates.confirmation_with_message(modalID, title, message);
+        }
         return templates.confirmation(modalID, title)
     },
     emptyTrashConfirmHtml : () => {

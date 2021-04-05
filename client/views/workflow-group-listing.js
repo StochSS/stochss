@@ -16,10 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 //support files
 let app = require('../app');
+let modals = require('../modals');
 //views
 let View = require('ampersand-view');
 let WorkflowListing = require("./workflow-listing");
@@ -28,6 +30,13 @@ let template = require('../templates/includes/workflowGroupListing.pug');
 
 module.exports = View.extend({
   template: template,
+  events: function () {
+    let events = {};
+    events['change [data-hook=' + this.model.elementID + '-annotation'] = 'updateAnnotation';
+    events['click [data-hook=' + this.model.elementID + '-remove'] = 'handleTrashModelClick';
+    events['click [data-hook=' + this.model.elementID + '-tab-btn'] = 'changeCollapseButtonText';
+    return events;
+  },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
   },
@@ -42,6 +51,27 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
+  handleTrashModelClick: function () {
+    if(document.querySelector('#moveToTrashConfirmModal')) {
+      document.querySelector('#moveToTrashConfirmModal').remove();
+    }
+    let self = this;
+    let modal = $(modals.moveToTrashConfirmHtml("model", true)).modal();
+    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
+    yesBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      let file = self.model.model.directory.split('/').pop();
+      let projectPath = self.parent.model.directory;
+      let trashPath = path.join(projectPath, "trash", file);
+      let queryString = "?srcPath=" + self.model.model.directory + "&dstPath=" + trashPath;
+      let endpoint = path.join(app.getApiPath(), 'file/move') + queryString;
+      xhr({uri: endpoint, json: true}, function (err, response, body) {
+        if(response.statusCode < 400) {
+          self.parent.update("WorkflowGroup");
+        }
+      });
+    });
+  },
   renderWorkflowCollection: function () {
     if(this.workflowCollectionView){
       this.workflowCollectionView.remove();
@@ -51,5 +81,9 @@ module.exports = View.extend({
       WorkflowListing,
       this.queryByHook("workflow-listing")
     );
+  },
+  updateAnnotation: function (e) {
+    this.model.model.annotation = e.target.value.trim();
+    this.model.model.saveModel();
   }
 });

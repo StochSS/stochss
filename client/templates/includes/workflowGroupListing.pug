@@ -42,4 +42,6 @@ div
 
       div.tab-pane(id=this.model.elementID + "-notes-tab")
 
-        div: textarea(id=this.model.elementID + "-annotation" data-hook=this.model.elementID + "-annotation" rows="7" style="width: 100%;")=this.model.model.annotation
+        div
+
+          textarea(id=this.model.elementID + "-annotation" data-hook=this.model.elementID + "-annotation" rows="7" style="width: 100%;")=this.model.model.annotation

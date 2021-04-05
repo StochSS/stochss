@@ -46,7 +46,6 @@ module.exports = View.extend({
     if(this.model.collection.parent.collection.parent.newFormat) {
       $(this.queryByHook(this.model.elementID + "-status")).css("display", "none");
       if(this.model.collection.indexOf(this.model) === this.model.collection.length - 1) {
-        console.log($("#" + this.model.elementID + "-divider"), "#" + this.model.elementID + "-divider")
         $(this.queryByHook(this.model.elementID + "-divider")).css("display", "none");
       }
     }else if(this.model.status === "running"){

@@ -88,7 +88,9 @@ module.exports = View.extend({
             xhr({uri: endpoint}, function(err, response, body) {
               if(response.statusCode < 400) {
                 node.original._path = path.join(newDir, file)
-                if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.inculdes(".wkgp")) {
+                if((node.type === "nonspatial" || node.type === "spatial") && (oldPath.includes("trash") || newDir.includes("trash"))) {
+                  self.updateParent("Archive");
+                }else if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.inculdes(".wkgp")) {
                   self.updateParent(node.type)
                 }
               }else{
@@ -196,6 +198,8 @@ module.exports = View.extend({
       this.parent.update("Workflow")
     }else if(type === "workflow-group") {
       this.parent.update("WorkflowGroup")
+    }else if(type === "Archive") {
+      this.parent.update(type);
     }
   },
   refreshJSTree: function () {

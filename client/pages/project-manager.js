@@ -213,7 +213,7 @@ let ProjectManager = PageView.extend({
   },
   renderWorkflowGroupCollection: function () {
     if(this.workflowGroupCollection) {
-      this.workflowGroupCollection.remaove();
+      this.workflowGroupCollection.remove();
     }
     this.workflowGroupCollection = this.renderCollection(
       this.model.workflowGroups,
@@ -223,13 +223,14 @@ let ProjectManager = PageView.extend({
   },
   update: function (target) {
     this.projectFileBrowser.refreshJSTree();
-    let fetchTypes = ["Model", "Workflow", "WorkflowGroup"];
+    let fetchTypes = ["Model", "Workflow", "WorkflowGroup", "Archive"];
     if(fetchTypes.includes(target)) {
       let self = this;
       this.model.fetch({
         success: function (model, response, options) {
           if(model.newFormat) {
-            console.log("TODO")
+            self.renderWorkflowGroupCollection();
+            console.log(target)
           }else{
             if(target === "Workflow"){
               self.renderWorkflowsCollection();
