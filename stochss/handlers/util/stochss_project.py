@@ -91,7 +91,7 @@ class StochSSProject(StochSSBase):
         mdl_path = os.path.join(dirname, file)
         model = model_class(path=mdl_path).load()
         model['name'] = self.get_name(path=file)
-        model['directory'] = mdl_path
+        model['directory'] = mdl_path.replace(self.user_dir + "/", "")
         return model
 
 
@@ -99,8 +99,8 @@ class StochSSProject(StochSSBase):
         path = os.path.join(dirname, file)
         notebook = json.dumps(StochSSNotebook(path=path).load())
         status = "error" if "Traceback (most recent call last)" in notebook else "ready"
-        nb_wkfl = {"directory":path, "annotation":"", "name":self.get_name(path=path),
-                   "status":status, "type":"Notebook"}
+        nb_wkfl = {"directory":path.replace(self.user_dir + "/", ""), "annotation":"",
+                   "name":self.get_name(path=path), "status":status, "type":"Notebook"}
         return nb_wkfl
 
 
@@ -108,7 +108,7 @@ class StochSSProject(StochSSBase):
         path = os.path.join(dirname, folder)
         workflow = StochSSWorkflow(path=path)
         info = workflow.load_info()
-        wkfl = {"directory":path, "annotation":info['annotation'],
+        wkfl = {"directory":path.replace(self.user_dir + "/", ""), "annotation":info['annotation'],
                 "name":self.get_name(path=path), "status":workflow.get_status(),
                 "type":workflow.TITLES[info['type']]}
         return wkfl
@@ -234,7 +234,7 @@ class StochSSProject(StochSSBase):
         metadata, creators = self.__get_meta_data()
         self.project = {"name":self.get_name(), "directory":self.path, "annotation":annotation,
                         "dirname":self.get_dir_name(), "newFormat": current_format,
-                        "creators": creators, "workflowGroups": [], "archive":[], "models": []}
+                        "creators": creators, "workflowGroups": [], "archive":[]}
         if "description" in metadata.keys():
             self.project['metadata'] = metadata
         else:
@@ -254,6 +254,7 @@ class StochSSProject(StochSSBase):
                 wkgp_md = None
             self.__load_workflow_group(current_format=current_format, file=wkgp, metadata=wkgp_md)
         if not current_format:
+            self.project["models"] =  []
             for mdl in filter(self.MODEL_TEST, os.listdir(self.get_path(full=True))):
                 self.project['models'].append(self.__load_model(dirname=self.path, file=mdl))
         return self.project
