@@ -26,7 +26,7 @@ import mpl_toolkits
 class ParameterSweep2D():
     '''
     ################################################################################################
-    StochSS 2D parameter sweep workflow object
+    StochSS 2D parameter sweep job object
     ################################################################################################
     '''
 
@@ -180,7 +180,7 @@ class ParameterSweep2D():
 
     def run(self, verbose=False):
         '''
-        Run a 2D parameter sweep workflow
+        Run a 2D parameter sweep job
 
         Attributes
         ----------

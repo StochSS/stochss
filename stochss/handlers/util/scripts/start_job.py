@@ -38,10 +38,10 @@ def get_parsed_args():
     Attributes
     ----------
     '''
-    description = "Start a job from an existing workflow."
+    description = "Start a job from an existing job."
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('path', help="The path to the workflow.")
-    parser.add_argument('type', help="The type of the workflow.")
+    parser.add_argument('path', help="The path to the job.")
+    parser.add_argument('type', help="The type of the job.")
     parser.add_argument('-v', '--verbose', action="store_true",
                         help="Print results as they are stored.")
     return parser.parse_args()
@@ -54,11 +54,11 @@ def report_error(err):
     Attributes
     ----------
     path : str
-        Path to the workflow
+        Path to the job
     err : Exception Obj
         Error caught in the except block
     '''
-    log.error("Workflow errors: %s", err)
+    log.error("Job errors: %s", err)
     log.error("Traceback:\n%s", traceback.format_exc())
     open('ERROR', 'w').close()
 
@@ -67,12 +67,12 @@ def setup_logger(log_path):
     '''
     Changer the GillesPy2 logger to record only error level logs and higher
     to the console and to log warning level logs and higher to a log file in
-    the workflow directory.
+    the job directory.
 
     Attributes
     ----------
     log_path : str
-        Path to the workflows log file
+        Path to the jobs log file
     '''
     formatter = log.handlers[0].formatter # gillespy2 log formatter
     fh_is_needed = True
@@ -99,8 +99,8 @@ def setup_logger(log_path):
 
 if __name__ == "__main__":
     args = get_parsed_args()
-    workflows = {"gillespy":EnsembleSimulation, "parameterSweep":ParameterSweep}
-    wkfl = workflows[args.type](path=args.path)
+    jobs = {"gillespy":EnsembleSimulation, "parameterSweep":ParameterSweep}
+    wkfl = jobs[args.type](path=args.path)
     os.chdir(wkfl.get_path(full=True))
     setup_logger("logs.txt")
     try:

@@ -67,7 +67,7 @@ def get_parsed_args():
     return parser.parse_args()
 
 
-def run_preview(workflow):
+def run_preview(job):
     '''
     Run the preview simulation
 
@@ -76,7 +76,7 @@ def run_preview(workflow):
     '''
     response = {"timeout": False}
     try:
-        plot = workflow.run(preview=True)
+        plot = job.run(preview=True)
         response["results"] = plot
     except ModelError as error:
         response['errors'] = f"{error}"

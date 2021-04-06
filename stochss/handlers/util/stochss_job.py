@@ -27,14 +27,14 @@ from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
 from .stochss_spatial_model import StochSSSpatialModel
-from .stochss_errors import StochSSWorkflowError, StochSSWorkflowNotCompleteError, \
+from .stochss_errors import StochSSJobError, StochSSJobNotCompleteError, \
                             StochSSFileNotFoundError, StochSSFileExistsError, \
                             FileNotJSONFormatError, PlotNotAvailableError
 
 class StochSSJob(StochSSBase):
     '''
     ################################################################################################
-    StochSS workflow object
+    StochSS job object
     ################################################################################################
     '''
 
@@ -43,19 +43,19 @@ class StochSSJob(StochSSBase):
 
     def __init__(self, path, new=False, data=None):
         '''
-        Intitialize a workflow object and if its new create it on the users file system
+        Intitialize a job object and if its new create it on the users file system
 
         Attributes
         ----------
         path : str
-            Path to the workflow
+            Path to the job
         new : bool
-            Indicates whether or not the workflow is new
+            Indicates whether or not the job is new
         data : dict
-            Load data needed for loading a workflow
+            Load data needed for loading a job
         '''
         super().__init__(path=path)
-        self.workflow = {}
+        self.job = {}
         self.type = None
         self.time_stamp = None
         if data is not None:
@@ -65,10 +65,10 @@ class StochSSJob(StochSSBase):
             file = f"{self.get_name()}{self.TYPES[self.type]}{self.time_stamp}.wkfl"
             self.path = file if data['dirname'] is None else os.path.join(data['dirname'], file)
             settings = data['settings'] if "settings" in data.keys() else None
-            self.__create_new_workflow(mdl_path=path, settings=settings)
+            self.__create_new_job(mdl_path=path, settings=settings)
 
 
-    def __create_new_workflow(self, mdl_path, settings=None):
+    def __create_new_job(self, mdl_path, settings=None):
         path = self.get_path(full=True)
         try:
             if not os.path.exists(self.get_dir_name(full=True)):
@@ -84,7 +84,7 @@ class StochSSJob(StochSSBase):
             if settings is None:
                 self.__create_settings()
         except FileExistsError as err:
-            message = f"Could not create your workflow: {str(err)}"
+            message = f"Could not create your job: {str(err)}"
             raise StochSSFileExistsError(message, traceback.format_exc()) from err
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
@@ -98,7 +98,7 @@ class StochSSJob(StochSSBase):
             with open(self.__get_settings_path(full=True), "w") as file:
                 json.dump(settings, file)
         else:
-            shutil.copyfile('/stochss/stochss_templates/workflowSettingsTemplate.json',
+            shutil.copyfile('/stochss/stochss_templates/jobSettingsTemplate.json',
                             self.__get_settings_path(full=True))
 
 
@@ -117,25 +117,25 @@ class StochSSJob(StochSSBase):
 
     def check_for_external_model(self, path=None):
         '''
-        Check if the workflows model exists outside of the workflow and return it path
+        Check if the jobs model exists outside of the job and return it path
         '''
         if path is None:
             path = self.get_model_path(full=True, external=True)
-        self.log("debug", f"Path to the workflow's model: {path}")
+        self.log("debug", f"Path to the job's model: {path}")
         resp = {"file":path.replace(self.user_dir + '/', '')}
         if not os.path.exists(path):
             file = self.get_file(path=path)
             error = f"The model file {file} could not be found.  "
             error += "To edit the model you will need to extract the model from the "
-            error += "workflow or open the workflow and update the path to the model."
+            error += "job or open the job and update the path to the model."
             resp['error'] = error
         return resp
 
 
     def duplicate_as_new(self, stamp):
         '''
-        Get all data needed to create a new workflow that
-        is a copy of this workflow in ready state.
+        Get all data needed to create a new job that
+        is a copy of this job in ready state.
 
         Attributes
         ----------
@@ -148,7 +148,7 @@ class StochSSJob(StochSSBase):
         data = {"type":self.type, "stamp":stamp,
                 "dirname":self.get_dir_name(), "settings":wkfl['settings']}
         kwargs = {"path":self.get_model_path(), "new":True, "data":data}
-        resp = {"message":f"A new workflow has been created from {self.path}",
+        resp = {"message":f"A new job has been created from {self.path}",
                 "mdlPath":mdl_path,
                 "mdl_file":self.get_file(path=mdl_path)}
         c_resp = self.check_for_external_model(path=os.path.join(self.user_dir, mdl_path))
@@ -159,7 +159,7 @@ class StochSSJob(StochSSBase):
 
     def extract_model(self):
         '''
-        Get all data needed to create a new model that is a copy of the workflows model
+        Get all data needed to create a new model that is a copy of the jobs model
 
         Attributes
         ----------
@@ -169,7 +169,7 @@ class StochSSJob(StochSSBase):
         file = self.get_file(path=src_path)
         dst_dirname = self.get_dir_name()
         if ".proj" in dst_dirname:
-            old_format = dst_dirname.endswith("WorkflowGroup1.wkgp")
+            old_format = dst_dirname.endswith("JobGroup1.wkgp")
             dst_dirname = os.path.dirname(dst_dirname)
             if not old_format:
                 dst_dirname, changed = self.get_unique_path(name=f"{self.get_name(path=file)}.wkgp",
@@ -191,11 +191,11 @@ class StochSSJob(StochSSBase):
         '''
         status = self.get_status()
         if status == "error":
-            message = f"The workflow experienced an error during run: {status}"
-            raise StochSSWorkflowError(message, traceback.format_exc())
+            message = f"The job experienced an error during run: {status}"
+            raise StochSSJobError(message, traceback.format_exc())
         if status != "complete":
-            message = f"The workflow has not finished running: {status}."
-            raise StochSSWorkflowNotCompleteError(message, traceback.format_exc())
+            message = f"The job has not finished running: {status}."
+            raise StochSSJobNotCompleteError(message, traceback.format_exc())
 
         csv_path = self.get_csv_path(full=True)
         if os.path.exists(csv_path + ".zip"):
@@ -222,7 +222,7 @@ class StochSSJob(StochSSBase):
             csv_path = list(filter(lambda file: self.__is_csv_dir(file=file), res_files))[0]
             return os.path.join(res_path, csv_path)
         except IndexError as err:
-            message = f"Could not find the workflow results csv directory: {str(err)}"
+            message = f"Could not find the job results csv directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
@@ -250,7 +250,7 @@ class StochSSJob(StochSSBase):
             Indicates whether or not to consider the path to the internal model
         '''
         info = self.load_info()
-        self.log("debug", f"Workflow info: {info}")
+        self.log("debug", f"Job info: {info}")
         if external:
             return info['source_model']
         if info['wkfl_model'] is None:
@@ -297,7 +297,7 @@ class StochSSJob(StochSSBase):
 
     def get_results_plot(self, plt_key, plt_data):
         '''
-        Get the plotly figure for the results of a workflow
+        Get the plotly figure for the results of a job
 
         Attributes
         ----------
@@ -309,7 +309,7 @@ class StochSSJob(StochSSBase):
         self.log("debug", f"Key identifying the requested plot: {plt_key}")
         self.log("debug", f"Title and axis data for the plot: {plt_data}")
         path = os.path.join(self.get_results_path(full=True), "plots.json")
-        self.log("debug", f"Path to the workflow result plot file: {path}")
+        self.log("debug", f"Path to the job result plot file: {path}")
         try:
             with open(path, "r") as plot_file:
                 fig = json.load(plot_file)[plt_key]
@@ -346,7 +346,7 @@ class StochSSJob(StochSSBase):
             self.log("debug", f"Contents of the log file: {logs}")
             if logs:
                 return logs
-            return "No logs were recoded for this workflow."
+            return "No logs were recoded for this job."
         except FileNotFoundError as err:
             message = f"Could not find the log file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -382,7 +382,7 @@ class StochSSJob(StochSSBase):
 
     def get_time_stamp(self):
         '''
-        Get the time stamp from the workflow name
+        Get the time stamp from the job name
 
         Attributes
         ----------
@@ -393,7 +393,7 @@ class StochSSJob(StochSSBase):
 
     def load(self, new=False):
         '''
-        Reads in all relavent data for a workflow and stores it in self.workflow.
+        Reads in all relavent data for a job and stores it in self.job.
 
         Attributes
         ----------
@@ -405,7 +405,7 @@ class StochSSJob(StochSSBase):
         if status in ("new", "ready"):
             if ".proj" in self.path:
                 mdl_dirname = self.get_dir_name()
-                if "WorkflowGroup1" in self.path:
+                if "JobGroup1" in self.path:
                     mdl_dirname = os.path.dirname(mdl_dirname)
                 mdl_path = os.path.join(mdl_dirname, self.get_file(path=info['source_model']))
             else:
@@ -420,26 +420,26 @@ class StochSSJob(StochSSBase):
             self.log("error", f"Exception information: {error}")
         finally:
             settings = self.load_settings(model=model)
-            self.workflow = {"mdlPath":mdl_path, "model":model, "settings":settings,
+            self.job = {"mdlPath":mdl_path, "model":model, "settings":settings,
                              "startTime":info['start_time'], "status":status,
                              "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
                              "type":self.type, "wkflDir":self.get_file(),
                              "wkflName":self.get_name(), "wkflParPath":self.get_dir_name()}
             if error is not None:
-                self.workflow['error'] = error
-        return self.workflow
+                self.job['error'] = error
+        return self.job
 
 
     def load_info(self):
         '''
-        Reads the workflows load function
+        Reads the jobs load function
 
         Attributes
         ----------
         '''
         try:
             path = self.get_info_path(full=True)
-            self.log("debug", f"The path to the workflow's info file: {path}")
+            self.log("debug", f"The path to the job's info file: {path}")
             with open(path, "r") as info_file:
                 info = json.load(info_file)
                 if "annotation" not in info:
@@ -472,7 +472,7 @@ class StochSSJob(StochSSBase):
 
     def load_settings(self, model=None):
         '''
-        Load the workflow settings from the settings file
+        Load the job settings from the settings file
 
         Attributes
         ----------
@@ -502,7 +502,7 @@ class StochSSJob(StochSSBase):
 
     def save(self, mdl_path, settings, initialize):
         '''
-        Save the data for a new or ready state workflow
+        Save the data for a new or ready state job
 
         Attributes
         ----------
@@ -511,8 +511,8 @@ class StochSSJob(StochSSBase):
         new_info = {"source_model":mdl_path}
         if initialize:
             # If this format is not something Javascript's Date.parse() method
-            # understands then the workflow status page will be unable to correctly create a
-            # Date object from the datestring parsed from the workflow's info.json file
+            # understands then the job status page will be unable to correctly create a
+            # Date object from the datestring parsed from the job's info.json file
             new_info['start_time'] = datetime.datetime.now().strftime("%b %d, %Y  %I:%M %p UTC")
             new_info['wkfl_model'] = self.get_file(path=mdl_path)
             open(os.path.join(self.path, 'RUNNING'), 'w').close()
@@ -523,7 +523,7 @@ class StochSSJob(StochSSBase):
             os.remove(path)
             shutil.copyfile(os.path.join(self.user_dir, mdl_path),
                             self.get_model_path(full=True))
-            return f"Successfully saved the workflow: {self.path}"
+            return f"Successfully saved the job: {self.path}"
         except FileNotFoundError as err:
             message = f"Could not find the model file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err

@@ -25,7 +25,7 @@ import matplotlib
 class ParameterSweep1D():
     '''
     ################################################################################################
-    StochSS 1D parameter sweep workflow object
+    StochSS 1D parameter sweep job object
     ################################################################################################
     '''
 
@@ -176,7 +176,7 @@ class ParameterSweep1D():
 
     def run(self, verbose=False):
         '''
-        Run a 1D parameter sweep workflow
+        Run a 1D parameter sweep job
 
         Attributes
         ----------

@@ -34,7 +34,7 @@ from .parameter_sweep_2d import ParameterSweep2D
 class ParameterSweep(StochSSJob):
     '''
     ################################################################################################
-    StochSS parameter sweep workflow object
+    StochSS parameter sweep job object
     ################################################################################################
     '''
 
@@ -42,12 +42,12 @@ class ParameterSweep(StochSSJob):
 
     def __init__(self, path):
         '''
-        Intitialize an parameter sweep workflow object
+        Intitialize an parameter sweep job object
 
         Attributes
         ----------
         path : str
-            Path to the parameter sweep workflow
+            Path to the parameter sweep job
         '''
         super().__init__(path=path)
         self.g_model, self.s_model = self.load_models()
@@ -146,7 +146,7 @@ class ParameterSweep(StochSSJob):
 
     def run(self, verbose=False):
         '''
-        Run a 1D or 2D parameter sweep workflow
+        Run a 1D or 2D parameter sweep job
 
         Attributes
         ----------

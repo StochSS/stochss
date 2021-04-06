@@ -29,7 +29,7 @@ from .stochss_job import StochSSJob
 class EnsembleSimulation(StochSSJob):
     '''
     ################################################################################################
-    StochSS ensemble simulation workflow object
+    StochSS ensemble simulation job object
     ################################################################################################
     '''
 
@@ -37,12 +37,12 @@ class EnsembleSimulation(StochSSJob):
 
     def __init__(self, path, preview=False):
         '''
-        Intitialize an ensemble simulation workflow object
+        Intitialize an ensemble simulation job object
 
         Attributes
         ----------
         path : str
-            Path to the ensemble simulation workflow
+            Path to the ensemble simulation job
         '''
         super().__init__(path=path)
         if not preview:
@@ -81,7 +81,7 @@ class EnsembleSimulation(StochSSJob):
 
     def run(self, preview=False, verbose=False):
         '''
-        Run a GillesPy2 ensemble simulation workflow
+        Run a GillesPy2 ensemble simulation job
 
         Attributes
         ----------
