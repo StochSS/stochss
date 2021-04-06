@@ -27,11 +27,11 @@ import plotly
 
 from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver
 
-from .stochss_workflow import StochSSWorkflow
+from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
 
-class ParameterSweep(StochSSWorkflow):
+class ParameterSweep(StochSSJob):
     '''
     ################################################################################################
     StochSS parameter sweep workflow object

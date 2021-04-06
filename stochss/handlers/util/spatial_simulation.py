@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from spatialpy import Solver
 
-from .stochss_workflow import StochSSWorkflow
+from .stochss_job import StochSSJob
 
-class SpatialSimulation(StochSSWorkflow):
+class SpatialSimulation(StochSSJob):
     '''
     ################################################################################################
     StochSS spatial ensemble simulation workflow object

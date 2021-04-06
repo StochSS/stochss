@@ -71,7 +71,7 @@ def run_preview(workflow):
     '''
     Run the preview simulation
 
-    wkfl : StochSSWorkflow instance
+    wkfl : StochSSJob instance
         The wkfl used for the preview simulation
     '''
     response = {"timeout": False}

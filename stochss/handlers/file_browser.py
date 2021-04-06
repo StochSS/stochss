@@ -29,7 +29,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSpatialModel, \
-                  StochSSSBMLModel, StochSSNotebook, StochSSWorkflow, StochSSProject, \
+                  StochSSSBMLModel, StochSSNotebook, StochSSJob, StochSSProject, \
                   StochSSAPIError, report_error
 
 
@@ -431,7 +431,7 @@ class DownloadZipFileAPIHandler(APIHandler):
                 folder = StochSSFolder(path=path)
                 resp = folder.generate_zip_file()
             else:
-                wkfl = StochSSWorkflow(path=path)
+                wkfl = StochSSJob(path=path)
                 resp = wkfl.generate_csv_zip()
             log.debug("Response: %s", resp)
             self.write(resp)
@@ -526,7 +526,7 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
         target = self.get_query_argument(name="target")
         log.debug("The %s is being copied", target)
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             if target == "wkfl_model":
                 resp, kwargs = wkfl.extract_model()
                 model = StochSSModel(**kwargs)
@@ -538,7 +538,7 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
                     time_stamp = None
                 log.debug("The time stamp for the new workflow: %s", time_stamp)
                 resp, kwargs = wkfl.duplicate_as_new(stamp=time_stamp)
-                new_wkfl = StochSSWorkflow(**kwargs)
+                new_wkfl = StochSSJob(**kwargs)
                 new_wkfl.update_info(new_info={"source_model":resp['mdlPath']})
                 resp['wkflPath'] = new_wkfl.path
                 resp['File'] = new_wkfl.get_file()
@@ -568,7 +568,7 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("The path to the workflow: %s", path)
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             resp = wkfl.check_for_external_model()
             wkfl.print_logs(log)
             log.debug("Response: %s", resp)

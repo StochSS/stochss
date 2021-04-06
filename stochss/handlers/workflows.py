@@ -27,7 +27,7 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSWorkflow, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
+from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
                   StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
@@ -60,7 +60,7 @@ class LoadWorkflowAPIHandler(APIHandler):
         log.debug("Load data for the workflow: %s", data)
         try:
             new = path.endswith(".mdl")
-            wkfl = StochSSWorkflow(path=path, new=new, data=data)
+            wkfl = StochSSJob(path=path, new=new, data=data)
             resp = wkfl.load(new=new)
             log.debug("Response: %s", resp)
             self.write(resp)
@@ -92,7 +92,6 @@ class RunWorkflowAPIHandler(APIHandler):
         wkfl_type = data['type']
         log.debug("Type of workflow: %s", wkfl_type)
         try:
-            # nav = f"cd {StochSSWorkflow(path=path).get_path(full=True)}"
             script = "/stochss/stochss/handlers/util/scripts/start_job.py"
             exec_cmd = [f"{script}", f"{path}", f"{wkfl_type}"]
             if "v" in data['optType']:
@@ -126,7 +125,7 @@ class SaveWorkflowAPIHandler(APIHandler):
             log.debug("Handler query string: %s", data)
             model_path = data['mdlPath']
             log.debug("Path to the model: %s", model_path)
-            wkfl = StochSSWorkflow(path=data['wkflPath'])
+            wkfl = StochSSJob(path=data['wkflPath'])
             resp = wkfl.save(mdl_path=model_path, settings=data['settings'],
                              initialize="r" in data['optType'])
             log.debug("Response: %s", resp)
@@ -154,7 +153,7 @@ class WorkflowStatusAPIHandler(APIHandler):
         log.debug('path to the workflow: %s', path)
         log.debug('Getting the status of the workflow')
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             status = wkfl.get_status()
             log.debug('The status of the workflow is: %s', status)
             self.write(status)
@@ -186,7 +185,7 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             body['plt_data'] = None
         log.debug("Plot args passed to the plot: %s", body)
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             fig = wkfl.get_results_plot(**body)
             log.debug("Plot figure: %s", fig)
             self.write(fig)
@@ -212,7 +211,7 @@ class WorkflowLogsAPIHandler(APIHandler):
         path = os.path.dirname(self.get_query_argument(name="path"))
         log.debug("Path to the workflow logs file: %s", path)
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             logs = wkfl.get_run_logs()
             wkfl.print_logs(log)
             log.debug("Response: %s", logs)
@@ -246,7 +245,7 @@ class WorkflowNotebookHandler(APIHandler):
             elif path.endswith(".smdl"):
                 file_obj = StochSSSpatialModel(path=path)
             else:
-                file_obj = StochSSWorkflow(path=path)
+                file_obj = StochSSJob(path=path)
             kwargs = file_obj.get_notebook_data()
             if "type" in kwargs.keys():
                 wkfl_type = kwargs['type']
@@ -289,7 +288,7 @@ class SavePlotAPIHandler(APIHandler):
         plot = json.loads(self.request.body.decode())
         log.debug("The plot to be saved: %s", plot)
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             resp = wkfl.save_plot(plot=plot)
             wkfl.print_logs(log)
             log.debug("Response message: %s", resp)
@@ -319,7 +318,7 @@ class SaveAnnotationAPIHandler(APIHandler):
         info = json.loads(self.request.body.decode())
         log.debug("The annotation to be saved: %s", info['annotation'])
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             wkfl.update_info(new_info=info)
             wkfl.print_logs(log)
             resp = {"message":"The annotation was successfully saved", "data":info['annotation']}

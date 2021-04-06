@@ -31,7 +31,7 @@ from .stochss_errors import StochSSWorkflowError, StochSSWorkflowNotCompleteErro
                             StochSSFileNotFoundError, StochSSFileExistsError, \
                             FileNotJSONFormatError, PlotNotAvailableError
 
-class StochSSWorkflow(StochSSBase):
+class StochSSJob(StochSSBase):
     '''
     ################################################################################################
     StochSS workflow object

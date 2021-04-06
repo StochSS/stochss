@@ -24,9 +24,9 @@ import plotly
 
 from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver
 
-from .stochss_workflow import StochSSWorkflow
+from .stochss_job import StochSSJob
 
-class EnsembleSimulation(StochSSWorkflow):
+class EnsembleSimulation(StochSSJob):
     '''
     ################################################################################################
     StochSS ensemble simulation workflow object
