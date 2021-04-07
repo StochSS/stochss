@@ -65,6 +65,26 @@ class StochSSBase():
         return True
 
 
+    def check_workflow_format(cls, path):
+        '''
+        Determine if the format of the workflow is out of date
+
+        Attributes
+        ----------
+        path : str
+            Path to the workflow.
+        '''
+        path = os.path.join(cls.user_dir, path)
+        files = os.listdir(path)
+        old_files = ["info.json", "logs.txt", "results", "RUNNING", "ERROR", "COMPLETE"]
+        for file in old_files:
+            if file in files:
+                return False
+        if len(list(filter(lambda file: file.endswith(".mdl"), files))) > 0:
+            return False
+        return True
+
+
     def get_new_path(self, dst_path):
         '''
         Gets the proper destination path for the file object to be moved
