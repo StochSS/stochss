@@ -63,7 +63,7 @@ class StochSSModel(StochSSBase):
             if changed:
                 self.path = new_path.replace(self.user_dir + '/', "")
             with open(new_path, "w") as mdl_file:
-                json.dump(model, mdl_file)
+                json.dump(model, mdl_file, indent=4, sort_keys=True)
         else:
             self.model = None
 

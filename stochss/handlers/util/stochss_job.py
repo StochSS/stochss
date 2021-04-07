@@ -96,7 +96,7 @@ class StochSSJob(StochSSBase):
             settings = self.get_settings_template()
             settings['simulationSettings']['realizations'] = 20
             with open(self.__get_settings_path(full=True), "w") as file:
-                json.dump(settings, file)
+                json.dump(settings, file, indent=4, sort_keys=True)
         else:
             shutil.copyfile('/stochss/stochss_templates/workflowSettingsTemplate.json',
                             self.__get_settings_path(full=True))
@@ -521,7 +521,7 @@ class StochSSJob(StochSSBase):
             open(os.path.join(self.path, 'RUNNING'), 'w').close()
         self.update_info(new_info=new_info)
         with open(self.__get_settings_path(full=True), "w") as file:
-            json.dump(settings, file)
+            json.dump(settings, file, indent=4, sort_keys=True)
         try:
             os.remove(path)
             shutil.copyfile(os.path.join(self.user_dir, mdl_path),
@@ -546,7 +546,7 @@ class StochSSJob(StochSSBase):
         settings['resultsSettings']['outputs'].append(plot)
         self.log("debug", f"New settings: {settings}")
         with open(self.__get_settings_path(full=True), "w") as settings_file:
-            json.dump(settings, settings_file)
+            json.dump(settings, settings_file, indent=4, sort_keys=True)
         return {"message":"The plot was successfully saved", "data":plot}
 
 
@@ -578,4 +578,4 @@ class StochSSJob(StochSSBase):
                 info['annotation'] = new_info['annotation']
         self.log("debug", f"New info: {info}")
         with open(self.get_info_path(full=True), "w") as file:
-            json.dump(info, file)
+            json.dump(info, file, indent=4, sort_keys=True)

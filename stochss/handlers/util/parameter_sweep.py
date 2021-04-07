@@ -110,7 +110,8 @@ class ParameterSweep(StochSSJob):
             plot_figs['-'.join(key)] = fig
 
         with open('results/plots.json', 'w') as plots_file:
-            json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
+            json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
+                      indent=4, sort_keys=True)
 
 
     def __store_results(self, wkfl):
@@ -119,7 +120,7 @@ class ParameterSweep(StochSSJob):
         with open('results/results.p', 'wb') as results_file:
             pickle.dump(wkfl.ts_results, results_file)
         with open('results/results.json', 'w') as json_file:
-            json_file.write(json.dumps(str(wkfl.results)))
+            json.dump(wkfl.results, json_file, indent=4, sort_keys=True)
         self.__store_csv_results(wkfl)
 
 

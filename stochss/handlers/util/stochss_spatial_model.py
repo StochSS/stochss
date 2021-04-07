@@ -63,7 +63,7 @@ class StochSSSpatialModel(StochSSBase):
             if changed:
                 self.path = new_path.replace(self.user_dir + '/', "")
             with open(new_path, "w") as smdl_file:
-                json.dump(model, smdl_file)
+                json.dump(model, smdl_file, indent=4, sort_keys=True)
         else:
             self.model = None
 

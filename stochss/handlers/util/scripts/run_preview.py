@@ -111,5 +111,6 @@ if __name__ == "__main__":
 
     outfile = os.path.join(model.user_dir, f".{args.outfile}.tmp")
     with open(outfile, "w") as file:
-        json.dump(resp, file, cls=plotly.utils.PlotlyJSONEncoder)
+        json.dump(resp, file, cls=plotly.utils.PlotlyJSONEncoder,
+                  indent=4, sort_keys=True)
     open(f"{outfile}.done", "w").close()

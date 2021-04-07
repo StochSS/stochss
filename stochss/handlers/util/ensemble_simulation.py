@@ -68,7 +68,8 @@ class EnsembleSimulation(StochSSJob):
         for _, plot in plots.items():
             plot["config"] = {"responsive":True}
         with open('results/plots.json', 'w') as plots_file:
-            json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
+            json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
+                      indent=4, sort_keys=True)
 
 
     def __store_results(self, results):

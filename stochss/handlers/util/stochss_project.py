@@ -289,4 +289,4 @@ class StochSSProject(StochSSBase):
             else:
                 path = os.path.join(self.get_path(full=True), file, ".metadata.json")
             with open(path, "w") as metadata_file:
-                json.dump(metadata, metadata_file)
+                json.dump(metadata, metadata_file, indent=4, sort_keys=True)
