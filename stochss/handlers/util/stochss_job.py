@@ -98,7 +98,7 @@ class StochSSJob(StochSSBase):
             with open(self.__get_settings_path(full=True), "w") as file:
                 json.dump(settings, file)
         else:
-            shutil.copyfile('/stochss/stochss_templates/jobSettingsTemplate.json',
+            shutil.copyfile('/stochss/stochss_templates/workflowSettingsTemplate.json',
                             self.__get_settings_path(full=True))
 
 
@@ -388,7 +388,10 @@ class StochSSJob(StochSSBase):
         ----------
         '''
         name = self.get_name()
-        return "_"+"_".join(name.split('_')[-2:])
+        time_stamp = "_"+"_".join(name.split('_')[-2:])
+        if time_stamp.replace('_', '').isdigit():
+            return time_stamp
+        return None
 
 
     def load(self, new=False):
@@ -405,7 +408,7 @@ class StochSSJob(StochSSBase):
         if status in ("new", "ready"):
             if ".proj" in self.path:
                 mdl_dirname = self.get_dir_name()
-                if "JobGroup1" in self.path:
+                if "WorkflowGroup1" in self.path:
                     mdl_dirname = os.path.dirname(mdl_dirname)
                 mdl_path = os.path.join(mdl_dirname, self.get_file(path=info['source_model']))
             else:
@@ -421,10 +424,10 @@ class StochSSJob(StochSSBase):
         finally:
             settings = self.load_settings(model=model)
             self.job = {"mdlPath":mdl_path, "model":model, "settings":settings,
-                             "startTime":info['start_time'], "status":status,
-                             "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
-                             "type":self.type, "wkflDir":self.get_file(),
-                             "wkflName":self.get_name(), "wkflParPath":self.get_dir_name()}
+                        "startTime":info['start_time'], "status":status,
+                        "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
+                        "type":self.type, "wkflDir":self.get_file(),
+                        "wkflName":self.get_name(), "wkflParPath":self.get_dir_name()}
             if error is not None:
                 self.job['error'] = error
         return self.job
