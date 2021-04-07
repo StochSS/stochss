@@ -96,18 +96,26 @@ class StochSSWorkflow(StochSSBase):
 
     def __load_jobs(self):
         self.workflow['jobs'] = []
+        time = 0
+        last_job = None
         for file_obj in os.listdir(self.get_path(full=True)):
             if file_obj.startswith("job_"):
                 path = os.path.join(self.path, file_obj)
-                job = StochSSJob(path=path).load()
-                self.workflow['jobs'].append(job)
+                self.workflow['jobs'].append(path)
+                if os.path.getmtime(path) > time:
+                    time = os.path.getmtime(path)
+                    last_job = path
+        self.workflow['activeJob'] = StochSSJob(path=last_job).load()
 
 
     def __load_settings(self):
         path = os.path.join(self.get_path(full=True), "settings.json")
         try:
             with open(path, "r") as settings_file:
-                self.workflow['settings'] = json.load(settings_file)
+                settings = json.load(settings_file)
+                self.workflow['model'] = settings['model']
+                self.workflow['settings'] = settings['settings']
+                self.workflow['type'] = settings['type']
         except FileNotFoundError as err:
             message = f"Could not find the settings file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc) from err
@@ -140,6 +148,7 @@ class StochSSWorkflow(StochSSBase):
         '''
         self.workflow['directory'] = self.path
         self.workflow['name'] = self.get_name()
+        self.workflow['newFormat'] = self.check_workflow_format(path=self.path)
         if self.workflow['settings'] is None:
             self.__load_settings()
         self.__load_annotation()
