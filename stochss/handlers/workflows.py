@@ -59,9 +59,12 @@ class LoadWorkflowAPIHandler(APIHandler):
                 "dirname": None if not dirname or dirname == "." else dirname}
         log.debug("Load data for the workflow: %s", data)
         try:
-            new = path.endswith(".mdl")
-            wkfl = StochSSJob(path=path, new=new, data=data)
-            resp = wkfl.load(new=new)
+            if Base.check_workflow_format(path=path):
+                resp = StochSSWorkflow(path=path).load()['activeJob']
+            else:
+                new = path.endswith(".mdl")
+                wkfl = StochSSJob(path=path, new=new, data=data)
+                resp = wkfl.load(new=new)
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
