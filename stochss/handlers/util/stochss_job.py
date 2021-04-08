@@ -106,6 +106,27 @@ class StochSSJob(StochSSBase):
         return os.path.join(self.get_path(full=full), "settings.json")
 
 
+    def __get_extract_dst_path(self, mdl_file):
+        if ".proj" not in self.path:
+            wkfl_dirname = os.path.dirname(self.path.replace(self.path.partition(".wkfl")[2], ""))
+            return os.path.join(wkfl_dirname, mdl_file)
+        proj_path = self.path.replace(self.path.partition(".proj")[2], "")
+        if "WorkflowGroup1.wkgp" in self.path:
+            return os.path.join(proj_path, mdl_file)
+        wkgp_path = self.path.replace(self.path.partition(".wkgp")[2], "")
+        has_mdl = len(list(filter(lambda file: file.endswith(".mdl"), os.listdir(wkgp_path)))) > 0
+        if has_mdl:
+            wkgp_file = f"{self.get_name(path=mdl_file)}.wkgp"
+            path, changed = self.get_unique_path(name=wkgp_file, dirname=proj_path)
+            if changed:
+                mdl_file = f"{self.get_name(path=path)}.{mdl_file.split('.').pop()}"
+            return os.path.join(path, mdl_file)
+        wkgp_name = self.get_name(path=wkgp_path)
+        if wkgp_name != self.get_name(path=mdl_file):
+            mdl_file = f"{wkgp_name}.{mdl_file.split('.').pop()}"
+        return os.path.join(wkgp_path, mdl_file)
+
+
     def __is_csv_dir(self, file):
         if "results_csv" not in file:
             return False
@@ -113,23 +134,6 @@ class StochSSJob(StochSSBase):
         if not os.path.isdir(path):
             return False
         return True
-
-
-    def check_for_external_model(self, path=None):
-        '''
-        Check if the jobs model exists outside of the job and return it path
-        '''
-        if path is None:
-            path = self.get_model_path(full=True, external=True)
-        self.log("debug", f"Path to the job's model: {path}")
-        resp = {"file":path.replace(self.user_dir + '/', '')}
-        if not os.path.exists(path):
-            file = self.get_file(path=path)
-            error = f"The model file {file} could not be found.  "
-            error += "To edit the model you will need to extract the model from the "
-            error += "job or open the job and update the path to the model."
-            resp['error'] = error
-        return resp
 
 
     def duplicate_as_new(self, stamp):
@@ -166,17 +170,7 @@ class StochSSJob(StochSSBase):
         '''
         src_path = self.get_model_path()
         model = StochSSModel(path=src_path).load()
-        file = self.get_file(path=src_path)
-        dst_dirname = self.get_dir_name()
-        if ".proj" in dst_dirname:
-            old_format = dst_dirname.endswith("JobGroup1.wkgp")
-            dst_dirname = os.path.dirname(dst_dirname)
-            if not old_format:
-                dst_dirname, changed = self.get_unique_path(name=f"{self.get_name(path=file)}.wkgp",
-                                                            dirname=dst_dirname)
-                if changed:
-                    file = f"{self.get_name(path=dst_dirname)}.{file.split('.').pop()}"
-        dst_path = os.path.join(dst_dirname, file)
+        dst_path = self.__get_extract_dst_path(mdl_file=self.get_file(path=src_path))
         kwargs = {"path":dst_path, "new":True, "model":model}
         resp = {"message":f"A copy of the model in {self.path} has been created"}
         return resp, kwargs
