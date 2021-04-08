@@ -164,6 +164,30 @@ class StochSSWorkflow(StochSSBase):
         return resp
 
 
+    def extract_model(self):
+        '''
+        Extract the model from the most recently created job.
+
+        Attributes
+        ----------
+        '''
+        new_format = self.check_workflow_format(path=self.path)
+        if new_format:
+            os.chdir(self.path)
+            files = list(filter(lambda file: file.startswith("job_"), os.listdir()))
+            if len(files) <= 0:
+                os.chdir(self.user_dir)
+                message = "There are no jobs to extract a model from."
+                raise StochSSFileNotFoundError(message)
+            files.sort(reverse=True, key=os.path.getctime)
+            os.chdir(self.user_dir)
+            path = os.path.join(self.path, files[0])
+        else:
+            path = self.path
+        job = StochSSJob(path=path)
+        return job.extract_model()
+
+
     # def initialize_job(self):
     #     '''
     #     Initialize a new job for this workflow.

@@ -526,7 +526,7 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
         target = self.get_query_argument(name="target")
         log.debug("The %s is being copied", target)
         try:
-            wkfl = StochSSJob(path=path)
+            wkfl = StochSSWorkflow(path=path)
             if target == "wkfl_model":
                 resp, kwargs = wkfl.extract_model()
                 model = StochSSModel(**kwargs)
