@@ -41,7 +41,7 @@ module.exports = State.extend({
     elementID: {
       deps: ["collection"],
       fn: function () {
-        let identifier = Boolean(this.model.name) ? "WG" : "AW"
+        let identifier = !this.model || Boolean(this.model.name) ? "WG" : "AW"
         if(this.collection) {
           return this.collection.parent.elementID + identifier + (this.collection.indexOf(this) + 1)
         }
