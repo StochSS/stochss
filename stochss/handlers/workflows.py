@@ -27,8 +27,8 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
-                  StochSSAPIError, report_error
+from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
+                  StochSSBase, StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -59,7 +59,7 @@ class LoadWorkflowAPIHandler(APIHandler):
                 "dirname": None if not dirname or dirname == "." else dirname}
         log.debug("Load data for the workflow: %s", data)
         try:
-            if Base.check_workflow_format(path=path):
+            if StochSSBase.check_workflow_format(path=path):
                 resp = StochSSWorkflow(path=path).load()['activeJob']
             else:
                 new = path.endswith(".mdl")

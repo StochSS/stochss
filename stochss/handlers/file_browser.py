@@ -29,7 +29,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSpatialModel, \
-                  StochSSSBMLModel, StochSSNotebook, StochSSJob, StochSSProject, \
+                  StochSSSBMLModel, StochSSNotebook, StochSSWorkflow, StochSSJob, StochSSProject, \
                   StochSSAPIError, report_error
 
 
@@ -568,7 +568,7 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("The path to the workflow: %s", path)
         try:
-            wkfl = StochSSJob(path=path)
+            wkfl = StochSSWorkflow(path=path)
             resp = wkfl.check_for_external_model()
             wkfl.print_logs(log)
             log.debug("Response: %s", resp)

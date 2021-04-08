@@ -65,6 +65,7 @@ class StochSSBase():
         return True
 
 
+    @classmethod
     def check_workflow_format(cls, path):
         '''
         Determine if the format of the workflow is out of date

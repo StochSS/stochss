@@ -84,6 +84,15 @@ class StochSSWorkflow(StochSSBase):
                 "status":wkfl['status'], "annotation":info['annotation']}
 
 
+    def __get_model_path(self):
+        try:
+            with open(os.path.join(self.path, "settings.json")) as settings_file:
+                return json.load(settings_file)['model']
+        except FileNotFoundError as err:
+            message = f"Could not find settings file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+
+
     def __load_annotation(self):
         path = os.path.join(self.get_path(full=True), "README.md")
         try:
@@ -127,6 +136,32 @@ class StochSSWorkflow(StochSSBase):
             json.dump(settings, settings_file, indent=4, sort_keys=True)
         with open("README.md", "w") as rdme_file:
             rdme_file.write(annotation)
+
+
+    def check_for_external_model(self, path=None):
+        '''
+        Check if the jobs model exists outside of the job and return it path
+
+        Attributes
+        ----------
+        path : str
+            Path to the external model
+        '''
+        if path is None:
+            if self.check_workflow_format(path=self.path):
+                path = self.__get_model_path()
+            else:
+                job = StochSSJob(path=self.path)
+                path = job.get_model_path(full=True, external=True)
+        self.log("debug", f"Path to the job's model: {path}")
+        resp = {"file":path.replace(self.user_dir + '/', '')}
+        if not os.path.exists(path):
+            file = self.get_file(path=path)
+            error = f"The model file {file} could not be found.  "
+            error += "To edit the model you will need to extract the model from the "
+            error += "job or open the job and update the path to the model."
+            resp['error'] = error
+        return resp
 
 
     # def initialize_job(self):
