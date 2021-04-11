@@ -212,6 +212,7 @@ class StochSSWorkflow(StochSSBase):
             self.__load_settings()
         self.__load_annotation()
         self.__load_jobs()
+        return self.workflow
 
 
     def save(self, settings, mdl_path):
