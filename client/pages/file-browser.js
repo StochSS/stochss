@@ -1167,15 +1167,6 @@ let FileBrowser = PageView.extend({
       }
       // specific to workflows
       let workflow = {
-        "Convert to Notebook" : {
-          "label" : "To Notebook",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.toNotebook(o, "workflow")
-          }
-        },
         "Start/Restart Workflow" : {
           "label" : (o.original._status === "ready") ? "Start Workflow" : "Restart Workflow",
           "_disabled" : true,
