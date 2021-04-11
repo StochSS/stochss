@@ -691,6 +691,41 @@ let FileBrowser = PageView.extend({
       }
     })
   },
+  newWorkflow: function (o, type) {
+    if(document.querySelector('#newWorkflowModal')) {
+      document.querySelector('#newWorkflowModal').remove()
+    }
+    var self = this;
+    let ext = o.type === "spatial" ? /.smdl/g : /.mdl/g
+    let name = o.original._path.split('/').pop().replace(ext, "")
+    let modal = $(modals.newWorkflowHtml(name, type)).modal();
+    let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
+    let input = document.querySelector('#newWorkflowModal #workflowNameInput');
+    okBtn.disabled = false;
+    input.addEventListener("keyup", function (event) {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    input.addEventListener("input", function (e) {
+      var endErrMsg = document.querySelector('#newWorkflowModal #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newWorkflowModal #modelNameInputSpecCharError')
+      let error = self.validateName(input.value)
+      okBtn.disabled = error !== "" || input.value.trim() === ""
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+    });
+    okBtn.addEventListener('click', function (e) {
+      modal.modal("hide");
+      let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
+      let wkflFile = input.value.trim() + typeCode + ".wkfl";
+      let wkflPath = path.join(path.dirname(o.original._path), wkflFile);
+      let queryString = "?path=" + wkflPath + "&model=" + o.original._path + "&type=" + type;
+      let endpoint = path.join(app.getApiPath(), "workflow/new") + queryString;
+      console.log(endpoint)
+    });
+  },
   addExistingModel: function (o) {
     var self = this
     if(document.querySelector('#newProjectModelModal')){
@@ -1028,6 +1063,35 @@ let FileBrowser = PageView.extend({
         }
       }
       // common to both spatial and non-spatial models
+      let newWorkflow = {
+        "ensembleSimulation" : {
+          "label" : "Ensemble Simulation",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newWorkflow(o, "Ensemble Simulation")
+          }
+        },
+        "parameterSweep" : {
+          "label" : "Parameter Sweep",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newWorkflow(o, "Parameter Sweep")
+          }
+        },
+        "jupyterNotebook" : {
+          "label" : "Jupyter Notebook",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
+          }
+        }
+      }
       let model = {
         "Edit" : {
           "label" : "Edit",
@@ -1044,9 +1108,7 @@ let FileBrowser = PageView.extend({
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
-          "action" : function (data) {
-            window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
-          }
+          "submenu" : o.type === "nonspatial" ? newWorkflow : {"jupyterNotebook":newWorkflow.jupyterNotebook}
         }
       }
       // convert options for spatial models

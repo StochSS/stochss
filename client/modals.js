@@ -467,6 +467,15 @@ module.exports = {
 
       return templates.message(modalID, title, message)
     },
+    newWorkflowHtml: (name, type) => {
+      let modalID = "newWorkflowModal"
+      let inputID = "workflowNameInput"
+      let title = `New ${type} Workflow`
+      let label = "Name:"
+      let value = name
+
+      return templates.input(modalID, inputID, title, label, value);
+    },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Variables will only be represented using continuous (floating point) values.`;
         let populationDescription = `Population - Variables will only be represented using discrete (integer count) values.`;
