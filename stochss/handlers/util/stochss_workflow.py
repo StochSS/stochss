@@ -164,6 +164,26 @@ class StochSSWorkflow(StochSSBase):
         return resp
 
 
+    def duplicate_as_new(self):
+        '''
+        Create a clean copy of the workflow and its settings with no jobs.
+
+        Attributes
+        ----------
+        '''
+        self.load()
+        path = self.get_unique_copy_path(path=self.path)
+        kwargs = {"path": path, "new": True, "mdl_path": self.workflow['model'],
+                  "wkfl_type": self.workflow['type']}
+        message = f"A new workflow has been created from {self.path}"
+        resp = {"message": message, "mdlPath": self.workflow['model'],
+                "mdl_file": self.get_file(path=self.workflow['model'])}
+        c_resp = self.check_for_external_model(path=self.workflow['model'])
+        if "error" in c_resp.keys():
+            resp['error'] = c_resp['error']
+        return resp, kwargs
+
+
     def extract_model(self):
         '''
         Extract the model from the most recently created job.

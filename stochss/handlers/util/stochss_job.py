@@ -155,9 +155,6 @@ class StochSSJob(StochSSBase):
         resp = {"message":f"A new job has been created from {self.path}",
                 "mdlPath":mdl_path,
                 "mdl_file":self.get_file(path=mdl_path)}
-        c_resp = self.check_for_external_model(path=os.path.join(self.user_dir, mdl_path))
-        if "error" in c_resp.keys():
-            resp['error'] = c_resp['error']
         return resp, kwargs
 
 

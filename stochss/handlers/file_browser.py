@@ -533,13 +533,21 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
                 resp['mdlPath'] = model.path
                 resp['File'] = model.get_file()
             else:
-                time_stamp = self.get_query_argument(name="stamp")
-                if time_stamp == "None":
-                    time_stamp = None
-                log.debug("The time stamp for the new workflow: %s", time_stamp)
-                resp, kwargs = wkfl.duplicate_as_new(stamp=time_stamp)
-                new_wkfl = StochSSJob(**kwargs)
-                new_wkfl.update_info(new_info={"source_model":resp['mdlPath']})
+                if wkfl.check_workflow_format(path=path):
+                    resp, kwargs = wkfl.duplicate_as_new()
+                    new_wkfl = StochSSWorkflow(**kwargs)
+                else:
+                    time_stamp = self.get_query_argument(name="stamp")
+                    if time_stamp == "None":
+                        time_stamp = None
+                    log.debug("The time stamp for the new workflow: %s", time_stamp)
+                    job = StochSSJob(path=path)
+                    resp, kwargs = job.duplicate_as_new(stamp=time_stamp)
+                    new_wkfl = StochSSJob(**kwargs)
+                    new_wkfl.update_info(new_info={"source_model":resp['mdlPath']})
+                    c_resp = wkfl.check_for_external_model(path=resp['mdlPath'])
+                    if "error" in c_resp.keys():
+                        resp['error'] = c_resp['error']
                 resp['wkflPath'] = new_wkfl.path
                 resp['File'] = new_wkfl.get_file()
             log.debug("Response: %s", resp)
