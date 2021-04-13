@@ -49,7 +49,9 @@ let ProjectManager = PageView.extend({
     'click [data-hook=new-model]' : 'handleNewModelClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadModelClick',
-    'click [data-hook=new-workflow]' : 'handleNewWorkflowClick',
+    'click [data-hook=new-ensemble-simulation]' : 'handleNewWorkflowClick',
+    'click [data-hook=new-parameter-sweep]' : 'handleNewWorkflowClick',
+    'click [data-hook=new-jupyter-notebook]' : 'handleNewWorkflowClick',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
     'click [data-hook=archive-btn]' : 'changeCollapseButtonText',
     'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
@@ -246,7 +248,10 @@ let ProjectManager = PageView.extend({
     this.addNewModel(isSpatial);
   },
   handleNewWorkflowClick: function (e) {
-    let models = this.models;
+    let type = e.target.dataset.type;
+    let models = type === "Jupyter Notebook" ? this.models : this.models.filter(function (model) {
+      return !model.is_spatial
+    });
     if(models && models.length > 0) {
       let self = this;
       if(document.querySelector("#newProjectWorkflowModal")) {
@@ -258,17 +263,25 @@ let ProjectManager = PageView.extend({
       let select = document.querySelector("#newProjectWorkflowModal #select");
       okBtn.addEventListener('click', function (e) {
         modal.modal('hide');
-        let mdlPath = models.filter(function (model) {
+        let mdl = models.filter(function (model) {
           return model.name === select.value;
-        })[0].directory;
-        let projectPath = self.model.directory;
-        var parentPath = mdlPath.includes(".wkgp") ? path.dirname(mdlPath) : path.join(projectPath, "WorkflowGroup1.wkgp");
-        let queryString = "?path="+mdlPath+"&parentPath="+parentPath;
-        window.location.href = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
+        })[0];
+        if(type === "Jupyter Notebook") {
+          let parentPath = path.join(path.dirname(mdl.directory), "WorkflowGroup1.wkgp");
+          let queryString = "?path=" + mdl.directory + "&parentPath=" + parentPath;
+          let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
+          window.location.href = endpoint;
+        }else {
+          app.newWorkflow(self, mdl.directory, mdl.is_spatial, type);
+        }
       });
     }else{
-      let title = "No Models Found";
-      let message = "You need to add a model before you can create a new workflow.";
+      let title = "No Models Found for " + type + " Workflows";
+      if(this.models.length > 0) {
+        var message = "Jupyter Notebook workflows are the only workflows available for spatial models.";
+      }else{
+        var message = "You need to add a model before you can create a new workflow.";
+      }
       let modal = $(modals.noModelsMessageHtml(title, message)).modal();
     }
   },

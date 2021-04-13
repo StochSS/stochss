@@ -69,10 +69,19 @@ section.page
 
       div
 
-        button.btn.btn-outline-primary.box-shadow(
-          id=this.model.elementID + "-new-workflow",
-          data-hook="new-workflow"
-        ) Add New Workflow
+        button.btn.btn-outline-primary.inline.dropdown-toggle.box-shadow(
+          id=this.model.elementID + "-workflow-btn",
+          data-hook=this.model.elementID + "-workflow-btn",
+          data-toggle="dropdown",
+          aria-haspopup="true",
+          aria-expanded="false",
+          type="button"
+        ) Add New Workflow <span class="caret"></span>
+
+        ul.dropdown-menu(aria-labelledby=this.model.elementID + "-workflow-btn")
+          li.dropdown-item(id="new-ensemble-simulation" data-hook="new-ensemble-simulation" data-type="Ensemble Simulation") Ensemble Simulation
+          li.dropdown-item(id="new-parameter-sweep" data-hook="new-parameter-sweep" data-type="Parameter Sweep") Parameter Sweep
+          li.dropdown-item(id="new-jupyter-notebook" data-hook="new-jupyter-notebook" data-type="Jupyter Notebook") Jupyter Notebook
 
     div.card.card-body(id=this.model.elementID + "-advanced-section")
 
