@@ -17,8 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //var config = require('./config.js')(process.env.NODE_ENV);
+let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
+//support files
+let modals = require('./modals');
+
 let routePrefix = 'stochss';
 let apiPrefix =  path.join(routePrefix, 'api');
 let getBasePath = () => {
@@ -98,13 +102,54 @@ let getBrowser = () => {
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
 }
 
+let newWorkflow = (parent, mdlPath, isSpatial, type) => {
+  if(document.querySelector('#newWorkflowModal')) {
+    document.querySelector('#newWorkflowModal').remove()
+  }
+  let self = parent;
+  let ext = isSpatial ? /.smdl/g : /.mdl/g
+  let name = mdlPath.split('/').pop().replace(ext, "")
+  let modal = $(modals.newWorkflowHtml(name, type)).modal();
+  let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
+  let input = document.querySelector('#newWorkflowModal #workflowNameInput');
+  okBtn.disabled = false;
+  input.addEventListener("keyup", function (event) {
+    if(event.keyCode === 13){
+      event.preventDefault();
+      okBtn.click();
+    }
+  });
+  input.addEventListener("input", function (e) {
+    let endErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputEndCharError')
+    let charErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputSpecCharError')
+    let error = self.validateName(input.value)
+    okBtn.disabled = error !== "" || input.value.trim() === ""
+    charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+    endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+  });
+  okBtn.addEventListener('click', function (e) {
+    modal.modal("hide");
+    let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
+    let wkflFile = input.value.trim() + typeCode + ".wkfl";
+    let wkflPath = path.join(path.dirname(mdlPath), wkflFile);
+    let queryString = "?path=" + wkflPath + "&model=" + mdlPath + "&type=" + type;
+    let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        window.location.href = path.join(getBasePath(), "stochss/workflow/edit") + "?path=" + body.path
+      }
+    })
+  });
+}
+
 module.exports = {
     routePrefix: routePrefix,
     getApiPath: getApiPath,
     getBasePath: getBasePath,
     getBrowser: getBrowser,
     registerRenderSubview: registerRenderSubview,
-    changeCollapseButtonText: changeCollapseButtonText
+    changeCollapseButtonText: changeCollapseButtonText,
+    newWorkflow: newWorkflow
 };
 
 

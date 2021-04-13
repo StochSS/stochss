@@ -692,39 +692,7 @@ let FileBrowser = PageView.extend({
     })
   },
   newWorkflow: function (o, type) {
-    if(document.querySelector('#newWorkflowModal')) {
-      document.querySelector('#newWorkflowModal').remove()
-    }
-    var self = this;
-    let ext = o.type === "spatial" ? /.smdl/g : /.mdl/g
-    let name = o.original._path.split('/').pop().replace(ext, "")
-    let modal = $(modals.newWorkflowHtml(name, type)).modal();
-    let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
-    let input = document.querySelector('#newWorkflowModal #workflowNameInput');
-    okBtn.disabled = false;
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newWorkflowModal #modelNameInputEndCharError')
-      var charErrMsg = document.querySelector('#newWorkflowModal #modelNameInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== "" || input.value.trim() === ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener('click', function (e) {
-      modal.modal("hide");
-      let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
-      let wkflFile = input.value.trim() + typeCode + ".wkfl";
-      let wkflPath = path.join(path.dirname(o.original._path), wkflFile);
-      let queryString = "?path=" + wkflPath + "&model=" + o.original._path + "&type=" + type;
-      let endpoint = path.join(app.getApiPath(), "workflow/new") + queryString;
-      console.log(endpoint)
-    });
+    app.newWorkflow(this, o.original._path, o.type === "spatial", type);
   },
   addExistingModel: function (o) {
     var self = this
