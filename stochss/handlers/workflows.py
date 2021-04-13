@@ -35,6 +35,36 @@ log = logging.getLogger('stochss')
 
 # pylint: disable=abstract-method
 # pylint: disable=too-few-public-methods
+class NewWorkflowAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for creating a new workflow
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Creates a new workflow of the given type for the given model.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow: %s", path)
+        mdl_path = self.get_query_argument(name="model")
+        log.debug("The path to the model: %s", mdl_path)
+        wkfl_type = self.get_query_argument(name="type")
+        log.debug("Type of the workflow: %s", wkfl_type)
+        try:
+            wkfl = StochSSWorkflow(path=path, new=True, mdl_path=mdl_path, wkfl_type=wkfl_type)
+            resp = {"path": wkfl.path}
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
 class LoadWorkflowAPIHandler(APIHandler):
     '''
     ################################################################################################
