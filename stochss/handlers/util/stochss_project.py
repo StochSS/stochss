@@ -24,6 +24,7 @@ import traceback
 from .stochss_base import StochSSBase
 from .stochss_model import StochSSModel
 from .stochss_spatial_model import StochSSSpatialModel
+from .stochss_workflow import StochSSWorkflow
 from .stochss_job import StochSSJob
 from .stochss_notebook import StochSSNotebook
 from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
@@ -106,11 +107,19 @@ class StochSSProject(StochSSBase):
 
     def __load_workflow(self, dirname, folder):
         path = os.path.join(dirname, folder)
-        workflow = StochSSJob(path=path)
-        info = workflow.load_info()
-        wkfl = {"directory":path.replace(self.user_dir + "/", ""), "annotation":info['annotation'],
-                "name":self.get_name(path=path), "status":workflow.get_status(),
-                "type":workflow.TITLES[info['type']]}
+        wkfl = {"directory":path.replace(self.user_dir + "/", ""), "name":self.get_name(path=path)}
+        if self.check_workflow_format(path=path):
+            workflow = StochSSWorkflow(path=path)
+            workflow.load()
+            wkfl['annotation'] = workflow.workflow['annotation']
+            wkfl['type'] = workflow.workflow['type']
+            wkfl['status'] = None
+        else:
+            workflow = StochSSJob(path=path)
+            info = workflow.load_info()
+            wkfl["annotation"] = info['annotation']
+            wkfl["status"] = workflow.get_status()
+            wkfl["type"] = workflow.TITLES[info['type']]
         return wkfl
 
 

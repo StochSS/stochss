@@ -10,7 +10,9 @@ div
 
       div(data-hook=this.model.elementID + "-type")="Type: " + this.model.type
 
-      div(data-hook=this.model.elementID + "-status")="Status: " + this.model.status
+      if(this.model.status)
+
+        div(data-hook=this.model.elementID + "-status")="Status: " + this.model.status
 
     div.col-md-2
 

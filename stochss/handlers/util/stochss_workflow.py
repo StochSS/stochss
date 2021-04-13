@@ -114,7 +114,10 @@ class StochSSWorkflow(StochSSBase):
                 if os.path.getmtime(path) > time:
                     time = os.path.getmtime(path)
                     last_job = path
-        self.workflow['activeJob'] = StochSSJob(path=last_job).load()
+        if last_job is None:
+            self.workflow['activeJob'] = None
+        else:
+            self.workflow['activeJob'] = StochSSJob(path=last_job).load()
 
 
     def __load_settings(self):
