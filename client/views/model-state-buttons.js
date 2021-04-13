@@ -237,25 +237,6 @@ module.exports = View.extend({
     Plotly.newPlot(el, data);
     window.scrollTo(0, document.body.scrollHeight)
   },
-  handleEnsembleSimulationClick: function (e) {
-    this.launchStochssWorkflow("gillespy")
-  },
-  handleParameterSweepClick: function (e) {
-    this.launchStochssWorkflow("parameterSweep")
-  },
-  launchStochssWorkflow: function (type) {
-    let queryString = "?type=" + type + "&path=" + this.model.directory
-    if(this.model.directory.includes('.proj') && !this.model.directory.includes('.wkgp')) {
-      var parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp")
-    }else{
-      var parentPath = path.dirname(this.model.directory)
-    }
-    queryString += "&parentPath=" + parentPath
-    let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
-    this.saveModel(function () {
-      window.location.href = endpoint
-    });
-  },
   handleSimulateClick: function (e) {
     var errorMsg = $(this.parent.queryByHook("error-detected-msg"))
     if(!this.model.valid) {
@@ -271,9 +252,9 @@ module.exports = View.extend({
         this.clickNewWorkflowHandler(e)
       }else if(!this.model.is_spatial) {
         if(simType === "ensemble") {
-          this.handleEnsembleSimulationClick(e)
+          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Ensemble Simulation");
         }else if(simType === "psweep") {
-          this.handleParameterSweepClick(e)
+          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep");
         }
       }
     }

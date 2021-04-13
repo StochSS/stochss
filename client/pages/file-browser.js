@@ -594,7 +594,7 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.open(endpoint)
   },
-  validateName(input, rename = false) {
+  validateName: function (input, rename = false) {
     var error = ""
     if(input.endsWith('/')) {
       error = 'forward'
