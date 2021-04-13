@@ -102,6 +102,23 @@ let getBrowser = () => {
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
 }
 
+let validateName = (input, rename = false) => {
+  var error = ""
+  if(input.endsWith('/')) {
+    error = 'forward'
+  }
+  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+  if(rename) {
+    invalidChars += "/"
+  }
+  for(var i = 0; i < input.length; i++) {
+    if(invalidChars.includes(input.charAt(i))) {
+      error = error === "" || error === "special" ? "special" : "both"
+    }
+  }
+  return error
+}
+
 let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   if(document.querySelector('#newWorkflowModal')) {
     document.querySelector('#newWorkflowModal').remove()
@@ -122,7 +139,7 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   input.addEventListener("input", function (e) {
     let endErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputEndCharError')
     let charErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputSpecCharError')
-    let error = self.validateName(input.value)
+    let error = validateName(input.value)
     okBtn.disabled = error !== "" || input.value.trim() === ""
     charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
     endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
@@ -131,7 +148,11 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
     modal.modal("hide");
     let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
     let wkflFile = input.value.trim() + typeCode + ".wkfl";
-    let wkflPath = path.join(path.dirname(mdlPath), wkflFile);
+    if(mdlPath.includes(".proj") && !mdlPath.includes(".wkgp")){
+      var wkflPath = path.join(path.dirname(mdlPath), "WorkflowGroup1.wkgp", wkflFile);
+    }else{
+      var wkflPath = path.join(path.dirname(mdlPath), wkflFile);
+    }
     let queryString = "?path=" + wkflPath + "&model=" + mdlPath + "&type=" + type;
     let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
