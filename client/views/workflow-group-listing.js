@@ -33,6 +33,8 @@ module.exports = View.extend({
   events: function () {
     let events = {};
     events['change [data-hook=' + this.model.elementID + '-annotation'] = 'updateAnnotation';
+    events['click #' + this.model.elementID + "-ensemble-simulation"] = 'handleEnsembleSimulationClick';
+    events['click #' + this.model.elementID + "-parameter-sweep"] = 'handleParameterSweepClick';
     events['click [data-hook=' + this.model.elementID + '-remove'] = 'handleTrashModelClick';
     events['click [data-hook=' + this.model.elementID + '-tab-btn'] = 'changeCollapseButtonText';
     return events;
@@ -45,11 +47,17 @@ module.exports = View.extend({
     let parentPath = path.dirname(this.model.model.directory);
     let queryString = "?path=" + this.model.model.directory + "&parentPath=" + parentPath;
     let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
-    $(this.queryByHook(this.model.elementID + "-workflow-btn")).prop("href", endpoint);
+    $(this.queryByHook(this.model.elementID + "-jupyter-notebook")).prop("href", endpoint);
     this.renderWorkflowCollection();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  handleEnsembleSimulationClick: function (e) {
+    app.newWorkflow(this, this.model.model.directory, this.model.model.is_spatial, "Ensemble Simulation")
+  },
+  handleParameterSweepClick: function (e) {
+    app.newWorkflow(this, this.model.model.directory, this.model.model.is_spatial, "Parameter Sweep")
   },
   handleTrashModelClick: function () {
     if(document.querySelector('#moveToTrashConfirmModal')) {

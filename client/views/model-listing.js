@@ -32,6 +32,8 @@ module.exports = View.extend({
   events: function () {
   	let events = {};
   	events['change [data-hook=' + this.model.elementID + '-annotation]'] = 'updateAnnotation';
+    events['click #' + this.model.elementID + "-ensemble-simulation"] = 'handleEnsembleSimulationClick';
+    events['click #' + this.model.elementID + "-parameter-sweep"] = 'handleParameterSweepClick';
   	events['click [data-hook=' + this.model.elementID + '-notes-btn]'] = 'handleEditNotesClick';
   	events['click [data-hook=' + this.model.elementID + '-remove]'] = 'handleTrashModelClick';
   	events['click [data-hook=' + this.model.elementID + '-annotation-btn'] = 'changeCollapseButtonText';
@@ -45,7 +47,7 @@ module.exports = View.extend({
     let parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp");
     let queryString = "?path=" + this.model.directory + "&parentPath=" + parentPath;
     let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
-    $(this.queryByHook(this.model.elementID + "-workflow-btn")).prop("href", endpoint);
+    $(this.queryByHook(this.model.elementID + "-jupyter-notebook")).prop("href", endpoint);
     if(!this.model.annotation){
       $(this.queryByHook(this.model.elementID + '-notes-btn')).text('Add Notes')
     }else{
@@ -67,6 +69,12 @@ module.exports = View.extend({
       $(this.queryByHook(this.model.elementID + "-annotation-btn")).text('-');
     }
     document.querySelector("#" + this.model.elementID + "-annotation").focus();
+  },
+  handleEnsembleSimulationClick: function (e) {
+    app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Ensemble Simulation")
+  },
+  handleParameterSweepClick: function (e) {
+    app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep")
   },
   handleTrashModelClick: function (e) {
     if(document.querySelector('#moveToTrashConfirmModal')) {

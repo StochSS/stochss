@@ -8,11 +8,22 @@ div
 
     div.col-md-4
 
-      a.btn.btn-outline-secondary.inline.box-shadow(
+      button.btn.btn-outline-secondary.inline.dropdown-toggle.box-shadow(
         id=this.model.elementID + "-workflow-btn",
         data-hook=this.model.elementID + "-workflow-btn",
-        role="button",
-      ) New Workflow Using Model
+        data-toggle="dropdown",
+        aria-haspopup="true",
+        aria-expanded="false",
+        type="button"
+      ) New Workflow Using Model <span class="caret"></span>
+
+      ul.dropdown-menu(aria-labelledby=this.model.elementID + "-workflow-btn")
+        if(!this.model.is_spatial)
+          li.dropdown-item(id=this.model.elementID + "-ensemble-simulation") Ensemble Simulation
+          li.dropdown-item(id=this.model.elementID + "-parameter-sweep") Parameter Sweep
+        li.dropdown-item
+
+          a.btn(id=this.model.elementID + "-jupyter-notebook" data-hook=this.model.elementID + "-jupyter-notebook" style="padding: 0;") Jupyter Notebook
 
     div.col-md-2
 
