@@ -255,6 +255,17 @@ class StochSSWorkflow(StochSSBase):
             json.dump(self.workflow['settings'], settings_file, indent=4, sort_keys=True)
 
 
+    def save_annotation(self, annotation):
+        '''
+        Save the workflows annotation.
+
+        annotation : str
+            Annotation to be saved
+        '''
+        with open(os.path.join(self.path, "README.md"), "w") as rdme_file:
+            rdme_file.write(annotation)
+
+
     def update_wkfl_format(self):
         '''
         Update a workflow to the new workflow/job format

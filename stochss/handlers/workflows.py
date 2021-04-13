@@ -351,9 +351,13 @@ class SaveAnnotationAPIHandler(APIHandler):
         info = json.loads(self.request.body.decode())
         log.debug("The annotation to be saved: %s", info['annotation'])
         try:
-            wkfl = StochSSJob(path=path)
-            wkfl.update_info(new_info=info)
-            wkfl.print_logs(log)
+            if StochSSWorkflow.check_workflow_format(path=path):
+                wkfl = StochSSWorkflow(path=path)
+                wkfl.save_annotation(info['annotation'])
+            else:
+                wkfl = StochSSJob(path=path)
+                wkfl.update_info(new_info=info)
+                wkfl.print_logs(log)
             resp = {"message":"The annotation was successfully saved", "data":info['annotation']}
             log.debug("Response message: %s", resp)
             self.write(resp)
