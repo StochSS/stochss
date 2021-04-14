@@ -114,7 +114,8 @@ class StochSSFolder(StochSSBase):
         elif not file.endswith(ext):
             _ext = file.split('.').pop()
             file = file.replace(_ext, ext)
-        if self.path.endswith(".proj") and ext != "json" and self.check_project_format():
+        if self.path.endswith(".proj") and ext != "json" and \
+                                           self.check_project_format(path=self.path):
             wkgp_file = f"{self.get_name(path=file)}.wkgp"
             wkgp_path, changed = self.get_unique_path(name=wkgp_file, dirname=self.path)
             if changed:
@@ -143,7 +144,7 @@ class StochSSFolder(StochSSBase):
         dirname = sbml.get_dir_name()
         is_valid, errors = self.__validate_sbml(sbml=sbml)
         if is_valid:
-            if self.path.endswith(".proj") and self.check_project_format():
+            if self.path.endswith(".proj") and self.check_project_format(path=self.path):
                 wkgp_path, _ = self.get_unique_path(name=f"{sbml.get_name()}.wkgp",
                                                     dirname=self.path)
                 convert_resp = sbml.convert_to_model(name=self.get_name(wkgp_path), wkgp=True)

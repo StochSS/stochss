@@ -168,7 +168,7 @@ class StochSSProject(StochSSBase):
         '''
         try:
             self.log("debug", f"Original file name: {file}")
-            if self.check_project_format():
+            if self.check_project_format(path=self.path):
                 wkgp_file = f"{self.get_name(path=file)}.wkgp"
                 self.log("debug", f"Original workflow group folder name: {wkgp_file}")
                 if new:
@@ -237,7 +237,7 @@ class StochSSProject(StochSSBase):
         Attributes
         ----------
         '''
-        current_format = self.check_project_format()
+        current_format = self.check_project_format(path=self.path)
         trash_path = os.path.join(self.get_path(full=True), "trash")
         annotation = self.__load_annotation()
         metadata, creators = self.__get_meta_data()

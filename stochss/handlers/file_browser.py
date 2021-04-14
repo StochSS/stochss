@@ -362,7 +362,8 @@ class SBMLToModelAPIHandler(APIHandler):
         try:
             sbml = StochSSSBMLModel(path=path)
             if ".proj" in path:
-                wkgp = StochSSProject(path=sbml.get_dir_name()).check_project_format()
+                proj = StochSSProject(path=sbml.get_dir_name())
+                wkgp = proj.check_project_format(path=proj.path)
             else:
                 wkgp = False
             convert_resp = sbml.convert_to_model(name=sbml.get_name(), wkgp=wkgp)

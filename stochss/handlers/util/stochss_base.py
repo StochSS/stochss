@@ -46,14 +46,15 @@ class StochSSBase():
         self.logs = []
 
 
-    def check_project_format(self):
+    @classmethod
+    def check_project_format(cls, path):
         '''
         Determine if the format of the project is out of date
 
         Attributes
         ----------
         '''
-        files = os.listdir(self.path)
+        files = os.listdir(path)
         model_test = lambda file: file.endswith(".mdl") or file.endswith(".smdl")
         wkgp_test = lambda file: file.endswith(".wkgp")
         models = list(filter(model_test, files))
