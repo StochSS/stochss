@@ -24,7 +24,7 @@ var Tooltips = require('../tooltips');
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
-var template = require('../templates/includes/modelSettings.pug');
+var template = require('../templates/includes/timespanSettings.pug');
 
 module.exports = View.extend({
   template: template,

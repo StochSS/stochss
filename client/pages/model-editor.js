@@ -42,7 +42,7 @@ var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
 var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
-var ModelSettingsView = require('../views/model-settings');
+var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 var QuickviewDomainTypes = require('../views/quickview-domain-types');
 //models
@@ -220,7 +220,7 @@ let ModelEditor = PageView.extend({
     }
   },
   renderSubviews: function () {
-    this.modelSettings = new ModelSettingsView({
+    this.modelSettings = new TimespanSettingsView({
       parent: this,
       model: this.model.modelSettings,
     });
