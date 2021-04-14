@@ -449,6 +449,8 @@ class StochSSModel(StochSSBase):
         self.__update_reactions()
         self.__update_events(param_ids=param_ids)
         self.__update_rules(param_ids=param_ids)
+        self.model['name'] = self.get_name()
+        self.model['directory'] = self.path
         return self.model
 
 
