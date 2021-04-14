@@ -21,7 +21,7 @@ var path = require('path');
 var xhr = require('xhr');
 //models
 var Model = require('ampersand-model');
-var ModelSettings = require('./model-settings');
+var TimespanSettings = require('./timespan-settings');
 var Domain = require('./domain');
 //collections
 var Species = require('./species');
@@ -53,7 +53,7 @@ module.exports = Model.extend({
     functionDefinitions: FunctionDefinitions
   },
   children: {
-    modelSettings: ModelSettings,
+    modelSettings: TimespanSettings,
     domain: Domain
   },
   session: {
