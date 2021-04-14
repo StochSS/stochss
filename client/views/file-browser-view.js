@@ -769,54 +769,8 @@ module.exports = View.extend({
       });
     });
   },
-  addNewWorkflow: function (o) {
-    if(o.type !== "workflow-group" && this.parent.model.workflowGroups.length <= 0) {
-      let title = "No Workflow Groups Found"
-      let message = "You need to create an workflow group before you can create a new workflow."
-      let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
-    }else if(!this.parent.model.newFormat) {
-      if(o.type === "workflow-group" && this.parent.models.length <= 0) {
-        let title = "No Models Found"
-        let message = "You need to add a model before you can create a new workflow."
-        let modal = $(modals.noWorkflowGroupMessageHtml(title, message)).modal()
-      }else if(o.type !== "workflow-group" && this.parent.model.workflowGroups.length == 1) {
-        let expName = this.parent.model.workflowGroups.models[0].name
-        let parentPath = path.join(path.dirname(o.original._path), expName + ".wkgp")
-        let modelPath = o.original._path
-        let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
-        window.location.href = endpoint
-      }else{
-        let self = this
-        if(document.querySelector('#newProjectWorkflowModal')){
-          document.querySelector('#newProjectWorkflowModal').remove()
-        }
-        let options = o.type === "workflow-group" ?
-                      this.parent.models.map(function (model) {return model.name}) :
-                      this.parent.model.workflowGroups.map(function (workflowGroup) {return workflowGroup.name})
-        let label = o.type === "workflow-group" ? "Model file name: " : "Workflow Group file name: "
-        let modal = $(modals.newProjectWorkflowHtml(label, options)).modal()
-        let okBtn = document.querySelector('#newProjectWorkflowModal .ok-model-btn')
-        let select = document.querySelector('#newProjectWorkflowModal #select')
-        okBtn.addEventListener("click", function (e) {
-            modal.modal('hide')
-            let mdlFile = o.type === "workflow-group" ? self.parent.models.filter(function (model) {
-              return model.name === select.value;
-            })[0].directory.split("/").pop() : null;
-            let parentPath = o.type === "workflow-group" ? o.original._path : path.join(path.dirname(o.original._path), select.value + ".wkgp")
-            let modelPath = o.type === "workflow-group" ? path.join(path.dirname(o.original._path), mdlFile) : o.original._path
-            let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+modelPath+"&parentPath="+parentPath
-            window.location.href = endpoint
-        });
-      }
-    }else{
-      let mdlPath = o.type === "workflow-group" ? this.parent.model.workflowGroups.filter(function (wkgp) {
-        return o.text.startsWith(wkgp.name)
-      })[0].model.directory : o.original._path;
-      let dirname = o.type === "workflow-group" ? o.original._path : path.dirname(o.original._path);
-      let queryString = "?path=" + mdlPath + "&parentPath=" + dirname;
-      let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection") + queryString;
-      window.location.href = endpoint;
-    }
+  newWorkflow: function (o, type) {
+    app.newWorkflow(this, o.original._path, o.type === "spatial", type);
   },
   addModel: function (parentPath, modelName, message) {
     var endpoint = path.join(app.getBasePath(), "stochss/models/edit")
@@ -1188,13 +1142,31 @@ module.exports = View.extend({
       }
       // menu option for creating new workflows
       let newWorkflow = {
-        "NewWorkflow" : {
-          "label" : "New Workflow",
+        "ensembleSimulation" : {
+          "label" : "Ensemble Simulation",
           "_disabled" : false,
           "separator_before" : false,
-          "separator_after" : true,
+          "separator_after" : false,
           "action" : function (data) {
-            self.addNewWorkflow(o)
+            self.newWorkflow(o, "Ensemble Simulation")
+          }
+        },
+        "parameterSweep" : {
+          "label" : "Parameter Sweep",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.newWorkflow(o, "Parameter Sweep")
+          }
+        },
+        "jupyterNotebook" : {
+          "label" : "Jupyter Notebook",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
           }
         }
       }
@@ -1219,7 +1191,13 @@ module.exports = View.extend({
             self.handleExtractModelClick(o);
           }
         },
-        "New Workflow" : newWorkflow.NewWorkflow
+        "New Workflow" : {
+          "label" : "New Workflow",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "submenu" : o.type === "nonspatial" ? newWorkflow : {"jupyterNotebook":newWorkflow.jupyterNotebook}
+        }
       }
       // convert options for non-spatial models
       let modelConvert = {
@@ -1269,10 +1247,6 @@ module.exports = View.extend({
             }
           }
         }
-      }
-      // specific to workflow groups
-      let workflowGroup = {
-        "Add New Workflow" : newWorkflow.NewWorkflow
       }
       // specific to workflows
       let workflow = {
@@ -1408,7 +1382,7 @@ module.exports = View.extend({
          return $.extend(commonModel, modelConvert, download, common)
       }
       if (o.type === 'workflow-group') {
-        return $.extend(refresh, workflowGroup, downloadWCombine)
+        return $.extend(refresh, downloadWCombine)
       }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, downloadWCombine, common)
