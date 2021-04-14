@@ -20,9 +20,12 @@ let path = require('path');
 //Support Files
 let app = require('../app.js');
 //models
-var State = require('ampersand-state');
+var Model = require('ampersand-model');
 
-module.exports = State.extend({
+module.exports = Model.extend({
+  url: function () {
+    return path.join(app.getApiPath(), "workflow/load-workflow") + "?path=" + this.directory;
+  },
   session: {
     annotation: 'string',
     directory: 'string',
