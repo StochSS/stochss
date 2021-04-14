@@ -238,10 +238,18 @@ class StochSSWorkflow(StochSSBase):
         self.workflow['directory'] = self.path
         self.workflow['name'] = self.get_name()
         self.workflow['newFormat'] = self.check_workflow_format(path=self.path)
-        if self.workflow['settings'] is None:
-            self.__load_settings()
-        self.__load_annotation()
-        self.__load_jobs()
+        if self.workflow['newFormat']:
+            if self.workflow['settings'] is None:
+                self.__load_settings()
+            self.__load_annotation()
+            self.__load_jobs()
+        else:
+            self.workflow['jobs'] = []
+            job = StochSSJob(path=self.path).load()
+            self.workflow['activeJob'] = job
+            self.workflow['model'] = job['mdlPath']
+            self.workflow['settings'] = job['settings']
+            self.workflow['type'] = job['titleType']
         return self.workflow
 
 

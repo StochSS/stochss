@@ -82,19 +82,8 @@ class LoadWorkflowAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the workflow/model: %s", path)
-        wkfl_type = self.get_query_argument(name="type")
-        dirname = self.get_query_argument(name='parentPath', default=os.path.dirname(path))
-        data = {"type":wkfl_type if wkfl_type != "none" else None,
-                "stamp": self.get_query_argument(name="stamp"),
-                "dirname": None if not dirname or dirname == "." else dirname}
-        log.debug("Load data for the workflow: %s", data)
         try:
-            if StochSSBase.check_workflow_format(path=path):
-                resp = StochSSWorkflow(path=path).load()['activeJob']
-            else:
-                new = path.endswith(".mdl")
-                wkfl = StochSSJob(path=path, new=new, data=data)
-                resp = wkfl.load(new=new)
+            resp = StochSSWorkflow(path=path).load()
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
