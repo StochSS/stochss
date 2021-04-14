@@ -79,7 +79,12 @@ class StochSSFolder(StochSSBase):
             file_type = types[ext]
             node['type'] = file_type
             if file_type == "workflow":
-                node['_status'] = self.get_status(path=path)
+                node['_newFormat'] = self.check_workflow_format(path=_path)
+                if node['_newFormat']:
+                    node['_hasJobs'] = len(list(filter(lambda file: "job" in file,
+                                                       os.listdir(_path)))) > 0
+                else:
+                    node['_status'] = self.get_status(path=_path)
             elif file_type == "workflow-group":
                 node['children'] = True
         elif os.path.isdir(os.path.join(path, file)):
