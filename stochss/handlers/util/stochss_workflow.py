@@ -87,7 +87,14 @@ class StochSSWorkflow(StochSSBase):
     def __get_model_path(self):
         try:
             with open(os.path.join(self.path, "settings.json")) as settings_file:
-                return json.load(settings_file)['model']
+                path = json.load(settings_file)['model']
+            if ".proj" not in self.path:
+                return path
+            file = self.get_file(path=path)
+            proj_path = f"{self.path.split('.proj')[0]}.proj"
+            if self.check_project_format(path=proj_path):
+                return os.path.join(self.get_dir_name(), file)
+            return os.path.join(proj_path, file)
         except FileNotFoundError as err:
             message = f"Could not find settings file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -287,7 +294,7 @@ class StochSSWorkflow(StochSSBase):
             with open("settings.json", "w") as settings_file:
                 json.dump(data['settings']['settings'], settings_file, indent=4, sort_keys=True)
             self.rename(name=data['job'])
-            path = os.path.join(self.get_dir_name(full=True), data['wkfl'])
+            path, _ = self.get_unique_path(name=data['wkfl'], dirname=self.get_dir_name(full=True))
             os.mkdir(path)
             shutil.move(self.get_path(full=True), os.path.join(path, data['job']))
             os.chdir(path)

@@ -146,7 +146,7 @@ class StochSSJob(StochSSBase):
         '''
         wkfl = self.load()
         if wkfl['status'] != "ready":
-            mdl_path = self.load_info()['source_model']
+            mdl_path = self.get_model_path(external=True)
         else:
             mdl_path = wkfl['mdlPath']
         data = {"type":self.type, "stamp":stamp,
@@ -243,7 +243,13 @@ class StochSSJob(StochSSBase):
         info = self.load_info()
         self.log("debug", f"Job info: {info}")
         if external:
-            return info['source_model']
+            if '.proj' not in self.path:
+                return info['source_model']
+            file = self.get_file(path=info['source_model'])
+            proj_path = f"{self.path.split('.proj')[0]}.proj"
+            if self.check_project_format(path=proj_path):
+                return os.path.join(self.get_dir_name(), file)
+            return os.path.join(proj_path, file)
         if info['wkfl_model'] is None:
             file = self.get_file(path=info['source_model'])
             return os.path.join(self.get_path(full=full), file)
