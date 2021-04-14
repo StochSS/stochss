@@ -1250,15 +1250,6 @@ module.exports = View.extend({
       }
       // specific to workflows
       let workflow = {
-        "Convert to Notebook" : {
-          "label" : "To Notebook",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.toNotebook(o, "workflow")
-          }
-        },
         "Start/Restart Workflow" : {
           "label" : (o.original._status === "ready") ? "Start Workflow" : "Restart Workflow",
           "_disabled" : true,
@@ -1285,7 +1276,7 @@ module.exports = View.extend({
           "submenu" : {
             "Edit" : {
               "label" : " Edit",
-              "_disabled" : !(o.original._status === "ready"),
+              "_disabled" : (!o.original._newFormat && o.original._status !== "ready"),
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
@@ -1294,7 +1285,7 @@ module.exports = View.extend({
             },
             "Extract" : {
               "label" : "Extract",
-              "_disabled" : false,
+              "_disabled" : (o.original._newFormat && !o.original._hasJobs),
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {

@@ -1223,7 +1223,7 @@ let FileBrowser = PageView.extend({
           "submenu" : {
             "Edit" : {
               "label" : " Edit",
-              "_disabled" : !(o.original._status === "ready"),
+              "_disabled" : (!o.original._newFormat && o.original._status !== "ready"),
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
@@ -1232,7 +1232,7 @@ let FileBrowser = PageView.extend({
             },
             "Extract" : {
               "label" : "Extract",
-              "_disabled" : false,
+              "_disabled" : (o.original._newFormat && !o.original._hasJobs),
               "separator_before" : false,
               "separator_after" : false,
               "action" : function (data) {
