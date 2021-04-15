@@ -14,5 +14,23 @@ section.page
             a.active-link(data-hook="project-breadcrumb")
           li.breadcrumb-item.active(aria-current="page" data-hook="workflow-breadcrumb")
 
+  div.card.card-body(data-hook="src-model" style="display: none;")
+
+    h3 Model
+
+    div
+
+      div.text-warning
+        | The model used for this workflow could not be found, you will need to select the model to be run by this workflow
+
+      div.text-info(id="model-location-info" style="display: none;")
+        | This model was found in multiple locations
+
+      div.inline(data-hook="model-file")
+
+      div.inline(data-hook="model-location")
+
+    button.btn.btn-outline-primary.box-shadow(data-hook="save-model") Update Model
+
   button.btn.btn-primary.box-shadow(data-hook="return-to-project-btn" style="display: none;") Return to Project
 

@@ -26,6 +26,9 @@ module.exports = Model.extend({
   url: function () {
     return path.join(app.getApiPath(), "workflow/load-workflow") + "?path=" + this.directory;
   },
+  props: {
+    model: 'string'
+  },
   session: {
     annotation: 'string',
     directory: 'string',

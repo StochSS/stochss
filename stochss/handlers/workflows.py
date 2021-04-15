@@ -28,7 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
-                  StochSSBase, StochSSAPIError, report_error
+                  StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -91,6 +91,30 @@ class LoadWorkflowAPIHandler(APIHandler):
         self.finish()
 
 
+    @web.authenticated
+    async def post(self):
+        '''
+        Start saving the workflow.  Creates the workflow directory and workflow_info file if
+        saving a new workflow.  Copys model into the workflow directory.
+
+        Attributes
+        ----------
+        '''
+        try:
+            path = self.get_query_argument(name="path")
+            log.debug("Path to the workflow: %s", path)
+            data = json.loads(self.request.body.decode())
+            log.debug("Workflow Data: %s", data)
+            log.debug("Path to the model: %s", data['model'])
+            wkfl = StochSSWorkflow(path=path)
+            resp = wkfl.save(mdl_path=data['model'])
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
 class RunWorkflowAPIHandler(APIHandler):
     '''
     ################################################################################################
@@ -122,36 +146,6 @@ class RunWorkflowAPIHandler(APIHandler):
             log.debug('Sending the workflow run cmd')
             subprocess.Popen(exec_cmd)
             log.debug('The workflow has started')
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
-class SaveWorkflowAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for saving workflows.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Start saving the workflow.  Creates the workflow directory and workflow_info file if
-        saving a new workflow.  Copys model into the workflow directory.
-
-        Attributes
-        ----------
-        '''
-        try:
-            data = json.loads(self.get_query_argument(name="data"))
-            log.debug("Handler query string: %s", data)
-            model_path = data['mdlPath']
-            log.debug("Path to the model: %s", model_path)
-            wkfl = StochSSJob(path=data['wkflPath'])
-            resp = wkfl.save(mdl_path=model_path, settings=data['settings'],
-                             initialize="r" in data['optType'])
-            log.debug("Response: %s", resp)
-            self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
