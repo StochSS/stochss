@@ -23,6 +23,7 @@ import datetime
 import traceback
 
 from .stochss_base import StochSSBase
+from .stochss_folder import StochSSFolder
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSFileNotFoundError
 
@@ -243,13 +244,36 @@ class StochSSWorkflow(StochSSBase):
                 self.__load_settings()
             self.__load_annotation()
             self.__load_jobs()
+            oldfmtrdy = False
         else:
             self.workflow['jobs'] = []
-            job = StochSSJob(path=self.path).load()
-            self.workflow['activeJob'] = job
-            self.workflow['model'] = job['mdlPath']
-            self.workflow['settings'] = job['settings']
-            self.workflow['type'] = job['titleType']
+            job = StochSSJob(path=self.path)
+            jobdata = job.load()
+            self.workflow['activeJob'] = jobdata
+            self.workflow['model'] = job.get_model_path(external=True)
+            self.workflow['settings'] = jobdata['settings']
+            self.workflow['type'] = jobdata['titleType']
+            oldfmtrdy = jobdata['status'] == "ready"
+        if not os.path.exists(self.workflow['model']) and (oldfmtrdy or self.workflow['newFormat']):
+            if ".proj" in self.path:
+                if "WorkflowGroup1.wkgp" in self.path:
+                    proj = StochSSFolder(path=os.path.dirname(self.get_dir_name(full=True)))
+                    test = lambda ext, root, file: ".wkfl" in root or "trash" in root
+                    models = proj.get_file_list(ext=[".mdl"], test=test)
+                else:
+                    wkgp = StochSSFolder(path=self.get_dir_name(full=True))
+                    test = lambda ext, root, file: ".wkfl" in root
+                    models = wkgp.get_file_list(ext=[".mdl"], test=test)
+                    if models['files']:
+                        self.workflow['model'] = models["paths"]["0"][0]
+                        models = None
+                    else:
+                        self.workflow['model'] = None
+            else:
+                root = StochSSFolder(path="")
+                test = lambda ext, root, file: ".wkfl" in root or ".proj" in root
+                models = root.get_file_list(ext=[".mdl"], test=test)
+            self.workflow['models'] = models
         return self.workflow
 
 
