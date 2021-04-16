@@ -503,7 +503,7 @@ class StochSSJob(StochSSBase):
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
-    def save(self, mdl_path, settings, initialize):
+    def save(self, mdl_path, settings, initialize=False):
         '''
         Save the data for a new or ready state job
 
@@ -520,8 +520,8 @@ class StochSSJob(StochSSBase):
             new_info['wkfl_model'] = self.get_file(path=mdl_path)
             open(os.path.join(self.path, 'RUNNING'), 'w').close()
         self.update_info(new_info=new_info)
-        with open(self.__get_settings_path(full=True), "w") as file:
-            json.dump(settings, file, indent=4, sort_keys=True)
+        # with open(self.__get_settings_path(full=True), "w") as file:
+        #     json.dump(settings, file, indent=4, sort_keys=True)
         try:
             os.remove(path)
             shutil.copyfile(os.path.join(self.user_dir, mdl_path),
