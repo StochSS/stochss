@@ -24,6 +24,7 @@ let _ = require('underscore');
 let app = require('../app');
 //views
 let View = require('ampersand-view');
+let TimespanSettingsView = require('./timespan-settings');
 //templates
 let template = require('../templates/includes/settings.pug');
 
@@ -32,7 +33,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=collapse-settings]' : 'changeCollapseButtonText',
     'click [data-hook=save]' : 'clickSaveHandler',
-    'click [data-hook=start-workflow]'  : 'clickStartJobHandler',
+    'click [data-hook=start-job]'  : 'clickStartJobHandler',
     'click [data-hook=edit-model]' : 'clickEditModelHandler'
   },
   initialize: function (attrs, options) {
@@ -41,8 +42,8 @@ module.exports = View.extend({
   render: function() {
     View.prototype.render.apply(this, arguments);
     if(this.parent.model.newFormat) {
-      console.log("TODO: Update start button text")
-      console.log("TODO: Render timespan settings")
+      $(this.queryByHook("start-job")).text("Start New Job");
+      this.renderTimespanSettingsView();
     }
     if(this.parent.model.type === "Parameter Sweep") {
       console.log("TODO: Render parameter sweep settings")
@@ -64,6 +65,7 @@ module.exports = View.extend({
     this.parent.handleSaveWorkflow(e, _.bind(this.saved, this));
   },
   clickStartJobHandler: function (e) {
+    this.saving();
     let self = this;
     let type = this.parent.model.type === "Ensemble Simulation" ? "gillespy" : "parameterSweep";
     let data = {"settings": this.parent.model.settings.toJSON(),
@@ -73,6 +75,7 @@ module.exports = View.extend({
     let initEndpoint = path.join(app.getApiPath(), "workflow/init-job") + queryStr;
     xhr({uri: initEndpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
+        self.saved();
         let runQuery = "?path=" + body + "&type=" + type;
         let runEndpoint = path.join(app.getApiPath(), "workflow/run-job") + runQuery;
         xhr({uri: runEndpoint, json: true}, function (err, response, body) {
@@ -115,6 +118,15 @@ module.exports = View.extend({
       seconds = "0" + seconds
     }
     return "_" + month + day + year + "_" + hours + minutes + seconds;
+  },
+  renderTimespanSettingsView: function () {
+    if(this.timespanSettingsView) {
+      this.timespanSettingsView.remove();
+    }
+    this.timespanSettingsView = new TimespanSettingsView({
+      model: this.model.timespanSettings
+    });
+    app.registerRenderSubview(this, this.timespanSettingsView, "timespan-settings-container");
   },
   saved: function () {
     $(this.queryByHook('saving-workflow')).css("display", "none");
