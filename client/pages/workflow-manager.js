@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let xhr = require('xhr');
 let $ = require('jquery');
+let path = require('path');
+let _ = require('underscore');
 //support files
 let app = require('../app');
 //models
@@ -25,6 +27,7 @@ let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
 let SelectView = require('ampersand-select-view');
+let SettingsView = require('../views/settings');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
 
@@ -35,7 +38,9 @@ let WorkflowManager = PageView.extend({
   events: {
     'change [data-hook=model-file]' : 'handleModelSelect',
     'change [data-hook=model-location]' : 'handleLocationSelect',
-    'click [data-hook=save-model]' : 'handleSaveWorkflow'
+    'click [data-hook=project-breadcrumb]' : 'handleReturnToProject',
+    'click [data-hook=save-model]' : 'handleSaveWorkflow',
+    'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -83,13 +88,24 @@ let WorkflowManager = PageView.extend({
       }
     }
   },
-  handleSaveWorkflow: function (e) {
+  handleReturnToProject: function (e) {
+    this.handleSaveWorkflow(e, _.bind(function () {
+      let queryStr = "?path=" + this.projectPath;
+      let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+      window.location.href = endpoint;
+    }, this));
+  },
+  handleSaveWorkflow: function (e, cb) {
     let self = this;
     let endpoint = this.model.url();
     xhr({uri: endpoint, json: true, method: 'post', data: this.model.toJSON()}, function (err, response, body) {
       if(response.statusCode < 400) {
         console.log(body)
-        $(self.queryByHook("src-model")).css("display", "none");
+        if(cb) {
+          cb();
+        }else{
+          $(self.queryByHook("src-model")).css("display", "none");
+        }
       }
     });
   },
@@ -120,8 +136,34 @@ let WorkflowManager = PageView.extend({
     });
     app.registerRenderSubview(this, modelSelectView, "model-file");
   },
+  renderSettingsView: function () {
+    if(this.settingsView) {
+      this.settingsView.remove();
+    }
+    this.settingsView = new SettingsView({
+      model: this.model.settings
+    });
+    app.registerRenderSubview(this, this.settingsView, "settings-container");
+  },
   renderSubviews: function () {
     console.log(this.model)
+    let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";
+    let newFormNotArchive = this.model.newFormat && this.model.model;
+    if(!this.models && (oldFormRdyState || newFormNotArchive)) {
+      this.renderSettingsView();
+    }
+    if(this.model.newFormat) {
+      console.log("TODO: Render the jobs container")
+    }else if(this.model.activeJob.status !== "ready") {
+      console.log("TODO: Render the status container")
+    }
+    let detailsStatus = ["error", "complete"]
+    if(this.model.activeJob && detailsStatus.includes(this.model.activeJob.status)) {
+      console.log("TODO: Render the results container")
+      console.log("TODO: Render the info container")
+      console.log("TODO: Render the review model container")
+      console.log("TODO: Render the review settings container")
+    }
   }
 });
 

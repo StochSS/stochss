@@ -107,7 +107,7 @@ class LoadWorkflowAPIHandler(APIHandler):
             log.debug("Workflow Data: %s", data)
             log.debug("Path to the model: %s", data['model'])
             wkfl = StochSSWorkflow(path=path)
-            resp = wkfl.save(mdl_path=data['model'])
+            resp = wkfl.save(new_settings=data['settings'], mdl_path=data['model'])
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:

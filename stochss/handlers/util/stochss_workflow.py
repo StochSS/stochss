@@ -278,7 +278,7 @@ class StochSSWorkflow(StochSSBase):
         return self.workflow
 
 
-    def save(self, new_settings=None, mdl_path=None):
+    def save(self, new_settings, mdl_path):
         '''
         Save the settings and model path for the workflow to the settings file.
 
@@ -293,15 +293,13 @@ class StochSSWorkflow(StochSSBase):
             path = os.path.join(self.get_path(full=True), "settings.json")
             with open(path, "r") as settings_file:
                 settings = json.load(settings_file)
-            if new_settings is not None:
-                settings['settings'] = new_settings
-            if mdl_path is not None:
-                settings['model'] = mdl_path
+            settings['settings'] = new_settings
+            settings['model'] = mdl_path
             with open(path, "w") as settings_file:
                 json.dump(settings, settings_file, indent=4, sort_keys=True)
             return f"Successfully saved the workflow: {self.path}"
         job = StochSSJob(path=self.path)
-        return job.save(mdl_path, new_settings)
+        return job.save(mdl_path=mdl_path, settings=new_settings)
 
 
     def save_annotation(self, annotation):
