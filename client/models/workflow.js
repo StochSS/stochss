@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let path = require('path');
 //Support Files
 let app = require('../app.js');
+//collections
+let Jobs = require('./jobs');
 //models
+let Job = require('./job');
 let Model = require('ampersand-model');
 let Settings = require('./settings');
 
@@ -31,14 +34,19 @@ module.exports = Model.extend({
     model: 'string'
   },
   children: {
-    settings: Settings
+    settings: Settings,
+    activeJob: Job
+  },
+  collection: {
+    jobs: Jobs
   },
   session: {
     annotation: 'string',
     directory: 'string',
     name: 'string',
     status: 'string',
-    type: 'string'
+    type: 'string',
+    newFormat: 'boolean'
   },
   derived: {
     elementID: {
