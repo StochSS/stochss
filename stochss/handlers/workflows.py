@@ -115,6 +115,35 @@ class LoadWorkflowAPIHandler(APIHandler):
         self.finish()
 
 
+class InitializeJobAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for initializing jobs.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Initialize a new job or an existing old format workflow.
+
+        Attributes
+        ----------
+        '''
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the workflow: %s", path)
+        data = json.loads(self.get_query_argument(name="data"))
+        log.debug("Handler query string: %s", data)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            resp = wkfl.initialize_job(settings=data['settings'], mdl_path=data['mdl_path'],
+                                       wkfl_type=data['type'], time_stamp=data['time_stamp'])
+            log.debug("Response message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
 class RunWorkflowAPIHandler(APIHandler):
     '''
     ################################################################################################

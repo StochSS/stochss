@@ -58,23 +58,15 @@ class StochSSJob(StochSSBase):
         self.job = {}
         self.type = None
         self.time_stamp = None
-        if data is not None:
-            self.type = data['type']
-            self.time_stamp = data['stamp'] if new else self.get_time_stamp()
         if new:
-            file = f"{self.get_name()}{self.TYPES[self.type]}{self.time_stamp}.wkfl"
-            self.path = file if data['dirname'] is None else os.path.join(data['dirname'], file)
-            settings = data['settings'] if "settings" in data.keys() else None
-            self.__create_new_job(mdl_path=path, settings=settings)
+            self.type = data['type']
+            self.__create_new_job(mdl_path=data['mdl_path'], settings=data['settings'])
 
 
     def __create_new_job(self, mdl_path, settings=None):
         path = self.get_path(full=True)
         try:
-            if not os.path.exists(self.get_dir_name(full=True)):
-                os.makedirs(path)
-            else:
-                os.mkdir(path)
+            os.mkdir(path)
             os.mkdir(self.get_results_path(full=True))
             info = {"source_model":mdl_path, "wkfl_model":None, "type":self.type, "start_time":None}
             self.update_info(new_info=info, new=True)
@@ -152,9 +144,14 @@ class StochSSJob(StochSSBase):
             mdl_path = self.get_model_path(external=True)
         else:
             mdl_path = wkfl['mdlPath']
-        data = {"type":self.type, "stamp":stamp,
-                "dirname":self.get_dir_name(), "settings":wkfl['settings']}
-        kwargs = {"path":self.get_model_path(), "new":True, "data":data}
+        if self.get_time_stamp():
+            path = self.path.replace(self.get_time_stamp(), stamp)
+        else:
+            dirname = self.get_dir_name()
+            mdl_name = self.get_name(path=mdl_path)
+            path = os.path.join(dirname, f"{mdl_name}{self.TYPES[self.type]}{stamp}.wkfl")
+        data = {"type":self.type, "mdl_path":self.get_model_path(), "settings":wkfl['settings']}
+        kwargs = {"path": path, "new":True, "data":data}
         resp = {"message":f"A new job has been created from {self.path}",
                 "mdlPath":mdl_path,
                 "mdl_file":self.get_file(path=mdl_path)}
@@ -520,8 +517,8 @@ class StochSSJob(StochSSBase):
             new_info['wkfl_model'] = self.get_file(path=mdl_path)
             open(os.path.join(self.path, 'RUNNING'), 'w').close()
         self.update_info(new_info=new_info)
-        # with open(self.__get_settings_path(full=True), "w") as file:
-        #     json.dump(settings, file, indent=4, sort_keys=True)
+        with open(self.__get_settings_path(full=True), "w") as file:
+            json.dump(settings, file, indent=4, sort_keys=True)
         try:
             os.remove(path)
             shutil.copyfile(os.path.join(self.user_dir, mdl_path),

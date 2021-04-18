@@ -219,14 +219,30 @@ class StochSSWorkflow(StochSSBase):
         return job.extract_model()
 
 
-    # def initialize_job(self):
-    #     '''
-    #     Initialize a new job for this workflow.
+    def initialize_job(self, settings, mdl_path, time_stamp, wkfl_type):
+        '''
+        Initialize a new job for this workflow.
 
-    #     Attributes
-    #     ----------
-    #     '''
-
+        Attributes
+        ----------
+        settings : dict
+            Workflow settings dictionary
+        mdl_path : str
+            Path to the model of the workflow
+        time_stamp : str
+            Datetime stamp for the new job
+        wkfl_type : str
+            Type of workflow
+        '''
+        self.save(new_settings=settings, mdl_path=mdl_path)
+        if self.check_workflow_format(path=self.path):
+            path = os.path.join(self.path, f"job{time_stamp}")
+            data = {"mdl_path": mdl_path, "settings": settings, "type":wkfl_type}
+            job = StochSSJob(path=path, new=True, data=data)
+        else:
+            job = StochSSJob(path=self.path)
+        job.save(mdl_path=mdl_path, settings=settings, initialize=True)
+        return job.path
 
 
     def load(self):
