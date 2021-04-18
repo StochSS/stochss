@@ -20,7 +20,8 @@ let path = require('path');
 //Support Files
 let app = require('../app.js');
 //models
-var Model = require('ampersand-model');
+let Model = require('ampersand-model');
+let Settings = require('./settings');
 
 module.exports = Model.extend({
   url: function () {
@@ -28,6 +29,9 @@ module.exports = Model.extend({
   },
   props: {
     model: 'string'
+  },
+  children: {
+    settings: Settings
   },
   session: {
     annotation: 'string',
