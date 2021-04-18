@@ -160,16 +160,15 @@ class RunWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        data = json.loads(self.get_query_argument(name="data"))
-        log.debug("Handler query string: %s", data)
-        path = data['wkflPath']
+        path = self.get_query_argument(name="path")
         log.debug("Path to the workflow: %s", path)
-        wkfl_type = data['type']
+        wkfl_type = self.get_query_argument(name="type")
         log.debug("Type of workflow: %s", wkfl_type)
+        verbose = self.get_query_argument(name="verbose", default=False)
         try:
             script = "/stochss/stochss/handlers/util/scripts/start_job.py"
             exec_cmd = [f"{script}", f"{path}", f"{wkfl_type}"]
-            if "v" in data['optType']:
+            if verbose:
                 exec_cmd.append("-v")
             log.debug("Exec command sent to the subprocess: %s", exec_cmd)
             log.debug('Sending the workflow run cmd')
