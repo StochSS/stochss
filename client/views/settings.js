@@ -25,6 +25,7 @@ let app = require('../app');
 //views
 let View = require('ampersand-view');
 let TimespanSettingsView = require('./timespan-settings');
+let SimulationSettingsView = require('./simulation-settings');
 //templates
 let template = require('../templates/includes/settings.pug');
 
@@ -48,7 +49,7 @@ module.exports = View.extend({
     if(this.parent.model.type === "Parameter Sweep") {
       console.log("TODO: Render parameter sweep settings")
     }
-    console.log("TODO: Render simulation settings")
+    this.renderSimulationSettingsView();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -118,6 +119,15 @@ module.exports = View.extend({
       seconds = "0" + seconds
     }
     return "_" + month + day + year + "_" + hours + minutes + seconds;
+  },
+  renderSimulationSettingsView: function () {
+    if(this.simulationSettingsView) {
+      this.simulationSettingsView.remove();
+    }
+    this.simulationSettingsView = new SimulationSettingsView({
+      model: this.model.simulationSettings
+    });
+    app.registerRenderSubview(this, this.simulationSettingsView, "sim-settings-container");
   },
   renderTimespanSettingsView: function () {
     if(this.timespanSettingsView) {
