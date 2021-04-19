@@ -26,7 +26,7 @@ module.exports = State.extend({
   children: {
     speciesOfInterest: Species
   },
-  collection: {
+  collections: {
     parameters: SweepParameters
   },
   initialize: function(attrs, options) {

@@ -1,0 +1,100 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+let $ = require('jquery');
+//support files
+let app = require('../app');
+let Tooltips = require('../tooltips');
+//models
+let Model = require('../models/model');
+//views
+let View = require('ampersand-view');
+let ParameterView = require('./sweep-parameter');
+let SelectView = require('ampersand-select-view');
+//templates
+let template = require('../templates/includes/parameterSettings.pug');
+
+module.exports = View.extend({
+  template: template,
+  events: {
+    'click [data-hook=collapse]' :  'changeCollapseButtonText',
+    'click [data-hook=add-ps-parameter]' : 'handleAddParameterClick'
+  },
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
+    this.tooltips = Tooltips.parameterSweepSettings;
+    this.stochssModel = new Model({
+      directory: attrs.modelDirectory
+    });
+    let self = this;
+    this.stochssModel.fetch({
+      success: function (model, response, options) {
+        self.renderSubviews();
+      }
+    });
+  },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  getParameterID: function () {
+    let parameters = this.model.parameters.map(function (param) { return param.paramID });
+    let target = this.stochssModel.parameters.filter(function (param) {
+      return !parameters.includes(param.compID);
+    })[0].compID;
+    return target;
+  },
+  handleAddParameterClick: function (e) {
+    let target = this.getParameterID();
+    this.model.parameters.addSweepParameter(target);
+  },
+  renderParametersCollection: function () {
+    let options = {"viewOptions": {
+      stochssParams: this.stochssModel.parameters
+    }}
+    this.renderCollection(
+      this.model.parameters,
+      ParameterView,
+      this.queryByHook("ps-parameter-collection"),
+      options
+    );
+  },
+  renderSpeciesOfInterestView: function () {
+    let speciesOfInterestView = new SelectView({
+      name: 'species-of-interest',
+      required: true,
+      idAttribute: 'cid',
+      textAttribute: 'name',
+      eagerValidate: true,
+      options: this.stochssModel.species,
+      value: this.model.speciesOfInterest
+    });
+    app.registerRenderSubview(this, speciesOfInterestView, "variable-of-interest-list");
+  },
+  renderSubviews: function () {
+    if(!Boolean(this.model.speciesOfInterest.name)) {
+      this.model.speciesOfInterest = this.stochssModel.species.at(0);
+    }
+    this.model.updateVariables(this.stochssModel.parameters);
+    this.model.parameters.on("add remove", function () {
+      let disable = this.model.parameters.length >= 2 || this.model.parameters.length >= this.stochssModel.parameters.length
+      $(this.queryByHook("add-ps-parameter")).prop("disabled", disable)
+    }, this)
+    this.renderSpeciesOfInterestView();
+    this.renderParametersCollection();
+  }
+});

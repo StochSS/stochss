@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
+let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 let _ = require('underscore');
@@ -26,6 +26,7 @@ let app = require('../app');
 let View = require('ampersand-view');
 let TimespanSettingsView = require('./timespan-settings');
 let SimulationSettingsView = require('./simulation-settings');
+let ParameterSettingsView = require('./parameter-settings');
 //templates
 let template = require('../templates/includes/settings.pug');
 
@@ -47,7 +48,7 @@ module.exports = View.extend({
       this.renderTimespanSettingsView();
     }
     if(this.parent.model.type === "Parameter Sweep") {
-      console.log("TODO: Render parameter sweep settings")
+      this.renderParameterSettingsView();
     }
     this.renderSimulationSettingsView();
   },
@@ -119,6 +120,16 @@ module.exports = View.extend({
       seconds = "0" + seconds
     }
     return "_" + month + day + year + "_" + hours + minutes + seconds;
+  },
+  renderParameterSettingsView: function () {
+    if(this.parameterSettingsView) {
+      this.parameterSettingsView.remove();
+    }
+    this.parameterSettingsView = new ParameterSettingsView({
+      model: this.model.parameterSweepSettings,
+      modelDirectory: this.parent.model.model
+    });
+    app.registerRenderSubview(this, this.parameterSettingsView, "param-sweep-settings-container");
   },
   renderSimulationSettingsView: function () {
     if(this.simulationSettingsView) {
