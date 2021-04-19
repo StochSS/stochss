@@ -332,9 +332,9 @@ let ProjectManager = PageView.extend({
     PageView.prototype.render.apply(this, arguments);
     $("#page-title").text("Project: " + this.model.name);
     if(this.model.annotation){
-      $(self.queryByHook('edit-annotation-btn')).text('Edit Notes');
-      $(self.queryByHook('annotation-text-container')).text(this.model.annotation);
-      $(self.queryByHook("collapse-annotation-container")).collapse('show');
+      $(this.queryByHook('edit-annotation-btn')).text('Edit Notes');
+      $(this.queryByHook('annotation-text-container')).text(this.model.annotation);
+      $(this.queryByHook("collapse-annotation-container")).collapse('show');
     }
     if(this.model.newFormat) {
       $("#" + this.model.elementID + "-archive-section").css("display", "block");
