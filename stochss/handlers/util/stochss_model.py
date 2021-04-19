@@ -28,7 +28,7 @@ from gillespy2 import Model, Species, Parameter, Reaction, Event, EventTrigger, 
                       RateRule, AssignmentRule, FunctionDefinition
 
 from .stochss_base import StochSSBase
-from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, \
+from .stochss_errors import StochSSAPIError, StochSSFileNotFoundError, FileNotJSONFormatError, \
                             StochSSModelFormatError
 
 class StochSSModel(StochSSBase):
@@ -320,25 +320,29 @@ class StochSSModel(StochSSBase):
         Attributes
         ----------
         '''
-        if self.model is None:
-            _ = self.load()
-        name = self.get_name()
-        tspan = self.__convert_model_settings()
         try:
-            g_model = Model(name=name, volume=self.model['volume'], tspan=tspan,
-                            annotation=self.model['annotation'])
-        except KeyError as err:
-            message = "Model properties are not properly formatted or "
-            message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc()) from err
-        self.__convert_species(model=g_model)
-        self.__convert_parameters(model=g_model)
-        self.__convert_reactions(model=g_model)
-        self.__convert_events(model=g_model)
-        self.__convert_rules(model=g_model)
-        self.__convert_function_definitions(model=g_model)
-        self.log("debug", str(g_model))
-        return g_model
+            if self.model is None:
+                _ = self.load()
+            name = self.get_name()
+            tspan = self.__convert_model_settings()
+            try:
+                g_model = Model(name=name, volume=self.model['volume'], tspan=tspan,
+                                annotation=self.model['annotation'])
+            except KeyError as err:
+                message = "Model properties are not properly formatted or "
+                message += f"are referenced incorrectly: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+            self.__convert_species(model=g_model)
+            self.__convert_parameters(model=g_model)
+            self.__convert_reactions(model=g_model)
+            self.__convert_events(model=g_model)
+            self.__convert_rules(model=g_model)
+            self.__convert_function_definitions(model=g_model)
+            self.log("debug", str(g_model))
+            return g_model
+        except Exception as err:
+            message = f"An un-expected error occured: {str(err)}"
+            raise StochSSAPIError(500, "Server Error", message, traceback.format_exc()) from err
 
 
     def convert_to_sbml(self):
