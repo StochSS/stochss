@@ -128,7 +128,7 @@ class StochSSNotebook(StochSSBase):
                     delay = event['delay'] if event['delay'] else None
                     ev_str = f'{pad}self.add_event(Event(name="{event["name"]}", '
                     ev_str += f'trigger={t_name}, assignments=[{a_names}], '
-                    ev_str += f'delay="{delay}", priority="{event["priority"]}", '
+                    ev_str += f'delay={delay}, priority="{event["priority"]}", '
                     ev_str += f'use_values_from_trigger_time={event["useValuesFromTriggerTime"]}))'
                     events.append(ev_str)
                 model.extend(triggers)
