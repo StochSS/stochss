@@ -141,6 +141,29 @@ class StochSSWorkflow(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc) from err
 
 
+    def __update_settings(self):
+        settings = self.workflow['settings']['parameterSweepSettings']
+        parameters = []
+        if "parameters" not in settings.keys():
+            if "paramID" in settings['parameterOne']:
+                param1 = {"paramID": settings['parameterOne']['paramID'],
+                          "min": settings['p1Min'],
+                          "max": settings['p1Max'],
+                          "steps": settings['p1Steps'],
+                          "hasChangedRanged": False}
+                parameters.append(param1)
+            if "paramID" in settings['parameterTwo']:
+                param2 = {"paramID": settings['parameterTwo']['paramID'],
+                          "min": settings['p2Min'],
+                          "max": settings['p2Max'],
+                          "steps": settings['p2Steps'],
+                          "hasChangedRanged": False}
+                parameters.append(param2)
+            soi = settings['speciesOfInterest']
+            self.workflow['settings']['parameterSweepSettings'] = {"speciesOfInterest": soi,
+                                                                   "parameters": parameters}
+
+
     @classmethod
     def __write_new_files(cls, settings, annotation):
         with open("settings.json", "w") as settings_file:
@@ -270,6 +293,7 @@ class StochSSWorkflow(StochSSBase):
             self.workflow['settings'] = jobdata['settings']
             self.workflow['type'] = jobdata['titleType']
             oldfmtrdy = jobdata['status'] == "ready"
+        self.__update_settings()
         if not os.path.exists(self.workflow['model']) and (oldfmtrdy or self.workflow['newFormat']):
             if ".proj" in self.path:
                 if "WorkflowGroup1.wkgp" in self.path:
