@@ -26,8 +26,9 @@ let app = require('../app');
 let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
-let SelectView = require('ampersand-select-view');
 let SettingsView = require('../views/settings');
+let SelectView = require('ampersand-select-view');
+let StatusView = require('../views/workflow-status');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
 
@@ -136,6 +137,15 @@ let WorkflowManager = PageView.extend({
     });
     app.registerRenderSubview(this, modelSelectView, "model-file");
   },
+  renderStatusView: function () {
+    if(this.statusView) {
+      this.statusView.remove();
+    }
+    this.statusView = new StatusView({
+      model: this.model.activeJob
+    });
+    app.registerRenderSubview(this, this.statusView, "status-container");
+  },
   renderSettingsView: function () {
     if(this.settingsView) {
       this.settingsView.remove();
@@ -151,11 +161,13 @@ let WorkflowManager = PageView.extend({
     let newFormNotArchive = this.model.newFormat && this.model.model;
     if(!this.models && (oldFormRdyState || newFormNotArchive)) {
       this.renderSettingsView();
+    }else if(this.settingsView) {
+      this.settingsView.remove();
     }
     if(this.model.newFormat) {
       console.log("TODO: Render the jobs container")
     }else if(this.model.activeJob.status !== "ready") {
-      console.log("TODO: Render the status container")
+      this.renderStatusView();
     }
     let detailsStatus = ["error", "complete"]
     if(this.model.activeJob && detailsStatus.includes(this.model.activeJob.status)) {
@@ -163,6 +175,26 @@ let WorkflowManager = PageView.extend({
       console.log("TODO: Render the info container")
       console.log("TODO: Render the review model container")
       console.log("TODO: Render the review settings container")
+    }
+  },
+  updateWorkflow: function (newJob) {
+    let self = this;
+    if(this.model.newFormat && (newJob || !this.model.activeJob.status)) {
+      console.log("TODO: Fetch model")
+      if(newJob){
+        console.log("TODO: Render jobs container")
+      }else{
+        console.log("TODO: Render the results container")
+        console.log("TODO: Render the info container")
+        console.log("TODO: Render the review model container")
+        console.log("TODO: Render the review settings container")
+      }
+    }else{
+      this.model.fetch({
+        success: function (model, response, options) {
+          self.renderSubviews();
+        }
+      });
     }
   }
 });
