@@ -30,6 +30,7 @@ let SettingsView = require('../views/settings');
 let SelectView = require('ampersand-select-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
+let ModelViewerView = require('../views/model-viewer');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
 
@@ -118,7 +119,7 @@ let WorkflowManager = PageView.extend({
   renderActiveJob: function () {
     console.log("TODO: Render the results container")
     console.log("TODO: Render the info container")
-    console.log("TODO: Render the review model container")
+    this.renderModelViewerView();
     console.log("TODO: Render the review settings container")
   },
   renderJobListingView: function () {
@@ -157,6 +158,15 @@ let WorkflowManager = PageView.extend({
       unselectedText: "-- Select Model --"
     });
     app.registerRenderSubview(this, modelSelectView, "model-file");
+  },
+  renderModelViewerView: function () {
+    if(this.modelViewerView) {
+      this.modelViewerView.remove();
+    }
+    this.modelViewerView = new ModelViewerView({
+      model: this.model.activeJob.model
+    });
+    app.registerRenderSubview(this, this.modelViewerView, "model-viewer-container");
   },
   renderStatusView: function () {
     if(this.statusView) {
@@ -210,7 +220,7 @@ let WorkflowManager = PageView.extend({
           }
         }
       });
-    }else{
+    }else if(!this.model.newFormat){
       this.model.fetch({
         success: function (model, response, options) {
           self.renderSubviews();
