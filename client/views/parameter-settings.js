@@ -52,16 +52,16 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
-  getParameterID: function () {
+  getParameter: function () {
     let parameters = this.model.parameters.map(function (param) { return param.paramID });
     let target = this.stochssModel.parameters.filter(function (param) {
       return !parameters.includes(param.compID);
-    })[0].compID;
+    })[0];
     return target;
   },
   handleAddParameterClick: function (e) {
-    let target = this.getParameterID();
-    this.model.parameters.addSweepParameter(target);
+    let target = this.getParameter();
+    this.model.parameters.addSweepParameter(target.compID, target.name);
   },
   renderParametersCollection: function () {
     let options = {"viewOptions": {

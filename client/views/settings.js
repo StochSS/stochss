@@ -82,7 +82,6 @@ module.exports = View.extend({
         let runEndpoint = path.join(app.getApiPath(), "workflow/run-job") + runQuery;
         xhr({uri: runEndpoint, json: true}, function (err, response, body) {
           if(response.statusCode < 400) {
-            console.log(body)
             if(self.parent.model.newFormat) {
               console.log("TODO: Update jobs container")
             }else {

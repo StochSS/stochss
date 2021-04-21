@@ -20,11 +20,12 @@ let Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: SweepParameter,
-  addSweepParameter: function (paramID) {
+  addSweepParameter: function (paramID, name) {
     let variable = this.add({
       paramID: paramID,
       min: 0,
       max: 0,
+      name: name,
       steps: 11,
       hasChangedRange: false
     });

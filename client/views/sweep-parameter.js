@@ -137,6 +137,7 @@ module.exports = View.extend({
       return param.name === targetName
     })[0];
     this.model.paramID = this.parameter.compID;
+    this.model.name = this.parameter.name;
     this.model.hasChangedRange = false
     this.model.updateVariable(this.parameter)
     this.updateModelFields();
