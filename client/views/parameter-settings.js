@@ -32,6 +32,7 @@ let template = require('../templates/includes/parameterSettings.pug');
 module.exports = View.extend({
   template: template,
   events: {
+    'change [data-hook=variable-of-interest-list]' : 'setVariableOfInterest',
     'click [data-hook=collapse]' :  'changeCollapseButtonText',
     'click [data-hook=add-ps-parameter]' : 'handleAddParameterClick'
   },
@@ -74,14 +75,18 @@ module.exports = View.extend({
     );
   },
   renderSpeciesOfInterestView: function () {
+    let options = this.stochssModel.species.map(function (specie) {
+      return [specie.compID, specie.name];
+    });
+    let soi = this.model.speciesOfInterest.compID;
     let speciesOfInterestView = new SelectView({
       name: 'species-of-interest',
       required: true,
       idAttribute: 'cid',
       textAttribute: 'name',
       eagerValidate: true,
-      options: this.stochssModel.species,
-      value: this.model.speciesOfInterest
+      options: options,
+      value: soi
     });
     app.registerRenderSubview(this, speciesOfInterestView, "variable-of-interest-list");
   },
@@ -96,5 +101,12 @@ module.exports = View.extend({
     }, this)
     this.renderSpeciesOfInterestView();
     this.renderParametersCollection();
+  },
+  setVariableOfInterest: function (e) {
+    let target = e.target.value;
+    let variable = this.stochssModel.species.filter(function (specie) {
+      return specie.compID === Number(target);
+    })[0];
+    this.model.speciesOfInterest = variable;
   }
 });
