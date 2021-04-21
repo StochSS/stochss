@@ -134,13 +134,15 @@ class ParameterSweep(StochSSJob):
         run_settings = self.__get_run_settings(verbose=verbose)
         kwargs = {"model":self.g_model, "settings":run_settings}
         settings = self.settings['parameterSweepSettings']
-        p1_range = numpy.linspace(settings['p1Min'], settings['p1Max'], settings['p1Steps'])
-        param_one = {"parameter":settings['parameterOne']['name'], "range":p1_range}
-        if settings['is1D']:
+        param_1 = settings['parameters'][0]
+        p1_range = numpy.linspace(param_1['min'], param_1['max'], param_1['steps'])
+        param_one = {"parameter":param_1['name'], "range":p1_range}
+        if len(settings['parameters']) == 1:
             kwargs['param'] = param_one
             return kwargs
-        p2_range = numpy.linspace(settings['p2Min'], settings['p2Max'], settings['p2Steps'])
-        param_two = {"parameter":settings['parameterTwo']['name'], "range":p2_range}
+        param_2 = settings['parameters'][1]
+        p2_range = numpy.linspace(param_2['min'], param_2['max'], param_2['steps'])
+        param_two = {"parameter":param_2['name'], "range":p2_range}
         kwargs["params"] = [param_one, param_two]
         return kwargs
 
@@ -154,7 +156,7 @@ class ParameterSweep(StochSSJob):
         verbose : bool
             Indicates whether or not to print debug statements
         '''
-        is_1d = self.settings['parameterSweepSettings']['is1D']
+        is_1d = len(self.settings['parameterSweepSettings']['parameters']) == 1
         kwargs = self.configure(verbose=verbose)
         wkfl = ParameterSweep1D(**kwargs) if is_1d else ParameterSweep2D(**kwargs)
         wkfl.run(verbose=verbose)

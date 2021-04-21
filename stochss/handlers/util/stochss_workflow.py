@@ -149,6 +149,7 @@ class StochSSWorkflow(StochSSBase):
                 param1 = {"paramID": settings['parameterOne']['paramID'],
                           "min": settings['p1Min'],
                           "max": settings['p1Max'],
+                          "name": settings['parameterOne']['name'],
                           "steps": settings['p1Steps'],
                           "hasChangedRanged": False}
                 parameters.append(param1)
@@ -156,6 +157,7 @@ class StochSSWorkflow(StochSSBase):
                 param2 = {"paramID": settings['parameterTwo']['paramID'],
                           "min": settings['p2Min'],
                           "max": settings['p2Max'],
+                          "name": settings['parameterTwo']['name'],
                           "steps": settings['p2Steps'],
                           "hasChangedRanged": False}
                 parameters.append(param2)

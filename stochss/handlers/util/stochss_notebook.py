@@ -347,21 +347,21 @@ class StochSSNotebook(StochSSBase):
         settings = self.settings['parameterSweepSettings']
         eval_str = "float(eval(model.get_parameter(p1).expression))"
         number_of_trajectories = self.settings['simulationSettings']['realizations']
-        if not settings['parameterOne']:
+        if not settings['parameters']:
             param = self.s_model['parameters'][0]
             p_min = f"0.5 * {eval_str}"
             p_max = f"1.5 * {eval_str}"
             spec_of_interest = self.s_model['species'][0]
         else:
-            param = settings['parameterOne']
-            p_min = settings['p1Min']
-            p_max = settings['p1Max']
+            param = settings['parameters'][0]
+            p_min = param['min']
+            p_max = param['max']
             spec_of_interest = settings['speciesOfInterest']
         config_cell.extend([f"{pad}# ENTER PARAMETER HERE", f"{pad}p1 = '{param['name']}'",
                             f"{pad}# ENTER START VALUE FOR P1 RANGE HERE", f"{pad}p1_min = {p_min}",
                             f"{pad}# ENTER END VALUE FOR P1 RANGE HERE", f"{pad}p1_max = {p_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P1 HERE",
-                            f"{pad}p1_steps = {settings['p1Steps']}",
+                            f"{pad}p1_steps = {param['steps']}",
                             f"{pad}p1_range = np.linspace(p1_min, p1_max, p1_steps)",
                             f"{pad}# ENTER VARIABLE OF INTEREST HERE",
                             f"{pad}variable_of_interest = '{spec_of_interest['name']}'",
@@ -455,7 +455,7 @@ class StochSSNotebook(StochSSBase):
         p1_eval_str = "float(eval(model.get_parameter(p1).expression))"
         p2_eval_str = "float(eval(model.get_parameter(p2).expression))"
         number_of_trajectories = self.settings['simulationSettings']['realizations']
-        if not settings['parameterOne']:
+        if not settings['parameters']:
             param1 = self.s_model['parameters'][0]
             p1_min = f"0.5 * {p1_eval_str}"
             p1_max = f"1.5 * {p1_eval_str}"
@@ -464,12 +464,12 @@ class StochSSNotebook(StochSSBase):
             p2_max = f"1.5 * {p2_eval_str}"
             spec_of_interest = self.s_model['species'][0]
         else:
-            param1 = settings['parameterOne']
-            p1_min = settings['p1Min']
-            p1_max = settings['p1Max']
-            param2 = settings['parameterTwo']
-            p2_min = settings['p2Min']
-            p2_max = settings['p2Max']
+            param1 = settings['parameters'][0]
+            p1_min = param1['min']
+            p1_max = param1['max']
+            param2 = settings['parameters'][1]
+            p2_min = param2['min']
+            p2_max = param2['max']
             spec_of_interest = settings['speciesOfInterest']
         config_cell.extend([f"{pad}# ENTER PARAMETER 1 HERE", f"{pad}p1 = '{param1['name']}'",
                             f"{pad}# ENTER PARAMETER 2 HERE", f"{pad}p2 = '{param2['name']}'",
@@ -477,13 +477,13 @@ class StochSSNotebook(StochSSBase):
                             f"{pad}p1_min = {p1_min}",
                             f"{pad}# ENTER END VALUE FOR P1 RANGE HERE", f"{pad}p1_max = {p1_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P1 HERE",
-                            f"{pad}p1_steps = {settings['p1Steps']}",
+                            f"{pad}p1_steps = {param1['steps']}",
                             f"{pad}p1_range = np.linspace(p1_min, p1_max, p1_steps)",
                             f"{pad}# ENTER START VALUE FOR P2 RANGE HERE",
                             f"{pad}p2_min = {p2_min}",
                             f"{pad}# ENTER END VALUE FOR P2 RANGE HERE", f"{pad}p2_max = {p2_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P2 HERE",
-                            f"{pad}p2_steps = {settings['p2Steps']}",
+                            f"{pad}p2_steps = {param2['steps']}",
                             f"{pad}p2_range = np.linspace(p2_min, p2_max, p2_steps)",
                             f"{pad}# ENTER VARIABLE OF INTEREST HERE",
                             f"{pad}variable_of_interest = '{spec_of_interest['name']}'",

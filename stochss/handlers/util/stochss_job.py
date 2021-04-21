@@ -131,6 +131,31 @@ class StochSSJob(StochSSBase):
         return True
 
 
+    def __update_settings(self):
+        settings = self.job['settings']['parameterSweepSettings']
+        if "parameters" not in settings.keys():
+            parameters = []
+            if "paramID" in settings['parameterOne']:
+                param1 = {"paramID": settings['parameterOne']['paramID'],
+                          "min": settings['p1Min'],
+                          "max": settings['p1Max'],
+                          "name": settings['parameterOne']['name'],
+                          "steps": settings['p1Steps'],
+                          "hasChangedRanged": False}
+                parameters.append(param1)
+            if "paramID" in settings['parameterTwo']:
+                param2 = {"paramID": settings['parameterTwo']['paramID'],
+                          "min": settings['p2Min'],
+                          "max": settings['p2Max'],
+                          "name": settings['parameterTwo']['name'],
+                          "steps": settings['p2Steps'],
+                          "hasChangedRanged": False}
+                parameters.append(param2)
+            soi = settings['speciesOfInterest']
+            self.job['settings']['parameterSweepSettings'] = {"speciesOfInterest": soi,
+                                                              "parameters": parameters}
+
+
     def duplicate_as_new(self, stamp):
         '''
         Get all data needed to create a new job that
@@ -271,7 +296,8 @@ class StochSSJob(StochSSBase):
         settings = self.load_settings()
         if info['type'] == "gillespy":
             wkfl_type = info['type']
-        elif info['type'] == "parameterSweep" and settings['parameterSweepSettings']['is1D']:
+        elif info['type'] == "parameterSweep" and \
+                    len(settings['parameterSweepSettings']['parameters']) == 1:
             wkfl_type = "1d_parameter_sweep"
         else:
             wkfl_type = "2d_parameter_sweep"
@@ -425,6 +451,7 @@ class StochSSJob(StochSSBase):
                         "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
                         "type":self.type, "wkflDir":self.get_file(),
                         "wkflName":self.get_name(), "wkflParPath":self.get_dir_name()}
+            self.__update_settings()
             if error is not None:
                 self.job['error'] = error
         return self.job
