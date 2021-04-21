@@ -27,7 +27,42 @@ module.exports = State.extend({
     settings: Settings
   },
   session: {
+    directory: 'string',
     startTime: 'string',
     status: 'string'
+  },
+  derived: {
+    name: {
+      deps: ["directory"],
+      fn: function () {
+        return this.directory.split("/").pop();
+      }
+    },
+    fmtStartTime: {
+      deps: ["startTime"],
+      fn: function () {
+        let date = new Date(this.startTime);
+        let months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+        var stamp = months[date.getMonth()] + " ";
+        stamp += date.getDate() + ", ";
+        stamp += date.getFullYear() + "  ";
+        let hours = date.getHours();
+        let ampm = hours >= 12 ? 'PM' : 'AM'; // get AM or PM based on hours
+        hours = hours%12; // format hours to 12 hour time format
+        hours = hours ? hours : 12; // replace 0 with 12
+        let minutes = date.getMinutes();
+        minutes = minutes < 10 ? '0' + minutes : minutes; // format minutes to always have two chars
+        let timeZone = date.toString().split('(').pop().split(')').shift(); // get the timezone from the date
+        if(timeZone.includes(" ")){
+          tzparts = timeZone.split(" ");
+          tzparts = tzparts.map(function (element) {
+            return element.charAt(0);
+          })
+          timeZone = tzparts.join("");
+        }
+        // timeZone = timeZone.replace('(', '').replace(')', '') // remove the '()' from the timezone
+        return  stamp + hours + ":" + minutes + " " + ampm + " " + timeZone;
+      }
+    }
   }
 });
