@@ -21,8 +21,20 @@ module.exports = State.extend({
     paramID: 'number',
     min: 'any',
     max: 'any',
+    name: 'string',
     steps: 'any',
     hasChangedRanged: 'boolean' 
+  },
+  derived: {
+    elementID: {
+      deps: ["collection"],
+      fn: function () {
+        if(this.collection) {
+          return "ST" + (this.collection.indexOf(this) + 1);
+        }
+        return "ST-"
+      }
+    }
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
