@@ -31,6 +31,18 @@ from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
 
+class NumpyEncoder(json.JSONEncoder):
+    '''
+    ################################################################################################
+    Custom json encoder for numpy ndarrays
+    ################################################################################################
+    '''
+    def default(self, o):
+        if isinstance(o, numpy.ndarray):
+            return o.tolist()
+        return json.JSONEncoder.default(self, o)
+
+
 class ParameterSweep(StochSSJob):
     '''
     ################################################################################################
@@ -120,7 +132,7 @@ class ParameterSweep(StochSSJob):
         with open('results/results.p', 'wb') as results_file:
             pickle.dump(wkfl.ts_results, results_file)
         with open('results/results.json', 'w') as json_file:
-            json.dump(wkfl.results, json_file, indent=4, sort_keys=True)
+            json.dump(wkfl.results, json_file, indent=4, sort_keys=True, cls=NumpyEncoder)
         self.__store_csv_results(wkfl)
 
 
