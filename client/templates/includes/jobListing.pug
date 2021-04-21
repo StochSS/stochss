@@ -1,0 +1,21 @@
+tr(data-hook=this.model.elementID)
+
+  td
+
+    button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-open" style="width: 100%")=this.model.name
+
+  td
+
+    div.py-2=this.model.fmtStartTime
+
+  td
+
+    div.py-2
+
+      div.inline(data-hook=this.model.elementID + "-status")=this.model.status
+
+      div.inline.spinner-border.status(data-hook=this.model.elementID + "-running-spinner")
+
+  td
+
+    button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-remove") X

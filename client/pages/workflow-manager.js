@@ -29,6 +29,7 @@ let PageView = require('./base');
 let SettingsView = require('../views/settings');
 let SelectView = require('ampersand-select-view');
 let StatusView = require('../views/workflow-status');
+let JobListingView = require('../views/job-listing');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
 
@@ -41,6 +42,7 @@ let WorkflowManager = PageView.extend({
     'change [data-hook=model-location]' : 'handleLocationSelect',
     'click [data-hook=project-breadcrumb]' : 'handleReturnToProject',
     'click [data-hook=save-model]' : 'handleSaveWorkflow',
+    'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
     'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
   },
   initialize: function (attrs, options) {
@@ -67,6 +69,9 @@ let WorkflowManager = PageView.extend({
         self.renderSubviews();
       }
     });
+  },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
   },
   handleLocationSelect: function (e) {
     let value = e.srcElement.value;
@@ -109,6 +114,22 @@ let WorkflowManager = PageView.extend({
         }
       }
     });
+  },
+  renderActiveJob: function () {
+    console.log("TODO: Render the results container")
+    console.log("TODO: Render the info container")
+    console.log("TODO: Render the review model container")
+    console.log("TODO: Render the review settings container")
+  },
+  renderJobListingView: function () {
+    if(this.jobListingView) {
+      this.jobListingView.remove();
+    }
+    this.jobListingView = this.renderCollection(
+      this.model.jobs,
+      JobListingView,
+      this.queryByHook("job-listing")
+    );
   },
   renderModelLocationSelectView: function (model) {
     if(this.modelLocationSelectView) {
@@ -165,30 +186,30 @@ let WorkflowManager = PageView.extend({
       this.settingsView.remove();
     }
     if(this.model.newFormat) {
-      console.log("TODO: Render the jobs container")
+      $(this.queryByHook("jobs-container")).css("display", "block");
+      this.renderJobListingView();
     }else if(this.model.activeJob.status !== "ready") {
       this.renderStatusView();
     }
     let detailsStatus = ["error", "complete"]
     if(this.model.activeJob && detailsStatus.includes(this.model.activeJob.status)) {
-      console.log("TODO: Render the results container")
-      console.log("TODO: Render the info container")
-      console.log("TODO: Render the review model container")
-      console.log("TODO: Render the review settings container")
+      this.renderActiveJob();
     }
+  },
+  setActiveJob: function (job) {
+    this.model.activeJob = job;
+    this.renderActiveJob();
   },
   updateWorkflow: function (newJob) {
     let self = this;
     if(this.model.newFormat && (newJob || !this.model.activeJob.status)) {
-      console.log("TODO: Fetch model")
-      if(newJob){
-        console.log("TODO: Render jobs container")
-      }else{
-        console.log("TODO: Render the results container")
-        console.log("TODO: Render the info container")
-        console.log("TODO: Render the review model container")
-        console.log("TODO: Render the review settings container")
-      }
+      this.model.fetch({
+        success: function (model, response, options) {
+          if(!self.model.activeJob.status){
+            self.renderActiveJob();
+          }
+        }
+      });
     }else{
       this.model.fetch({
         success: function (model, response, options) {

@@ -36,5 +36,25 @@ section.page
 
   div(data-hook="status-container")
 
+  div.card.card-body(data-hook="jobs-container" style="display: none;")
+
+    div
+
+      h3.inline Jobs
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#job-listing-container" data-hook="collapse-jobs") -
+
+    div.collapse.show(id="job-listing-container")
+
+      table.table
+        thead
+          tr
+            th(scope="col") Job
+            th(scope="col") Start Time
+            th(scope="col") Status
+            th(scope="col") Remove
+
+        tbody(data-hook="job-listing")
+
   button.btn.btn-primary.box-shadow(data-hook="return-to-project-btn" style="display: none;") Return to Project
 

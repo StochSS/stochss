@@ -25,38 +25,55 @@ let app = require('../app');
 //views
 let View = require('ampersand-view');
 //templates
-let template = require('../templates/includes/workflowStatus.pug');
-
+let template = require('../templates/includes/jobListing.pug');
 
 module.exports = View.extend({
   template: template,
-  events: {
-    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+  events: function () {
+    let events = {};
+    events['click [data-hook=' + this.model.elementID + '-open]'] = 'openActiveJob';
+    events['click [data-hook=' + this.model.elementID + '-remove]'] = 'deleteJob';
+    return events;
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
   },
-  render: function () {
+  render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
-    if(this.model.status !== 'running') {
-      $(this.queryByHook('running-spinner')).css('display', "none");
-    }else{
+    if(this.model.status === "running") {
+      $(this.queryByHook(this.model.elementID + "-open")).prop("disabled", true);
       this.getJobStatus();
+    }else{
+      $(this.queryByHook(this.model.elementID + '-running-spinner')).css('display', "none")
     }
   },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
+  deleteJob: function (e) {
+    let self = this;
+    let endpoint = path.join(app.getApiPath(), "file/delete") + "?path=" + this.model.directory;
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        self.model.collection.remove();
+        self.remove();
+      }
+    });
   },
   getJobStatus: function () {
     let self = this;
-    let queryString = "?path=" + this.model.directory;
+    let queryString = "?path=" + this.model.directory
     let endpoint = path.join(app.getApiPath(), "workflow/workflow-status") + queryString;
     xhr({uri: endpoint}, function (err, response, body) {
       if(body === 'running') {
         setTimeout(_.bind(self.getJobStatus, self), 1000);
       }else{
+        self.model.status = body;
+        $(self.queryByHook(self.model.elementID + "-open")).prop("disabled", false);
+        $(self.queryByHook(self.model.elementID + '-running-spinner')).css('display', "none");
+        $(self.queryByHook(self.model.elementID + "-status")).text(body);
         self.parent.updateWorkflow();
       }
     });
+  },
+  openActiveJob: function (e) {
+    this.parent.setActiveJob(this.model);
   }
 });
