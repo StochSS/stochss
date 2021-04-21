@@ -37,7 +37,7 @@ module.exports = Model.extend({
     settings: Settings,
     activeJob: Job
   },
-  collection: {
+  collections: {
     jobs: Jobs
   },
   session: {

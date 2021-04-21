@@ -32,6 +32,15 @@ module.exports = State.extend({
     status: 'string'
   },
   derived: {
+    elementID: {
+      deps: ["collection"],
+      fn: function () {
+        if(this.collection) {
+          return this.collection.parent.elementID + "J" + (this.collection.indexOf(this) + 1);
+        }
+        return "J-";
+      }
+    },
     name: {
       deps: ["directory"],
       fn: function () {
