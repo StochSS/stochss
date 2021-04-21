@@ -119,7 +119,8 @@ class StochSSWorkflow(StochSSBase):
             if file_obj.startswith("job_"):
                 path = os.path.join(self.path, file_obj)
                 self.workflow['jobs'].append(path)
-                if os.path.getmtime(path) > time:
+                status = self.get_status(path=path)
+                if os.path.getmtime(path) > time and status != "running":
                     time = os.path.getmtime(path)
                     last_job = path
         if last_job is None:

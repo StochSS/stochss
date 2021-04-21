@@ -449,8 +449,7 @@ class StochSSJob(StochSSBase):
             self.job = {"mdlPath":mdl_path, "model":model, "settings":settings,
                         "startTime":info['start_time'], "status":status,
                         "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
-                        "type":self.type, "wkflDir":self.get_file(),
-                        "wkflName":self.get_name(), "wkflParPath":self.get_dir_name()}
+                        "type":self.type, "directory":self.path}
             self.__update_settings()
             if error is not None:
                 self.job['error'] = error
