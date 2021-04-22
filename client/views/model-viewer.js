@@ -20,11 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let app = require('../app');
 //views
 let View = require('ampersand-view');
-let SpeciesViewer = require('./species-viewer');
-let ParametersViewer = require('./parameters-viewer');
-let ReactionsViewer = require('./reactions-viewer');
-let EventsViewer = require('./events-viewer');
 let RulesViewer = require('./rules-viewer');
+let EventsViewer = require('./events-viewer');
+let SpeciesViewer = require('./species-viewer');
+let ReactionsViewer = require('./reactions-viewer');
+let ParametersViewer = require('./parameters-viewer');
+let SBMLComponentsView = require('./sbml-component-editor');
 //templates
 let template = require('../templates/includes/modelViewer.pug');
 
@@ -43,6 +44,7 @@ module.exports = View.extend({
     this.renderReactionsView();
     this.renderEventsView();
     this.renderRulesView();
+    this.renderSBMLComponentsView();
   },
   renderEventsView: function () {
     let eventsViewer = new EventsViewer({
@@ -67,6 +69,13 @@ module.exports = View.extend({
       collection: this.model.rules
     });
     app.registerRenderSubview(this, rulesViewer, "rules-viewer-container");
+  },
+  renderSBMLComponentsView: function () {
+    let sbmlComponentsView = new SBMLComponentsView({
+      functionDefinitions: this.model.functionDefinitions,
+      viewMode: true
+    });
+    app.registerRenderSubview(this, sbmlComponentsView, "sbml-components-viewer-container");
   },
   renderSpeciesView: function () {
     let speciesViewer = new SpeciesViewer({
