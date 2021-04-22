@@ -31,6 +31,7 @@ let SelectView = require('ampersand-select-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
 let ModelViewerView = require('../views/model-viewer');
+let SettingsViewerView = require('../views/settings-viewer');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
 
@@ -107,7 +108,6 @@ let WorkflowManager = PageView.extend({
     let endpoint = this.model.url();
     xhr({uri: endpoint, json: true, method: 'post', data: this.model.toJSON()}, function (err, response, body) {
       if(response.statusCode < 400) {
-        console.log(body)
         if(cb) {
           cb();
         }else{
@@ -119,8 +119,8 @@ let WorkflowManager = PageView.extend({
   renderActiveJob: function () {
     console.log("TODO: Render the results container")
     console.log("TODO: Render the info container")
+    this.renderSettingsViewerView();
     this.renderModelViewerView();
-    console.log("TODO: Render the review settings container")
   },
   renderJobListingView: function () {
     if(this.jobListingView) {
@@ -185,6 +185,15 @@ let WorkflowManager = PageView.extend({
       model: this.model.settings
     });
     app.registerRenderSubview(this, this.settingsView, "settings-container");
+  },
+  renderSettingsViewerView: function () {
+    if(this.settingsViewerView) {
+      this.settingsViewerView.remove();
+    }
+    this.settingsViewerView = new SettingsViewerView({
+      model: this.model.activeJob.settings
+    });
+    app.registerRenderSubview(this, this.settingsViewerView, "settings-viewer-container");
   },
   renderSubviews: function () {
     console.log(this.model)
