@@ -27,6 +27,7 @@ let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
 let SettingsView = require('../views/settings');
+let LogsView = require('../views/workflow-info');
 let SelectView = require('ampersand-select-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
@@ -118,7 +119,7 @@ let WorkflowManager = PageView.extend({
   },
   renderActiveJob: function () {
     console.log("TODO: Render the results container")
-    console.log("TODO: Render the info container")
+    this.renderLogsView();
     this.renderSettingsViewerView();
     this.renderModelViewerView();
   },
@@ -131,6 +132,15 @@ let WorkflowManager = PageView.extend({
       JobListingView,
       this.queryByHook("job-listing")
     );
+  },
+  renderLogsView: function () {
+    if(this.logsView) {
+      this.logsView.remove();
+    }
+    this.logsView = new LogsView({
+      logs: this.model.activeJob.logs
+    });
+    app.registerRenderSubview(this, this.logsView, "workflow-info-container");
   },
   renderModelLocationSelectView: function (model) {
     if(this.modelLocationSelectView) {

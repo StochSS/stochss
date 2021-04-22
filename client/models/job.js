@@ -28,6 +28,7 @@ module.exports = State.extend({
   },
   session: {
     directory: 'string',
+    logs: 'string',
     startTime: 'string',
     status: 'string'
   },
