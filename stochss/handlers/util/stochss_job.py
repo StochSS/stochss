@@ -125,7 +125,7 @@ class StochSSJob(StochSSBase):
     def __is_csv_dir(self, file):
         if "results_csv" not in file:
             return False
-        path = os.path.join(file, self.get_results_path())
+        path = os.path.join(self.get_results_path(), file)
         if not os.path.isdir(path):
             return False
         return True
@@ -291,7 +291,13 @@ class StochSSJob(StochSSBase):
         '''
         info = self.load_info()
         file = f"{self.get_name()}.ipynb"
-        path = os.path.join(self.get_dir_name(), file)
+        dirname = self.get_dir_name()
+        if ".wkfl" in dirname:
+            code = "_ES" if info['type'] == "gillespy" else "_PS"
+            wkfl_name = self.get_name(path=dirname).replace(code, "_NB")
+            file = f"{wkfl_name}_{file}"
+            dirname = os.path.dirname(dirname)
+        path = os.path.join(dirname, file)
         g_model, s_model = self.load_models()
         settings = self.load_settings()
         if info['type'] == "gillespy":
