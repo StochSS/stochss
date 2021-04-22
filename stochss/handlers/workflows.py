@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os
 import json
 import logging
 import subprocess
@@ -233,33 +232,6 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             fig = wkfl.get_results_plot(**body)
             log.debug("Plot figure: %s", fig)
             self.write(fig)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
-class WorkflowLogsAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for getting Workflow logs.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Retrieve workflow logs from User's file system.
-
-        Attributes
-        ----------
-        '''
-        path = os.path.dirname(self.get_query_argument(name="path"))
-        log.debug("Path to the workflow logs file: %s", path)
-        try:
-            wkfl = StochSSJob(path=path)
-            logs = wkfl.get_run_logs()
-            wkfl.print_logs(log)
-            log.debug("Response: %s", logs)
-            self.write(logs)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()

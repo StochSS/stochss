@@ -94,7 +94,6 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/init-job\/?", InitializeJobAPIHandler),
         (r"/stochss/api/workflow/run-job\/?", RunWorkflowAPIHandler),
         (r"/stochss/api/workflow/workflow-status\/?", WorkflowStatusAPIHandler),
-        (r"/stochss/api/workflow/workflow-logs\/?", WorkflowLogsAPIHandler),
         (r"/stochss/api/workflow/plot-results\/?", PlotWorkflowResultsAPIHandler),
         (r"/stochss/api/workflow/duplicate\/?", DuplicateWorkflowAsNewHandler),
         (r"/stochss/api/workflow/edit-model\/?", GetWorkflowModelPathAPIHandler),
