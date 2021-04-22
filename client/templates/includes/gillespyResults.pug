@@ -3,9 +3,10 @@ div#workflow-results.card.card-body
   div
 
     h3.inline Results
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", id="collapse" data-hook="collapse", disabled) +
 
-  div.collapse(id="collapse-results", data-hook="workflow-results")
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-results" data-hook="collapse-results-btn") +
+
+  div.collapse(id="collapse-results" data-hook="workflow-results")
 
     div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
 
@@ -21,20 +22,7 @@ div#workflow-results.card.card-body
             td: div(id="title" data-hook="title")
             td: div(id="xaxis" data-hook="xaxis")
             td: div(id="yaxis" data-hook="yaxis")
-    div.card.card-body
-      div
 
-        h5.inline Plot Trajectories
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-trajectories", id="collapse-trajectories-btn" data-hook="collapse-trajectories") -
-
-      div.collapse(class="show", id="collapse-trajectories")
-
-        div(id="trajectories" data-hook="trajectories")
-        div.spinner-border.workflow-plot(id="trajectories" data-hook="plot-spinner")
-        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="plot") Edit Plot
-        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="save-plot" disabled) Save Plot to Project Viewer
-        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-png-custom" disabled) Download PNG
-        button.btn.btn-primary.box-shadow(id="trajectories" data-hook="download-json" disabled) Download JSON
+    button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
 
     button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
-      

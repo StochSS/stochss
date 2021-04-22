@@ -32,6 +32,7 @@ let SelectView = require('ampersand-select-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
 let ModelViewerView = require('../views/model-viewer');
+let ResultsView = require('../views/workflow-results');
 let SettingsViewerView = require('../views/settings-viewer');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
@@ -122,7 +123,7 @@ let WorkflowManager = PageView.extend({
       $(this.queryByHook("active-job-header")).text("Job: " + this.model.activeJob.name);
       $(this.queryByHook("active-job-header-container")).css("display", "block");
     }
-    console.log("TODO: Render the results container")
+    this.renderResultsView();
     this.renderLogsView();
     this.renderSettingsViewerView();
     this.renderModelViewerView();
@@ -181,6 +182,15 @@ let WorkflowManager = PageView.extend({
       model: this.model.activeJob.model
     });
     app.registerRenderSubview(this, this.modelViewerView, "model-viewer-container");
+  },
+  renderResultsView: function () {
+    if(this.resultsView) {
+      this.resultsView.remove();
+    }
+    this.resultsView = new ResultsView({
+      model: this.model.activeJob
+    });
+    app.registerRenderSubview(this, this.resultsView, "workflow-results-container");
   },
   renderStatusView: function () {
     if(this.statusView) {

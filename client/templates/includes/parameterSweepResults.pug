@@ -3,9 +3,10 @@ div#workflow-results.card.card-body
   div
 
     h3.inline Results
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-results", id="collapse" data-hook="collapse", disabled) +
 
-  div.collapse(id="collapse-results", data-hook="workflow-results")
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-results" data-hook="collapse-results-btn") +
+
+  div.collapse(id="collapse-results" data-hook="workflow-results")
 
     div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
 
@@ -22,45 +23,6 @@ div#workflow-results.card.card-body
             td: div(id="xaxis" data-hook="xaxis")
             td: div(id="yaxis" data-hook="yaxis")
 
-    div
-
-      div.inline.horizontal-space
-
-        span.inline(for="species-of-interest") Variable of Interest:
-
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.species) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-
-        div.inline(id="species-of-interest" data-hook="specie-of-interest-list")
-
-      div.inline.horizontal-space
-
-        span.inline(for="feature-extractor") Feature Extraction: 
-
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.mapper) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-
-        div.inline(id="feature-extractor" data-hook="feature-extraction-list")
-
-      div.horizontal-space.collapse(class="show" id="ensemble-aggragator-container" data-hook="ensemble-aggragator-container")
-
-        span.inline(for="ensemble-aggragator") Ensemble Aggragator: 
-
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.reducer) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-        
-        div.inline(id="ensemble-aggragator" data-hook="ensemble-aggragator-list")
-
-    div.card.card-body
-      div
-
-        h5.inline Parameter Sweep
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-psweep", id="collapse-psweep-btn" data-hook="collapse-psweep") -
-
-      div.collapse(class="show", id="collapse-psweep")
-
-        div(id="psweep" data-hook="psweep")
-        div.spinner-border.workflow-plot(id="psweep" data-hook="plot-spinner")
-        button.btn.btn-primary.box-shadow(id="psweep" data-hook="plot") Edit Plot
-        button.btn.btn-primary.box-shadow(id="psweep" data-hook="save-plot" disabled) Save Plot to Project Viewer
-        button.btn.btn-primary.box-shadow(id="psweep" data-hook="download-png-custom" disabled) Download PNG
-        button.btn.btn-primary.box-shadow(id="psweep" data-hook="download-json" disabled) Download JSON 
+    button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
 
     button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
