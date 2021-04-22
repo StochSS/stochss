@@ -115,18 +115,20 @@ module.exports = View.extend({
     app.registerRenderSubview(this, this.stepsInputView, this.model.elementID + "-target-steps");
   },
   renderTargetSelectView: function (e) {
-    if(this.targetSelectView) {
-      this.targetSelectView.remove();
+    if(this.model.collection) {
+      if(this.targetSelectView) {
+        this.targetSelectView.remove();
+      }
+      let options = this.getAvailableParameters();
+      this.targetSelectView = new SelectView({
+        name: 'variable-target',
+        required: true,
+        idAttribute: 'cid',
+        options: options,
+        value: this.parameter.name
+      });
+      app.registerRenderSubview(this, this.targetSelectView, this.model.elementID + "-sweep-target");
     }
-    let options = this.getAvailableParameters();
-    this.targetSelectView = new SelectView({
-      name: 'variable-target',
-      required: true,
-      idAttribute: 'cid',
-      options: options,
-      value: this.parameter.name
-    });
-    app.registerRenderSubview(this, this.targetSelectView, this.model.elementID + "-sweep-target");
   },
   setHasChangedRange: function () {
     this.model.hasChangedRange = true;

@@ -113,7 +113,7 @@ class ParameterSweep1D():
         if "xaxis_label" not in plt_data:
             plt_data['xaxis_label'] = f"<b>{self.param['parameter']}</b>"
         if "yaxis_label" not in plt_data:
-            plt_data['xaxis_label'] = "<b>Population</b>"
+            plt_data['yaxis_label'] = "<b>Population</b>"
 
 
     def get_plotly_traces(self, keys):
