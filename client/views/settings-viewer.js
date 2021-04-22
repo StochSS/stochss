@@ -40,6 +40,9 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(!this.parent.model.newFormat) {
+      $(this.queryByHook("timespan-settings-viewer-container")).css("display", "none");
+    }
     let simSettings = this.model.simulationSettings;
     let hideDeterministic = simSettings.isAutomatic || simSettings.algorithm === "SSA" || simSettings.algorithm === "Tau-Leaping";
     let hideStochastic = simSettings.isAutomatic || simSettings.algorithm === "ODE" 
