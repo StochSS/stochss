@@ -35,6 +35,7 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.sbmlComponentsEditor
     this.functionDefinitions = attrs.functionDefinitions;
+    this.viewMode = attrs.viewMode;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
