@@ -118,6 +118,10 @@ let WorkflowManager = PageView.extend({
     });
   },
   renderActiveJob: function () {
+    if(this.model.newFormat) {
+      $(this.queryByHook("active-job-header")).text("Job: " + this.model.activeJob.name);
+      $(this.queryByHook("active-job-header-container")).css("display", "block");
+    }
     console.log("TODO: Render the results container")
     this.renderLogsView();
     this.renderSettingsViewerView();
