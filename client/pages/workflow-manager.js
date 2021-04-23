@@ -220,7 +220,6 @@ let WorkflowManager = PageView.extend({
     app.registerRenderSubview(this, this.settingsViewerView, "settings-viewer-container");
   },
   renderSubviews: function () {
-    console.log(this.model)
     let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";
     let newFormNotArchive = this.model.newFormat && this.model.model;
     if(!this.models && (oldFormRdyState || newFormNotArchive)) {

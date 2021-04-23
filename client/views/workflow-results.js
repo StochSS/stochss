@@ -21,10 +21,12 @@ let xhr = require('xhr');
 let path = require('path');
 //support files
 let app = require('../app');
+let Tooltips = require('../tooltips');
 let Plotly = require('../lib/plotly');
 //views
 let InputView = require('./input');
 let View = require('ampersand-view');
+let SelectView = require('ampersand-select-view');
 //templates
 let gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
 let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
@@ -35,6 +37,9 @@ module.exports = View.extend({
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
+    'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
+    'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
+    'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
     'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
     'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
     'click [data-target=edit-plot]' : 'openPlotArgsSection',
@@ -45,6 +50,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.tooltips = Tooltips.parameterSweepResults;
     this.plots = {};
     this.plotArgs = {};
   },
@@ -61,6 +67,13 @@ module.exports = View.extend({
       var type = isEnsemble ? "stddevran" : "trajectories";
     }else{
       var type = "psweep";
+      this.renderSpeciesOfInterestView();
+      this.renderFeatureExtractionView();
+      if(isEnsemble) {
+        this.renderEnsembleAggragatorView();
+      }else{
+        $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
+      }
     }
     this.getPlot(type);
   },
@@ -92,19 +105,23 @@ module.exports = View.extend({
       }else{
         self.plots[type] = body;
         self.plotFigure(body, type);
-        let plotSaved = Boolean(self.model.settings.resultsSettings.outputs.filter(function (plot) {
-          if(plot.key === data.plt_key)
-            return true
-        }).length > 0)
-        let saveBtn = $(self.queryByHook(type + "-save-plot"));
-        if(!self.model.directory.includes('.proj')) {
-          saveBtn.css("display", "none");
-        }else if(plotSaved) {
-          saveBtn.prop('disabled', true)
-          saveBtn.text('Plot Saved to Project Viewer')
-        } 
       }
     });
+  },
+  getPlotForEnsembleAggragator: function (e) {
+    this.model.settings.resultsSettings.reducer = e.target.value;
+    this.getPlot('psweep')
+  },
+  getPlotForFeatureExtractor: function (e) {
+    this.model.settings.resultsSettings.mapper = e.target.value;
+    this.getPlot('psweep')
+  },
+  getPlotForSpecies: function (e) {
+    let species = this.model.model.species.filter(function (spec) {
+      return spec.name === e.target.value;
+    })[0];
+    this.model.settings.parameterSweepSettings.speciesOfInterest = species;
+    this.getPlot('psweep')
   },
   getPsweepKey: function () {
     let speciesOfInterest = this.model.settings.parameterSweepSettings.speciesOfInterest.name;
@@ -182,9 +199,52 @@ module.exports = View.extend({
     Plotly.newPlot(el, figure);
     $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
     $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
-    $(this.queryByHook(type + "-save-plot")).prop("disabled", false);
     $(this.queryByHook(type + "-download-png-custom")).prop("disabled", false);
     $(this.queryByHook(type + "-download-json")).prop("disabled", false);
+  },
+  renderEnsembleAggragatorView: function () {
+    let ensembleAggragators = [
+      ["min", "Minimum of ensemble"],
+      ["max", "Maximum of ensemble"],
+      ["avg", "Average of ensemble"],
+      ["var", "Variance of ensemble"]
+    ];
+    let ensembleAggragatorView = new SelectView({
+      name: 'ensemble-aggragator',
+      requires: true,
+      idAttribute: 'cid',
+      options: ensembleAggragators,
+      value: this.model.settings.resultsSettings.reducer
+    });
+    app.registerRenderSubview(this, ensembleAggragatorView, 'ensemble-aggragator-list');
+  },
+  renderFeatureExtractionView: function () {
+    let featureExtractors = [
+      ["min", "Minimum of population"],
+      ["max", "Maximum of population"], 
+      ["avg", "Average of population"], 
+      ["var", "Variance of population"], 
+      ["final", "Population at last time point"]
+    ];
+    let featureExtractionView = new SelectView({
+      name: 'feature-extractor',
+      requires: true,
+      idAttribute: 'cid',
+      options: featureExtractors,
+      value: this.model.settings.resultsSettings.mapper
+    });
+    app.registerRenderSubview(this, featureExtractionView, 'feature-extraction-list');
+  },
+  renderSpeciesOfInterestView: function () {
+    let speciesNames = this.model.model.species.map(function (specie) { return specie.name});
+    let speciesOfInterestView = new SelectView({
+      name: 'species-of-interest',
+      required: true,
+      idAttribute: 'cid',
+      options: speciesNames,
+      value: this.model.settings.parameterSweepSettings.speciesOfInterest.name
+    });
+    app.registerRenderSubview(this, speciesOfInterestView, "specie-of-interest-list");
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
