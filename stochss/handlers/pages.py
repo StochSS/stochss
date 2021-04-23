@@ -225,3 +225,20 @@ class ProjectManagerHandler(PageHandler):
         ----------
         '''
         self.render("stochss-project-manager.html", server_path=self.get_server_path())
+
+
+class LoadingPageHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Loading Page Page Handler
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Render the StochSS loading page.
+
+        Attributes
+        ----------
+        '''
+        self.render("stochss-loading-page.html", server_path=self.get_server_path())

@@ -48,6 +48,7 @@ def get_page_handlers(route_start):
         (r'/stochss/quickstart\/?', QuickstartHandler),
         (r'/stochss/project/browser\/?', ProjectBrowserHandler),
         (r'/stochss/project/manager\/?', ProjectManagerHandler),
+        (r'/stochss/loading-page\/?', LoadingPageHandler),
         #
         ## API Handlers
         #
