@@ -78,6 +78,42 @@ class StochSSProject(StochSSBase):
         return metadata, creators
 
 
+    def __get_old_model_data(self):
+        wkgps = {}
+        for file in os.listdir(self.get_path(full=True)):
+            ext = file.split('.').pop()
+            if ext in ("mdl", "smdl"):
+                name = self.get_name(path=file)
+                wkgp = {"file":f"{name}.wkgp",
+                        "model":file,
+                        "workflows":[]}
+                wkgps[name] = wkgp
+        return wkgps
+
+
+    def __get_old_workflow_data(self, data):
+        has_notebook = False
+        wkgp_path = os.path.join(self.get_path(), "WorkflowGroup1.wkgp")
+        for file in os.listdir(wkgp_path):
+            if file.endswith(".wkfl"):
+                path = os.path.join(wkgp_path, file)
+                wkfl = StochSSWorkflow(path=path)
+                mdl_file = wkfl.get_file(path=wkfl.get_model_path())
+                mdl_name = wkfl.get_name(path=mdl_file)
+                if mdl_name not in data.keys():
+                    _, kwargs = wkfl.extract_model()
+                    StochSSModel(**kwargs)
+                    wkgp = {"file":f"{mdl_name}.wkgp",
+                            "model":mdl_file,
+                            "workflows":[file]}
+                    data[mdl_name] = wkgp
+                else:
+                    data[mdl_name]['workflows'].append(file)
+            elif not has_notebook and file.endswith(".ipynb"):
+                has_notebook = True
+        return has_notebook
+
+
     def __load_annotation(self):
         path = os.path.join(self.get_path(full=True), "README.md")
         if not os.path.exists(path):
@@ -140,6 +176,16 @@ class StochSSProject(StochSSBase):
             self.project['archive'].append(wkgp)
         else:
             self.project['workflowGroups'].append(wkgp)
+
+
+    def __update_all_workflows(self):
+        wkgp = os.path.join(self.path, "WorkflowGroup1.wkgp")
+        for file in os.listdir(wkgp):
+            if file.endswith(".wkfl"):
+                path = os.path.join(wkgp, file)
+                if not self.check_workflow_format(path=path):
+                    wkfl = StochSSWorkflow(path=path)
+                    wkfl.update_wkfl_format()
 
 
     @classmethod
@@ -299,3 +345,27 @@ class StochSSProject(StochSSBase):
                 path = os.path.join(self.get_path(full=True), file, ".metadata.json")
             with open(path, "w") as metadata_file:
                 json.dump(metadata, metadata_file, indent=4, sort_keys=True)
+
+
+    def update_project_format(self):
+        '''
+        Update a project to the new format
+
+        Attributes
+        ----------
+        '''
+        self.__update_all_workflows()
+        data = self.__get_old_model_data()
+        has_notebook = self.__get_old_workflow_data(data=data)
+        os.chdir(self.path)
+        for _, wkgp in data.items():
+            os.mkdir(wkgp['file'])
+            shutil.move(wkgp['model'], os.path.join(wkgp['file'], wkgp['model']))
+            for workflow in wkgp['workflows']:
+                dst = os.path.join(wkgp['file'], workflow)
+                shutil.move(os.path.join("WorkflowGroup1.wkgp", workflow), dst)
+        if has_notebook:
+            shutil.move("WorkflowGroup1.wkgp", "Notebooks")
+        else:
+            shutil.rmtree("WorkflowGroup1.wkgp")
+        os.chdir(self.user_dir)

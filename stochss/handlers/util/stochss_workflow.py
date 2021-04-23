@@ -85,22 +85,6 @@ class StochSSWorkflow(StochSSBase):
                 "status":wkfl['status'], "annotation":info['annotation']}
 
 
-    def __get_model_path(self):
-        try:
-            with open(os.path.join(self.path, "settings.json")) as settings_file:
-                path = json.load(settings_file)['model']
-            if ".proj" not in self.path:
-                return path
-            file = self.get_file(path=path)
-            proj_path = f"{self.path.split('.proj')[0]}.proj"
-            if self.check_project_format(path=proj_path):
-                return os.path.join(self.get_dir_name(), file)
-            return os.path.join(proj_path, file)
-        except FileNotFoundError as err:
-            message = f"Could not find settings file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
-
-
     def __load_annotation(self):
         path = os.path.join(self.get_path(full=True), "README.md")
         try:
@@ -186,7 +170,7 @@ class StochSSWorkflow(StochSSBase):
         '''
         if path is None:
             if self.check_workflow_format(path=self.path):
-                path = self.__get_model_path()
+                path = self.get_model_path()
             else:
                 job = StochSSJob(path=self.path)
                 path = job.get_model_path(full=True, external=True)
@@ -243,6 +227,28 @@ class StochSSWorkflow(StochSSBase):
             path = self.path
         job = StochSSJob(path=path)
         return job.extract_model()
+
+
+    def get_model_path(self):
+        '''
+        Return the path to the external model file
+
+        Attributes
+        ----------
+        '''
+        try:
+            with open(os.path.join(self.path, "settings.json")) as settings_file:
+                path = json.load(settings_file)['model']
+            if ".proj" not in self.path:
+                return path
+            file = self.get_file(path=path)
+            proj_path = f"{self.path.split('.proj')[0]}.proj"
+            if self.check_project_format(path=proj_path):
+                return os.path.join(self.get_dir_name(), file)
+            return os.path.join(proj_path, file)
+        except FileNotFoundError as err:
+            message = f"Could not find settings file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     def initialize_job(self, settings, mdl_path, time_stamp, wkfl_type):
@@ -384,4 +390,4 @@ class StochSSWorkflow(StochSSBase):
             self.__write_new_files(data['settings'], data['annotation'])
         os.chdir(self.user_dir)
         self.path = os.path.join(self.get_dir_name(), data['wkfl'])
-        return self.path, data['settings']['model']
+        return self.path
