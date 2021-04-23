@@ -36,8 +36,8 @@ module.exports = View.extend({
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
     'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
-    'click [data-hook=collapse-trajectories-btn]' : 'handleCollapseTrajectoriesClick',
-    'click [data-hook=edit-plot]' : 'openPlotArgsSection',
+    'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
+    'click [data-target=edit-plot]' : 'openPlotArgsSection',
     'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
     'click [data-target=download-json]' : 'handleDownloadJSONClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
@@ -49,15 +49,16 @@ module.exports = View.extend({
     this.plotArgs = {};
   },
   render: function (attrs, options) {
+    let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
+                     this.model.settings.simulationSettings.algorithm !== "ODE";
     if(this.parent.model.type === "Parameter Sweep"){
       this.template = parameterSweepResultsTemplate;
     }else{
-      this.template = this.model.settings.simulationSettings.realizations > 1 ? 
-                                gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
+      this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
     }
     View.prototype.render.apply(this, arguments);
     if(this.parent.model.type === "Ensemble Simulation") {
-      var type = this.model.settings.simulationSettings.realizations < 2 ? "trajectories" : "stddevran";
+      var type = isEnsemble ? "stddevran" : "trajectories";
     }else{
       var type = "psweep";
     }
@@ -115,9 +116,9 @@ module.exports = View.extend({
     }
     return key;
   },
-  handleCollapseTrajectoriesClick: function (e) {
+  handleCollapsePlotContainerClick: function (e) {
     app.changeCollapseButtonText(this, e);
-    let type = "trajectories";
+    let type = e.target.dataset.type;
     if(!this.plots[type]){
       this.getPlot(type);
     }
@@ -180,6 +181,7 @@ module.exports = View.extend({
     let el = this.queryByHook(hook);
     Plotly.newPlot(el, figure);
     $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
+    $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
     $(this.queryByHook(type + "-save-plot")).prop("disabled", false);
     $(this.queryByHook(type + "-download-png-custom")).prop("disabled", false);
     $(this.queryByHook(type + "-download-json")).prop("disabled", false);

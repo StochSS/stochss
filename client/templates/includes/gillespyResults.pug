@@ -29,7 +29,14 @@ div#workflow-results.card.card-body
 
         h5.inline Plot Trajectories
 
-        button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-trajectories" id="collapse-trajectories-btn" data-hook="collapse-trajectories-btn") -
+        button.btn.btn-outline-collapse(
+          data-toggle="collapse"
+          data-target="#collapse-trajectories"
+          id="collapse-trajectories-btn"
+          data-hook="collapse-trajectories-btn"
+          data-trigger="collapse-plot-container"
+          data-type="trajectories"
+        ) -
 
       div.collapse.show(id="collapse-trajectories")
 
@@ -37,7 +44,7 @@ div#workflow-results.card.card-body
 
         div.spinner-border.workflow-plot(data-hook="trajectories-plot-spinner")
 
-        button.btn.btn-primary.box-shadow(data-hook="edit-plot") Edit Plot
+        button.btn.btn-primary.box-shadow(data-hook="trajectories-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
         button.btn.btn-primary.box-shadow(data-hook="trajectories-save-plot" disabled) Save Plot to Project Viewer
 
