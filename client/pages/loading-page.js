@@ -45,9 +45,9 @@ let LoadingPage = PageView.extend({
     if(this.action === "open") {
       this.uploadFileFromLink(this.filePath);
     }else if(this.action === "update-workflow") {
-      console.log("TODO: Launch workflow upadte api request")
+      this.updateWorkflowFormat(this.filePath);
     }else if(this.action === "update-project") {
-      console.log("TODO: Launch project upadte api request")
+      this.updateProjectFormat(this.filePath);
     }
   },
   getUploadResponse: function () {
@@ -95,8 +95,33 @@ let LoadingPage = PageView.extend({
     }
     window.location.href = endpoint;
   },
+  updateFormat: function (filePath, message, target, identifier) {
+    $(this.queryByHook("loading-header")).html("Updating Format");
+    $(this.queryByHook("loading-target")).html(filePath.split('/').pop());
+    $(this.queryByHook("loading-message")).html(message);
+    let self = this;
+    let queryStr = "?path=" + filePath;
+    let endpoint = path.join(app.getApiPath(), target, "update-format") + queryStr;
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        let dst = target === "workflow" ? body : filePath;
+        self.openStochSSPage(identifier, dst);
+      }
+    });
+  },
+  updateProjectFormat: function (filePath) {
+    let message = `You can update the format of any project and its workflows by opening the project and clicking yes when prompted to update the format.`;
+    let identifier = "stochss/project/manager"
+    this.updateFormat(filePath, message, "project", identifier);
+  },
+  updateWorkflowFormat: function (filePath) {
+    let message = `You can update the format of any workflow by opening the workflow and clicking yes when prompted to update the format.`;
+    let identifier = "stochss/workflow/edit"
+    this.updateFormat(filePath, message, "workflow", identifier);
+  },
   uploadFileFromLink: function (filePath) {
-    $(this.queryByHook("loading-header")).html("Uploading file: " + filePath.split('/').pop());
+    $(this.queryByHook("loading-header")).html("Uploading file");
+    $(this.queryByHook("loading-target")).html(filePath.split('/').pop());
     let message = `If the file is a Project, Workflow, Model, Domain, or Notebook it will be opened when the upload has completed.`;
     $(this.queryByHook("loading-message")).html(message);
     let self = this;
