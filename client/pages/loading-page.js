@@ -57,14 +57,25 @@ let LoadingPage = PageView.extend({
       let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
       xhr({uri: endpoint, json: true}, function (err, response, body) {
         if(response.statusCode >= 400 || Object.keys(body).includes("reason")) {
+          $(this.queryByHook("loading-spinner")).css("display", "none");
           let model = $(modals.projectExportErrorHtml(body.reason, body.message)).modal();
+          let close = document.querySelector("button[data-dismiss=modal]");
+          close.addEventListener("click", function (e) {
+            window.history.back();
+          });
         }else if(body.done) {
           if(body.file_path.endsWith(".proj")){
-            self.openStochSSFile("stochss/project/manager", body.file_path);
+            self.openStochSSPage("stochss/project/manager", body.file_path);
+          }else if(body.file_path.endsWith(".wkfl")){
+            self.openStochSSPage("stochss/workflow/edit", body.file_path);
           }else if(body.file_path.endsWith(".mdl")){
-            self.openStochSSFile("stochss/models/edit", body.file_path);
+            self.openStochSSPage("stochss/models/edit", body.file_path);
+          }else if(body.file_path.endsWith(".domn")){
+            self.openStochSSPage("stochss/domain/edit", body.file_path);
           }else if(body.file_path.endsWith(".ipynb")){
             self.openNotebookFile(body.file_path);
+          }else{
+            self.openStochSSPage('stochss/files');
           }
         }else{
           self.getUploadResponse();
@@ -76,13 +87,18 @@ let LoadingPage = PageView.extend({
     window.open(path.join(app.getBasePath(), "notebooks", path));
     window.history.back();
   },
-  openStochSSFile: function (identifier, path) {
-    window.location.href = path.join(app.getBasePath(), identifier) + "?path=" + path;
+  openStochSSPage: function (identifier, path) {
+    var endpoint = path.join(app.getBasePath(), identifier);
+    if(path) {
+      let query = identifier.includes("domain") ? "?domainPath=" : "?path=";
+      endpoint += query + path;
+    }
+    window.location.href = endpoint;
   },
   uploadFileFromLink: function (path) {
     $(this.queryByHook("loading-header")).text("Uploading file: " + path.split('/').pop());
-    let message = `If the file is a Project, Workflow, Model, Domain, or Notebook it will be opened when the upload has completed.`
-    $(this.queryByHook("loading-message")).text(message)
+    let message = `If the file is a Project, Workflow, Model, Domain, or Notebook it will be opened when the upload has completed.`;
+    $(this.queryByHook("loading-message")).text(message);
     let self = this;
     let queryStr = "?path=" + path;
     let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
