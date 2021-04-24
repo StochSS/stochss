@@ -69,6 +69,10 @@ class StochSSAPIError(Exception):
         self.traceback = trace
 
 
+    def __str__(self):
+        return f"{self.message}: \n{self.traceback}"
+
+
 
 ####################################################################################################
 # File System Errors

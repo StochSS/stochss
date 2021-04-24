@@ -58,8 +58,7 @@ def report_error(err):
     err : Exception Obj
         Error caught in the except block
     '''
-    log.error("Job errors: %s", err)
-    log.error("Traceback:\n%s", traceback.format_exc())
+    log.error("Job errors: %s\n%s", err, traceback.format_exc())
     open('ERROR', 'w').close()
 
 
@@ -100,10 +99,10 @@ def setup_logger(log_path):
 if __name__ == "__main__":
     args = get_parsed_args()
     jobs = {"gillespy":EnsembleSimulation, "parameterSweep":ParameterSweep}
-    wkfl = jobs[args.type](path=args.path)
-    os.chdir(wkfl.get_path(full=True))
-    setup_logger("logs.txt")
     try:
+        os.chdir(args.path)
+        wkfl = jobs[args.type](path=args.path)
+        setup_logger("logs.txt")
         wkfl.run(verbose=args.verbose)
     except Exception as error:
         wkfl.print_logs(log)

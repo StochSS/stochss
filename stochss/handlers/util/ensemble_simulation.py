@@ -25,6 +25,7 @@ import plotly
 from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver
 
 from .stochss_job import StochSSJob
+from .stochss_errors import StochSSAPIError
 
 class EnsembleSimulation(StochSSJob):
     '''
@@ -46,8 +47,11 @@ class EnsembleSimulation(StochSSJob):
         '''
         super().__init__(path=path)
         if not preview:
-            self.settings = self.load_settings()
-            self.g_model, self.s_model = self.load_models()
+            try:
+                self.settings = self.load_settings()
+                self.g_model, self.s_model = self.load_models()
+            except StochSSAPIError as err:
+                self.log("error", str(err))
 
 
     def __get_run_settings(self):

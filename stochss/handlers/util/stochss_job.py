@@ -452,7 +452,10 @@ class StochSSJob(StochSSBase):
             self.log("error", f"Exception information: {error}")
         finally:
             settings = self.load_settings(model=model)
-            logs = self.get_run_logs()
+            if os.path.exists(os.path.join(self.path, "logs.txt")):
+                logs = self.get_run_logs()
+            else:
+                logs = ""
             self.job = {"mdlPath":mdl_path, "model":model, "settings":settings,
                         "startTime":info['start_time'], "status":status,
                         "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
