@@ -388,6 +388,6 @@ class StochSSWorkflow(StochSSBase):
             shutil.move(self.get_path(full=True), os.path.join(path, data['job']))
             os.chdir(path)
             self.__write_new_files(data['settings'], data['annotation'])
+            self.path = os.path.join(self.get_dir_name(), self.get_file(path=path))
         os.chdir(self.user_dir)
-        self.path = os.path.join(self.get_dir_name(), data['wkfl'])
         return self.path
