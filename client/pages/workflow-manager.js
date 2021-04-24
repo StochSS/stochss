@@ -72,6 +72,17 @@ let WorkflowManager = PageView.extend({
           self.renderModelSelectView(response.models);
         }
         self.renderSubviews();
+        if(!self.model.newFormat) {
+          let self = this;
+          let modal = $(modals.updateFormatHtml("Workflow")).modal();
+          let yesBtn = document.querySelector("#updateWorkflowFormatModal .yes-modal-btn");
+          yesBtn.addEventListener("click", function (e) {
+            modal.modal("hide");
+            let queryStr = "?path=" + self.model.directory + "&action=update-workflow";
+            let endpoint = path.join(app.getBasePath(), "stochss/loading-page") + queryStr;
+            window.location.href = endpoint;
+          });
+        }
       }
     });
   },
@@ -124,7 +135,9 @@ let WorkflowManager = PageView.extend({
       $(this.queryByHook("active-job-header")).text("Job: " + this.model.activeJob.name);
       $(this.queryByHook("active-job-header-container")).css("display", "block");
     }
-    this.renderResultsView();
+    if(this.model.activeJob.status !== "error") {
+      this.renderResultsView();
+    }
     this.renderLogsView();
     this.renderSettingsViewerView();
     this.renderModelViewerView();
@@ -221,17 +234,6 @@ let WorkflowManager = PageView.extend({
     app.registerRenderSubview(this, this.settingsViewerView, "settings-viewer-container");
   },
   renderSubviews: function () {
-    if(!this.model.newFormat) {
-      let self = this;
-      let modal = $(modals.updateFormatHtml("Workflow")).modal();
-      let yesBtn = document.querySelector("#updateWorkflowFormatModal .yes-modal-btn");
-      yesBtn.addEventListener("click", function (e) {
-        modal.modal("hide");
-        let queryStr = "?path=" + self.model.directory + "&action=update-workflow";
-        let endpoint = path.join(app.getBasePath(), "stochss/loading-page") + queryStr;
-        window.location.href = endpoint;
-      });
-    }
     let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";
     let newFormNotArchive = this.model.newFormat && this.model.model;
     if(!this.models && (oldFormRdyState || newFormNotArchive)) {
