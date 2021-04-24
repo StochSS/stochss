@@ -27,18 +27,23 @@ let template = require('../templates/includes/workflowInfo.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse-info]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.listOfWarnings = [];
     this.listOfErrors = [];
     this.listOfNotes = [];
-    let logs = attrs.logs.split('\n');
+    let logs = attrs.logs.split("root - ");
+    logs.shift()
     logs.forEach(this.parseLogs, this);
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    if(this.parent.model.activeJob.status === "error") {
+      $(this.queryByHook("workflow-info")).collapse("show");
+      $(this.queryByHook("collapse-info")).html("-");
+    }
     this.expandLogContainers()
   },
   changeCollapseButtonText: function (e) {
@@ -62,7 +67,9 @@ module.exports = View.extend({
     }
   },
   parseLogs: function (log) {
-    let message = log.split('root - ').pop();
+    var message = log.split('\n');
+    message.pop();
+    message = message.join('<br>');
     if(message.startsWith("WARNING")){
       this.listOfWarnings.push(message.split("WARNING").pop());
     }else if(message.startsWith("ERROR")){
