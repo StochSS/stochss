@@ -22,6 +22,7 @@ let path = require('path');
 let _ = require('underscore');
 //support files
 let app = require('../app');
+let modals = require('../modals');
 //models
 let Workflow = require('../models/workflow');
 //views
@@ -220,6 +221,17 @@ let WorkflowManager = PageView.extend({
     app.registerRenderSubview(this, this.settingsViewerView, "settings-viewer-container");
   },
   renderSubviews: function () {
+    if(!this.model.newFormat) {
+      let self = this;
+      let modal = $(modals.updateFormatHtml("Workflow")).modal();
+      let yesBtn = document.querySelector("#updateWorkflowFormatModal .yes-modal-btn");
+      yesBtn.addEventListener("click", function (e) {
+        modal.modal("hide");
+        let queryStr = "?path=" + self.model.directory + "&action=update-workflow";
+        let endpoint = path.join(app.getBasePath(), "stochss/loading-page") + queryStr;
+        window.location.href = endpoint;
+      });
+    }
     let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";
     let newFormNotArchive = this.model.newFormat && this.model.model;
     if(!this.models && (oldFormRdyState || newFormNotArchive)) {

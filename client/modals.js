@@ -476,6 +476,19 @@ module.exports = {
 
       return templates.input(modalID, inputID, title, label, value);
     },
+    updateFormatHtml: (fileType) => {
+      let modalID = `update${fileType}FormatModal`
+      let title = `Update ${fileType} Format`
+      if(fileType === "Project") {
+        fileType += "s and Workflow";
+        var target = "project and its workflows";
+      }else{
+        var target = "workflow";
+      }
+      let message = `StochSS ${fileType}s have a new format.  Would you like to update this ${target} to the new format?`
+
+      return templates.confirmation_with_message(modalID, title, message);
+    },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Variables will only be represented using continuous (floating point) values.`;
         let populationDescription = `Population - Variables will only be represented using discrete (integer count) values.`;

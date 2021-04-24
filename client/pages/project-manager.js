@@ -330,6 +330,17 @@ let ProjectManager = PageView.extend({
   },
   renderSubviews: function (emptyTrash) {
     PageView.prototype.render.apply(this, arguments);
+    if(!this.model.newFormat) {
+      let self = this;
+      let modal = $(modals.updateFormatHtml("Project")).modal();
+      let yesBtn = document.querySelector("#updateProjectFormatModal .yes-modal-btn");
+      yesBtn.addEventListener("click", function (e) {
+        modal.modal("hide");
+        let queryStr = "?path=" + self.model.directory + "&action=update-project";
+        let endpoint = path.join(app.getBasePath(), "stochss/loading-page") + queryStr;
+        window.location.href = endpoint;
+      });
+    }
     $("#page-title").text("Project: " + this.model.name);
     if(this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Edit Notes');
