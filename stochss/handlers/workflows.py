@@ -347,3 +347,29 @@ class SaveAnnotationAPIHandler(APIHandler):
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
+
+
+class UpadteWorkflowAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for updating workflow format.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Updates the workflow to the new format.
+
+        Attributes
+        ----------
+        '''
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow: %s", path)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            resp = wkfl.update_wkfl_format()
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()

@@ -380,3 +380,27 @@ class UpdateAnnotationAPIHandler(APIHandler):
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
+
+
+class UpadteProjectAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for updating project format.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Updates the project and its workflows to the new format.
+
+        Attributes
+        ----------
+        '''
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the project: %s", path)
+        try:
+            proj = StochSSProject(path=path)
+            proj.update_project_format()
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()

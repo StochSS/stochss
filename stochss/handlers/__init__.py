@@ -89,6 +89,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/project/export-combine\/?", ExportAsCombineAPIHandler),
         (r"/stochss/api/project/meta-data\/?", ProjectMetaDataAPIHandler),
         (r"/stochss/api/project/save-annotation\/?", UpdateAnnotationAPIHandler),
+        (r"/stochss/api/project/update-format\/?", UpadteProjectAPIHandler),
         (r"/stochss/api/workflow/notebook\/?", WorkflowNotebookHandler),
         (r"/stochss/api/workflow/new\/?", NewWorkflowAPIHandler),
         (r"/stochss/api/workflow/load-workflow\/?", LoadWorkflowAPIHandler),
@@ -99,7 +100,8 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/duplicate\/?", DuplicateWorkflowAsNewHandler),
         (r"/stochss/api/workflow/edit-model\/?", GetWorkflowModelPathAPIHandler),
         (r"/stochss/api/workflow/save-plot\/?", SavePlotAPIHandler),
-        (r"/stochss/api/workflow/save-annotation\/?", SaveAnnotationAPIHandler)
+        (r"/stochss/api/workflow/save-annotation\/?", SaveAnnotationAPIHandler),
+        (r"/stochss/api/workflow/update-format\/?", UpadteWorkflowAPIHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers
