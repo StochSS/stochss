@@ -73,7 +73,6 @@ let WorkflowManager = PageView.extend({
         }
         self.renderSubviews();
         if(!self.model.newFormat) {
-          let self = this;
           let modal = $(modals.updateFormatHtml("Workflow")).modal();
           let yesBtn = document.querySelector("#updateWorkflowFormatModal .yes-modal-btn");
           yesBtn.addEventListener("click", function (e) {
@@ -261,7 +260,7 @@ let WorkflowManager = PageView.extend({
     if(this.model.newFormat && (newJob || !this.model.activeJob.status)) {
       this.model.fetch({
         success: function (model, response, options) {
-          if(!self.model.activeJob.status){
+          if(!newJob){
             self.renderActiveJob();
           }
         }
