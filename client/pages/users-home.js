@@ -42,15 +42,9 @@ let usersHomePage = PageView.extend({
     PageView.prototype.initialize.apply(this, arguments)
     let urlParams = new URLSearchParams(window.location.search)
     if(urlParams.has("open")){
-      let uploadPath = urlParams.get("open")
-      let endpoint = path.join(app.getApiPath(), 'file/upload-from-link')+"?path="+uploadPath
-      let self = this
-      xhr({uri:endpoint, json:true}, function (err, response, body) {
-        if(response.statusCode < 400) {
-          self.responsePath = body.responsePath
-          self.getUploadResponse()
-        }
-      })
+      let queryString = "?path=" + urlParams.get("open") + "&action=open";
+      let endpoint = path.join(app.getBasePath(), 'stochss/loading-page') + queryString;
+      window.location.href = endpoint;
     }
   },
   render: function (attrs, options) {
@@ -58,27 +52,6 @@ let usersHomePage = PageView.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
-  },
-  getUploadResponse: function () {
-    let self = this
-    setTimeout(function () {
-      let endpoint = path.join(app.getApiPath(), 'file/upload-from-link')+"?path="+self.responsePath+"&cmd=read"
-      xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode >= 400 || Object.keys(body).includes("reason")) {
-          let model = $(modals.projectExportErrorHtml(body.reason, body.message)).modal()
-        }else if(body.done) {
-          if(body.file_path.endsWith(".proj")){
-            window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body.file_path
-          }else if(body.file_path.endsWith(".mdl")){
-            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+body.file_path
-          }else if(body.file_path.endsWith(".ipynb")){
-            window.open(path.join(app.getBasePath(), "notebooks", body.file_path))
-          }
-        }else{
-          self.getUploadResponse()
-        }
-      })
-    }, 1000)
   },
   validateName(input) {
     var error = ""

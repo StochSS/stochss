@@ -34,21 +34,21 @@ let LoadingPage = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search)
-    let path = urlParams.get("path");
-    let action = urlParams.get("action");
-    if(action === "open") {
-      this.uploadFileFromLink(path);
-    }else if(action === "update-workflow") {
-      console.log("TODO: Launch workflow upadte api request")
-    }else if(action === "update-project") {
-      console.log("TODO: Launch project upadte api request")
-    }
+    this.filePath = urlParams.get("path");
+    this.action = urlParams.get("action");
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
     $(document.querySelector("div[data-hook=side-navbar]")).css("display", "none");
     $(document.querySelector("main[data-hook=page-main]")).removeClass().addClass("col-md-12 body");
     $(this.queryByHook("loading-spinner")).css("display", "block");
+    if(this.action === "open") {
+      this.uploadFileFromLink(this.filePath);
+    }else if(this.action === "update-workflow") {
+      console.log("TODO: Launch workflow upadte api request")
+    }else if(this.action === "update-project") {
+      console.log("TODO: Launch project upadte api request")
+    }
   },
   getUploadResponse: function () {
     let self = this;
@@ -83,24 +83,24 @@ let LoadingPage = PageView.extend({
       })
     }, 1000);
   },
-  openNotebookFile: function (path) {
-    window.open(path.join(app.getBasePath(), "notebooks", path));
+  openNotebookFile: function (filePath) {
+    window.open(path.join(app.getBasePath(), "notebooks", filePath));
     window.history.back();
   },
-  openStochSSPage: function (identifier, path) {
+  openStochSSPage: function (identifier, filePath) {
     var endpoint = path.join(app.getBasePath(), identifier);
-    if(path) {
+    if(filePath) {
       let query = identifier.includes("domain") ? "?domainPath=" : "?path=";
-      endpoint += query + path;
+      endpoint += query + filePath;
     }
     window.location.href = endpoint;
   },
-  uploadFileFromLink: function (path) {
-    $(this.queryByHook("loading-header")).text("Uploading file: " + path.split('/').pop());
+  uploadFileFromLink: function (filePath) {
+    $(this.queryByHook("loading-header")).html("Uploading file: " + filePath.split('/').pop());
     let message = `If the file is a Project, Workflow, Model, Domain, or Notebook it will be opened when the upload has completed.`;
-    $(this.queryByHook("loading-message")).text(message);
+    $(this.queryByHook("loading-message")).html(message);
     let self = this;
-    let queryStr = "?path=" + path;
+    let queryStr = "?path=" + filePath;
     let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
     xhr({uri:endpoint, json:true}, function (err, response, body) {
       if(response.statusCode < 400) {
