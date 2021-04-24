@@ -44,6 +44,12 @@ let LoadingPage = PageView.extend({
       console.log("TODO: Launch project upadte api request")
     }
   },
+  render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments);
+    $(document.querySelector("div[data-hook=side-navbar]")).css("display", "none");
+    $(document.querySelector("main[data-hook=page-main]")).removeClass().addClass("col-md-12 body");
+    $(this.queryByHook("loading-spinner")).css("display", "block");
+  },
   getUploadResponse: function () {
     let self = this;
     setTimeout(function () {
@@ -74,6 +80,9 @@ let LoadingPage = PageView.extend({
     window.location.href = path.join(app.getBasePath(), identifier) + "?path=" + path;
   },
   uploadFileFromLink: function (path) {
+    $(this.queryByHook("loading-header")).text("Uploading file: " + path.split('/').pop());
+    let message = `If the file is a Project, Workflow, Model, Domain, or Notebook it will be opened when the upload has completed.`
+    $(this.queryByHook("loading-message")).text(message)
     let self = this;
     let queryStr = "?path=" + path;
     let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;

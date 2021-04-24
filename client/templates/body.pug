@@ -32,7 +32,7 @@ body
 
   div.container-fluid
     div.row
-      div.col-sm-12.col-md-2.col-xxl-1
+      div.col-sm-12.col-md-2.col-xxl-1(data-hook="side-navbar")
         nav.sidebar.d-md-block
           div.sidebar-sticky.tools
             ul.nav.nav-flex-column
@@ -51,4 +51,6 @@ body
               li.nav-item
                 div: a.nav-link(href="stochss/quickstart", title="Quickstart") Tutorial
 
-      main.col-sm-12.col-md-10.col-xl-9.col-xxl-6.body(role="main"): div.container-fluid(data-hook="page-container")
+      main.col-sm-12.col-md-10.col-xl-9.col-xxl-6.body(role="main" data-hook="page-main")
+
+        div.container-fluid(data-hook="page-container")
