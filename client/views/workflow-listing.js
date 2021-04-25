@@ -63,6 +63,9 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
   	app.changeCollapseButtonText(this, e);
   },
+  getProjectPath: function () {
+    return this.model.directory.split(".proj")[0] + ".proj";
+  },
   getStatus: function () {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "workflow/workflow-status") + "?path=" + this.model.directory;
@@ -98,7 +101,7 @@ module.exports = View.extend({
     yesBtn.addEventListener('click', function (e) {
       modal.modal('hide');
       let file = self.model.directory.split('/').pop()
-      let projectPath = self.model.collection.parent.collection.parent.directory;
+      let projectPath = self.getProjectPath();
       let trashPath = path.join(projectPath, "trash", file);
       let queryString = "?srcPath=" + self.model.directory + "&dstPath=" + trashPath;
       let endpoint = path.join(app.getApiPath(), 'file/move') + queryString;
