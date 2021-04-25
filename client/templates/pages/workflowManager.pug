@@ -46,15 +46,18 @@ section.page
 
     div.collapse.show(id="job-listing-container")
 
-      table.table
-        thead
-          tr
-            th(scope="col") Job
-            th(scope="col") Start Time
-            th(scope="col") Status
-            th(scope="col") Remove
+      hr
 
-        tbody(data-hook="job-listing")
+      div.row
+
+        div.col-md-3: h6 <b>Job</b>
+        div.col-md-4: h6 <b>Start Time</b>
+        div.col-md-3: h6 <b>Status</b>
+        div.col-md-2: h6 <b>Remove</b>
+
+      div.mb-3.head
+
+      div(data-hook="job-listing")
 
   div.mt-4(data-hook="active-job-header-container" style="display: none")
 

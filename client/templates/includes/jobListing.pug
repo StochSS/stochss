@@ -1,21 +1,26 @@
-tr(data-hook=this.model.elementID)
+div(data-hook=this.model.elementID)
 
-  td
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
 
-    button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-open" style="width: 100%")=this.model.name
+  div.row
 
-  td
+    div.col-md-3
 
-    div.py-2=this.model.fmtStartTime
+      button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-open" style="width: 100%")=this.model.name
 
-  td
+    div.col-md-4
 
-    div.py-2
+      div.py-2=this.model.fmtStartTime
 
-      div.inline(data-hook=this.model.elementID + "-status")=this.model.status
+    div.col-md-3
 
-      div.inline.spinner-border.status(data-hook=this.model.elementID + "-running-spinner")
+      div.py-2
 
-  td
+        div.inline(data-hook=this.model.elementID + "-status")=this.model.status
 
-    button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-remove") X
+        div.inline.spinner-border.status(data-hook=this.model.elementID + "-running-spinner")
+
+    div.col-md-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-remove") X
