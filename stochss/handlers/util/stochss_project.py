@@ -101,14 +101,24 @@ class StochSSProject(StochSSBase):
                 mdl_file = wkfl.get_file(path=wkfl.get_model_path())
                 mdl_name = wkfl.get_name(path=mdl_file)
                 if mdl_name not in data.keys():
-                    _, kwargs = wkfl.extract_model()
-                    StochSSModel(**kwargs)
+                    try:
+                        _, kwargs = wkfl.extract_model()
+                        StochSSModel(**kwargs)
+                    except StochSSFileNotFoundError:
+                        mdl_file = None
                     wkgp = {"file":f"{mdl_name}.wkgp",
                             "model":mdl_file,
                             "workflows":[file]}
                     data[mdl_name] = wkgp
                 else:
                     data[mdl_name]['workflows'].append(file)
+                    if data[mdl_name]['model'] is None:
+                        try:
+                            _, kwargs = wkfl.extract_model()
+                            StochSSModel(**kwargs)
+                            data[mdl_name]['model'] = mdl_file
+                        except StochSSFileNotFoundError:
+                            pass
             elif not has_notebook and file.endswith(".ipynb"):
                 has_notebook = True
         return has_notebook
@@ -185,6 +195,8 @@ class StochSSProject(StochSSBase):
                 path = os.path.join(wkgp, file)
                 if not self.check_workflow_format(path=path):
                     wkfl = StochSSWorkflow(path=path)
+                    if "error" in wkfl.check_for_external_model().keys():
+                        wkfl.extract_model()
                     wkfl.update_wkfl_format()
 
 
@@ -359,11 +371,15 @@ class StochSSProject(StochSSBase):
         has_notebook = self.__get_old_workflow_data(data=data)
         os.chdir(self.path)
         for _, wkgp in data.items():
-            os.mkdir(wkgp['file'])
-            shutil.move(wkgp['model'], os.path.join(wkgp['file'], wkgp['model']))
-            for workflow in wkgp['workflows']:
-                dst = os.path.join(wkgp['file'], workflow)
-                shutil.move(os.path.join("WorkflowGroup1.wkgp", workflow), dst)
+            if wkgp['model'] is not None:
+                os.mkdir(wkgp['file'])
+                shutil.move(wkgp['model'], os.path.join(wkgp['file'], wkgp['model']))
+                for workflow in wkgp['workflows']:
+                    dst = os.path.join(wkgp['file'], workflow)
+                    shutil.move(os.path.join("WorkflowGroup1.wkgp", workflow), dst)
+            else:
+                for workflow in wkgp['workflows']:
+                    shutil.rmtree(os.path.join("WorkflowGroup1.wkgp", workflow))
         if has_notebook:
             shutil.move("WorkflowGroup1.wkgp", "Notebooks")
         else:
