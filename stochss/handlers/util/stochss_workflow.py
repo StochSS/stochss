@@ -56,8 +56,11 @@ class StochSSWorkflow(StochSSBase):
             if changed:
                 self.path = unique_path.replace(self.user_dir + '/', "")
             os.mkdir(unique_path)
-            self.workflow['settings'] = {"settings": self.get_settings_template(),
-                                         "model": mdl_path, "type":wkfl_type}
+            settings = self.get_settings_template()
+            with open(mdl_path, "r") as mdl_file:
+                timespan_settings = json.load(mdl_file)['modelSettings']
+                settings['timespanSettings'] = timespan_settings
+            self.workflow['settings'] = {"settings": settings, "model": mdl_path, "type":wkfl_type}
             settings_path = os.path.join(self.get_path(full=True), "settings.json")
             with open(settings_path, "w") as settings_file:
                 json.dump(self.workflow['settings'], settings_file, indent=4, sort_keys=True)
