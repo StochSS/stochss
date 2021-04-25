@@ -22,6 +22,7 @@ import json
 import pickle
 import plotly
 
+import numpy
 from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver
 
 from .stochss_job import StochSSJob
@@ -84,6 +85,13 @@ class EnsembleSimulation(StochSSJob):
         results.to_csv(path="results", nametag="results_csv", stamp=self.get_time_stamp())
 
 
+    def __update_timespan(self):
+        if "timespanSettings" in self.settings.keys():
+            end = self.settings['timespanSettings']['endSim']
+            step_size = self.settings['timespanSettings']['timeStep']
+            self.g_model.timespan(numpy.arange(0, end, step_size))
+
+
     def run(self, preview=False, verbose=False):
         '''
         Run a GillesPy2 ensemble simulation job
@@ -106,12 +114,14 @@ class EnsembleSimulation(StochSSJob):
         if self.settings['simulationSettings']['isAutomatic']:
             if verbose:
                 self.log("info", "Running an ensemble simulation with automatic solver")
+            self.__update_timespan()
             is_ode = self.g_model.get_best_solver(precompile=False).name == "ODESolver"
             results = self.g_model.run(number_of_trajectories=1 if is_ode else 100)
         else:
             if verbose:
                 self.log("info", "Running an ensemble simulation with manual solver")
             kwargs = self.__get_run_settings()
+            self.__update_timespan()
             results = self.g_model.run(**kwargs)
         if verbose:
             self.log("info", "Storing the results as pickle and csv")

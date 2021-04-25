@@ -58,7 +58,15 @@ class StochSSNotebook(StochSSBase):
             self.nb_type = 0
             self.s_model = models["s_model"]
             self.model = models["model"]
-            self.settings = self.get_settings_template() if settings is None else settings
+            if settings is None:
+                self.settings = self.get_settings_template()
+            else:
+                self.settings = settings
+                if "timespanSettings" in settings.keys():
+                    end = settings['timespanSettings']['endSim']
+                    step_size = settings['timespanSettings']['timeStep']
+                    self.s_model['modelSettings']['endSim'] = end
+                    self.s_model['modelSettings']['timeStep'] = step_size
             self.make_parent_dirs()
             n_path, changed = self.get_unique_path(name=self.get_file())
             if changed:

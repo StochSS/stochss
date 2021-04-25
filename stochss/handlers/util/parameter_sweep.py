@@ -144,6 +144,10 @@ class ParameterSweep(StochSSJob):
         ----------
         '''
         run_settings = self.__get_run_settings(verbose=verbose)
+        if "timespanSettings" in self.settings.keys():
+            end = self.settings['timespanSettings']['endSim']
+            step_size = self.settings['timespanSettings']['timeStep']
+            self.g_model.timespan(numpy.arange(0, end, step_size))
         kwargs = {"model":self.g_model, "settings":run_settings}
         settings = self.settings['parameterSweepSettings']
         param_1 = settings['parameters'][0]
