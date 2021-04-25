@@ -24,6 +24,7 @@ import traceback
 
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
+from .stochss_model import StochSSModel
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSFileNotFoundError
 
@@ -71,6 +72,9 @@ class StochSSWorkflow(StochSSBase):
     def __get_old_wkfl_data(self):
         job = StochSSJob(path=self.path)
         wkfl = job.load()
+        if wkfl['model'] is None:
+            mdl_path = job.get_model_path()
+            wkfl['model'] = StochSSModel(path=mdl_path).load()
         wkfl['settings']['timespanSettings'] = wkfl['model']['modelSettings']
         info = job.load_info()
         settings = {"settings":wkfl['settings'], "model":info['source_model'],
@@ -381,7 +385,8 @@ class StochSSWorkflow(StochSSBase):
                 else:
                     os.remove(file)
             self.__write_new_files(data['settings'], data['annotation'])
-            self.rename(name=data['wkfl'])
+            if data['wkfl'] != self.get_file():
+                self.rename(name=data['wkfl'])
         else:
             with open("settings.json", "w") as settings_file:
                 json.dump(data['settings']['settings'], settings_file, indent=4, sort_keys=True)
