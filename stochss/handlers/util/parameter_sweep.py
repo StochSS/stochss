@@ -25,7 +25,7 @@ import itertools
 import numpy
 import plotly
 
-from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver
+from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, ODESolver
 
 from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
@@ -68,7 +68,7 @@ class ParameterSweep(StochSSJob):
 
     def __get_run_settings(self, verbose=False):
         solver_map = {"SSA":VariableSSACSolver(model=self.g_model), "Tau-Leaping":TauLeapingSolver,
-                      "ODE":TauHybridSolver, "Hybrid-Tau-Leaping":TauHybridSolver}
+                      "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
         if self.settings['simulationSettings']['isAutomatic']:
             if verbose:
                 self.log("info", "Running a parameter sweep with automatic solver")
@@ -145,9 +145,11 @@ class ParameterSweep(StochSSJob):
         '''
         run_settings = self.__get_run_settings(verbose=verbose)
         if "timespanSettings" in self.settings.keys():
-            end = self.settings['timespanSettings']['endSim']
-            step_size = self.settings['timespanSettings']['timeStep']
-            self.g_model.timespan(numpy.arange(0, end, step_size))
+            keys = self.settings['timespanSettings'].keys()
+            if "endSim" in keys and "timeStep" in keys:
+                end = self.settings['timespanSettings']['endSim']
+                step_size = self.settings['timespanSettings']['timeStep']
+                self.g_model.timespan(numpy.arange(0, end, step_size))
         kwargs = {"model":self.g_model, "settings":run_settings}
         settings = self.settings['parameterSweepSettings']
         param_1 = settings['parameters'][0]

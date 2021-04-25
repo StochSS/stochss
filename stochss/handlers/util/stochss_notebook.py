@@ -44,14 +44,12 @@ class StochSSNotebook(StochSSBase):
                   "ODESolver":"ODE", "Solver":"SSA"}
 
     def __init__(self, path, new=False, models=None, settings=None):
-        '''
-        Intitialize a notebook object and if its new create it on the users file system
+        '''Intitialize a notebook object and if its new create it on the users file system
 
         Attributes
         ----------
         path : str
-            Path to the notebook
-        '''
+            Path to the notebook'''
         super().__init__(path=path)
         if new:
             self.is_ssa_c = check_cpp_support()
@@ -63,10 +61,12 @@ class StochSSNotebook(StochSSBase):
             else:
                 self.settings = settings
                 if "timespanSettings" in settings.keys():
-                    end = settings['timespanSettings']['endSim']
-                    step_size = settings['timespanSettings']['timeStep']
-                    self.s_model['modelSettings']['endSim'] = end
-                    self.s_model['modelSettings']['timeStep'] = step_size
+                    keys = settings['timespanSettings'].keys()
+                    if "endSim" in keys and "timeStep" in keys:
+                        end = settings['timespanSettings']['endSim']
+                        step_size = settings['timespanSettings']['timeStep']
+                        self.s_model['modelSettings']['endSim'] = end
+                        self.s_model['modelSettings']['timeStep'] = step_size
             self.make_parent_dirs()
             n_path, changed = self.get_unique_path(name=self.get_file())
             if changed:

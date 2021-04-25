@@ -23,7 +23,7 @@ import pickle
 import plotly
 
 import numpy
-from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver
+from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver, ODESolver
 
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSAPIError
@@ -57,7 +57,7 @@ class EnsembleSimulation(StochSSJob):
 
     def __get_run_settings(self):
         solver_map = {"SSA":SSACSolver(model=self.g_model), "Tau-Leaping":TauLeapingSolver,
-                      "ODE":TauHybridSolver, "Hybrid-Tau-Leaping":TauHybridSolver}
+                      "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
         return self.get_run_settings(settings=self.settings, solver_map=solver_map)
 
 
@@ -87,9 +87,11 @@ class EnsembleSimulation(StochSSJob):
 
     def __update_timespan(self):
         if "timespanSettings" in self.settings.keys():
-            end = self.settings['timespanSettings']['endSim']
-            step_size = self.settings['timespanSettings']['timeStep']
-            self.g_model.timespan(numpy.arange(0, end, step_size))
+            keys = self.settings['timespanSettings'].keys()
+            if "endSim" in keys and "timeStep" in keys:
+                end = self.settings['timespanSettings']['endSim']
+                step_size = self.settings['timespanSettings']['timeStep']
+                self.g_model.timespan(numpy.arange(0, end, step_size))
 
 
     def run(self, preview=False, verbose=False):
