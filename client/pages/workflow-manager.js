@@ -110,11 +110,17 @@ let WorkflowManager = PageView.extend({
     }
   },
   handleReturnToProject: function (e) {
-    this.handleSaveWorkflow(e, _.bind(function () {
+    if(this.model.activeJob.model.directory){
+      this.handleSaveWorkflow(e, _.bind(function () {
+        let queryStr = "?path=" + this.projectPath;
+        let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+        window.location.href = endpoint;
+      }, this));
+    }else{
       let queryStr = "?path=" + this.projectPath;
       let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
       window.location.href = endpoint;
-    }, this));
+    }
   },
   handleSaveWorkflow: function (e, cb) {
     let self = this;
