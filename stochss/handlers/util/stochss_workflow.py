@@ -22,6 +22,8 @@ import shutil
 import datetime
 import traceback
 
+import numpy
+
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
@@ -131,6 +133,13 @@ class StochSSWorkflow(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the settings file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc) from err
+
+
+    @classmethod
+    def __update_results_settings(cls, settings):
+        for param in settings['parameterSweepSettings']['parameters']:
+            p_range = list(numpy.linspace(param['min'], param['max'], param['steps']))
+            param['range'] = p_range
 
 
     def __update_settings(self):
@@ -274,6 +283,8 @@ class StochSSWorkflow(StochSSBase):
             Type of workflow
         '''
         self.save(new_settings=settings, mdl_path=mdl_path)
+        if wkfl_type == "parameterSweep":
+            self.__update_results_settings(settings=settings)
         if self.check_workflow_format(path=self.path):
             path = os.path.join(self.path, f"job{time_stamp}")
             data = {"mdl_path": mdl_path, "settings": settings, "type":wkfl_type}

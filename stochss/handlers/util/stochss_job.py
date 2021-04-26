@@ -19,9 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
+import pickle
 
 import datetime
 import traceback
+import numpy
 
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
@@ -136,18 +138,24 @@ class StochSSJob(StochSSBase):
         if "parameters" not in settings.keys():
             parameters = []
             if "paramID" in settings['parameterOne']:
+                p1_range = list(numpy.linspace(settings['p1Min'], settings['p1Max'],
+                                               settings['p1Steps']))
                 param1 = {"paramID": settings['parameterOne']['paramID'],
                           "min": settings['p1Min'],
                           "max": settings['p1Max'],
                           "name": settings['parameterOne']['name'],
+                          "range" : p1_range,
                           "steps": settings['p1Steps'],
                           "hasChangedRanged": False}
                 parameters.append(param1)
             if "paramID" in settings['parameterTwo']:
+                p2_range = list(numpy.linspace(settings['p2Min'], settings['p2Max'],
+                                               settings['p2Steps']))
                 param2 = {"paramID": settings['parameterTwo']['paramID'],
                           "min": settings['p2Min'],
                           "max": settings['p2Max'],
                           "name": settings['parameterTwo']['name'],
+                          "range" : p2_range,
                           "steps": settings['p2Steps'],
                           "hasChangedRanged": False}
                 parameters.append(param2)
@@ -312,6 +320,41 @@ class StochSSJob(StochSSBase):
         return {"kwargs":kwargs, "type":wkfl_type}
 
 
+    def get_plot_from_results(self, plt_key, plt_data, plt_type):
+        '''
+        Get the plotly figure for the results of a job
+
+        Attributes
+        ----------
+        plt_key : str
+            Indentifier for the requested plot figure
+        plt_data : dict
+            Title and axes data for the plot
+        plt_type : str
+            Type of plot to generate.
+        '''
+        self.log("debug", f"Key identifying the plot to generate: {plt_type}")
+        path = os.path.join(self.get_results_path(full=True), "results.p")
+        try:
+            with open(path, "rb") as results_file:
+                result = pickle.load(results_file)[plt_key]
+            if plt_type == "stddevran":
+                fig = result.plotplotly_std_dev_range(return_plotly_figure=True)
+            else:
+                if plt_type == "stddev":
+                    result = result.stddev_ensemble()
+                elif plt_type == "avg":
+                    result = result.average_ensemble()
+                fig = result.plotplotly(return_plotly_figure=True)
+            return self.get_results_plot(plt_key=None, plt_data=plt_data, fig=fig)
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
+
+
     def get_results_path(self, full=False):
         '''
         Return the path to the results directory
@@ -324,7 +367,7 @@ class StochSSJob(StochSSBase):
         return os.path.join(self.get_path(full=full), "results")
 
 
-    def get_results_plot(self, plt_key, plt_data):
+    def get_results_plot(self, plt_key, plt_data, fig=None):
         '''
         Get the plotly figure for the results of a job
 
@@ -340,8 +383,9 @@ class StochSSJob(StochSSBase):
         path = os.path.join(self.get_results_path(full=True), "plots.json")
         self.log("debug", f"Path to the job result plot file: {path}")
         try:
-            with open(path, "r") as plot_file:
-                fig = json.load(plot_file)[plt_key]
+            if fig is None:
+                with open(path, "r") as plot_file:
+                    fig = json.load(plot_file)[plt_key]
             if plt_data is None:
                 return fig
             for key in plt_data.keys():
