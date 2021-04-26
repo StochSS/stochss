@@ -27,6 +27,7 @@ let Plotly = require('../lib/plotly');
 let InputView = require('./input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
+let SweepParametersView = require('./sweep-parameter-range');
 //templates
 let gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
 let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
@@ -71,6 +72,7 @@ module.exports = View.extend({
       var type = "psweep";
       this.renderSpeciesOfInterestView();
       this.renderFeatureExtractionView();
+      this.renderSweepParameterView();
       if(isEnsemble) {
         this.renderEnsembleAggragatorView();
         this.renderPlotTypeSelectView();
@@ -95,11 +97,12 @@ module.exports = View.extend({
     $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
     let data = {};
     if(type === 'psweep'){
-      let key = this.getPsweepKey()
+      let key = this.getPsweepKey();
       data['plt_key'] = key;
     }else if(type === "ts-psweep") {
       data['plt_type'] = this.tsPlotData['type'];
-      data['plt_key'] = "";
+      let key = this.getTSPsweepKey()
+      data['plt_key'] = key;
     }else{
       data['plt_key'] = type;
     }
@@ -151,6 +154,14 @@ module.exports = View.extend({
     this.tsPlotData['type'] = e.target.value;
     let data = this.getPlot("ts-psweep");
     console.log(data)
+  },
+  getTSPsweepKey: function () {
+    let self = this;
+    let strs = Object.keys(this.tsPlotData.parameters).map(function (key) {
+      return key + ":" + self.tsPlotData.parameters[key]
+    });
+    let key = strs.join(",");
+    return key;
   },
   handleCollapsePlotContainerClick: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -280,6 +291,13 @@ module.exports = View.extend({
       value: this.model.settings.parameterSweepSettings.speciesOfInterest.name
     });
     app.registerRenderSubview(this, speciesOfInterestView, "specie-of-interest-list");
+  },
+  renderSweepParameterView: function () {
+    let sweepParameterView = this.renderCollection(
+      this.model.settings.parameterSweepSettings.parameters,
+      SweepParametersView,
+      this.queryByHook("parameter-ranges")
+    );
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
