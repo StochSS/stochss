@@ -40,6 +40,7 @@ module.exports = View.extend({
     'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
+    'change [data-hook=plot-type-select]' : 'getTSPlotForType',
     'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
     'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
     'click [data-target=edit-plot]' : 'openPlotArgsSection',
@@ -66,14 +67,21 @@ module.exports = View.extend({
     if(this.parent.model.type === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";
     }else{
+      this.tsPlotData = {"parameters":{}};
       var type = "psweep";
       this.renderSpeciesOfInterestView();
       this.renderFeatureExtractionView();
       if(isEnsemble) {
         this.renderEnsembleAggragatorView();
+        this.renderPlotTypeSelectView();
+        this.tsPlotData["type"] = "stddevran"
       }else{
         $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
+        $(this.queryByHook('plot-type-header')).css("display", "none");
+        this.tsPlotData["type"] = "trajectories"
       }
+      let data = this.getPlot("ts-psweep");
+      console.log(data)
     }
     this.getPlot(type);
   },
@@ -89,6 +97,9 @@ module.exports = View.extend({
     if(type === 'psweep'){
       let key = this.getPsweepKey()
       data['plt_key'] = key;
+    }else if(type === "ts-psweep") {
+      data['plt_type'] = this.tsPlotData['type'];
+      data['plt_key'] = "";
     }else{
       data['plt_key'] = type;
     }
@@ -96,6 +107,9 @@ module.exports = View.extend({
       data['plt_data'] = this.plotArgs;
     }else{
       data['plt_data'] = null;
+    }
+    if(type === 'ts-psweep') {
+      return data;
     }
     let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
     let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
@@ -132,6 +146,11 @@ module.exports = View.extend({
       key += ("-" + ensembleAggragator);
     }
     return key;
+  },
+  getTSPlotForType: function (e) {
+    this.tsPlotData['type'] = e.target.value;
+    let data = this.getPlot("ts-psweep");
+    console.log(data)
   },
   handleCollapsePlotContainerClick: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -234,6 +253,22 @@ module.exports = View.extend({
       value: this.model.settings.resultsSettings.mapper
     });
     app.registerRenderSubview(this, featureExtractionView, 'feature-extraction-list');
+  },
+  renderPlotTypeSelectView: function () {
+    let options = [
+      ["stddevran", "Standard Deviation Range"],
+      ["trajectories", "Trajectories"],
+      ["stddev", "Standard Deviation"],
+      ["avg", "Trajectory Mean"]
+    ];
+    let plotTypeSelectView = new SelectView({
+      name: 'plot-type',
+      required: true,
+      idAttribute: 'cid',
+      options: options,
+      value: "stddevran"
+    });
+    app.registerRenderSubview(this, plotTypeSelectView, "plot-type-select");
   },
   renderSpeciesOfInterestView: function () {
     let speciesNames = this.model.model.species.map(function (specie) { return specie.name});
