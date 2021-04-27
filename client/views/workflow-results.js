@@ -82,8 +82,7 @@ module.exports = View.extend({
         $(this.queryByHook('plot-type-header')).css("display", "none");
         this.tsPlotData["type"] = "trajectories"
       }
-      let data = this.getPlot("ts-psweep");
-      console.log(data)
+      this.getPlot("ts-psweep");
     }
     this.getPlot(type);
   },
@@ -111,19 +110,28 @@ module.exports = View.extend({
     }else{
       data['plt_data'] = null;
     }
-    if(type === 'ts-psweep') {
-      return data;
+    if(type === "psweep" && Boolean(this.plots[data.plt_key])) {
+      this.plotFigure(this.plots[data.plt_key], type);
+    }else if(type === "ts-psweep" && Boolean(this.plots[data.plt_type + data.plt_key])) {
+      this.plotFigure(this.plots[data.plt_type + data.plt_key], type);
+    }else{
+      let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
+      let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
+      xhr({url: endpoint, json: true}, function (err, response, body){
+        if(response.statusCode >= 400){
+          $(self.queryByHook(type + "-plot")).html(body.Message);
+        }else{
+          if(type === "psweep") {
+            self.plots[data.plt_key] = body;
+          }else if(type === "ts-psweep"){
+            self.plots[data.plt_type + data.plt_key] = body;
+          }else{
+            self.plots[type] = body;
+          }
+          self.plotFigure(body, type);
+        }
+      });
     }
-    let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
-    let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
-    xhr({url: endpoint, json: true}, function (err, response, body){
-      if(response.statusCode >= 400){
-        $(self.queryByHook(type + "-plot")).html(body.Message);
-      }else{
-        self.plots[type] = body;
-        self.plotFigure(body, type);
-      }
-    });
   },
   getPlotForEnsembleAggragator: function (e) {
     this.model.settings.resultsSettings.reducer = e.target.value;
@@ -152,8 +160,7 @@ module.exports = View.extend({
   },
   getTSPlotForType: function (e) {
     this.tsPlotData['type'] = e.target.value;
-    let data = this.getPlot("ts-psweep");
-    console.log(data)
+    this.getPlot("ts-psweep");
   },
   getTSPsweepKey: function () {
     let self = this;
@@ -267,7 +274,7 @@ module.exports = View.extend({
   },
   renderPlotTypeSelectView: function () {
     let options = [
-      ["stddevran", "Standard Deviation Range"],
+      ["stddevran", "Mean and Standard Deviation"],
       ["trajectories", "Trajectories"],
       ["stddev", "Standard Deviation"],
       ["avg", "Trajectory Mean"]

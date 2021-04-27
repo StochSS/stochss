@@ -36,16 +36,19 @@ module.exports = View.extend({
     this.parameter = this.parent.model.model.parameters.filter(function (param) {
       return param.compID === self.model.paramID
     })[0];
-    this.parent.tsPlotData.parameters[this.model.name] = this.parameter.expression;
+    let value = this.parameter.expression.toString().includes('.') ? this.parameter.expression : this.parameter.expression.toFixed(1)
+    this.parent.tsPlotData.parameters[this.model.name] = value;
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
   },
   setParameterRangeValue: function (e) {
-    let value = this.model.range[e.target.value];
+    var value = this.model.range[e.target.value];
+    if(!value.toString().includes(".")) {
+      value = value.toFixed(1)
+    }
     this.parent.tsPlotData.parameters[this.model.name] = value;
-    let data = this.parent.getPlot("ts-psweep");
-    console.log(data)
+    this.parent.getPlot("ts-psweep");
   },
   viewParameterRangeValue: function (e) {
     let value = this.model.range[e.target.value];
