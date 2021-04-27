@@ -24,6 +24,7 @@ import pickle
 import datetime
 import traceback
 import numpy
+import plotly
 
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
@@ -346,6 +347,8 @@ class StochSSJob(StochSSBase):
                 elif plt_type == "avg":
                     result = result.average_ensemble()
                 fig = result.plotplotly(return_plotly_figure=True)
+            fig["config"] = {"responsive":True}
+            fig = json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
             return self.get_results_plot(plt_key=None, plt_data=plt_data, fig=fig)
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"

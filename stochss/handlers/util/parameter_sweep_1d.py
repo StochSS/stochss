@@ -50,7 +50,7 @@ class ParameterSweep1D():
         self.param = param
         self.list_of_species = model.get_all_species().keys()
         self.results = {}
-        self.ts_results = []
+        self.ts_results = {}
         self.logs = []
 
 
@@ -193,7 +193,8 @@ class ParameterSweep1D():
             if verbose:
                 print(f"running {self.param['parameter']}={val}")
             tmp_res = tmp_mdl.run(**self.settings)
-            self.ts_results.append(tmp_res)
+            key = f"{self.param['parameter']}:{val}"
+            self.ts_results[key] = tmp_res
             if self.settings['number_of_trajectories'] > 1:
                 self.__ensemble_feature_extraction(results=tmp_res, index=i, verbose=verbose)
             else:
