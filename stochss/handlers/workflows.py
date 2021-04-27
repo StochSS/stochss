@@ -229,7 +229,10 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         log.debug("Plot args passed to the plot: %s", body)
         try:
             wkfl = StochSSJob(path=path)
-            fig = wkfl.get_results_plot(**body)
+            if "plt_type" in body.keys():
+                fig = wkfl.get_plot_from_results(**body)
+            else:
+                fig = wkfl.get_results_plot(**body)
             log.debug("Plot figure: %s", fig)
             self.write(fig)
         except StochSSAPIError as err:

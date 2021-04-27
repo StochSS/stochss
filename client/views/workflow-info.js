@@ -35,7 +35,9 @@ module.exports = View.extend({
     this.listOfErrors = [];
     this.listOfNotes = [];
     let logs = attrs.logs.split("root - ");
-    logs.shift()
+    if(logs.length > 1){
+      logs.shift()
+    }
     logs.forEach(this.parseLogs, this);
   },
   render: function () {
@@ -68,7 +70,9 @@ module.exports = View.extend({
   },
   parseLogs: function (log) {
     var message = log.split('\n');
-    message.pop();
+    if(message.length > 1) {
+      message.pop();
+    }
     message = message.join('<br>');
     if(message.startsWith("WARNING")){
       this.listOfWarnings.push(message.split("WARNING").pop());

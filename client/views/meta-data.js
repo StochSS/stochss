@@ -168,16 +168,30 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.filesSelectView, "file-select-view");
   },
+  saved: function () {
+    $(this.queryByHook('md-in-progress')).css("display", "none");
+    $(this.queryByHook('md-complete')).css("display", "inline-block");
+    let self = this;
+    setTimeout(function () {
+      $(self.queryByHook("md-complete")).css("display", "none");
+    }, 5000);
+  },
+  saving: function () {
+    $(this.queryByHook('md-in-progress')).css("display", "inline-block");
+    $(this.queryByHook('md-complete')).css("display", "none");
+  },
   saveMetaData: function (e) {
+    this.saving();
     let data = {}
     data[this.model.directory] = {"metadata":this.model.metadata, "creators":this.model.creators};
     this.model.workflowGroups.forEach(function (wkgp) {
       data[wkgp.name + ".wkgp"] = {"metadata": wkgp.metadata};
     });
+    let self = this;
     let endpoint = path.join(app.getApiPath(), "project/meta-data")+"?path="+this.model.directory;
     xhr({uri:endpoint, json:true, method:"post", body:data}, function (err, response, body) {
       if(response.statusCode < 400) {
-        console.log("Successfully Saved Mete Data");
+        self.saved();
       }
     });
   },

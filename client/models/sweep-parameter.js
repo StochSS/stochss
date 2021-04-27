@@ -22,6 +22,7 @@ module.exports = State.extend({
     min: 'any',
     max: 'any',
     name: 'string',
+    range: 'object',
     steps: 'any',
     hasChangedRanged: 'boolean' 
   },

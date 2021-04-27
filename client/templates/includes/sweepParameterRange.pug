@@ -1,0 +1,18 @@
+div
+
+  if(this.model.collection.indexOf(this.model) > 0)
+    hr
+
+  div
+
+    div.inline.mr-2=this.model.name + ":"
+
+    div.inline(data-hook=this.model.elementID + "-current-value")=this.parameter.expression
+
+  input.custom-range(
+    type="range"
+    min="0"
+    max=this.model.range.length - 1
+    value=this.model.range.indexOf(this.parameter.expression)
+    data-hook=this.model.elementID + "-slider"
+  )

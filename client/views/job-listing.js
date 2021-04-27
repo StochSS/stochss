@@ -52,7 +52,11 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), "file/delete") + "?path=" + this.model.directory;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400) {
-        self.model.collection.remove();
+        let job = self.model.collection.remove(self.model);
+        if(job.name === self.parent.model.activeJob.name){
+          self.parent.model.activeJob.status = null;
+          self.parent.updateWorkflow();
+        }
         self.remove();
       }
     });

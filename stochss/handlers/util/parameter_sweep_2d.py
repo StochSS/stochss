@@ -51,7 +51,7 @@ class ParameterSweep2D():
         self.list_of_species = model.get_all_species().keys()
         self.params = params
         self.logs = []
-        self.ts_results = []
+        self.ts_results = {}
         self.results = {}
 
 
@@ -202,7 +202,8 @@ class ParameterSweep2D():
                     message += f"{self.params[1]['parameter']}={val2}"
                     print(message)
                 tmp_res = tmp_mdl.run(**self.settings)
-                self.ts_results.append(tmp_res)
+                key = f"{self.params[0]['parameter']}:{val1},{self.params[1]['parameter']}:{val2}"
+                self.ts_results[key] = tmp_res
                 if self.settings['number_of_trajectories'] > 1:
                     self.__ensemble_feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j,
                                                        verbose=verbose)
