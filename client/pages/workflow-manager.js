@@ -135,6 +135,17 @@ let WorkflowManager = PageView.extend({
       }
     });
   },
+  removeActiveJob: function () {
+    $(this.queryByHook("active-job-header-container")).css("display", "none");
+    if(this.resultsView) {
+      this.resultsView.remove();
+    }
+    if(this.logsView) {
+      this.logsView.remove();
+      this.modelViewerView.remove();
+      this.settingsViewerView.remove();
+    }
+  },
   renderActiveJob: function () {
     if(this.model.newFormat) {
       $(this.queryByHook("active-job-header")).text("Job: " + this.model.activeJob.name);
@@ -267,7 +278,11 @@ let WorkflowManager = PageView.extend({
       this.model.fetch({
         success: function (model, response, options) {
           if(!newJob){
-            self.renderActiveJob();
+            if(Boolean(self.model.activeJob.status)){
+              self.renderActiveJob();
+            }else{
+              self.removeActiveJob();
+            }
           }
         }
       });
