@@ -61,3 +61,13 @@ div#project-meta-data.card.card-body
     div.inline
 
       button.btn.btn-primary.box-shadow(id="save-meta-data-button" data-hook="save-meta-data-button") Save
+
+    div.mdl-edit-btn.saving-status.inline(data-hook="md-in-progress")
+
+      div.spinner-grow.mr-2
+
+      span(data-hook="sd-action-in-progress") Saving
+
+    div.mdl-edit-btn.saved-status.inline(data-hook="md-complete")
+
+      span(data-hook="md-action-complete") Saved
