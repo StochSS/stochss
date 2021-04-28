@@ -126,8 +126,11 @@ module.exports = View.extend({
       let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
       xhr({url: endpoint, json: true}, function (err, response, body){
         if(response.statusCode >= 400){
-          $(self.queryByHook(type + "-plot")).html(body.Message);
+          $(self.queryByHook(type + "-plot-spinner")).css("display", "none");
+          let message = "<p>" + body.Message + "</p><p><b>Please re-run this job to get this plot</b></p>";
+          $(self.queryByHook(type + "-plot")).html(message);
         }else{
+          $(self.queryByHook(type + "-plot")).empty();
           if(type === "psweep") {
             self.plots[data.plt_key] = body;
           }else if(type === "ts-psweep"){

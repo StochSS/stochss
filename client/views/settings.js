@@ -49,6 +49,13 @@ module.exports = View.extend({
     }
     if(this.parent.model.type === "Parameter Sweep") {
       this.renderParameterSettingsView();
+      if(this.model.parameterSweepSettings.parameters.length < 1) {
+        $(this.queryByHook("start-job")).prop("disabled", true);
+      }
+      this.model.parameterSweepSettings.parameters.on("add remove", _.bind(function (e) {
+        let numParams = this.model.parameterSweepSettings.parameters.length;
+        $(this.queryByHook("start-job")).prop("disabled", numParams < 1);
+      }, this))
     }
     this.renderSimulationSettingsView();
   },
