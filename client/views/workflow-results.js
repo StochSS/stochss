@@ -32,6 +32,7 @@ let SweepParametersView = require('./sweep-parameter-range');
 let gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
 let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
 let parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResults.pug');
+let parameterScanTemplate = require('../templates/includes/parameterScanResults.pug');
 
 module.exports = View.extend({
   events: {
@@ -59,8 +60,9 @@ module.exports = View.extend({
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
                      this.model.settings.simulationSettings.algorithm !== "ODE";
+    let isParameterScan = this.model.settings.parameterSweepSettings.parameters.length > 2
     if(this.parent.model.type === "Parameter Sweep"){
-      this.template = parameterSweepResultsTemplate;
+      this.template = isParameterScan ? parameterScanTemplate : parameterSweepResultsTemplate;
     }else{
       this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
     }
@@ -69,20 +71,25 @@ module.exports = View.extend({
       var type = isEnsemble ? "stddevran" : "trajectories";
     }else{
       this.tsPlotData = {"parameters":{}};
-      var type = "psweep";
-      this.renderSpeciesOfInterestView();
-      this.renderFeatureExtractionView();
-      this.renderSweepParameterView();
+      var type = "ts-psweep";
+      if(!isParameterScan) {
+        this.renderSpeciesOfInterestView();
+        this.renderFeatureExtractionView();
+        if(isEnsemble) {
+          this.renderEnsembleAggragatorView();
+        }else{
+          $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
+        }
+        this.getPlot("psweep");
+      }
       if(isEnsemble) {
-        this.renderEnsembleAggragatorView();
         this.renderPlotTypeSelectView();
         this.tsPlotData["type"] = "stddevran"
       }else{
-        $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
         $(this.queryByHook('plot-type-header')).css("display", "none");
         this.tsPlotData["type"] = "trajectories"
       }
-      this.getPlot("ts-psweep");
+      this.renderSweepParameterView();
     }
     this.getPlot(type);
   },
