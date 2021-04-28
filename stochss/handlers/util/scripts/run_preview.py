@@ -96,6 +96,7 @@ if __name__ == "__main__":
         model = StochSSSpatialModel(path=args.path)
         wkfl = SpatialSimulation(path="", preview=True, species=args.species)
         wkfl.s_py_model = model.convert_to_spatialpy()
+        wkfl.s_model = model.model
     else:
         log_stm = setup_logger()
         model = StochSSModel(path=args.path)

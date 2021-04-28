@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery');
 var tests = require('./tests');
 //views
 var View = require('ampersand-view');
@@ -74,19 +75,19 @@ module.exports = View.extend({
   },
   renderDetailsView: function () {
     if(this.model.icType === "Place") {
+      $(this.queryByHook("scatter-details")).css("display", "none")
+      $(this.queryByHook("place-details")).css("display", "block")
       this.renderLocation();
     }else {
+      $(this.queryByHook("place-details")).css("display", "none")
+      $(this.queryByHook("scatter-details")).css("display", "block")
       this.renderTypes();
     }
   },
   renderLocation: function () {
     if(this.xCoord) {
       this.xCoord.remove();
-    }
-    if(this.yCoord) {
       this.yCoord.remove();
-    }
-    if(this.zCoord) {
       this.zCoord.remove();
     }
     this.xCoord = new InputView({parent: this, required: true,

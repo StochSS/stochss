@@ -71,6 +71,8 @@ class SpatialSimulation(StochSSWorkflow):
             #     self.species = list(self.s_py_model.get_all_species().keys())[0]
             t_ndx_list = list(range(len(os.listdir(results.result_dir)) - 1))
             plot = results.plot_species(species=self.species, t_ndx_list=t_ndx_list, animated=True,
+                                        concentration=self.s_model['defaultMode'] == "continuous",
+                                        deterministic=self.s_model['defaultMode'] == "discrete",
                                         width=None, height=None, return_plotly_figure=True,
                                         f_duration=100, t_duration=100)
             plot["layout"]["autosize"] = True
