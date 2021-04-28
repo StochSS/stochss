@@ -30,6 +30,7 @@ from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, ODE
 from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
+from .parameter_scan import ParameterScan
 
 class NumpyEncoder(json.JSONEncoder):
     '''
@@ -131,9 +132,10 @@ class ParameterSweep(StochSSJob):
             os.mkdir('results')
         with open('results/results.p', 'wb') as results_file:
             pickle.dump(wkfl.ts_results, results_file)
-        with open('results/results.json', 'w') as json_file:
-            json.dump(wkfl.results, json_file, indent=4, sort_keys=True, cls=NumpyEncoder)
-        self.__store_csv_results(wkfl)
+        if wkfl.name != "ParameterScan":
+            with open('results/results.json', 'w') as json_file:
+                json.dump(wkfl.results, json_file, indent=4, sort_keys=True, cls=NumpyEncoder)
+            self.__store_csv_results(wkfl)
 
 
     def configure(self, verbose=False):
@@ -151,17 +153,14 @@ class ParameterSweep(StochSSJob):
                 step_size = self.settings['timespanSettings']['timeStep']
                 self.g_model.timespan(numpy.arange(0, end, step_size))
         kwargs = {"model":self.g_model, "settings":run_settings}
-        settings = self.settings['parameterSweepSettings']
-        param_1 = settings['parameters'][0]
-        p1_range = numpy.linspace(param_1['min'], param_1['max'], param_1['steps'])
-        param_one = {"parameter":param_1['name'], "range":p1_range}
-        if len(settings['parameters']) == 1:
-            kwargs['param'] = param_one
+        parameters = []
+        for param in self.settings['parameterSweepSettings']['parameters']:
+            p_range = numpy.linspace(param['min'], param['max'], param['steps'])
+            parameters.append({"parameter":param['name'], "range":p_range})
+        if len(parameters) > 1:
+            kwargs['params'] = parameters
             return kwargs
-        param_2 = settings['parameters'][1]
-        p2_range = numpy.linspace(param_2['min'], param_2['max'], param_2['steps'])
-        param_two = {"parameter":param_2['name'], "range":p2_range}
-        kwargs["params"] = [param_one, param_two]
+        kwargs["param"] = parameters[0]
         return kwargs
 
 
@@ -174,9 +173,14 @@ class ParameterSweep(StochSSJob):
         verbose : bool
             Indicates whether or not to print debug statements
         '''
-        is_1d = len(self.settings['parameterSweepSettings']['parameters']) == 1
         kwargs = self.configure(verbose=verbose)
-        wkfl = ParameterSweep1D(**kwargs) if is_1d else ParameterSweep2D(**kwargs)
+        if "param" in kwargs.keys():
+            wkfl = ParameterSweep1D(**kwargs)
+        elif len(kwargs['params']) > 2:
+            wkfl = ParameterScan(**kwargs)
+        else:
+            wkfl = ParameterSweep2D(**kwargs)
         wkfl.run(verbose=verbose)
         self.__store_results(wkfl=wkfl)
-        self.__store_plots(wkfl=wkfl)
+        if wkfl.name != "ParameterScan":
+            self.__store_plots(wkfl=wkfl)
