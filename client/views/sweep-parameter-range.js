@@ -36,7 +36,7 @@ module.exports = View.extend({
     this.parameter = this.parent.model.model.parameters.filter(function (param) {
       return param.compID === self.model.paramID
     })[0];
-    let value = this.parameter.expression.toString().includes('.') ? this.parameter.expression : this.parameter.expression.toFixed(1)
+    let value = this.model.range[0].toString().includes('.') ? this.model.range[0] : this.model.range[0].toFixed(1)
     this.parent.tsPlotData.parameters[this.model.name] = value;
   },
   render: function (attrs, options) {

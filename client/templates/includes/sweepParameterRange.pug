@@ -7,12 +7,12 @@ div
 
     div.inline.mr-2=this.model.name + ":"
 
-    div.inline(data-hook=this.model.elementID + "-current-value")=this.parameter.expression
+    div.inline(data-hook=this.model.elementID + "-current-value")=this.model.range[0]
 
   input.custom-range(
     type="range"
     min="0"
     max=this.model.range.length - 1
-    value=this.model.range.indexOf(this.parameter.expression)
+    value=0
     data-hook=this.model.elementID + "-slider"
   )
