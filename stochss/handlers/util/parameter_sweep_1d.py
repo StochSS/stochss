@@ -91,7 +91,8 @@ class ParameterSweep1D():
     def __setup_results(self):
         for species in self.list_of_species:
             spec_res = {}
-            if self.settings['number_of_trajectories'] > 1:
+            if "ODE" not in self.settings['solver'].name and \
+                            self.settings['number_of_trajectories'] > 1:
                 for m_key in self.MAPPER_KEYS:
                     spec_res[m_key] = {}
                     for r_key in self.REDUCER_KEYS:
@@ -196,7 +197,8 @@ class ParameterSweep1D():
             tmp_res = tmp_mdl.run(**self.settings)
             key = f"{self.param['parameter']}:{val}"
             self.ts_results[key] = tmp_res
-            if self.settings['number_of_trajectories'] > 1:
+            if "ODE" not in self.settings['solver'].name and \
+                            self.settings['number_of_trajectories'] > 1:
                 self.__ensemble_feature_extraction(results=tmp_res, index=i, verbose=verbose)
             else:
                 self.__feature_extraction(results=tmp_res, index=i, verbose=verbose)

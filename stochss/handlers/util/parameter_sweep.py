@@ -83,7 +83,8 @@ class ParameterSweep(StochSSJob):
 
 
     def __store_csv_results(self, wkfl):
-        if wkfl.settings['number_of_trajectories'] > 1:
+        if "ODE" not in wkfl.settings['solver'].name and \
+                            wkfl.settings['number_of_trajectories'] > 1:
             csv_keys = list(itertools.product(["min", "max", "avg", "var", "final"],
                                               ["min", "max", "avg", "var"]))
         else:
@@ -104,7 +105,8 @@ class ParameterSweep(StochSSJob):
     @classmethod
     def __store_plots(cls, wkfl):
         mappers = ["min", "max", "avg", "var", "final"]
-        if wkfl.settings['number_of_trajectories'] > 1:
+        if "ODE" not in wkfl.settings['solver'].name and \
+                            wkfl.settings['number_of_trajectories'] > 1:
             keys = list(itertools.product(wkfl.list_of_species, mappers,
                                           ["min", "max", "avg", "var"]))
         else:

@@ -159,7 +159,9 @@ module.exports = View.extend({
     let speciesOfInterest = this.model.settings.parameterSweepSettings.speciesOfInterest.name;
     let featureExtractor = this.model.settings.resultsSettings.mapper;
     let key = speciesOfInterest + "-" + featureExtractor
-    if(this.model.settings.simulationSettings.realizations > 1){
+    let realizations = this.model.settings.simulationSettings.realizations;
+    let algorithm = this.model.settings.simulationSettings.algorithm;
+    if(algorithm !== "ODE" && realizations > 1){
       let ensembleAggragator = this.model.settings.resultsSettings.reducer;
       key += ("-" + ensembleAggragator);
     }
