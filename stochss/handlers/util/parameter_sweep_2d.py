@@ -29,6 +29,7 @@ class ParameterSweep2D():
     StochSS 2D parameter sweep job object
     ################################################################################################
     '''
+    name = "ParameterSweep2D"
 
     MAPPER_KEYS = ["min", "max", "avg", "var", "final"]
     REDUCER_KEYS = ["min", "max", "avg", "var"]

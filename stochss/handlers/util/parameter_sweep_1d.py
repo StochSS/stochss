@@ -28,6 +28,7 @@ class ParameterSweep1D():
     StochSS 1D parameter sweep job object
     ################################################################################################
     '''
+    name = "ParameterSweep1D"
 
     MAPPER_KEYS = ["min", "max", "avg", "var", "final"]
     REDUCER_KEYS = ["min", "max", "avg", "var"]
