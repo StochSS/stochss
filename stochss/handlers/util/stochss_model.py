@@ -81,6 +81,7 @@ class StochSSModel(StochSSBase):
                     g_assignment = EventAssignment(variable=var,
                                                    expression=assignment['expression'])
                     assignments.append(g_assignment)
+            return assignments
         except KeyError as err:
             message = "Event assignments are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
