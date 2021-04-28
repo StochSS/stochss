@@ -270,19 +270,19 @@ let WorkflowManager = PageView.extend({
   },
   setActiveJob: function (job) {
     this.model.activeJob = job;
+    this.removeActiveJob();
     this.renderActiveJob();
   },
   updateWorkflow: function (newJob) {
     let self = this;
-    if(this.model.newFormat && (newJob || !this.model.activeJob.status)) {
+    if(this.model.newFormat) {
+      let hadActiveJob = Boolean(this.model.activeJob.status)
       this.model.fetch({
         success: function (model, response, options) {
-          if(!newJob){
-            if(Boolean(self.model.activeJob.status)){
-              self.renderActiveJob();
-            }else{
-              self.removeActiveJob();
-            }
+          if(!Boolean(self.model.activeJob.status)){
+            self.removeActiveJob();
+          }else if(!hadActiveJob && Boolean(self.model.activeJob.status)) {
+            self.renderActiveJob();
           }
         }
       });
