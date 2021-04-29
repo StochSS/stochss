@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import copy
+from dask.distributed import Client
+from dask import delayed, compute
+from collections import OrderedDict
 
 class ParameterScan():
     '''
@@ -44,7 +47,10 @@ class ParameterScan():
         self.params = params
         self.logs = []
         self.ts_results = {}
-
+        # Initialize DASK - TODO: Update workers + threads
+        self.c = Client(n_workers=2, threads_per_worker=4)
+        self.result_keys = []
+        self.simulations = []
 
     @classmethod
     def __get_result_key(cls, variables):
@@ -54,22 +60,25 @@ class ParameterScan():
         return ",".join(elements)
 
 
-    def __run(self, index, variables, verbose):
+    def __load(self, index, variables, verbose):
         if index < len(self.params):
             param = self.params[index]
             index += 1
             for val in param['range']:
                 variables[param['parameter']] = val
-                self.__run(index=index, variables=variables, verbose=verbose)
+                self.__load(index=index, variables=variables, verbose=verbose)
         else:
             tmp_mdl = self.__setup_model(variables=variables)
             result_key = self.__get_result_key(variables=variables)
             if verbose:
                 message = f'running {result_key.replace(":", "=").replace(",", ", ")}'
                 print(message)
-            tmp_result = tmp_mdl.run(**self.settings)
-            self.ts_results[result_key] = tmp_result
+            sim_thread = delayed(tmp_mdl.run)(**self.settings)
+            self.simulations.append(sim_thread)
+            self.result_keys.append(result_key)
 
+    def __run(self):
+        self.ts_results = dict(zip(self.result_keys, compute(*self.simulations, scheduler='threads')))
 
     def __setup_model(self, variables):
         if "solver" in self.settings.keys() and \
@@ -105,4 +114,7 @@ class ParameterScan():
         '''
         index = 0
         variables = {}
-        self.__run(index=index, variables=variables, verbose=verbose)
+        self.__load(index=index, variables=variables, verbose=verbose)
+        self.__run()
+
+
