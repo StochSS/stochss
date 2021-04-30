@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import logging
 from tornado import web
-from notebook.base.handlers import IPythonHandler
+from notebook.base.handlers import IPythonHandler, APIHandler
+# APIHandler documentation:
+# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
+# Note APIHandler.finish() sets Content-Type handler to 'application/json'
+# Use finish() for json, write() for text
 
 log = logging.getLogger('stochss')
 
@@ -242,3 +246,29 @@ class LoadingPageHandler(PageHandler):
         ----------
         '''
         self.render("stochss-loading-page.html", server_path=self.get_server_path())
+
+
+class UserLogsAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting the user logs
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Return the contents of the user log file.
+
+        Attributes
+        ----------
+        '''
+        user_dir = os.path.expanduser("~")
+        path = os.path.join(user_dir, ".user-logs.txt")
+        try:
+            with open(path, "r") as log_file:
+                logs = log_file.read().replace("\n", "<br>")
+        except FileNotFoundError:
+            open(path, "w").close()
+            logs = ""
+        self.write(logs)
+        self.finish()
