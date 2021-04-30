@@ -19,13 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var _ = require('underscore');
 var $ = require('jquery');
 //var setFavicon = require('favicon-setter');
-var app = require('ampersand-app');
-var View = require('ampersand-view');
-var ViewSwitcher = require('ampersand-view-switcher');
+let xhr = require("xhr");
+var App = require('ampersand-app');
 var localLinks = require('local-links');
 var domify = require('domify');
 var path = require('path');
-
+// support files
+let app = require("../app");
+//views
+var View = require('ampersand-view');
+var ViewSwitcher = require('ampersand-view-switcher');
+//templates
 var headTemplate = require('!pug-loader!../templates/head.pug');
 var bodyTemplate = require('!pug-loader!../templates/body.pug');
 
@@ -94,10 +98,11 @@ module.exports = View.extend({
   template: bodyTemplate,
   autoRender: true,
   initialize: function () {
-      this.listenTo(app, 'page', this.handleNewPage);
+      this.listenTo(App, 'page', this.handleNewPage);
   },
   events: {
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
+    'click [data-hook=user-logs-collapse]' : 'changeCollapseButtonText'
     //'click a[href]': 'handleLinkClick'
   },
   render: function () {
@@ -114,16 +119,31 @@ module.exports = View.extend({
         document.title = _.result(newView, 'pageTitle') || 'StochSS';
         document.scrollTop = 0;
         
-        app.currentPage = newView;
+        App.currentPage = newView;
       }
     });
 
     var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/home"
     $(this.queryByHook("home-link")).prop('href', homePath);
-
+    this.getUserLogs();
     return this;
   },
-  
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  getUserLogs: function () {
+    let self = this;
+    let endpoint = path.join(app.getApiPath(), "user-logs");
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        logs = body;
+      }else{
+        logs = null;
+      }
+      $("#user-logs").html(logs);
+      self.updateUserLogs();
+    });
+  },
   handleNewPage: function (view) {
     this.pageSwitcher.set(view);
     //this.updateActiveNav();
@@ -145,5 +165,8 @@ module.exports = View.extend({
 
   navigate: function (page) {
     window.location = url;
+  },
+  updateUserLogs: function () {
+    setTimeout(_.bind(this.getUserLogs, this), 1000);
   }
 });
