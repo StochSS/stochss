@@ -94,7 +94,7 @@ class EnsembleSimulation(StochSSJob):
                 self.g_model.timespan(numpy.arange(0, end, step_size))
 
 
-    def run(self, preview=False, verbose=False):
+    def run(self, preview=False, verbose=True):
         '''
         Run a GillesPy2 ensemble simulation job
 
@@ -107,8 +107,11 @@ class EnsembleSimulation(StochSSJob):
         '''
         if preview:
             if verbose:
-                self.log("info", "Running a preview ensemble simulation")
+                self.log("info", f"Running {self.g_model.name} preview simulation")
             results = self.g_model.run(timeout=5)
+            if verbose:
+                self.log("info", f"{self.g_model.name} preview simulation has completed")
+                self.log("info", f"Generate result plot for {self.g_model.name} preview")
             plot = results.plotplotly(return_plotly_figure=True)
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}

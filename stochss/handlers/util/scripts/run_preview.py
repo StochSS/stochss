@@ -27,14 +27,20 @@ import argparse
 import warnings
 
 import plotly
-from gillespy2.core import log
+from tornado.log import LogFormatter
+from gillespy2.core import log as gillespy2_log
 from gillespy2 import ModelError, SimulationError
 
 sys.path.append("/stochss/stochss/handlers/") # pylint: disable=wrong-import-position
+sys.path.append("/stochss/stochss/") # pylint: disable=wrong-import-position
 from util.stochss_model import StochSSModel
 from util.stochss_spatial_model import StochSSSpatialModel
 from util.ensemble_simulation import EnsembleSimulation
 from util.spatial_simulation import SpatialSimulation
+from handlers.log import init_log
+
+init_log()
+log = logging.getLogger("stochss")
 
 def setup_logger():
     '''
@@ -45,10 +51,16 @@ def setup_logger():
     '''
     warnings.simplefilter("ignore")
     log_stream = io.StringIO()
-    for handler in log.handlers:
+    for handler in gillespy2_log.handlers:
         if isinstance(handler, logging.StreamHandler):
             handler.stream = log_stream
-    return log_stream
+    handler = logging.FileHandler(".user-logs.txt")
+    fmt = '%(color)s[%(levelname)s %(asctime)s]%(end_color)s %(message)s'
+    formatter = LogFormatter(fmt=fmt, datefmt='%H:%M:%S')
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
+    gillespy2_log.addHandler(handler)
+    return log_stream, handler
 
 
 def get_parsed_args():
@@ -77,6 +89,7 @@ def run_preview(job):
     response = {"timeout": False}
     try:
         plot = job.run(preview=True)
+        job.print_logs(log)
         response["results"] = plot
     except ModelError as error:
         response['errors'] = f"{error}"
@@ -90,6 +103,7 @@ def run_preview(job):
 
 
 if __name__ == "__main__":
+    log.info("Initializing the preview simulation")
     args = get_parsed_args()
     is_spatial = args.path.endswith(".smdl")
     if is_spatial:
@@ -98,19 +112,20 @@ if __name__ == "__main__":
         wkfl.s_py_model = model.convert_to_spatialpy()
         wkfl.s_model = model.model
     else:
-        log_stm = setup_logger()
+        log_stm, f_handler = setup_logger()
         model = StochSSModel(path=args.path)
         wkfl = EnsembleSimulation(path="", preview=True)
         wkfl.g_model = model.convert_to_gillespy2()
-
     resp = run_preview(wkfl)
     if not is_spatial:
         if 'GillesPy2 simulation exceeded timeout.' in log_stm.getvalue():
             resp['timeout'] = True
         log_stm.close()
+        f_handler.close()
 
     outfile = os.path.join(model.user_dir, f".{args.outfile}.tmp")
     with open(outfile, "w") as file:
         json.dump(resp, file, cls=plotly.utils.PlotlyJSONEncoder,
                   indent=4, sort_keys=True)
     open(f"{outfile}.done", "w").close()
+    log.info("Preview complete")
