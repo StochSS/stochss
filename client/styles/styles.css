@@ -19,6 +19,30 @@ img.quickstart {
   padding-left: 10px
 }
 
+.side-navbar {
+  z-index: 0;
+}
+
+.user-logs {
+  white-space: nowrap;
+  max-height: 250px;
+  padding: 5px;
+  margin-top: 10px;
+  width: auto;
+}
+
+#user-logs {
+  width: auto;
+  font-size: 0.875rem;
+  background-color: #000033;
+  color: white;
+  bottom: 0;
+}
+
+#user-logs:not(.show) {
+  height: 0px;
+}
+
 [role="main"] {
   padding-top: 20px;
 }
@@ -32,10 +56,22 @@ img.quickstart {
   }
   .sidebar-sticky {
     position: fixed;
+    flex: 0 0 15%;
+    max-width: 15%;
   }
   .nav-flex-column {
     -ms-flex-direction: column !important;
     flex-direction: column !important;
+  }
+  #user-logs:not(.show) {
+    height: 100%;
+    font-size: 0.5rem;
+  }
+  .expand-logs {
+    position: fixed;
+    left: auto;
+    right: auto;
+    width: 60%;
   }
 }
 
@@ -225,7 +261,8 @@ input[type="file"]::-ms-browse {
 }
 
 .body {
-  min-width: 500px !important; 
+  min-width: 500px !important;
+  z-index: 0;
 }
 .plot-preview {
   margin: 10px;
