@@ -59,7 +59,7 @@ def setup_file_handler():
     '''
     handler = logging.FileHandler(".user-logs.txt")
     fmt = '%(color)s%(asctime)s%(end_color)s$ %(message)s'
-    formatter = LogFormatter(fmt=fmt, datefmt='%H:%M:%S')
+    formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
     handler.setFormatter(formatter)
     handler.setLevel(logging.INFO)
     log.addHandler(handler)
