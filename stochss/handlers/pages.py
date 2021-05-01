@@ -266,7 +266,7 @@ class UserLogsAPIHandler(APIHandler):
         path = os.path.join(user_dir, ".user-logs.txt")
         try:
             with open(path, "r") as log_file:
-                logs = log_file.read().replace("\n", "<br>")
+                logs = log_file.read().strip().replace("\n", "<br>")
         except FileNotFoundError:
             open(path, "w").close()
             logs = ""
