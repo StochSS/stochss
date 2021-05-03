@@ -22,7 +22,7 @@ jobs:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
     - name: Get Base Lint Score
       run: |
-        echo ::set-env name=BASE_LINT::$(git diff --name-only --diff-filter=M $HEAD_REF | grep -E "\.py" | xargs pylint | grep -E -o "at [0-9.-]+" | grep -E -o [0-9.-]+)
+        echo BASE_LINT=$(git diff --name-only --diff-filter=M $HEAD_REF | grep -E "\.py" | xargs pylint | grep -E -o "at [0-9.-]+" | grep -E -o [0-9.-]+) >> $GITHUB_ENV
       env:
         HEAD_REF: ${{ github.event.pull_request.head.ref }}
       if: always()
@@ -31,17 +31,20 @@ jobs:
       env:
         HEAD_REF: ${{ github.event.pull_request.head.ref }}
     - name: Get Lint Delta Sign (+/-)
-      run: echo ::set-env name=PASSING_SCORE::$(git diff --name-only --diff-filter=M $BASE_REF | grep -E "\.py" | xargs pylint | grep -Eo "10, [+-]" | grep -Eo [+-] )
+      run: |
+        echo PASSING_SCORE=$(git diff --name-only --diff-filter=M $BASE_REF | grep -E "\.py" | xargs pylint | grep -Eo "10, [+-]" | grep -Eo [+-] ) >> $GITHUB_ENV
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
       if: always()
     - name: Get Head Lint Score
-      run: echo ::set-env name=HEAD_LINT::$(git diff --name-only --diff-filter=M $BASE_REF | grep -E "\.py" | xargs pylint | grep -E -o "at [0-9.-]+" | grep -E -o [0-9.-]+)
+      run: |
+        echo HEAD_LINT=$(git diff --name-only --diff-filter=M $BASE_REF | grep -E "\.py" | xargs pylint | grep -E -o "at [0-9.-]+" | grep -E -o [0-9.-]+) >> $GITHUB_ENV
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
       if: always()
     - name: Get Added Files Lint Score
-      run: echo ::set-env name=ADDED_LINT::$(git diff --name-only --diff-filter=A $BASE_REF | grep -E "\.py" | xargs pylint | grep -E -o "at [0-9.-]+" | grep -E -o [0-9.-]+)
+      run: |
+        echo ADDED_LINT=$(git diff --name-only --diff-filter=A $BASE_REF | grep -E "\.py" | xargs pylint | grep -E -o "at [0-9.-]+" | grep -E -o [0-9.-]+) >> $GITHUB_ENV
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
       if: always()
