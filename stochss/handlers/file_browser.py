@@ -54,7 +54,7 @@ class ModelBrowserFileList(APIHandler):
         '''
         path = self.get_query_argument(name="path")
         is_root = self.get_query_argument(name="isRoot", default=False)
-        log.info("Path to the directory: %s", path)
+        log.debug("Path to the directory: %s", path)
         try:
             folder = StochSSFolder(path=path)
             node = folder.get_jstree_node(is_root=is_root)
@@ -86,11 +86,14 @@ class ModelToNotebookHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         try:
             is_spatial = path.endswith(".smdl")
+            log.info("Getting data from %s", path.split('/').pop())
             model = StochSSSpatialModel(path=path) if is_spatial else StochSSModel(path=path)
             data = model.get_notebook_data()
             log.debug("Notebook data: %s", data)
+            log.info("Converting %s to notebook", path.split('/').pop())
             notebook = StochSSNotebook(**data)
             resp = notebook.create_ses_notebook() if is_spatial else notebook.create_es_notebook()
+            log.info("Successfully created the notebook for %s", path.split('/').pop())
             log.debug("Notebook file path: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -115,9 +118,11 @@ class DeleteFileAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("Deleting path: %s", path)
         try:
+            log.info("Deleting %s", path.split('/').pop())
             is_dir = os.path.isdir(path)
             file_obj = StochSSFolder(path=path) if is_dir else StochSSFile(path=path)
             resp = file_obj.delete()
+            log.info("Successfully deleted %s", path.split('/').pop())
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -143,10 +148,14 @@ class MoveFileAPIHandler(APIHandler):
         dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path: %s", dst_path)
         try:
+            log.info("Moving %s to %s", src_path.split('/').pop(),
+                     os.path.dirname(dst_path).split('/').pop())
             is_dir = os.path.isdir(src_path)
             file_obj = StochSSFolder(path=src_path) if is_dir else StochSSFile(path=src_path)
             resp = file_obj.move(location=dst_path)
             file_obj.print_logs(log)
+            log.info("Successfully moved %s to %s", src_path.split('/').pop(),
+                     os.path.dirname(dst_path).split('/').pop())
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -168,13 +177,15 @@ class DuplicateModelHandler(APIHandler):
         Attributes
         ----------
         '''
-        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
-        log.debug("Copying file: %s", path)
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the file: %s", path)
         try:
+            log.info("Coping %s", path.split('/').pop())
             file = StochSSFile(path=path)
             resp = file.duplicate()
             file.print_logs(log)
+            log.info("Successfully copied %s", path.split('/').pop())
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -197,13 +208,15 @@ class DuplicateDirectoryHandler(APIHandler):
         Attributes
         ----------
         '''
-        path = self.get_query_argument(name="path")
         self.set_header('Content-Type', 'application/json')
-        log.debug("Copying directory: %s", path)
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the directory: %s", path)
         try:
+            log.info("Coping %s", path.split('/').pop())
             folder = StochSSFolder(path=path)
             resp = folder.duplicate()
             folder.print_logs(log)
+            log.info("Successfully copied %s", path.split('/').pop())
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -227,12 +240,13 @@ class RenameAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Path to the file or directory: %s", path)
         new_name = self.get_query_argument(name="name")
         log.debug("New filename: %s", new_name)
-        self.set_header('Content-Type', 'application/json')
         try:
+            log.info("Renaming %s to %s", path.split('/').pop(), new_name)
             is_model = path.endswith(".mdl") or path.endswith(".smdl")
             if ".proj" in path and ".wkgp" in path and is_model:
                 wkgp = StochSSBase(path=os.path.dirname(path))
@@ -244,6 +258,7 @@ class RenameAPIHandler(APIHandler):
             else:
                 file_obj = StochSSBase(path=path)
                 resp = file_obj.rename(name=new_name)
+            log.info("Successfully renamed %s to %s", path.split('/').pop(), file_obj.get_file())
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -266,13 +281,16 @@ class ConvertToSpatialAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Converting non-spatial model to spatial model: %s", path)
-        self.set_header('Content-Type', 'application/json')
         try:
+            log.info("Convert %s to a spatial model", path.split('/').pop())
             model = StochSSModel(path=path)
+            log.info("Getting spatial model data")
             resp, data = model.convert_to_spatial()
             _ = StochSSModel(path=data['path'], new=True, model=data['spatial'])
+            log.info("Successfully converted %s to a spatial model", path.split('/').pop())
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -295,13 +313,16 @@ class ConvertToModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Converting spatial model to non-spatial model: %s", path)
-        self.set_header('Content-Type', 'application/json')
         try:
+            log.info("Convert %s to a model", path.split('/').pop())
             model = StochSSSpatialModel(path=path)
+            log.info("Getting model data")
             resp, data = model.convert_to_model()
             _ = StochSSModel(path=data['path'], new=True, model=data['model'])
+            log.info("Successfully converted %s to a model", path.split('/').pop())
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -324,15 +345,18 @@ class ModelToSBMLAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Converting to SBML: %s", path)
-        self.set_header('Content-Type', 'application/json')
         try:
+            log.info("Convert %s to sbml", path.split('/').pop())
             model = StochSSModel(path=path)
+            log.info("Getting sbml data")
             resp, data = model.convert_to_sbml()
             model.print_logs(log)
             sbml = StochSSSBMLModel(path=data['path'], new=True, document=data['document'])
             resp["File"] = sbml.get_file()
+            log.info("Successfully converted %s to sbml", path.split('/').pop())
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -356,11 +380,13 @@ class SBMLToModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Converting SBML: %s", path)
-        self.set_header('Content-Type', 'application/json')
         try:
+            log.info("Convert %s to a model", path.split('/').pop())
             sbml = StochSSSBMLModel(path=path)
+            log.info("Getting model data")
             if ".proj" in path:
                 proj = StochSSProject(path=sbml.get_dir_name())
                 wkgp = proj.check_project_format(path=proj.path)
@@ -373,6 +399,7 @@ class SBMLToModelAPIHandler(APIHandler):
                 model = StochSSModel(path=convert_resp['path'], new=True,
                                      model=convert_resp['model'])
                 resp['File'] = model.get_file()
+                log.info("Successfully converted %s to a model", path.split('/').pop())
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -397,6 +424,7 @@ class DownloadAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("Path to the model: %s", path)
         try:
+            log.info("Getting the file contents for download")
             file = StochSSFile(path=path)
             data = file.read()
             file.print_logs(log)
@@ -422,16 +450,18 @@ class DownloadZipFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Path to the model: %s", path)
         action = self.get_query_argument(name="action")
         log.debug("Action: %s", action)
-        self.set_header('Content-Type', 'application/json')
         try:
             if action == "generate":
+                log.info("Zipping the directory for download")
                 folder = StochSSFolder(path=path)
                 resp = folder.generate_zip_file()
             else:
+                log.info("Zipping the csv files for download")
                 wkfl = StochSSJob(path=path)
                 resp = wkfl.generate_csv_zip()
             log.debug("Response: %s", resp)
@@ -459,8 +489,10 @@ class CreateDirectoryHandler(APIHandler):
         directories = self.get_query_argument(name="path")
         log.debug("Path of directories: %s", directories)
         try:
+            log.info("Creating %s directory", directories.split('/').pop())
             folder = StochSSFolder(path=directories, new=True)
             folder.print_logs(log)
+            log.info("Successfully created %s directory", directories.split('/').pop())
             self.write("{0} was successfully created!".format(directories))
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -492,13 +524,22 @@ class UploadFileAPIHandler(APIHandler):
         log.debug("Path to the directory where the file will be uploaded: %s", file_info['path'])
         name = file_info['name'] if file_info['name'] else None
         if name is not None:
+            if os.path.dirname(name):
+                dst = os.path.dirname(name).split('/').pop()
+            else:
+                dst = file_info['path'].split('/').pop()
+            log.info("Uploading %s as %s to %s", file_data['filename'], name, dst)
             log.debug("Name with 'save as' path for the file: %s", name)
         else:
+            log.info("Uploading %s to %s", file_data['filename'],
+                     file_info['path'].split('/').pop())
             log.debug("No name given: %s", name)
         try:
             folder = StochSSFolder(path=file_info['path'])
             resp = folder.upload(file_type=file_info['type'], file=file_data['filename'],
                                  body=file_data['body'], new_name=name)
+            log.info("Successfully uploaded %s to %s", resp['file'],
+                     resp['dirname'].split('/').pop())
             log.debug("Response: %s", resp)
             self.write(json.dumps(resp))
         except StochSSAPIError as err:
@@ -529,12 +570,16 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
         try:
             wkfl = StochSSWorkflow(path=path)
             if target == "wkfl_model":
+                log.info("Extracting the model from %s", wkfl.get_file())
                 resp, kwargs = wkfl.extract_model()
                 model = StochSSModel(**kwargs)
                 resp['mdlPath'] = model.path
                 resp['File'] = model.get_file()
+                log.info("Successfully extracted the model from %s", wkfl.get_file())
             else:
+                log.info("Duplicating %s as new", wkfl.get_file())
                 if wkfl.check_workflow_format(path=path):
+                    log.info("Getting the workflow data")
                     resp, kwargs = wkfl.duplicate_as_new()
                     new_wkfl = StochSSWorkflow(**kwargs)
                 else:
@@ -543,6 +588,7 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
                         time_stamp = None
                     log.debug("The time stamp for the new workflow: %s", time_stamp)
                     job = StochSSJob(path=path)
+                    log.info("Getting the workflow data")
                     resp, kwargs = job.duplicate_as_new(stamp=time_stamp)
                     new_wkfl = StochSSJob(**kwargs)
                     new_wkfl.update_info(new_info={"source_model":resp['mdlPath']})
@@ -551,6 +597,7 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
                         resp['error'] = c_resp['error']
                 resp['wkflPath'] = new_wkfl.path
                 resp['File'] = new_wkfl.get_file()
+                log.info("Successfully duplicated %s as new", wkfl.get_file())
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
