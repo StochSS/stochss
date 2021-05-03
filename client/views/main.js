@@ -139,7 +139,7 @@ module.exports = View.extend({
   addNewLogs: function (newLogs) {
     let self = this;
     let logList = newLogs.map(function (log) {
-      var newLog = self.formatLog(log);
+      var newLog = log.includes("$ ") ? self.formatLog(log) : log;
       if(self.logs.length > 0) {
         newLog = "<br>" + newLog;
       }
@@ -168,13 +168,12 @@ module.exports = View.extend({
   },
   getUserLogs: function () {
     let self = this;
-    let endpoint = path.join(app.getApiPath(), "user-logs");
+    let queryStr = "?logNum=" + this.logs.length;
+    let endpoint = path.join(app.getApiPath(), "user-logs") + queryStr;
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400 && body) {
         let scrolled = self.scrolled;
-        if(self.logs.length < body.logs.length) {
-          self.addNewLogs(body.logs.slice(self.logs.length));
-        }
+        self.addNewLogs(body.logs);
         if(!self.scrolled){
           let element = document.querySelector("#user-logs");
           element.scrollTop = element.scrollHeight;
