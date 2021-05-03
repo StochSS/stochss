@@ -203,15 +203,21 @@ class ParameterSweep2D():
                     message = f"running {self.params[0]['parameter']}={val1}, "
                     message += f"{self.params[1]['parameter']}={val2}"
                     print(message)
-                tmp_res = tmp_mdl.run(**self.settings)
-                key = f"{self.params[0]['parameter']}:{val1},{self.params[1]['parameter']}:{val2}"
-                self.ts_results[key] = tmp_res
-                if "ODE" not in self.settings['solver'].name and \
-                            self.settings['number_of_trajectories'] > 1:
-                    self.__ensemble_feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j,
-                                                       verbose=verbose)
+                try:
+                    tmp_res = tmp_mdl.run(**self.settings)
+                except Exception as err:
+                    self.log("error", str(err))
                 else:
-                    self.__feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j, verbose=verbose)
+                    key = f"{self.params[0]['parameter']}:{val1},"
+                    key += f"{self.params[1]['parameter']}:{val2}"
+                    self.ts_results[key] = tmp_res
+                    if "ODE" not in self.settings['solver'].name and \
+                                self.settings['number_of_trajectories'] > 1:
+                        self.__ensemble_feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j,
+                                                           verbose=verbose)
+                    else:
+                        self.__feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j,
+                                                  verbose=verbose)
 
 
     def to_csv(self, keys, csv_writer):
