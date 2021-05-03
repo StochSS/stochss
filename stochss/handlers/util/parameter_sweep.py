@@ -67,6 +67,11 @@ class ParameterSweep(StochSSJob):
         self.settings = self.load_settings()
 
 
+    def __add_logs(self, wkfl):
+        self.logs.extend(wkfl.logs)
+        wkfl.logs = []
+
+
     def __get_run_settings(self, verbose=False):
         solver_map = {"SSA":VariableSSACSolver(model=self.g_model), "Tau-Leaping":TauLeapingSolver,
                       "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
@@ -100,10 +105,10 @@ class ParameterSweep(StochSSJob):
             with open(path, "w", newline="") as csv_file:
                 csv_writer = csv.writer(csv_file)
                 wkfl.to_csv(keys=key, csv_writer=csv_writer)
+        self.__add_logs(wkfl)
 
 
-    @classmethod
-    def __store_plots(cls, wkfl):
+    def __store_plots(self, wkfl):
         mappers = ["min", "max", "avg", "var", "final"]
         if "ODE" not in wkfl.settings['solver'].name and \
                             wkfl.settings['number_of_trajectories'] > 1:
@@ -127,6 +132,7 @@ class ParameterSweep(StochSSJob):
         with open('results/plots.json', 'w') as plots_file:
             json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
                       indent=4, sort_keys=True)
+        self.__add_logs(wkfl)
 
 
     def __store_results(self, wkfl):
@@ -183,6 +189,7 @@ class ParameterSweep(StochSSJob):
         else:
             wkfl = ParameterSweep2D(**kwargs)
         wkfl.run(verbose=verbose)
+        self.__add_logs(wkfl)
         self.__store_results(wkfl=wkfl)
         if wkfl.name != "ParameterScan":
             self.__store_plots(wkfl=wkfl)

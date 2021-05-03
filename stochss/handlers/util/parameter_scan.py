@@ -67,8 +67,12 @@ class ParameterScan():
             if verbose:
                 message = f'running {result_key.replace(":", "=").replace(",", ", ")}'
                 print(message)
-            tmp_result = tmp_mdl.run(**self.settings)
-            self.ts_results[result_key] = tmp_result
+            try:
+                tmp_result = tmp_mdl.run(**self.settings)
+            except Exception as err:
+                self.log("error", str(err))
+            else:
+                self.ts_results[result_key] = tmp_result
 
 
     def __setup_model(self, variables):
