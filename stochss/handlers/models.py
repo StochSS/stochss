@@ -95,11 +95,14 @@ class JsonFileAPIHandler(APIHandler):
         try:
             if path.endswith(".domn"):
                 model = StochSSSpatialModel(path=path)
+                log.info("Saving %s", model.get_file(path=path))
                 model.save_domain(domain=data)
             else:
                 model = StochSSModel(path=path)
+                log.info("Saving %s", model.get_file(path=path))
                 model.save(model=data)
                 model.print_logs(log)
+            log.info("Successfully saved %s", model.get_file(path=path))
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
@@ -211,12 +214,15 @@ class RunModelAPIHandler(APIHandler):
             self.write(resp)
         else:
             model = StochSSModel(path=path)
+            log.info("Check for preview results ...")
             results = model.get_preview_results(outfile=outfile)
             log.debug("Results for the model preview: %s", results)
             if results is None:
                 resp['Running'] = True
+                log.info("The preview is still running")
             else:
                 resp['Results'] = results
+                log.info("Loading the preview results")
             log.debug("Response to the read command: %s", resp)
             self.write(resp)
         self.finish()
