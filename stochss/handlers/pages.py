@@ -262,13 +262,14 @@ class UserLogsAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
         user_dir = os.path.expanduser("~")
         path = os.path.join(user_dir, ".user-logs.txt")
         try:
             with open(path, "r") as log_file:
-                logs = log_file.read().strip().replace("\n", "<br>")
+                logs = log_file.read().strip().split("\n")
         except FileNotFoundError:
             open(path, "w").close()
-            logs = ""
-        self.write(logs)
+            logs = []
+        self.write({"logs":logs})
         self.finish()
