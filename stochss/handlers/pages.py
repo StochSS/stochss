@@ -263,11 +263,12 @@ class UserLogsAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
+        log_num = self.get_query_arguments(name="logNum")[0]
         user_dir = os.path.expanduser("~")
         path = os.path.join(user_dir, ".user-logs.txt")
         try:
             with open(path, "r") as log_file:
-                logs = log_file.read().strip().split("\n")
+                logs = log_file.read().strip().split("\n")[int(log_num):]
         except FileNotFoundError:
             open(path, "w").close()
             logs = []
