@@ -126,6 +126,7 @@ module.exports = View.extend({
     var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/home"
     $(this.queryByHook("home-link")).prop('href', homePath);
     let self = this;
+    this.logs = [];
     this.getUserLogs();
     this.scrolled = false;
     this.scrollCount = 0;
@@ -134,6 +135,17 @@ module.exports = View.extend({
       self.scrollCount = 0;
     });
     return this;
+  },
+  addNewLogs: function (newLogs) {
+    let self = this;
+    let logList = newLogs.map(function (log) {
+      var newLog = self.formatLog(log);
+      if(self.logs.length > 0) {
+        newLog = "<br>" + newLog;
+      }
+      self.logs.push(newLog);
+      $("#user-logs").append(newLog);
+    });
   },
   collapseExpandLogs: function (e) {
     let logs = $("#user-logs");
@@ -151,8 +163,8 @@ module.exports = View.extend({
         $(".side-navbar").css("z-index", 1);
       }
     }
-    // let element = document.querySelector("#user-logs");
-    // element.scrollTop = element.scrollHeight;
+    let element = document.querySelector("#user-logs");
+    element.scrollTop = element.scrollHeight;
   },
   getUserLogs: function () {
     let self = this;
@@ -160,12 +172,8 @@ module.exports = View.extend({
     xhr({uri: endpoint, json: true}, function (err, response, body) {
       if(response.statusCode < 400 && body) {
         let scrolled = self.scrolled;
-        console.log(self.logs !== body)
-        if(!self.logs || self.logs.split("<br>").length !== body.split("<br>").length) {
-          console.log(self.logs, body)
-          self.formatLogs(body);
-          $("#user-logs").html(self.logs);
-          self.scrolled = scrolled;
+        if(self.logs.length < body.logs.length) {
+          self.addNewLogs(body.logs.slice(self.logs.length));
         }
         if(!self.scrolled){
           let element = document.querySelector("#user-logs");
@@ -176,30 +184,22 @@ module.exports = View.extend({
           self.scrolled = false;
           self.scrollCount = 0;
         }
-      }else{
-        self.logs = "";
       }
       self.updateUserLogs();
     });
   },
-  formatLogs: function (logs) {
-    let logList = logs.split("<br>").map(function (log) {
-      var time = log.split('$ ')[0]
-      let date = new Date(time);
-      let months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
-      var stamp = months[date.getMonth()] + " ";
-      stamp += date.getDate() + ", ";
-      stamp += date.getFullYear() + "  ";
-      let hours = date.getHours();
-      stamp += (hours < 10 ? 0 + hours : hours) + ":";
-      let minutes = date.getMinutes();
-      stamp += (minutes < 10 ? '0' + minutes : minutes) + ":";
-      let seconds = date.getSeconds();
-      stamp += seconds < 10 ? '0' + seconds : seconds;
-      return log.replace(time, stamp);
-    });
-    logs = logList.join("<br>")
-    this.logs = logs;
+  formatLog: function (log) {
+    var time = log.split('$ ')[0];
+    let date = new Date(time);
+    let months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+    var stamp = months[date.getMonth()] + " ";
+    stamp += date.getDate() + ", ";
+    stamp += date.getFullYear() + "  ";
+    let hours = date.getHours();
+    stamp += (hours < 10 ? "0" + hours : hours) + ":";
+    let minutes = date.getMinutes();
+    stamp += (minutes < 10 ? '0' + minutes : minutes) + ":";
+    return log.replace(time, stamp);
   },
   handleNewPage: function (view) {
     this.pageSwitcher.set(view);
