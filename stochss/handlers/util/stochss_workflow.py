@@ -60,9 +60,10 @@ class StochSSWorkflow(StochSSBase):
                 self.path = unique_path.replace(self.user_dir + '/', "")
             os.mkdir(unique_path)
             settings = self.get_settings_template()
-            with open(mdl_path, "r") as mdl_file:
-                timespan_settings = json.load(mdl_file)['modelSettings']
-                settings['timespanSettings'] = timespan_settings
+            if os.path.exists(mdl_path):
+                with open(mdl_path, "r") as mdl_file:
+                    timespan_settings = json.load(mdl_file)['modelSettings']
+                    settings['timespanSettings'] = timespan_settings
             self.workflow['settings'] = {"settings": settings, "model": mdl_path, "type":wkfl_type}
             settings_path = os.path.join(self.get_path(full=True), "settings.json")
             with open(settings_path, "w") as settings_file:
@@ -196,7 +197,7 @@ class StochSSWorkflow(StochSSBase):
             file = self.get_file(path=path)
             error = f"The model file {file} could not be found.  "
             error += "To edit the model you will need to extract the model from the "
-            error += "job or open the job and update the path to the model."
+            error += "workflow or open the workflow and update the path to the model."
             resp['error'] = error
         return resp
 
