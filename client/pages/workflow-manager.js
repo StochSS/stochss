@@ -131,6 +131,10 @@ let WorkflowManager = PageView.extend({
           cb();
         }else{
           $(self.queryByHook("src-model")).css("display", "none");
+          let oldFormRdyState = !self.model.newFormat && self.model.activeJob.status === "ready";
+          if(oldFormRdyState || self.model.newFormat) {
+            self.renderSettingsView();
+          }
         }
       }
     });
