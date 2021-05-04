@@ -59,6 +59,12 @@ class JsonFileAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         file_objs = {"ipynb":StochSSNotebook, "mdl":StochSSModel, "smdl":StochSSSpatialModel}
         ext = path.split(".").pop()
+        if ext == "ipynb":
+            log.info("Getting notebook data for download")
+        elif purpose == "None":
+            log.info("Getting model data for download")
+        else:
+            log.info("Loading model data")
         try:
             file = file_objs[ext](path=path)
             data = file.load()
@@ -130,6 +136,7 @@ class LoadDomainEditorAPIHandler(APIHandler):
             log.debug("Path to the domain file: %s", d_path)
         new = self.get_query_argument(name="new", default=False)
         log.debug("The domain is new: %s", new)
+        log.info("Loading the domain data")
         try:
             model = StochSSSpatialModel(path=path)
             domain = model.get_domain(path=d_path, new=new)
@@ -164,9 +171,11 @@ class LoadDomainAPIHandler(APIHandler):
             log.debug("Path to the domain file: %s", d_path)
         new = self.get_query_argument(name="new", default=False)
         log.debug("The domain is new: %s", new)
+        log.info("Generating the domain plot")
         try:
             model = StochSSSpatialModel(path=path)
             fig = json.loads(model.get_domain_plot(path=d_path, new=new))
+            log.info("Loading the domain plot")
             resp = {"fig":fig}
             log.debug("Response: %s", resp)
             self.write(resp)
@@ -267,16 +276,22 @@ class ImportMeshAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
+        log.info("Loading the mesh from %s", self.request.files['datafile'][0]['filename'])
         data = self.request.files['datafile'][0]['body'].decode()
         if "typefile" in self.request.files.keys():
+            log.info("Loading the particle types from %s",
+                     self.request.files['typefile'][0]['filename'])
             types = self.request.files['typefile'][0]['body'].decode().strip().split("\n")
         else:
             types = None
+        log.info("Loading particle data")
         particle_data = json.loads(self.request.body_arguments['particleData'][0].decode())
         try:
+            log.info("Generating new particles")
             resp = StochSSSpatialModel.get_particles_from_remote(mesh=data, data=particle_data,
                                                                  types=types)
             log.debug("Number of Particles: %s", len(resp['particles']))
+            log.info("Successfully created new particles")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -348,11 +363,14 @@ class Create3DDomainAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
+        log.info("Loading particle data")
         data = json.loads(self.request.body.decode())
         log.debug("Data used to create the domain: %s", data)
         try:
+            log.info("Generating new particles")
             resp = StochSSSpatialModel.get_particles_from_3d_domain(data=data)
             log.debug("Number of Particles: %s", len(resp['particles']))
+            log.info("Successfully created new particles")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -377,6 +395,7 @@ class GetParticlesTypesAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("Path to the file: %s", path)
         try:
+            log.info("Loading particle types from %s", path.split('/').pop())
             model = StochSSSpatialModel(path="")
             resp = model.get_types_from_file(path=path)
             log.debug("Number of Particles: %s", len(resp['types']))
