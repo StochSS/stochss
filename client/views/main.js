@@ -143,19 +143,23 @@ module.exports = View.extend({
     if(this.logBlock.length > 0) {
       let logBlock = this.logBlock.join("<br>");
       this.logBlock = [];
-      $("#user-logs").append("<p style='white-space:pre'>" + logBlock + "</p>")
+      $("#user-logs").append("<p class='mb-1' style='white-space:pre'>" + logBlock + "</p>")
+      return ""
     }
+    return "<br>"
   },
   addNewLogs: function (newLogs) {
     let self = this;
     let logList = newLogs.map(function (log) {
       if(log.includes("$ ")){
-        self.addNewLogBlock();
+        let head = self.addNewLogBlock();
         var newLog = self.formatLog(log);
-        $("#user-logs").append("<br>" + newLog);
+        $("#user-logs").append(head + newLog);
       }else{
         var newLog = log;
-        self.logBlock.push(newLog);
+        if(newLog.trim()) {
+          self.logBlock.push(newLog);
+        }
       }
       self.logs.push(newLog);
     });
