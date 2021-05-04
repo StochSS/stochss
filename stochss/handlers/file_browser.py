@@ -148,14 +148,15 @@ class MoveFileAPIHandler(APIHandler):
         dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path: %s", dst_path)
         try:
-            log.info("Moving %s to %s", src_path.split('/').pop(),
-                     os.path.dirname(dst_path).split('/').pop())
+            dst = os.path.dirname(dst_path).split('/').pop()
+            if not dst:
+                dst = "/"
+            log.info("Moving %s to %s", src_path.split('/').pop(), dst)
             is_dir = os.path.isdir(src_path)
             file_obj = StochSSFolder(path=src_path) if is_dir else StochSSFile(path=src_path)
             resp = file_obj.move(location=dst_path)
             file_obj.print_logs(log)
-            log.info("Successfully moved %s to %s", src_path.split('/').pop(),
-                     os.path.dirname(dst_path).split('/').pop())
+            log.info("Successfully moved %s to %s", src_path.split('/').pop(), dst)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -523,23 +524,23 @@ class UploadFileAPIHandler(APIHandler):
         log.debug("Type of file to be uploaded: %s", file_info['type'])
         log.debug("Path to the directory where the file will be uploaded: %s", file_info['path'])
         name = file_info['name'] if file_info['name'] else None
+        if file_info['path'].split('/').pop():
+            dst = file_info['path'].split('/').pop()
+        else:
+            dst = "/"
         if name is not None:
             if os.path.dirname(name):
                 dst = os.path.dirname(name).split('/').pop()
-            else:
-                dst = file_info['path'].split('/').pop()
             log.info("Uploading %s as %s to %s", file_data['filename'], name, dst)
             log.debug("Name with 'save as' path for the file: %s", name)
         else:
-            log.info("Uploading %s to %s", file_data['filename'],
-                     file_info['path'].split('/').pop())
+            log.info("Uploading %s to %s", file_data['filename'], dst)
             log.debug("No name given: %s", name)
         try:
             folder = StochSSFolder(path=file_info['path'])
             resp = folder.upload(file_type=file_info['type'], file=file_data['filename'],
                                  body=file_data['body'], new_name=name)
-            log.info("Successfully uploaded %s to %s", resp['file'],
-                     resp['dirname'].split('/').pop())
+            log.info("Successfully uploaded %s to %s", resp['file'], dst)
             log.debug("Response: %s", resp)
             self.write(json.dumps(resp))
         except StochSSAPIError as err:
