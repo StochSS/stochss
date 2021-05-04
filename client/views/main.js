@@ -126,9 +126,9 @@ module.exports = View.extend({
     var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/home"
     $(this.queryByHook("home-link")).prop('href', homePath);
     let self = this;
-    console.log(app.getBasePath(), typeof app.getBasePath())
     let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcomb to StochSS Live!";
     $("#user-logs").html(message)
+    this.logBlock = [];
     this.logs = [];
     this.getUserLogs();
     this.scrolled = false;
@@ -139,13 +139,27 @@ module.exports = View.extend({
     });
     return this;
   },
+  addNewLogBlock: function () {
+    if(this.logBlock.length > 0) {
+      let logBlock = this.logBlock.join("<br>");
+      this.logBlock = [];
+      $("#user-logs").append("<p style='white-space:pre'>" + logBlock + "</p>")
+    }
+  },
   addNewLogs: function (newLogs) {
     let self = this;
     let logList = newLogs.map(function (log) {
-      let newLog = log.includes("$ ") ? self.formatLog(log) : log;
+      if(log.includes("$ ")){
+        self.addNewLogBlock();
+        var newLog = self.formatLog(log);
+        $("#user-logs").append("<br>" + newLog);
+      }else{
+        var newLog = log;
+        self.logBlock.push(newLog);
+      }
       self.logs.push(newLog);
-      $("#user-logs").append("<br>" + newLog);
     });
+    this.addNewLogBlock();
   },
   collapseExpandLogs: function (e) {
     let logs = $("#user-logs");
