@@ -126,6 +126,9 @@ module.exports = View.extend({
     var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/home"
     $(this.queryByHook("home-link")).prop('href', homePath);
     let self = this;
+    console.log(app.getBasePath(), typeof app.getBasePath())
+    let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcomb to StochSS Live!";
+    $("#user-logs").html(message)
     this.logs = [];
     this.getUserLogs();
     this.scrolled = false;
@@ -139,12 +142,9 @@ module.exports = View.extend({
   addNewLogs: function (newLogs) {
     let self = this;
     let logList = newLogs.map(function (log) {
-      var newLog = log.includes("$ ") ? self.formatLog(log) : log;
-      if(self.logs.length > 0) {
-        newLog = "<br>" + newLog;
-      }
+      let newLog = log.includes("$ ") ? self.formatLog(log) : log;
       self.logs.push(newLog);
-      $("#user-logs").append(newLog);
+      $("#user-logs").append("<br>" + newLog);
     });
   },
   collapseExpandLogs: function (e) {
