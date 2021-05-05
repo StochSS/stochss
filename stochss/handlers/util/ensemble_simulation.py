@@ -116,19 +116,18 @@ class EnsembleSimulation(StochSSJob):
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot
+        if verbose:
+            self.log("info", "Running the ensemble simulation")
         if self.settings['simulationSettings']['isAutomatic']:
-            if verbose:
-                self.log("info", "Running an ensemble simulation with automatic solver")
             self.__update_timespan()
             is_ode = self.g_model.get_best_solver(precompile=False).name == "ODESolver"
             results = self.g_model.run(number_of_trajectories=1 if is_ode else 100)
         else:
-            if verbose:
-                self.log("info", "Running an ensemble simulation with manual solver")
             kwargs = self.__get_run_settings()
             self.__update_timespan()
             results = self.g_model.run(**kwargs)
         if verbose:
+            self.log("info", "The ensemble simulation has completed")
             self.log("info", "Storing the results as pickle and csv")
         self.__store_results(results=results)
         if verbose:
