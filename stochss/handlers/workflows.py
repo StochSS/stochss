@@ -173,7 +173,7 @@ class RunWorkflowAPIHandler(APIHandler):
         verbose = self.get_query_argument(name="verbose", default=False)
         try:
             script = "/stochss/stochss/handlers/util/scripts/start_job.py"
-            exec_cmd = [f"{script}", f"{path}", f"{wkfl_type}"]
+            exec_cmd = [f"{script}", f"{path}", f"{wkfl_type}", "-v"]
             if verbose:
                 exec_cmd.append("-v")
             log.debug("Exec command sent to the subprocess: %s", exec_cmd)
