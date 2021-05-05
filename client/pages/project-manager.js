@@ -45,7 +45,7 @@ let ProjectManager = PageView.extend({
   events: {
     'change [data-hook=annotation-text-container]' : 'updateAnnotation',
     'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
-    'click [data-hook=collapse-annotation-container]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText',
     'click [data-hook=new-model]' : 'handleNewModelClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadModelClick',
@@ -420,7 +420,10 @@ let ProjectManager = PageView.extend({
       $(this.queryByHook("collapse-annotation-container")).collapse('hide');
     }
     let endpoint = path.join(app.getApiPath(), "project/save-annotation")+"?path="+this.model.directory;
-    xhr({uri: endpoint, json: true, method: "post", data: {'annotation': this.model.annotation}});
+    let data = {'annotation': this.model.annotation};
+    xhr({uri: endpoint, json: true, method: "post", data: data}, function (err, response, body) {
+      console.log(body);
+    });
   },
   validateName(input) {
     var error = "";
