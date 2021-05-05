@@ -112,10 +112,11 @@ if __name__ == "__main__":
         job_handler, user_handler = setup_logger("logs.txt")
         wkfl.run(verbose=args.verbose)
     except Exception as error:
-        wkfl.print_logs(log)
         report_error(err=error)
     else:
         job_handler.close()
         user_handler.close()
         # update status to complete
         open('COMPLETE', 'w').close()
+    finally:
+        wkfl.print_logs(log)
