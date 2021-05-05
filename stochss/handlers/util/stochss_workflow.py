@@ -283,15 +283,20 @@ class StochSSWorkflow(StochSSBase):
         wkfl_type : str
             Type of workflow
         '''
+        self.log("info", f"Saving {self.get_file()}")
         self.save(new_settings=settings, mdl_path=mdl_path)
         if wkfl_type == "parameterSweep":
             self.__update_results_settings(settings=settings)
+        self.log("info", f"Successfully saved {self.get_file()}")
         if self.check_workflow_format(path=self.path):
+            self.log("info", f"Creating job{time_stamp} job")
             path = os.path.join(self.path, f"job{time_stamp}")
             data = {"mdl_path": mdl_path, "settings": settings, "type":wkfl_type}
             job = StochSSJob(path=path, new=True, data=data)
+            self.log("info", f"Successfully created {job.get_file()} job")
         else:
             job = StochSSJob(path=self.path)
+        self.log("info", f"Initializing {job.get_file()}")
         job.save(mdl_path=mdl_path, settings=settings, initialize=True)
         return job.path
 

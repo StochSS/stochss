@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
 import json
 import logging
 import subprocess
@@ -56,8 +57,10 @@ class NewWorkflowAPIHandler(APIHandler):
         wkfl_type = self.get_query_argument(name="type")
         log.debug("Type of the workflow: %s", wkfl_type)
         try:
+            log.info("Creating %s workflow", path.split('/').pop())
             wkfl = StochSSWorkflow(path=path, new=True, mdl_path=mdl_path, wkfl_type=wkfl_type)
             resp = {"path": wkfl.path}
+            log.info("Successfully created %s workflow", wkfl.get_file())
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -82,6 +85,7 @@ class LoadWorkflowAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("The path to the workflow/model: %s", path)
         try:
+            log.info("Loading workflow data")
             resp = StochSSWorkflow(path=path).load()
             log.debug("Response: %s", resp)
             self.write(resp)
@@ -99,15 +103,17 @@ class LoadWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the workflow: %s", path)
+        data = json.loads(self.request.body.decode())
+        log.debug("Workflow Data: %s", data)
+        log.debug("Path to the model: %s", data['model'])
         try:
-            path = self.get_query_argument(name="path")
-            log.debug("Path to the workflow: %s", path)
-            data = json.loads(self.request.body.decode())
-            log.debug("Workflow Data: %s", data)
-            log.debug("Path to the model: %s", data['model'])
             wkfl = StochSSWorkflow(path=path)
+            log.info("Saving %s", wkfl.get_file())
             resp = wkfl.save(new_settings=data['settings'], mdl_path=data['model'])
             log.debug("Response: %s", resp)
+            log.info("Successfully saved %s", wkfl.get_file())
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -136,6 +142,7 @@ class InitializeJobAPIHandler(APIHandler):
             wkfl = StochSSWorkflow(path=path)
             resp = wkfl.initialize_job(settings=data['settings'], mdl_path=data['mdl_path'],
                                        wkfl_type=data['type'], time_stamp=data['time_stamp'])
+            wkfl.print_logs(log)
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -171,7 +178,9 @@ class RunWorkflowAPIHandler(APIHandler):
                 exec_cmd.append("-v")
             log.debug("Exec command sent to the subprocess: %s", exec_cmd)
             log.debug('Sending the workflow run cmd')
-            subprocess.Popen(exec_cmd)
+            job = subprocess.Popen(exec_cmd)
+            with open(os.path.join(path, "RUNNING"), "w") as file:
+                file.write(f"Subprocess id: {job.pid}")
             log.debug('The workflow has started')
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -231,7 +240,9 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             wkfl = StochSSJob(path=path)
             if "plt_type" in body.keys():
                 fig = wkfl.get_plot_from_results(**body)
+                wkfl.print_logs(log)
             else:
+                log.info("Loading the plot...")
                 fig = wkfl.get_results_plot(**body)
             log.debug("Plot figure: %s", fig)
             self.write(fig)
@@ -265,10 +276,14 @@ class WorkflowNotebookHandler(APIHandler):
                 file_obj = StochSSSpatialModel(path=path)
             else:
                 file_obj = StochSSJob(path=path)
+            log.info("Loading data for %s", file_obj.get_file())
             kwargs = file_obj.get_notebook_data()
             if "type" in kwargs.keys():
                 wkfl_type = kwargs['type']
                 kwargs = kwargs['kwargs']
+                log.info("Converting %s to notebook", file_obj.get_file())
+            else:
+                log.info("Creating notebook workflow for %s", file_obj.get_file())
             log.debug("Type of workflow to be run: %s", wkfl_type)
             notebook = StochSSNotebook(**kwargs)
             notebooks = {"gillespy":notebook.create_es_notebook,
@@ -280,6 +295,7 @@ class WorkflowNotebookHandler(APIHandler):
             resp = notebooks[wkfl_type]()
             notebook.print_logs(log)
             log.debug("Response: %s", resp)
+            log.info("Successfully created the notebook for %s", file_obj.get_file())
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -337,6 +353,7 @@ class SaveAnnotationAPIHandler(APIHandler):
         info = json.loads(self.request.body.decode())
         log.debug("The annotation to be saved: %s", info['annotation'])
         try:
+            log.info("Saving annotation for %s", path.split('/').pop())
             if StochSSWorkflow.check_workflow_format(path=path):
                 wkfl = StochSSWorkflow(path=path)
                 wkfl.save_annotation(info['annotation'])
@@ -345,6 +362,7 @@ class SaveAnnotationAPIHandler(APIHandler):
                 wkfl.update_info(new_info=info)
                 wkfl.print_logs(log)
             resp = {"message":"The annotation was successfully saved", "data":info['annotation']}
+            log.info("Successfully saved the annotation")
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:

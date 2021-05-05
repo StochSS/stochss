@@ -337,8 +337,10 @@ class StochSSJob(StochSSBase):
         self.log("debug", f"Key identifying the plot to generate: {plt_type}")
         path = os.path.join(self.get_results_path(full=True), "results.p")
         try:
+            self.log("info", "Loading the results...")
             with open(path, "rb") as results_file:
                 result = pickle.load(results_file)[plt_key]
+            self.log("info", "Generating the plot...")
             if plt_type == "stddevran":
                 fig = result.plotplotly_std_dev_range(return_plotly_figure=True)
             else:
@@ -348,6 +350,7 @@ class StochSSJob(StochSSBase):
                     result = result.average_ensemble()
                 fig = result.plotplotly(return_plotly_figure=True)
             fig["config"] = {"responsive":True}
+            self.log("info", "Loading the plot...")
             fig = json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
             return self.get_results_plot(plt_key=None, plt_data=plt_data, fig=fig)
         except FileNotFoundError as err:
