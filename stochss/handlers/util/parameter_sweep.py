@@ -172,7 +172,7 @@ class ParameterSweep(StochSSJob):
         return kwargs
 
 
-    def run(self, verbose=False):
+    def run(self, verbose=True):
         '''
         Run a 1D or 2D parameter sweep job
 
@@ -184,12 +184,22 @@ class ParameterSweep(StochSSJob):
         kwargs = self.configure(verbose=verbose)
         if "param" in kwargs.keys():
             wkfl = ParameterSweep1D(**kwargs)
+            sim_type = "1D parameter sweep"
         elif len(kwargs['params']) > 2:
+            sim_type = "parameter scan"
             wkfl = ParameterScan(**kwargs)
         else:
+            sim_type = "2D parameter sweep"
             wkfl = ParameterSweep2D(**kwargs)
+        if verbose:
+            self.log("info", f"Running the {sim_type}")
         wkfl.run(verbose=verbose)
         self.__add_logs(wkfl)
+        if verbose:
+            self.log("info", f"The {sim_type} has completed")
+            self.log("info", "Storing the results as pickle and csv")
         self.__store_results(wkfl=wkfl)
         if wkfl.name != "ParameterScan":
+            if verbose:
+                self.log("info", "Storing the polts of the results")
             self.__store_plots(wkfl=wkfl)

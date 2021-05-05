@@ -65,8 +65,9 @@ class ParameterScan():
             tmp_mdl = self.__setup_model(variables=variables)
             result_key = self.__get_result_key(variables=variables)
             if verbose:
-                message = f'running {result_key.replace(":", "=").replace(",", ", ")}'
-                print(message)
+                message = '--> running simulation: '
+                message += f'{result_key.replace(":", "=").replace(",", ", ")}'
+                self.log("info", message)
             try:
                 tmp_result = tmp_mdl.run(**self.settings)
             except Exception as err:

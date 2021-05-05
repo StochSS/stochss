@@ -64,14 +64,14 @@ class ParameterSweep1D():
                 else:
                     m_data = [func_map[m_key](x[species]) for x in results]
                 if verbose:
-                    print(f'  {m_key} population {species}={m_data}')
+                    self.log("debug", f'  {m_key} population {species}={m_data}')
                 std = numpy.std(m_data)
                 for r_key in self.REDUCER_KEYS:
                     r_data = func_map[r_key](m_data)
                     self.results[species][m_key][r_key][index, 0] = r_data
                     self.results[species][m_key][r_key][index, 1] = std
                     if verbose:
-                        print(f'    {r_key} std of ensemble m:{r_data} s:{std}')
+                        self.log("debug", f'    {r_key} std of ensemble m:{r_data} s:{std}')
 
 
     def __feature_extraction(self, results, index, verbose=False):
@@ -85,7 +85,7 @@ class ParameterSweep1D():
                     data = func_map[key](spec_res)
                 self.results[species][key][index, 0] = data
                 if verbose:
-                    print(f'  {key} population {species}={data}')
+                    self.log("debug", f'  {key} population {species}={data}')
 
 
     def __setup_results(self):
@@ -193,7 +193,7 @@ class ParameterSweep1D():
                 tmp_mdl = copy.deepcopy(self.model)
                 tmp_mdl.listOfParameters[self.param['parameter']].set_expression(val)
             if verbose:
-                print(f"running {self.param['parameter']}={val}")
+                self.log("info", f"--> running simulation: {self.param['parameter']}={val}")
             try:
                 tmp_res = tmp_mdl.run(**self.settings)
             except Exception as err:

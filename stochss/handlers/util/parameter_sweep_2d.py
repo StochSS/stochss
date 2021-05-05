@@ -65,12 +65,12 @@ class ParameterSweep2D():
                 else:
                     m_data = [func_map[m_key](x[species]) for x in results]
                 if verbose:
-                    print(f'  {m_key} population {species}={m_data}')
+                    self.log("debug", f'  {m_key} population {species}={m_data}')
                 for r_key in self.REDUCER_KEYS:
                     r_data = func_map[r_key](m_data)
                     self.results[species][m_key][r_key][i_ndx, j_ndx] = r_data
                     if verbose:
-                        print(f'    {r_key} of ensemble = {r_data}')
+                        self.log("debug", f'    {r_key} of ensemble = {r_data}')
 
 
     def __feature_extraction(self, results, i_ndx, j_ndx, verbose=False):
@@ -84,7 +84,7 @@ class ParameterSweep2D():
                     data = func_map[key](spec_res)
                 self.results[species][key][i_ndx, j_ndx] = data
                 if verbose:
-                    print(f'  {key} population {species}={data}')
+                    self.log("debug", f'  {key} population {species}={data}')
 
 
     def __setup_results(self):
@@ -200,9 +200,9 @@ class ParameterSweep2D():
                     tmp_mdl.listOfParameters[self.params[0]['parameter']].set_expression(val1)
                     tmp_mdl.listOfParameters[self.params[1]['parameter']].set_expression(val2)
                 if verbose:
-                    message = f"running {self.params[0]['parameter']}={val1}, "
+                    message = f"--> running simulation: {self.params[0]['parameter']}={val1}, "
                     message += f"{self.params[1]['parameter']}={val2}"
-                    print(message)
+                    self.log("info", message)
                 try:
                     tmp_res = tmp_mdl.run(**self.settings)
                 except Exception as err:
