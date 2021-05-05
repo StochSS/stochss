@@ -276,6 +276,7 @@ class StochSSProject(StochSSBase):
             shutil.copytree(src, dst)
             if not dirname:
                 dirname = "/"
+            self.log("info", f"Successfully extracted {self.get_file(path=src)} to {dirname}")
             resp = f"The Workflow {self.get_file(path=src)} was exported to {dirname}"
             resp += f" in files as {self.get_file(path=dst)}"
             return resp

@@ -18,18 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import os
-# import ast
 import json
-# import shutil
 import logging
-
-# from shutil import copyfile, copytree, rmtree
 from tornado import web
 from notebook.base.handlers import APIHandler
-
-# from .util.rename import get_unique_file_name, get_file_name
-# from .util.workflow_status import get_status
-# from .util.generate_zip_file import download_zip
+# APIHandler documentation:
+# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
+# Note APIHandler.finish() sets Content-Type handler to 'application/json'
+# Use finish() for json, write() for text
 
 from .util import StochSSFolder, StochSSProject, StochSSModel, StochSSSpatialModel, \
                   StochSSAPIError, report_error
@@ -81,6 +77,7 @@ class LoadProjectAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the project directory: %s", path)
+        log.info("Loading project data")
         try:
             project = StochSSProject(path=path)
             s_project = project.load()
@@ -108,11 +105,13 @@ class NewProjectAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: %s", path)
+        log.info("Creating %s project", path.split('/').pop())
         try:
             project = StochSSProject(path=path, new=True)
             resp = {"message":f"Successfully created the project: {project.get_file()}",
                     "path":project.path}
             log.debug("Response: %s", resp)
+            log.info("Successfully created %s project", project.get_file())
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -189,7 +188,6 @@ class AddExistingModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("Path to the project: %s", path)
@@ -197,15 +195,17 @@ class AddExistingModelAPIHandler(APIHandler):
         log.debug("Path to the model: %s", mdl_path)
         try:
             project = StochSSProject(path=path)
+            log.info("Loading model data")
             model_class = StochSSModel if mdl_path.endswith(".mdl") else StochSSSpatialModel
             model = model_class(path=mdl_path)
+            log.info("Adding %s to %s", model.get_file(), project.get_file())
             resp = project.add_model(file=model.get_file(), model=model.load())
             project.print_logs(log)
+            log.info("Successfully added %s to %s", model.get_file(), project.get_file())
             log.debug("Response: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -230,6 +230,7 @@ class ExtractModelAPIHandler(APIHandler):
         log.debug("Destination path for the target model: %s", dst_path)
         try:
             src_model = StochSSModel(path=src_path)
+            log.info("Extracting %s", src_model.get_file())
             dst_model = StochSSModel(path=dst_path, new=True, model=src_model.load())
             dirname = dst_model.get_dir_name()
             if not dirname:
@@ -237,6 +238,7 @@ class ExtractModelAPIHandler(APIHandler):
             message = f"The Model {src_model.get_file()} was extracted to "
             message += f"{dirname} in files as {dst_model.get_file()}"
             log.debug("Response message: %s", message)
+            log.info("Successfully extracted %s to %s", src_model.get_file(), dirname)
             self.write(message)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -263,8 +265,10 @@ class ExtractWorkflowAPIHandler(APIHandler):
         dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path for the target model: %s", dst_path)
         try:
+            log.info("Extracting %s", src_path.split('/').pop())
             project = StochSSProject(path=os.path.dirname(os.path.dirname(src_path)))
             resp = project.extract_workflow(src=src_path, dst=dst_path)
+            project.print_logs(log)
             log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
@@ -290,9 +294,11 @@ class EmptyTrashAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("Path to the trash directory: %s", path)
         try:
+            log.info("Emptying the trash")
             folder = StochSSFolder(path=path)
             resp = folder.empty()
             log.debug("Response message: %s", resp)
+            log.info("Successfully emptied the trash")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -319,8 +325,10 @@ class ProjectMetaDataAPIHandler(APIHandler):
         data = json.loads(self.request.body.decode())
         log.debug("Meta-data to be saved: %s", data)
         try:
+            log.info("Saving metadata for %s", path.split('/').pop())
             project = StochSSProject(path=path)
             project.update_meta_data(data=data)
+            log.info("Successfully saved the metadata")
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
@@ -375,8 +383,10 @@ class UpdateAnnotationAPIHandler(APIHandler):
         data = json.loads(self.request.body.decode())['annotation'].strip()
         log.debug("Annotation to be saved: %s", data)
         try:
+            log.info("Saving the annotation for %s", path.split('/').pop())
             project = StochSSProject(path=path)
             project.update_annotation(annotation=data)
+            log.info("Successfully saved the annotation")
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
