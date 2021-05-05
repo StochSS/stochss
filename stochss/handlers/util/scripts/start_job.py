@@ -24,11 +24,17 @@ import logging
 import argparse
 import traceback
 
-from gillespy2.core import log
+from tornado.log import LogFormatter
+from gillespy2.core import log as gillespy2_log
 
+sys.path.append("/stochss/stochss/") # pylint: disable=wrong-import-position
 sys.path.append("/stochss/stochss/handlers/") # pylint: disable=wrong-import-position
 from util.ensemble_simulation import EnsembleSimulation
 from util.parameter_sweep import ParameterSweep
+from handlers.log import init_log
+
+init_log()
+log = logging.getLogger("stochss")
 
 def get_parsed_args():
     '''
@@ -58,7 +64,9 @@ def report_error(err):
     err : Exception Obj
         Error caught in the except block
     '''
-    log.error("Job errors: %s\n%s", err, traceback.format_exc())
+    message = "Job errors: %s\n%s", err, traceback.format_exc()
+    gillespy2_log.error(message)
+    log.error(message)
     open('ERROR', 'w').close()
 
 
@@ -73,27 +81,26 @@ def setup_logger(log_path):
     log_path : str
         Path to the jobs log file
     '''
-    formatter = log.handlers[0].formatter # gillespy2 log formatter
-    fh_is_needed = True
-    for handler in log.handlers:
+    formatter = gillespy2_log.handlers[0].formatter # gillespy2 log formatter
+    for handler in gillespy2_log.handlers:
         if isinstance(handler, logging.StreamHandler):
             # Reset the stream to stderr
             handler.stream = sys.stderr
             # Only log error and critical logs to console
             handler.setLevel(logging.ERROR)
-        elif isinstance(handler, logging.FileHandler):
-            # File Handler was already added to the log
-            fh_is_needed = False
-    # Add the file handler if it not in the log already
-    if fh_is_needed:
-        # initialize file handler
-        file_handler = logging.FileHandler(log_path)
-        # log warning, error, and critical logs to file
-        file_handler.setLevel(logging.WARNING)
-        # add gillespy2 log formatter
-        file_handler.setFormatter(formatter)
-        # add file handler to log
-        log.addHandler(file_handler)
+    # Add the file handler for job logs
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setLevel(logging.WARNING)
+    file_handler.setFormatter(formatter)
+    gillespy2_log.addHandler(file_handler)
+    # Add the file handler for user logs
+    handler = logging.FileHandler(".user-logs.txt")
+    fmt = '%(color)s%(asctime)s%(end_color)s$ %(message)s'
+    formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
+    gillespy2_log.addHandler(handler)
+    return file_handler, handler
 
 
 if __name__ == "__main__":
@@ -102,11 +109,13 @@ if __name__ == "__main__":
     try:
         os.chdir(args.path)
         wkfl = jobs[args.type](path=args.path)
-        setup_logger("logs.txt")
+        job_handler, user_handler = setup_logger("logs.txt")
         wkfl.run(verbose=args.verbose)
     except Exception as error:
         wkfl.print_logs(log)
         report_error(err=error)
     else:
+        job_handler.close()
+        user_handler.close()
         # update status to complete
         open('COMPLETE', 'w').close()
