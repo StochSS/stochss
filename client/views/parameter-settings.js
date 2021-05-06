@@ -96,7 +96,7 @@ module.exports = View.extend({
     }
     this.model.updateVariables(this.stochssModel.parameters);
     this.model.parameters.on("add remove", function () {
-      let disable = this.model.parameters.length >= 3 || this.model.parameters.length >= this.stochssModel.parameters.length
+      let disable = this.model.parameters.length >= 6 || this.model.parameters.length >= this.stochssModel.parameters.length
       $(this.queryByHook("add-ps-parameter")).prop("disabled", disable)
     }, this)
     this.renderSpeciesOfInterestView();
