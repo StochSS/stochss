@@ -181,113 +181,117 @@ section.page
 
         div.tab-pane(id="set-particle-types" data-hook="set-particle-types")
 
-          div.my-3
+          div.card.card-body
 
-            div.text-info(data-hook="type-location-message" style="display: none")
-              | There are multiple type files with that name, please select a location
+            div.my-3
 
-            div.inline.mr-3
+              div.text-info(data-hook="type-location-message" style="display: none")
+                | There are multiple type files with that name, please select a location
 
-              span.inline.mr-2(for="types-file-select") Select type description file:
+              div.inline.mr-3
 
-              div.inline(id="types-file-select" data-hook="types-file-select")
+                span.inline.mr-2(for="types-file-select") Select type description file:
 
-            div.inline(data-hook="type-location-container" style="display: none")
+                div.inline(id="types-file-select" data-hook="types-file-select")
 
-              span.inlinemr-2(for="types-file-location-select") Location:
+              div.inline(data-hook="type-location-container" style="display: none")
 
-              div.inline(id="types-file-location-select" data-hook="types-file-location-select")
+                span.inlinemr-2(for="types-file-location-select") Location:
 
-          div.inline
+                div.inline(id="types-file-location-select" data-hook="types-file-location-select")
 
-            button.btn.btn-outline-primary.box-shadow(data-hook="set-particle-types-btn" disabled) Set Types
+            div.inline
 
-          div.mdl-edit-btn.saving-status.inline(data-hook="st-in-progress")
+              button.btn.btn-outline-primary.box-shadow(data-hook="set-particle-types-btn" disabled) Set Types
 
-            div.spinner-grow.mr-2
+            div.mdl-edit-btn.saving-status.inline(data-hook="st-in-progress")
 
-            span(data-hook="st-action-in-progress")
+              div.spinner-grow.mr-2
 
-          div.mdl-edit-btn.saved-status.inline(data-hook="st-complete")
+              span(data-hook="st-action-in-progress")
 
-            span(data-hook="st-action-complete")
+            div.mdl-edit-btn.saved-status.inline(data-hook="st-complete")
 
-          div.mdl-edit-btn.save-error-status(data-hook="st-error")
+              span(data-hook="st-action-complete")
 
-            span(data-hook="st-action-error")
+            div.mdl-edit-btn.save-error-status(data-hook="st-error")
+
+              span(data-hook="st-action-error")
 
         div.tab-pane(id="import-particles")
 
-          div.my-3
+          div.card.card-body
 
-            span.inline.mr-2(for="meshfile") Please specify a mesh to import: 
+            div.my-3
 
-            input(id="meshfile" type="file" name="meshfile" size="30" accept=".xml" required)
+              span.inline.mr-2(for="meshfile") Please specify a mesh to import: 
 
-          div.mb-3
+              input(id="meshfile" type="file" name="meshfile" size="30" accept=".xml" required)
 
-            span.inline.mr-2(for=typefile) Type descriptions (optional):
+            div.mb-3
 
-            input(id="typefile" type="file" name="typefile" size="30" accept=".txt")
+              span.inline.mr-2(for=typefile) Type descriptions (optional):
 
-          div
+              input(id="typefile" type="file" name="typefile" size="30" accept=".txt")
 
-            h4.inline Advanced
+            div
 
-            button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#mesh-advanced", data-hook="collapse-mesh-advanced") +
+              h4.inline Advanced
 
-          div.collapse(id="mesh-advanced" data-hook="mesh-advanced-container")
+              button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#mesh-advanced", data-hook="collapse-mesh-advanced") +
 
-            div(data-hook="mesh-type-select")
+            div.collapse(id="mesh-advanced" data-hook="mesh-advanced-container")
 
-            h5 Type Defaults
+              div(data-hook="mesh-type-select")
 
-            table.table
-              thead
-                tr
-                  th(scope="col") Mass
-                  th(scope="col") Volume
-                  th(scope="col") Viscosity
-                  th(scope="col") Fixed
+              h5 Type Defaults
 
-              tbody
-                tr
-                  td: div(data-hook="mesh-mass")
-                  td: div(data-hook="mesh-volume")
-                  td: div(data-hook="mesh-nu")
-                  td: input(type="checkbox" data-hook="mesh-fixed" disabled)
+              table.table
+                thead
+                  tr
+                    th(scope="col") Mass
+                    th(scope="col") Volume
+                    th(scope="col") Viscosity
+                    th(scope="col") Fixed
 
-            h5 Particle Transformations
+                tbody
+                  tr
+                    td: div(data-hook="mesh-mass")
+                    td: div(data-hook="mesh-volume")
+                    td: div(data-hook="mesh-nu")
+                    td: input(type="checkbox" data-hook="mesh-fixed" disabled)
 
-            table.table
-              thead
-                tr
-                  th(scope="col") X-Axis
-                  th(scope="col") Y-Axis
-                  th(scope="col") Z-Axis
-              tbody
-                tr
-                  td: div(data-hook="mesh-x-trans")
-                  td: div(data-hook="mesh-y-trans")
-                  td: div(data-hook="mesh-z-trans")
+              h5 Particle Transformations
 
-          div.inline
+              table.table
+                thead
+                  tr
+                    th(scope="col") X-Axis
+                    th(scope="col") Y-Axis
+                    th(scope="col") Z-Axis
+                tbody
+                  tr
+                    td: div(data-hook="mesh-x-trans")
+                    td: div(data-hook="mesh-y-trans")
+                    td: div(data-hook="mesh-z-trans")
 
-            button.btn.btn-outline-primary.box-shadow(data-hook="import-particles-btn" disabled) Import Mesh
+            div.inline
 
-          div.mdl-edit-btn.saving-status.inline(data-hook="im-in-progress")
+              button.btn.btn-outline-primary.box-shadow(data-hook="import-particles-btn" disabled) Import Mesh
 
-            div.spinner-grow.mr-2
+            div.mdl-edit-btn.saving-status.inline(data-hook="im-in-progress")
 
-            span(data-hook="im-action-in-progress")
+              div.spinner-grow.mr-2
 
-          div.mdl-edit-btn.saved-status.inline(data-hook="im-complete")
+              span(data-hook="im-action-in-progress")
 
-            span(data-hook="im-action-complete")
+            div.mdl-edit-btn.saved-status.inline(data-hook="im-complete")
 
-          div.mdl-edit-btn.save-error-status(data-hook="im-error")
+              span(data-hook="im-action-complete")
 
-            span(data-hook="im-action-error")
+            div.mdl-edit-btn.save-error-status(data-hook="im-error")
+
+              span(data-hook="im-action-error")
 
   div.card.card-body
 
@@ -295,9 +299,9 @@ section.page
 
       h3.inline Domain
     
-      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#domain-plot", data-hook="collapse-domain-plot") -
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#domain-plot-container", data-hook="collapse-domain-plot") -
 
-    div.collapse.show(id="domain-plot" data-hook="domain-plot-container")
+    div.collapse.show(id="domain-plot-container" data-hook="domain-plot-container")
 
       div(id="domain-plot" data-hook="domain-plot" style="height: 800px")
 
