@@ -20,13 +20,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import pickle
-import plotly
+import logging
 
 import numpy
+import plotly
 from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver, ODESolver
 
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSAPIError
+
+log = logging.getLogger("stochss")
 
 class EnsembleSimulation(StochSSJob):
     '''
@@ -52,7 +55,7 @@ class EnsembleSimulation(StochSSJob):
                 self.settings = self.load_settings()
                 self.g_model, self.s_model = self.load_models()
             except StochSSAPIError as err:
-                self.log("error", str(err))
+                log.error(str(err))
 
 
     def __get_run_settings(self):
@@ -107,17 +110,17 @@ class EnsembleSimulation(StochSSJob):
         '''
         if preview:
             if verbose:
-                self.log("info", f"Running {self.g_model.name} preview simulation")
+                log.info("Running %s preview simulation", self.g_model.name)
             results = self.g_model.run(timeout=5)
             if verbose:
-                self.log("info", f"{self.g_model.name} preview simulation has completed")
-                self.log("info", f"Generate result plot for {self.g_model.name} preview")
+                log.info("%s preview simulation has completed", self.g_model.name)
+                log.info("Generate result plot for %s preview", self.g_model.name)
             plot = results.plotplotly(return_plotly_figure=True)
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot
         if verbose:
-            self.log("info", "Running the ensemble simulation")
+            log.info("Running the ensemble simulation")
         if self.settings['simulationSettings']['isAutomatic']:
             self.__update_timespan()
             is_ode = self.g_model.get_best_solver(precompile=False).name == "ODESolver"
@@ -127,10 +130,10 @@ class EnsembleSimulation(StochSSJob):
             self.__update_timespan()
             results = self.g_model.run(**kwargs)
         if verbose:
-            self.log("info", "The ensemble simulation has completed")
-            self.log("info", "Storing the results as pickle and csv")
+            log.info("The ensemble simulation has completed")
+            log.info("Storing the results as pickle and csv")
         self.__store_results(results=results)
         if verbose:
-            self.log("info", "Storing the polts of the results")
+            log.info("Storing the polts of the results")
         self.__plot_results(results=results)
         return None

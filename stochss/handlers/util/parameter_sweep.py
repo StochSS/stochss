@@ -20,6 +20,7 @@ import os
 import csv
 import json
 import pickle
+import logging
 import itertools
 
 import numpy
@@ -31,6 +32,8 @@ from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
 from .parameter_scan import ParameterScan
+
+log = logging.getLogger("stochss")
 
 class NumpyEncoder(json.JSONEncoder):
     '''
@@ -67,17 +70,10 @@ class ParameterSweep(StochSSJob):
         self.settings = self.load_settings()
 
 
-    def __add_logs(self, wkfl):
-        self.logs.extend(wkfl.logs)
-        wkfl.logs = []
-
-
-    def __get_run_settings(self, verbose=False):
+    def __get_run_settings(self):
         solver_map = {"SSA":VariableSSACSolver(model=self.g_model), "Tau-Leaping":TauLeapingSolver,
                       "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
         if self.settings['simulationSettings']['isAutomatic']:
-            if verbose:
-                self.log("info", "Running a parameter sweep with automatic solver")
             solver_name = self.g_model.get_best_solver().name
             kwargs = {"number_of_trajectories":1 if solver_name == "ODESolver" else 20}
             if solver_name != "VariableSSACSolver":
@@ -105,10 +101,10 @@ class ParameterSweep(StochSSJob):
             with open(path, "w", newline="") as csv_file:
                 csv_writer = csv.writer(csv_file)
                 wkfl.to_csv(keys=key, csv_writer=csv_writer)
-        self.__add_logs(wkfl)
 
 
-    def __store_plots(self, wkfl):
+    @classmethod
+    def __store_plots(cls, wkfl):
         mappers = ["min", "max", "avg", "var", "final"]
         if "ODE" not in wkfl.settings['solver'].name and \
                             wkfl.settings['number_of_trajectories'] > 1:
@@ -132,7 +128,6 @@ class ParameterSweep(StochSSJob):
         with open('results/plots.json', 'w') as plots_file:
             json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
                       indent=4, sort_keys=True)
-        self.__add_logs(wkfl)
 
 
     def __store_results(self, wkfl):
@@ -146,14 +141,14 @@ class ParameterSweep(StochSSJob):
             self.__store_csv_results(wkfl)
 
 
-    def configure(self, verbose=False):
+    def configure(self):
         '''
         Get the configuration arguments for 1D or 2D parameter sweep
 
         Attributes
         ----------
         '''
-        run_settings = self.__get_run_settings(verbose=verbose)
+        run_settings = self.__get_run_settings()
         if "timespanSettings" in self.settings.keys():
             keys = self.settings['timespanSettings'].keys()
             if "endSim" in keys and "timeStep" in keys:
@@ -181,7 +176,7 @@ class ParameterSweep(StochSSJob):
         verbose : bool
             Indicates whether or not to print debug statements
         '''
-        kwargs = self.configure(verbose=verbose)
+        kwargs = self.configure()
         if "param" in kwargs.keys():
             wkfl = ParameterSweep1D(**kwargs)
             sim_type = "1D parameter sweep"
@@ -192,14 +187,13 @@ class ParameterSweep(StochSSJob):
             sim_type = "2D parameter sweep"
             wkfl = ParameterSweep2D(**kwargs)
         if verbose:
-            self.log("info", f"Running the {sim_type}")
-        wkfl.run(verbose=verbose)
-        self.__add_logs(wkfl)
+            log.info("Running the %s", sim_type)
+        wkfl.run(job_id=self.get_file(), verbose=verbose)
         if verbose:
-            self.log("info", f"The {sim_type} has completed")
-            self.log("info", "Storing the results as pickle and csv")
+            log.info("The %s has completed", sim_type)
+            log.info("Storing the results as pickle and csv")
         self.__store_results(wkfl=wkfl)
         if wkfl.name != "ParameterScan":
             if verbose:
-                self.log("info", "Storing the polts of the results")
+                log.info("Storing the polts of the results")
             self.__store_plots(wkfl=wkfl)

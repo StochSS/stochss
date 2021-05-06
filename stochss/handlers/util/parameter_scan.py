@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import copy
+import logging
+import traceback
+
+log = logging.getLogger("stochss")
 
 class ParameterScan():
     '''
@@ -42,7 +46,6 @@ class ParameterScan():
         self.model = model
         self.settings = settings
         self.params = params
-        self.logs = []
         self.ts_results = {}
 
 
@@ -54,24 +57,24 @@ class ParameterScan():
         return ",".join(elements)
 
 
-    def __run(self, index, variables, verbose):
+    def __run(self, job_id, index, variables, verbose):
         if index < len(self.params):
             param = self.params[index]
             index += 1
             for val in param['range']:
                 variables[param['parameter']] = val
-                self.__run(index=index, variables=variables, verbose=verbose)
+                self.__run(job_id=job_id, index=index, variables=variables, verbose=verbose)
         else:
             tmp_mdl = self.__setup_model(variables=variables)
             result_key = self.__get_result_key(variables=variables)
             if verbose:
-                message = '--> running simulation: '
+                message = f'{job_id} --> running: '
                 message += f'{result_key.replace(":", "=").replace(",", ", ")}'
-                self.log("info", message)
+                log.info(message)
             try:
                 tmp_result = tmp_mdl.run(**self.settings)
             except Exception as err:
-                self.log("error", str(err))
+                log.error("%s\n%s", err, traceback.format_exc())
             else:
                 self.ts_results[result_key] = tmp_result
 
@@ -87,21 +90,7 @@ class ParameterScan():
         return tmp_mdl
 
 
-    def log(self, level, message):
-        '''
-        Add a log to the objects internal logs
-
-        Attribute
-        ---------
-        level : str
-            Level of the log
-        message : string
-            Message to be logged
-        '''
-        self.logs.append({"level":level, "message":message})
-
-
-    def run(self, verbose=False):
+    def run(self, job_id, verbose=False):
         '''
         Run a parameter scan job
 
@@ -110,4 +99,4 @@ class ParameterScan():
         '''
         index = 0
         variables = {}
-        self.__run(index=index, variables=variables, verbose=verbose)
+        self.__run(job_id=job_id, index=index, variables=variables, verbose=verbose)

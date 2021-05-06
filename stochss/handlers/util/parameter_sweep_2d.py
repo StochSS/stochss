@@ -17,11 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import copy
+import logging
+import traceback
 
 import numpy
 import plotly
 import matplotlib
 import mpl_toolkits
+
+log = logging.getLogger("stochss")
 
 class ParameterSweep2D():
     '''
@@ -51,7 +55,6 @@ class ParameterSweep2D():
         self.settings = settings
         self.list_of_species = model.get_all_species().keys()
         self.params = params
-        self.logs = []
         self.ts_results = {}
         self.results = {}
 
@@ -65,12 +68,12 @@ class ParameterSweep2D():
                 else:
                     m_data = [func_map[m_key](x[species]) for x in results]
                 if verbose:
-                    self.log("debug", f'  {m_key} population {species}={m_data}')
+                    log.debug('  %s population %s=%s', m_key, species, m_data)
                 for r_key in self.REDUCER_KEYS:
                     r_data = func_map[r_key](m_data)
                     self.results[species][m_key][r_key][i_ndx, j_ndx] = r_data
                     if verbose:
-                        self.log("debug", f'    {r_key} of ensemble = {r_data}')
+                        log.debug('    %s of ensemble = %s', r_key, r_data)
 
 
     def __feature_extraction(self, results, i_ndx, j_ndx, verbose=False):
@@ -84,7 +87,7 @@ class ParameterSweep2D():
                     data = func_map[key](spec_res)
                 self.results[species][key][i_ndx, j_ndx] = data
                 if verbose:
-                    self.log("debug", f'  {key} population {species}={data}')
+                    log.debug('  %s population %s=%s', key, species, data)
 
 
     def __setup_results(self):
@@ -138,20 +141,6 @@ class ParameterSweep2D():
         return trace_list
 
 
-    def log(self, level, message):
-        '''
-        Add a log to the objects internal logs
-
-        Attribute
-        ---------
-        level : str
-            Level of the log
-        message : string
-            Message to be logged
-        '''
-        self.logs.append({"level":level, "message":message})
-
-
     def plot(self, keys=None):
         '''
         Plot the results based on the keys using matplotlib
@@ -180,7 +169,7 @@ class ParameterSweep2D():
         _ = matplotlib.pyplot.colorbar(ax=axis, cax=cax)
 
 
-    def run(self, verbose=False):
+    def run(self, job_id, verbose=False):
         '''
         Run a 2D parameter sweep job
 
@@ -200,13 +189,13 @@ class ParameterSweep2D():
                     tmp_mdl.listOfParameters[self.params[0]['parameter']].set_expression(val1)
                     tmp_mdl.listOfParameters[self.params[1]['parameter']].set_expression(val2)
                 if verbose:
-                    message = f"--> running simulation: {self.params[0]['parameter']}={val1}, "
+                    message = f"{job_id} --> running: {self.params[0]['parameter']}={val1}, "
                     message += f"{self.params[1]['parameter']}={val2}"
-                    self.log("info", message)
+                    log.info(message)
                 try:
                     tmp_res = tmp_mdl.run(**self.settings)
                 except Exception as err:
-                    self.log("error", str(err))
+                    log.error("%s\n%s", err, traceback.format_exc())
                 else:
                     key = f"{self.params[0]['parameter']}:{val1},"
                     key += f"{self.params[1]['parameter']}:{val2}"

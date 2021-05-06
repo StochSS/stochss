@@ -89,7 +89,6 @@ def run_preview(job):
     response = {"timeout": False}
     try:
         plot = job.run(preview=True)
-        job.print_logs(log)
         response["results"] = plot
     except ModelError as error:
         response['errors'] = f"{error}"

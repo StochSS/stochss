@@ -118,5 +118,3 @@ if __name__ == "__main__":
         user_handler.close()
         # update status to complete
         open('COMPLETE', 'w').close()
-    finally:
-        wkfl.print_logs(log)
