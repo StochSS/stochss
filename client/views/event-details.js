@@ -82,11 +82,7 @@ module.exports = View.extend({
     this.eventAssignmentsView = new EventAssignment({
       collection: this.model.eventAssignments,
     });
-    this.registerRenderSubview(this.eventAssignmentsView, 'event-assignments');
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
+    app.registerRenderSubview(this, this.eventAssignmentsView, 'event-assignments');
   },
   openAdvancedSection: function () {
     if(this.model.advanced_error && !$(this.queryByHook("advanced-event-section")).hasClass('show')) {

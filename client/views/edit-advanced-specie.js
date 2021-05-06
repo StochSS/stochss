@@ -16,8 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var tests = require('./tests');
 var $ = require('jquery');
+//support files
+let app = require('../app');
+var tests = require('./tests');
 //views
 var View = require('ampersand-view');
 var SelectView = require('ampersand-select-view');
@@ -46,7 +48,7 @@ module.exports = View.extend({
       options: ['Concentration','Population','Hybrid Concentration/Population'],
       value: optionDict[this.model.mode],
     });
-    this.registerRenderSubview(modeSelectView, "specie-mode")
+    app.registerRenderSubview(this, modeSelectView, "specie-mode")
     if(this.model.isSwitchTol){
       $(this.queryByHook('switching-tol')).prop('checked', true);
     }else{
@@ -58,10 +60,6 @@ module.exports = View.extend({
   update: function () {
   },
   updateValid: function () {
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
   },
   setSpeciesMode: function (e) {
     var value = e.target.selectedOptions.item(0).text

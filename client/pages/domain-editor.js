@@ -497,7 +497,7 @@ let DomainEditor = PageView.extend({
       parent: this,
       model: this.domain
     });
-    this.registerRenderSubview(this.create3DDomainView, "add-3d-domain");
+    app.registerRenderSubview(this, this.create3DDomainView, "add-3d-domain");
   },
   renderDomainLimitations: function () {
     if(this.xLimMinView) {
@@ -511,54 +511,54 @@ let DomainEditor = PageView.extend({
     this.xLimMinView = new InputView({parent: this, required: true,
                                      name: 'x-lim-min', valueType: 'number',
                                      value: this.domain.x_lim[0] || 0});
-    this.registerRenderSubview(this.xLimMinView, "x_lim-min");
+    app.registerRenderSubview(this, this.xLimMinView, "x_lim-min");
     this.yLimMinView = new InputView({parent: this, required: true,
                                      name: 'y-lim-min', valueType: 'number',
                                      value: this.domain.y_lim[0] || 0});
-    this.registerRenderSubview(this.yLimMinView, "y_lim-min");
+    app.registerRenderSubview(this, this.yLimMinView, "y_lim-min");
     this.zLimMinView = new InputView({parent: this, required: true,
                                      name: 'z-lim-min', valueType: 'number',
                                      value: this.domain.z_lim[0] || 0});
-    this.registerRenderSubview(this.zLimMinView, "z_lim-min");
+    app.registerRenderSubview(this, this.zLimMinView, "z_lim-min");
     this.xLimMaxView = new InputView({parent: this, required: true,
                                      name: 'x-lim-max', valueType: 'number',
                                      value: this.domain.x_lim[1] || 0});
-    this.registerRenderSubview(this.xLimMaxView, "x_lim-max");
+    app.registerRenderSubview(this, this.xLimMaxView, "x_lim-max");
     this.yLimMaxView = new InputView({parent: this, required: true,
                                      name: 'y-lim-max', valueType: 'number',
                                      value: this.domain.y_lim[1] || 0});
-    this.registerRenderSubview(this.yLimMaxView, "y_lim-max");
+    app.registerRenderSubview(this, this.yLimMaxView, "y_lim-max");
     this.zLimMaxView = new InputView({parent: this, required: true,
                                      name: 'z-lim-max', valueType: 'number',
                                      value: this.domain.z_lim[1] || 0});
-    this.registerRenderSubview(this.zLimMaxView, "z_lim-max");
+    app.registerRenderSubview(this, this.zLimMaxView, "z_lim-max");
   },
   renderDomainProperties: function () {
     $(this.queryByHook("static-domain")).prop("checked", this.domain.static);
     let densityView = new InputView({parent: this, required: true,
                                      name: 'density', valueType: 'number',
                                      value: this.domain.rho_0 || 1});
-    this.registerRenderSubview(densityView, "density");
+    app.registerRenderSubview(this, densityView, "density");
     let gravityXView = new InputView({parent: this, required: true,
                                      name: 'gravity-x', valueType: 'number',
                                      value: this.domain.gravity[0], label: "X:  "});
-    this.registerRenderSubview(gravityXView, "gravity-x");
+    app.registerRenderSubview(this, gravityXView, "gravity-x");
     let gravityYView = new InputView({parent: this, required: true,
                                      name: 'gravity-y', valueType: 'number',
                                      value: this.domain.gravity[1], label: "Y:  "});
-    this.registerRenderSubview(gravityYView, "gravity-y");
+    app.registerRenderSubview(this, gravityYView, "gravity-y");
     let gravityZView = new InputView({parent: this, required: true,
                                      name: 'gravity-z', valueType: 'number',
                                      value: this.domain.gravity[2], label: "Z:  "});
-    this.registerRenderSubview(gravityZView, "gravity-z");
+    app.registerRenderSubview(this, gravityZView, "gravity-z");
     let pressureView = new InputView({parent: this, required: true,
                                       name: 'pressure', valueType: 'number',
                                       value: this.domain.p_0 || 0});
-    this.registerRenderSubview(pressureView, "pressure");
+    app.registerRenderSubview(this, pressureView, "pressure");
     let speedView = new InputView({parent: this, required: true,
                                    name: 'speed', valueType: 'number', 
                                    value: this.domain.c_0 || 0});
-    this.registerRenderSubview(speedView, "speed");
+    app.registerRenderSubview(this, speedView, "speed");
   },
   renderDomainTypes: function () {
     if(this.domainTypesView) {
@@ -605,15 +605,15 @@ let DomainEditor = PageView.extend({
     this.massView = new InputView({parent: this, required: true,
                                   name: 'mass', valueType: 'number',
                                   value: type.mass});
-    this.registerRenderSubview(this.massView, "td-mass");
+    app.registerRenderSubview(this, this.massView, "td-mass");
     this.volView = new InputView({parent: this, required: true,
                                  name: 'volume', valueType: 'number',
                                  value: type.volume});
-    this.registerRenderSubview(this.volView, "td-vol");
+    app.registerRenderSubview(this, this.volView, "td-vol");
     this.nuView = new InputView({parent: this, required: true,
                                 name: 'viscosity', valueType: 'number',
                                 value: type.nu});
-    this.registerRenderSubview(this.nuView, "td-nu");
+    app.registerRenderSubview(this, this.nuView, "td-nu");
     $(this.queryByHook("td-fixed")).prop("checked", type.fixed);
     $(this.queryByHook("edit-defaults")).css("display", "block");
   },
@@ -630,21 +630,21 @@ let DomainEditor = PageView.extend({
       model: particle,
       newParticle: false,
     });
-    this.registerRenderSubview(this.editParticleView, "edit-particle");
+    app.registerRenderSubview(this, this.editParticleView, "edit-particle");
   },
   renderMeshTransformations: function () {
     let xtrans = new InputView({parent: this, required: true,
                                 name: 'x-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(xtrans, "mesh-x-trans");
+    app.registerRenderSubview(this, xtrans, "mesh-x-trans");
     let ytrans = new InputView({parent: this, required: true,
                                 name: 'y-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(ytrans, "mesh-y-trans");
+    app.registerRenderSubview(this, ytrans, "mesh-y-trans");
     let ztrans = new InputView({parent: this, required: true,
                                 name: 'z-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(ztrans, "mesh-z-trans");
+    app.registerRenderSubview(this, ztrans, "mesh-z-trans");
   },
   renderMeshTypeDefaults: function (id) {
     let type = this.domain.types.get(id, "typeID")
@@ -662,11 +662,7 @@ let DomainEditor = PageView.extend({
       model: particle,
       newParticle: true,
     });
-    this.registerRenderSubview(this.newParticleView, "new-particle");
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    return this.renderSubview(view, this.queryByHook(hook));
+    app.registerRenderSubview(this, this.newParticleView, "new-particle");
   },
   renderSubviews: function () {
     let breadData = this.getBreadcrumbData();
@@ -733,7 +729,7 @@ let DomainEditor = PageView.extend({
         options: body.files,
         unselectedText: "-- Select Type File --",
       });
-      self.registerRenderSubview(typesSelectView, "types-file-select")
+      app.registerRenderSubview(self, typesSelectView, "types-file-select")
     });
   },
   renderTypesLocationSelect: function (options) {
@@ -748,7 +744,7 @@ let DomainEditor = PageView.extend({
       options: options,
       unselectedText: "-- Select Location --"
     });
-    this.registerRenderSubview(this.typesLocationSelectView, "types-file-location-select")
+    app.registerRenderSubview(this, this.typesLocationSelectView, "types-file-location-select")
   },
   renderTypeSelectView: function () {
     if(this.typeView) {
@@ -764,7 +760,7 @@ let DomainEditor = PageView.extend({
       options: this.domain.types,
       value: this.domain.types.get(0, "typeID")
     });
-    this.registerRenderSubview(this.typeView, "mesh-type-select")
+    app.registerRenderSubview(this, this.typeView, "mesh-type-select")
   },
   saveDomain: function (name=null) {
     let domain = this.domain.toJSON();

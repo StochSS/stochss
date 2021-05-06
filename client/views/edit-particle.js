@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var $ = require('jquery');
 var _ = require('underscore');
 //support files
+let app = require('../app');
 var tests = require('../views/tests');
 //views
 var View = require('ampersand-view');
@@ -130,10 +131,6 @@ module.exports = View.extend({
     $(this.queryByHook("save-particle")).prop('disabled', true);
     $(this.queryByHook("remove-particle")).prop('disabled', true);
   },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    return this.renderSubview(view, this.queryByHook(hook));
-  },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     this.type = this.parent.domain.types.get(this.model.type, "typeID");
@@ -154,15 +151,15 @@ module.exports = View.extend({
     var xCoord = new InputView({parent: this, required: true,
                                 name: 'x-coord', valueType: 'number',
                                 value: this.model.point[0] || 0});
-    this.registerRenderSubview(xCoord, "x-coord-" + this.viewIndex);
+    app.registerRenderSubview(this, xCoord, "x-coord-" + this.viewIndex);
     var yCoord = new InputView({parent: this, required: true,
                                 name: 'y-coord', valueType: 'number',
                                 value: this.model.point[1] || 0});
-    this.registerRenderSubview(yCoord, "y-coord-" + this.viewIndex);
+    app.registerRenderSubview(this, yCoord, "y-coord-" + this.viewIndex);
     var zCoord = new InputView({parent: this, required: true,
                                 name: 'z-coord', valueType: 'number',
                                 value: this.model.point[2] || 0});
-    this.registerRenderSubview(zCoord, "z-coord-" + this.viewIndex);
+    app.registerRenderSubview(this, zCoord, "z-coord-" + this.viewIndex);
   },
   renderProperties: function () {
     if(this.massView) {
@@ -177,15 +174,15 @@ module.exports = View.extend({
     this.massView = new InputView({parent: this, required: true,
                                   name: 'mass', valueType: 'number',
                                   value: this.model.mass || this.type.mass});
-    this.registerRenderSubview(this.massView, "mass-" + this.viewIndex);
+    app.registerRenderSubview(this, this.massView, "mass-" + this.viewIndex);
     this.volView = new InputView({parent: this, required: true,
                                  name: 'volume', valueType: 'number',
                                  value: this.model.volume || this.type.volume});
-    this.registerRenderSubview(this.volView, "volume-" + this.viewIndex);
+    app.registerRenderSubview(this, this.volView, "volume-" + this.viewIndex);
     this.nuView = new InputView({parent: this, required: true,
                                 name: 'viscosity', valueType: 'number',
                                 value: this.model.nu || this.type.nu});
-    this.registerRenderSubview(this.nuView, "nu-" + this.viewIndex);
+    app.registerRenderSubview(this, this.nuView, "nu-" + this.viewIndex);
     let fixed = this.model.fixed || this.type.fixed;
     $(this.queryByHook("fixed-" + this.viewIndex)).prop("checked", fixed);
   },
@@ -200,7 +197,7 @@ module.exports = View.extend({
       options: this.parent.domain.types,
       value: this.parent.domain.types.get(this.model.type, "typeID")
     });
-    this.registerRenderSubview(typeView, "type-" + this.viewIndex)
+    app.registerRenderSubview(this, typeView, "type-" + this.viewIndex)
   },
   startAction: function (action) {
     $(this.queryByHook("ep-complete")).css("display", "none");

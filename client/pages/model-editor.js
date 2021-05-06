@@ -208,7 +208,7 @@ let ModelEditor = PageView.extend({
       this.particleViewer = new ParticleViewer({
         model: particle
       });
-      this.registerRenderSubview(this.particleViewer, "me-particle-viewer")
+      app.registerRenderSubview(this, this.particleViewer, "me-particle-viewer")
     }else{
       $(this.queryByHook("me-select-particle")).css("display", "block")
       this.typeQuickViewer = this.renderCollection(
@@ -216,7 +216,6 @@ let ModelEditor = PageView.extend({
         QuickviewDomainTypes,
         this.queryByHook("me-types-quick-view")
       );
-      console.log(this.domainViewer.model.types.models)
     }
   },
   renderSubviews: function () {
@@ -230,8 +229,8 @@ let ModelEditor = PageView.extend({
     this.renderSpeciesView();
     this.renderParametersView();
     this.renderReactionsView();
-    this.registerRenderSubview(this.modelSettings, 'model-settings-container');
-    this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
+    app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
+    app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
       $(this.queryByHook("model-editor-advanced-container")).css("display", "none");
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
@@ -247,7 +246,7 @@ let ModelEditor = PageView.extend({
           functionDefinitions: this.model.functionDefinitions,
           viewModel: false
         });
-        this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
+        app.registerRenderSubview(this, sbmlComponentView, 'sbml-component-container');
       }
       this.renderSystemVolumeView();
     }
@@ -260,10 +259,6 @@ let ModelEditor = PageView.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
   },
   renderDomainViewer: function(domainPath=null) {
     if(this.domainViewer) {
@@ -280,7 +275,7 @@ let ModelEditor = PageView.extend({
           model: domain,
           domainPath: domainPath
         });
-        self.registerRenderSubview(self.domainViewer, 'domain-viewer-container');
+        app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
       });
     }else{
       this.domainViewer = new DomainViewer({
@@ -288,7 +283,7 @@ let ModelEditor = PageView.extend({
         model: this.model.domain,
         domainPath: domainPath
       });
-      this.registerRenderSubview(this.domainViewer, 'domain-viewer-container');
+      app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
     }
   },
   renderSpeciesView: function (mode="edit") {
@@ -300,7 +295,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.speciesEditor = new SpeciesViewer({collection: this.model.species});
     }
-    this.registerRenderSubview(this.speciesEditor, 'species-editor-container');
+    app.registerRenderSubview(this, this.speciesEditor, 'species-editor-container');
   },
   renderInitialConditions: function (mode="edit", opened=false) {
     if(this.initialConditionsEditor) {
@@ -316,7 +311,7 @@ let ModelEditor = PageView.extend({
         collection: this.model.initialConditions
       });
     }
-    this.registerRenderSubview(this.initialConditionsEditor, 'initial-conditions-editor-container');
+    app.registerRenderSubview(this, this.initialConditionsEditor, 'initial-conditions-editor-container');
     },
   renderParametersView: function (mode="edit", opened=false) {
     if(this.parametersEditor) {
@@ -327,7 +322,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.parametersEditor = new ParameterViewer({collection: this.model.parameters});
     }
-    this.registerRenderSubview(this.parametersEditor, 'parameters-editor-container');
+    app.registerRenderSubview(this, this.parametersEditor, 'parameters-editor-container');
   },
   renderReactionsView: function (mode="edit", opened=false) {
     if(this.reactionsEditor) {
@@ -338,7 +333,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.reactionsEditor = new ReactionsViewer({collection: this.model.reactions});
     }
-    this.registerRenderSubview(this.reactionsEditor, 'reactions-editor-container');
+    app.registerRenderSubview(this, this.reactionsEditor, 'reactions-editor-container');
   },
   renderEventsView: function (mode="edit", opened=false) {
     if(this.eventsEditor){
@@ -349,7 +344,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.eventsEditor = new EventsViewer({collection: this.model.eventsCollection});
     }
-    this.registerRenderSubview(this.eventsEditor, 'events-editor-container');
+    app.registerRenderSubview(this, this.eventsEditor, 'events-editor-container');
   },
   renderRulesView: function (mode="edit", opened=false) {
     if(this.rulesEditor){
@@ -360,7 +355,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.rulesEditor = new RulesViewer({collection: this.model.rules})
     }
-    this.registerRenderSubview(this.rulesEditor, 'rules-editor-container');
+    app.registerRenderSubview(this, this.rulesEditor, 'rules-editor-container');
   },
   renderSystemVolumeView: function () {
     if(this.systemVolumeView) {
@@ -376,7 +371,7 @@ let ModelEditor = PageView.extend({
       valueType: 'number',
       value: this.model.volume,
     });
-    this.registerRenderSubview(this.systemVolumeView, 'volume')
+    app.registerRenderSubview(this, this.systemVolumeView, 'volume')
     if(this.model.defaultMode === "continuous") {
       $(this.queryByHook("system-volume-container")).collapse("hide")
     }

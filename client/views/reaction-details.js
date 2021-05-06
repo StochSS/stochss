@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var _ = require('underscore');
 var $ = require('jquery');
 var katex = require('katex');
+//support files
+let app = require('../app');
 //config
 var ReactionTypes = require('../reaction-types');
 //models
@@ -100,7 +102,7 @@ module.exports = View.extend({
         value: this.model.propensity,
         placeholder: "--No Expression Entered--"
       });
-      this.registerRenderSubview(propensityView, 'select-rate-parameter')
+      app.registerRenderSubview(this, propensityView, 'select-rate-parameter')
       $(this.queryByHook('rate-parameter-label')).text('Propensity:')
       $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.propensity);
     }else{
@@ -123,7 +125,7 @@ module.exports = View.extend({
         // Else fetch the right Parameter from Parameters based on existing rate
         value: this.model.rate.name ? this.getRateFromParameters(this.model.rate.name) : this.model.collection.parent.parameters.at(0),
       });
-      this.registerRenderSubview(rateParameterView, 'select-rate-parameter');
+      app.registerRenderSubview(this, rateParameterView, 'select-rate-parameter');
       $(this.queryByHook('rate-parameter-label')).text('Rate Parameter:')
       $(this.queryByHook('rate-parameter-tooltip')).prop('title', this.parent.tooltips.rate);
     }
@@ -132,10 +134,10 @@ module.exports = View.extend({
         model: this.model,
         parent: this
       });
-      this.registerRenderSubview(typesView, 'domain-types-editor');
+      app.registerRenderSubview(this, typesView, 'domain-types-editor');
     }
-    this.registerRenderSubview(reactantsView, 'reactants-editor');
-    this.registerRenderSubview(productsView, 'products-editor');
+    app.registerRenderSubview(this, reactantsView, 'reactants-editor');
+    app.registerRenderSubview(this, productsView, 'products-editor');
     this.totalRatio = this.getTotalReactantRatio();
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -172,7 +174,7 @@ module.exports = View.extend({
       value: ReactionTypes[this.model.reactionType].label,
     });
 
-    this.registerRenderSubview(this.reactionTypesSelectView, 'select-reaction-type');
+    app.registerRenderSubview(this, this.reactionTypesSelectView, 'select-reaction-type');
     this.renderReactionTypes();
   },
   selectRateParam: function (e) {
@@ -221,10 +223,6 @@ module.exports = View.extend({
   },
   getReactionTypeLabels: function () {
     return _.map(ReactionTypes, function (val, key) { return val.label; })
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
   },
   getTotalReactantRatio: function () {
     return this.model.reactants.length;

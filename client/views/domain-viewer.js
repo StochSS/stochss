@@ -119,10 +119,6 @@ module.exports = View.extend({
     });
     this.toggleDomainError();
   },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
-  },
   renderDomainSelectView: function () {
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-list");
@@ -137,7 +133,7 @@ module.exports = View.extend({
         unselectedText: "-- Select Domain --",
         value: self.getDomainSelectValue(body.files)
       });
-      self.registerRenderSubview(domainSelectView, "select-domain")
+      app.registerRenderSubview(self, domainSelectView, "select-domain")
     });
   },
   getDomainSelectValue: function (files) {
@@ -162,7 +158,7 @@ module.exports = View.extend({
       options: options,
       unselectedText: "-- Select Location --"
     });
-    this.registerRenderSubview(this.domainLocationSelectView, "select-location")
+    app.registerRenderSubview(this, this.domainLocationSelectView, "select-location")
   },
   renderTypesViewer: function () {
     if(this.typesViewer) {
