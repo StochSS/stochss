@@ -321,13 +321,7 @@ let DomainEditor = PageView.extend({
     return model;
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   },
   changeParticleLocation: function (x, y, z) {
     this.domain.particles.get(this.actPart.part.particle_id, "particle_id").point = [x, y, z];

@@ -82,11 +82,11 @@ var BrowserDetect = {
 };
 
 let changeCollapseButtonText = (view, e) => {
-  let source = e.target.dataset.hook
-  let isBtn = $(view.queryByHook(source)).attr("class").includes("btn")
-  let collapseContainer = $(view.queryByHook(source).dataset.target)
+  let source = e.target.dataset.hook;
+  let isBtn = $(view.queryByHook(source)).attr("class").includes("btn");
+  let collapseContainer = $(view.queryByHook(source).dataset.target);
   if(isBtn && !collapseContainer.attr("class").includes("collapsing")) {
-    let collapseBtn = $(view.queryByHook(source))
+    let collapseBtn = $(view.queryByHook(source));
     let text = collapseBtn.text();
     text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
   }

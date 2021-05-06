@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var $ = require('jquery');
+//support files
+let app = require('../app');
 //views
 var View = require('ampersand-view');
 var ViewInitialCondition = require('./view-initial-condition');
@@ -47,12 +49,6 @@ module.exports = View.extend({
     this.parent.renderInitialConditions("edit", true);
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   },
 });

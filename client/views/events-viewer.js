@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var $ = require('jquery');
+//support files
+let app = require('../app');
 //views
 var View = require('ampersand-view');
 var ViewEvent = require('./view-events');
@@ -26,7 +28,7 @@ var template = require('../templates/includes/eventsViewer.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse]' : 'changeSettingsCollapseButtonText',
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'click [data-hook=edit-events]' : 'switchToEditMode'
   },
   initialize: function (attrs, options) {
@@ -46,13 +48,7 @@ module.exports = View.extend({
   switchToEditMode: function (e) {
     this.parent.renderEventsView("edit", true);
   },
-  changeSettingsCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
   },
 });
