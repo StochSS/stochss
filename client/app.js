@@ -116,8 +116,9 @@ let getXHR = (endpoint, {
 let postXHR = (endpoint, data, {
   always = function (err, response, body) {console.log("No always callback provided")},
   success = function (err, response, body) {console.log("No success callback provided")},
-  error = function (err, response, body) {console.log("No error callback provided")}}={}) => {
-  xhr({uri: endpoint, json: true, method: "post", body: data}, function (err, response, body) {
+  error = function (err, response, body) {console.log("No error callback provided")}}={}, isJSON) => {
+  console.log(isJSON, Boolean(isJSON))
+  xhr({uri: endpoint, json: isJSON !== undefined ? isJSON : true, method: "post", body: data}, function (err, response, body) {
     if(response.statusCode < 400) {
       success(err, response, body);
     }else if(response.statusCode < 500) {
