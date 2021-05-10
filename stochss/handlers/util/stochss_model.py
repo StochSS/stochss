@@ -392,7 +392,7 @@ class StochSSModel(StochSSBase):
             wkgp_path = self.get_dir_name()
             wkgp_path, _ = self.get_unique_path(name=self.get_file(path=wkgp_path),
                                                 dirname=os.path.dirname(wkgp_path))
-            s_file = self.get_file(path=wkgp_path).replace(".wkgp", ".mdl")
+            s_file = self.get_file(path=wkgp_path).replace(".wkgp", ".smdl")
             s_path = os.path.join(wkgp_path, s_file)
         else:
             s_path = self.path.replace(".mdl", ".smdl")
