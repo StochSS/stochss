@@ -329,11 +329,9 @@ module.exports = View.extend({
   },
   openUploadRequest: function (endpoint, formData, file, type, o) {
     let self = this
-    let req = new XMLHttpRequest();
-    req.open("POST", endpoint)
-    req.onload = function (e) {
-      var resp = JSON.parse(req.response)
-      if(req.status < 400) {
+    app.postXHR(endpoint, formData, {
+      success: function (err, response, body) {
+        body = JSON.parse(body);
         if(o){
           var node = $('#models-jstree-view').jstree().get_node(o.parent);
           if(node.type === "root" || node.type === "#"){
@@ -344,17 +342,18 @@ module.exports = View.extend({
         }else{
           self.refreshJSTree();
         }
-        if(resp.file.endsWith(".mdl") || resp.file.endsWith(".smdl") ||resp.file.endsWith(".sbml")) {
+        if(body.file.endsWith(".mdl") || body.file.endsWith(".smdl") ||body.file.endsWith(".sbml")) {
           self.updateParent("model")
         }
-        if(resp.errors.length > 0){
-          let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
+        if(body.errors.length > 0){
+          let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, body.message, body.errors)).modal();
         }
-      }else{
-        let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
+      },
+      error: function (err, response, body) {
+        body = JSON.parse(body);
+        let zipErrorModal = $(modals.projectExportErrorHtml(body.Reason, body.Message)).modal()
       }
-    }
-    req.send(formData)
+    }, false);
   },
   deleteFile: function (o) {
     var fileType = o.type

@@ -262,11 +262,9 @@ let FileBrowser = PageView.extend({
       formData.append("datafile", file)
       formData.append("fileinfo", JSON.stringify(fileinfo))
       let endpoint = path.join(app.getApiPath(), 'file/upload');
-      let req = new XMLHttpRequest();
-      req.open("POST", endpoint)
-      req.onload = function (e) {
-        var resp = JSON.parse(req.response)
-        if(req.status < 400) {
+      app.postXHR(endpoint, formData, {
+        success: function (err, response, body) {
+          body = JSON.parse(body);
           if(o){
             var node = $('#models-jstree').jstree().get_node(o.parent);
             if(node.type === "root" || node.type === "#"){
@@ -277,16 +275,17 @@ let FileBrowser = PageView.extend({
           }else{
             self.refreshJSTree();
           }
-          if(resp.errors.length > 0){
-            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, resp.message, resp.errors)).modal();
+          if(body.errors.length > 0){
+            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, body.message, body.errors)).modal();
           }
-        }else{
-          let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal()
+        },
+        error: function (err, response, body) {
+          body = JSON.parse(body);
+          let zipErrorModal = $(modals.projectExportErrorHtml(resp.Reason, resp.Message)).modal();
         }
-      }
-      req.send(formData)
+      }, false);
       modal.modal('hide')
-    })
+    });
   },
   deleteFile: function (o) {
     var fileType = o.type

@@ -96,43 +96,42 @@ let DomainEditor = PageView.extend({
       formData.append("typefile", typeFiles[0]);
     }
     let endpoint = path.join(app.getApiPath(), 'spatial-model/import-mesh');
-    let req = new XMLHttpRequest();
-    req.open("POST", endpoint);
-    req.onload = function (e) {
-      var resp = JSON.parse(req.response);
-      if(req.status < 400) {
-        if(resp.types) {
-          self.addMissingTypes(resp.types)
+    app.postXHR(endpoint, formData, {
+      success: function (err, response, body) {
+        body = JSON.parse(body);
+        if(body.types) {
+          self.addMissingTypes(body.types)
         }
-        self.addParticles(resp.particles);
-        if(self.domain.x_lim[0] > resp.limits.x_lim[0]) {
-          self.domain.x_lim[0] = resp.limits.x_lim[0]
+        self.addParticles(body.particles);
+        if(self.domain.x_lim[0] > body.limits.x_lim[0]) {
+          self.domain.x_lim[0] = body.limits.x_lim[0]
         }
-        if(self.domain.y_lim[0] > resp.limits.y_lim[0]) {
-          self.domain.y_lim[0] = resp.limits.y_lim[0]
+        if(self.domain.y_lim[0] > body.limits.y_lim[0]) {
+          self.domain.y_lim[0] = body.limits.y_lim[0]
         }
-        if(self.domain.z_lim[0] > resp.limits.z_lim[0]) {
-          self.domain.z_lim[0] = resp.limits.z_lim[0]
+        if(self.domain.z_lim[0] > body.limits.z_lim[0]) {
+          self.domain.z_lim[0] = body.limits.z_lim[0]
         }
-        if(self.domain.x_lim[1] < resp.limits.x_lim[1]) {
-          self.domain.x_lim[1] = resp.limits.x_lim[1]
+        if(self.domain.x_lim[1] < body.limits.x_lim[1]) {
+          self.domain.x_lim[1] = body.limits.x_lim[1]
         }
-        if(self.domain.y_lim[1] < resp.limits.y_lim[1]) {
-          self.domain.y_lim[1] = resp.limits.y_lim[1]
+        if(self.domain.y_lim[1] < body.limits.y_lim[1]) {
+          self.domain.y_lim[1] = body.limits.y_lim[1]
         }
-        if(self.domain.z_lim[1] < resp.limits.z_lim[1]) {
-          self.domain.z_lim[1] = resp.limits.z_lim[1]
+        if(self.domain.z_lim[1] < body.limits.z_lim[1]) {
+          self.domain.z_lim[1] = body.limits.z_lim[1]
         }
         self.renderDomainLimitations();
         self.completeAction("Mesh successfully imported", "im")
         $('html, body').animate({
             scrollTop: $("#domain-plot").offset().top
         }, 20);
-      }else{
-        self.errorAction(resp.Message, "im")
+      },
+      error: function (err, response, body) {
+        body = JSON.parse(body);
+        self.errorAction(body.Message, "im")
       }
-    }
-    req.send(formData)
+    }, false)
   },
   handleSetDefaults: function (e) {
     let mass = Number($(this.queryByHook("td-mass")).find('input')[0].value);
