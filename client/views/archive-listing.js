@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 //support files
@@ -60,8 +59,8 @@ module.exports = View.extend({
       let trashPath = path.join(projectPath, "trash", file);
       let queryString = "?srcPath=" + path.join(projectPath, file) + "&dstPath=" + trashPath;
       let endpoint = path.join(app.getApiPath(), 'file/move') + queryString;
-      xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode < 400) {
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
           self.parent.update("WorkflowGroup");
         }
       });

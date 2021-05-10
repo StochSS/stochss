@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
-let xhr = require('xhr');
 let path = require('path');
 //support files
 let app = require('../app');
@@ -124,12 +123,8 @@ module.exports = View.extend({
     }else{
       let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
       let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
-      xhr({url: endpoint, json: true}, function (err, response, body){
-        if(response.statusCode >= 400){
-          $(self.queryByHook(type + "-plot-spinner")).css("display", "none");
-          let message = "<p>" + body.Message + "</p><p><b>Please re-run this job to get this plot</b></p>";
-          $(self.queryByHook(type + "-plot")).html(message);
-        }else{
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
           $(self.queryByHook(type + "-plot")).empty();
           if(type === "psweep") {
             self.plots[data.plt_key] = body;
@@ -139,6 +134,11 @@ module.exports = View.extend({
             self.plots[type] = body;
           }
           self.plotFigure(body, type);
+        },
+        error: function (err, response, body) {
+          $(self.queryByHook(type + "-plot-spinner")).css("display", "none");
+          let message = "<p>" + body.Message + "</p><p><b>Please re-run this job to get this plot</b></p>";
+          $(self.queryByHook(type + "-plot")).html(message);
         }
       });
     }
@@ -200,8 +200,8 @@ module.exports = View.extend({
     }
     let queryStr = "?path=" + this.model.directory + "&type=" + type;
     let endpoint = path.join(app.getApiPath(), "workflow/notebook") + queryStr;
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         window.open(path.join(app.getBasePath(), "notebooks", body.FilePath));
       }
     });
@@ -227,8 +227,8 @@ module.exports = View.extend({
     let self = this;
     let queryStr = "?path=" + this.model.directory + "&action=resultscsv";
     let endpoint = path.join(app.getApiPath(), "file/download-zip") + queryStr;
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         window.open(path.join("files", body.Path));
       }
     });

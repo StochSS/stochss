@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let jstree = require('jstree');
 let path = require('path');
-let xhr = require('xhr');
 let $ = require('jquery');
 let _ = require('underscore');
 //support files
@@ -106,15 +105,16 @@ let FileBrowser = PageView.extend({
             var oldPath = node.original._path
             let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
             var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
-            xhr({uri: endpoint}, function(err, response, body) {
-              if(response.statusCode < 400) {
-                node.original._path = path.join(newDir, file)
+            app.getXHR(endpoint, {
+              success: function (err, response, body) {
+                node.original._path = path.join(newDir, file);
                 if(node.type === "folder") {
                   $('#models-jstree').jstree().refresh_node(node);
                 }
-              }else{
-                body = JSON.parse(body)
-                $('#models-jstree').jstree().refresh()
+              },
+              error: function (err, response, body) {
+                body = JSON.parse(body);
+                $('#models-jstree').jstree().refresh();
               }
             });
           }
@@ -306,24 +306,25 @@ let FileBrowser = PageView.extend({
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
-      xhr({uri: endpoint}, function(err, response, body) {
-        if(response.statusCode < 400) {
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
           var node = $('#models-jstree').jstree().get_node(o.parent);
           if(node.type === "root"){
             self.refreshJSTree();
-            let actionsBtn = $(self.queryByHook("options-for-node"))
+            let actionsBtn = $(self.queryByHook("options-for-node"));
             if(actionsBtn.text().endsWith(o.text)) {
-              actionsBtn.text("Actions")
-              actionsBtn.prop("disabled", true)
-              self.nodeForContextMenu = ""
+              actionsBtn.text("Actions");
+              actionsBtn.prop("disabled", true);
+              self.nodeForContextMenu = "";
             }
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
-        }else{
-          body = JSON.parse(body)
+        },
+        error: function (err, response, body) {
+          body = JSON.parse(body);
         }
-      })
+      });
       modal.modal('hide')
     });
   },
@@ -348,27 +349,26 @@ let FileBrowser = PageView.extend({
       var identifier = "file/duplicate"
     }
     var endpoint = path.join(app.getApiPath(), identifier)+queryStr
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(parentID);
-          if(node.type === "root"){
-            self.refreshJSTree()
-          }else{          
-            $('#models-jstree').jstree().refresh_node(node);
-          }
-          if(type === "workflow"){
-            var message = ""
-            if(body.error){
-              message = body.error
-            }else{
-              message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>"
-            }
-            let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal()
-          }
-          self.selectNode(node, body.File)
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
+          self.refreshJSTree();
+        }else{          
+          $('#models-jstree').jstree().refresh_node(node);
         }
+        if(type === "workflow"){
+          var message = ""
+          if(body.error){
+            message = body.error;
+          }else{
+            message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>";
+          }
+          let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal();
+        }
+        self.selectNode(node, body.File);
       }
-    );
+    });
   },
   getTimeStamp: function () {
     var date = new Date();
@@ -399,19 +399,17 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     var endpoint = path.join(app.getApiPath(), "model/to-spatial")+"?path="+o.original._path;
-    xhr({uri: endpoint, json: true}, 
-      function (err, response, body) {
-        if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(parentID);
-          if(node.type === "root"){
-            self.refreshJSTree()
-          }else{          
-            $('#models-jstree').jstree().refresh_node(node);
-          }
-          self.selectNode(node, body.File)
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
+          self.refreshJSTree();
+        }else{          
+          $('#models-jstree').jstree().refresh_node(node);
         }
+        self.selectNode(node, body.File);
       }
-    );
+    });
   },
   toModel: function (o, from) {
     var self = this;
@@ -422,24 +420,23 @@ let FileBrowser = PageView.extend({
       var identifier = "sbml/to-model"
     }
     let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode < 400) {
-          var node = $('#models-jstree').jstree().get_node(parentID);
-          if(node.type === "root"){
-            self.refreshJSTree()
-          }else{          
-            $('#models-jstree').jstree().refresh_node(node);
-          }
-          self.selectNode(node, body.File)
-          if(from === "SBML" && body.errors.length > 0){
-            var title = ""
-            var msg = body.message
-            var errors = body.errors
-            let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
-          }
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        var node = $('#models-jstree').jstree().get_node(parentID);
+        if(node.type === "root"){
+          self.refreshJSTree();
+        }else{          
+          $('#models-jstree').jstree().refresh_node(node);
+        }
+        self.selectNode(node, body.File);
+        if(from === "SBML" && body.errors.length > 0){
+          var title = "";
+          var msg = body.message;
+          var errors = body.errors;
+          let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
         }
       }
-    );
+    });
   },
   toNotebook: function (o, type) {
     let self = this
@@ -449,19 +446,17 @@ let FileBrowser = PageView.extend({
     }else{
       endpoint = path.join(app.getApiPath(), "workflow/notebook")+"?type=none&path="+o.original._path
     }
-    xhr({ uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400){
-        var node = $('#models-jstree').jstree().get_node(o.parent)
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        var node = $('#models-jstree').jstree().get_node(o.parent);
         if(node.type === 'root'){
           self.refreshJSTree();
         }else{
           $('#models-jstree').jstree().refresh_node(node);
         }
-        var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
-        self.selectNode(node, body.File)
-        console.log(notebookPath)
-        window.open(notebookPath)
-        console.log("Opened new window")
+        var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath);
+        self.selectNode(node, body.File);
+        window.open(notebookPath);
       }
     });
   },
@@ -469,15 +464,15 @@ let FileBrowser = PageView.extend({
     var self = this;
     var parentID = o.parent;
     var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         var node = $('#models-jstree').jstree().get_node(parentID);
         if(node.type === "root"){
-          self.refreshJSTree()
+          self.refreshJSTree();
         }else{          
           $('#models-jstree').jstree().refresh_node(node);
         }
-        self.selectNode(node, body.File)
+        self.selectNode(node, body.File);
       }
     });
   },
@@ -491,24 +486,24 @@ let FileBrowser = PageView.extend({
     $('#models-jstree').jstree().edit(o, null, function(node, status) {
       if(text != node.text){
         var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+node.text
-        xhr({uri: endpoint, json: true}, function (err, response, body){
-          if(response.statusCode < 400) {
-            if(body.changed) {
-              nameWarning.text(body.message)
-              nameWarning.collapse('show');
-              window.scrollTo(0,0)
-              setTimeout(_.bind(self.hideNameWarning, self), 10000);
-            }
-            node.original._path = body._path
-          }
-          if(text.split('.').pop() != node.text.split('.').pop()){
+        app.getXHR(endpoint, {
+          always: function (err, response, body) {
             if(parent.type === "root"){
-              self.refreshJSTree()
+              self.refreshJSTree();
             }else{          
               $('#models-jstree').jstree().refresh_node(parent);
             }
+          },
+          success: function (err, response, body) {
+            if(body.changed) {
+              nameWarning.text(body.message);
+              nameWarning.collapse('show');
+              window.scrollTo(0,0);
+              setTimeout(_.bind(self.hideNameWarning, self), 10000);
+            }
+            node.original._path = body._path;
           }
-        })
+        });
       }
       extensionWarning.collapse('hide');
       nameWarning.collapse('hide');
@@ -545,10 +540,10 @@ let FileBrowser = PageView.extend({
       }
     }
     var endpoint = path.join(app.getApiPath(), identifier)+queryStr
-    xhr({uri: endpoint, json: isJSON}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         if(dataType === "json") {
-          let data = nodeType === "domain" ? body.domain : body
+          let data = nodeType === "domain" ? body.domain : body;
           self.exportToJsonFile(data, o.original.text);
         }else if(dataType === "zip") {
           var node = $('#models-jstree').jstree().get_node(o.parent);
@@ -557,13 +552,14 @@ let FileBrowser = PageView.extend({
           }else{
             $('#models-jstree').jstree().refresh_node(node);
           }
-          self.exportToZipFile(body.Path)
+          self.exportToZipFile(body.Path);
         }else{
           self.exportToFile(body, o.original.text);
         }
-      }else{
+      },
+      error: function (err, response, body) {
         if(dataType === "plain-text") {
-          body = JSON.parse(body)
+          body = JSON.parse(body);
         }
       }
     });
@@ -615,21 +611,9 @@ let FileBrowser = PageView.extend({
     if(document.querySelector("#newProjectModal")) {
       document.querySelector("#newProjectModal").remove()
     }
-    if(document.querySelector("#newWorkflowGroupModal")) {
-      document.querySelector("#newWorkflowGroupModal").remove()
-    }
-    var modal = ""
-    var okBtn = ""
-    var input = ""
-    if(isProject) {
-      modal = $(modals.newProjectModalHtml()).modal();
-      okBtn = document.querySelector('#newProjectModal .ok-model-btn');
-      input = document.querySelector('#newProjectModal #projectNameInput');
-    }else{
-      modal = $(modals.newWorkflowGroupModalHtml()).modal();
-      okBtn = document.querySelector('#newWorkflowGroupModal .ok-model-btn');
-      input = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInput');
-    }
+    var modal = $(modals.newProjectModalHtml()).modal();
+    var okBtn = document.querySelector('#newProjectModal .ok-model-btn');
+    var input = document.querySelector('#newProjectModal #projectNameInput');
     input.addEventListener("keyup", function (event) {
       if(event.keyCode === 13){
         event.preventDefault();
@@ -637,15 +621,8 @@ let FileBrowser = PageView.extend({
       }
     });
     input.addEventListener("input", function (e) {
-      var endErrMsg = ""
-      var charErrMsg = ""
-      if(isProject){
-        endErrMsg = document.querySelector('#newProjectModal #projectNameInputEndCharError')
-        charErrMsg = document.querySelector('#newProjectModal #projectNameInputSpecCharError')
-      }else{
-        endErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputEndCharError')
-        charErrMsg = document.querySelector('#newWorkflowGroupModal #workflowGroupNameInputSpecCharError')
-      }
+      var endErrMsg = document.querySelector('#newProjectModal #projectNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newProjectModal #projectNameInputSpecCharError')
       let error = self.validateName(input.value)
       okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
@@ -653,43 +630,33 @@ let FileBrowser = PageView.extend({
     });
     okBtn.addEventListener("click", function (e) {
       if(Boolean(input.value)) {
+        modal.modal('hide')
         var parentPath = ""
         if(o && o.original && o.original.type !== "root") {
           parentPath = o.original._path
         }
-        var endpoint = ""
-        if(isProject){
-          var projectName = input.value.trim() + ".proj"
-          var projectPath = path.join(parentPath, projectName)
-          endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
-        }else{
-          var workflowGroupName = input.value.trim() + ".wkgp"
-          var workflowGroupPath = path.join(parentPath, workflowGroupName)
-          endpoint = path.join(app.getApiPath(), "project/new-workflow-group")+"?path="+workflowGroupPath
-        }
-        xhr({uri: endpoint,json: true}, function (err, response, body) {
-          if(response.statusCode < 400) {
-            if(isProject) {
-              if(o){//directory was created with context menu option
-                var node = $('#models-jstree').jstree().get_node(o);
-                if(node.type === "root"){
-                  self.refreshJSTree()
-                }else{          
-                  $('#models-jstree').jstree().refresh_node(node);
-                }
-              }else{//directory was created with create directory button
-                self.refreshJSTree()
+        var projectName = input.value.trim() + ".proj"
+        var projectPath = path.join(parentPath, projectName)
+        var endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
+        app.getXHR(endpoint, {
+          success: function (err, response, body) {
+            if(o){//directory was created with context menu option
+              var node = $('#models-jstree').jstree().get_node(o);
+              if(node.type === "root"){
+                self.refreshJSTree();
+              }else{          
+                $('#models-jstree').jstree().refresh_node(node);
               }
-            }else{
-              let successModal = $(modals.newWorkflowGroupSuccessHtml(body.message)).modal()
+            }else{//directory was created with create directory button
+              self.refreshJSTree();
             }
-          }else{
-            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
+          },
+          error: function (err, response, body) {
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal();
           }
-          modal.modal('hide')
-        })
+        });
       }
-    })
+    });
   },
   newWorkflow: function (o, type) {
     app.newWorkflow(this, o.original._path, o.type === "spatial", type);
@@ -700,54 +667,58 @@ let FileBrowser = PageView.extend({
       document.querySelector('#newProjectModelModal').remove()
     }
     let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+o.original._path
-    xhr({uri:mdlListEP, json:true}, function (err, response, body) {
-      let modal = $(modals.newProjectModelHtml(body.files)).modal()
-      let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn')
-      let select = document.querySelector('#newProjectModelModal #modelFileInput')
-      let location = document.querySelector('#newProjectModelModal #modelPathInput')
-      select.addEventListener("change", function (e) {
-        okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2
-        if(body.paths[e.target.value].length >= 2) {
-          var locations = body.paths[e.target.value].map(function (path) {
-            return `<option>${path}</option>`
-          });
-          locations.unshift(`<option value="">Select a location</option>`)
-          locations = locations.join(" ")
-          $("#modelPathInput").find('option').remove().end().append(locations)
-          $("#location-container").css("display", "block")
-        }else{
-          $("#location-container").css("display", "none")
-          $("#modelPathInput").find('option').remove().end()
-        }
-      });
-      location.addEventListener("change", function (e) {
-        okBtn.disabled = !Boolean(e.target.value)
-      });
-      okBtn.addEventListener("click", function (e) {
-        let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value
-        let queryString = "?path="+o.original._path+"&mdlPath="+mdlPath
-        let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
-        xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
-          if(response.statusCode < 400) {
-            let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal()
+    app.getXHR(mdlListEP, {
+      always: function (err, response, body) {
+        let modal = $(modals.newProjectModelHtml(body.files)).modal();
+        let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
+        let select = document.querySelector('#newProjectModelModal #modelFileInput');
+        let location = document.querySelector('#newProjectModelModal #modelPathInput');
+        select.addEventListener("change", function (e) {
+          okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
+          if(body.paths[e.target.value].length >= 2) {
+            var locations = body.paths[e.target.value].map(function (path) {
+              return `<option>${path}</option>`;
+            });
+            locations.unshift(`<option value="">Select a location</option>`);
+            locations = locations.join(" ");
+            $("#modelPathInput").find('option').remove().end().append(locations);
+            $("#location-container").css("display", "block");
           }else{
-            let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal()
+            $("#location-container").css("display", "none");
+            $("#modelPathInput").find('option').remove().end();
           }
         });
-        modal.modal('hide')
-      });
-    })
+        location.addEventListener("change", function (e) {
+          okBtn.disabled = !Boolean(e.target.value);
+        });
+        okBtn.addEventListener("click", function (e) {
+          let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
+          let queryString = "?path="+o.original._path+"&mdlPath="+mdlPath;
+          let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString;
+          app.postXHR(endpoint, null, {
+            success: function (err, response, body) {
+              let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
+            },
+            error: function (err, response, body) {
+              let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+            }
+          });
+          modal.modal('hide');
+        });
+      }
+    });
   },
   addModel: function (parentPath, modelName, message) {
     var endpoint = path.join(app.getBasePath(), "stochss/models/edit")
     if(parentPath.endsWith(".proj")) {
       let queryString = "?path=" + parentPath + "&mdlFile=" + modelName
       let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryString
-      xhr({uri: newMdlEP, json: true}, function (err, response, body) {
-        if(response.statusCode < 400) {
-          endpoint += "?path="+body.path
+      app.getXHR(newMdlEP, {
+        success: function (err, response, body) {
+          endpoint += "?path="+body.path;
           window.location.href = endpoint;
-        }else{
+        },
+        error: function (err, response, body) {
           let title = "Model Already Exists";
           let message = "A model already exists with that name";
           let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
@@ -758,13 +729,15 @@ let FileBrowser = PageView.extend({
       let queryString = "?path="+modelPath+"&message="+message;
       endpoint += queryString
       let existEP = path.join(app.getApiPath(), "model/exists")+queryString
-      xhr({uri: existEP, json: true}, function (err, response, body) {
-        if(body.exists) {
-          let title = "Model Already Exists";
-          let message = "A model already exists with that name";
-          let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
-        }else{
-          window.location.href = endpoint;
+      app.getXHR(existEP, {
+        always: function (err, response, body) {
+          if(body.exists) {
+            let title = "Model Already Exists";
+            let message = "A model already exists with that name";
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+          }else{
+            window.location.href = endpoint;
+          }
         }
       });
     }
@@ -817,21 +790,22 @@ let FileBrowser = PageView.extend({
         }else{
           let dirName = input.value.trim();
           let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
-          xhr({uri:endpoint}, function (err, response, body) {
-            if(response.statusCode < 400){
+          app.getXHR(endpoint, {
+            success: function (err, response, body) {
               if(o){//directory was created with context menu option
                 var node = $('#models-jstree').jstree().get_node(o);
                 if(node.type === "root"){
-                  self.refreshJSTree()
+                  self.refreshJSTree();
                 }else{          
                   $('#models-jstree').jstree().refresh_node(node);
                 }
               }else{//directory was created with create directory button
-                self.refreshJSTree()
+                self.refreshJSTree();
               }
-            }else{//new directory not created no need to refresh
-              body = JSON.parse(body)
-              let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal()
+            },
+            error: function (err, response, body) {
+              body = JSON.parse(body);
+              let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal();
             }
           });
         }
@@ -857,14 +831,14 @@ let FileBrowser = PageView.extend({
   },
   editWorkflowModel: function (o) {
     let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         if(body.error){
-          let title = o.text + " Not Found"
-          let message = body.error
-          let modal = $(modals.duplicateWorkflowHtml(title, message)).modal()
+          let title = o.text + " Not Found";
+          let message = body.error;
+          let modal = $(modals.duplicateWorkflowHtml(title, message)).modal();
         }else{
-          window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file
+          window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file;
         }
       }
     });

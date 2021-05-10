@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 let _ = require('underscore');
@@ -51,11 +50,13 @@ module.exports = View.extend({
     let self = this;
     let queryString = "?path=" + this.model.directory;
     let endpoint = path.join(app.getApiPath(), "workflow/workflow-status") + queryString;
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(body === 'running') {
-        setTimeout(_.bind(self.getJobStatus, self), 1000);
-      }else{
-        self.parent.updateWorkflow();
+    app.getXHR(endpoint, {
+      always: function (err, response, body) {
+        if(body === 'running') {
+          setTimeout(_.bind(self.getJobStatus, self), 1000);
+        }else{
+          self.parent.updateWorkflow();
+        }
       }
     });
   }

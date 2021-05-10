@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var path = require('path');
 var Plotly = require('../lib/plotly');
 var $ = require('jquery');
@@ -169,9 +168,11 @@ module.exports = View.extend({
     }
     var endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
     var self = this;
-    xhr({ uri: endpoint, json: true}, function (err, response, body) {
-      self.outfile = body.Outfile
-      self.getResults()
+    app.getXHR(endpoint, {
+      always: function (err, response, body) {
+        self.outfile = body.Outfile;
+        self.getResults();
+      }
     });
   },
   running: function () {
@@ -208,24 +209,30 @@ module.exports = View.extend({
     setTimeout(function () {
       let queryStr = "?cmd=read&outfile="+self.outfile+"&path="+model.directory
       endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
-      xhr({ uri: endpoint, json: true}, function (err, response, body) {
-        if(typeof body === "string") {
-          body = body.replace(/NaN/g, null)
-          body = JSON.parse(body)
-        }
-        var data = body.Results;
-        if(response.statusCode >= 400 || data.errors){
-          self.ran(false);
-          $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
-        }
-        else if(!body.Running){
-          if(data.timeout){
-            $(self.parent.queryByHook('model-timeout-message')).collapse('show');
+      let errorCB = function (err, response, body) {
+        self.ran(false);
+        $(self.parent.queryByHook('model-run-error-message')).text(body.Results.errors);
+      }
+      app.getXHR(endpoint, {
+        always: function (err, response, body) {
+          if(typeof body === "string") {
+            body = body.replace(/NaN/g, null)
+            body = JSON.parse(body)
           }
-          self.plotResults(data.results);
-        }else{
-          self.getResults();
-        }
+          var data = body.Results;
+          if(response.statusCode >= 400 || data.errors){
+            errorCB(err, response, body);
+          }
+          else if(!body.Running){
+            if(data.timeout){
+              $(self.parent.queryByHook('model-timeout-message')).collapse('show');
+            }
+            self.plotResults(data.results);
+          }else{
+            self.getResults();
+          }
+        },
+        error: errorCB
       });
     }, 2000);
   },

@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 let _ = require('underscore');
@@ -50,8 +49,8 @@ module.exports = View.extend({
   deleteJob: function (e) {
     let self = this;
     let endpoint = path.join(app.getApiPath(), "file/delete") + "?path=" + this.model.directory;
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         let job = self.model.collection.remove(self.model);
         if(job.name === self.parent.model.activeJob.name){
           self.parent.model.activeJob.status = null;
@@ -65,15 +64,17 @@ module.exports = View.extend({
     let self = this;
     let queryString = "?path=" + this.model.directory
     let endpoint = path.join(app.getApiPath(), "workflow/workflow-status") + queryString;
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(body === 'running') {
-        setTimeout(_.bind(self.getJobStatus, self), 1000);
-      }else{
-        self.model.status = body;
-        $(self.queryByHook(self.model.elementID + "-open")).prop("disabled", false);
-        $(self.queryByHook(self.model.elementID + '-running-spinner')).css('display', "none");
-        $(self.queryByHook(self.model.elementID + "-status")).text(body);
-        self.parent.updateWorkflow();
+    app.getXHR(endpoint, {
+      always: function (err, response, body) {
+        if(body === 'running') {
+          setTimeout(_.bind(self.getJobStatus, self), 1000);
+        }else{
+          self.model.status = body;
+          $(self.queryByHook(self.model.elementID + "-open")).prop("disabled", false);
+          $(self.queryByHook(self.model.elementID + '-running-spinner')).css('display', "none");
+          $(self.queryByHook(self.model.elementID + "-status")).text(body);
+          self.parent.updateWorkflow();
+        }
       }
     });
   },

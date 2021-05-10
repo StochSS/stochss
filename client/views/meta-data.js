@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 let $ = require('jquery');
 var path = require('path');
 //support files
@@ -189,8 +188,8 @@ module.exports = View.extend({
     });
     let self = this;
     let endpoint = path.join(app.getApiPath(), "project/meta-data")+"?path="+this.model.directory;
-    xhr({uri:endpoint, json:true, method:"post", body:data}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.postXHR(endpoint, data, {
+      success: function (err, response, body) {
         self.saved();
       }
     });

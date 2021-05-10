@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 //support files
@@ -43,10 +42,10 @@ let projectBrowser = PageView.extend({
     PageView.prototype.initialize.apply(this, arguments);
     let self = this;
     let endpoint = path.join(app.getApiPath(), "project/load-browser");
-    xhr({uri:endpoint, json:true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         self.projects = body.projects;
-        self.renderProjectsView()
+        self.renderProjectsView();
       }
     });
   },
@@ -84,10 +83,11 @@ let projectBrowser = PageView.extend({
         modal.modal('hide');
         let projectPath = input.value.trim() + ".proj";
         let endpoint = path.join(app.getApiPath(), "project/new-project") + "?path=" + projectPath;
-        xhr({uri:endpoint, json:true}, function (err, response, body) {
-          if(response.statusCode < 400) {
+        app.getXHR(endpoint, {
+          success: function (err, response, body) {
             window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body.path;
-          }else{
+          },
+          error: function (err, response, body) {
             let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal();
           }
         });

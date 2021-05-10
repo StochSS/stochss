@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 //support files
@@ -55,32 +54,38 @@ let LoadingPage = PageView.extend({
     setTimeout(function () {
       let queryStr = "?path=" + self.responsePath + "&cmd=read";
       let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
-      xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode >= 400 || Object.keys(body).includes("reason")) {
-          $(this.queryByHook("loading-spinner")).css("display", "none");
-          let model = $(modals.projectExportErrorHtml(body.reason, body.message)).modal();
-          let close = document.querySelector("button[data-dismiss=modal]");
-          close.addEventListener("click", function (e) {
-            window.history.back();
-          });
-        }else if(body.done) {
-          if(body.file_path.endsWith(".proj")){
-            self.openStochSSPage("stochss/project/manager", body.file_path);
-          }else if(body.file_path.endsWith(".wkfl")){
-            self.openStochSSPage("stochss/workflow/edit", body.file_path);
-          }else if(body.file_path.endsWith(".mdl")){
-            self.openStochSSPage("stochss/models/edit", body.file_path);
-          }else if(body.file_path.endsWith(".domn")){
-            self.openStochSSPage("stochss/domain/edit", body.file_path);
-          }else if(body.file_path.endsWith(".ipynb")){
-            self.openNotebookFile(body.file_path);
+      let errorCB = function (err, response, body) {
+        $(this.queryByHook("loading-spinner")).css("display", "none");
+        let model = $(modals.projectExportErrorHtml(body.reason, body.message)).modal();
+        let close = document.querySelector("button[data-dismiss=modal]");
+        close.addEventListener("click", function (e) {
+          window.history.back();
+        });
+      }
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
+          if(Object.keys(body).includes("reason")) {
+            errorCB(err, response, body);
+          }else if(body.done) {
+            if(body.file_path.endsWith(".proj")){
+              self.openStochSSPage("stochss/project/manager", body.file_path);
+            }else if(body.file_path.endsWith(".wkfl")){
+              self.openStochSSPage("stochss/workflow/edit", body.file_path);
+            }else if(body.file_path.endsWith(".mdl")){
+              self.openStochSSPage("stochss/models/edit", body.file_path);
+            }else if(body.file_path.endsWith(".domn")){
+              self.openStochSSPage("stochss/domain/edit", body.file_path);
+            }else if(body.file_path.endsWith(".ipynb")){
+              self.openNotebookFile(body.file_path);
+            }else{
+              self.openStochSSPage('stochss/files');
+            }
           }else{
-            self.openStochSSPage('stochss/files');
+            self.getUploadResponse();
           }
-        }else{
-          self.getUploadResponse();
-        }
-      })
+        },
+        error: errorCB
+      });
     }, 1000);
   },
   openNotebookFile: function (filePath) {
@@ -102,8 +107,8 @@ let LoadingPage = PageView.extend({
     let self = this;
     let queryStr = "?path=" + filePath;
     let endpoint = path.join(app.getApiPath(), target, "update-format") + queryStr;
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         let dst = target === "workflow" ? body : filePath;
         self.openStochSSPage(identifier, dst);
       }
@@ -127,8 +132,8 @@ let LoadingPage = PageView.extend({
     let self = this;
     let queryStr = "?path=" + filePath;
     let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
-    xhr({uri:endpoint, json:true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         self.responsePath = body.responsePath;
         self.getUploadResponse();
       }

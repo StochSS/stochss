@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 //support files
@@ -77,13 +76,13 @@ let workflowSelection = PageView.extend({
     let type = e.target.dataset.type;
     let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath
     let endpoint = path.join(app.getApiPath(), "workflow/notebook") + queryString
-    xhr({uri:endpoint, json:true}, function (err, response, body) {
-      if(response.statusCode < 400){
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         let notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
         window.open(notebookPath, "_blank")
         window.history.back();
       }
-    });
+    })
   },
   validateWorkflows: function () {
     let invalid = !this.model.valid;

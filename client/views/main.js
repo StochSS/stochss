@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var _ = require('underscore');
 var $ = require('jquery');
 //var setFavicon = require('favicon-setter');
-let xhr = require("xhr");
 var App = require('ampersand-app');
 var localLinks = require('local-links');
 var domify = require('domify');
@@ -188,21 +187,23 @@ module.exports = View.extend({
     let self = this;
     let queryStr = "?logNum=" + this.logs.length;
     let endpoint = path.join(app.getApiPath(), "user-logs") + queryStr;
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400 && body) {
-        let scrolled = self.scrolled;
-        self.addNewLogs(body.logs);
-        if(!self.scrolled){
-          let element = document.querySelector("#user-logs");
-          element.scrollTop = element.scrollHeight;
-        }else if(self.scrollCount < 60) {
-          self.scrollCount += 1;
-        }else{
-          self.scrolled = false;
-          self.scrollCount = 0;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        if(body) {
+          let scrolled = self.scrolled;
+          self.addNewLogs(body.logs);
+          if(!self.scrolled){
+            let element = document.querySelector("#user-logs");
+            element.scrollTop = element.scrollHeight;
+          }else if(self.scrollCount < 60) {
+            self.scrollCount += 1;
+          }else{
+            self.scrolled = false;
+            self.scrollCount = 0;
+          }
         }
+        self.updateUserLogs();
       }
-      self.updateUserLogs();
     });
   },
   formatLog: function (log) {

@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 //support files
@@ -48,10 +47,11 @@ module.exports = View.extend({
     let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       modal.modal('hide');
-      xhr({uri: endpoint}, function(err, response, body) {
-        if(response.statusCode < 400) {
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
           self.model.collection.remove(self.model);
-        }else{
+        },
+        error: function (err, response, body) {
           body = JSON.parse(body);
         }
       });

@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 //support files
@@ -74,6 +73,12 @@ let ProjectManager = PageView.extend({
         self.renderSubviews(response.trash_empty);
       }
     });
+    window.addEventListener("pageshow", function (event) {
+      var navType = window.performance.navigation.type
+      if(navType === 2){
+        window.location.reload()
+      }
+    });
   },
   addExistingModel: function () {
     if(document.querySelector('#newProjectModelModal')){
@@ -81,43 +86,46 @@ let ProjectManager = PageView.extend({
     }
     let self = this
     let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path=" + self.model.directory;
-    xhr({uri:mdlListEP, json:true}, function (err, response, body) {
-      let modal = $(modals.newProjectModelHtml(body.files)).modal();
-      let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
-      let select = document.querySelector('#newProjectModelModal #modelFileInput');
-      let location = document.querySelector('#newProjectModelModal #modelPathInput');
-      select.addEventListener("change", function (e) {
-        okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
-        if(body.paths[e.target.value].length >= 2) {
-          var locations = body.paths[e.target.value].map(function (path) {
-            return `<option>${path}</option>`;
-          });
-          locations.unshift(`<option value="">Select a location</option>`);
-          locations = locations.join(" ");
-          $("#modelPathInput").find('option').remove().end().append(locations);
-          $("#location-container").css("display", "block");
-        }else{
-          $("#location-container").css("display", "none");
-          $("#modelPathInput").find('option').remove().end();
-        }
-      });
-      location.addEventListener("change", function (e) {
-        okBtn.disabled = !Boolean(e.target.value);
-      });
-      okBtn.addEventListener("click", function (e) {
-        modal.modal('hide');
-        let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
-        let queryString = "?path=" + self.model.directory + "&mdlPath=" + mdlPath;
-        let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
-        xhr({uri:endpoint, json:true, method:"post"}, function (err, response, body) {
-          if(response.statusCode < 400) {
-            let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
+    app.getXHR(mdlListEP, {
+      always: function (err, response, body) {
+        let modal = $(modals.newProjectModelHtml(body.files)).modal();
+        let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
+        let select = document.querySelector('#newProjectModelModal #modelFileInput');
+        let location = document.querySelector('#newProjectModelModal #modelPathInput');
+        select.addEventListener("change", function (e) {
+          okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
+          if(body.paths[e.target.value].length >= 2) {
+            var locations = body.paths[e.target.value].map(function (path) {
+              return `<option>${path}</option>`;
+            });
+            locations.unshift(`<option value="">Select a location</option>`);
+            locations = locations.join(" ");
+            $("#modelPathInput").find('option').remove().end().append(locations);
+            $("#location-container").css("display", "block");
           }else{
-            let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+            $("#location-container").css("display", "none");
+            $("#modelPathInput").find('option').remove().end();
           }
         });
-        self.update("Model");
-      });
+        location.addEventListener("change", function (e) {
+          okBtn.disabled = !Boolean(e.target.value);
+        });
+        okBtn.addEventListener("click", function (e) {
+          modal.modal('hide');
+          let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
+          let queryString = "?path=" + self.model.directory + "&mdlPath=" + mdlPath;
+          let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
+          app.postXHR(endpoint, null, {
+            success: function (err, response, body) {
+              let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
+            },
+            error: function (err, response, body) {
+              let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+            }
+          });
+          self.update("Model");
+        });
+      }
     });
   },
   addModel: function (parentPath, modelName, message) {
@@ -125,11 +133,12 @@ let ProjectManager = PageView.extend({
     if(parentPath.endsWith(".proj")) {
       let queryString = "?path=" + parentPath + "&mdlFile=" + modelName;
       let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryString;
-      xhr({uri: newMdlEP, json: true}, function (err, response, body) {
-        if(response.statusCode < 400) {
+      app.getXHR(newMdlEP, {
+        success: function (err, response, body) {
           endpoint += "?path="+body.path;
           window.location.href = endpoint;
-        }else{
+        },
+        error: function (err, response, body) {
           let title = "Model Already Exists";
           let message = "A model already exists with that name";
           let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
@@ -140,13 +149,15 @@ let ProjectManager = PageView.extend({
       let queryString = "?path="+modelPath+"&message="+message;
       endpoint += queryString;
       let existEP = path.join(app.getApiPath(), "model/exists")+queryString;
-      xhr({uri: existEP, json: true}, function (err, response, body) {
-        if(body.exists) {
-          let title = "Model Already Exists";
-          let message = "A model already exists with that name";
-          let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
-        }else{
-          window.location.href = endpoint;
+      app.getXHR(existEP, {
+        always: function (err, response, body) {
+          if(body.exists) {
+            let title = "Model Already Exists";
+            let message = "A model already exists with that name";
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+          }else{
+            window.location.href = endpoint;
+          }
         }
       });
     }
@@ -218,8 +229,8 @@ let ProjectManager = PageView.extend({
     yesBtn.addEventListener('click', function (e) {
       modal.modal('hide');
       let endpoint = path.join(app.getApiPath(), "project/empty-trash")+"?path="+path.join(self.model.directory, "trash");
-      xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode < 400) {
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
           $(self.queryByHook('empty-project-trash')).prop('disabled', true);
           self.update("trash");
         }
@@ -236,8 +247,8 @@ let ProjectManager = PageView.extend({
     let self = this;
     let queryStr = "?path="+this.model.directory+"&action=generate";
     let endpoint = path.join(app.getApiPath(), "file/download-zip")+queryStr;
-    xhr({uri:endpoint, json:true}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
         var downloadEP = path.join(app.getBasePath(), "/files", body.Path);
         window.open(downloadEP);
       }
@@ -398,7 +409,6 @@ let ProjectManager = PageView.extend({
         success: function (model, response, options) {
           if(model.newFormat) {
             self.renderWorkflowGroupCollection();
-            console.log(target)
           }else{
             if(target === "Workflow"){
               self.renderWorkflowsCollection();
@@ -421,8 +431,10 @@ let ProjectManager = PageView.extend({
     }
     let endpoint = path.join(app.getApiPath(), "project/save-annotation")+"?path="+this.model.directory;
     let data = {'annotation': this.model.annotation};
-    xhr({uri: endpoint, json: true, method: "post", data: data}, function (err, response, body) {
-      console.log(body);
+    app.postXHR(endpoint, data, {
+      always: function (err, response, body) {
+        console.log(body);
+      }
     });
   },
   validateName(input) {

@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var _ = require('underscore');
 var $ = require('jquery');
 let path = require('path');
@@ -268,14 +267,16 @@ let ModelEditor = PageView.extend({
       let self = this;
       let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath
       let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr
-      xhr({uri: endpoint, json: true}, function (err, resp, body) {
-        let domain = new Domain(body.domain);
-        self.domainViewer = new DomainViewer({
-          parent: self,
-          model: domain,
-          domainPath: domainPath
-        });
-        app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
+      app.getXHR(endpoint, {
+        always: function (err, response, body) {
+          let domain = new Domain(body.domain);
+          self.domainViewer = new DomainViewer({
+            parent: self,
+            model: domain,
+            domainPath: domainPath
+          });
+          app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
+        }
       });
     }else{
       this.domainViewer = new DomainViewer({

@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 let _ = require('underscore');
@@ -69,12 +68,14 @@ module.exports = View.extend({
   getStatus: function () {
     var self = this;
     var endpoint = path.join(app.getApiPath(), "workflow/workflow-status") + "?path=" + this.model.directory;
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(body === 'running')
-        setTimeout(_.bind(self.getStatus, self), 1000);
-      else{
-      	self.model.status = body;
-        $(self.queryByHook(this.model.elementID + "-status")).text(self.model.status);
+    app.getXHR(endpoint, {
+      always: function (err, response, body) {
+        if(body === 'running')
+          setTimeout(_.bind(self.getStatus, self), 1000);
+        else{
+          self.model.status = body;
+          $(self.queryByHook(this.model.elementID + "-status")).text(self.model.status);
+        }
       }
     });
   },
@@ -105,8 +106,8 @@ module.exports = View.extend({
       let trashPath = path.join(projectPath, "trash", file);
       let queryString = "?srcPath=" + self.model.directory + "&dstPath=" + trashPath;
       let endpoint = path.join(app.getApiPath(), 'file/move') + queryString;
-      xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode < 400) {
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
           self.parent.update("Workflow");
         }
       });
@@ -121,6 +122,6 @@ module.exports = View.extend({
     let queryString = "?path=" + this.model.directory;
     let endpoint = path.join(app.getApiPath(), "workflow/save-annotation") + queryString;
     let body = {'annotation':this.model.annotation};
-    xhr({uri:endpoint, json:true, method:'post', body:body}, function (err, response, body) {console.log("Saved Notes")});
+    app.postXHR(endpoint, body);
   }
 });

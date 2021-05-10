@@ -97,6 +97,38 @@ let registerRenderSubview = (parent, view, hook) => {
   parent.renderSubview(view, parent.queryByHook(hook));
 };
 
+let getXHR = (endpoint, {
+  always = function (err, response, body) {console.log("No always callback provided")},
+  success = function (err, response, body) {console.log("No success callback provided")},
+  error = function (err, response, body) {console.log("No error callback provided")}}={}) => {
+  xhr({uri: endpoint, json: true}, function (err, response, body) {
+    if(response.statusCode < 400) {
+      success(err, response, body);
+    }else if(response.statusCode < 500) {
+      error(err, response, body);
+    }else{
+      console.log("Critical Error Detected");
+    }
+    always(err, response, body);
+  });
+};
+
+let postXHR = (endpoint, data, {
+  always = function (err, response, body) {console.log("No always callback provided")},
+  success = function (err, response, body) {console.log("No success callback provided")},
+  error = function (err, response, body) {console.log("No error callback provided")}}={}) => {
+  xhr({uri: endpoint, json: true, method: "post", body: data}, function (err, response, body) {
+    if(response.statusCode < 400) {
+      success(err, response, body);
+    }else if(response.statusCode < 500) {
+      error(err, response, body);
+    }else{
+      console.log("Critical Error Detected");
+    }
+    always(err, response, body);
+  });
+};
+
 let getBrowser = () => {
   BrowserDetect.init();
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
@@ -155,11 +187,11 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
     }
     let queryString = "?path=" + wkflPath + "&model=" + mdlPath + "&type=" + type;
     let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400) {
-        window.location.href = path.join(getBasePath(), "stochss/workflow/edit") + "?path=" + body.path
+    getXHR(endpoint, {
+      success: function (err, response, body) {
+        window.location.href = path.join(getBasePath(), "stochss/workflow/edit") + "?path=" + body.path;
       }
-    })
+    });
   });
 }
 
@@ -170,7 +202,9 @@ module.exports = {
     getBrowser: getBrowser,
     registerRenderSubview: registerRenderSubview,
     changeCollapseButtonText: changeCollapseButtonText,
-    newWorkflow: newWorkflow
+    newWorkflow: newWorkflow,
+    getXHR: getXHR,
+    postXHR: postXHR
 };
 
 

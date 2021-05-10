@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var $ = require('jquery');
 var path = require('path');
 //support files
@@ -49,34 +48,35 @@ module.exports = View.extend({
     }
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/3d-domain");
-    xhr({uri: endpoint, json: true, method: "post", body: this.data}, function (err, resp, body) {
-      if(resp.statusCode < 400) {
+    app.postXHR(endpoint, this.data, {
+      success: function (err, response, body) {
         self.parent.addParticles(body.particles);
         if(self.parent.domain.x_lim[0] > body.limits.x_lim[0]) {
-          self.parent.domain.x_lim[0] = body.limits.x_lim[0]
+          self.parent.domain.x_lim[0] = body.limits.x_lim[0];
         }
         if(self.parent.domain.y_lim[0] > body.limits.y_lim[0]) {
-          self.parent.domain.y_lim[0] = body.limits.y_lim[0]
+          self.parent.domain.y_lim[0] = body.limits.y_lim[0];
         }
         if(self.parent.domain.z_lim[0] > body.limits.z_lim[0]) {
-          self.parent.domain.z_lim[0] = body.limits.z_lim[0]
+          self.parent.domain.z_lim[0] = body.limits.z_lim[0];
         }
         if(self.parent.domain.x_lim[1] < body.limits.x_lim[1]) {
-          self.parent.domain.x_lim[1] = body.limits.x_lim[1]
+          self.parent.domain.x_lim[1] = body.limits.x_lim[1];
         }
         if(self.parent.domain.y_lim[1] < body.limits.y_lim[1]) {
-          self.parent.domain.y_lim[1] = body.limits.y_lim[1]
+          self.parent.domain.y_lim[1] = body.limits.y_lim[1];
         }
         if(self.parent.domain.z_lim[1] < body.limits.z_lim[1]) {
-          self.parent.domain.z_lim[1] = body.limits.z_lim[1]
+          self.parent.domain.z_lim[1] = body.limits.z_lim[1];
         }
         self.parent.renderDomainLimitations();
-        self.completeAction("Domain successfully created")
+        self.completeAction("Domain successfully created");
         $('html, body').animate({
             scrollTop: $("#domain-plot").offset().top
         }, 20);
-      }else{
-        self.errorAction(body.Message)
+      },
+      error: function (err, response, body) {
+        self.errorAction(body.Message);
       }
     });
   },
@@ -112,7 +112,6 @@ module.exports = View.extend({
     $(this.queryByHook("cd-in-progress")).css("display", "none");
     $(this.queryByHook("cd-action-complete")).text(action);
     $(this.queryByHook("cd-complete")).css("display", "inline-block");
-    console.log(action)
     let self = this
     setTimeout(function () {
       $(self.queryByHook("cd-complete")).css("display", "none");
@@ -204,7 +203,6 @@ module.exports = View.extend({
     $(this.queryByHook("cd-complete")).css("display", "none");
     $(this.queryByHook("cd-action-in-progress")).text(action);
     $(this.queryByHook("cd-in-progress")).css("display", "inline-block");
-    console.log(action)
   },
   update: function (e) {},
   updateTotalParticles: function (e) {

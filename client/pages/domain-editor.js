@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var $ = require('jquery');
 let path = require('path');
 var _ = require('underscore');
@@ -217,7 +216,6 @@ let DomainEditor = PageView.extend({
       $(this.queryByHook("type-location-container")).css("display", "none");
       var disabled = true;
     }
-    console.log(disabled)
     $(this.queryByHook("set-particle-types-btn")).prop("disabled", disabled);
   },
   handleSelectTypeLocation: function (e) {
@@ -248,13 +246,15 @@ let DomainEditor = PageView.extend({
       this.queryStr += "domain_path=" + domainPath
     }
     let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + this.queryStr
-    xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      self.domain = new Domain(body.domain);
-      self.domain.directory = domainPath
-      self.domain.dirname = newDomain && !modelPath ? domainPath : null
-      self.model = self.buildModel(body.model, modelPath);
-      self.actPart = {"part":null, "tn":0, "pn":0};
-      self.renderSubviews();
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.domain = new Domain(body.domain);
+        self.domain.directory = domainPath
+        self.domain.dirname = newDomain && !modelPath ? domainPath : null
+        self.model = self.buildModel(body.model, modelPath);
+        self.actPart = {"part":null, "tn":0, "pn":0};
+        self.renderSubviews();
+      }
     });
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
@@ -273,8 +273,6 @@ let DomainEditor = PageView.extend({
     if(!fromImport) {
       this.renderDomainTypes();
       this.updatePlot();
-    }else{
-      console.log("From Imports")
     }
     if(cb) {
       cb();
@@ -469,14 +467,15 @@ let DomainEditor = PageView.extend({
     let self = this;
     let queryStr = "?path=" + this.typeDescriptionsFile;
     let endpoint = path.join(app.getApiPath(), "spatial-model/particle-types") + queryStr;
-    xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      if(resp.statusCode < 400) {
-        self.addMissingTypes(body.names)
-        self.changeParticleTypes(body.types)
-        self.completeAction("Types set", "st")
-      }else{
-        self.errorAction(body.Message, "st")
-        console.log(err)
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.addMissingTypes(body.names);
+        self.changeParticleTypes(body.types);
+        self.completeAction("Types set", "st");
+      },
+      error: function (err, response, body) {
+        self.errorAction(body.Message, "st");
+        console.log(err);
       }
     });
   },
@@ -700,9 +699,11 @@ let DomainEditor = PageView.extend({
     this.renderCreate3DDomain();
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
-    xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      self.plot = body.fig;
-      self.displayDomain();
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.plot = body.fig;
+        self.displayDomain();
+      }
     });
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -719,17 +720,19 @@ let DomainEditor = PageView.extend({
   renderTypesFileSelect: function () {
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/types-list");
-    xhr({uri: endpoint, json:true}, function (err, resp, body) {
-      self.typeDescriptions = body.paths;
-      var typesSelectView = new SelectView({
-        label: '',
-        name: 'type-files',
-        required: false,
-        idAttributes: 'cid',
-        options: body.files,
-        unselectedText: "-- Select Type File --",
-      });
-      app.registerRenderSubview(self, typesSelectView, "types-file-select")
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.typeDescriptions = body.paths;
+        var typesSelectView = new SelectView({
+          label: '',
+          name: 'type-files',
+          required: false,
+          idAttributes: 'cid',
+          options: body.files,
+          unselectedText: "-- Select Type File --",
+        });
+        app.registerRenderSubview(self, typesSelectView, "types-file-select");
+      }
     });
   },
   renderTypesLocationSelect: function (options) {
@@ -773,12 +776,13 @@ let DomainEditor = PageView.extend({
     }
     let self = this;
     let endpoint = path.join(app.getApiPath(), "file/json-data") + "?path=" + domainPath;
-    xhr({uri: endpoint, method: "post", json: true, body: domain}, function (err, response, body) {
-      if(response.statusCode >= 400) {
-        self.errorAction(body.Message, "sd");
-        console.log(body.message)
-      }else{
+    app.postXHR(endpoint, domain, {
+      success: function (err, response, body) {
         self.completeAction("Domain save to file (.domn)", "sd");
+      },
+      error: function (err, response, body) {
+        self.errorAction(body.Message, "sd");
+        console.log(body.message);
       }
     });
   },

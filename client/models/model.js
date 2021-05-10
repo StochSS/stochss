@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var app = require('../app');
 var path = require('path');
-var xhr = require('xhr');
 //models
 var Model = require('ampersand-model');
 var TimespanSettings = require('./timespan-settings');

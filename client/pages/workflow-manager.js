@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let xhr = require('xhr');
 let $ = require('jquery');
 let path = require('path');
 let _ = require('underscore');
@@ -125,8 +124,8 @@ let WorkflowManager = PageView.extend({
   handleSaveWorkflow: function (e, cb) {
     let self = this;
     let endpoint = this.model.url();
-    xhr({uri: endpoint, json: true, method: 'post', data: this.model.toJSON()}, function (err, response, body) {
-      if(response.statusCode < 400) {
+    app.postXHR(endpoint, this.model.toJSON(), {
+      success: function (err, response, body) {
         if(cb) {
           cb();
         }else{
