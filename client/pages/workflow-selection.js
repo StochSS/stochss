@@ -62,9 +62,10 @@ let workflowSelection = PageView.extend({
       isPreview: false,
       for: "wkfl",
     });
-    this.model.fetch({
-      success: function (model, response, options) {
-        $(self.queryByHook("wkfl-selection-header")).text("Workflow Selection for " + model.name);
+    app.getXHR(this.model.url(), {
+      success: function (err, response, body) {
+        self.model.set(body)
+        $(self.queryByHook("wkfl-selection-header")).text("Workflow Selection for " + self.model.name);
         if(self.modelDir.includes(".proj")) {
           self.queryByHook("workflow-selection-breadcrumb-links").style.display = "block";
         }
@@ -85,6 +86,7 @@ let workflowSelection = PageView.extend({
     })
   },
   validateWorkflows: function () {
+    this.model.updateValid();
     let invalid = !this.model.valid;
     if(invalid) {
       let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + this.model.directory;

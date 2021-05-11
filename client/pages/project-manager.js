@@ -64,13 +64,14 @@ let ProjectManager = PageView.extend({
     this.model = new Project({
       directory: urlParams.get('path')
     });
-    this.model.fetch({
-      success: function (model, response, options) {
-        self.models = new Collection(response.models, {model: Model});
+    app.getXHR(this.model.url(), {
+      success: function (err, response, body) {
+        self.model.set(body)
+        self.models = new Collection(body.models, {model: Model});
         if(!self.model.newFormat) {
           self.model.workflowGroups.models[0].model = null;
         }
-        self.renderSubviews(response.trash_empty);
+        self.renderSubviews(body.trash_empty);
       }
     });
     window.addEventListener("pageshow", function (event) {
@@ -405,20 +406,21 @@ let ProjectManager = PageView.extend({
     let fetchTypes = ["Model", "Workflow", "WorkflowGroup", "Archive"];
     if(fetchTypes.includes(target)) {
       let self = this;
-      this.model.fetch({
-        success: function (model, response, options) {
-          if(model.newFormat) {
+      app.getXHR(this.model.url(), {
+        success: function (err, response, body) {
+          self.model.set(body)
+          if(self.model.newFormat) {
             self.renderWorkflowGroupCollection();
           }else{
             if(target === "Workflow"){
               self.renderWorkflowsCollection();
             }
             if(target === "Model"){
-              self.models = new Collection(response.models, {model: Model});
+              self.models = new Collection(body.models, {model: Model});
               self.renderModelsCollection();
             }
           }
-          $(self.queryByHook('empty-project-trash')).prop('disabled', response.trash_empty)
+          $(self.queryByHook('empty-project-trash')).prop('disabled', body.trash_empty)
         }
       });
     }

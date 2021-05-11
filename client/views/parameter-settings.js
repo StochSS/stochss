@@ -43,8 +43,9 @@ module.exports = View.extend({
       directory: attrs.modelDirectory
     });
     let self = this;
-    this.stochssModel.fetch({
-      success: function (model, response, options) {
+    app.getXHR(this.stochssModel.url(), {
+      success: function (err, response, body) {
+        self.stochssModel.set(body)
         self.renderSubviews();
       }
     });

@@ -56,8 +56,9 @@ let WorkflowManager = PageView.extend({
       directory: urlParams.get('path')
     });
     let self = this;
-    this.model.fetch({
-      success: function (model, response, options) {
+    app.getXHR(this.model.url(), {
+      success: function (err, response, body) {
+        self.model.set(body)
         $("#page-title").text("Workflow: " + self.model.name);
         if(self.model.directory.includes('.proj')) {
           let index = self.model.directory.indexOf('.proj') + 5;
@@ -67,8 +68,8 @@ let WorkflowManager = PageView.extend({
           self.queryByHook("project-breadcrumb-links").style.display = "block";
           self.queryByHook("return-to-project-btn").style.display = "inline-block";
         }
-        if(response.models){
-          self.renderModelSelectView(response.models);
+        if(body.models){
+          self.renderModelSelectView(body.models);
         }
         self.renderSubviews();
         if(!self.model.newFormat) {
@@ -280,8 +281,9 @@ let WorkflowManager = PageView.extend({
     let self = this;
     if(this.model.newFormat) {
       let hadActiveJob = Boolean(this.model.activeJob.status)
-      this.model.fetch({
-        success: function (model, response, options) {
+      app.getXHR(this.model.url(), {
+        success: function (err, response, body) {
+          self.model.set(body);
           if(!Boolean(self.model.activeJob.status)){
             self.removeActiveJob();
           }else if(!hadActiveJob && Boolean(self.model.activeJob.status)) {
@@ -290,8 +292,9 @@ let WorkflowManager = PageView.extend({
         }
       });
     }else if(!this.model.newFormat){
-      this.model.fetch({
-        success: function (model, response, options) {
+      app.getXHR(this.model.url(), {
+        success: function (err, response, body) {
+          self.model.set(body)
           self.renderSubviews();
         }
       });

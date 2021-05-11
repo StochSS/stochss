@@ -87,8 +87,9 @@ let ModelEditor = PageView.extend({
       }
       this.projectName = this.getFileName(this.projectPath)
     }
-    this.model.fetch({
-      success: function (model, response, options) {
+    app.getXHR(this.model.url(), {
+      success: function (err, response, body) {
+        self.model.set(body)
         if(directory.includes('.proj')) {
           self.queryByHook("project-breadcrumb-links").style.display = "block"
           self.queryByHook("model-name-header").style.display = "none"
@@ -96,7 +97,7 @@ let ModelEditor = PageView.extend({
         self.renderSubviews();
         self.model.updateValid()
       }
-    });
+    })
     this.model.reactions.on("change", function (reactions) {
       this.updateSpeciesInUse();
       this.updateParametersInUse();
