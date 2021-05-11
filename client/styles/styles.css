@@ -635,3 +635,10 @@ span.checkbox {
   word-break: break-word !important;
   overflow-wrap: break-word !important;
 }
+
+.horizontal-scroll {
+  display: block;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
