@@ -129,13 +129,7 @@ module.exports = View.extend({
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;
     if (cb) {
-      model.save(model.attributes, {
-        success: cb,
-        error: function (model, response, options) {
-          console.error("Error saving model:", model);
-          console.error("Response:", response);
-        },
-      });
+      model.saveModel(cb);
     } else {
       model.saveModel();
     }

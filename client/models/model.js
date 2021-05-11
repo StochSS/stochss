@@ -136,9 +136,9 @@ module.exports = Model.extend({
       self.parameters.trigger('update-parameters', parameter.compID, parameter);
     });
     if(cb) {
-      this.save({success: cb});
+      app.postXHR(this.url(), this.toJSON(), { success: cb });
     }else{
-      this.save()
+      app.postXHR(this.url(), this.toJSON());
     }
   },
 });
