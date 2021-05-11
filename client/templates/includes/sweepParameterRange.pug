@@ -7,7 +7,9 @@ div
 
     div.inline.mr-2=this.model.name + ":"
 
-    div.inline(data-hook=this.model.elementID + "-current-value")=this.model.range[0]
+    div.inline(style="max-width: 100%")
+
+      div.horizontal-scroll(data-hook=this.model.elementID + "-current-value")=this.model.range[0]
 
   input.custom-range(
     type="range"
