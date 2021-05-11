@@ -494,7 +494,7 @@ class CreateDirectoryHandler(APIHandler):
             folder = StochSSFolder(path=directories, new=True)
             folder.print_logs(log)
             log.info("Successfully created %s directory", directories.split('/').pop())
-            self.write("{0} was successfully created!".format(directories))
+            self.write(f"{directories} was successfully created!")
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
