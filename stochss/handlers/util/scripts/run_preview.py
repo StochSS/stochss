@@ -75,7 +75,7 @@ def get_parsed_args():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('path', help="The path from the user directory to the model.")
     parser.add_argument('outfile', help="The temp file used to hold the results.")
-    parser.add_argument('species', help="Spatial species to preview.", default=None)
+    parser.add_argument('--species', help="Spatial species to preview.", default=None)
     return parser.parse_args()
 
 

@@ -125,7 +125,7 @@ module.exports = View.extend({
     var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/home"
     $(this.queryByHook("home-link")).prop('href', homePath);
     let self = this;
-    let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcomb to StochSS Live!";
+    let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
     $("#user-logs").html(message)
     this.logBlock = [];
     this.logs = [];
