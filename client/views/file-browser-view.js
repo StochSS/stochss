@@ -1368,7 +1368,7 @@ module.exports = View.extend({
         return $.extend(open, workflow, downloadWCombine, common)
       }
       if (o.type === 'notebook' || o.type === "other") {
-        return $.extend(open, common)
+        return $.extend(open, download, common)
       }
       if (o.type === 'sbml-model') {
         return $.extend(open, sbml, common)
