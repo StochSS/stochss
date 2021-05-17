@@ -24,7 +24,7 @@ module.exports = State.extend({
     name: 'string',
     range: 'object',
     steps: 'any',
-    hasChangedRanged: 'boolean' 
+    hasChangedRange: 'boolean' 
   },
   derived: {
     elementID: {
@@ -42,10 +42,10 @@ module.exports = State.extend({
   },
   updateVariable: function (parameter) {
     let value = parameter.expression;
-    if(this.min <= 0 || !this.hasChangedRanged) {
+    if(this.min <= 0 || !this.hasChangedRange) {
       this.min = value * 0.5;
     }
-    if(this.max <= 0 || !this.hasChangedRanged) {
+    if(this.max <= 0 || !this.hasChangedRange) {
       this.max = value * 1.5;
     }
   }

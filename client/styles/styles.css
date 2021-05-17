@@ -56,8 +56,8 @@ img.quickstart {
   }
   .sidebar-sticky {
     position: fixed;
-    flex: 0 0 15%;
-    max-width: 15%;
+    flex: 0 0 11.5%;
+    max-width: 11.5%;
   }
   .nav-flex-column {
     -ms-flex-direction: column !important;
