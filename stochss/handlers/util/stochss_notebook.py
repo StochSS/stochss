@@ -44,21 +44,29 @@ class StochSSNotebook(StochSSBase):
                   "ODESolver":"ODE", "Solver":"SSA"}
 
     def __init__(self, path, new=False, models=None, settings=None):
-        '''
-        Intitialize a notebook object and if its new create it on the users file system
+        '''Intitialize a notebook object and if its new create it on the users file system
 
         Attributes
         ----------
         path : str
-            Path to the notebook
-        '''
+            Path to the notebook'''
         super().__init__(path=path)
         if new:
             self.is_ssa_c = check_cpp_support()
             self.nb_type = 0
             self.s_model = models["s_model"]
             self.model = models["model"]
-            self.settings = self.get_settings_template() if settings is None else settings
+            if settings is None:
+                self.settings = self.get_settings_template()
+            else:
+                self.settings = settings
+                if "timespanSettings" in settings.keys():
+                    keys = settings['timespanSettings'].keys()
+                    if "endSim" in keys and "timeStep" in keys:
+                        end = settings['timespanSettings']['endSim']
+                        step_size = settings['timespanSettings']['timeStep']
+                        self.s_model['modelSettings']['endSim'] = end
+                        self.s_model['modelSettings']['timeStep'] = step_size
             self.make_parent_dirs()
             n_path, changed = self.get_unique_path(name=self.get_file())
             if changed:
@@ -128,7 +136,7 @@ class StochSSNotebook(StochSSBase):
                     delay = event['delay'] if event['delay'] else None
                     ev_str = f'{pad}self.add_event(Event(name="{event["name"]}", '
                     ev_str += f'trigger={t_name}, assignments=[{a_names}], '
-                    ev_str += f'delay="{delay}", priority="{event["priority"]}", '
+                    ev_str += f'delay={delay}, priority="{event["priority"]}", '
                     ev_str += f'use_values_from_trigger_time={event["useValuesFromTriggerTime"]}))'
                     events.append(ev_str)
                 model.extend(triggers)
@@ -137,7 +145,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Events are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     @classmethod
     def __create_event_assignment_strings(cls, assignments, event, pad):
@@ -171,7 +179,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Function definitions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_import_cell(self, interactive_backend=False):
         try:
@@ -213,7 +221,7 @@ class StochSSNotebook(StochSSBase):
         except KeyError as err:
             message = "Workflow settings are not properly formatted or "
             message += f"are referenced incorrectly for notebooks: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_initial_condition_strings(self, model, pad):
         if self.s_model['initialConditions']:
@@ -234,12 +242,13 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Initial conditions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_mesh_string(self, model, pad):
         mesh = ["", f"{pad}# Domain",
                 f"{pad}mesh = Mesh.read_stochss_domain('{self.s_model['path']}')",
-                f"{pad}self.add_mesh(mesh)"]
+                f"{pad}self.add_mesh(mesh)",
+                "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
         model.extend(mesh)
 
     def __create_model_cell(self):
@@ -289,7 +298,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Parameters are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_ps_post_process_cells(self):
         pad = "    "
@@ -346,21 +355,21 @@ class StochSSNotebook(StochSSBase):
         settings = self.settings['parameterSweepSettings']
         eval_str = "float(eval(model.get_parameter(p1).expression))"
         number_of_trajectories = self.settings['simulationSettings']['realizations']
-        if not settings['parameterOne']:
+        if not settings['parameters']:
             param = self.s_model['parameters'][0]
             p_min = f"0.5 * {eval_str}"
             p_max = f"1.5 * {eval_str}"
             spec_of_interest = self.s_model['species'][0]
         else:
-            param = settings['parameterOne']
-            p_min = settings['p1Min']
-            p_max = settings['p1Max']
+            param = settings['parameters'][0]
+            p_min = param['min']
+            p_max = param['max']
             spec_of_interest = settings['speciesOfInterest']
         config_cell.extend([f"{pad}# ENTER PARAMETER HERE", f"{pad}p1 = '{param['name']}'",
                             f"{pad}# ENTER START VALUE FOR P1 RANGE HERE", f"{pad}p1_min = {p_min}",
                             f"{pad}# ENTER END VALUE FOR P1 RANGE HERE", f"{pad}p1_max = {p_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P1 HERE",
-                            f"{pad}p1_steps = {settings['p1Steps']}",
+                            f"{pad}p1_steps = {param['steps']}",
                             f"{pad}p1_range = np.linspace(p1_min, p1_max, p1_steps)",
                             f"{pad}# ENTER VARIABLE OF INTEREST HERE",
                             f"{pad}variable_of_interest = '{spec_of_interest['name']}'",
@@ -454,7 +463,7 @@ class StochSSNotebook(StochSSBase):
         p1_eval_str = "float(eval(model.get_parameter(p1).expression))"
         p2_eval_str = "float(eval(model.get_parameter(p2).expression))"
         number_of_trajectories = self.settings['simulationSettings']['realizations']
-        if not settings['parameterOne']:
+        if not settings['parameters']:
             param1 = self.s_model['parameters'][0]
             p1_min = f"0.5 * {p1_eval_str}"
             p1_max = f"1.5 * {p1_eval_str}"
@@ -463,12 +472,12 @@ class StochSSNotebook(StochSSBase):
             p2_max = f"1.5 * {p2_eval_str}"
             spec_of_interest = self.s_model['species'][0]
         else:
-            param1 = settings['parameterOne']
-            p1_min = settings['p1Min']
-            p1_max = settings['p1Max']
-            param2 = settings['parameterTwo']
-            p2_min = settings['p2Min']
-            p2_max = settings['p2Max']
+            param1 = settings['parameters'][0]
+            p1_min = param1['min']
+            p1_max = param1['max']
+            param2 = settings['parameters'][1]
+            p2_min = param2['min']
+            p2_max = param2['max']
             spec_of_interest = settings['speciesOfInterest']
         config_cell.extend([f"{pad}# ENTER PARAMETER 1 HERE", f"{pad}p1 = '{param1['name']}'",
                             f"{pad}# ENTER PARAMETER 2 HERE", f"{pad}p2 = '{param2['name']}'",
@@ -476,13 +485,13 @@ class StochSSNotebook(StochSSBase):
                             f"{pad}p1_min = {p1_min}",
                             f"{pad}# ENTER END VALUE FOR P1 RANGE HERE", f"{pad}p1_max = {p1_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P1 HERE",
-                            f"{pad}p1_steps = {settings['p1Steps']}",
+                            f"{pad}p1_steps = {param1['steps']}",
                             f"{pad}p1_range = np.linspace(p1_min, p1_max, p1_steps)",
                             f"{pad}# ENTER START VALUE FOR P2 RANGE HERE",
                             f"{pad}p2_min = {p2_min}",
                             f"{pad}# ENTER END VALUE FOR P2 RANGE HERE", f"{pad}p2_max = {p2_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P2 HERE",
-                            f"{pad}p2_steps = {settings['p2Steps']}",
+                            f"{pad}p2_steps = {param2['steps']}",
                             f"{pad}p2_range = np.linspace(p2_min, p2_max, p2_steps)",
                             f"{pad}# ENTER VARIABLE OF INTEREST HERE",
                             f"{pad}variable_of_interest = '{spec_of_interest['name']}'",
@@ -569,7 +578,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Reactions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_rules_strings(self, model, pad):
         if self.s_model['rules']:
@@ -593,7 +602,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Rules are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     @classmethod
     def __create_sme_expres_cells(cls):
@@ -737,7 +746,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Species are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_stoich_spec_string(self, stoich_species):
         species = {}
@@ -975,7 +984,7 @@ class StochSSNotebook(StochSSBase):
                 return json.load(notebook_file)
         except FileNotFoundError as err:
             message = f"Could not find the notebook file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
     def write_notebook_file(self, cells):
         '''Write the new notebook file to disk

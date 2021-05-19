@@ -69,6 +69,10 @@ class StochSSAPIError(Exception):
         self.traceback = trace
 
 
+    def __str__(self):
+        return f"{self.message}: \n{self.traceback}"
+
+
 
 ####################################################################################################
 # File System Errors
@@ -203,19 +207,19 @@ class DomainFormatError(StochSSAPIError):
         super().__init__(406, "Domain File Not In Proper Format", msg, trace)
 
 ####################################################################################################
-# Workflow Errors
+# Job Errors
 ####################################################################################################
 
-class StochSSWorkflowError(StochSSAPIError):
+class StochSSJobError(StochSSAPIError):
     '''
     ################################################################################################
-    StochSS Workflow Errored During Run Time
+    StochSS Job Errored During Run Time
     ################################################################################################
     '''
 
     def __init__(self, msg, trace=None):
         '''
-        Indicates that the workflow experienced an error during run
+        Indicates that the job experienced an error during run
 
         Attributes
         ----------
@@ -224,19 +228,19 @@ class StochSSWorkflowError(StochSSAPIError):
         trace : str
             Error traceback for the error
         '''
-        super().__init__(403, "Workflow Errored on Run", msg, trace)
+        super().__init__(403, "Job Errored on Run", msg, trace)
 
 
-class StochSSWorkflowNotCompleteError(StochSSAPIError):
+class StochSSJobNotCompleteError(StochSSAPIError):
     '''
     ################################################################################################
-    StochSS Workflow Has Not Completed
+    StochSS Job Has Not Completed
     ################################################################################################
     '''
 
     def __init__(self, msg, trace=None):
         '''
-        Indicates that the action requires a workflow to finish running before it can be executed
+        Indicates that the action requires a job to finish running before it can be executed
 
         Attributes
         ----------
@@ -245,7 +249,7 @@ class StochSSWorkflowNotCompleteError(StochSSAPIError):
         trace : str
             Error traceback for the error
         '''
-        super().__init__(403, "Workflow Run Not Complete", msg, trace)
+        super().__init__(403, "Job Run Not Complete", msg, trace)
 
 
 class PlotNotAvailableError(StochSSAPIError):

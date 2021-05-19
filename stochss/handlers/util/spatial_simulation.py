@@ -19,12 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from spatialpy import Solver
 
-from .stochss_workflow import StochSSWorkflow
+from .stochss_job import StochSSJob
 
-class SpatialSimulation(StochSSWorkflow):
+class SpatialSimulation(StochSSJob):
     '''
     ################################################################################################
-    StochSS spatial ensemble simulation workflow object
+    StochSS spatial ensemble simulation job object
     ################################################################################################
     '''
 
@@ -32,12 +32,12 @@ class SpatialSimulation(StochSSWorkflow):
 
     def __init__(self, path, preview=False, species=None):
         '''
-        Intitialize a spatial ensemble simulation workflow object
+        Intitialize a spatial ensemble simulation job object
 
         Attributes
         ----------
         path : str
-            Path to the spatial ensemble simulation workflow
+            Path to the spatial ensemble simulation job
         '''
         super().__init__(path=path)
         if not preview:
@@ -54,7 +54,7 @@ class SpatialSimulation(StochSSWorkflow):
 
     def run(self, preview=False, verbose=False):
         '''
-        Run a SpatialPy ensemble simulation workflow
+        Run a SpatialPy ensemble simulation job
 
         Attributes
         ----------

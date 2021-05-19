@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var $ = require('jquery');
 var path = require('path');
 //support files
@@ -49,34 +48,35 @@ module.exports = View.extend({
     }
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/3d-domain");
-    xhr({uri: endpoint, json: true, method: "post", body: this.data}, function (err, resp, body) {
-      if(resp.statusCode < 400) {
+    app.postXHR(endpoint, this.data, {
+      success: function (err, response, body) {
         self.parent.addParticles(body.particles);
         if(self.parent.domain.x_lim[0] > body.limits.x_lim[0]) {
-          self.parent.domain.x_lim[0] = body.limits.x_lim[0]
+          self.parent.domain.x_lim[0] = body.limits.x_lim[0];
         }
         if(self.parent.domain.y_lim[0] > body.limits.y_lim[0]) {
-          self.parent.domain.y_lim[0] = body.limits.y_lim[0]
+          self.parent.domain.y_lim[0] = body.limits.y_lim[0];
         }
         if(self.parent.domain.z_lim[0] > body.limits.z_lim[0]) {
-          self.parent.domain.z_lim[0] = body.limits.z_lim[0]
+          self.parent.domain.z_lim[0] = body.limits.z_lim[0];
         }
         if(self.parent.domain.x_lim[1] < body.limits.x_lim[1]) {
-          self.parent.domain.x_lim[1] = body.limits.x_lim[1]
+          self.parent.domain.x_lim[1] = body.limits.x_lim[1];
         }
         if(self.parent.domain.y_lim[1] < body.limits.y_lim[1]) {
-          self.parent.domain.y_lim[1] = body.limits.y_lim[1]
+          self.parent.domain.y_lim[1] = body.limits.y_lim[1];
         }
         if(self.parent.domain.z_lim[1] < body.limits.z_lim[1]) {
-          self.parent.domain.z_lim[1] = body.limits.z_lim[1]
+          self.parent.domain.z_lim[1] = body.limits.z_lim[1];
         }
         self.parent.renderDomainLimitations();
-        self.completeAction("Domain successfully created")
+        self.completeAction("Domain successfully created");
         $('html, body').animate({
             scrollTop: $("#domain-plot").offset().top
         }, 20);
-      }else{
-        self.errorAction(body.Message)
+      },
+      error: function (err, response, body) {
+        self.errorAction(body.Message);
       }
     });
   },
@@ -99,10 +99,6 @@ module.exports = View.extend({
                  "yLim":[0, 0], "zLim":[0, 0], "type":0, "volume":1,
                  "transformation": null}
   },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    return this.renderSubview(view, this.queryByHook(hook));
-  },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     this.renderNumberOfParticles();
@@ -116,7 +112,6 @@ module.exports = View.extend({
     $(this.queryByHook("cd-in-progress")).css("display", "none");
     $(this.queryByHook("cd-action-complete")).text(action);
     $(this.queryByHook("cd-complete")).css("display", "inline-block");
-    console.log(action)
     let self = this
     setTimeout(function () {
       $(self.queryByHook("cd-complete")).css("display", "none");
@@ -132,58 +127,58 @@ module.exports = View.extend({
     let xtrans = new InputView({parent: this, required: true,
                                 name: 'x-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(xtrans, "domain-x-trans");
+    app.registerRenderSubview(this, xtrans, "domain-x-trans");
     let ytrans = new InputView({parent: this, required: true,
                                 name: 'y-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(ytrans, "domain-y-trans");
+    app.registerRenderSubview(this, ytrans, "domain-y-trans");
     let ztrans = new InputView({parent: this, required: true,
                                 name: 'z-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(ztrans, "domain-z-trans");
+    app.registerRenderSubview(this, ztrans, "domain-z-trans");
   },
   renderNumberOfParticles: function () {
     let nxView = new InputView({parent: this, required: true,
                                 name: 'nx', valueType: 'number',
                                 tests: tests.valueTests,
                                 value: this.data.nx});
-    this.registerRenderSubview(nxView, "nx");
+    app.registerRenderSubview(this, nxView, "nx");
     let nyView = new InputView({parent: this, required: true,
                                 name: 'ny', valueType: 'number',
                                 tests: tests.valueTests,
                                 value: this.data.ny});
-    this.registerRenderSubview(nyView, "ny");
+    app.registerRenderSubview(this, nyView, "ny");
     let nzView = new InputView({parent: this, required: true,
                                 name: 'nz', valueType: 'number',
                                 tests: tests.valueTests,
                                 value: this.data.nz});
-    this.registerRenderSubview(nzView, "nz");
+    app.registerRenderSubview(this, nzView, "nz");
   },
   renderParticleLimits: function () {
     let xLimMinView = new InputView({parent: this, required: true,
                                 name: 'x-lim-min', valueType: 'number',
                                 value: this.data.xLim[0]});
-    this.registerRenderSubview(xLimMinView, "xLim-min");
+    app.registerRenderSubview(this, xLimMinView, "xLim-min");
     let yLimMinView = new InputView({parent: this, required: true,
                                 name: 'y-lim-min', valueType: 'number',
                                 value: this.data.yLim[0]});
-    this.registerRenderSubview(yLimMinView, "yLim-min");
+    app.registerRenderSubview(this, yLimMinView, "yLim-min");
     let zLimMinView = new InputView({parent: this, required: true,
                                 name: 'z-lim-min', valueType: 'number',
                                 value: this.data.zLim[0]});
-    this.registerRenderSubview(zLimMinView, "zLim-min");
+    app.registerRenderSubview(this, zLimMinView, "zLim-min");
     let xLimMaxView = new InputView({parent: this, required: true,
                                 name: 'x-lim-max', valueType: 'number',
                                 value: this.data.xLim[1]});
-    this.registerRenderSubview(xLimMaxView, "xLim-max");
+    app.registerRenderSubview(this, xLimMaxView, "xLim-max");
     let yLimMaxView = new InputView({parent: this, required: true,
                                 name: 'y-lim-max', valueType: 'number',
                                 value: this.data.yLim[1]});
-    this.registerRenderSubview(yLimMaxView, "yLim-max");
+    app.registerRenderSubview(this, yLimMaxView, "yLim-max");
     let zLimMaxView = new InputView({parent: this, required: true,
                                 name: 'z-lim-max', valueType: 'number',
                                 value: this.data.zLim[1]});
-    this.registerRenderSubview(zLimMaxView, "zLim-max");
+    app.registerRenderSubview(this, zLimMaxView, "zLim-max");
   },
   renderType: function () {
     var typeView = new SelectView({
@@ -196,7 +191,7 @@ module.exports = View.extend({
       options: this.model.types,
       value: this.type
     });
-    this.registerRenderSubview(typeView, "type-select")
+    app.registerRenderSubview(this, typeView, "type-select")
   },
   renderTypeDefaults: function () {
     $(this.queryByHook("mass")).text(this.type.mass)
@@ -208,7 +203,6 @@ module.exports = View.extend({
     $(this.queryByHook("cd-complete")).css("display", "none");
     $(this.queryByHook("cd-action-in-progress")).text(action);
     $(this.queryByHook("cd-in-progress")).css("display", "inline-block");
-    console.log(action)
   },
   update: function (e) {},
   updateTotalParticles: function (e) {

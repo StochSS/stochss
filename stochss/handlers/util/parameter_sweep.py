@@ -20,21 +20,37 @@ import os
 import csv
 import json
 import pickle
+import logging
 import itertools
 
 import numpy
 import plotly
 
-from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver
+from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, ODESolver
 
-from .stochss_workflow import StochSSWorkflow
+from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
+from .parameter_scan import ParameterScan
 
-class ParameterSweep(StochSSWorkflow):
+log = logging.getLogger("stochss")
+
+class NumpyEncoder(json.JSONEncoder):
     '''
     ################################################################################################
-    StochSS parameter sweep workflow object
+    Custom json encoder for numpy ndarrays
+    ################################################################################################
+    '''
+    def default(self, o):
+        if isinstance(o, numpy.ndarray):
+            return o.tolist()
+        return json.JSONEncoder.default(self, o)
+
+
+class ParameterSweep(StochSSJob):
+    '''
+    ################################################################################################
+    StochSS parameter sweep job object
     ################################################################################################
     '''
 
@@ -42,24 +58,22 @@ class ParameterSweep(StochSSWorkflow):
 
     def __init__(self, path):
         '''
-        Intitialize an parameter sweep workflow object
+        Intitialize an parameter sweep job object
 
         Attributes
         ----------
         path : str
-            Path to the parameter sweep workflow
+            Path to the parameter sweep job
         '''
         super().__init__(path=path)
         self.g_model, self.s_model = self.load_models()
         self.settings = self.load_settings()
 
 
-    def __get_run_settings(self, verbose=False):
+    def __get_run_settings(self):
         solver_map = {"SSA":VariableSSACSolver(model=self.g_model), "Tau-Leaping":TauLeapingSolver,
-                      "ODE":TauHybridSolver, "Hybrid-Tau-Leaping":TauHybridSolver}
+                      "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
         if self.settings['simulationSettings']['isAutomatic']:
-            if verbose:
-                self.log("info", "Running a parameter sweep with automatic solver")
             solver_name = self.g_model.get_best_solver().name
             kwargs = {"number_of_trajectories":1 if solver_name == "ODESolver" else 20}
             if solver_name != "VariableSSACSolver":
@@ -70,7 +84,8 @@ class ParameterSweep(StochSSWorkflow):
 
 
     def __store_csv_results(self, wkfl):
-        if wkfl.settings['number_of_trajectories'] > 1:
+        if "ODE" not in wkfl.settings['solver'].name and \
+                            wkfl.settings['number_of_trajectories'] > 1:
             csv_keys = list(itertools.product(["min", "max", "avg", "var", "final"],
                                               ["min", "max", "avg", "var"]))
         else:
@@ -91,7 +106,8 @@ class ParameterSweep(StochSSWorkflow):
     @classmethod
     def __store_plots(cls, wkfl):
         mappers = ["min", "max", "avg", "var", "final"]
-        if wkfl.settings['number_of_trajectories'] > 1:
+        if "ODE" not in wkfl.settings['solver'].name and \
+                            wkfl.settings['number_of_trajectories'] > 1:
             keys = list(itertools.product(wkfl.list_of_species, mappers,
                                           ["min", "max", "avg", "var"]))
         else:
@@ -110,7 +126,8 @@ class ParameterSweep(StochSSWorkflow):
             plot_figs['-'.join(key)] = fig
 
         with open('results/plots.json', 'w') as plots_file:
-            json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
+            json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
+                      indent=4, sort_keys=True)
 
 
     def __store_results(self, wkfl):
@@ -118,44 +135,65 @@ class ParameterSweep(StochSSWorkflow):
             os.mkdir('results')
         with open('results/results.p', 'wb') as results_file:
             pickle.dump(wkfl.ts_results, results_file)
-        with open('results/results.json', 'w') as json_file:
-            json_file.write(json.dumps(str(wkfl.results)))
-        self.__store_csv_results(wkfl)
+        if wkfl.name != "ParameterScan":
+            with open('results/results.json', 'w') as json_file:
+                json.dump(wkfl.results, json_file, indent=4, sort_keys=True, cls=NumpyEncoder)
+            self.__store_csv_results(wkfl)
 
 
-    def configure(self, verbose=False):
+    def configure(self):
         '''
         Get the configuration arguments for 1D or 2D parameter sweep
 
         Attributes
         ----------
         '''
-        run_settings = self.__get_run_settings(verbose=verbose)
+        run_settings = self.__get_run_settings()
+        if "timespanSettings" in self.settings.keys():
+            keys = self.settings['timespanSettings'].keys()
+            if "endSim" in keys and "timeStep" in keys:
+                end = self.settings['timespanSettings']['endSim']
+                step_size = self.settings['timespanSettings']['timeStep']
+                self.g_model.timespan(numpy.arange(0, end, step_size))
         kwargs = {"model":self.g_model, "settings":run_settings}
-        settings = self.settings['parameterSweepSettings']
-        p1_range = numpy.linspace(settings['p1Min'], settings['p1Max'], settings['p1Steps'])
-        param_one = {"parameter":settings['parameterOne']['name'], "range":p1_range}
-        if settings['is1D']:
-            kwargs['param'] = param_one
+        parameters = []
+        for param in self.settings['parameterSweepSettings']['parameters']:
+            p_range = numpy.linspace(param['min'], param['max'], param['steps'])
+            parameters.append({"parameter":param['name'], "range":p_range})
+        if len(parameters) > 1:
+            kwargs['params'] = parameters
             return kwargs
-        p2_range = numpy.linspace(settings['p2Min'], settings['p2Max'], settings['p2Steps'])
-        param_two = {"parameter":settings['parameterTwo']['name'], "range":p2_range}
-        kwargs["params"] = [param_one, param_two]
+        kwargs["param"] = parameters[0]
         return kwargs
 
 
-    def run(self, verbose=False):
+    def run(self, verbose=True):
         '''
-        Run a 1D or 2D parameter sweep workflow
+        Run a 1D or 2D parameter sweep job
 
         Attributes
         ----------
         verbose : bool
             Indicates whether or not to print debug statements
         '''
-        is_1d = self.settings['parameterSweepSettings']['is1D']
-        kwargs = self.configure(verbose=verbose)
-        wkfl = ParameterSweep1D(**kwargs) if is_1d else ParameterSweep2D(**kwargs)
-        wkfl.run(verbose=verbose)
+        kwargs = self.configure()
+        if "param" in kwargs.keys():
+            wkfl = ParameterSweep1D(**kwargs)
+            sim_type = "1D parameter sweep"
+        elif len(kwargs['params']) > 2:
+            sim_type = "parameter scan"
+            wkfl = ParameterScan(**kwargs)
+        else:
+            sim_type = "2D parameter sweep"
+            wkfl = ParameterSweep2D(**kwargs)
+        if verbose:
+            log.info("Running the %s", sim_type)
+        wkfl.run(job_id=self.get_file(), verbose=verbose)
+        if verbose:
+            log.info("The %s has completed", sim_type)
+            log.info("Storing the results as pickle and csv")
         self.__store_results(wkfl=wkfl)
-        self.__store_plots(wkfl=wkfl)
+        if wkfl.name != "ParameterScan":
+            if verbose:
+                log.info("Storing the polts of the results")
+            self.__store_plots(wkfl=wkfl)

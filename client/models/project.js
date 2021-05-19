@@ -16,27 +16,59 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var path = require('path');
+let path = require('path');
 //Support Files
-var app = require('../app.js');
+let app = require('../app.js');
 //Collections
-var ModelsCollection = require('./models');
-var WorkflowGroupsCollection = require('./workflow-groups');
+let Creators = require('./creators');
+let WorkflowGroups = require('./workflow-groups');
 //Models
-var Model = require('ampersand-model');
+let Metadata = require('./metadata');
+let Model = require('ampersand-model');
 
 module.exports = Model.extend({
   url: function () {
     return path.join(app.getApiPath(), "project/load-project")+"?path="+this.directory;
   },
+  children: {
+    metadata: Metadata
+  },
   collections: {
-    models: ModelsCollection,
-    workflowGroups: WorkflowGroupsCollection
+    workflowGroups: WorkflowGroups,
+    archive: WorkflowGroups,
+    creators: Creators
   },
   session: {
+    annotation: 'string',
     directory: 'string',
-    parentDir: 'string',
-    plot: 'object',
-    annotation: 'string'
+    dirname: 'string',
+    name: 'string',
+    newFormat: 'boolean'
+  },
+  derived: {
+  	elementID: {
+  	  deps: ["collection"],
+  	  fn: function () {
+  	  	if(this.collection) {
+  	  	  return "P" + (this.collection.indexOf(this) + 1);
+  	  	}
+  	  	return "P-";
+  	  }
+  	},
+  	location: {
+  	  deps: ["dirname"],
+  	  fn: function () {
+  	  	if(this.dirname) {
+  	  	  return "Location: " + this.dirname;
+  	  	}
+  	  	return "";
+  	  }
+  	},
+  	open: {
+  	  deps: ["directory"],
+  	  fn: function () {
+  	  	return path.join(app.getBasePath(), "stochss/project/manager")+"?path="+this.directory
+  	  }
+  	}
   }
-})
+});

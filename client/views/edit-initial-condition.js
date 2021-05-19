@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+//support files
+let app = require('../app');
 var tests = require('./tests');
 //views
 var View = require('ampersand-view');
@@ -61,17 +63,13 @@ module.exports = View.extend({
       // Else fetch the right Parameter from Parameters based on existing rate
       value: this.model.specie.name ? this.getSpecieFromSpecies(this.model.specie.name) : this.model.collection.parent.species.at(0),
     });
-    this.registerRenderSubview(typeSelectView, 'initial-condition-type');
-    this.registerRenderSubview(speciesSelectView, 'initial-condition-species');
+    app.registerRenderSubview(this, typeSelectView, 'initial-condition-type');
+    app.registerRenderSubview(this, speciesSelectView, 'initial-condition-species');
     this.renderDetailsView();
   },
   update: function () {
   },
   updateValid: function () {
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
   },
   renderDetailsView: function () {
     if(this.model.icType === "Place") {
@@ -95,19 +93,19 @@ module.exports = View.extend({
                                 modelKey: "x", label: 'x: ',
                                 tests: tests.valueTests,
                                 value: this.model.x});
-    this.registerRenderSubview(this.xCoord, "x-container");
+    app.registerRenderSubview(this, this.xCoord, "x-container");
     this.yCoord = new InputView({parent: this, required: true,
                                 name: 'Y', valueType: 'number',
                                 modelKey: "y", label: 'y: ',
                                 tests: tests.valueTests,
                                 value: this.model.y});
-    this.registerRenderSubview(this.yCoord, "y-container");
+    app.registerRenderSubview(this, this.yCoord, "y-container");
     this.zCoord = new InputView({parent: this, required: true,
                                 name: 'Z', valueType: 'number',
                                 modelKey: "z", label: 'z: ',
                                 tests: tests.valueTests,
                                 value: this.model.z});
-    this.registerRenderSubview(this.zCoord, "z-container");
+    app.registerRenderSubview(this, this.zCoord, "z-container");
   },
   renderTypes: function () {
     if(this.typesView) {

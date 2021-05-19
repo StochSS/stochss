@@ -1,0 +1,7 @@
+{
+    "annotation": "",
+    "source_model": "Examples/Example SIR Epidemic Project.proj/SIR Epidemic Model.wkgp/SIR Epidemic Model.mdl",
+    "start_time": "Apr 28, 2021  09:17 PM UTC",
+    "type": "parameterSweep",
+    "wkfl_model": "SIR Epidemic Model.mdl"
+}

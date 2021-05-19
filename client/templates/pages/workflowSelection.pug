@@ -1,6 +1,6 @@
 section.page
 
-  h3="Workflow Selection for " + this.modelFile
+  h3(data-hook="wkfl-selection-header")
 
   div(data-hook="workflow-selection-breadcrumb-links" style="display: none")
     h5
@@ -18,35 +18,25 @@ section.page
   table.table
     thead
       tr
-        th(scope="col" colspan="4") StochSS Workflows
+        th(scope="col" colspan="3") Jupyter Notebook Workflows
     tbody
       tr
         td
-          button.btn.btn-outline-primary.box-shadow.inline(id="stochss-es" data-hook="stochss-es") Ensemble Simulation
-
-          div.tooltip-icon.horizontal-space(data-html="true" data-toggle="tooltip" title=this.tooltips.ensembleSimulation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-          
+          button.btn.btn-outline-primary.box-shadow(id="ensemble-simulation" data-hook="ensemble-simulation" data-type="gillespy")
+            | Ensemble Simulation
         td
-          button.btn.btn-outline-primary.box-shadow.inline(id="stochss-ps" data-hook="stochss-ps") Parameter Sweep
-          
-          div.tooltip-icon.horizontal-space(data-html="true" data-toggle="tooltip" title=this.tooltips.parameterSweep) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-
-  table.table
-    thead
+          button.btn.btn-outline-primary.box-shadow(id="spatial-simulation" data-hook="spatial-simulation" data-type="spatial")
+            | Spatial Ensemble Simulation
+        td
+          button.btn.btn-outline-primary.box-shadow(id="oned-parameter-sweep" data-hook="oned-parameter-sweep" data-type="1d_parameter_sweep")
+            | 1D Parameter Sweep
       tr
-        th(scope="col" colspan="4") Jupyter Notebook Workflows
-    tbody
-      tr
-        td: button.btn.btn-outline-primary.box-shadow(id="ensemble-simulation" data-hook="ensemble-simulation" data-type="gillespy")
-              | Ensemble Simulation
-        td: button.btn.btn-outline-primary.box-shadow(id="spatial-simulation" data-hook="spatial-simulation" data-type="spatial")
-              | Spatial Ensemble Simulation
-        td: button.btn.btn-outline-primary.box-shadow(id="oned-parameter-sweep" data-hook="oned-parameter-sweep" data-type="1d_parameter_sweep")
-              | 1D Parameter Sweep
-      tr
-        td: button.btn.btn-outline-primary.box-shadow(id="twod-parameter-sweep" data-hook="twod-parameter-sweep" data-type="2d_parameter_sweep")
-              | 2D Parameter Sweep
-        td: button.btn.btn-outline-primary.box-shadow(id="sciope-model-exploration" data-hook="sciope-model-exploration" data-type="sciope_model_exploration")
-              | Sciope Model Exploration
-        td: button.btn.btn-outline-primary.box-shadow(id="model-inference" data-hook="model-inference" data-type="model_inference")
-              | Sciope Model Inference
+        td
+          button.btn.btn-outline-primary.box-shadow(id="twod-parameter-sweep" data-hook="twod-parameter-sweep" data-type="2d_parameter_sweep")
+            | 2D Parameter Sweep
+        td
+          button.btn.btn-outline-primary.box-shadow(id="sciope-model-exploration" data-hook="sciope-model-exploration" data-type="sciope_model_exploration")
+            | Sciope Model Exploration
+        td
+          button.btn.btn-outline-primary.box-shadow(id="model-inference" data-hook="model-inference" data-type="model_inference")
+            | Sciope Model Inference

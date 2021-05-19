@@ -24,7 +24,8 @@ module.exports = State.extend({
     fname: 'string',
     lname: 'string',
     email: 'string',
-    organization: 'string'
+    organization: 'string',
+    elementID: 'string'
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments)

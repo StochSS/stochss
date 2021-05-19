@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //views
-var View = require('ampersand-view');
+let View = require('ampersand-view');
 //templates
-var template = require('../templates/includes/creatorList.pug');
+let template = require('../templates/includes/creatorListing.pug');
 
 module.exports = View.extend({
   template: template,
@@ -33,6 +33,8 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
   },
   removeCreator: function (e) {
-    this.model.collection.remove(this.model)
+    let index = this.parent.metadata.creators.indexOf(this.model.elementID);
+    this.parent.metadata.creators.splice(index, 1);
+    this.parent.renderCreatorListingView();
   }
 });

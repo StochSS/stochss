@@ -1,0 +1,20 @@
+div
+
+  if(this.model.collection.indexOf(this.model) > 0)
+    hr
+
+  div
+
+    div.inline.mr-2=this.model.name + ":"
+
+    div.inline(style="max-width: 100%")
+
+      div.horizontal-scroll(data-hook=this.model.elementID + "-current-value")=this.model.range[0]
+
+  input.custom-range(
+    type="range"
+    min="0"
+    max=this.model.range.length - 1
+    value=0
+    data-hook=this.model.elementID + "-slider"
+  )

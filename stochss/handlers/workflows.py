@@ -27,13 +27,46 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSWorkflow, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
+from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
                   StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
 
 # pylint: disable=abstract-method
+# pylint: disable=too-few-public-methods
+class NewWorkflowAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for creating a new workflow
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Creates a new workflow of the given type for the given model.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow: %s", path)
+        mdl_path = self.get_query_argument(name="model")
+        log.debug("The path to the model: %s", mdl_path)
+        wkfl_type = self.get_query_argument(name="type")
+        log.debug("Type of the workflow: %s", wkfl_type)
+        try:
+            log.info("Creating %s workflow", path.split('/').pop())
+            wkfl = StochSSWorkflow(path=path, new=True, mdl_path=mdl_path, wkfl_type=wkfl_type)
+            resp = {"path": wkfl.path}
+            log.info("Successfully created %s workflow", wkfl.get_file())
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
 class LoadWorkflowAPIHandler(APIHandler):
     '''
     ################################################################################################
@@ -51,17 +84,66 @@ class LoadWorkflowAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the workflow/model: %s", path)
-        wkfl_type = self.get_query_argument(name="type")
-        dirname = self.get_query_argument(name='parentPath', default=os.path.dirname(path))
-        data = {"type":wkfl_type if wkfl_type != "none" else None,
-                "stamp": self.get_query_argument(name="stamp"),
-                "dirname": None if not dirname or dirname == "." else dirname}
-        log.debug("Load data for the workflow: %s", data)
         try:
-            new = path.endswith(".mdl")
-            wkfl = StochSSWorkflow(path=path, new=new, data=data)
-            resp = wkfl.load(new=new)
+            log.info("Loading workflow data")
+            resp = StochSSWorkflow(path=path).load()
             log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+    @web.authenticated
+    async def post(self):
+        '''
+        Start saving the workflow.  Creates the workflow directory and workflow_info file if
+        saving a new workflow.  Copys model into the workflow directory.
+
+        Attributes
+        ----------
+        '''
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the workflow: %s", path)
+        data = json.loads(self.request.body.decode())
+        log.debug("Workflow Data: %s", data)
+        log.debug("Path to the model: %s", data['model'])
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            log.info("Saving %s", wkfl.get_file())
+            resp = wkfl.save(new_settings=data['settings'], mdl_path=data['model'])
+            log.debug("Response: %s", resp)
+            log.info("Successfully saved %s", wkfl.get_file())
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class InitializeJobAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for initializing jobs.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Initialize a new job or an existing old format workflow.
+
+        Attributes
+        ----------
+        '''
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the workflow: %s", path)
+        data = json.loads(self.get_query_argument(name="data"))
+        log.debug("Handler query string: %s", data)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            resp = wkfl.initialize_job(settings=data['settings'], mdl_path=data['mdl_path'],
+                                       wkfl_type=data['type'], time_stamp=data['time_stamp'])
+            wkfl.print_logs(log)
+            log.debug("Response message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -84,52 +166,22 @@ class RunWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        data = json.loads(self.get_query_argument(name="data"))
-        log.debug("Handler query string: %s", data)
-        path = data['wkflPath']
+        path = self.get_query_argument(name="path")
         log.debug("Path to the workflow: %s", path)
-        wkfl_type = data['type']
+        wkfl_type = self.get_query_argument(name="type")
         log.debug("Type of workflow: %s", wkfl_type)
+        verbose = self.get_query_argument(name="verbose", default=False)
         try:
-            # nav = f"cd {StochSSWorkflow(path=path).get_path(full=True)}"
             script = "/stochss/stochss/handlers/util/scripts/start_job.py"
-            exec_cmd = [f"{script}", f"{path}", f"{wkfl_type}"]
-            if "v" in data['optType']:
+            exec_cmd = [f"{script}", f"{path}", f"{wkfl_type}", "-v"]
+            if verbose:
                 exec_cmd.append("-v")
             log.debug("Exec command sent to the subprocess: %s", exec_cmd)
             log.debug('Sending the workflow run cmd')
-            subprocess.Popen(exec_cmd)
+            job = subprocess.Popen(exec_cmd)
+            with open(os.path.join(path, "RUNNING"), "w") as file:
+                file.write(f"Subprocess id: {job.pid}")
             log.debug('The workflow has started')
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
-class SaveWorkflowAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for saving workflows.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Start saving the workflow.  Creates the workflow directory and workflow_info file if
-        saving a new workflow.  Copys model into the workflow directory.
-
-        Attributes
-        ----------
-        '''
-        try:
-            data = json.loads(self.get_query_argument(name="data"))
-            log.debug("Handler query string: %s", data)
-            model_path = data['mdlPath']
-            log.debug("Path to the model: %s", model_path)
-            wkfl = StochSSWorkflow(path=data['wkflPath'])
-            resp = wkfl.save(mdl_path=model_path, settings=data['settings'],
-                             initialize="r" in data['optType'])
-            log.debug("Response: %s", resp)
-            self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
@@ -153,7 +205,7 @@ class WorkflowStatusAPIHandler(APIHandler):
         log.debug('path to the workflow: %s', path)
         log.debug('Getting the status of the workflow')
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             status = wkfl.get_status()
             log.debug('The status of the workflow is: %s', status)
             self.write(status)
@@ -185,37 +237,15 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             body['plt_data'] = None
         log.debug("Plot args passed to the plot: %s", body)
         try:
-            wkfl = StochSSWorkflow(path=path)
-            fig = wkfl.get_results_plot(**body)
+            wkfl = StochSSJob(path=path)
+            if "plt_type" in body.keys():
+                fig = wkfl.get_plot_from_results(**body)
+                wkfl.print_logs(log)
+            else:
+                log.info("Loading the plot...")
+                fig = wkfl.get_results_plot(**body)
             log.debug("Plot figure: %s", fig)
             self.write(fig)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
-class WorkflowLogsAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for getting Workflow logs.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Retrieve workflow logs from User's file system.
-
-        Attributes
-        ----------
-        '''
-        path = os.path.dirname(self.get_query_argument(name="path"))
-        log.debug("Path to the workflow logs file: %s", path)
-        try:
-            wkfl = StochSSWorkflow(path=path)
-            logs = wkfl.get_run_logs()
-            wkfl.print_logs(log)
-            log.debug("Response: %s", logs)
-            self.write(logs)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
@@ -245,11 +275,15 @@ class WorkflowNotebookHandler(APIHandler):
             elif path.endswith(".smdl"):
                 file_obj = StochSSSpatialModel(path=path)
             else:
-                file_obj = StochSSWorkflow(path=path)
+                file_obj = StochSSJob(path=path)
+            log.info("Loading data for %s", file_obj.get_file())
             kwargs = file_obj.get_notebook_data()
             if "type" in kwargs.keys():
                 wkfl_type = kwargs['type']
                 kwargs = kwargs['kwargs']
+                log.info("Converting %s to notebook", file_obj.get_file())
+            else:
+                log.info("Creating notebook workflow for %s", file_obj.get_file())
             log.debug("Type of workflow to be run: %s", wkfl_type)
             notebook = StochSSNotebook(**kwargs)
             notebooks = {"gillespy":notebook.create_es_notebook,
@@ -261,6 +295,7 @@ class WorkflowNotebookHandler(APIHandler):
             resp = notebooks[wkfl_type]()
             notebook.print_logs(log)
             log.debug("Response: %s", resp)
+            log.info("Successfully created the notebook for %s", file_obj.get_file())
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -288,7 +323,7 @@ class SavePlotAPIHandler(APIHandler):
         plot = json.loads(self.request.body.decode())
         log.debug("The plot to be saved: %s", plot)
         try:
-            wkfl = StochSSWorkflow(path=path)
+            wkfl = StochSSJob(path=path)
             resp = wkfl.save_plot(plot=plot)
             wkfl.print_logs(log)
             log.debug("Response message: %s", resp)
@@ -318,11 +353,43 @@ class SaveAnnotationAPIHandler(APIHandler):
         info = json.loads(self.request.body.decode())
         log.debug("The annotation to be saved: %s", info['annotation'])
         try:
-            wkfl = StochSSWorkflow(path=path)
-            wkfl.update_info(new_info=info)
-            wkfl.print_logs(log)
+            log.info("Saving annotation for %s", path.split('/').pop())
+            if StochSSWorkflow.check_workflow_format(path=path):
+                wkfl = StochSSWorkflow(path=path)
+                wkfl.save_annotation(info['annotation'])
+            else:
+                wkfl = StochSSJob(path=path)
+                wkfl.update_info(new_info=info)
+                wkfl.print_logs(log)
             resp = {"message":"The annotation was successfully saved", "data":info['annotation']}
+            log.info("Successfully saved the annotation")
             log.debug("Response message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class UpadteWorkflowAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for updating workflow format.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Updates the workflow to the new format.
+
+        Attributes
+        ----------
+        '''
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow: %s", path)
+        try:
+            wkfl = StochSSWorkflow(path=path)
+            resp = wkfl.update_wkfl_format()
+            log.debug("Response Message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)

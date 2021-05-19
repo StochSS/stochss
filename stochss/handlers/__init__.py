@@ -48,9 +48,11 @@ def get_page_handlers(route_start):
         (r'/stochss/quickstart\/?', QuickstartHandler),
         (r'/stochss/project/browser\/?', ProjectBrowserHandler),
         (r'/stochss/project/manager\/?', ProjectManagerHandler),
+        (r'/stochss/loading-page\/?', LoadingPageHandler),
         #
         ## API Handlers
         #
+        (r'/stochss/api/user-logs\/?', UserLogsAPIHandler),
         (r"/stochss/api/file/browser-list\/?", ModelBrowserFileList),
         (r"/stochss/api/file/upload\/?", UploadFileAPIHandler),
         (r"/stochss/api/file/upload-from-link\/?", UploadFileFromLinkAPIHandler),
@@ -80,7 +82,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),
         (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
         (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),
-        (r"/stochss/api/project/new-workflow-group\/?", NewWorkflowGroupAPIHandler),
+        (r"/stochss/api/project/new-model\/?", NewModelAPIHandler),
         (r"/stochss/api/project/add-existing-model\/?", AddExistingModelAPIHandler),
         (r"/stochss/api/project/extract-model\/?", ExtractModelAPIHandler),
         (r"/stochss/api/project/extract-workflow\/?", ExtractWorkflowAPIHandler),
@@ -88,17 +90,19 @@ def get_page_handlers(route_start):
         (r"/stochss/api/project/export-combine\/?", ExportAsCombineAPIHandler),
         (r"/stochss/api/project/meta-data\/?", ProjectMetaDataAPIHandler),
         (r"/stochss/api/project/save-annotation\/?", UpdateAnnotationAPIHandler),
+        (r"/stochss/api/project/update-format\/?", UpadteProjectAPIHandler),
         (r"/stochss/api/workflow/notebook\/?", WorkflowNotebookHandler),
+        (r"/stochss/api/workflow/new\/?", NewWorkflowAPIHandler),
         (r"/stochss/api/workflow/load-workflow\/?", LoadWorkflowAPIHandler),
-        (r"/stochss/api/workflow/save-workflow\/?", SaveWorkflowAPIHandler),
-        (r"/stochss/api/workflow/run-workflow\/?", RunWorkflowAPIHandler),
+        (r"/stochss/api/workflow/init-job\/?", InitializeJobAPIHandler),
+        (r"/stochss/api/workflow/run-job\/?", RunWorkflowAPIHandler),
         (r"/stochss/api/workflow/workflow-status\/?", WorkflowStatusAPIHandler),
-        (r"/stochss/api/workflow/workflow-logs\/?", WorkflowLogsAPIHandler),
         (r"/stochss/api/workflow/plot-results\/?", PlotWorkflowResultsAPIHandler),
         (r"/stochss/api/workflow/duplicate\/?", DuplicateWorkflowAsNewHandler),
         (r"/stochss/api/workflow/edit-model\/?", GetWorkflowModelPathAPIHandler),
         (r"/stochss/api/workflow/save-plot\/?", SavePlotAPIHandler),
-        (r"/stochss/api/workflow/save-annotation\/?", SaveAnnotationAPIHandler)
+        (r"/stochss/api/workflow/save-annotation\/?", SaveAnnotationAPIHandler),
+        (r"/stochss/api/workflow/update-format\/?", UpadteWorkflowAPIHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers
