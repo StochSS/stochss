@@ -99,6 +99,7 @@ module.exports = View.extend({
     let self = this;
     let el = this.queryByHook(type + "-plot");
     Plotly.purge(el);
+    $(this.queryByHook(type + "-plot")).empty();
     $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
     let data = {};
     if(type === 'psweep'){
@@ -125,7 +126,6 @@ module.exports = View.extend({
       let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
       app.getXHR(endpoint, {
         success: function (err, response, body) {
-          $(self.queryByHook(type + "-plot")).empty();
           if(type === "psweep") {
             self.plots[data.plt_key] = body;
           }else if(type === "ts-psweep"){
