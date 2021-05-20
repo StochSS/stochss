@@ -823,7 +823,7 @@ class StochSSNotebook(StochSSBase):
     def __get_gillespy2_solver_name(self):
         precompile = self.nb_type > self.ENSEMBLE_SIMULATION
         if self.settings['simulationSettings']['isAutomatic']:
-            solver = self.model.get_best_solver(precompile=precompile).name
+            solver = self.model.get_best_solver().name
             self.settings['simulationSettings']['algorithm'] = self.SOLVER_MAP[solver]
             return solver
         algorithm_map = {'SSA': "SSACSolver" if self.is_ssa_c else "NumPySSASolver",
