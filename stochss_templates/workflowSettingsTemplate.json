@@ -9,20 +9,16 @@
         "tauTol": 0.03
     },
     "parameterSweepSettings":{
-        "is1D":true,
-        "p1Min":0,
-        "p1Max":0,
-        "p1Steps":11,
-        "p2Min":0,
-        "p2Max":0,
-        "p2Steps":11,
-        "parameterOne": {},
-        "parameterTwo": {},
+        "parameters": [],
         "speciesOfInterest": {}
     },
     "resultsSettings":{
         "mapper":"final",
         "reducer":"avg",
         "outputs": []
+    },
+    "timespanSettings": {
+        "endSim": 20,
+        "timeStep": 0.05
     }
 }

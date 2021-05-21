@@ -1,0 +1,138 @@
+div#workflow-settings-viewer.card.card-body
+
+  div
+
+    h3.inline Review Settings
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-wkfl-settings-viewer" data-hook="collapse-settings-viewer") +
+
+  div.collapse(id="collapse-wkfl-settings-viewer" data-hook="workflow-settings-viewer-container")
+
+    div.card.card-body(data-hook="timespan-settings-viewer-container")
+
+      div
+
+        h3.inline Timespan
+
+        button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-timespan-settings" data-hook="collapse-ts-settings") -
+
+      div.collapse(class="show" id="collapse-timespan-settings" data-hook="timespan-settings-container")
+
+        hr
+
+        div.row
+
+          div.col-md-6
+
+            h5.inline.pr-2 Simulation Time: 
+
+            div.inline="0 to " + this.model.timespanSettings.endSim
+
+          div.col-md-6
+
+            h5.inline.pr-2 Sample Frequency:
+
+            div.inline=this.model.timespanSettings.timeStep
+
+    div.card.card-body(data-hook="param-sweep-settings-viewer-container")
+
+      div
+
+        h3.inline Parameter Settings
+
+        button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-p-settings-viewer" data-hook="collapse-p-settings") -
+
+      div.collapse(class="show", id="collapse-p-settings-viewer")
+
+        hr
+
+        div
+
+          h5.inline.pr-2 Variable of Interest: 
+
+          div.inline=this.model.parameterSweepSettings.speciesOfInterest.name
+
+        hr
+
+        div
+
+          h4 Sweep Parameters
+
+          table.table
+            thead
+              tr
+                th(scope="col") Target
+                th(scope="col") Current Value
+                th(scope="col") Minimum Value
+                th(scope="col") Maximum Value
+                th(scope="col") Steps
+
+            tbody(data-hook="view-sweep-parameters")
+
+    div.card.card-body(data-hook="sim-settings-viewer-container")
+
+      div
+
+        h3.inline Simulation Settings
+      
+        button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-sim-settings" data-hook="collapse-sim-settings") -
+
+      div.collapse(class="show" id="collapse-sim-settings")
+
+        hr
+
+        div
+
+          h5.inline.pr-2 Simulation Algorithm: 
+
+          div.inline=this.algorithm
+
+        div(data-hook="view-deterministic-settings")
+
+          hr
+
+          h4 Deterministic Settings
+
+          hr
+
+          div.row
+
+            div.col-md-6
+
+              h5.inline.pr-2 Relative Tolerance: 
+
+              div.inline=this.model.simulationSettings.relativeTol
+
+            div.col-md-6
+
+              h5.inline.pr-2 Absolute Tolerance: 
+
+              div.inline=this.model.simulationSettings.absoluteTol
+
+        div(data-hook="view-stochastic-settings")
+
+          hr
+
+          h4 Stochastic Settings
+
+          hr
+
+          div.row
+
+            div.col-md-4
+
+              h5.inline.pr-2 Trajectories: 
+
+              div.inline=this.model.simulationSettings.realizations
+
+            div.col-md-4
+
+              h5.inline.pr-2 Seed: 
+
+              div.inline=this.model.simulationSettings.seed
+
+            div.col-md-4(data-hook="view-tau-tolerance")
+
+              h5.inline.pr-2 Tau Tolerance: 
+
+              div.inline=this.model.simulationSettings.tauTol

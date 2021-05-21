@@ -16,27 +16,32 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+//collections
+let SweepParameters = require('./sweep-parameters');
 //models
-var State = require('ampersand-state');
-var Parameter = require('./parameter');
-var Species = require('./specie');
+let State = require('ampersand-state');
+let Species = require('./specie');
 
 module.exports = State.extend({
-  props: {
-    is1D: 'boolean',
-    p1Min: 'number',
-    p1Max: 'number',
-    p1Steps: 'number',
-    p2Min: 'number',
-    p2Max: 'number',
-    p2Steps: 'number'
-  },
   children: {
-    parameterOne: Parameter,
-    parameterTwo: Parameter,
     speciesOfInterest: Species
+  },
+  collections: {
+    parameters: SweepParameters
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
+  },
+  updateVariables: function (parameters) {
+    this.parameters.forEach(function (variable) {
+      let parameter = parameters.filter(function (parameter) {
+        return parameter.compID === variable.paramID;
+      })[0];
+      if(parameter === undefined) {
+        this.removeVariable(variable);
+      }else{
+        variable.updateVariable(variable);
+      }
+    });
   }
 }); 

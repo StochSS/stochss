@@ -24,6 +24,8 @@ from .stochss_spatial_model import StochSSSpatialModel
 from .stochss_sbml import StochSSSBMLModel
 from .stochss_notebook import StochSSNotebook
 from .stochss_workflow import StochSSWorkflow
+from .stochss_job import StochSSJob
+from .stochss_project import StochSSProject
 from .ensemble_simulation import EnsembleSimulation
 from .parameter_sweep import ParameterSweep
 from .stochss_errors import StochSSAPIError, report_error

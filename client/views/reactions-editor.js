@@ -21,6 +21,7 @@ var katex = require('katex');
 var _ = require('underscore');
 var $ = require('jquery');
 //support files
+let app = require('../app');
 var ReactionTypes = require('../reaction-types');
 var Tooltips = require('../tooltips');
 //models
@@ -192,15 +193,7 @@ module.exports = View.extend({
     collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
-    if(e.target.dataset && e.target.dataset.toggle === "collapse") {
-      let source = e.target.dataset.hook
-      let collapseContainer = $(this.queryByHook(source).dataset.target)
-      if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-        let collapseBtn = $(this.queryByHook(source))
-        let text = collapseBtn.text();
-        text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-      }
-    }
+    app.changeCollapseButtonText(this, e);
   },
   getDefaultSpecie: function () {
     var value = this.collection.parent.species.models[0];

@@ -28,11 +28,38 @@ def init_log():
     Attributes
     ----------
     '''
+    setup_stream_handler()
+    setup_file_handler()
+    log.setLevel(logging.DEBUG)
+    log.propagate = False
+
+
+def setup_stream_handler():
+    '''
+    Initialize the StochSS stream handler
+
+    Attributes
+    ----------
+    '''
     handler = logging.StreamHandler()
     fmt = '%(color)s[%(levelname)1.1s %(asctime)s StochSS '
     fmt += '%(filename)s:%(lineno)d]%(end_color)s %(message)s'
     formatter = LogFormatter(fmt=fmt, datefmt='%H:%M:%S')
     handler.setFormatter(formatter)
-    log.setLevel(logging.WARNING)
+    handler.setLevel(logging.WARNING)
     log.addHandler(handler)
-    log.propagate = False
+
+
+def setup_file_handler():
+    '''
+    Initialize the StochSS file handler
+
+    Attributes
+    ----------
+    '''
+    handler = logging.FileHandler(".user-logs.txt")
+    fmt = '%(color)s%(asctime)s%(end_color)s$ %(message)s'
+    formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
+    log.addHandler(handler)

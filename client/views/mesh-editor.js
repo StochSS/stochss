@@ -16,8 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var app = require('ampersand-app');
 var $ = require('jquery');
+//support files
+var app = require('../app');
 var tests = require('./tests');
 //views
 var View = require('ampersand-view');
@@ -45,13 +46,7 @@ module.exports = View.extend({
     this.model.parent.trigger('mesh-update');
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   },
   subviews: {
     inputSubdomains: {

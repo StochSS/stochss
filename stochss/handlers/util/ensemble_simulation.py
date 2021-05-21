@@ -20,16 +20,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import pickle
+import logging
+
+import numpy
 import plotly
+from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver, ODESolver
 
-from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver
+from .stochss_job import StochSSJob
+from .stochss_errors import StochSSAPIError
 
-from .stochss_workflow import StochSSWorkflow
+log = logging.getLogger("stochss")
 
-class EnsembleSimulation(StochSSWorkflow):
+class EnsembleSimulation(StochSSJob):
     '''
     ################################################################################################
-    StochSS ensemble simulation workflow object
+    StochSS ensemble simulation job object
     ################################################################################################
     '''
 
@@ -37,23 +42,29 @@ class EnsembleSimulation(StochSSWorkflow):
 
     def __init__(self, path, preview=False):
         '''
-        Intitialize an ensemble simulation workflow object
+        Intitialize an ensemble simulation job object
 
         Attributes
         ----------
         path : str
-            Path to the ensemble simulation workflow
+            Path to the ensemble simulation job
         '''
         super().__init__(path=path)
         if not preview:
-            self.settings = self.load_settings()
-            self.g_model, self.s_model = self.load_models()
+            try:
+                self.settings = self.load_settings()
+                self.g_model, self.s_model = self.load_models()
+            except StochSSAPIError as err:
+                log.error(str(err))
 
 
     def __get_run_settings(self):
-        solver_map = {"SSA":SSACSolver(model=self.g_model), "Tau-Leaping":TauLeapingSolver,
-                      "ODE":TauHybridSolver, "Hybrid-Tau-Leaping":TauHybridSolver}
-        return self.get_run_settings(settings=self.settings, solver_map=solver_map)
+        solver_map = {"SSA":SSACSolver, "Tau-Leaping":TauLeapingSolver,
+                      "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
+        run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
+        if run_settings['solver'].name == "SSACSolver":
+            run_settings['solver'] = run_settings['solver'](model=self.g_model)
+        return run_settings
 
 
     @classmethod
@@ -68,7 +79,8 @@ class EnsembleSimulation(StochSSWorkflow):
         for _, plot in plots.items():
             plot["config"] = {"responsive":True}
         with open('results/plots.json', 'w') as plots_file:
-            json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder)
+            json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
+                      indent=4, sort_keys=True)
 
 
     def __store_results(self, results):
@@ -79,9 +91,18 @@ class EnsembleSimulation(StochSSWorkflow):
         results.to_csv(path="results", nametag="results_csv", stamp=self.get_time_stamp())
 
 
-    def run(self, preview=False, verbose=False):
+    def __update_timespan(self):
+        if "timespanSettings" in self.settings.keys():
+            keys = self.settings['timespanSettings'].keys()
+            if "endSim" in keys and "timeStep" in keys:
+                end = self.settings['timespanSettings']['endSim']
+                step_size = self.settings['timespanSettings']['timeStep']
+                self.g_model.timespan(numpy.arange(0, end, step_size))
+
+
+    def run(self, preview=False, verbose=True):
         '''
-        Run a GillesPy2 ensemble simulation workflow
+        Run a GillesPy2 ensemble simulation job
 
         Attributes
         ----------
@@ -92,26 +113,30 @@ class EnsembleSimulation(StochSSWorkflow):
         '''
         if preview:
             if verbose:
-                self.log("info", "Running a preview ensemble simulation")
+                log.info("Running %s preview simulation", self.g_model.name)
             results = self.g_model.run(timeout=5)
+            if verbose:
+                log.info("%s preview simulation has completed", self.g_model.name)
+                log.info("Generate result plot for %s preview", self.g_model.name)
             plot = results.plotplotly(return_plotly_figure=True)
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot
+        if verbose:
+            log.info("Running the ensemble simulation")
         if self.settings['simulationSettings']['isAutomatic']:
-            if verbose:
-                self.log("info", "Running an ensemble simulation with automatic solver")
-            is_ode = self.g_model.get_best_solver(precompile=False).name == "ODESolver"
+            self.__update_timespan()
+            is_ode = self.g_model.get_best_solver().name == "ODESolver"
             results = self.g_model.run(number_of_trajectories=1 if is_ode else 100)
         else:
-            if verbose:
-                self.log("info", "Running an ensemble simulation with manual solver")
             kwargs = self.__get_run_settings()
+            self.__update_timespan()
             results = self.g_model.run(**kwargs)
         if verbose:
-            self.log("info", "Storing the results as pickle and csv")
+            log.info("The ensemble simulation has completed")
+            log.info("Storing the results as pickle and csv")
         self.__store_results(results=results)
         if verbose:
-            self.log("info", "Storing the polts of the results")
+            log.info("Storing the polts of the results")
         self.__plot_results(results=results)
         return None

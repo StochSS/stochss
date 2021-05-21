@@ -1,0 +1,47 @@
+{
+    "model": "Examples/Example SIR Epidemic Project.proj/SIR Epidemic Model.wkgp/SIR Epidemic Model.mdl",
+    "settings": {
+        "parameterSweepSettings": {
+            "parameters": [],
+            "speciesOfInterest": {}
+        },
+        "resultsSettings": {
+            "mapper": "final",
+            "outputs": [
+                {
+                    "key": "stddev",
+                    "species": [
+                        "Susceptible",
+                        "Infected",
+                        "Recovered"
+                    ],
+                    "stamp": 200727162833
+                },
+                {
+                    "key": "stddevran",
+                    "species": [
+                        "Susceptible",
+                        "Infected",
+                        "Recovered"
+                    ],
+                    "stamp": 200727162836
+                }
+            ],
+            "reducer": "avg"
+        },
+        "simulationSettings": {
+            "absoluteTol": 1e-06,
+            "algorithm": "SSA",
+            "isAutomatic": false,
+            "realizations": 20,
+            "relativeTol": 0.001,
+            "seed": -1,
+            "tauTol": 0.03
+        },
+        "timespanSettings": {
+            "endSim": 20,
+            "timeStep": 0.05
+        }
+    },
+    "type": "Ensemble Simulation"
+}

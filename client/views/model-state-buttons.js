@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var path = require('path');
 var Plotly = require('../lib/plotly');
 var $ = require('jquery');
@@ -73,7 +72,11 @@ module.exports = View.extend({
     let self = this
     this.saveModel(function () {
       self.saved()
-      var queryString = "?path="+path.dirname(self.model.directory)
+      var dirname = path.dirname(self.model.directory)
+      if(dirname.endsWith(".wkgp")) {
+        dirname = path.dirname(dirname)
+      }
+      var queryString = "?path="+dirname
       window.location.href = path.join(app.getBasePath(), "/stochss/project/manager")+queryString;
     })
   },
@@ -83,7 +86,8 @@ module.exports = View.extend({
       self.saved()
       var queryString = "?path="+self.model.directory
       if(self.model.directory.includes('.proj')) {
-        let parentPath = path.join(path.dirname(self.model.directory), "WorkflowGroup1.wkgp")
+        let wkgp = self.model.directory.includes('.wkgp') ? self.model.name + ".wkgp" : "WorkflowGroup1.wkgp"
+        let parentPath = path.join(path.dirname(self.model.directory), wkgp)
         queryString += "&parentPath="+parentPath
       }
       let endpoint = path.join(app.getBasePath(), "stochss/workflow/selection")+queryString
@@ -125,13 +129,7 @@ module.exports = View.extend({
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;
     if (cb) {
-      model.save(model.attributes, {
-        success: cb,
-        error: function (model, response, options) {
-          console.error("Error saving model:", model);
-          console.error("Response:", response);
-        },
-      });
+      model.saveModel(cb);
     } else {
       model.saveModel();
     }
@@ -151,8 +149,8 @@ module.exports = View.extend({
       saved.style.display = "none";
     }, 5000);
   },
-  runModel: function (species=undefined) {
-    if(!species) {
+  runModel: function (species=null) {
+    if(typeof species !== "string") {
       this.saved();
     }
     this.running();
@@ -164,9 +162,11 @@ module.exports = View.extend({
     }
     var endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
     var self = this;
-    xhr({ uri: endpoint, json: true}, function (err, response, body) {
-      self.outfile = body.Outfile
-      self.getResults()
+    app.getXHR(endpoint, {
+      always: function (err, response, body) {
+        self.outfile = body.Outfile;
+        self.getResults();
+      }
     });
   },
   running: function () {
@@ -203,24 +203,30 @@ module.exports = View.extend({
     setTimeout(function () {
       let queryStr = "?cmd=read&outfile="+self.outfile+"&path="+model.directory
       endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
-      xhr({ uri: endpoint, json: true}, function (err, response, body) {
-        if(typeof body === "string") {
-          body = body.replace(/NaN/g, null)
-          body = JSON.parse(body)
-        }
-        var data = body.Results;
-        if(response.statusCode >= 400 || data.errors){
-          self.ran(false);
-          $(self.parent.queryByHook('model-run-error-message')).text(data.errors);
-        }
-        else if(!body.Running){
-          if(data.timeout){
-            $(self.parent.queryByHook('model-timeout-message')).collapse('show');
+      let errorCB = function (err, response, body) {
+        self.ran(false);
+        $(self.parent.queryByHook('model-run-error-message')).text(body.Results.errors);
+      }
+      app.getXHR(endpoint, {
+        always: function (err, response, body) {
+          if(typeof body === "string") {
+            body = body.replace(/NaN/g, null)
+            body = JSON.parse(body)
           }
-          self.plotResults(data.results);
-        }else{
-          self.getResults();
-        }
+          var data = body.Results;
+          if(response.statusCode >= 400 || data.errors){
+            errorCB(err, response, body);
+          }
+          else if(!body.Running){
+            if(data.timeout){
+              $(self.parent.queryByHook('model-timeout-message')).collapse('show');
+            }
+            self.plotResults(data.results);
+          }else{
+            self.getResults();
+          }
+        },
+        error: errorCB
       });
     }, 2000);
   },
@@ -231,25 +237,6 @@ module.exports = View.extend({
     el = this.parent.queryByHook('preview-plot-container');
     Plotly.newPlot(el, data);
     window.scrollTo(0, document.body.scrollHeight)
-  },
-  handleEnsembleSimulationClick: function (e) {
-    this.launchStochssWorkflow("gillespy")
-  },
-  handleParameterSweepClick: function (e) {
-    this.launchStochssWorkflow("parameterSweep")
-  },
-  launchStochssWorkflow: function (type) {
-    let queryString = "?type=" + type + "&path=" + this.model.directory
-    if(this.model.directory.includes('.proj')) {
-      var parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp")
-    }else{
-      var parentPath = path.dirname(this.model.directory)
-    }
-    queryString += "&parentPath=" + parentPath
-    let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
-    this.saveModel(function () {
-      window.location.href = endpoint
-    });
   },
   handleSimulateClick: function (e) {
     var errorMsg = $(this.parent.queryByHook("error-detected-msg"))
@@ -266,9 +253,9 @@ module.exports = View.extend({
         this.clickNewWorkflowHandler(e)
       }else if(!this.model.is_spatial) {
         if(simType === "ensemble") {
-          this.handleEnsembleSimulationClick(e)
+          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Ensemble Simulation");
         }else if(simType === "psweep") {
-          this.handleParameterSweepClick(e)
+          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep");
         }
       }
     }
