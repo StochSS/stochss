@@ -175,7 +175,7 @@ class ParameterSweep1D():
         self.__setup_results()
         for i, val in enumerate(self.param['range']):
             if "solver" in self.settings.keys() and \
-                            self.settings['solver'].name == "VariableSSACSolver":
+                            self.settings['solver'].name == "SSACSolver":
                 tmp_mdl = self.model
                 self.settings['variables'] = {self.param['parameter']:val}
             else:

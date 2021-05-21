@@ -440,8 +440,8 @@ class StochSSJob(StochSSBase):
         ----------
         settings : dict
             StochSS simulation settings dict
-        need_variable_ssa : bool
-            Indicates whether or not the VariableSSACSolver is needed
+        solver_map : dict
+            Dictionary mapping algorithm to solver
         '''
         settings = settings['simulationSettings']
         kwargs = {"solver":solver_map[settings['algorithm']]}

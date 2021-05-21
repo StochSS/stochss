@@ -81,7 +81,7 @@ class ParameterScan():
 
     def __setup_model(self, variables):
         if "solver" in self.settings.keys() and \
-                        self.settings['solver'].name == "VariableSSACSolver":
+                        self.settings['solver'].name == "SSACSolver":
             self.settings['variables'] = variables
             return self.model
         tmp_mdl = copy.deepcopy(self.model)
