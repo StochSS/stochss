@@ -180,7 +180,7 @@ class ParameterSweep2D():
         for i, val1 in enumerate(self.params[0]['range']):
             for j, val2 in enumerate(self.params[1]['range']):
                 if "solver" in self.settings.keys() and \
-                            self.settings['solver'].name == "VariableSSACSolver":
+                            self.settings['solver'].name == "SSACSolver":
                     tmp_mdl = self.model
                     variables = {self.params[0]['parameter']:val1, self.params[1]['parameter']:val2}
                     self.settings['variables'] = variables

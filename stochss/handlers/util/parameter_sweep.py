@@ -26,7 +26,7 @@ import itertools
 import numpy
 import plotly
 
-from gillespy2 import TauLeapingSolver, TauHybridSolver, VariableSSACSolver, ODESolver
+from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver, ODESolver
 
 from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
@@ -71,16 +71,19 @@ class ParameterSweep(StochSSJob):
 
 
     def __get_run_settings(self):
-        solver_map = {"SSA":VariableSSACSolver(model=self.g_model), "Tau-Leaping":TauLeapingSolver,
+        solver_map = {"SSA":SSACSolver, "Tau-Leaping":TauLeapingSolver,
                       "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
         if self.settings['simulationSettings']['isAutomatic']:
             solver_name = self.g_model.get_best_solver().name
             kwargs = {"number_of_trajectories":1 if solver_name == "ODESolver" else 20}
-            if solver_name != "VariableSSACSolver":
+            if solver_name != "SSACSolver":
                 return kwargs
-            kwargs['solver'] = solver_map['SSA']
+            kwargs['solver'] = solver_map['SSA'](model=self.g_model)
             return kwargs
-        return self.get_run_settings(settings=self.settings, solver_map=solver_map)
+        run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
+        if run_settings['solver'].name == "SSACSolver":
+            run_settings['solver'] = run_settings['solver'](model=self.g_model)
+        return run_settings
 
 
     def __store_csv_results(self, wkfl):
