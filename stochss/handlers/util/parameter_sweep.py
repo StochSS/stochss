@@ -26,7 +26,7 @@ import itertools
 import numpy
 import plotly
 
-from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver, ODESolver
+from gillespy2 import TauHybridSolver
 
 from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
@@ -71,24 +71,30 @@ class ParameterSweep(StochSSJob):
 
 
     def __get_run_settings(self):
-        solver_map = {"SSA":SSACSolver, "Tau-Leaping":TauLeapingSolver,
-                      "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
+        instance_solvers = ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]
         if self.settings['simulationSettings']['isAutomatic']:
-            solver_name = self.g_model.get_best_solver().name
-            kwargs = {"number_of_trajectories":1 if solver_name == "ODESolver" else 20}
-            if solver_name != "SSACSolver":
+            solver = self.g_model.get_best_solver()
+            kwargs = {"number_of_trajectories":1 if "ODE" in solver.name else 20}
+            if solver.name not in instance_solvers:
                 return kwargs
-            kwargs['solver'] = solver_map['SSA'](model=self.g_model)
+            kwargs['solver'] = solver(model=self.g_model)
             return kwargs
+        solver_map = {"SSA":self.g_model.get_best_solver_algo("SSA"),
+                      "Tau-Leaping":self.g_model.get_best_solver_algo("Tau-Leaping"),
+                      "ODE":self.g_model.get_best_solver_algo("ODE"),
+                      "Hybrid-Tau-Leaping":TauHybridSolver}
         run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
-        if run_settings['solver'].name == "SSACSolver":
+        if run_settings['solver'].name in instance_solvers:
             run_settings['solver'] = run_settings['solver'](model=self.g_model)
         return run_settings
 
 
     def __store_csv_results(self, wkfl):
-        if "ODE" not in wkfl.settings['solver'].name and \
-                            wkfl.settings['number_of_trajectories'] > 1:
+        if "solver" in wkfl.settings.keys():
+            solver_name = wkfl.settings['solver'].name
+        else:
+            solver_name = wkfl.model.get_best_solver().name
+        if "ODE" not in solver_name and wkfl.settings['number_of_trajectories'] > 1:
             csv_keys = list(itertools.product(["min", "max", "avg", "var", "final"],
                                               ["min", "max", "avg", "var"]))
         else:
@@ -109,8 +115,11 @@ class ParameterSweep(StochSSJob):
     @classmethod
     def __store_plots(cls, wkfl):
         mappers = ["min", "max", "avg", "var", "final"]
-        if "ODE" not in wkfl.settings['solver'].name and \
-                            wkfl.settings['number_of_trajectories'] > 1:
+        if "solver" in wkfl.settings.keys():
+            solver_name = wkfl.settings['solver'].name
+        else:
+            solver_name = wkfl.model.get_best_solver().name
+        if "ODE" not in solver_name and wkfl.settings['number_of_trajectories'] > 1:
             keys = list(itertools.product(wkfl.list_of_species, mappers,
                                           ["min", "max", "avg", "var"]))
         else:
