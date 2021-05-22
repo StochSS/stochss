@@ -271,3 +271,24 @@ class PlotNotAvailableError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(406, "Plot Figure Not Available", msg, trace)
+
+
+class StochSSJobResultsError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Job Results Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the job results object was corrupted
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(500, "Job Results Error", msg, trace)
