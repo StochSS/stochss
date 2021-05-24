@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
+import pickle
 from urllib import request
 import traceback
 
@@ -137,6 +138,13 @@ class StochSSFolder(StochSSBase):
             message = "The file could not be validated as a Model file "
             message += f"and was uploaded as {file} to {dirname}"
         return {"message":message, "path":dirname, "file":file, "errors":error}
+
+
+    def __upload_pickled_model(self, file, body, new_name=None):
+        model = pickle.loads(body)
+        template = self.get_model_template()
+        if not hasattr(model, "domain"):
+            s_model = StochSSSBMLModel.gillespy2_to_model()
 
 
     def __upload_sbml(self, file, body, new_name=None):
@@ -391,13 +399,15 @@ class StochSSFolder(StochSSBase):
         new_name : str
             New name for the file (may also include new directories)
         '''
+        exts = {"model":['mdl', 'smdl', 'json'], "sbml":['sbml', 'xml']}
+        ext = file.split('.').pop() if '.' in file else ""
+        if file_type == "model" and ext == "p":
+            return self.__upload_pickled_model(file, body, new_name=new_name)
         try:
             body = body.decode()
         except UnicodeError:
             pass
-        exts = {"model":['mdl', 'smdl', 'json'], "sbml":['sbml', 'xml']}
-        ext = file.split('.').pop() if '.' in file else ""
-        if  ext in ('mdl', 'smdl') or (file_type == "model" and ext in exts[file_type]):
+        if ext in ('mdl', 'smdl') or (file_type == "model" and ext in exts[file_type]):
             return self.__upload_model(file, body, new_name=new_name)
         if ext == 'sbml' or (file_type == "sbml" and ext in exts[file_type]):
             return self.__upload_sbml(file, body, new_name=new_name)
