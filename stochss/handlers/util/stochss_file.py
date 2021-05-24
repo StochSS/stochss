@@ -142,7 +142,7 @@ class StochSSFile(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
-    def unzip(self):
+    def unzip(self, from_upload=True):
         '''
         Extract the contents of a zip archive
 
@@ -151,7 +151,6 @@ class StochSSFile(StochSSBase):
         '''
         if not self.path.endswith(".zip"):
             return []
-
         try:
             path = self.get_path(full=True)
             dirname = self.get_dir_name(full=True)
@@ -167,6 +166,12 @@ class StochSSFile(StochSSBase):
                 zip_file.extractall(dirname)
             if "__MACOSX" in os.listdir(dirname):
                 shutil.rmtree(os.path.join(dirname, "__MACOSX"))
-            return []
+            if from_upload:
+                return []
+            message = "Successfully extracted the contents of"
+            return {"message": f"{message} {self.get_file()} to {self.get_dir_name()}"}
         except zipfile.BadZipFile as err:
-            return [str(err)]
+            message = f"{str(err)} so it could not be unzipped."
+            if not from_upload:
+                raise StochSSUnzipError(message, traceback.format_exc()) from err
+            return [message]
