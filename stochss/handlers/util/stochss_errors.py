@@ -140,6 +140,27 @@ class StochSSPermissionsError(StochSSAPIError):
         '''
         super().__init__(403, "Permission Denied", msg, trace)
 
+
+class StochSSUnzipError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Un-Zip Zip Archive API Handler Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that a problem occured during the extraction process for the zip archive
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "Unable to Extract Contents", msg, trace)
+
 ####################################################################################################
 # Model Errors
 ####################################################################################################

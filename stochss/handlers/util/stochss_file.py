@@ -23,7 +23,7 @@ import traceback
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
-                            StochSSFileExistsError
+                            StochSSFileExistsError, StochSSUnzipError
 
 class StochSSFile(StochSSBase):
     '''
