@@ -363,7 +363,7 @@ module.exports = {
         let title = `Upload a ${type}`
         var accept = "";
         if(type === "model") {
-          accept = 'accept=".json, .mdl, .smdl"'
+          accept = 'accept=".json, .mdl, .smdl, .p"'
         }else if(type === "sbml") {
           accept = 'accept=".xml, .sbml"'
         }else if(type === "file" && isSafariV14Plus){
