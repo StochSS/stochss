@@ -695,7 +695,7 @@ class UnzipFileAPIHandler(APIHandler):
         log.debug("The path to the zip archive: %s", path)
         try:
             file = StochSSFile(path=path)
-            resp = file.unzip()
+            resp = file.unzip(from_upload=False)
             log.debug("Response Message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
