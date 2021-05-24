@@ -59,9 +59,9 @@ class EnsembleSimulation(StochSSJob):
 
 
     def __get_run_settings(self):
-        solver_map = {"SSA":self.g_model.get_best_solver_algo("SSA"),
+        solver_map = {"ODE":self.g_model.get_best_solver_algo("ODE"),
+                      "SSA":self.g_model.get_best_solver_algo("SSA"),
                       "Tau-Leaping":self.g_model.get_best_solver_algo("Tau-Leaping"),
-                      "ODE":self.g_model.get_best_solver_algo("ODE"),
                       "Hybrid-Tau-Leaping":TauHybridSolver}
         run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
         instance_solvers = ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]
