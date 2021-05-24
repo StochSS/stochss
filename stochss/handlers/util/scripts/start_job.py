@@ -108,9 +108,9 @@ if __name__ == "__main__":
     jobs = {"gillespy":EnsembleSimulation, "parameterSweep":ParameterSweep}
     try:
         os.chdir(args.path)
-        wkfl = jobs[args.type](path=args.path)
+        job = jobs[args.type](path=args.path)
         job_handler, user_handler = setup_logger("logs.txt")
-        wkfl.run(verbose=args.verbose)
+        job.run(verbose=args.verbose)
     except Exception as error:
         report_error(err=error)
     else:

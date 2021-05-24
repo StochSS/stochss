@@ -21,13 +21,14 @@ import os
 import json
 import pickle
 import logging
+import traceback
 
 import numpy
 import plotly
 from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver, ODESolver
 
 from .stochss_job import StochSSJob
-from .stochss_errors import StochSSAPIError
+from .stochss_errors import StochSSAPIError, StochSSJobResultsError
 
 log = logging.getLogger("stochss")
 
@@ -67,28 +68,46 @@ class EnsembleSimulation(StochSSJob):
         return run_settings
 
 
+    def __store_csv_results(self, results):
+        try:
+            results.to_csv(path="results", nametag="results_csv", stamp=self.get_time_stamp())
+        except Exception as err:
+            log.error("Error storing csv results: %s\n%s",
+                      str(err), traceback.format_exc())
+
+
     @classmethod
-    def __plot_results(cls, results):
-        plots = {"trajectories":results.plotplotly(return_plotly_figure=True)}
-        if len(results) > 1:
-            plots['stddevran'] = results.plotplotly_std_dev_range(return_plotly_figure=True)
-            std_res = results.stddev_ensemble()
-            plots['stddev'] = std_res.plotplotly(return_plotly_figure=True)
-            avg_res = results.average_ensemble()
-            plots['avg'] = avg_res.plotplotly(return_plotly_figure=True)
-        for _, plot in plots.items():
-            plot["config"] = {"responsive":True}
-        with open('results/plots.json', 'w') as plots_file:
-            json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
-                      indent=4, sort_keys=True)
+    def __store_pickled_results(cls, results):
+        try:
+            with open('results/results.p', 'wb') as results_file:
+                pickle.dump(results, results_file)
+        except Exception as err:
+            message = f"Error storing pickled results: {err}\n{traceback.format_exc()}"
+            log.error(message)
+            return message
+        return False
 
 
-    def __store_results(self, results):
-        if not 'results' in os.listdir():
-            os.mkdir('results')
-        with open('results/results.p', 'wb') as results_file:
-            pickle.dump(results, results_file)
-        results.to_csv(path="results", nametag="results_csv", stamp=self.get_time_stamp())
+    @classmethod
+    def __store_result_plots(cls, results):
+        try:
+            plots = {"trajectories":results.plotplotly(return_plotly_figure=True)}
+            if len(results) > 1:
+                plots['stddevran'] = results.plotplotly_std_dev_range(return_plotly_figure=True)
+                std_res = results.stddev_ensemble()
+                plots['stddev'] = std_res.plotplotly(return_plotly_figure=True)
+                avg_res = results.average_ensemble()
+                plots['avg'] = avg_res.plotplotly(return_plotly_figure=True)
+            for _, plot in plots.items():
+                plot["config"] = {"responsive":True}
+            with open('results/plots.json', 'w') as plots_file:
+                json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
+                          indent=4, sort_keys=True)
+        except Exception as err:
+            message = f"Error storing result plots: {err}\n{traceback.format_exc()}"
+            log.error(message)
+            return message
+        return False
 
 
     def __update_timespan(self):
@@ -135,8 +154,15 @@ class EnsembleSimulation(StochSSJob):
         if verbose:
             log.info("The ensemble simulation has completed")
             log.info("Storing the results as pickle and csv")
-        self.__store_results(results=results)
+        if not 'results' in os.listdir():
+            os.mkdir('results')
+        self.__store_csv_results(results=results)
+        pkl_err = self.__store_pickled_results(results=results)
         if verbose:
             log.info("Storing the polts of the results")
-        self.__plot_results(results=results)
+        plt_err = self.__store_result_plots(results=results)
+        if pkl_err and plt_err:
+            message = "An unexpected error occured with the result object"
+            trace = f"{pkl_err}\n{plt_err}"
+            raise StochSSJobResultsError(message, trace)
         return None
