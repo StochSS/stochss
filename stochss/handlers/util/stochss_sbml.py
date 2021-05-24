@@ -21,8 +21,6 @@ import json
 import traceback
 
 from gillespy2.sbml.SBMLimport import convert
-from gillespy2.sbml.SBMLimport import __read_sbml_model as _read_sbml_model
-from gillespy2.sbml.SBMLimport import __get_math as _get_math
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError
@@ -107,10 +105,9 @@ class StochSSSBMLModel(StochSSBase):
 
     @classmethod
     def __convert_function_definition(cls, model, function_definitions):
-        for function_definition in function_definitions:
-            name = function_definition["name"]
-            variables = ', '.join(function_definition["args"])
-            expression = function_definition["function"]
+        for name, function_definition in function_definitions.items():
+            variables = function_definition.args
+            expression = function_definition.function_string
             function = "lambda({0}, {1})".format(variables, expression)
             signature = "{0}({1})".format(name, variables)
 
@@ -219,26 +216,6 @@ class StochSSSBMLModel(StochSSBase):
         model['defaultMode'] = mode
 
 
-    def __get_function_definitions(self):
-        path = self.get_path(full=True)
-        sb_model = _read_sbml_model(path)[0]
-        function_definitions = []
-
-        for i in range(sb_model.getNumFunctionDefinitions()):
-            function = sb_model.getFunctionDefinition(i)
-            function_name = function.getId()
-            function_tree = function.getMath()
-            num_nodes = function_tree.getNumChildren()
-            function_args = [function_tree.getChild(i).getName() for i in range(num_nodes-1)]
-            function_string = _get_math(function_tree.getChild(num_nodes-1))
-            s_function_definition = {"name":function_name,
-                                     "function":function_string,
-                                     "args":function_args}
-            function_definitions.append(s_function_definition)
-
-        return function_definitions
-
-
     @classmethod
     def __get_parameter(cls, parameters, name):
         return list(filter(lambda parameter: parameter['name'] == name, parameters))[0]
@@ -282,9 +259,6 @@ class StochSSSBMLModel(StochSSBase):
         Attributes
         ----------
         '''
-        s_model = self.get_model_template() # StochSS Model in json format
-        self.log("debug", f"Model template: \n{json.dumps(s_model)}")
-
         g_model, errors = self.convert_to_gillespy() # GillesPy2 Model object
         if g_model is None:
             message = "ERROR! We were unable to convert the SBML Model into a StochSS Model."
@@ -300,15 +274,33 @@ class StochSSSBMLModel(StochSSBase):
         else:
             s_path = os.path.join(self.get_dir_name(), s_file)
 
-        self.__convert_species(model=s_model, species=g_model.get_all_species())
-        self.__convert_parameters(model=s_model, parameters=g_model.get_all_parameters())
-        self.__convert_reactions(model=s_model, reactions=g_model.get_all_reactions())
-        self.__convert_events(model=s_model, events=g_model.get_all_events())
-        self.__convert_rules(model=s_model, r_type='Rate Rule', rules=g_model.get_all_rate_rules())
-        self.__convert_rules(model=s_model, r_type='Assignment Rule',
-                             rules=g_model.get_all_assignment_rules())
-        self.__convert_function_definition(model=s_model,
-                                           function_definitions=self.__get_function_definitions())
+        model_temp = self.get_model_template() # StochSS Model in json format
+        self.log("debug", f"Model template: \n{json.dumps(model_temp)}")
+        s_model = self.gillespy2_to_model(s_model=model_temp, g_model=g_model)
 
         message = "The SBML Model was successfully converted to a StochSS Model."
         return {"message":message, "errors":errors, "model":s_model, "path":s_path}
+
+
+    @classmethod
+    def gillespy2_to_model(cls, s_model, g_model):
+        '''
+        Convert the gillespy2 model to a stochss model
+
+        Attributes
+        ----------
+        s_model : dict
+            The srochss model template
+        g_model : obj
+            The GillesPy2 model object
+        '''
+        cls.__convert_species(model=s_model, species=g_model.get_all_species())
+        cls.__convert_parameters(model=s_model, parameters=g_model.get_all_parameters())
+        cls.__convert_reactions(model=s_model, reactions=g_model.get_all_reactions())
+        cls.__convert_events(model=s_model, events=g_model.get_all_events())
+        cls.__convert_rules(model=s_model, r_type='Rate Rule', rules=g_model.get_all_rate_rules())
+        cls.__convert_rules(model=s_model, r_type='Assignment Rule',
+                             rules=g_model.get_all_assignment_rules())
+        cls.__convert_function_definition(model=s_model,
+                                        function_definitions=g_model.get_all_function_definitions())
+        return s_model
