@@ -674,3 +674,30 @@ class UploadFileFromLinkAPIHandler(APIHandler):
             log.debug("Response: %s", resp)
             self.write(resp)
         self.finish()
+
+
+class UnzipFileAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for unzipping zip archives.
+    ################################################################################################
+    '''
+
+    async def get(self):
+        '''
+        Unzip a zip archive.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the zip archive: %s", path)
+        try:
+            file = StochSSFile(path=path)
+            resp = file.unzip()
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
