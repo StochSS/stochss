@@ -133,9 +133,11 @@ module.exports = View.extend({
   },
   toggleReactionTypes: function (e, prev, curr) {
     if(curr && curr.add && this.collection.parent.parameters.length === 1){
+      $(this.queryByHook('massaction-message')).prop('hidden', true);
       $(this.queryByHook('add-reaction-full')).prop('hidden', false);
       $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
     }else if(curr && !curr.add && this.collection.parent.parameters.length === 0){
+      $(this.queryByHook('massaction-message')).prop('hidden', false);
       $(this.queryByHook('add-reaction-full')).prop('hidden', true);
       $(this.queryByHook('add-reaction-partial')).prop('hidden', false);
     }
