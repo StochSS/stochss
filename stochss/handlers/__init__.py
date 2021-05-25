@@ -63,6 +63,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/file/download-zip\/?", DownloadZipFileAPIHandler),
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
         (r"/stochss/api/file/duplicate\/?", DuplicateModelHandler),
+        (r"/stochss/api/file/unzip\/?", UnzipFileAPIHandler),
         (r"/stochss/api/directory/duplicate\/?", DuplicateDirectoryHandler),
         (r"/stochss/api/directory/create\/?", CreateDirectoryHandler),
         (r"/stochss/api/spatial/to-model\/?", ConvertToModelAPIHandler),

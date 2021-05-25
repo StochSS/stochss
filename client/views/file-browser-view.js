@@ -924,6 +924,24 @@ module.exports = View.extend({
       }
     });
   },
+  extractAll: function (o) {
+    let self = this;
+    let queryStr = "?path=" + o.original._path;
+    let endpoint = path.join(app.getApiPath(), "file/unzip") + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        let node = $('#models-jstree-view').jstree().get_node(o.parent);
+        if(node.type === "root"){
+          self.refreshJSTree();
+        }else{          
+          $('#models-jstree-view').jstree().refresh_node(node);
+        }
+      },
+      error: function (err, response, body) {
+        let modal = $(modals.newProjectModelErrorHtml(body.Reason, body.message)).modal();
+      }
+    });
+  },
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -1343,6 +1361,18 @@ module.exports = View.extend({
           }
         }
       }
+      //Specific to zip archives
+      let extractAll = {
+        "extractAll" : {
+          "label" : "Extract All",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.extractAll(o);
+          }
+        }
+      }
       if (o.type === 'root'){
         return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
       }
@@ -1366,6 +1396,9 @@ module.exports = View.extend({
       }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, downloadWCombine, common)
+      }
+      if (o.text.endsWith(".zip")) {
+        return $.extend(open, extractAll, download, common)
       }
       if (o.type === 'notebook' || o.type === "other") {
         return $.extend(open, download, common)

@@ -90,11 +90,10 @@ class ParameterSweep2D():
                     log.debug('  %s population %s=%s', key, species, data)
 
 
-    def __setup_results(self):
+    def __setup_results(self, solver_name):
         for species in self.list_of_species:
             spec_res = {}
-            if "ODE" not in self.settings['solver'].name and \
-                            self.settings['number_of_trajectories'] > 1:
+            if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
                 for m_key in self.MAPPER_KEYS:
                     spec_res[m_key] = {}
                     for r_key in self.REDUCER_KEYS:
@@ -176,11 +175,14 @@ class ParameterSweep2D():
         Attributes
         ----------
         '''
-        self.__setup_results()
+        if "solver" in self.settings.keys():
+            solver_name = self.settings['solver'].name
+        else:
+            solver_name = self.model.get_best_solver().name
+        self.__setup_results(solver_name=solver_name)
         for i, val1 in enumerate(self.params[0]['range']):
             for j, val2 in enumerate(self.params[1]['range']):
-                if "solver" in self.settings.keys() and \
-                            self.settings['solver'].name == "SSACSolver":
+                if solver_name in ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]:
                     tmp_mdl = self.model
                     variables = {self.params[0]['parameter']:val1, self.params[1]['parameter']:val2}
                     self.settings['variables'] = variables
@@ -200,8 +202,7 @@ class ParameterSweep2D():
                     key = f"{self.params[0]['parameter']}:{val1},"
                     key += f"{self.params[1]['parameter']}:{val2}"
                     self.ts_results[key] = tmp_res
-                    if "ODE" not in self.settings['solver'].name and \
-                                self.settings['number_of_trajectories'] > 1:
+                    if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
                         self.__ensemble_feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j,
                                                            verbose=verbose)
                     else:

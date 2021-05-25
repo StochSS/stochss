@@ -91,11 +91,10 @@ class ParameterSweep1D():
                     log.debug('  %s population %s=%s', key, species, data)
 
 
-    def __setup_results(self):
+    def __setup_results(self, solver_name):
         for species in self.list_of_species:
             spec_res = {}
-            if "ODE" not in self.settings['solver'].name and \
-                            self.settings['number_of_trajectories'] > 1:
+            if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
                 for m_key in self.MAPPER_KEYS:
                     spec_res[m_key] = {}
                     for r_key in self.REDUCER_KEYS:
@@ -135,7 +134,8 @@ class ParameterSweep1D():
         else:
             results = self.results[keys[0]][keys[1]]
 
-        visible = self.settings['number_of_trajectories'] > 1
+        visible = "number_of_trajectories" in self.settings.keys() and \
+                                    self.settings['number_of_trajectories'] > 1
         error_y = dict(type="data", array=results[:, 1], visible=visible)
 
         trace_list = [plotly.graph_objs.Scatter(x=self.param['range'],
@@ -172,10 +172,13 @@ class ParameterSweep1D():
         Attributes
         ----------
         '''
-        self.__setup_results()
+        if "solver" in self.settings.keys():
+            solver_name = self.settings['solver'].name
+        else:
+            solver_name = self.model.get_best_solver().name
+        self.__setup_results(solver_name=solver_name)
         for i, val in enumerate(self.param['range']):
-            if "solver" in self.settings.keys() and \
-                            self.settings['solver'].name == "SSACSolver":
+            if solver_name in ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]:
                 tmp_mdl = self.model
                 self.settings['variables'] = {self.param['parameter']:val}
             else:
@@ -190,8 +193,7 @@ class ParameterSweep1D():
             else:
                 key = f"{self.param['parameter']}:{val}"
                 self.ts_results[key] = tmp_res
-                if "ODE" not in self.settings['solver'].name and \
-                                self.settings['number_of_trajectories'] > 1:
+                if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
                     self.__ensemble_feature_extraction(results=tmp_res, index=i, verbose=verbose)
                 else:
                     self.__feature_extraction(results=tmp_res, index=i, verbose=verbose)
