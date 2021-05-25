@@ -101,8 +101,6 @@ class StochSSFolder(StochSSBase):
         path = os.path.join(self.path, file)
         new_file = StochSSFile(path=path, new=True, body=body)
         error = new_file.unzip()
-        if error:
-            error[0] += " so it could not be unzipped."
         file = new_file.get_file()
         dirname = new_file.get_dir_name()
         message = f"{file} was successfully uploaded to {dirname}"
