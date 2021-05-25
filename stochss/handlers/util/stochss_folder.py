@@ -166,7 +166,7 @@ class StochSSFolder(StochSSBase):
         except Exception as err:
             dirname = None
             message = "The file could not be validated as a Model file "
-            message += f"and was uploaded as {file} to {dirname}"
+            message += f"and could not be uploaded."
             error = [str(err)]
         return {"message":message, "path":dirname, "file":file, "errors":error}
 
