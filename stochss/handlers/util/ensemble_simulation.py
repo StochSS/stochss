@@ -25,7 +25,7 @@ import traceback
 
 import numpy
 import plotly
-from gillespy2 import TauLeapingSolver, TauHybridSolver, SSACSolver, ODESolver
+from gillespy2 import TauHybridSolver
 
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSAPIError, StochSSJobResultsError
@@ -60,10 +60,13 @@ class EnsembleSimulation(StochSSJob):
 
 
     def __get_run_settings(self):
-        solver_map = {"SSA":SSACSolver, "Tau-Leaping":TauLeapingSolver,
-                      "ODE":ODESolver, "Hybrid-Tau-Leaping":TauHybridSolver}
+        solver_map = {"ODE":self.g_model.get_best_solver_algo("ODE"),
+                      "SSA":self.g_model.get_best_solver_algo("SSA"),
+                      "Tau-Leaping":self.g_model.get_best_solver_algo("Tau-Leaping"),
+                      "Hybrid-Tau-Leaping":TauHybridSolver}
         run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
-        if run_settings['solver'].name == "SSACSolver":
+        instance_solvers = ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]
+        if run_settings['solver'].name in instance_solvers :
             run_settings['solver'] = run_settings['solver'](model=self.g_model)
         return run_settings
 
@@ -145,7 +148,7 @@ class EnsembleSimulation(StochSSJob):
             log.info("Running the ensemble simulation")
         if self.settings['simulationSettings']['isAutomatic']:
             self.__update_timespan()
-            is_ode = self.g_model.get_best_solver().name == "ODESolver"
+            is_ode = self.g_model.get_best_solver().name in ["ODESolver", "ODECSolver"]
             results = self.g_model.run(number_of_trajectories=1 if is_ode else 100)
         else:
             kwargs = self.__get_run_settings()

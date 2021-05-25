@@ -40,7 +40,8 @@ class StochSSNotebook(StochSSBase):
     MODEL_EXPLORATION = 5
     MODEL_INFERENCE = 6
     SOLVER_MAP = {"SSACSolver":"SSA", "NumPySSASolver":"SSA", "ODESolver":"ODE", "Solver":"SSA",
-                  "TauLeapingSolver":"Tau-Leaping", "TauHybridSolver":"Hybrid-Tau-Leaping"}
+                  "TauLeapingSolver":"Tau-Leaping", "TauHybridSolver":"Hybrid-Tau-Leaping",
+                  "ODECSolver":"ODE", "TauLeapingCSolver":"Tau-Leaping"}
 
     def __init__(self, path, new=False, models=None, settings=None):
         '''Intitialize a notebook object and if its new create it on the users file system
@@ -71,7 +72,6 @@ class StochSSNotebook(StochSSBase):
             if changed:
                 self.path = n_path.replace(self.user_dir + '/', "")
 
-
     def __create_common_cells(self, interactive_backend=False):
         cells = [self.__create_import_cell(interactive_backend=interactive_backend),
                  nbf.new_markdown_cell(f"# {self.get_name()}"),
@@ -85,11 +85,15 @@ class StochSSNotebook(StochSSBase):
         pad = "    "
         config = ["def configure_simulation():"]
         # Add solver instantiation line if the c solver are available
-        instance_solvers = ["SSACSolver"]
+        instance_solvers = ["SSACSolver", "ODECSolver", "TauLeapingCSolver"]
         is_automatic = self.settings['simulationSettings']['isAutomatic']
-        if self.is_ssa_c and self.settings['solver'] in instance_solvers:
-            commented = is_automatic and self.nb_type <= self.ENSEMBLE_SIMULATION and \
-                                                    self.settings['solver'] not in instance_solvers
+        if self.settings['solver'] in instance_solvers:
+            if is_automatic and self.nb_type <= self.ENSEMBLE_SIMULATION:
+                commented = True
+            elif is_automatic and self.settings['solver'] not in instance_solvers:
+                commented = True
+            else:
+                commented = False
             start = f"{pad}# " if commented else pad
             config.append(f"{start}solver = {self.settings['solver']}(model=model)")
         config.append(pad + "kwargs = {")
@@ -201,11 +205,12 @@ class StochSSNotebook(StochSSBase):
             imports.append("from gillespy2 import Model, Species, Parameter, Reaction, Event, \\")
             imports.append("                      EventTrigger, EventAssignment, RateRule, \\")
             imports.append("                      AssignmentRule, FunctionDefinition")
-            ssa = "SSACSolver" if self.is_ssa_c else "NumPySSASolver"
-            algorithm_map = {'SSA': f'from gillespy2 import {ssa}',
-                             'Tau-Leaping': 'from gillespy2 import TauLeapingSolver',
-                             'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridSolver',
-                             'ODE': 'from gillespy2 import ODESolver'}
+            ssa_import = f'from gillespy2 import {self.model.get_best_solver_algo("SSA").name}'
+            tau_import = 'from gillespy2 import '
+            tau_import += f'{self.model.get_best_solver_algo("Tau-Leaping").name}'
+            ode_import = f'from gillespy2 import {self.model.get_best_solver_algo("ODE").name}'
+            algorithm_map = {'SSA': ssa_import, 'Tau-Leaping': tau_import, 'ODE': ode_import,
+                             'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridSolver'}
             algorithm = self.settings['simulationSettings']['algorithm']
             for name, alg_import in algorithm_map.items():
                 if not is_automatic and name == algorithm:
@@ -796,9 +801,11 @@ class StochSSNotebook(StochSSBase):
             settings['realizations'] = 1
         # Map algorithm for GillesPy2
         ssa_solver = "solver" if self.is_ssa_c else "NumPySSASolver"
+        ode_solver = "solver" if self.is_ssa_c else "ODESolver"
+        tau_solver = "solver" if self.is_ssa_c else "TauLeapingSolver"
         solver_map = {"SSA":f'"solver":{ssa_solver}',
-                      "ODE":'"solver":ODESolver',
-                      "Tau-Leaping":'"solver":TauLeapingSolver',
+                      "ODE":f'"solver":{ode_solver}',
+                      "Tau-Leaping":f'"solver":{tau_solver}',
                       "Hybrid-Tau-Leaping":'"solver":TauHybridSolver'}
         # Map algorithm settings for GillesPy2. GillesPy2 requires snake case, remap camelCase
         settings_map = {"number_of_trajectories":settings['realizations'],
@@ -824,10 +831,10 @@ class StochSSNotebook(StochSSBase):
             solver = self.model.get_best_solver().name
             self.settings['simulationSettings']['algorithm'] = self.SOLVER_MAP[solver]
             return solver
-        algorithm_map = {'SSA': "SSACSolver" if self.is_ssa_c else "NumPySSASolver",
-                         'Tau-Leaping': 'TauLeapingSolver',
+        algorithm_map = {'SSA': self.model.get_best_solver_algo("SSA").name,
+                         'Tau-Leaping': self.model.get_best_solver_algo("Tau-Leaping").name,
                          'Hybrid-Tau-Leaping': 'TauHybridSolver',
-                         'ODE': 'ODESolver'}
+                         'ODE': self.model.get_best_solver_algo("ODE").name}
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
 
     def create_1dps_notebook(self):
@@ -970,10 +977,7 @@ class StochSSNotebook(StochSSBase):
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
     def load(self):
-        '''Read the notebook file and return as a dict
-
-        Attributes
-        ----------'''
+        '''Read the notebook file and return as a dict'''
         try:
             with open(self.get_path(full=True), "r") as notebook_file:
                 return json.load(notebook_file)
