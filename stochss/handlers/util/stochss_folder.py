@@ -139,10 +139,36 @@ class StochSSFolder(StochSSBase):
 
 
     def __upload_pickled_model(self, file, body, new_name=None):
-        model = pickle.loads(body)
-        template = self.get_model_template()
-        if not hasattr(model, "domain"):
-            s_model = StochSSSBMLModel.gillespy2_to_model()
+        try:
+            name = self.get_name(path=file) if new_name is None else new_name
+            model = pickle.loads(body)
+            template = self.get_model_template()
+            if not hasattr(model, "domain"):
+            #     TODO: Implement spatialpy_to_model function
+            #     s_model = StochSSSBMLModel.spatialpy_to_model(s_model=template, sp_model=model)
+            #     file = f"{name}.smdl"
+            # else:
+                s_model = StochSSSBMLModel.gillespy2_to_model(s_model=template, g_model=model)
+                file = f"{name}.mdl"
+            if self.path.endswith(".proj") and self.check_project_format(path=self.path):
+                wkgp_file = f"{name}.wkgp"
+                wkgp_path, changed = self.get_unique_path(name=wkgp_file, dirname=self.path)
+                if changed:
+                    file = f"{self.get_name(path=wkgp_path)}.{ext}"
+                path = os.path.join(wkgp_path, file)
+            else:
+                path = os.path.join(self.path, file)
+            new_file = StochSSFile(path=path, new=True, body=json.dumps(s_model))
+            file = new_file.get_file()
+            dirname = new_file.get_dir_name()
+            message = f"{file} was successfully uploaded to {dirname}"
+            error = []
+        except Exception as err:
+            dirname = None
+            message = "The file could not be validated as a Model file "
+            message += f"and was uploaded as {file} to {dirname}"
+            error = [str(err)]
+        return {"message":message, "path":dirname, "file":file, "errors":error}
 
 
     def __upload_sbml(self, file, body, new_name=None):
