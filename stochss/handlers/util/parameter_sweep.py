@@ -33,21 +33,10 @@ from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
 from .parameter_scan import ParameterScan
+from .stochss_encoders import NumpyEncoder
 from .stochss_errors import StochSSJobResultsError
 
 log = logging.getLogger("stochss")
-
-class NumpyEncoder(json.JSONEncoder):
-    '''
-    ################################################################################################
-    Custom json encoder for numpy ndarrays
-    ################################################################################################
-    '''
-    def default(self, o):
-        if isinstance(o, numpy.ndarray):
-            return o.tolist()
-        return json.JSONEncoder.default(self, o)
-
 
 class ParameterSweep(StochSSJob):
     '''
