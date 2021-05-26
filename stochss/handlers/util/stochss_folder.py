@@ -27,6 +27,7 @@ from .stochss_base import StochSSBase
 from .stochss_file import StochSSFile
 from .stochss_model import StochSSModel
 from .stochss_sbml import StochSSSBMLModel
+from .stochss_encoders import NumpyEncoder
 from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
                             StochSSPermissionsError
 
@@ -143,7 +144,7 @@ class StochSSFolder(StochSSBase):
             name = self.get_name(path=file) if new_name is None else new_name
             model = pickle.loads(body)
             template = self.get_model_template()
-            if hasattr(model, "domain"):
+            if hasattr(model, "mesh"):
                 s_model = StochSSSBMLModel.spatialpy_to_model(s_model=template, sp_model=model)
                 file = f"{name}.smdl"
             else:
@@ -157,7 +158,7 @@ class StochSSFolder(StochSSBase):
                 path = os.path.join(wkgp_path, file)
             else:
                 path = os.path.join(self.path, file)
-            new_file = StochSSFile(path=path, new=True, body=json.dumps(s_model))
+            new_file = StochSSFile(path=path, new=True, body=json.dumps(s_model, cls=NumpyEncoder))
             file = new_file.get_file()
             dirname = new_file.get_dir_name()
             message = f"{file} was successfully uploaded to {dirname}"
@@ -165,7 +166,7 @@ class StochSSFolder(StochSSBase):
         except Exception as err:
             dirname = None
             message = "The file could not be validated as a Model file and could not be uploaded."
-            error = [str(err)]
+            error = [str(err), traceback.format_exc()]
         return {"message":message, "path":dirname, "file":file, "errors":error}
 
 

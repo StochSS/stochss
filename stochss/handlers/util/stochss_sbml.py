@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import copy
 import traceback
 
 from gillespy2.sbml.SBMLimport import convert
@@ -272,7 +273,8 @@ class StochSSSBMLModel(StochSSBase):
                 initial_condition['x'] = 0
                 initial_condition['y'] = 0
                 initial_condition['z'] = 0
-        model['initialConditions'].append(s_initial_condition)
+
+            model['initialConditions'].append(s_initial_condition)
 
 
     @classmethod
@@ -321,8 +323,8 @@ class StochSSSBMLModel(StochSSBase):
     @classmethod
     def __spatialpy__convert_species(cls, model, sp_model):
         for name, specie in sp_model.get_all_species().items():
-            if specie in sp_model.listOfDiffusuionRestrictions.keys():
-                types = sp_model.listOfDiffusuionRestrictions[specie]
+            if specie in sp_model.listOfDiffusionRestrictions.keys():
+                types = sp_model.listOfDiffusionRestrictions[specie]
             else:
                 types = sp_model.listOfTypeIDs
             s_species = {"compID":model['defaultID'],
@@ -345,7 +347,7 @@ class StochSSSBMLModel(StochSSBase):
                         "nu":0, "typeID":0, "volume":1}
         model['domain']['types'].append(default_type)
         for sp_type in types:
-            s_type = default_type
+            s_type = copy.deepcopy(default_type)
             s_type['typeID'] = sp_type
             s_type['name'] = str(sp_type)
 
@@ -439,7 +441,8 @@ class StochSSSBMLModel(StochSSBase):
         sp_model : obj
             The SpatialPy model object
         '''
-        cls.__spatialpy__convert_domain(model=s_model, domain=sp_model.domain)
+        s_model['is_spatial'] = True
+        cls.__spatialpy__convert_domain(model=s_model, domain=sp_model.mesh)
         s_model['domain']['static'] = sp_model.staticDomain
         cls.__spatialpy__convert_types(model=s_model, types=sp_model.listOfTypeIDs)
         cls.__spatialpy__convert_species(model=s_model, sp_model=sp_model)
