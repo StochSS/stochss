@@ -413,10 +413,12 @@ class JobPresentationAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the job: %s", path)
+        name = self.get_query_argument(name="name")
+        log.debug("Name of the job presentation: %s", name)
         try:
             folder = StochSSFolder(path=path)
             log.info("Publishing the %s presentation", folder.get_name())
-            resp = folder.publish_presentation()
+            resp = folder.publish_presentation(name=name)
             log.info(resp['message'])
             log.debug("Response Message: %s", resp)
             self.write(resp)

@@ -374,7 +374,7 @@ class StochSSFolder(StochSSBase):
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
-    def publish_presentation(self):
+    def publish_presentation(self, name=None):
         '''
         Publish a job, workflow, or project presentation.
 
@@ -384,7 +384,8 @@ class StochSSFolder(StochSSBase):
         present_dir = os.path.join(self.user_dir, ".presentations")
         if not os.path.exists(present_dir):
             os.mkdir(present_dir)
-        dst = os.path.join(present_dir, self.get_file())
+        file = self.get_file() if name is None else name
+        dst = os.path.join(present_dir, file)
         if os.path.exists(dst):
             message = "A presentation with this name already exists"
             raise StochSSFileExistsError(message)
