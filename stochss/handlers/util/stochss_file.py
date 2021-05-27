@@ -117,7 +117,7 @@ class StochSSFile(StochSSBase):
         src = self.get_path(full=True)
         try:
             shutil.copyfile(src, dst)
-            os.chmod(dst, stat.S_IREAD)
+            # INSERT JUPYTER HUB CODE HERE
             return {"message": f"Successfully published the {self.get_name()} presentation"}
         except PermissionError as err:
             message = f"You do not have permission to copy this file: {str(err)}"
