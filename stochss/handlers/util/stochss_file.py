@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-import stat
 import shutil
 import zipfile
 import traceback
@@ -112,7 +111,7 @@ class StochSSFile(StochSSBase):
             os.mkdir(present_dir)
         dst = os.path.join(present_dir, self.get_file())
         if os.path.exists(dst):
-            message = "A publication with this name already exists"
+            message = "A presentation with this name already exists"
             raise StochSSFileExistsError(message)
         src = self.get_path(full=True)
         try:
@@ -120,7 +119,7 @@ class StochSSFile(StochSSBase):
             # INSERT JUPYTER HUB CODE HERE
             return {"message": f"Successfully published the {self.get_name()} presentation"}
         except PermissionError as err:
-            message = f"You do not have permission to copy this file: {str(err)}"
+            message = f"You do not have permission to publish this file: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
