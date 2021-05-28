@@ -57,6 +57,7 @@ module.exports = View.extend({
     this.tooltips = Tooltips.parameterSweepResults;
     this.plots = {};
     this.plotArgs = {};
+    this.mode = Boolean(attrs.mode) ? attrs.mode : "edit";
   },
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
@@ -68,6 +69,12 @@ module.exports = View.extend({
       this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
     }
     View.prototype.render.apply(this, arguments);
+    if(this.mode === "presentation") {
+      $(this.queryByHook("job-presentation")).css("display", "none");
+      if(!isParameterScan){
+        $(this.queryByHook("convert-to-notebook")).css("display", "none");
+      }
+    }
     if(this.parent.model.type === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";
     }else{

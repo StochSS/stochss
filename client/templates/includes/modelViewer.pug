@@ -2,7 +2,7 @@ div.card.card-body
 
   div(id="model-viewer-header")
 
-    h3.inline="Review Model: "+this.model.name
+    h3.inline(data-hook="job-model-name")="Review Model: "+this.model.name
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-model" data-hook="collapse-model") +
 

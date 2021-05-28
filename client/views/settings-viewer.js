@@ -37,9 +37,13 @@ module.exports = View.extend({
     this.algorithm = this.model.simulationSettings.isAutomatic ? 
                "The algorithm was chosen based on your model." : 
                this.model.simulationSettings.algorithm
+    this.mode = Boolean(attrs.mode) ? attrs.mode : "edit";
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(this.mode === "presentation") {
+      $(this.queryByHook("job-settings-header")).html("Settings")
+    }
     if(!this.parent.model.newFormat) {
       $(this.queryByHook("timespan-settings-viewer-container")).css("display", "none");
     }

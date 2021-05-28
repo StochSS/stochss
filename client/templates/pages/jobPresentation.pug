@@ -1,0 +1,22 @@
+html
+
+  head
+    meta(charset="utf-8")
+    title StochSS: Stochastic Simulation Service
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="description", content="")
+    meta(name="author", content="")
+
+  body
+
+    div#job-presentation.container
+
+      h2=this.model.name
+
+      div(data-hook="job-results")
+
+      div(data-hook="job-settings")
+
+      div(data-hook="job-model")
+
+      a.btn.btn-outline-secondary.box-shadow.text-break(href=this.open role="button") Open in StochSS
