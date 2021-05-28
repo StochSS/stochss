@@ -1,0 +1,30 @@
+html
+
+  head
+    meta(charset="utf-8")
+    title StochSS: Stochastic Simulation Service
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="description", content="")
+    meta(name="author", content="")
+
+  body
+
+    div#model-presentation.container
+
+      h2=this.model.name
+
+      div(data-hook="model-species")
+
+      div(data-hook="model-parameters")
+
+      div(data-hook="model-reactions")
+
+      div(data-hook="model-events")
+
+      div(data-hook="model-rules")
+
+      div(data-hook="model-sbml-components")
+
+      div.card.card-body="System Volume: "+this.model.volume
+
+      a.btn.btn-outline-secondary.box-shadow.text-break(href=this.open role="button") Open in StochSS
