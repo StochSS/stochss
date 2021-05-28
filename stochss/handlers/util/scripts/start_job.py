@@ -64,7 +64,7 @@ def report_error(err):
     err : Exception Obj
         Error caught in the except block
     '''
-    message = "Job errors: %s\n%s", err, traceback.format_exc()
+    message = f"Job errors: {str(err)}\n{traceback.format_exc()}"
     gillespy2_log.error(message)
     log.error(message)
     open('ERROR', 'w').close()
