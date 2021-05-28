@@ -28,7 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSFolder, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
-                  StochSSAPIError, report_error
+                  StochSSFile, StochSSAPIError, report_error
 
 
 log = logging.getLogger('stochss')
@@ -399,6 +399,35 @@ class GetParticlesTypesAPIHandler(APIHandler):
             model = StochSSSpatialModel(path="")
             resp = model.get_types_from_file(path=path)
             log.debug("Number of Particles: %s", len(resp['types']))
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class ModelPresentationAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler publishing model presentations.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Publish a model or spatial model presentation.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the file: %s", path)
+        try:
+            file = StochSSFile(path=path)
+            log.info("Publishing the %s presentation", file.get_name())
+            resp = file.publish_presentation()
+            log.info(resp['message'])
+            log.debug("Response Message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
