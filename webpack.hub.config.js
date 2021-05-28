@@ -5,7 +5,8 @@ module.exports = {
   mode: 'development',
   entry: {
     home: './client/pages/home.js',
-    jobPresentation: './client/pages.job-presentation.js'
+    jobPresentation: './client/pages/job-presentation.js',
+    modelPresentation: './client/pages/model-presentation.js'
   },
   output: {
     filename: 'stochss-[name].bundle.js',
@@ -25,6 +26,13 @@ module.exports = {
       filename: '../templates/stochss-job-presentation.html',
       template: 'jupyterhub/home_template.pug',
       name: 'jobPresentation',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Model Presentation',
+      filename: '../templates/stochss-model-presentation.html',
+      template: 'jupyterhub/home_template.pug',
+      name: 'modelPresentation',
       inject: false
     })
   ],

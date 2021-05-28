@@ -71,12 +71,13 @@ c.JupyterHub.log_level = 'DEBUG'
 c.JupyterHub.default_url = '/stochss'
 
 # Page handlers
-from handlers import HomeHandler, JobPresentationHandler
+from handlers import *
 
 # StochSS request handlers
 c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
-        (r"/stochss/job-presentation\/?", JobPresentationHandler)
+        (r"/stochss/job-presentation\/?", JobPresentationHandler),
+        (r"/stochss/model-presentation\/?", ModelPresentationHandler)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
