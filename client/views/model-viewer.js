@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery');
 //support files
 let app = require('../app');
 //views
@@ -36,9 +37,13 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.mode = Boolean(attrs.mode) ? attrs.mode : "edit";
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    if(this.mode === "presentation") {
+      $(this.queryByHook("job-model-name")).html("Model: " + this.model.name)
+    }
     this.renderSpeciesView();
     this.renderParametersView();
     this.renderReactionsView();
