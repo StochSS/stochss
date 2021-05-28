@@ -51,6 +51,7 @@ let JobPresentationPage = PageView.extend({
     // app.getXHR(endpoint, {
     //   success: function (err, response, body) {
     //     self.model.set(body);
+    //     self.model.type = body.titleType;
     //     self.renderSubviews();
     //   }
     // });
