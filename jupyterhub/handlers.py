@@ -52,3 +52,20 @@ class JobPresentationHandler(BaseHandler):
         '''
         html = self.render_template("stochss-job-presentation.html")
         self.finish(html)
+
+
+class ModelPresentationHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Handler for rendering jupyterhub model presentation page.
+    ################################################################################################
+    '''
+    async def get(self):
+        '''
+        Render the jupyterhub model presentation page.
+
+        Attributes
+        ----------
+        '''
+        html = self.render_template("stochss-model-presentation.html")
+        self.finish(html)

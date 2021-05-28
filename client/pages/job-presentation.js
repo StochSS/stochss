@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let path = require('path');
 let domReady = require('domready');
 let bootstrap = require('bootstrap');
 //support files
