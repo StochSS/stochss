@@ -340,7 +340,8 @@ class StochSSFolder(StochSSBase):
         Attributes
         ----------
         '''
-        data = self.get_file_list(ext=".proj", folder=True)
+        test = lambda ext, root, file: bool("trash" in root)
+        data = self.get_file_list(ext=".proj", folder=True, test=test)
         projects = []
         for file in data['files']:
             for path in data['paths'][file[0]]:

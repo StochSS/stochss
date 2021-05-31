@@ -346,7 +346,7 @@ class StochSSWorkflow(StochSSBase):
                         self.workflow['model'] = None
             else:
                 root = StochSSFolder(path="")
-                test = lambda ext, root, file: ".wkfl" in root or ".proj" in root
+                test = lambda ext, root, file: ".wkfl" in root or ".proj" in root or "trash" in root
                 models = root.get_file_list(ext=[".mdl"], test=test)
             if models is not None:
                 self.workflow['models'] = models
