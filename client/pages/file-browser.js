@@ -44,6 +44,7 @@ let FileBrowser = PageView.extend({
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
+    'click [data-hook=empty-trash]' : 'emptyTrash'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments)
@@ -113,7 +114,10 @@ let FileBrowser = PageView.extend({
                 node.original._path = path.join(newDir, file);
                 if(node.type === "folder") {
                   $('#models-jstree').jstree().refresh_node(node);
-                }else if(newDir.endsWith("trash") || oldPath.split("/").includes("trash")) {
+                }else if(newDir.endsWith("trash")) {
+                  $(self.queryByHook('empty-trash')).prop('disabled', false);
+                  $('#models-jstree').jstree().refresh_node(par);
+                }else if(oldPath.split("/").includes("trash")) {
                   $('#models-jstree').jstree().refresh_node(par);
                 }
               },
@@ -775,7 +779,6 @@ let FileBrowser = PageView.extend({
         if(o && o.original && o.original.type !== "root"){
           parentPath = o.original._path
         }
-        console.log(parentPath)
         if(isModel) {
           let ext = isSpatial ? ".smdl" : ".mdl"
           let modelName = o && o.type === "project" ? input.value.trim().split("/").pop() + ext : input.value.trim() + ext;
@@ -865,6 +868,43 @@ let FileBrowser = PageView.extend({
       }
     });
   },
+  moveToTrash: function (o) {
+    if(document.querySelector('#moveToTrashConfirmModal')) {
+      document.querySelector('#moveToTrashConfirmModal').remove();
+    }
+    let self = this;
+    let modal = $(modals.moveToTrashConfirmHtml("model")).modal();
+    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
+    yesBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      let queryStr = "?srcPath=" + o.original._path + "&dstPath=" + path.join("trash", o.text)
+      let endpoint = path.join(app.getApiPath(), "file/move") + queryStr
+      app.getXHR(endpoint, {
+        always: function (err, response, body) {
+          $(self.queryByHook('empty-trash')).prop('disabled', false);
+          $('#models-jstree').jstree().refresh();
+        }
+      });
+    });
+  },
+  emptyTrash: function (e) {
+    if(document.querySelector("#emptyTrashConfirmModal")) {
+      document.querySelector("#emptyTrashConfirmModal").remove()
+    }
+    let self = this;
+    let modal = $(modals.emptyTrashConfirmHtml()).modal();
+    let yesBtn = document.querySelector('#emptyTrashConfirmModal .yes-modal-btn');
+    yesBtn.addEventListener('click', function (e) {
+      modal.modal('hide');
+      let endpoint = path.join(app.getApiPath(), "file/empty-trash") + "?path=trash";
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
+          self.refreshJSTree();
+          $(self.queryByHook('empty-trash')).prop('disabled', true);
+        }
+      });
+    });
+  },
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -910,6 +950,17 @@ let FileBrowser = PageView.extend({
             self.duplicateFileOrDirectory(o, null)
           }
         },
+        "MoveToTrash" : {
+          "label" : "Move To Trash",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.moveToTrash(o);
+          }
+        }
+      }
+      let delete_node = {
         "Delete" : {
           "label" : "Delete",
           "_disabled" : false,
@@ -1277,7 +1328,7 @@ let FileBrowser = PageView.extend({
         return {"Refresh": folder.Refresh}
       }
       if (o.original._path.split("/")[0] === "trash") {
-        return {"Delete": common.Delete}
+        return delete_node
       }
       if (o.type ===  'folder') {
         return $.extend(folder, common)
@@ -1337,7 +1388,7 @@ let FileBrowser = PageView.extend({
       var file = e.target.text
       var node = $('#models-jstree').jstree().get_node(e.target)
       var _path = node.original._path;
-      if(!_path.split("/")[0] === "trash") {
+      if(!(_path.split("/")[0] === "trash")) {
         if(file.endsWith('.mdl') || file.endsWith('.smdl')){
           window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
         }else if(file.endsWith('.ipynb')){
