@@ -315,7 +315,7 @@ class LoadExternalDomains(APIHandler):
         self.set_header('Content-Type', 'application/json')
         try:
             folder = StochSSFolder(path="")
-            test = lambda ext, root, file: bool("trash" in root)
+            test = lambda ext, root, file: bool("trash" in root.split("/"))
             resp = folder.get_file_list(ext=".domn", test=test)
             log.debug("Response: %s", resp)
             self.write(resp)
@@ -341,7 +341,7 @@ class LoadParticleTypesDescriptions(APIHandler):
         self.set_header('Content-Type', 'application/json')
         try:
             folder = StochSSFolder(path="")
-            test = lambda ext, root, file: bool("trash" in root)
+            test = lambda ext, root, file: bool("trash" in root.split("/"))
             resp = folder.get_file_list(ext=".txt", test=test)
             log.debug("Response: %s", resp)
             self.write(resp)
