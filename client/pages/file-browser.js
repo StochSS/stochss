@@ -78,7 +78,10 @@ let FileBrowser = PageView.extend({
           if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
             return false
           }
-          if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder'){
+          if(op === 'move_node' && more && more.ref && more.ref.original && path.dirname(more.ref.original._path).split("/").includes("trash")){
+            return false
+          }
+          if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder' && more.ref.text !== "trash"){
             if(!more.ref.state.loaded){
               return false
             }
@@ -110,6 +113,8 @@ let FileBrowser = PageView.extend({
                 node.original._path = path.join(newDir, file);
                 if(node.type === "folder") {
                   $('#models-jstree').jstree().refresh_node(node);
+                }else if(newDir.endsWith("trash") || oldPath.split("/").includes("trash")) {
+                  $('#models-jstree').jstree().refresh_node(par);
                 }
               },
               error: function (err, response, body) {
