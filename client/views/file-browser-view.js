@@ -1379,7 +1379,7 @@ module.exports = View.extend({
       if (o.text === "trash"){
         return refresh
       }
-      if (o.original._path.includes("trash")) {
+      if (o.original._path.includes(".proj/trash/")) {
         return {"Delete": common.Delete}
       }
       if (o.type ===  'folder') {
