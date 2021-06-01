@@ -97,6 +97,8 @@ class StochSSBase():
             New path for the file object from the users home directory
         '''
         new_path = os.path.join(self.user_dir, dst_path)
+        if dst_path.startswith("trash/") and not "trash" in os.listdir(self.user_dir):
+            os.mkdir(os.path.join(self.user_dir, "trash"))
         if new_path.split().pop().replace('.', '', 5).isdigit():
             return new_path.replace(new_path.split().pop(), "").strip()
         if "trash/" in new_path and os.path.exists(new_path):
