@@ -60,6 +60,8 @@ class StochSSWorkflow(StochSSBase):
                 self.path = unique_path.replace(self.user_dir + '/', "")
             os.mkdir(unique_path)
             settings = self.get_settings_template()
+            if wkfl_type == "Parameter Sweep":
+                settings['simulationSettings']['realizations'] = 20
             if os.path.exists(mdl_path):
                 with open(mdl_path, "r") as mdl_file:
                     timespan_settings = json.load(mdl_file)['modelSettings']
@@ -331,7 +333,7 @@ class StochSSWorkflow(StochSSBase):
             if ".proj" in self.path:
                 if "WorkflowGroup1.wkgp" in self.path:
                     proj = StochSSFolder(path=os.path.dirname(self.get_dir_name(full=True)))
-                    test = lambda ext, root, file: ".wkfl" in root or "trash" in root
+                    test = lambda ext, root, file: ".wkfl" in root or "trash" in root.split("/")
                     models = proj.get_file_list(ext=[".mdl"], test=test)
                 else:
                     wkgp = StochSSFolder(path=self.get_dir_name(full=True))
@@ -344,7 +346,8 @@ class StochSSWorkflow(StochSSBase):
                         self.workflow['model'] = None
             else:
                 root = StochSSFolder(path="")
-                test = lambda ext, root, file: ".wkfl" in root or ".proj" in root
+                test = lambda ext, root, file: ".wkfl" in root or ".proj" in root or \
+                                               "trash" in root.split("/")
                 models = root.get_file_list(ext=[".mdl"], test=test)
             if models is not None:
                 self.workflow['models'] = models

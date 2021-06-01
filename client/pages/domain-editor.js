@@ -669,19 +669,28 @@ let DomainEditor = PageView.extend({
       let projBC = $(this.queryByHook("grandparent-breadcrumb"));
       projBC.text(breadData.project.name);
       projBC.prop("href", breadData.project.href);
+      $(this.queryByHook("return-to-project")).prop("href", breadData.project.href);
       let mdlBC = $(this.queryByHook("parent-two-breadcrumb"));
       mdlBC.text(breadData.model.name);
       mdlBC.prop("href", breadData.model.href);
+      $(this.queryByHook("return-to-model")).prop("href", breadData.model.href);
     }else if(breadData.model || breadData.project) {
       $(this.queryByHook("one-parent-breadcrumb-links")).css("display", "block");
       let breadcrumb = $(this.queryByHook("parent-one-breadcrumb"));
       if(breadData.project) {
         breadcrumb.text(breadData.project.name)
         breadcrumb.prop("href", breadData.project.href);
+        $(this.queryByHook("return-to-project")).prop("href", breadData.project.href);
+        $(this.queryByHook("return-to-model")).css("display", "none");
       }else {
         breadcrumb.text(breadData.model.name)
         breadcrumb.prop("href", breadData.model.href);
+        $(this.queryByHook("return-to-project")).css("display", "none");
+        $(this.queryByHook("return-to-model")).prop("href", breadData.model.href);
       }
+    }else{
+      $(this.queryByHook("return-to-model")).css("display", "none");
+      $(this.queryByHook("return-to-project")).css("display", "none");
     }
     this.renderDomainProperties();
     this.renderDomainLimitations();

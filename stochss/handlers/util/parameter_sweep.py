@@ -33,7 +33,7 @@ from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
 from .parameter_scan import ParameterScan
-from .stochss_errors import StochSSJobResultsError
+from .stochss_errors import StochSSJobResultsError, StochSSJobError
 
 log = logging.getLogger("stochss")
 
@@ -232,6 +232,9 @@ class ParameterSweep(StochSSJob):
         if verbose:
             log.info("Running the %s", sim_type)
         job.run(job_id=self.get_file(), verbose=verbose)
+        if not job.ts_results:
+            message = "All simulations failed to complete."
+            raise StochSSJobError(message)
         if verbose:
             log.info("The %s has completed", sim_type)
             log.info("Storing the results as pickle and csv")

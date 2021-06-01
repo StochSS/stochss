@@ -99,6 +99,7 @@ module.exports = View.extend({
       this.openReactionsContainer();
     }
     this.toggleProcessError()
+    $(this.queryByHook('massaction-message')).prop('hidden', this.collection.parent.parameters.length > 0);
   },
   update: function () {
   },
