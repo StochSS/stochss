@@ -639,16 +639,9 @@ let FileBrowser = PageView.extend({
         var endpoint = path.join(app.getApiPath(), "project/new-project")+"?path="+projectPath
         app.getXHR(endpoint, {
           success: function (err, response, body) {
-            if(o){//directory was created with context menu option
-              var node = $('#models-jstree').jstree().get_node(o);
-              if(node.type === "root"){
-                self.refreshJSTree();
-              }else{          
-                $('#models-jstree').jstree().refresh_node(node);
-              }
-            }else{//directory was created with create directory button
-              self.refreshJSTree();
-            }
+            let queryStr = "?path=" + body.path;
+            let endpoint = path.join(app.getBasePath(), 'stochss/project/manager') + queryStr;
+            window.location.href = endpoint;
           },
           error: function (err, response, body) {
             let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal();
