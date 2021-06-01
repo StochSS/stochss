@@ -1379,7 +1379,7 @@ module.exports = View.extend({
       if (o.text === "trash"){
         return refresh
       }
-      if (o.original._path.includes("trash")) {
+      if (o.original._path.includes(".proj/trash/")) {
         return {"Delete": common.Delete}
       }
       if (o.type ===  'folder') {
@@ -1441,26 +1441,28 @@ module.exports = View.extend({
         var file = e.target.text
         var node = $('#models-jstree-view').jstree().get_node(e.target)
         var _path = node.original._path;
-        if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-          window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
-        }else if(file.endsWith('.ipynb')){
-          var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
-          window.open(notebookPath, '_blank')
-        }else if(file.endsWith('.sbml')){
-          var openPath = path.join(app.getBasePath(), "edit", _path)
-          window.open(openPath, '_blank')
-        }else if(file.endsWith('.proj')){
-          window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
-        }else if(file.endsWith('.wkfl')){
-          window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
-        }else if(file.endsWith('.domn')) {
-          let queryStr = "?domainPath=" + _path
-          window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
-        }else if(node.type === "folder" && $('#models-jstree-view').jstree().is_open(node) && $('#models-jstree-view').jstree().is_loaded(node)){
-          $('#models-jstree-view').jstree().refresh_node(node)
-        }else if(node.type === "other"){
-          var openPath = path.join(app.getBasePath(), "view", _path);
-          window.open(openPath, "_blank");
+        if(!_path.includes(".proj/trash/")){
+          if(file.endsWith('.mdl') || file.endsWith('.smdl')){
+            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
+          }else if(file.endsWith('.ipynb')){
+            var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
+            window.open(notebookPath, '_blank')
+          }else if(file.endsWith('.sbml')){
+            var openPath = path.join(app.getBasePath(), "edit", _path)
+            window.open(openPath, '_blank')
+          }else if(file.endsWith('.proj')){
+            window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
+          }else if(file.endsWith('.wkfl')){
+            window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
+          }else if(file.endsWith('.domn')) {
+            let queryStr = "?domainPath=" + _path
+            window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+          }else if(node.type === "folder" && $('#models-jstree-view').jstree().is_open(node) && $('#models-jstree-view').jstree().is_loaded(node)){
+            $('#models-jstree-view').jstree().refresh_node(node)
+          }else if(node.type === "other"){
+            var openPath = path.join(app.getBasePath(), "view", _path);
+            window.open(openPath, "_blank");
+          }
         }
       });
     })
