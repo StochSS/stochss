@@ -23,7 +23,7 @@ import traceback
 
 import numpy
 import plotly
-from spatialpy import Model, Species, Parameter, Reaction, Mesh, MeshError, \
+from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
 
 from .stochss_base import StochSSBase
@@ -73,7 +73,7 @@ class StochSSSpatialModel(StochSSBase):
     def __build_stochss_domain(cls, s_domain, data=None):
         particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
         gravity = [0] * 3 if s_domain.gravity is None else s_domain.gravity
-        domain = {"size":s_domain.mesh_size,
+        domain = {"size":s_domain.domain_size,
                   "rho_0":s_domain.rho0, # density
                   "c_0":s_domain.c0, # approx./artificial speed of sound
                   "p_0":s_domain.P0, # atmos/background pressure
@@ -132,9 +132,9 @@ class StochSSSpatialModel(StochSSBase):
             gravity = self.model['domain']['gravity']
             if gravity == [0, 0, 0]:
                 gravity = None
-            mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
-            self.__convert_particles(mesh=mesh)
-            model.add_mesh(mesh)
+            domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
+            self.__convert_particles(domain=domain)
+            model.add_domain(domain)
             model.staticDomain = self.model['domain']['static']
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
@@ -189,10 +189,10 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_particles(self, mesh):
+    def __convert_particles(self, domain):
         try:
             for particle in self.model['domain']['particles']:
-                mesh.add_point(particle['point'], particle['volume'], particle['mass'],
+                domain.add_point(particle['point'], particle['volume'], particle['mass'],
                                particle['type'], particle['nu'], particle['fixed'])
         except KeyError as err:
             message = "Spatial model domain particle properties are not properly formatted or "
@@ -289,7 +289,7 @@ class StochSSSpatialModel(StochSSBase):
             if path.endswith(".domn"):
                 with open(path, "r") as domain_file:
                     return json.load(domain_file)
-            s_domain = Mesh.read_xml_mesh(filename=path)
+            s_domain = Domain.read_xml_domain(filename=path)
             return self.__build_stochss_domain(s_domain=s_domain)
         except FileNotFoundError as err:
             message = f"Could not find the domain file: {str(err)}"
@@ -297,7 +297,7 @@ class StochSSSpatialModel(StochSSBase):
         except json.decoder.JSONDecodeError as err:
             message = f"The domain file is not JSON decobable: {str(err)}"
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
-        except MeshError as err:
+        except DomainError as err:
             message = f"The domain file is not in proper format: {str(err)}"
             raise DomainFormatError(message, traceback.format_exc()) from err
 
@@ -441,7 +441,7 @@ class StochSSSpatialModel(StochSSBase):
             xlim = [coord + data['transformation'][0] for coord in data['xLim']]
             ylim = [coord + data['transformation'][1] for coord in data['yLim']]
             zlim = [coord + data['transformation'][2] for coord in data['zLim']]
-        s_domain = Mesh.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
+        s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
                                          ny=data['ny'], nz=data['nz'], **data['type'])
         domain = cls.__build_stochss_domain(s_domain=s_domain)
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
@@ -465,7 +465,7 @@ class StochSSSpatialModel(StochSSBase):
         file = tempfile.NamedTemporaryFile()
         with open(file.name, "w") as mesh_file:
             mesh_file.write(mesh)
-        s_domain = Mesh.read_xml_mesh(filename=file.name)
+        s_domain = Domain.read_xml_domain(filename=file.name)
         domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
         if types is not None:
             type_data = cls.get_types_from_file(lines=types)

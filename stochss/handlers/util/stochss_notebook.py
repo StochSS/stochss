@@ -196,7 +196,7 @@ class StochSSNotebook(StochSSBase):
                 imports.append("%matplotlib notebook")
             if self.s_model['is_spatial']:
                 imports.append("import spatialpy")
-                imports.append("from spatialpy import Model, Species, Parameter, Reaction, Mesh,\\")
+                imports.append("from spatialpy import Model, Species, Parameter, Reaction, Domain,\\")
                 imports.append("                      PlaceInitialCondition, \\")
                 imports.append("                      UniformInitialCondition, \\")
                 imports.append("                      ScatterInitialCondition")
@@ -247,12 +247,12 @@ class StochSSNotebook(StochSSBase):
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-    def __create_mesh_string(self, model, pad):
-        mesh = ["", f"{pad}# Domain",
-                f"{pad}mesh = Mesh.read_stochss_domain('{self.s_model['path']}')",
-                f"{pad}self.add_mesh(mesh)",
+    def __create_domain_string(self, model, pad):
+        domain = ["", f"{pad}# Domain",
+                f"{pad}domain = Domain.read_stochss_domain('{self.s_model['path']}')",
+                f"{pad}self.add_domain(domain)",
                 "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
-        model.extend(mesh)
+        model.extend(domain)
 
     def __create_model_cell(self):
         pad = '        '
@@ -260,7 +260,7 @@ class StochSSNotebook(StochSSBase):
             model = [f"class {self.__get_class_name()}(Model):",
                      "    def __init__(self):",
                      f'{pad}Model.__init__(self, name="{self.get_name()}")']
-            self.__create_mesh_string(model=model, pad=pad)
+            self.__create_domain_string(model=model, pad=pad)
             self.__create_species_strings(model=model, pad=pad)
             self.__create_initial_condition_strings(model=model, pad=pad)
             self.__create_parameter_strings(model=model, pad=pad)
