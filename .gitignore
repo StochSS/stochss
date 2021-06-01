@@ -8,6 +8,12 @@ stochss-model-editor.html
 stochss-workflow-manager.html
 stochss-workflow-selection.html
 stochss-project-manager.html
+multiple-plots-page.html
+stochss-domain-editor.html
+stochss-loading-page.html
+stochss-project-browser.html
+stochss-quick-start.html
+stochss-user-home.html
 *.swp
 *.swo
 package-lock.json

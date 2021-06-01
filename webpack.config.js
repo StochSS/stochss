@@ -13,7 +13,8 @@ module.exports = {
     workflowEditor: './client/pages/workflow-manager.js',
     projectBrowser: './client/pages/project-browser.js',
     projectManager: './client/pages/project-manager.js',
-    loadingPage: './client/pages/loading-page.js'
+    loadingPage: './client/pages/loading-page.js',
+    multiplePlots: './client/pages/multiple-plots.js'
   },
   output: {
     filename: 'stochss-[name].bundle.js',
@@ -89,6 +90,13 @@ module.exports = {
       filename: 'stochss-loading-page.html',
       template: 'page_template.pug',
       name: 'loadingPage',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: "StochSS | Multiple Plots Page",
+      filename: 'multiple-plots-page.html',
+      template: 'page_template.pug',
+      name: 'multiplePlots',
       inject: false
     })
   ],
