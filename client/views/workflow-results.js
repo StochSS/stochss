@@ -46,6 +46,7 @@ module.exports = View.extend({
     'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
     'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
     'click [data-target=edit-plot]' : 'openPlotArgsSection',
+    'click [data-hook=multiple-plots]' : 'plotMultiplePlots',
     'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
     'click [data-target=download-json]' : 'handleDownloadJSONClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
@@ -120,28 +121,22 @@ module.exports = View.extend({
       error.css("display", "none");
     }, 5000);
   },
-  getPlot: function (type) {
-    let self = this;
+  cleanupPlotContainer: function (type) {
     let el = this.queryByHook(type + "-plot");
     Plotly.purge(el);
     $(this.queryByHook(type + "-plot")).empty();
+    if(type === "ts-psweep" || type === "psweep"){
+      $(this.queryByHook(type + "-edit-plot")).prop("disabled", true);
+      $(this.queryByHook(type + "-download-png-custom")).prop("disabled", true);
+      $(this.queryByHook(type + "-download-json")).prop("disabled", true);
+      $(this.queryByHook("multiple-plots")).prop("disabled", true);
+    }
     $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
-    let data = {};
-    if(type === 'psweep'){
-      let key = this.getPsweepKey();
-      data['plt_key'] = key;
-    }else if(type === "ts-psweep") {
-      data['plt_type'] = this.tsPlotData['type'];
-      let key = this.getTSPsweepKey()
-      data['plt_key'] = key;
-    }else{
-      data['plt_key'] = type;
-    }
-    if(Object.keys(this.plotArgs).length){
-      data['plt_data'] = this.plotArgs;
-    }else{
-      data['plt_data'] = null;
-    }
+  },
+  getPlot: function (type) {
+    let self = this;
+    this.cleanupPlotContainer(type);
+    let data = this.getPlotData(type);
     if(type === "psweep" && Boolean(this.plots[data.plt_key])) {
       this.plotFigure(this.plots[data.plt_key], type);
     }else if(type === "ts-psweep" && Boolean(this.plots[data.plt_type + data.plt_key])) {
@@ -167,6 +162,32 @@ module.exports = View.extend({
         }
       });
     }
+  },
+  getPlotData: function (type) {
+    let data = {};
+    if(type === 'psweep'){
+      let key = this.getPsweepKey();
+      data['plt_key'] = key;
+    }else if(type === "ts-psweep" || type === "ts-psweep-mp") {
+      if(type === "ts-psweep-mp"){
+        data['plt_type'] = "mltplplt";
+      }else{
+        data['plt_type'] = this.tsPlotData['type'];
+      }
+      let key = this.getTSPsweepKey()
+      data['plt_key'] = key;
+    }else if(type === "mltplplt"){
+      data['plt_type'] = type;
+      data['plt_key'] = null;
+    }else{
+      data['plt_key'] = type;
+    }
+    if(Object.keys(this.plotArgs).length){
+      data['plt_data'] = this.plotArgs;
+    }else{
+      data['plt_data'] = null;
+    }
+    return data
   },
   getPlotForEnsembleAggragator: function (e) {
     this.model.settings.resultsSettings.reducer = e.target.value;
@@ -197,6 +218,8 @@ module.exports = View.extend({
   },
   getTSPlotForType: function (e) {
     this.tsPlotData['type'] = e.target.value;
+    let display = this.tsPlotData['type'] === "trajectories" ? "inline-block" : "none";
+    $(this.queryByHook("multiple-plots")).css("display", display);
     this.getPlot("ts-psweep");
   },
   getTSPsweepKey: function () {
@@ -291,6 +314,17 @@ module.exports = View.extend({
     $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
     $(this.queryByHook(type + "-download-png-custom")).prop("disabled", false);
     $(this.queryByHook(type + "-download-json")).prop("disabled", false);
+    if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
+      $(this.queryByHook("multiple-plots")).prop("disabled", false);
+    }
+  },
+  plotMultiplePlots: function (e) {
+    let type = e.target.dataset.type;
+    let data = this.getPlotData(type);
+    var queryStr = "?path=" + this.model.directory + "&wkfl=" + this.parent.model.name;
+    queryStr += "&job=" + this.model.name + "&data=" + JSON.stringify(data);
+    let endpoint = path.join(app.getBasePath(), "stochss/multiple-plots") + queryStr;
+    window.open(endpoint);
   },
   renderEnsembleAggragatorView: function () {
     let ensembleAggragators = [

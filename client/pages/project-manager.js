@@ -229,7 +229,7 @@ let ProjectManager = PageView.extend({
     let yesBtn = document.querySelector('#emptyTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       modal.modal('hide');
-      let endpoint = path.join(app.getApiPath(), "project/empty-trash")+"?path="+path.join(self.model.directory, "trash");
+      let endpoint = path.join(app.getApiPath(), "file/empty-trash")+"?path="+path.join(self.model.directory, "trash");
       app.getXHR(endpoint, {
         success: function (err, response, body) {
           $(self.queryByHook('empty-project-trash')).prop('disabled', true);
