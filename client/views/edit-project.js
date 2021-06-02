@@ -29,7 +29,7 @@ let template = require('../templates/includes/editProject.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=remove-project-btn]' : 'handleRemoveProjectClick'
+    'click [data-hook=remove-project-btn]' : 'handleMoveToTrash'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -37,16 +37,17 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
   },
-  handleRemoveProjectClick: function (e) {
-    if(document.querySelector('#deleteFileModal')) {
-      document.querySelector('#deleteFileModal').remove();
+  handleMoveToTrash: function (e) {
+    if(document.querySelector('#moveToTrashConfirmModal')) {
+      document.querySelector('#moveToTrashConfirmModal').remove();
     }
     let self = this;
-    let endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+this.model.directory;
-    let modal = $(modals.deleteFileHtml("project")).modal();
-    let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
+    let modal = $(modals.moveToTrashConfirmHtml("model")).modal();
+    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', function (e) {
       modal.modal('hide');
+      let queryStr = "?srcPath=" + self.model.directory + "&dstPath=" + path.join("trash", self.model.directory.split("/").pop());
+      let endpoint = path.join(app.getApiPath(), "file/move") + queryStr
       app.getXHR(endpoint, {
         success: function (err, response, body) {
           self.model.collection.remove(self.model);

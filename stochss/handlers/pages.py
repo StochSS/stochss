@@ -248,6 +248,23 @@ class LoadingPageHandler(PageHandler):
         self.render("stochss-loading-page.html", server_path=self.get_server_path())
 
 
+class MultiplePlotsHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Multiple Plots Page Handler
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Render the StochSS multiple plots page.
+
+        Attributes
+        ----------
+        '''
+        self.render("multiple-plots-page.html", server_path=self.get_server_path())
+
+
 class UserLogsAPIHandler(APIHandler):
     '''
     ################################################################################################

@@ -171,7 +171,7 @@ class AddExistingModelAPIHandler(APIHandler):
             folder = StochSSFolder(path="")
             # file will be excluded if test passes
             test = lambda ext, root, file: bool(".wkfl" in root or f"{path}" in root or \
-                                                "trash" in root)
+                                                "trash" in root.split("/"))
             data = folder.get_file_list(ext=[".mdl", ".smdl"], test=test)
             log.debug("List of models: %s", data)
             self.write(data)
@@ -270,35 +270,6 @@ class ExtractWorkflowAPIHandler(APIHandler):
             resp = project.extract_workflow(src=src_path, dst=dst_path)
             project.print_logs(log)
             log.debug("Response message: %s", resp)
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
-class EmptyTrashAPIHandler(APIHandler):
-    '''
-    ##############################################################################
-    Handler for a projects trash directory
-    ##############################################################################
-    '''
-    @web.authenticated
-    def get(self):
-        '''
-        Empty the trash directory.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path")
-        log.debug("Path to the trash directory: %s", path)
-        try:
-            log.info("Emptying the trash")
-            folder = StochSSFolder(path=path)
-            resp = folder.empty()
-            log.debug("Response message: %s", resp)
-            log.info("Successfully emptied the trash")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)

@@ -333,7 +333,7 @@ class StochSSWorkflow(StochSSBase):
             if ".proj" in self.path:
                 if "WorkflowGroup1.wkgp" in self.path:
                     proj = StochSSFolder(path=os.path.dirname(self.get_dir_name(full=True)))
-                    test = lambda ext, root, file: ".wkfl" in root or "trash" in root
+                    test = lambda ext, root, file: ".wkfl" in root or "trash" in root.split("/")
                     models = proj.get_file_list(ext=[".mdl"], test=test)
                 else:
                     wkgp = StochSSFolder(path=self.get_dir_name(full=True))
@@ -346,7 +346,8 @@ class StochSSWorkflow(StochSSBase):
                         self.workflow['model'] = None
             else:
                 root = StochSSFolder(path="")
-                test = lambda ext, root, file: ".wkfl" in root or ".proj" in root
+                test = lambda ext, root, file: ".wkfl" in root or ".proj" in root or \
+                                               "trash" in root.split("/")
                 models = root.get_file_list(ext=[".mdl"], test=test)
             if models is not None:
                 self.workflow['models'] = models
