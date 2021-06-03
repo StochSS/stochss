@@ -5,4 +5,4 @@ gillespy2==1.5.11
 sciope==0.4
 pygmsh==5.0.2
 meshio==2.3.10
-git+https://github.com/spatialpy/SpatialPy.git@develop
+spatialpy==1.0
