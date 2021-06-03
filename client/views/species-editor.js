@@ -137,16 +137,18 @@ module.exports = View.extend({
   },
   setAllSpeciesModes: function (defaultMode, cb) {
     this.collection.parent.defaultMode = defaultMode;
+    this.collection.forEach(function (specie) { 
+      specie.mode = defaultMode
+      if(cb) {
+        cb(specie)
+      }
+    });
     if(!this.collection.parent.is_spatial) {
       if(defaultMode === "continuous") {
         $(this.parent.queryByHook("system-volume-container")).collapse("hide")
       }else{
         $(this.parent.queryByHook("system-volume-container")).collapse("show")
       }
-      this.collection.map(function (specie) { 
-        specie.mode = defaultMode
-        cb(specie)
-      });
       if(defaultMode === "dynamic"){
         this.renderSpeciesAdvancedView()
         $(this.queryByHook('advanced-species')).collapse('show');
