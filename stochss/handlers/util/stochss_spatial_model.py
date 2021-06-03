@@ -465,7 +465,7 @@ class StochSSSpatialModel(StochSSBase):
         file = tempfile.NamedTemporaryFile()
         with open(file.name, "w") as mesh_file:
             mesh_file.write(mesh)
-        s_domain = Domain.read_xml_domain(filename=file.name)
+        s_domain = Domain.read_xml_mesh(filename=file.name)
         domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
         if types is not None:
             type_data = cls.get_types_from_file(lines=types)
