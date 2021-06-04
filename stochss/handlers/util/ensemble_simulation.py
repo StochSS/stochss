@@ -119,7 +119,7 @@ class EnsembleSimulation(StochSSJob):
             if "endSim" in keys and "timeStep" in keys:
                 end = self.settings['timespanSettings']['endSim']
                 step_size = self.settings['timespanSettings']['timeStep']
-                self.g_model.timespan(numpy.arange(0, end, step_size))
+                self.g_model.timespan(numpy.arange(0, end + step_size, step_size))
 
 
     def run(self, preview=False, verbose=True):
