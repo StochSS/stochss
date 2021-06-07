@@ -18,8 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
+let app = require('../app');
+let tests = require('./tests');
 let Tooltips = require('../tooltips');
 //views
+let InputView = require('./input');
 let View = require('ampersand-view');
 let BoundaryConditionView = require('./boundary-condition-view');
 //templates
@@ -27,10 +30,25 @@ let template = require('../templates/includes/boundaryConditionsEditor.pug');
 
 module.exports = View.extend({
   template: template,
+  events: {
+    'change [data-hook=new-bc-name]' : 'handleSetValue',
+    'change [data-hook=new-bc-type]' : 'handleSetValue',
+    'change [data-hook=new-bc-value]' : 'handleSetValue',
+    'change [data-hook=new-bc-x-min]' : 'handleSetValue',
+    'change [data-hook=new-bc-x-max]' : 'handleSetValue',
+    'change [data-hook=new-bc-y-min]' : 'handleSetValue',
+    'change [data-hook=new-bc-y-max]' : 'handleSetValue',
+    'change [data-hook=new-bc-z-min]' : 'handleSetValue',
+    'change [data-hook=new-bc-z-max]' : 'handleSetValue',
+    'click [data-hook=collapse-bc]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-new-bc' : 'changeCollapseButtonText',
+    'click [data-hook=add-new-bc]' : 'handleAddBCClick'
+  },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.boundaryConditionsEditor;
+    this.setDefaultBC();
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -43,9 +61,30 @@ module.exports = View.extend({
       $(this.queryByHook('bc-view-tab')).tab('show');
       $(this.queryByHook('edit-boundary-conditions')).removeClass('active');
       $(this.queryByHook('view-boundary-conditions')).addClass('active');
+    }else{
+      this.renderEditBoundaryConditionView();
+      this.toggleAddNewBCButton();
     }
-    this.renderEditBoundaryConditionView();
     this.renderViewBoundaryConditionView();
+  },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  handleAddBCClick: function (e) {
+    let newBC = JSON.stringify(this.newBC)
+    this.setDefaultBC();
+    this.resetNewBCViews();
+  },
+  handleSetValue: function (e) {
+    let key = e.delegateTarget.dataset.target;
+    let value = e.target.value;
+    if(key.endsWith("min") || key.endsWith("max") || key === "type_id"){
+      value = this.validateNewBCCondition(key, value);
+    }else if(key === "value" && value === "") {
+      value = null;
+    }
+    this.newBC[key] = value;
+    this.toggleAddNewBCButton();
   },
   renderEditBoundaryConditionView: function () {
     if(this.editBoundaryConditionView) {
@@ -54,7 +93,7 @@ module.exports = View.extend({
     this.editBoundaryConditionView = this.renderCollection(
       this.collection,
       BoundaryConditionView,
-      this.queryByHook("edit-boundary-conditions")
+      this.queryByHook("edit-boundary-conditions-list")
     );
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -71,8 +110,161 @@ module.exports = View.extend({
     this.viewBoundaryConditionView = this.renderCollection(
       this.collection,
       BoundaryConditionView,
-      this.queryByHook("view-boundary-conditions"),
+      this.queryByHook("view-boundary-conditions-list"),
       options
     );
+  },
+  resetNewBCViews: function () {
+    $(this.queryByHook("new-bc-name")).find("input").val(this.newBC.name);
+    $(this.queryByHook("new-bc-type")).find("input").val(this.newBC.type_id);
+    $(this.queryByHook("new-bc-value")).find("input").val(this.newBC.value);
+    $(this.queryByHook("new-bc-x-min")).find("input").val(this.newBC.xmin);
+    $(this.queryByHook("new-bc-x-max")).find("input").val(this.newBC.xmax);
+    $(this.queryByHook("new-bc-y-min")).find("input").val(this.newBC.ymin);
+    $(this.queryByHook("new-bc-y-max")).find("input").val(this.newBC.ymax);
+    $(this.queryByHook("new-bc-z-min")).find("input").val(this.newBC.zmin);
+    $(this.queryByHook("new-bc-z-max")).find("input").val(this.newBC.zmax);
+    this.toggleAddNewBCButton();
+  },
+  setDefaultBC: function () {
+    this.newBC = {"name": "", "species": null, "property": null, "value": null, "deterministic": true, "type_id": null,
+                  "xmin": null, "ymin": null, "zmin": null, "xmax": null, "ymax": null, "zmax": null};
+    this.setConditions = [];
+  },
+  toggleAddNewBCButton: function () {
+    let disabled = this.newBC.name === "" || this.newBC.value === null || !this.setConditions.length;
+    $(this.queryByHook("add-new-bc")).prop("disabled", disabled);
+  },
+  update: function (e) {},
+  validateNewBCCondition: function(key, value) {
+    if((value === 0 && key === "type_id") || value === "") {
+      value = null
+      if(this.setConditions.includes(key)){
+        let index = this.setConditions.indexOf(key);
+        this.setConditions.splice(index, 1);
+      }
+    }else if(!this.setConditions.includes(key)){
+      this.setConditions.push(key);
+    }
+    return value;
+  },
+  subviews: {
+    newBCName: {
+      hook: "new-bc-name",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'name',
+          tests: tests.nameTests,
+          valueType: 'string',
+          value: this.newBC.name,
+        });
+      }
+    },
+    newBCValue: {
+      hook: "new-bc-value",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'value',
+          tests: tests.valueTests,
+          valueType: 'number',
+          value: this.newBC.value,
+        });
+      }
+    },
+    newBCxmin: {
+      hook: "new-bc-x-min",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'xmin',
+          tests: tests.valueTests,
+          valueType: 'number',
+          value: this.newBC.xmin,
+        });
+      }
+    },
+    newBCymin: {
+      hook: "new-bc-y-min",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'ymin',
+          tests: tests.valueTests,
+          valueType: 'number',
+          value: this.newBC.ymin,
+        });
+      }
+    },
+    newBCzmin: {
+      hook: "new-bc-z-min",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'zmin',
+          tests: tests.valueTests,
+          valueType: 'number',
+          value: this.newBC.zmin,
+        });
+      }
+    },
+    newBCxmax: {
+      hook: "new-bc-x-max",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'xmax',
+          tests: tests.valueTests,
+          valueType: 'number',
+          value: this.newBC.xmax,
+        });
+      }
+    },
+    newBCymax: {
+      hook: "new-bc-y-max",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'ymax',
+          tests: tests.valueTests,
+          valueType: 'number',
+          value: this.newBC.ymax,
+        });
+      }
+    },
+    newBCzmax: {
+      hook: "new-bc-z-max",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'zmax',
+          tests: tests.valueTests,
+          valueType: 'number',
+          value: this.newBC.zmax,
+        });
+      }
+    },
+    newBCType: {
+      hook: "new-bc-type",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'type',
+          tests: tests.valueTests,
+          valueType: 'number',
+          value: this.newBC.type_id,
+        });
+      }
+    }
   }
 });
