@@ -40,5 +40,6 @@
 	"reactions": [],
 	"rules": [],
 	"eventsCollection": [],
-	"functionDefinitions": []
+	"functionDefinitions": [],
+	"boundaryConditions": []
 }
