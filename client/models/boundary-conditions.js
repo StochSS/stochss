@@ -23,4 +23,13 @@ var BoundaryCondition = require('./boundary-condition');
 
 module.exports = Collection.extend({
   model: BoundaryCondition,
+  addNewBoundaryCondition: function (name, expression) {
+    let id = this.parent.getDefaultID();
+    let boundaryCondition = this.add({
+      compID: id,
+      name: name,
+      expression: expression,
+      annotation: ""
+    });
+  }
 });
