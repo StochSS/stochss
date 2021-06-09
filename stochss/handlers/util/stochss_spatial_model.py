@@ -559,6 +559,8 @@ class StochSSSpatialModel(StochSSBase):
             self.model['domain'] = self.get_model_template()['domain']
         elif "static" not in self.model['domain'].keys():
             self.model['domain']['static'] = True
+        if "boundaryConditions" not in self.model.keys():
+            self.model['boundaryConditions'] = []
         for species in self.model['species']:
             if "types" not in species.keys():
                 species['types'] = list(range(1, len(self.model['domain']['types'])))
