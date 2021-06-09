@@ -215,7 +215,8 @@ class RunModelAPIHandler(APIHandler):
             exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
                         f'{path}', f'{outfile}']
             if species is not None:
-                exec_cmd.append(f"{species}")
+                exec_cmd.insert(1, "--species")
+                exec_cmd.insert(2, f"{species}")
             log.debug("Script commands for running a preview: %s", exec_cmd)
             subprocess.Popen(exec_cmd)
             resp['Running'] = True
