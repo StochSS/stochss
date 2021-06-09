@@ -18,8 +18,15 @@
 #------------------------------------------------------------------------------
 # JupyterHub(Application) configuration
 #------------------------------------------------------------------------------
+import os
+import os.path
+import sys
+import logging
 
-import sys, os, os.path, shutil, logging
+# Page handlers
+from handlers import *
+# API Handlers
+from model_presentation import JsonFileAPIHandler
 
 ## Class for authenticating users.
 #
@@ -70,14 +77,12 @@ c.JupyterHub.log_level = 'DEBUG'
 #  By default, redirects users to their own server.
 c.JupyterHub.default_url = '/stochss'
 
-# Page handlers
-from handlers import *
-
 # StochSS request handlers
 c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
         (r"/stochss/job-presentation\/?", JobPresentationHandler),
-        (r"/stochss/model-presentation\/?", ModelPresentationHandler)
+        (r"/stochss/model-presentation\/?", ModelPresentationHandler),
+        (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
@@ -173,15 +178,18 @@ c.DockerSpawner.debug = True
 #------------------------------------------------------------------------------
 
 def get_user_cpu_count_or_fail():
+    '''
+    Get the user cpu count or raise error
+    '''
     log = logging.getLogger()
     reserve_count = int(os.environ['RESERVED_CPUS'])
-    log.info("RESERVED_CPUS environment variable is set to {}".format(reserve_count))
+    log.info("RESERVED_CPUS environment variable is set to %s", reserve_count)
     # Round up to an even number of reserved cpus
     if reserve_count % 2 > 0:
-        log.warn("Increasing reserved cpu count by one so it's an even number. This helps allocate logical cpus to users more easily.")
+        log.warning("Increasing reserved cpu count by one so it's an even number. This helps allocate logical cpus to users more easily.")
         reserve_count += 1
     total_cpus = os.cpu_count()
-    log.info("Total cpu count as reported by os.count: {}".format(total_cpus))
+    log.info("Total cpu count as reported by os.count: %s", total_cpus)
     if reserve_count >= total_cpus:
         e_message = "RESERVED_CPUS environment cannot be greater than or equal to the number of cpus returned by os.cpu_count()"
         log.error(e_message)
@@ -192,28 +200,32 @@ def get_user_cpu_count_or_fail():
     if user_cpu_count % 2 > 0 and user_cpu_count > 1:
         user_cpu_count -= 1
     c.StochSS.reserved_cpu_count = reserve_count
-    log.info('Using {} logical cpus for user containers...'.format(user_cpu_count))
-    log.info('Reserving {} logical cpus for hub container and underlying OS'.format(reserve_count))
+    log.info('Using %s logical cpus for user containers...', user_cpu_count)
+    log.info('Reserving %s logical cpus for hub container and underlying OS', reserve_count)
     return user_cpu_count
 
 c.StochSS.user_cpu_count = get_user_cpu_count_or_fail()
 c.StochSS.user_cpu_alloc = [0] * c.StochSS.user_cpu_count
 
 def get_power_users():
+    '''
+    Get the list of power users
+    '''
     power_users_file = os.environ.get('POWER_USERS_FILE')
     log = logging.getLogger()
     if not os.path.exists(power_users_file):
-        log.warn('No power users defined!')
+        log.warning('No power users defined!')
         return []
-    with open(power_users_file) as f:
-        power_users = [ x.rstrip() for x in f.readlines() ]
+    with open(power_users_file) as file:
+        power_users = [ x.rstrip() for x in file.readlines() ]
     return power_users
 
 
 c.StochSS.power_users = get_power_users()
 
 def pre_spawn_hook(spawner):
-    '''Function that runs before DockerSpawner spawns a user container.
+    '''
+    Function that runs before DockerSpawner spawns a user container.
     Limits the resources available to user containers, excluding a list of power users.
     '''
     log = logging.getLogger()
@@ -224,8 +236,8 @@ def pre_spawn_hook(spawner):
     palloc = c.StochSS.user_cpu_alloc
     div = len(palloc) // 2
     reserved = c.StochSS.reserved_cpu_count
-    log.warn('Reserved CPUs: {}'.format(reserved))
-    log.warn('Number of user containers using each logical core: {}'.format(palloc))
+    log.warning('Reserved CPUs: %s', reserved)
+    log.warning('Number of user containers using each logical core: %s', palloc)
     # We want to allocate logical cores that are on the same physical core
     # whenever possible.
     #
@@ -248,12 +260,12 @@ def pre_spawn_hook(spawner):
     #
     avail_cpus = palloc[div:]
     # If <= 4 cpus available then use 1 cpu for each user instead of 2
-    if not len(avail_cpus):
-        log.warn("The host system only has 4 logical cpus, so we'll only reserve one logical cpu per user container, instead of the normal 2")
+    if not avail_cpus:
+        log.warning("The host system only has 4 logical cpus, so we'll only reserve one logical cpu per user container, instead of the normal 2")
         avail_cpus = palloc
         least_used_cpu = min(avail_cpus)
         cpu1_index = avail_cpus.index(least_used_cpu)
-        log.info("User {} to use logical cpu {}".format(spawner.user.name, str(cpu1_index)))
+        log.info("User %s to use logical cpu %s", spawner.user.name, str(cpu1_index))
         palloc[cpu1_index] += 1
         spawner.extra_host_config['cpuset_cpus'] = '{}'.format(cpu1_index)
     else:
@@ -262,12 +274,15 @@ def pre_spawn_hook(spawner):
         palloc[cpu1_index] += 1
         cpu2_index = cpu1_index+div
         palloc[cpu2_index] += 1
-        log.info("User {} to use logical cpus {} and {}".format(
-                spawner.user.name, str(cpu1_index), str(cpu2_index)))
+        log.info("User %s to use logical cpus %s and %s",
+                 spawner.user.name, str(cpu1_index), str(cpu2_index))
         spawner.extra_host_config['cpuset_cpus'] = '{},{}'.format(cpu1_index, cpu2_index)
 
 
 def post_stop_hook(spawner):
+    '''
+    Post stop hook
+    '''
     log = logging.getLogger()
     reserved = c.StochSS.reserved_cpu_count
     palloc = c.StochSS.user_cpu_alloc
@@ -275,8 +290,8 @@ def post_stop_hook(spawner):
         cpu1_index, cpu2_index = spawner.extra_host_config['cpuset_cpus'].split(',')
         palloc[int(cpu1_index)] -= 1
         palloc[int(cpu2_index)] -= 1
-        log.warn('Reserved CPUs: {}'.format(reserved))
-        log.warn('Number of user containers using each logical core: {}'.format(palloc))
+        log.warning('Reserved CPUs: %s', reserved)
+        log.warning('Number of user containers using each logical core: %s', palloc)
     except:
         # Exception thrown due to cpuset_cpus not being set (power user)
         pass
@@ -399,13 +414,13 @@ c.Authenticator.admin_users = admin = set([])
 
 pwd = os.path.dirname(__file__)
 with open(os.path.join(pwd, 'userlist')) as f:
-        for line in f:
-                if not line:
-                        continue
-                parts = line.split()
-                # in case of newline at the end of userlist file
-                if len(parts) >= 1:
-                        name = parts[0]
-                        #whitelist.add(name)
-                        if len(parts) > 1 and parts[1] == 'admin':
-                                admin.add(name)
+    for line in f:
+        if not line:
+            continue
+        parts = line.split()
+        # in case of newline at the end of userlist file
+        if len(parts) >= 1:
+            name = parts[0]
+            #whitelist.add(name)
+            if len(parts) > 1 and parts[1] == 'admin':
+                admin.add(name)
