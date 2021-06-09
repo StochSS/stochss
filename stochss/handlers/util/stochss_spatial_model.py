@@ -388,6 +388,21 @@ class StochSSSpatialModel(StochSSBase):
         return s_model
 
 
+    @classmethod
+    def create_boundary_condition(cls, kwargs):
+        '''
+        Create a new boundary condition using spatialpy.BoundaryCondition
+
+        Attributes
+        ----------
+        kwargs : dict
+            Arguments passed to the spatialpy.BoundaryCondition constructor
+        '''
+        new_bc = BoundaryCondition(**kwargs)
+        expression = new_bc.expression()
+        return {"expression": expression}
+
+
     def get_domain(self, path=None, new=False):
         '''
         Get a prospective domain
