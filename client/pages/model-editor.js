@@ -233,12 +233,8 @@ let ModelEditor = PageView.extend({
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
     app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
-      if(this.model.boundaryConditions && this.model.boundaryConditions.length) {
-        $(this.queryByHook("system-volume-container")).css("display", "none");
-        this.renderBoundaryConditionsView();
-      }else{
-        $(this.queryByHook("model-editor-advanced-container")).css("display", "none");
-      }
+      $(this.queryByHook("system-volume-container")).css("display", "none");
+      this.renderBoundaryConditionsView();
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
       this.renderDomainViewer();
       this.renderInitialConditions();
