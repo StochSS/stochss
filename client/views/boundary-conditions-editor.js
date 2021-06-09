@@ -24,6 +24,7 @@ let Tooltips = require('../tooltips');
 //views
 let InputView = require('./input');
 let View = require('ampersand-view');
+let SelectView = require('ampersand-select-view');
 let BoundaryConditionView = require('./boundary-condition-view');
 //templates
 let template = require('../templates/includes/boundaryConditionsEditor.pug');
@@ -32,6 +33,8 @@ module.exports = View.extend({
   template: template,
   events: {
     'change [data-hook=new-bc-name]' : 'handleSetValue',
+    'change [data-hook=new-bc-target]' : 'handleSetTarget',
+    'change [data-hook=new-bc-deterministic]' : 'handleSetDeterministic',
     'change [data-hook=new-bc-type]' : 'handleSetValue',
     'change [data-hook=new-bc-value]' : 'handleSetValue',
     'change [data-hook=new-bc-x-min]' : 'handleSetValue',
@@ -75,15 +78,35 @@ module.exports = View.extend({
     this.setDefaultBC();
     this.resetNewBCViews();
   },
+  handleSetDeterministic: function (e) {
+    this.newBC.deterministic = e.target.checked;
+  },
+  handleSetTarget: function (e) {
+    let properties = ["v", "nu", "rho"];
+    let target = e.target.value;
+    if(properties.includes(target)) {
+      this.newBC.property = target;
+      this.newBC.species = null;
+      $(this.queryByHook("new-bc-deterministic")).prop("disabled", true);
+    }else{
+      this.newBC.property = null;
+      this.newBC.species = target;
+      $(this.queryByHook("new-bc-deterministic")).prop("disabled", false);
+    }
+  },
   handleSetValue: function (e) {
     let key = e.delegateTarget.dataset.target;
     let value = e.target.value;
-    if(key.endsWith("min") || key.endsWith("max") || key === "type_id"){
-      value = this.validateNewBCCondition(key, value);
-    }else if(key === "value" && value === "") {
-      value = null;
+    if(key === "name") {
+      this.newBCName = value;
+    }else{
+      if(key.endsWith("min") || key.endsWith("max") || key === "type_id"){
+        value = this.validateNewBCCondition(key, value);
+      }else if(key === "value" && value === "") {
+        value = null;
+      }
+      this.newBC[key] = value;
     }
-    this.newBC[key] = value;
     this.toggleAddNewBCButton();
   },
   renderEditBoundaryConditionView: function () {
@@ -115,7 +138,9 @@ module.exports = View.extend({
     );
   },
   resetNewBCViews: function () {
-    $(this.queryByHook("new-bc-name")).find("input").val(this.newBC.name);
+    $(this.queryByHook("new-bc-deterministic")).prop("checked", this.newBC.deterministic);
+    $(this.queryByHook("new-bc-name")).find("input").val(this.newBCName);
+    $(this.queryByHook("new-bc-target")).find("select").val(this.newBC.property);
     $(this.queryByHook("new-bc-type")).find("input").val(this.newBC.type_id);
     $(this.queryByHook("new-bc-value")).find("input").val(this.newBC.value);
     $(this.queryByHook("new-bc-x-min")).find("input").val(this.newBC.xmin);
@@ -124,15 +149,17 @@ module.exports = View.extend({
     $(this.queryByHook("new-bc-y-max")).find("input").val(this.newBC.ymax);
     $(this.queryByHook("new-bc-z-min")).find("input").val(this.newBC.zmin);
     $(this.queryByHook("new-bc-z-max")).find("input").val(this.newBC.zmax);
+    $(this.queryByHook("new-bc-deterministic")).prop("disabled", true);
     this.toggleAddNewBCButton();
   },
   setDefaultBC: function () {
-    this.newBC = {"name": "", "species": null, "property": null, "value": null, "deterministic": true, "type_id": null,
+    this.newBCName = "";
+    this.newBC = {"species": null, "property": "v", "value": null, "deterministic": true, "type_id": null,
                   "xmin": null, "ymin": null, "zmin": null, "xmax": null, "ymax": null, "zmax": null};
     this.setConditions = [];
   },
   toggleAddNewBCButton: function () {
-    let disabled = this.newBC.name === "" || this.newBC.value === null || !this.setConditions.length;
+    let disabled = this.newBCName === "" || this.newBC.value === null || !this.setConditions.length;
     $(this.queryByHook("add-new-bc")).prop("disabled", disabled);
   },
   update: function (e) {},
@@ -154,11 +181,29 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new InputView({
           parent: this,
-          required: true,
+          required: false,
           name: 'name',
-          tests: tests.nameTests,
           valueType: 'string',
-          value: this.newBC.name,
+          value: this.newBCName
+        });
+      }
+    },
+    newBCTarget: {
+      hook: "new-bc-target",
+      prepareView: function (el) {
+        let species = this.collection.parent.species.map(function (specie) {
+          return [specie.compID, specie.name]
+        });
+        let properties = [["v", "Velocity"], ["nu", "Viscosity"], ["rho", "Density"]]
+        let options = [{groupName: "Properties", options: properties},
+                       {groupName: "Variables", options: species}]
+        return new SelectView({
+          parent: this,
+          required: false,
+          name: 'target',
+          eagerValidate: true,
+          groupOptions: options,
+          value: this.newBC.property
         });
       }
     },
@@ -167,11 +212,11 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new InputView({
           parent: this,
-          required: true,
+          required: false,
           name: 'value',
           tests: tests.valueTests,
           valueType: 'number',
-          value: this.newBC.value,
+          value: this.newBC.value
         });
       }
     },
