@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let path = require('path');
 //support files
 let app = require('../app');
 let tests = require('./tests');
@@ -74,9 +75,15 @@ module.exports = View.extend({
     app.changeCollapseButtonText(this, e);
   },
   handleAddBCClick: function (e) {
-    let newBC = JSON.stringify(this.newBC)
-    this.setDefaultBC();
-    this.resetNewBCViews();
+    let endpoint = path.join(app.getApiPath(), "model/new-bc")
+    let self = this;
+    app.postXHR(endpoint, this.newBC, {
+      success: function (err, response, body) {
+        self.collection.addNewBoundaryCondition(self.newBCName, body.expression);
+        self.setDefaultBC();
+        self.resetNewBCViews();
+      }
+    });
   },
   handleSetDeterministic: function (e) {
     this.newBC.deterministic = e.target.checked;
