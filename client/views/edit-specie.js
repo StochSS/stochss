@@ -43,6 +43,9 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.previousName = this.model.name
+    if(this.model.mode === null && this.model.collection.parent.defaultMode !== "") {
+      this.model.mode = this.model.collection.parent.defaultMode;
+    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
