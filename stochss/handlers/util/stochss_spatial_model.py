@@ -376,20 +376,22 @@ class StochSSSpatialModel(StochSSBase):
         return self.__load_domain_from_file(path=path)
 
 
-    def get_domain_plot(self, domain=None, path=None, new=False):
+    def get_domain_plot(self, path=None, new=False):
         '''
         Get a plotly plot of the models domain or a prospective domain
 
         Attributes
         ----------
-        domain : dict
-            The domain to be plotted
         path : str
             Path to a prospective domain
         new : bool
             Indicates whether or not to load an new domain
         '''
-        domain = Domain.read_stochss_domain(self.path)
+        if new:
+            path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+        elif path is None:
+            path = self.path
+        domain = Domain.read_stochss_domain(path)
         fig = domain.plot_types(return_plotly_figure=True)
         fig['layout']['autosize'] = True
         fig['config'] = {"responsive":True}
