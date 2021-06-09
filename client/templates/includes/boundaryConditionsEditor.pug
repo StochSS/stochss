@@ -56,9 +56,7 @@ div#boundary-conditions.card
 
             div.col-sm-2: h6 <b>Name</b>
 
-            div.col-sm-2: h6 <b>Target</b>
-
-            div.col-sm-2: h6 <b>Value</b>
+            div.col-sm-4: h6 <b>Target</b>
 
             div.col-sm-6: h6 <b>Conditions</b>
 
@@ -71,15 +69,15 @@ div#boundary-conditions.card
               table.table
                 tbody
                   tr
-                    th(scope="row") Target
+                    th(scope="row") Property/Variable
                     td(data-hook="new-bc-target")
                   tr
                     th(scope="row") Value
                     td(data-hook="new-bc-value" data-target="value")
                   tr
-                    th(scope="row") Deterministic
+                    th(scope="row") Concentration
                     td
-                      input(type="checkbox" checked=this.newBC.deterministic data-hook="new-bc-deterministic")
+                      input(type="checkbox" checked=this.newBC.deterministic data-hook="new-bc-deterministic" disabled)
 
             div.col-sm-6
 
