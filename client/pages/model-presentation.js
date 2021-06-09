@@ -43,23 +43,21 @@ let ModelPresentationPage = PageView.extend({
   template: template,
   initialize: function (attrs, arguments) {
     PageView.prototype.initialize.apply(this, arguments);
-    console.log("TODO: get the path to the model from the url")
-    // let urlParams = new URLSearchParams(window.location.search)
-    // this.model = new Model({
-    //   directory: urlParams.get("path"),
-    //   for: "presentation"
-    // });
-    console.log("TODO: get model from file system using the app.getXHR function")
-    // let self = this;
-    // let queryStr = "?path=" + this.model.directory;
-    // let endpoint = path.join();
-    // app.getXHR(endpoint, {
-    //   success: function (err, response, body) {
-    //     self.model.set(body);
-    //     self.renderSubviews();
-    //   }
-    // });
-    console.log("TODO: generate the open link and store in this.open")
+    let urlParams = new URLSearchParams(window.location.search);
+    this.model = new Model({
+      directory: urlParams.get("path"),
+      for: "presentation"
+    });
+    let self = this;
+    let queryStr = "?path=" + this.model.directory;
+    let endpoint = path.join();
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.model.set(body);
+        self.renderSubviews();
+      }
+    });
+    this.open = "open.stochss.org?open=" + this.model.directory;
   },
   renderSubviews: function () {
     PageView.prototype.render.apply(this, arguments);
