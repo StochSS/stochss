@@ -389,24 +389,11 @@ class StochSSSpatialModel(StochSSBase):
         new : bool
             Indicates whether or not to load an new domain
         '''
-        if domain is None:
-            domain = self.get_domain(path=path, new=new)
-        trace_list = []
-        for i, d_type in enumerate(domain['types']):
-            if len(domain['types']) > 1:
-                particles = list(filter(lambda particle, key=i: particle['type'] == key,
-                                        domain['particles']))
-            else:
-                particles = domain['particles']
-            trace = self.__get_trace_data(particles=particles, name=d_type['name'])
-            trace_list.append(trace)
-        layout = {"scene":{"aspectmode":'data'}, "autosize":True}
-        if len(domain['x_lim']) == 2:
-            layout["xaxis"] = {"range":domain['x_lim']}
-        if len(domain['y_lim']) == 2:
-            layout["yaxis"] = {"range":domain['y_lim']}
-        return json.dumps({"data":trace_list, "layout":layout, "config":{"responsive":True}},
-                          cls=plotly.utils.PlotlyJSONEncoder)
+        domain = Domain.read_stochss_domain(self.path)
+        fig = domain.plot_types(return_plotly_figure=True)
+        fig['layout']['autosize'] = True
+        fig['config'] = {"responsive":True}
+        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
     def get_notebook_data(self):
