@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var $ = require('jquery');
 var katex = require('katex');
+let _ = require('underscore');
 //support files
 var tests = require('./tests');
 var modals = require('../modals');
@@ -69,6 +70,8 @@ module.exports = View.extend({
           self.types.push(type.name)
         });
       }
+    }else{
+      this.model.on('change', _.bind(this.updateViewer, this));
     }
   },
   render: function () {
@@ -113,9 +116,12 @@ module.exports = View.extend({
     });
     okBtn.addEventListener('click', function (e) {
       self.model.annotation = input.value.trim();
-      self.parent.renderReactionListingViews();
+      self.parent.renderEditReactionListingView();
       modal.modal('hide');
     });
+  },
+  updateViewer: function () {
+    this.parent.renderViewReactionView();
   },
   subviews: {
     inputName: {
