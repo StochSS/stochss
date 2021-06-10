@@ -66,7 +66,8 @@ module.exports = View.extend({
     });
     okBtn.addEventListener('click', function (e) {
       self.model.annotation = input.value.trim();
-      self.parent.renderBoundaryConditionView();
+      self.parent.renderEditBoundaryConditionView();
+      self.parent.renderViewBoundaryConditionView();
       modal.modal('hide');
     });
   },
