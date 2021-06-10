@@ -136,6 +136,12 @@ module.exports = View.extend({
     if(this.viewBoundaryConditionView) {
       this.viewBoundaryConditionView.remove();
     }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("bc-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("bc-annotation-header")).css("display", "block");
+    }
     let options = {viewOptions: {viewMode: true}};
     this.viewBoundaryConditionView = this.renderCollection(
       this.collection,
