@@ -23,7 +23,7 @@ let View = require('ampersand-view');
 let RulesViewer = require('./rules-viewer');
 let EventsViewer = require('./events-viewer');
 let SpeciesViewer = require('./species-viewer');
-let ReactionsViewer = require('./reactions-viewer');
+let ReactionsEditor = require('./reactions-editor');
 let ParametersViewer = require('./parameters-viewer');
 let SBMLComponentsView = require('./sbml-component-editor');
 //templates
@@ -59,8 +59,9 @@ module.exports = View.extend({
     app.registerRenderSubview(this, parametersViewer, "parameters-viewer-container");
   },
   renderReactionsView: function () {
-    let reactionsViewer = new ReactionsViewer({
-      collection: this.model.reactions
+    let reactionsViewer = new ReactionsEditor({
+      collection: this.model.reactions,
+      readOnly: true
     });
     app.registerRenderSubview(this, reactionsViewer, "reactions-viewer-container");
   },
