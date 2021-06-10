@@ -24,7 +24,7 @@ var modals = require('../modals')
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
-var template = require('../templates/includes/editReactionVar.pug');
+var template = require('../templates/includes/editParameter.pug');
 
 module.exports = View.extend({
   template: template,
