@@ -24,7 +24,7 @@ let RulesViewer = require('./rules-viewer');
 let EventsViewer = require('./events-viewer');
 let SpeciesViewer = require('./species-viewer');
 let ReactionsViewer = require('./reactions-viewer');
-let ParametersViewer = require('./parameters-viewer');
+let ParametersEditor = require('./parameters-editor');
 let SBMLComponentsView = require('./sbml-component-editor');
 //templates
 let template = require('../templates/includes/modelViewer.pug');
@@ -53,8 +53,9 @@ module.exports = View.extend({
     app.registerRenderSubview(this, eventsViewer, "events-viewer-container");
   },
   renderParametersView: function () {
-    let parametersViewer = new ParametersViewer({
-      collection: this.model.parameters
+    let parametersViewer = new ParametersEditor({
+      collection: this.model.parameters,
+      readOnly: true
     });
     app.registerRenderSubview(this, parametersViewer, "parameters-viewer-container");
   },
