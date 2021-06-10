@@ -35,6 +35,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     var self = this;
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.parametersEditor
     this.collection.on('update-parameters', function (compID, parameter) {
       self.collection.parent.reactions.map(function (reaction) {
@@ -61,7 +62,18 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEditParameter();
+    if(this.readOnly) {
+      $(this.queryByHook('parameters-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('parameters-view-tab')).tab('show');
+      $(this.queryByHook('edit-parameters')).removeClass('active');
+      $(this.queryByHook('view-parameters')).addClass('active');
+    }else{
+      this.renderEditParameter();
+    }
     this.renderViewParameter();
   },
   update: function () {
