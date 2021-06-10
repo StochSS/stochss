@@ -23,6 +23,8 @@ import os.path
 import sys
 import logging
 
+sys.path.append('/srv/jupyterhub/')
+
 # Page handlers
 from handlers import *
 # API Handlers
@@ -82,7 +84,8 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
         (r"/stochss/job-presentation\/?", JobPresentationHandler),
         (r"/stochss/model-presentation\/?", ModelPresentationHandler),
-        (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler)
+        (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
+        (r"/stochss/api/publish/model\/?", PublishUserModel)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.

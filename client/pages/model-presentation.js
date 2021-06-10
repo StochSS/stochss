@@ -26,12 +26,12 @@ let app = require('../app');
 let Model = require('../models/model');
 //views
 let PageView = require('./base');
-let Rules = require('./rules-viewer');
-let Events = require('./events-viewer');
-let Species = require('./species-viewer');
-let Reactions = require('./reactions-viewer');
-let Parameters = require('./parameters-viewer');
-let SBMLComponents = require('./sbml-component-editor');
+let Rules = require('../views/rules-viewer');
+let Events = require('../views/events-viewer');
+let Species = require('../views/species-viewer');
+let Reactions = require('../views/reactions-viewer');
+let Parameters = require('../views/parameters-viewer');
+let SBMLComponents = require('../views/sbml-component-editor');
 //templates
 let template = require('../templates/pages/modelPresentation.pug');
 
@@ -41,7 +41,7 @@ import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min
 
 let ModelPresentationPage = PageView.extend({
   template: template,
-  initialize: function (attrs, arguments) {
+  initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
     this.model = new Model({
@@ -60,7 +60,7 @@ let ModelPresentationPage = PageView.extend({
     this.open = "open.stochss.org?open=" + this.model.directory;
   },
   renderSubviews: function () {
-    PageView.prototype.render.apply(this, arguments);
+    PageView.prototype.render.apply(this, options);
     this.renderSpeciesContainer();
     this.renderParametersContainer();
     this.renderReactionsContainer();
