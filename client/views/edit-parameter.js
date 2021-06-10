@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var $ = require('jquery');
+let _ = require('underscore');
 //support files
 var tests = require('./tests');
 var modals = require('../modals')
@@ -24,10 +25,10 @@ var modals = require('../modals')
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
-var template = require('../templates/includes/editParameter.pug');
+var editTemplate = require('../templates/includes/editParameter.pug');
+let viewTemplate = require('../templates/includes/viewParameters.pug');
 
 module.exports = View.extend({
-  template: template,
   bindings: {
     'model.inUse': {
       hook: 'remove',
@@ -43,9 +44,14 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.previousName = this.model.name
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
   },
   render: function () {
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
+    if(!this.viewMode){
+      this.model.on('change', _.bind(this.updateViewer, this))
+    }
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
@@ -95,6 +101,10 @@ module.exports = View.extend({
       this.model.collection.trigger('update-parameters', this.model.compID, this.model);
       this.model.collection.trigger('remove')
     }
+  },
+  updateViewer: function () {
+    console.log(this.parent)
+    this.parent.renderViewParameter()
   },
   subviews: {
     inputName: {

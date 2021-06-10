@@ -1,42 +1,73 @@
-div#parameters-editor.card.card-body
+div#parameters-editor.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Parameters
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-parameters", data-hook="collapse") +
+    h3.inline.mr-3 Parameters
 
-  div.collapse(id="collapse-parameters" data-hook="parameters-list-container")
-    p
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="parameter-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="parameters-edit-tab" data-toggle="tab" href="#edit-parameters") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="parameters-view-tab" data-toggle="tab" href="#view-parameters") View
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-parameters" data-hook="collapse") +
+
+  div.card-body
+    p.mb-0
      | Constant values that represents an inherent properties of the system. Used to set the rate of a <i>Reaction</i>.
 
-    div.mx-1.row.head.align-items-baseline
+    div.collapse.tab-content(id="collapse-parameters" data-hook="parameters-list-container")
 
-      div.col-sm-3
+      div.tab-pane.active(id="edit-parameters" data-hook="edit-parameters")
 
-        h6.inline <b>Name</b>
+        hr
 
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+        div.mx-1.row.head.align-items-baseline
 
-      div.col-sm-5
+          div.col-sm-3
 
-        h6.inline <b>Value</b>
+            h6.inline <b>Name</b>
 
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.expression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-      div.col-sm-2
+          div.col-sm-5
 
-        h6.inline <b>Annotation</b>
+            h6.inline <b>Value</b>
 
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.expression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-      div.col-sm-2
+          div.col-sm-2
 
-        h6.inline <b>Remove</b>
+            h6.inline <b>Annotation</b>
 
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.remove) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-    div.mt-3(data-hook="parameter-list")
+          div.col-sm-2
 
-    button.btn.btn-outline-primary.box-shadow(data-hook="add-parameter") Add Parameter
+            h6.inline <b>Remove</b>
 
-    button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-parameters") Save Parameters
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.remove) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        div.my-3(data-hook="edit-parameter-list")
+
+        button.btn.btn-outline-primary.box-shadow(data-hook="add-parameter") Add Parameter
+
+      div.tab-pane(id="view-parameters" data-hook="view-parameters")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3: h6 <b>Name</b>
+
+          div.col-sm-7: h6 <b>Value</b>
+
+          div.col-sm-2(data-hook="parameters-annotation-header"): h6 <b>Annotation</b>
+
+        div.mt-3(data-hook="view-parameter-list")

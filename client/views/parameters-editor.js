@@ -30,14 +30,12 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=add-parameter]' : 'addParameter',
-    'click [data-hook=save-parameters]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
     var self = this;
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.parametersEditor
-    this.opened = attrs.opened
     this.collection.on('update-parameters', function (compID, parameter) {
       self.collection.parent.reactions.map(function (reaction) {
         if(reaction.rate && reaction.rate.compID === compID){
@@ -64,9 +62,7 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderEditParameter();
-    if(this.opened) {
-      this.openParametersContainer();
-    }
+    this.renderViewParameter();
   },
   update: function () {
   },
@@ -79,7 +75,7 @@ module.exports = View.extend({
     this.editParameterView = this.renderCollection(
       this.collection,
       EditParameterView,
-      this.queryByHook('parameter-list')
+      this.queryByHook('edit-parameter-list')
     );
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -87,6 +83,24 @@ module.exports = View.extend({
         $('[data-toggle="tooltip"]').tooltip("hide");
       });
     });
+  },
+  renderViewParameter: function () {
+    if(this.viewParameterView) {
+      this.viewParameterView.remove();
+    }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("parameters-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("parameters-annotation-header")).css("display", "block");
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.viewParameterView = this.renderCollection(
+      this.collection,
+      EditParameterView,
+      this.queryByHook('view-parameter-list'),
+      options
+    );
   },
   addParameter: function () {
     this.collection.addParameter();
@@ -97,15 +111,6 @@ module.exports = View.extend({
 
        });
     });
-  },
-  switchToViewMode: function (e) {
-    this.parent.modelStateButtons.clickSaveHandler(e);
-    this.parent.renderParametersView(mode="view");
-  },
-  openParametersContainer: function () {
-    $(this.queryByHook('parameters-list-container')).collapse('show');
-    let collapseBtn = $(this.queryByHook('collapse'))
-    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
