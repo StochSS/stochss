@@ -28,7 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSFolder, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
-                  StochSSFile, StochSSAPIError, report_error
+                  StochSSAPIError, report_error
 
 
 log = logging.getLogger('stochss')
@@ -429,9 +429,9 @@ class ModelPresentationAPIHandler(APIHandler):
         ext = path.split(".").pop()
         try:
             model = file_objs[ext](path=path)
-            log.info("Publishing the %s presentation", file.get_name())
+            log.info("Publishing the %s presentation", model.get_name())
             links, data = model.publish_presentation()
-            presentation_model = file_objs[ext](**data)
+            file_objs[ext](**data)
             resp = {"message": f"Successfully published the {self.get_name()} presentation",
                     "links": links}
             log.info(resp['message'])
