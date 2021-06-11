@@ -427,17 +427,16 @@ class ModelPresentationAPIHandler(APIHandler):
         log.debug("Path to the file: %s", path)
         file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
         ext = path.split(".").pop()
-        if ext == "mdl":
-            try:
-                model = file_objs[ext](path=path)
-                log.info("Publishing the %s presentation", file.get_name())
-                links, data = model.publish_presentation()
-                presentation_model = file_objs[ext](**data)
-                resp = {"message": f"Successfully published the {self.get_name()} presentation",
-                        "links": links}
-                log.info(resp['message'])
-                log.debug("Response Message: %s", resp)
-                self.write(resp)
-            except StochSSAPIError as err:
-                report_error(self, log, err)
+        try:
+            model = file_objs[ext](path=path)
+            log.info("Publishing the %s presentation", file.get_name())
+            links, data = model.publish_presentation()
+            presentation_model = file_objs[ext](**data)
+            resp = {"message": f"Successfully published the {self.get_name()} presentation",
+                    "links": links}
+            log.info(resp['message'])
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
