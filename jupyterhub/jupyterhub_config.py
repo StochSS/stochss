@@ -85,7 +85,6 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/present-job\/?", JobPresentationHandler),
         (r"/stochss/present-model\/?", ModelPresentationHandler),
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
-        (r"/stochss/api/publish/model\/?", PublishUserModel)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
