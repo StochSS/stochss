@@ -37,30 +37,6 @@ class HomeHandler(BaseHandler):
         self.finish(html)
 
 
-class PublishUserModel(BaseHandler):
-    '''
-    ################################################################################################
-    Handler for copying a user model from a user container into a presentations folder
-    managed by jupyterhub.
-    ################################################################################################
-    '''
-    async def get(self):
-        pass
-        # Pass the username as a query parameter
-        # username = 
-        # Pass the model filename as a query parameter
-        # filename = 
-        client = docker.from_env()
-        containers = client.containers.list()
-        user_container = [ c in containers if c.name == f'jupyter-{username}' ][0]
-        user_model_path = f'/home/jovyan/.presentations/{filename}'
-        jupyterhub_tar_path = f'/srv/jupyterhub/.presentations/{filename}.tar'
-        bits, stat = user_container.get_archive(user_model_path)
-        with open(jupyterhub_tar_path, 'w') as tar_file:
-            for chunk in bits:
-                tar_file.write(chunk)
-
-
 class JobPresentationHandler(BaseHandler):
     '''
     ################################################################################################
