@@ -470,20 +470,21 @@ class StochSSModel(StochSSBase):
         present_dir = os.path.join(self.user_dir, ".presentations")
         if not os.path.exists(present_dir):
             os.mkdir(present_dir)
-        dst = os.path.join(present_dir, self.get_file())
-        if os.path.exists(dst):
-            message = "A presentation with this name already exists"
-            raise StochSSFileExistsError(message)
         src = self.get_path(full=True)
         try:
-            shutil.copyfile(src, dst)
+            self.load()
             hostname = os.uname()[1]
-            model = json.jumps(self.load(), sort_keys=True)
+            model = json.jumps(self.model, sort_keys=True)
             file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl" # replace with gillespy2.Model.to_json
+            dst = os.path.join(present_dir, file)
+            if os.path.exists(dst):
+                message = "A presentation with this name already exists"
+                raise StochSSFileExistsError(message)
             present_link = f"live.stochss.org/stochss/present-model?owner={hostname}&file={file}"
             download_link = f"live.stochss.org/stochss/download_presentation?owner={hostname}&file={file}"
-            return {"message": f"Successfully published the {self.get_name()} presentation",
-                    "links": {"presentation": present_link, "download": download_link}}
+            links = {"presentation": present_link, "download": download_link}
+            data = {"path": dst, "new":True, "model":self.model}
+            return links, data
         except PermissionError as err:
             message = f"You do not have permission to publish this file: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
