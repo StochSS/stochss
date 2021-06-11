@@ -480,8 +480,8 @@ class StochSSModel(StochSSBase):
             hostname = os.uname()[1]
             model = json.jumps(self.load(), sort_keys=True)
             file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl" # replace with gillespy2.Model.to_json
-            present_link = f"live.stochss.org/present-model?owner={hostname}&file={file}"
-            download_link = f"live.stochss.org/download_presentation?owner={hostname}&file={file}"
+            present_link = f"live.stochss.org/stochss/present-model?owner={hostname}&file={file}"
+            download_link = f"live.stochss.org/stochss/download_presentation?owner={hostname}&file={file}"
             return {"message": f"Successfully published the {self.get_name()} presentation",
                     "links": {"presentation": present_link, "download": download_link}}
         except PermissionError as err:
