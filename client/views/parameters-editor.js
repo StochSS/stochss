@@ -89,7 +89,7 @@ module.exports = View.extend({
       EditParameterView,
       this.queryByHook('edit-parameter-list')
     );
-    $(document).ready(function () {
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
         $('[data-toggle="tooltip"]').tooltip("hide");
