@@ -75,6 +75,10 @@ module.exports = View.extend({
       if(!isParameterScan){
         $(this.queryByHook("convert-to-notebook")).css("display", "none");
       }
+    }else if(app.getBasePath() === "/") {
+      $(this.queryByHook("job-presentation")).css("display", "none");
+    }else{
+      $(this.queryByHook("job-presentation")).prop("disabled", true);
     }
     if(this.parent.model.type === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";
