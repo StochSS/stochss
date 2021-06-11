@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import ast
 import json
-import haslib
+import hashlib
 import tempfile
 import traceback
 
@@ -30,7 +30,7 @@ from gillespy2 import Model, Species, Parameter, Reaction, Event, EventTrigger, 
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSAPIError, StochSSFileNotFoundError, FileNotJSONFormatError, \
-                            StochSSModelFormatError
+                            StochSSModelFormatError, StochSSFileExistsError, StochSSPermissionsError
 
 class StochSSModel(StochSSBase):
     '''
@@ -470,18 +470,19 @@ class StochSSModel(StochSSBase):
         present_dir = os.path.join(self.user_dir, ".presentations")
         if not os.path.exists(present_dir):
             os.mkdir(present_dir)
-        src = self.get_path(full=True)
         try:
             self.load()
             hostname = os.uname()[1]
-            model = json.jumps(self.model, sort_keys=True)
-            file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl" # replace with gillespy2.Model.to_json
+            model = json.dumps(self.model, sort_keys=True)
+            # replace with gillespy2.Model.to_json
+            file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl"
             dst = os.path.join(present_dir, file)
             if os.path.exists(dst):
                 message = "A presentation with this name already exists"
                 raise StochSSFileExistsError(message)
-            present_link = f"live.stochss.org/stochss/present-model?owner={hostname}&file={file}"
-            download_link = f"live.stochss.org/stochss/download_presentation?owner={hostname}&file={file}"
+            query_str = f"?owner={hostname}&file={file}"
+            present_link = f"live.stochss.org/stochss/present-model{query_str}"
+            download_link = f"live.stochss.org/stochss/download_presentation{query_str}"
             links = {"presentation": present_link, "download": download_link}
             data = {"path": dst, "new":True, "model":self.model}
             return links, data
