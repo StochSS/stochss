@@ -223,6 +223,30 @@ let templates = {
                     </div>
                   </div>
                 </div>`
+        },
+        presentationLinks : (modalID, title, name, headers, links) => {
+          return `
+            <div id=${modalID} class="modal" tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content info">
+                  <div class="modal-header">
+                    <h5 class="modal-title"> ${title} </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <h4 class="head">${headers[0]}</h4>
+                    <a href="${links.presentation}"> Open ${name} Presentation</a>
+                    <h4 class="head">${headers[1]}</h4>
+                    <a href="${links.download}"> Download ${name} Presentation</a>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary box-shadow close-btn" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>`
         }
     }
 
@@ -530,5 +554,10 @@ module.exports = {
                 </div>
               </div>
             </div>`
+    },
+    presentationLinks : (title, name, headers, links) => {
+      let modalID = "presentationLinksModal"
+
+      return templates.presentationLinks(modalID, title, name, headers, links);
     }
 }
