@@ -16,10 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
 import ast
 import json
 import logging
-import traceback
+import tarfile
+import tempfile
+
+import docker
 from tornado import web
 from notebook.base.handlers import APIHandler
 # APIHandler documentation:
@@ -27,9 +31,7 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from presentation_base import StochSSBase
-from presentation_error import StochSSAPIError, report_error, \
-							   StochSSFileNotFoundError, FileNotJSONFormatError
+from presentation_error import StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -52,54 +54,72 @@ class JsonFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        purpose = self.get_query_argument(name="for")
-        log.debug("Purpose of the handler: %s", purpose)
-        path = self.get_query_argument(name="path")
-        log.debug("Path to the file: %s", path)
+        owner = self.get_query_argument(name="owner")
+        log.debug("Container id of the owner: %s", owner)
+        file = self.get_query_argument(name="file")
+        log.debug("Name to the file: %s", file)
         self.set_header('Content-Type', 'application/json')
         file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
-        ext = path.split(".").pop()
+        ext = file.split(".").pop()
         try:
-            file = file_objs[ext](path=path)
-            data = file.load()
-            log.debug("Contents of the json file: %s", data)
-            file.print_logs(log)
-            self.write(data)
+            model = get_presentation_from_user(owner=owner, file=file)
+            file_obj = file_objs[ext](model=model)
+            model = file_obj.load()
+            log.debug("Contents of the json file: %s", model)
+            file_obj.print_logs(log)
+            self.write(model)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
         self.finish()
 
 
-def __read_model_file(model):
-    try:
-        with open(model.get_path(full=True), "r") as mdl_file:
-            return json.load(mdl_file)
-    except FileNotFoundError as err:
-        message = f"Could not find the model file: {str(err)}"
-        raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
-    except json.decoder.JSONDecodeError as err:
-        message = f"The model is not JSON decobable: {str(err)}"
-        raise FileNotJSONFormatError(message, traceback.format_exc()) from err
+def get_presentation_from_user(owner, file):
+    '''
+    Get the model presentation from the users container
+
+    Attributes
+    ----------
+    owner : str
+        Hostname of the user container
+    file : str
+        Name of the model presentation file
+    '''
+    client = docker.from_env()
+    containers = client.containers.list()
+    user_container = list(filter(lambda container: container.id.startswith(owner),
+                                 containers))[0]
+    user_model_path = f'/home/jovyan/.presentations/{file}'
+    tar_mdl = tempfile.TemporaryFile()
+    bits, _ = user_container.get_archive(user_model_path)
+    for chunk in bits:
+        tar_mdl.write(chunk)
+    tar_mdl.seek(0)
+    tar_file = tarfile.TarFile(fileobj=tar_mdl)
+    tmp_dir = tempfile.TemporaryDirectory()
+    tar_file.extractall(tmp_dir.name)
+    tar_mdl.close()
+    mdl_path = os.path.join(tmp_dir.name, file)
+    with open(mdl_path, "r") as mdl_file:
+        return json.load(mdl_file)
 
 
-class StochSSModel(StochSSBase):
+class StochSSModel():
     '''
     ################################################################################################
     StochSS model object
     ################################################################################################
     '''
 
-    def __init__(self, path):
+    def __init__(self, model):
         '''
         Intitialize a model object
 
         Attributes
         ----------
-        path : str
-            Path to the model
+        model : dict
+            Existing model data
         '''
-        super().__init__(path=path)
-        self.model = __read_model_file(self)
+        self.model = model
 
 
     @classmethod
@@ -186,29 +206,26 @@ class StochSSModel(StochSSBase):
         self.__update_reactions()
         self.__update_events(param_ids=param_ids)
         self.__update_rules(param_ids=param_ids)
-        self.model['name'] = self.get_name()
-        self.model['directory'] = self.path
         return self.model
 
 
-class StochSSSpatialModel(StochSSBase):
+class StochSSSpatialModel():
     '''
     ################################################################################################
     StochSS spatial model object
     ################################################################################################
     '''
 
-    def __init__(self, path):
+    def __init__(self, model):
         '''
         Intitialize a spatial model object
 
         Attributes
         ----------
-        path : str
-            Path to the spatial model
+        model : dict
+            Existing model data
         '''
-        super().__init__(path=path)
-        self.model = __read_model_file(self)
+        self.model = model
 
 
     def load(self):
@@ -218,7 +235,6 @@ class StochSSSpatialModel(StochSSBase):
         Attributes
         ----------
         '''
-        self.model['name'] = self.get_name()
         if not self.model['defaultMode']:
             self.model['defaultMode'] = "discrete"
         if "static" not in self.model['domain'].keys():
