@@ -99,30 +99,6 @@ class StochSSFile(StochSSBase):
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
-    def publish_presentation(self):
-        '''
-        Publish a model or spatial model presentation
-
-        Attributes
-        ----------
-        '''
-        present_dir = os.path.join(self.user_dir, ".presentations")
-        if not os.path.exists(present_dir):
-            os.mkdir(present_dir)
-        dst = os.path.join(present_dir, self.get_file())
-        if os.path.exists(dst):
-            message = "A presentation with this name already exists"
-            raise StochSSFileExistsError(message)
-        src = self.get_path(full=True)
-        try:
-            shutil.copyfile(src, dst)
-            # INSERT JUPYTER HUB CODE HERE
-            return {"message": f"Successfully published the {self.get_name()} presentation"}
-        except PermissionError as err:
-            message = f"You do not have permission to publish this file: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc()) from err
-
-
     def move(self, location):
         '''
         Moves a file to a new location.

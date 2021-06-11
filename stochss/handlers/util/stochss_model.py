@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import ast
 import json
+import haslib
 import tempfile
 import traceback
 
@@ -457,6 +458,35 @@ class StochSSModel(StochSSBase):
         self.model['name'] = self.get_name()
         self.model['directory'] = self.path
         return self.model
+
+
+    def publish_presentation(self):
+        '''
+        Publish a model or spatial model presentation
+
+        Attributes
+        ----------
+        '''
+        present_dir = os.path.join(self.user_dir, ".presentations")
+        if not os.path.exists(present_dir):
+            os.mkdir(present_dir)
+        dst = os.path.join(present_dir, self.get_file())
+        if os.path.exists(dst):
+            message = "A presentation with this name already exists"
+            raise StochSSFileExistsError(message)
+        src = self.get_path(full=True)
+        try:
+            shutil.copyfile(src, dst)
+            hostname = os.uname()[1]
+            model = json.jumps(self.load(), sort_keys=True)
+            file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl" # replace with gillespy2.Model.to_json
+            present_link = f"live.stochss.org/present-model?owner={hostname}&file={file}"
+            download_link = f"live.stochss.org/download_presentation?owner={hostname}&file={file}"
+            return {"message": f"Successfully published the {self.get_name()} presentation",
+                    "links": {"presentation": present_link, "download": download_link}}
+        except PermissionError as err:
+            message = f"You do not have permission to publish this file: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def save(self, model):
