@@ -307,6 +307,11 @@ module.exports = View.extend({
       app.getXHR(endpoint, {
         success: function (err, response, body) {
           self.endAction("publish");
+          let title = body.message;
+          let linkHeaders = ["Presentation Link", "Download Link"];
+          let links = body.links;
+          let name = self.model.name
+          $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
         },
         error: function (err, response, body) {
           self.errorAction();
