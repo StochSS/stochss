@@ -44,13 +44,15 @@ let ModelPresentationPage = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
+    let owner = urlParams.get("owner")
+    let file = urlParams.get("file");
     this.model = new Model({
-      directory: urlParams.get("path"),
+      directory: file,
       for: "presentation"
     });
     let self = this;
-    let queryStr = "?path=" + this.model.directory;
-    let endpoint = path.join();
+    let queryStr = "?file=" + this.model.directory + "&owner=" + owner;
+    let endpoint = "stochss/api/file/json-data" + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {
         self.model.set(body);
