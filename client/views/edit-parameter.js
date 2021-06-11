@@ -103,7 +103,6 @@ module.exports = View.extend({
     }
   },
   updateViewer: function () {
-    console.log(this.parent)
     this.parent.renderViewParameter()
   },
   subviews: {
