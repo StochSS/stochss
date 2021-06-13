@@ -50,10 +50,10 @@ module.exports = View.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("stochss-es")).addClass("disabled");
       $(this.queryByHook("stochss-ps")).addClass("disabled");
-      $(this.queryByHook("presentation")).css("display", "none");
-    }else if(app.getBasePath() === "/") {
-      $(this.queryByHook("presentation")).css("display", "none");
-    }
+      // $(this.queryByHook("presentation")).css("display", "none");
+    }//else if(app.getBasePath() === "/") {
+    //   $(this.queryByHook("presentation")).css("display", "none");
+    // }
   },
   clickSaveHandler: function (e) {
     let self = this;
@@ -308,7 +308,7 @@ module.exports = View.extend({
         success: function (err, response, body) {
           self.endAction("publish");
           let title = body.message;
-          let linkHeaders = ["Presentation Link", "Download Link"];
+          let linkHeaders = ["Presentation Link", "Download Link", "Open Link"];
           let links = body.links;
           let name = self.model.name
           $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
