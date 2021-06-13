@@ -40,16 +40,13 @@ log = logging.getLogger('stochss')
 class JsonFileAPIHandler(APIHandler):
     '''
     ################################################################################################
-    Base Handler for interacting with Model file Get/Post Requests and
-    downloading json formatted files.
+    Base Handler for getting model presentations from user containers.
     ################################################################################################
     '''
     @web.authenticated
     async def get(self):
         '''
-        Retrieve model data from User's file system if it exists and
-        create new models using a model template if they don't.  Also
-        retrieves JSON files for download.
+        Load the model presentation from User's presentations directory.
 
         Attributes
         ----------
@@ -67,6 +64,37 @@ class JsonFileAPIHandler(APIHandler):
             model = file_obj.load()
             log.debug("Contents of the json file: %s", model)
             file_obj.print_logs(log)
+            self.write(model)
+        except StochSSAPIError as load_err:
+            report_error(self, log, load_err)
+        self.finish()
+
+
+class DownModelPresentationAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Base Handler for downloading model presentations from user containers.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Download the model presentation from User's presentations directory.
+
+        Attributes
+        ----------
+        '''
+        owner = self.get_query_argument(name="owner")
+        log.debug("Container id of the owner: %s", owner)
+        file = self.get_query_argument(name="file")
+        log.debug("Name to the file: %s", file)
+        self.set_header('Content-Type', 'application/json')
+        file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
+        ext = file.split(".").pop()
+        try:
+            model = get_presentation_from_user(owner=owner, file=file)
+            self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
+            log.debug("Contents of the json file: %s", model)
             self.write(model)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
