@@ -28,7 +28,7 @@ sys.path.append('/srv/jupyterhub/')
 # Page handlers
 from handlers import *
 # API Handlers
-from model_presentation import JsonFileAPIHandler
+from model_presentation import JsonFileAPIHandler, DownModelPresentationAPIHandler
 
 ## Class for authenticating users.
 #

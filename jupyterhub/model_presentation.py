@@ -87,10 +87,9 @@ class DownModelPresentationAPIHandler(APIHandler):
         log.debug("Container id of the owner: %s", owner)
         log.debug("Name to the file: %s", file)
         self.set_header('Content-Type', 'application/json')
-        file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
-        ext = file.split(".").pop()
         try:
             model = get_presentation_from_user(owner=owner, file=file)
+            ext = file.split(".").pop()
             self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
             log.debug("Contents of the json file: %s", model)
             self.write(model)
