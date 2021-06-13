@@ -19,8 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
-from urllib import request
 import traceback
+
+import requests
 
 from .stochss_base import StochSSBase
 from .stochss_file import StochSSFile
@@ -442,17 +443,20 @@ class StochSSFolder(StochSSBase):
         remote_path : str
             Path to the remote file
         '''
-        response = request.urlopen(remote_path)
-        file = self.get_file(path=remote_path)
+        ext = remote_path.split('.').pop()
+        body = requests.get(remote_path, allow_redirects=True).content
+        if "presentation-download" in remote_path:
+            file = f"{json.loads(body)['name']}.{ext}"
+        else:
+            file = self.get_file(path=remote_path)
         path = self.get_new_path(dst_path=file)
         if os.path.exists(path):
             message = f"Could not upload this file as {file} already exists"
             return {"message":message, "reason":"File Already Exists"}
         try:
             file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
-            ext = file.split('.').pop()
             file_type = file_types[ext] if ext in file_types.keys() else "file"
-            _ = self.upload(file_type=file_type, file=file, body=response.read())
+            _ = self.upload(file_type=file_type, file=file, body=body)
             new_path = self.__get_rmt_upld_path(file=file)
             message = f"Successfully uploaded the file {file} to {new_path}"
             return {"message":message, "file_path":new_path}
