@@ -30,7 +30,7 @@ let Rules = require('../views/rules-viewer');
 let Events = require('../views/events-viewer');
 let Species = require('../views/species-viewer');
 let Reactions = require('../views/reactions-viewer');
-let Parameters = require('../views/parameters-viewer');
+let Parameters = require('../views/parameters-editor');
 let SBMLComponents = require('../views/sbml-component-editor');
 //templates
 let template = require('../templates/pages/modelPresentation.pug');
@@ -78,7 +78,8 @@ let ModelPresentationPage = PageView.extend({
   },
   renderParametersContainer: function () {
     let parameters = new Parameters({
-      collection: this.model.parameters
+      collection: this.model.parameters,
+      readOnly: true
     });
     app.registerRenderSubview(this, parameters, "model-parameters");
   },
