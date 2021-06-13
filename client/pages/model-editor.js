@@ -28,7 +28,6 @@ var PageView = require('../pages/base');
 var InputView = require('../views/input');
 var DomainViewer = require('../views/domain-viewer');
 var SpeciesEditorView = require('../views/species-editor');
-var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var InitialConditionsViewer = require('../views/initial-conditions-viewer');
 var ParametersEditorView = require('../views/parameters-editor');
@@ -287,15 +286,14 @@ let ModelEditor = PageView.extend({
       app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
     }
   },
-  renderSpeciesView: function (mode="edit") {
+  renderSpeciesView: function () {
     if(this.speciesEditor) {
       this.speciesEditor.remove()
     }
-    if(mode === "edit") {
-      this.speciesEditor = new SpeciesEditorView({collection: this.model.species});
-    }else{
-      this.speciesEditor = new SpeciesViewer({collection: this.model.species});
-    }
+    this.speciesEditor = new SpeciesEditorView({
+      collection: this.model.species,
+      spatial: this.model.is_spatial
+    });
     app.registerRenderSubview(this, this.speciesEditor, 'species-editor-container');
   },
   renderInitialConditions: function (mode="edit", opened=false) {
