@@ -482,8 +482,10 @@ class StochSSModel(StochSSBase):
                 raise StochSSFileExistsError(message)
             query_str = f"?owner={hostname}&file={file}"
             present_link = f"live.stochss.org/stochss/present-model{query_str}"
-            download_link = f"live.stochss.org/stochss/download_presentation{query_str}"
-            links = {"presentation": present_link, "download": download_link}
+            download_link = os.path.join("live.stochss.org/stochss/download_presentation",
+                                         hostname, file)
+            open_link = f"live.stochss.org?open={download_link}"
+            links = {"presentation": present_link, "download": download_link, "open": open_link}
             data = {"path": dst, "new":True, "model":self.model}
             return links, data
         except PermissionError as err:
