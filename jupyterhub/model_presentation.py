@@ -77,16 +77,14 @@ class DownModelPresentationAPIHandler(APIHandler):
     ################################################################################################
     '''
     @web.authenticated
-    async def get(self):
+    async def get(self, owner, file):
         '''
         Download the model presentation from User's presentations directory.
 
         Attributes
         ----------
         '''
-        owner = self.get_query_argument(name="owner")
         log.debug("Container id of the owner: %s", owner)
-        file = self.get_query_argument(name="file")
         log.debug("Name to the file: %s", file)
         self.set_header('Content-Type', 'application/json')
         file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
