@@ -432,7 +432,7 @@ class ModelPresentationAPIHandler(APIHandler):
             log.info("Publishing the %s presentation", model.get_name())
             links, data = model.publish_presentation()
             file_objs[ext](**data)
-            resp = {"message": f"Successfully published the {self.get_name()} presentation",
+            resp = {"message": f"Successfully published the {model.get_name()} presentation",
                     "links": links}
             log.info(resp['message'])
             log.debug("Response Message: %s", resp)
