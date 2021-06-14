@@ -25,11 +25,11 @@ div.mx-1
 
   div.mx-1.pl-2(data-hook="advanced-species")
 
-    div
+    div.align-items-baseline
 
-      h5.inline Advanced
+      h6.inline Advanced
 
-      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-species-advanced" + this.model.collection.indexOf(this.model) data-hook="collapse-advanced") +
+      button.btn.btn-outline-collapse.mb-2(data-toggle="collapse" data-target="#collapse-species-advanced" + this.model.collection.indexOf(this.model) data-hook="collapse-advanced") +
 
     div.collapse(id="collapse-species-advanced" + this.model.collection.indexOf(this.model))
 
