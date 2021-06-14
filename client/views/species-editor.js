@@ -82,6 +82,7 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     this.toggleSpeciesCollectionError();
     this.renderEditSpeciesView();
+    this.renderViewSpeciesView();
   },
   addSpecies: function () {
     if(this.parent.model.domain.types) {
@@ -121,7 +122,30 @@ module.exports = View.extend({
     this.editSpeciesView = this.renderCollection(
       this.collection,
       SpecieView,
-      this.queryByHook('specie-list')
+      this.queryByHook('edit-specie-list')
+    );
+  },
+  renderViewSpeciesView: function () {
+    if(this.viewSpeciesView){
+      this.viewSpeciesView.remove();
+    }
+    if(this.defaultMode !== "dynamic") {
+      $(this.queryByHook("species-switching-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("species-switching-header")).css("display", "block");
+    }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("species-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("species-annotation-header")).css("display", "block");
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.viewSpeciesView = this.renderCollection(
+      this.collection,
+      SpecieView,
+      this.queryByHook('view-specie-list'),
+      options
     );
   },
   toggleSpeciesCollectionError: function () {

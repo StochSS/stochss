@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let _ = require('underscore');
 //support files
 let app = require('../app');
 let tests = require('./tests');
@@ -27,6 +28,7 @@ let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 //templates
 let editTemplate = require('../templates/includes/editSpecies.pug');
+let viewTemplate = require('../templates/includes/viewSpecies.pug')
 
 module.exports = View.extend({
   bindings: {
@@ -49,12 +51,15 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.previousName = this.model.name;
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
-    if(this.model.mode === null && this.model.collection.parent.defaultMode !== "") {
-      this.model.mode = this.model.collection.parent.defaultMode;
+    if(this.model.mode === null && this.parent.defaultMode !== "") {
+      this.model.mode = this.parent.defaultMode;
     }
+    this.switchingValWithLabel = this.model.isSwitchTol ? 
+      "Switching Tolerance: " + this.model.switchTol :
+      "Minimum Value For Switching: " + this.model.switchMin
   },
   render: function () {
-    this.template = this.viewMode ? null : editTemplate;
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
@@ -62,6 +67,9 @@ module.exports = View.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
+    if(!this.viewMode){
+      this.model.on('change', _.bind(this.updateViewer, this))
+    }
     if(!this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Add')
     }
@@ -151,6 +159,7 @@ module.exports = View.extend({
   },
   update: function () {},
   updateInputValidation: function () {
+    if(this.viewMode) {return}
     // Update validation requirements and re-run tests for inputSwitchTol.
     // This removes error reporting not using switching tolerance
     let shouldValidateTol = this.model.mode === "dynamic" && this.model.isSwitchTol
@@ -183,6 +192,9 @@ module.exports = View.extend({
     }
   },
   updateValid: function (e) {},
+  updateViewer: function () {
+    this.parent.renderViewSpeciesView()
+  },
   subviews: {
     inputName: {
       hook: 'input-name-container',
