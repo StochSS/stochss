@@ -81,6 +81,8 @@ module.exports = View.extend({
   renderSpeciesView: function () {
     let speciesViewer = new SpeciesViewer({
       collection: this.model.species,
+      spatial: this.model.is_spatial,
+      defaultMode: this.model.defaultMode,
       readOnly: true
     });
     app.registerRenderSubview(this, speciesViewer, "species-viewer-container");

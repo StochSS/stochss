@@ -25,10 +25,13 @@ let modals = require('../modals');
 //views
 let InputView = require('./input');
 let View = require('ampersand-view');
+let TypesView = require('./component-types');
 let SelectView = require('ampersand-select-view');
 //templates
 let editTemplate = require('../templates/includes/editSpecies.pug');
-let viewTemplate = require('../templates/includes/viewSpecies.pug')
+let editSpatialTemplate = require('../templates/includes/editSpatialSpecies.pug');
+let viewTemplate = require('../templates/includes/viewSpecies.pug');
+let viewSpatialTemplate = require('../templates/includes/viewSpatialSpecies.pug');
 
 module.exports = View.extend({
   bindings: {
@@ -49,34 +52,46 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.modelType = "species";
     this.previousName = this.model.name;
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    if(this.viewMode && this.parent.spatial) {
+      let self = this;
+      this.types = [];
+      if(this.model.types) {
+        this.model.types.forEach(function (index) {
+          let type = self.model.collection.parent.domain.types.get(index, "typeID");
+          self.types.push(type.name);
+        });
+      }
+    }
     if(this.model.mode === null && this.parent.defaultMode !== "") {
       this.model.mode = this.parent.defaultMode;
     }
     this.switchingValWithLabel = this.model.isSwitchTol ? 
       "Switching Tolerance: " + this.model.switchTol :
-      "Minimum Value For Switching: " + this.model.switchMin
+      "Minimum Value For Switching: " + this.model.switchMin;
   },
   render: function () {
-    this.template = this.viewMode ? viewTemplate : editTemplate;
+    if(this.parent.spatial){
+      this.template = this.viewMode ? viewSpatialTemplate : editSpatialTemplate;
+    }else{
+      this.template = this.viewMode ? viewTemplate : editTemplate;
+    }
     View.prototype.render.apply(this, arguments);
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
     $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
+      e.target.remove();
     });
-    if(!this.viewMode){
-      this.model.on('change', _.bind(this.updateViewer, this))
-    }
     if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+      $(this.queryByHook('edit-annotation-btn')).text('Add');
     }
     if(this.parent.defaultMode !== "dynamic") {
       $(this.queryByHook("advanced-species")).css("display", "none");
     }else{
-      $(this.queryByHook("advanced-species")).css("display", "block")
+      $(this.queryByHook("advanced-species")).css("display", "block");
     }
     if(this.model.isSwitchTol){
       $(this.queryByHook('switching-tol')).prop('checked', true);
@@ -85,6 +100,12 @@ module.exports = View.extend({
     }
     this.toggleSwitchingSettings();
     this.updateInputValidation();
+    if(!this.viewMode){
+      this.model.on('change', _.bind(this.updateViewer, this));
+      if(this.parent.spatial) {
+        this.renderTypes();
+      }
+    }
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -115,6 +136,19 @@ module.exports = View.extend({
     this.remove();
     this.collection.removeSpecie(this.model);
     this.parent.toggleSpeciesCollectionError();
+  },
+  renderTypes: function () {
+    if(this.typesView) {
+      this.typesView.remove();
+    }
+    this.typesView = this.renderCollection(
+      this.model.collection.parent.domain.types,
+      TypesView,
+      this.queryByHook("species-types"),
+      {"filter": function (model) {
+        return model.typeID != 0;
+      }}
+    );
   },
   setSpeciesMode: function (e) {
     this.model.mode = e.target.value;
@@ -159,7 +193,7 @@ module.exports = View.extend({
   },
   update: function () {},
   updateInputValidation: function () {
-    if(this.viewMode) {return}
+    if(this.viewMode || this.parent.spatial) {return}
     // Update validation requirements and re-run tests for inputSwitchTol.
     // This removes error reporting not using switching tolerance
     let shouldValidateTol = this.model.mode === "dynamic" && this.model.isSwitchTol
@@ -216,11 +250,11 @@ module.exports = View.extend({
         return new InputView({
           parent: this,
           required: true,
-          name: 'value',
+          name: this.parent.spatial ? 'diffusion constant' : 'value',
           tests: tests.valueTests,
-          modelKey: 'value',
+          modelKey: this.parent.spatial ? 'diffusionConst' : 'value',
           valueType: 'number',
-          value: this.model.value,
+          value: this.parent.spatial ? this.model.diffusionConst : this.model.value,
         });
       }
     },
