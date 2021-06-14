@@ -463,9 +463,9 @@ let ModelEditor = PageView.extend({
     });
     let switchToDynamic = (!Boolean(prevMode) || prevMode !== "dynamic") && this.model.defaultMode === "dynamic";
     let switchFromDynamic = Boolean(prevMode) && prevMode === "dynamic" && this.model.defaultMode !== "dynamic";
-    // if(switchToDynamic || switchFromDynamic) {
-    //   this.speciesEditor.();
-    // }
+    if(switchToDynamic || switchFromDynamic) {
+      this.speciesEditor.renderEditSpeciesView();
+    }
   },
   setDefaultMode: function (e) {
     let self = this;
