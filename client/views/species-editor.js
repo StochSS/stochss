@@ -109,7 +109,7 @@ module.exports = View.extend({
     }
     this.collection.addSpecie(types);
     this.toggleSpeciesCollectionError()
-    $(document).ready(function () {
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
@@ -133,11 +133,19 @@ module.exports = View.extend({
     if(this.editSpeciesView){
       this.editSpeciesView.remove();
     }
+    let options = {viewOptions: {parent: this}};
     this.editSpeciesView = this.renderCollection(
       this.collection,
       SpecieView,
       this.queryByHook('edit-specie-list')
     );
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   renderViewSpeciesView: function () {
     if(this.viewSpeciesView){
@@ -154,13 +162,20 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook("species-annotation-header")).css("display", "block");
     }
-    let options = {viewOptions: {viewMode: true}};
+    let options = {viewOptions: {parent: this, viewMode: true}};
     this.viewSpeciesView = this.renderCollection(
       this.collection,
       SpecieView,
       this.queryByHook('view-specie-list'),
       options
     );
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+
+       });
+    });
   },
   toggleSpeciesCollectionError: function () {
     let errorMsg = $(this.queryByHook('species-collection-error'))
