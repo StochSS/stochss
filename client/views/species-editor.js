@@ -24,7 +24,8 @@ let Tooltips = require('../tooltips');
 let View = require('ampersand-view');
 let SpecieView = require('./edit-species');
 //templates
-let specieTemplate = require('../templates/includes/speciesEditor.pug');
+let speciesTemplate = require('../templates/includes/speciesEditor.pug');
+let spatialSpeciesTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
 
 module.exports = View.extend({
   events: {
@@ -33,8 +34,9 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.spatial = attrs.spatial
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
-    this.template = attrs.spatial ? null : specieTemplate;
+    this.template = this.spatial ? spatialSpeciesTemplate : speciesTemplate;
     this.tooltips = Tooltips.speciesEditor;
     this.defaultMode = attrs.defaultMode;
     let self = this
