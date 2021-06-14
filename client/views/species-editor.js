@@ -33,6 +33,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.template = attrs.spatial ? null : specieTemplate;
     this.tooltips = Tooltips.speciesEditor;
     this.defaultMode = attrs.defaultMode;
@@ -80,8 +81,19 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.toggleSpeciesCollectionError();
-    this.renderEditSpeciesView();
+    if(this.readOnly) {
+      $(this.queryByHook('species-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('species-view-tab')).tab('show');
+      $(this.queryByHook('edit-species')).removeClass('active');
+      $(this.queryByHook('view-species')).addClass('active');
+    }else{
+      this.toggleSpeciesCollectionError();
+      this.renderEditSpeciesView();
+    }
     this.renderViewSpeciesView();
   },
   addSpecies: function () {
