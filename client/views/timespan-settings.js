@@ -31,6 +31,10 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'input [data-hook=timestep-size-slider]' : 'viewTimestepValue',
+    'change [data-hook=preview-time]' : 'updateViewer',
+    'change [data-hook=time-units]' : 'updateViewer',
+    'change [data-hook=timestep-size-slider]' : 'setTimestepSize'
   },
   bindings: {
   },
@@ -40,6 +44,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    $(this.queryByHook("timestep-size-value")).html(this.model.timestepSize);
   },
   update: function (e) {
   },
@@ -48,6 +53,18 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  setTimestepSize: function (e) {
+    this.model.timestepSize = Number(e.target.value);
+    $(this.queryByHook("view-timestep-size")).html(this.model.timestepSize);
+  },
+  updateViewer: function (e) {
+    $(this.queryByHook("view-end-sim")).html("0 to " + this.model.endSim);
+    $(this.queryByHook("view-time-step")).html(this.model.timeStep);
+  },
+  viewTimestepValue: function (e) {
+    let value = e.target.value;
+    $(this.queryByHook("timestep-size-value")).html(value);
   },
   subviews: {
     inputSimEnd: {
