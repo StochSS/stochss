@@ -24,18 +24,20 @@ var View = require('ampersand-view');
 var InputView = require('./input');
 var SelectView = require('ampersand-select-view');
 //templates
-var template = require('../templates/includes/editEventAssignment.pug');
+var editTemplate = require('../templates/includes/editEventAssignment.pug');
+var viewTemplate = require('../templates/includes/viewEventAssignment.pug');
 
 module.exports = View.extend({
-  template: template,
   events: {
     'click [data-hook=remove]' : 'removeAssignment',
     'change [data-hook=event-assignment-variable]' : 'selectAssignmentVariable',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
   },
   render: function () {
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
     var options = this.getOptions();
     var variableSelectView = new SelectView({
@@ -47,8 +49,6 @@ module.exports = View.extend({
       value: this.model.variable.name,
     });
     app.registerRenderSubview(this, variableSelectView, 'event-assignment-variable');
-    var inputField = this.queryByHook('event-assignment-Expression').children[0].children[1];
-    $(inputField).attr("placeholder", "---No Expression Entered---");
   },
   update: function () {
   },
@@ -87,14 +87,13 @@ module.exports = View.extend({
   },
   subviews: {
     inputAssignmentExpression: {
-      hook: 'event-assignment-Expression',
+      hook: 'event-assignment-expression',
       prepareView: function (el) {
         return new InputView({
           parent: this,
           required: true,
           name: 'event-assignment-expression',
-          label: '',
-          tests: '',
+          placehonder: "---No Expression Entered---",
           modelKey: 'expression',
           valueType: 'string',
           value: this.model.expression,

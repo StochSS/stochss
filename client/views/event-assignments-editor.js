@@ -32,10 +32,28 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(
+    this.renderEditEventAssignment();
+    this.renderViewEventAssignment();
+  },
+  renderEditEventAssignment: function () {
+    if(this.editEventAssignments) {
+      this.editEventAssignments.remove();
+    }
+    this.editEventAssignments = this.renderCollection(
       this.collection,
       EditEventAssignment,
-      this.queryByHook('event-assignments-container')
+      this.queryByHook('edit-event-assignments-container')
+    );
+  },
+  renderViewEventAssignment: function () {
+    if(this.viewEventAssignments) {
+      this.viewEventAssignments.remove();
+    }
+    let options = {viewOptions: {viewMode: true}}
+    this.viewEventAssignments = this.renderCollection(
+      this.collection,
+      EditEventAssignment,
+      this.queryByHook('view-event-assignments-container')
     );
   },
   update: function () {

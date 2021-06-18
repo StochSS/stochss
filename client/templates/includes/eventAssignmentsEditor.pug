@@ -1,26 +1,53 @@
-div
+div#event-assignments-editor
 
-  table.table
+  div
 
-    thead
+    h5.inline.mr-3
 
-      tr
+      div
+        
+        div.inline Assignments
 
-        th(scope="col")
-          div
-            div.inline Target
+        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.assignments) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.variable) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-event-assignments" data-hook="collapse") -
 
-        th(scope="col")
-          div
-            div.inline Expression
+  div.collapse.show.tab-content(id="collapse-event-assignments" data-hook="event-assignments-list-container")
 
-            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.assignmentExpression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+    div.tab-pane.active(id="edit-event-assignments" data-hook="edit-event-assignments")
 
-        th(scope="col") Remove
+      hr
 
-    tbody(data-hook="event-assignments-container")
+      div.mx-1.row.head.align-items-baseline
 
-  button.btn.btn-outline-primary.box-shadow(data-hook="add-event-assignment", type="button")
-      | Add Assignment
+        div.col-sm-3
+
+          div.inline <b>Target</b>
+
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.variable) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        div.col-sm-7
+
+          h6.inline <b>Expression</b>
+
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.assignmentExpression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        div.col-sm-2
+
+          h6 <b>Remove</b>
+
+      div.my-3(data-hook="edit-event-assignments-container")
+
+      button.btn.btn-outline-primary.box-shadow(data-hook="add-event-assignment", type="button") Add Assignment
+
+    div.tab-pane(id="view-event-assignments" data-hook="view-event-assignments")
+
+      hr
+
+      div.mx-1.row.head.align-items-baseline
+
+        div.col-sm-3 <b>Target</b>
+
+        div.col-sm-7 <b>Expression</b>
+
+      div.my-3(data-hook="view-event-assignments-container")
