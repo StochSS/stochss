@@ -1,58 +1,49 @@
-html
+section.page
+  div#home-wrapper.container.card.card-body
+     
+    div.logo(id="stochss-logo" data-hook="stochss-logo")
+      img(src="/hub/static/stochss-logo.png")
 
-  head
-    meta(charset="utf-8")
-    title StochSS: Stochastic Simulation Service
-    meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    meta(name="description", content="")
-    meta(name="author", content="")
+    div.centered
+      h1.display-5 Welcome to StochSS Live!
 
-  body
-    div#home-wrapper.container.card.card-body
-       
-      div.logo(id="stochss-logo" data-hook="stochss-logo")
-        img(src="/hub/static/stochss-logo.png")
+      p.home-p
+        | An accessible platform for modeling mathematical, biological, and biochemical systems.
 
-      div.centered
-        h1.display-5 Welcome to StochSS Live!
+    div.row.home-highlights
+      div.col-md-2
+      div.col-md-5
 
-        p.home-p
-          | An accessible platform for modeling mathematical, biological, and biochemical systems.
+        h5 Features
+        ul.home-list
+          li Discrete Stochastic Modeling
+          li Continuous ODE Modeling
+          li Convert Between Stochastic and ODE Models
+          li Import SBML Models
+          li Parameter Sweep Workflows
+          li Spatial Simulations
+      
+      div.col-md-5
 
-      div.row.home-highlights
-        div.col-md-2
-        div.col-md-5
+        h5 Coming soon...
+        ul.home-list
+          li Sciope Integration
+          li Bring Your Own Cloud
 
-          h5 Features
-          ul.home-list
-            li Discrete Stochastic Modeling
-            li Continuous ODE Modeling
-            li Convert Between Stochastic and ODE Models
-            li Import SBML Models
-            li Parameter Sweep Workflows
-            li Spatial Simulations
-        
-        div.col-md-5
+    div.centered
+      a.try-stochss-btn.btn.btn-primary.box-shadow(href="/hub/spawn" role="button") Click here to login
 
-          h5 Coming soon...
-          ul.home-list
-            li Sciope Integration
-            li Bring Your Own Cloud
+  div#registration-home.container.card.card-body
 
-      div.centered
-        a.try-stochss-btn.btn.btn-primary.box-shadow(href="/hub/spawn" role="button") Click here to login
+    div.centered
 
-    div#registration-home.container.card.card-body
+      p.home-p
+        | StochSS is open-source software.  To obtain continued funding for sustained development, we must show that StochSS is making an impact in the scientific community.  For this, we need to know who is using the software, and a bit about what they are using it for.  Please consider registering StochSS to show your support.
 
-      div.centered
+      div.collapse(data-hook="registration-link")
 
-        p.home-p
-          | StochSS is open-source software.  To obtain continued funding for sustained development, we must show that StochSS is making an impact in the scientific community.  For this, we need to know who is using the software, and a bit about what they are using it for.  Please consider registering StochSS to show your support.
+        button.btn.btn-primary.box-shadow(data-hook="registration-link-button" style="margin: 1.5rem;") Register Stochss
 
-        div.collapse(data-hook="registration-link")
+      div.collapse.show(data-hook="registration-form" id="registration-form")
 
-          button.btn.btn-primary.box-shadow(data-hook="registration-link-button" style="margin: 1.5rem;") Register Stochss
-
-        div.collapse.show(data-hook="registration-form" id="registration-form")
-
-          iframe(src="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true" width="100%" height="800" frameborder="0")
+        iframe(src="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true" width="100%" height="800" frameborder="0")
