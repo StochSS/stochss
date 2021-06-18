@@ -53,6 +53,10 @@ c.NotebookApp.disable_check_xsrf = True
 ## The default URL to redirect to from `/`
 c.NotebookApp.default_url = '/stochss/home'
 
+# c.NotebookApp.allow_origin = "*"
+# c.NotebookApp.ip = "0.0.0.0"
+c.NotebookApp.allow_remote_access = True
+
 #------------------------------------------------------------------------------
 # KernelManager(ConnectionFileMixin) configuration
 #------------------------------------------------------------------------------
