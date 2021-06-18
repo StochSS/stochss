@@ -415,6 +415,8 @@ c.Spawner.mem_guarantee = '2G'
 #  Defaults to an empty set, in which case no user has admin access.
 c.Authenticator.admin_users = admin = set([])
 
+c.NotebookApp.allow_origin = "*"
+c.NotebookApp.ip = "0.0.0.0"
 c.NotebookApp.allow_remote_access = True
 
 pwd = os.path.dirname(__file__)
