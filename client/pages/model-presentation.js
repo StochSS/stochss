@@ -52,7 +52,7 @@ let ModelPresentationPage = PageView.extend({
     });
     let self = this;
     let queryStr = "?file=" + this.model.directory + "&owner=" + owner;
-    let endpoint = "stochss/api/file/json-data" + queryStr;
+    let endpoint = "api/file/json-data" + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {
         self.model.set(body);
