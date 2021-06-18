@@ -30,7 +30,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.readOnly = attrs.readOnly ? attrs.readOnly : true;
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);

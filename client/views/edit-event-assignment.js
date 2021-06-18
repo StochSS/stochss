@@ -39,16 +39,6 @@ module.exports = View.extend({
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
-    var options = this.getOptions();
-    var variableSelectView = new SelectView({
-      label: '',
-      name: 'variable',
-      required: true,
-      idAttributes: 'cid',
-      options: options,
-      value: this.model.variable.name,
-    });
-    app.registerRenderSubview(this, variableSelectView, 'event-assignment-variable');
   },
   update: function () {
   },
@@ -62,22 +52,28 @@ module.exports = View.extend({
   getOptions: function () {
     var species = this.model.collection.parent.collection.parent.species;
     var parameters = this.model.collection.parent.collection.parent.parameters;
-    var speciesNames = species.map(function (specie) { return specie.name });
-    var parameterNames = parameters.map(function (parameter) { return parameter.name });
-    return speciesNames.concat(parameterNames);
+    var specs = species.map(function (specie) {
+      return [specie.compID, specie.name]
+    });
+    var params = parameters.map(function (parameter) {
+      return [parameter.compID, parameter.name]
+    });
+    let options = [{groupName: "Variables", options: specs},
+                   {groupName: "Parameters", options: params}]
+    return options;
   },
   selectAssignmentVariable: function (e) {
     var species = this.model.collection.parent.collection.parent.species;
     var parameters = this.model.collection.parent.collection.parent.parameters;
     var val = e.target.selectedOptions.item(0).text;
     var eventVar = species.filter(function (specie) {
-      if(specie.name === val) {
+      if(specie.compID === val) {
         return specie;
       }
     });
     if(!eventVar.length) {
       eventVar = parameters.filter(function (parameter) {
-        if(parameter.name === val) {
+        if(parameter.compID === val) {
           return parameter;
         }
       });
@@ -100,5 +96,18 @@ module.exports = View.extend({
         });
       },
     },
+    variableSelectView: {
+      hook: 'event-assignment-variable',
+      prepareView: function (el) {
+        let options = this.getOptions();
+        return new SelectView({
+          name: 'variable',
+          required: true,
+          idAttributes: 'cid',
+          groupOptions: options,
+          value: this.model.variable.compID,
+        });
+      }
+    }
   },
 });
