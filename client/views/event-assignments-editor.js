@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery');
 //views
 var View = require('ampersand-view');
 var EditEventAssignment = require('./edit-event-assignment');
@@ -29,11 +30,17 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : true;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEditEventAssignment();
-    this.renderViewEventAssignment();
+    if(this.readOnly) {
+      $(this.queryByHook('edit-event-assignments')).removeClass('active');
+      $(this.queryByHook('view-event-assignments')).addClass('active');
+      this.renderViewEventAssignment();
+    }else{
+      this.renderEditEventAssignment();
+    }
   },
   renderEditEventAssignment: function () {
     if(this.editEventAssignments) {
@@ -53,7 +60,8 @@ module.exports = View.extend({
     this.viewEventAssignments = this.renderCollection(
       this.collection,
       EditEventAssignment,
-      this.queryByHook('view-event-assignments-container')
+      this.queryByHook('view-event-assignments-container'),
+      options
     );
   },
   update: function () {

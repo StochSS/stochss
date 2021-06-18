@@ -12,42 +12,44 @@ div#event-assignments-editor
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-event-assignments" data-hook="collapse") -
 
-  div.collapse.show.tab-content(id="collapse-event-assignments" data-hook="event-assignments-list-container")
+  div
 
-    div.tab-pane.active(id="edit-event-assignments" data-hook="edit-event-assignments")
+    div.collapse.show.tab-content(id="collapse-event-assignments" data-hook="event-assignments-list-container")
 
-      hr
+      div.tab-pane.active(id="edit-event-assignments" data-hook="edit-event-assignments")
 
-      div.mx-1.row.head.align-items-baseline
+        hr
 
-        div.col-sm-3
+        div.mx-1.row.head.align-items-baseline
 
-          div.inline <b>Target</b>
+          div.col-sm-3
 
-          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.variable) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            div.inline <b>Target</b>
 
-        div.col-sm-7
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.variable) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          h6.inline <b>Expression</b>
+          div.col-sm-7
 
-          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.assignmentExpression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            h6.inline <b>Expression</b>
 
-        div.col-sm-2
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.parent.tooltips.assignmentExpression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          h6 <b>Remove</b>
+          div.col-sm-2
 
-      div.my-3(data-hook="edit-event-assignments-container")
+            h6 <b>Remove</b>
 
-      button.btn.btn-outline-primary.box-shadow(data-hook="add-event-assignment", type="button") Add Assignment
+        div.my-3(data-hook="edit-event-assignments-container")
 
-    div.tab-pane(id="view-event-assignments" data-hook="view-event-assignments")
+        button.btn.btn-outline-primary.box-shadow(data-hook="add-event-assignment", type="button") Add Assignment
 
-      hr
+      div.tab-pane(id="view-event-assignments" data-hook="view-event-assignments")
 
-      div.mx-1.row.head.align-items-baseline
+        hr
 
-        div.col-sm-3 <b>Target</b>
+        div.mx-1.row.head.align-items-baseline
 
-        div.col-sm-7 <b>Expression</b>
+          div.col-sm-3 <b>Target</b>
 
-      div.my-3(data-hook="view-event-assignments-container")
+          div.col-sm-7 <b>Expression</b>
+
+        div.my-3(data-hook="view-event-assignments-container")
