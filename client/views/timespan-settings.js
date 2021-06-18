@@ -36,14 +36,23 @@ module.exports = View.extend({
     'change [data-hook=time-units]' : 'updateViewer',
     'change [data-hook=timestep-size-slider]' : 'setTimestepSize'
   },
-  bindings: {
-  },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.modelSettings
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    if(this.readOnly) {
+      $(this.queryByHook('timespan-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('timespan-view-tab')).tab('show');
+      $(this.queryByHook('edit-timespan')).removeClass('active');
+      $(this.queryByHook('view-timespan')).addClass('active');
+    }
     $(this.queryByHook("timestep-size-value")).html(this.model.timestepSize);
   },
   update: function (e) {
