@@ -21,7 +21,7 @@ let app = require('../app');
 //views
 let View = require('ampersand-view');
 let RulesViewer = require('./rules-viewer');
-let EventsViewer = require('./events-viewer');
+let EventsViewer = require('./events-editor');
 let SpeciesViewer = require('./species-viewer');
 let ReactionsViewer = require('./reactions-viewer');
 let ParametersEditor = require('./parameters-editor');
@@ -48,7 +48,8 @@ module.exports = View.extend({
   },
   renderEventsView: function () {
     let eventsViewer = new EventsViewer({
-      collection: this.model.eventsCollection
+      collection: this.model.eventsCollection,
+      readOnly: true
     });
     app.registerRenderSubview(this, eventsViewer, "events-viewer-container");
   },
