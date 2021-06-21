@@ -32,7 +32,6 @@ var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var InitialConditionsViewer = require('../views/initial-conditions-viewer');
 var ParametersEditorView = require('../views/parameters-editor');
-var ParameterViewer = require('../views/parameters-viewer');
 var ParticleViewer = require('../views/view-particle');
 var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
@@ -57,6 +56,7 @@ let ModelEditor = PageView.extend({
     'click [data-hook=edit-model-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
+    'change [data-hook=edit-volume]' : 'updateVolumeViewer',
     'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
@@ -314,15 +314,11 @@ let ModelEditor = PageView.extend({
     }
     app.registerRenderSubview(this, this.initialConditionsEditor, 'initial-conditions-editor-container');
     },
-  renderParametersView: function (mode="edit", opened=false) {
+  renderParametersView: function () {
     if(this.parametersEditor) {
       this.parametersEditor.remove()
     }
-    if(mode === "edit") {
-      this.parametersEditor = new ParametersEditorView({collection: this.model.parameters, opened: opened});
-    }else{
-      this.parametersEditor = new ParameterViewer({collection: this.model.parameters});
-    }
+    this.parametersEditor = new ParametersEditorView({collection: this.model.parameters});
     app.registerRenderSubview(this, this.parametersEditor, 'parameters-editor-container');
   },
   renderReactionsView: function () {
@@ -368,10 +364,11 @@ let ModelEditor = PageView.extend({
       valueType: 'number',
       value: this.model.volume,
     });
-    app.registerRenderSubview(this, this.systemVolumeView, 'volume')
+    app.registerRenderSubview(this, this.systemVolumeView, 'edit-volume')
     if(this.model.defaultMode === "continuous") {
       $(this.queryByHook("system-volume-container")).collapse("hide")
     }
+    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -425,6 +422,9 @@ let ModelEditor = PageView.extend({
   clickDownloadPNGButton: function (e) {
     let pngButton = $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
+  },
+  updateVolumeViewer: function (e) {
+    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
   }
 });
 

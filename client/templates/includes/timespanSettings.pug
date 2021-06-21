@@ -1,33 +1,113 @@
-div#preview-settings.card.card-body
+div#preview-settings.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Timespan
+    h3.inline.mr-3 Timespan
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-preview-settings", data-hook="collapse") -
+    div.inline.mr-3
 
-  div.collapse(class="show", id="collapse-preview-settings" data-hook="timespan-container")
+      ul.nav.nav-tabs.card-header-tabs(id="timespan-tabs")
 
-    p Timespan settings are used for the preview and all workflows created using this model.
+        li.nav-item
 
-    table.table
+          a.nav-link.tab.active(data-hook="timespan-edit-tab" data-toggle="tab" href="#edit-timespan") Edit
 
-      thead
+        li.nav-item
 
-        tr
+          a.nav-link.tab(data-hook="timespan-view-tab" data-toggle="tab" href="#view-timespan") View
 
-          th(scope="col") Simulation Time
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-preview-settings" data-hook="collapse") -
 
-          th(scope="col")
-            div
-              div.inline Sample Frequency
+  div.card-body
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.timeUnits) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+    p.mb-0
+      | Timespan settings are used for the preview and all workflows created using this model.
 
-      tbody
+    div.collapse.tab-content(class="show" id="collapse-preview-settings" data-hook="timespan-container")
 
-        tr
+      div.tab-pane.active(id="edit-timespan" data-hook="edit-timespan")
 
-          td: div(data-hook="preview-time")
+        hr
 
-          td: div(data-hook="time-units")
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+
+            h6 <b>Simulation Time</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Sample Frequency</b>
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.timeUnits) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          div.col-sm-6
+
+            if this.parent.model.is_spatial
+              h6 <b>Timestep Size</b>
+
+        div.mx-1.my-3.row
+
+          div.col-sm-3(data-hook="preview-time")
+
+          div.col-sm-3(data-hook="time-units")
+
+          div.col-sm-6
+
+            if this.parent.model.is_spatial
+              div
+
+                div.row
+
+                  div.col-sm-3
+                    
+                    span.inline 1e-5
+
+                  div.col-sm-8
+
+                    span.mr-2.inline Current Value: 
+
+                    div.inline(data-hook="timestep-size-value")
+
+                  div.col-sm-1.d-flex.justify-content-end
+
+                    span.inline 1
+
+                input.custom-range(
+                  type="range"
+                  min="1e-5"
+                  max="1"
+                  step="1e-5"
+                  value=this.model.timestepSize
+                  data-hook="timestep-size-slider"
+                )
+
+      div.tab-pane(id="view-timespan" data-hook="view-timespan")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+
+            h6 <b>Simulation Time</b>
+
+          div.col-sm-3
+
+            h6 <b>Sample Frequency</b>
+
+          div.col-sm-3
+
+            if this.parent.model.is_spatial
+              h6 <b>Timestep Size</b>
+
+        div.mx-1.my-3.row
+
+          div.col-sm-3(data-hook="view-end-sim")="0 to " + this.model.endSim
+
+          div.col-sm-3(data-hook="view-time-step")=this.model.timeStep
+
+          if this.parent.model.is_spatial
+            div.col-sm-6(data-hook="view-timestep-size")=this.model.timestepSize
+            
+
