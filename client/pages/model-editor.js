@@ -36,7 +36,6 @@ var ParticleViewer = require('../views/view-particle');
 var ReactionsEditorView = require('../views/reactions-editor');
 var ReactionsViewer = require('../views/reactions-viewer');
 var EventsEditorView = require('../views/events-editor');
-var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
 var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
@@ -332,14 +331,9 @@ let ModelEditor = PageView.extend({
     }
     app.registerRenderSubview(this, this.reactionsEditor, 'reactions-editor-container');
   },
-  renderEventsView: function (mode="edit", opened=false) {
+  renderEventsView: function () {
     if(this.eventsEditor){
       this.eventsEditor.remove();
-    }
-    if(mode === "edit") {
-      this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection, opened: opened});
-    }else{
-      this.eventsEditor = new EventsViewer({collection: this.model.eventsCollection});
     }
     app.registerRenderSubview(this, this.eventsEditor, 'events-editor-container');
   },
