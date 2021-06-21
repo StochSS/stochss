@@ -18,51 +18,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var $ = require('jquery');
 //support files
+let app = require('../app');
 var tests = require('./tests');
 var modals = require('../modals');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
+var EventAssignment = require('./event-assignments-editor');
 //templates
-var template = require('../templates/includes/eventListings.pug');
-
-let eventAnnotationModalHtml = (eventName, annotation) => {
-  return `
-    <div id="eventAnnotationModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Annotation for ${eventName}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <span for="eventAnnotationInput">Annotation: </span>
-            <input type="text" id="eventAnnotationInput" name="eventAnnotationInput" size="30" autofocus value="${annotation}">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary ok-model-btn">OK</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-}
+var editTemplate = require('../templates/includes/eventListings.pug');
+let viewTemplate = require('../templates/includes/viewEvents.pug');
 
 module.exports = View.extend({
-  template: template,
   bindings: {
-    'model.name' : {
-      type: 'value',
-      hook: 'input-name-container'
-    },
     'model.selected' : {
       type: function (el, value, previousValue) {
         el.checked = value;
       },
       hook: 'select'
+    },
+    'model.initialValue': {
+      hook: 'event-trigger-init-value',
+      type: 'booleanAttribute',
+      name: 'checked',
+    },
+    'model.persistent': {
+      hook: 'event-trigger-persistent',
+      type: 'booleanAttribute',
+      name: 'checked',
     }
   },
   events: {
@@ -72,8 +55,13 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    if(this.viewMode) {
+      this.delay = this.model.delay === "" ? "None" : this.model.delay;
+    }
   },
   render: function () {
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
@@ -82,7 +70,15 @@ module.exports = View.extend({
       e.target.remove()
     });
     if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+      $(this.queryByHook('edit-annotation-btn')).text('Add');
+    }
+    if(this.viewMode) {
+      this.renderViewEventAssignments();
+      if(this.model.useValuesFromTriggerTime) {
+        $(this.queryByHook("trigger-time")).prop('checked', true);
+      }else{
+        $(this.queryByHook("assignment-time")).prop('checked', true);
+      }
     }
   },
   update: function () {
@@ -110,13 +106,24 @@ module.exports = View.extend({
     });
     okBtn.addEventListener('click', function (e) {
       self.model.annotation = input.value.trim();
-      self.parent.renderEventListingsView();
+      self.parent.renderEditEventListingsView();
       modal.modal('hide');
     });
   },
   removeEvent: function () {
     this.remove();
     this.collection.removeEvent(this.model);
+  },
+  renderViewEventAssignments: function () {
+    if(this.viewEventAssignmentsView){
+      this.viewEventAssignmentsView.remove()
+    }
+    this.viewEventAssignmentsView = new EventAssignment({
+      collection: this.model.eventAssignments,
+      tooltips: this.parent.parent.tooltips,
+      readOnly: true
+    });
+    app.registerRenderSubview(this, this.viewEventAssignmentsView, 'assignment-viewer');
   },
   subviews: {
     inputName: {

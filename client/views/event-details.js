@@ -81,6 +81,7 @@ module.exports = View.extend({
     }
     this.eventAssignmentsView = new EventAssignment({
       collection: this.model.eventAssignments,
+      tooltips: this.parent.tooltips
     });
     app.registerRenderSubview(this, this.eventAssignmentsView, 'event-assignments');
   },

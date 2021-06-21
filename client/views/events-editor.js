@@ -38,7 +38,6 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.eventsEditor
-    this.opened = attrs.opened
     this.collection.on("select", function (event) {
       this.setSelectedEvent(event);
       this.setDetailsView(event);
@@ -59,7 +58,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEventListingsView();
+    this.renderEditEventListingsView();
     this.detailsContainer = this.queryByHook('event-details-container');
     this.detailsViewSwitcher = new ViewSwitcher({
       el: this.detailsContainer,
@@ -69,22 +68,38 @@ module.exports = View.extend({
       this.collection.trigger("select", this.selectedEvent);
     }
     this.toggleAddEventButton()
-    if(this.opened) {
-      this.openEventsContainer();
-    }
+    this.renderViewEventListingView();
   },
   update: function () {
   },
   updateValid: function () {
   },
-  renderEventListingsView: function () {
-    if(this.eventListingsView){
-      this.eventListingsView.remove();
+  renderEditEventListingsView: function () {
+    if(this.editEventListingsView){
+      this.editEventListingsView.remove();
     }
-    this.eventListingsView = this.renderCollection(
+    this.editEventListingsView = this.renderCollection(
       this.collection,
       EventListings,
-      this.queryByHook('event-listing-container')
+      this.queryByHook('edit-event-listing-container')
+    );
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderViewEventListingView: function () {
+    if(this.viewEventListingsView) {
+      this.viewEventListingsView.remove();
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.viewEventListingsView = this.renderCollection(
+      this.collection,
+      EventListings,
+      this.queryByHook('view-event-listing-container'),
+      options
     );
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -133,11 +148,6 @@ module.exports = View.extend({
   switchToViewMode: function (e) {
     this.parent.modelStateButtons.clickSaveHandler(e);
     this.parent.renderEventsView(mode="view");
-  },
-  openEventsContainer: function () {
-    $(this.queryByHook('events')).collapse('show');
-    let collapseBtn = $(this.queryByHook('collapse'))
-    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);

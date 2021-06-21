@@ -31,12 +31,14 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
+    this.tooltips = attrs.tooltips;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
       $(this.queryByHook('edit-event-assignments')).removeClass('active');
       $(this.queryByHook('view-event-assignments')).addClass('active');
+      $(this.queryByHook('event-assignments-header')).css("display", "none");
       this.renderViewEventAssignment();
     }else{
       this.renderEditEventAssignment();

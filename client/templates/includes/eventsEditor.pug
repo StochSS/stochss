@@ -27,7 +27,7 @@ div#events.card
 
       div.tab-pane.active(id="edit-events" data-hook="edit-events")
 
-        div.row.mb-3
+        div.row.mb-3.align-items-baseline
 
           div.col-md-6.container-part
             
@@ -55,10 +55,36 @@ div#events.card
 
                 h6 <b>Remove</b>
 
-            div.mt-3(data-hook="event-listing-container")
+            div.mt-3(data-hook="edit-event-listing-container")
 
           div.col-md-6.container-part(data-hook="event-details-container")
 
         button.btn.btn-outline-primary.box-shadow(data-hook="add-event") Add Event
 
       div.tab-pane(id="view-events" data-hook="view-events")
+
+        hr
+
+        div.mx-1.row.head
+
+          div.col-sm-2
+
+            h6 <b>Name</b>
+
+          div.col-sm-2
+
+            h6 <b>Trigger</b>
+
+          div.col-sm-4
+
+            h6 <b>Assignments</b>
+
+          div.col-sm-2
+
+            h6 <b>Advanced</b>
+
+          div.col-sm-2(data-hook="events-annotation-header")
+
+            h6 <b>Annotation</b>
+
+        div.mt-3(data-hook="view-event-listing-container")
