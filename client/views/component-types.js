@@ -46,5 +46,8 @@ module.exports = View.extend({
       let index = this.parent.model.types.indexOf(typeID);
       this.parent.model.types.splice(index, 1);
     }
+    if(this.parent.modelType === "species") {
+      this.parent.model.trigger('change');
+    }
   }
 });
