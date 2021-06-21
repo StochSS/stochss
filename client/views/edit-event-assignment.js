@@ -31,6 +31,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=remove]' : 'removeAssignment',
     'change [data-hook=event-assignment-variable]' : 'selectAssignmentVariable',
+    'change [data-hook=event-assignment-expression]' : 'updateViewer'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -65,7 +66,7 @@ module.exports = View.extend({
   selectAssignmentVariable: function (e) {
     var species = this.model.collection.parent.collection.parent.species;
     var parameters = this.model.collection.parent.collection.parent.parameters;
-    var val = e.target.selectedOptions.item(0).text;
+    var val = Number(e.target.value);
     var eventVar = species.filter(function (specie) {
       if(specie.compID === val) {
         return specie;
@@ -79,7 +80,11 @@ module.exports = View.extend({
       });
     }
     this.model.variable = eventVar[0];
+    this.updateViewer();
     this.model.collection.parent.collection.trigger('change');
+  },
+  updateViewer: function () {
+    this.model.collection.parent.trigger('change');
   },
   subviews: {
     inputAssignmentExpression: {
@@ -89,7 +94,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'event-assignment-expression',
-          placehonder: "---No Expression Entered---",
+          placeholder: "---No Expression Entered---",
           modelKey: 'expression',
           valueType: 'string',
           value: this.model.expression,
