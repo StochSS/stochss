@@ -51,6 +51,7 @@ class JsonFileAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         owner = self.get_query_argument(name="owner")
         log.debug("Container id of the owner: %s", owner)
         file = self.get_query_argument(name="file")
