@@ -57,6 +57,7 @@ let ModelEditor = PageView.extend({
     'click [data-hook=edit-model-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
+    'change [data-hook=edit-volume]' : 'updateVolumeViewer',
     'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
@@ -368,10 +369,11 @@ let ModelEditor = PageView.extend({
       valueType: 'number',
       value: this.model.volume,
     });
-    app.registerRenderSubview(this, this.systemVolumeView, 'volume')
+    app.registerRenderSubview(this, this.systemVolumeView, 'edit-volume')
     if(this.model.defaultMode === "continuous") {
       $(this.queryByHook("system-volume-container")).collapse("hide")
     }
+    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -425,6 +427,9 @@ let ModelEditor = PageView.extend({
   clickDownloadPNGButton: function (e) {
     let pngButton = $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
+  },
+  updateVolumeViewer: function (e) {
+    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
   }
 });
 

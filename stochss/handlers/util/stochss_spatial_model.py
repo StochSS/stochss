@@ -169,8 +169,9 @@ class StochSSSpatialModel(StochSSBase):
     def __convert_model_settings(self, model):
         try:
             end = self.model['modelSettings']['endSim']
-            step_size = self.model['modelSettings']['timeStep']
-            tspan = numpy.arange(0, end + step_size, step_size)
+            output_freq = self.model['modelSettings']['timeStep']
+            step_size = self.model['modelSettings']['timestepSize']
+            tspan = numpy.arange(0, end + step_size, output_freq)
             model.timespan(tspan, timestep_size=step_size)
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
@@ -525,6 +526,8 @@ class StochSSSpatialModel(StochSSBase):
         self.model['name'] = self.get_name()
         if not self.model['defaultMode']:
             self.model['defaultMode'] = "discrete"
+        if "timestepSize" not in self.model['modelSettings'].keys():
+            self.model['modelSettings']['timestepSize'] = self.model['modelSettings']['timeStep']
         if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
             self.model['domain'] = self.get_model_template()['domain']
         elif "static" not in self.model['domain'].keys():
