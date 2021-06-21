@@ -28,8 +28,8 @@ let Model = require('../models/model');
 let PageView = require('./base');
 let Rules = require('../views/rules-viewer');
 let Events = require('../views/events-viewer');
-let Species = require('../views/species-viewer');
-let Reactions = require('../views/reactions-viewer');
+let Species = require('../views/species-editor');
+let Reactions = require('../views/reactions-editor');
 let Parameters = require('../views/parameters-editor');
 let SBMLComponents = require('../views/sbml-component-editor');
 //templates
@@ -85,7 +85,8 @@ let ModelPresentationPage = PageView.extend({
   },
   renderReactionsContainer: function () {
     let reactions = new Reactions({
-      collection: this.model.reactions
+      collection: this.model.reactions,
+      readOnly: true
     });
     app.registerRenderSubview(this, reactions, "model-reactions");
   },
@@ -104,7 +105,8 @@ let ModelPresentationPage = PageView.extend({
   },
   renderSpeciesContainer: function () {
     let species = new Species({
-      collection: this.model.species
+      collection: this.model.species,
+      readOnly: true
     });
     app.registerRenderSubview(this, species, "model-species");
   }
