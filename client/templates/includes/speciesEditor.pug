@@ -1,92 +1,89 @@
-div#species-editor.card.card-body
+div#species-editor.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Variables
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-species", data-hook="collapse") -
+    h3.inline.mr-3 Variables
 
-  div.collapse(class="show", id="collapse-species" data-hook="species-list-container")
-    p
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="species-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="species-edit-tab" data-toggle="tab" href="#edit-species") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="species-view-tab" data-toggle="tab" href="#view-species") View
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-species" data-hook="collapse") -
+
+  div.card-body
+    p.mb-0
      | Time varying quantities of interest; e.g.: concentrations, populations, or counts of biochemical species, epidemological compartments, chemicals, proteins, or molecules.
 
-    table.table
-      thead
-        tr
-          th(scope="col")
-            div
-              div.inline Name
+    div.collapse.tab-content(class="show" id="collapse-species" data-hook="species-list-container")
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+      div.tab-pane.active(id="edit-species" data-hook="edit-species")
 
-          th(scope="col")
-            div
-              div.inline Initial Condition
+        hr
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.initialValue) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+        div.mx-1.row.head.align-items-baseline
 
-          th(scope="col")
-            div
-              div.inline Annotation
+          div.col-sm-3
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-              
-          th(scope="col")
-            div
-              div.inline Remove
+            h6.inline <b>Name</b>
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.remove) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-        
-      tbody(data-hook="specie-list")
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-    table.table
-      thead
-        tr
-          th(scope="col", colspan="3") 
+          div.col-sm-5
 
-            div
+            h6.inline <b>Initial Condition</b>
 
-              div.inline Variable Mode
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.initialValue) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.speciesMode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+          div.col-sm-2
 
-      tbody
-        tr
-          td
-            input(type="radio", name="species-mode", data-hook="all-continuous", data-name="continuous") 
-            |  Concentration
-          td
-            input(type="radio", name="species-mode", data-hook="all-discrete", data-name="discrete")
-            |  Population
-          td
-            input(type="radio", name="species-mode", data-hook="advanced", data-name="dynamic")
-            |  Hybrid Concentration/Population
-          
-    div.collapse(data-hook="advanced-species")
+            h6.inline <b>Annotation</b>
 
-      table.table
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-        thead
+          div.col-sm-2
 
-          tr
+            h6.inline <b>Remove</b>
 
-            th(scope="col") Name
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.remove) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-            th(scope="col") 
-              div
-                div.inline Mode
+        div.my-3(data-hook="edit-specie-list")
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.mode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-              
-            th(scope="col" colspan="2")
-              div
-                div.inline Switching Settings (Hybrid Only)
+        div(data-hook="species-collection-error"): p.text-danger A model must have at least one variable
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.switchValue) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+        button.btn.btn-outline-primary.box-shadow(data-hook="add-species") Add Variable
 
-        tbody(data-hook="edit-species-mode")
+      div.tab-pane(id="view-species" data-hook="view-species")
 
-    div(data-hook="species-collection-error"): p.text-danger A model must have at least one variable
+        hr
 
-    button.btn.btn-outline-primary.box-shadow(data-hook="add-species") Add Variable
+        div.mx-1.row.head.align-items-baseline
 
-    button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-species") Save Variables
+          div.col-sm-2
+
+            h6.inline <b>Name</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Initial Condition</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Mode</b>
+
+          div.col-sm-4(data-hook="species-switching-header")
+
+            h6.inline <b>Switch Tolerance/Minimum Value for Switching</b>
+
+          div.col-sm-2(data-hook="species-annotation-header")
+
+            h6.inline <b>Annotation</b>
+
+        div.my-3(data-hook="view-specie-list")

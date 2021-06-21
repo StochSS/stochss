@@ -23,7 +23,7 @@ let app = require('../app');
 let View = require('ampersand-view');
 let RulesViewer = require('./rules-viewer');
 let EventsViewer = require('./events-viewer');
-let SpeciesViewer = require('./species-viewer');
+let SpeciesViewer = require('./species-editor');
 let ReactionsViewer = require('./reactions-editor');
 let ParametersViewer = require('./parameters-editor');
 let SBMLComponentsView = require('./sbml-component-editor');
@@ -86,7 +86,10 @@ module.exports = View.extend({
   },
   renderSpeciesView: function () {
     let speciesViewer = new SpeciesViewer({
-      collection: this.model.species
+      collection: this.model.species,
+      spatial: this.model.is_spatial,
+      defaultMode: this.model.defaultMode,
+      readOnly: true
     });
     app.registerRenderSubview(this, speciesViewer, "species-viewer-container");
   },

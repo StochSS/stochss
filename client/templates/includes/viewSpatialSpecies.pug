@@ -11,15 +11,11 @@ div.mx-1
 
     div.col-sm-2
 
-      div=this.model.value
+      div=this.model.diffusionConst
 
-    div.col-sm-2
+    div.col-sm-6
 
-      div=this.model.mode
-
-    if this.model.mode === "dynamic"
-      div.col-sm-4
-        div=this.switchingValWithLabel
+      div=this.types.join(", ")
 
     div.col-sm-2
 
