@@ -182,6 +182,7 @@ module.exports = View.extend({
       var val = e.target.selectedOptions.item(0).text;
       var param = this.getRateFromParameters(val);
       this.model.rate = param || this.model.rate;
+      this.model.trigger("change");
       this.model.collection.trigger("change");
     }
   },

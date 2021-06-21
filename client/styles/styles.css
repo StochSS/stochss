@@ -293,6 +293,11 @@ input[type="file"]::-ms-browse {
   display: inline-block;
 }
 
+.reaction-list-summary {
+  width: auto !important;
+  text-align: center;
+}
+
 .container-part {
   max-width: none;
 }

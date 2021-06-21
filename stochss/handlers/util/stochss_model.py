@@ -380,6 +380,8 @@ class StochSSModel(StochSSBase):
         if self.model is None:
             model = self.load()
         model['is_spatial'] = True
+        if "timestepSize" not in self.model['modelSettings'].keys():
+            self.model['modelSettings']['timestepSize'] = self.model['modelSettings']['timeStep']
         if "domain" not in model.keys():
             model['domain'] = self.get_model_template()['domain']
         for species in model['species']:
