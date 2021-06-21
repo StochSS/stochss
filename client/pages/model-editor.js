@@ -34,7 +34,6 @@ var InitialConditionsViewer = require('../views/initial-conditions-viewer');
 var ParametersEditorView = require('../views/parameters-editor');
 var ParticleViewer = require('../views/view-particle');
 var ReactionsEditorView = require('../views/reactions-editor');
-var ReactionsViewer = require('../views/reactions-viewer');
 var EventsEditorView = require('../views/events-editor');
 var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
@@ -322,15 +321,11 @@ let ModelEditor = PageView.extend({
     this.parametersEditor = new ParametersEditorView({collection: this.model.parameters});
     app.registerRenderSubview(this, this.parametersEditor, 'parameters-editor-container');
   },
-  renderReactionsView: function (mode="edit", opened=false) {
+  renderReactionsView: function () {
     if(this.reactionsEditor) {
       this.reactionsEditor.remove()
     }
-    if(mode === "edit") {
-      this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions, opened: opened});
-    }else{
-      this.reactionsEditor = new ReactionsViewer({collection: this.model.reactions});
-    }
+    this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions});
     app.registerRenderSubview(this, this.reactionsEditor, 'reactions-editor-container');
   },
   renderEventsView: function (mode="edit", opened=false) {
