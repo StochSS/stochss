@@ -24,7 +24,6 @@ import tarfile
 import tempfile
 
 import docker
-from tornado import web
 from notebook.base.handlers import APIHandler
 # APIHandler documentation:
 # https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
@@ -43,7 +42,6 @@ class JsonFileAPIHandler(APIHandler):
     Base Handler for getting model presentations from user containers.
     ################################################################################################
     '''
-    @web.authenticated
     async def get(self):
         '''
         Load the model presentation from User's presentations directory.
@@ -77,7 +75,6 @@ class DownModelPresentationAPIHandler(APIHandler):
     Base Handler for downloading model presentations from user containers.
     ################################################################################################
     '''
-    @web.authenticated
     async def get(self, owner, file):
         '''
         Download the model presentation from User's presentations directory.
