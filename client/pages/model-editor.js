@@ -467,7 +467,6 @@ let ModelEditor = PageView.extend({
     }
   },
   setDefaultMode: function (e) {
-    let self = this;
     let prevMode = this.model.defaultMode;
     this.model.defaultMode = e.target.dataset.name;
     this.speciesEditor.defaultMode = e.target.dataset.name;
