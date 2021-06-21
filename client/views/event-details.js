@@ -44,8 +44,8 @@ module.exports = View.extend({
   events: {
     'change [data-hook=event-trigger-init-value]' : 'setTriggerInitialValue',
     'change [data-hook=event-trigger-persistent]' : 'setTriggerPersistent',
-    'change [data-hook=trigger-time]' : 'setUseValuesFromTriggerTime',
-    'change [data-hook=assignment-time]' : 'setUseValuesFromTriggerTime',
+    'change [data-hook=edit-trigger-time]' : 'setUseValuesFromTriggerTime',
+    'change [data-hook=edit-assignment-time]' : 'setUseValuesFromTriggerTime',
     'click [data-hook=advanced-event-button]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
@@ -59,9 +59,9 @@ module.exports = View.extend({
     var delayField = this.queryByHook('event-delay').children[0].children[1];
     $(delayField).attr("placeholder", "---No Expression Entered---");
     if(this.model.useValuesFromTriggerTime){
-      $(this.queryByHook('trigger-time')).prop('checked', true)
+      $(this.queryByHook('edit-trigger-time')).prop('checked', true)
     }else{
-      $(this.queryByHook('assignment-time')).prop('checked', true)
+      $(this.queryByHook('edit-assignment-time')).prop('checked', true)
     }
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();

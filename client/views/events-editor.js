@@ -94,7 +94,7 @@ module.exports = View.extend({
     if(this.viewEventListingsView) {
       this.viewEventListingsView.remove();
     }
-    let options = {viewOptions: {viewMode: true}};
+    let options = {viewOptions: {parent: this, viewMode: true}};
     this.viewEventListingsView = this.renderCollection(
       this.collection,
       EventListings,

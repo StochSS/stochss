@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var $ = require('jquery');
+let _ = require('underscore');
 //support files
 let app = require('../app');
 var tests = require('./tests');
@@ -58,6 +59,8 @@ module.exports = View.extend({
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
     if(this.viewMode) {
       this.delay = this.model.delay === "" ? "None" : this.model.delay;
+    }else{
+      this.model.on("change", _.bind(this.updateViewer, this));
     }
   },
   render: function () {
@@ -75,9 +78,9 @@ module.exports = View.extend({
     if(this.viewMode) {
       this.renderViewEventAssignments();
       if(this.model.useValuesFromTriggerTime) {
-        $(this.queryByHook("trigger-time")).prop('checked', true);
+        $(this.queryByHook("view-trigger-time")).prop('checked', true);
       }else{
-        $(this.queryByHook("assignment-time")).prop('checked', true);
+        $(this.queryByHook("view-assignment-time")).prop('checked', true);
       }
     }
   },
@@ -120,10 +123,13 @@ module.exports = View.extend({
     }
     this.viewEventAssignmentsView = new EventAssignment({
       collection: this.model.eventAssignments,
-      tooltips: this.parent.parent.tooltips,
+      tooltips: this.parent.tooltips,
       readOnly: true
     });
     app.registerRenderSubview(this, this.viewEventAssignmentsView, 'assignment-viewer');
+  },
+  updateViewer: function () {
+    this.parent.renderViewEventListingView();
   },
   subviews: {
     inputName: {
