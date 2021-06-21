@@ -8,7 +8,9 @@ div(data-hook="event-details")
 
     div.col-md-8.inline(id="event-trigger-expression" data-hook="event-trigger-expression")
 
-  div
+  div(data-hook="event-assignments")
+
+  div.my-1
 
     h6.inline Advanced
     button.btn.btn-outline-collapse(data-toggle='collapse', data-target='#advanced-events', data-hook='advanced-event-button') +
@@ -68,5 +70,3 @@ div(data-hook="event-details")
 
           input(type="radio", name="use-values-from" data-hook="assignment-time" data-name="assignment") 
           |  Assignment Time
-
-  div(data-hook="event-assignments")

@@ -1,45 +1,64 @@
-div#events.card.card-body
+div#events.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Events
+    h3.inline.mr-3 Events
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="events-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="events-edit-tab" data-toggle="tab" href="#edit-events") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="events-view-tab" data-toggle="tab" href="#view-events") View
 
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#events-container", data-hook="collapse") +
 
-  div.collapse(id="events-container", data-hook="events")
+  div.card-body
 
-    div.row
+    p.mb-0
+     | A discontinuous action triggered by the state of the system.
 
-      div.col-md-6.container-part
-        p
-         | A discontinuous action triggered by the state of the system.
+    div.collapse.tab-content(id="events-container", data-hook="events")
 
-        table.table
+      div.tab-pane.active(id="edit-events" data-hook="edit-events")
 
-          thead
+        div.row.mb-3
 
-            tr
+          div.col-md-6.container-part
+            
+            hr
 
-              th(scope="col") Edit
+            div.mx-1.row.head.align-items-baseline
 
-              th(scope="col")
-               div
-                 div.inline Name
+              div.col-md-2
 
-                 div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+                h6 <b>Edit</b>
 
-              th(scope="col")
-                div
-                  div.inline Annotation
+              div.col-md-5
 
-                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+                h6.inline <b>Name</b>
 
-              th(scope="col") Remove
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          tbody(data-hook="event-listing-container")
+              div.col-md-3
 
-      div.col-md-6.container-part(data-hook="event-details-container")
+                h6.inline <b>Annotation</b>
 
-    button.btn.btn-outline-primary.box-shadow(data-hook="add-event") Add Event
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-    button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-events") Save Events
+              div.col-md-2
+
+                h6 <b>Remove</b>
+
+            div.mt-3(data-hook="event-listing-container")
+
+          div.col-md-6.container-part(data-hook="event-details-container")
+
+        button.btn.btn-outline-primary.box-shadow(data-hook="add-event") Add Event
+
+      div.tab-pane(id="view-events" data-hook="view-events")
