@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var $ = require('jquery');
 let path = require('path');
 var _ = require('underscore');
@@ -113,31 +112,31 @@ module.exports = View.extend({
     }
     this.parent.renderParticleViewer(null);
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + queryStr;
-    xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      self.plot = body.fig;
-      self.displayDomain();
+    app.getXHR(endpoint, {
+      always: function (err, response, body) {
+        self.plot = body.fig;
+        self.displayDomain();
+      }
     });
     this.toggleDomainError();
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
   },
   renderDomainSelectView: function () {
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-list");
-    xhr({uri: endpoint, json:true}, function (err, resp, body) {
-      self.externalDomains = body.paths;
-      var domainSelectView = new SelectView({
-        label: '',
-        name: 'domains',
-        required: false,
-        idAttributes: 'cid',
-        options: body.files,
-        unselectedText: "-- Select Domain --",
-        value: self.getDomainSelectValue(body.files)
-      });
-      self.registerRenderSubview(domainSelectView, "select-domain")
+    app.getXHR(endpoint, {
+      always: function (err, response, body) {
+        self.externalDomains = body.paths;
+        var domainSelectView = new SelectView({
+          label: '',
+          name: 'domains',
+          required: false,
+          idAttributes: 'cid',
+          options: body.files,
+          unselectedText: "-- Select Domain --",
+          value: self.getDomainSelectValue(body.files)
+        });
+        app.registerRenderSubview(self, domainSelectView, "select-domain")
+      }
     });
   },
   getDomainSelectValue: function (files) {
@@ -162,7 +161,7 @@ module.exports = View.extend({
       options: options,
       unselectedText: "-- Select Location --"
     });
-    this.registerRenderSubview(this.domainLocationSelectView, "select-location")
+    app.registerRenderSubview(this, this.domainLocationSelectView, "select-location")
   },
   renderTypesViewer: function () {
     if(this.typesViewer) {
@@ -215,12 +214,6 @@ module.exports = View.extend({
     }
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   }
 });

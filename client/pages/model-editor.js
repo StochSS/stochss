@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var _ = require('underscore');
 var $ = require('jquery');
 let path = require('path');
@@ -33,7 +32,6 @@ var SpeciesViewer = require('../views/species-viewer');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var InitialConditionsViewer = require('../views/initial-conditions-viewer');
 var ParametersEditorView = require('../views/parameters-editor');
-var ParameterViewer = require('../views/parameters-viewer');
 var ParticleViewer = require('../views/view-particle');
 var ReactionsEditorView = require('../views/reactions-editor');
 var ReactionsViewer = require('../views/reactions-viewer');
@@ -42,7 +40,7 @@ var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
 var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
-var ModelSettingsView = require('../views/model-settings');
+var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 var QuickviewDomainTypes = require('../views/quickview-domain-types');
 //models
@@ -83,10 +81,14 @@ let ModelEditor = PageView.extend({
     });
     if(directory.includes('.proj')) {
       this.projectPath = path.dirname(directory)
+      if(this.projectPath.endsWith(".wkgp")) {
+        this.projectPath = path.dirname(this.projectPath)
+      }
       this.projectName = this.getFileName(this.projectPath)
     }
-    this.model.fetch({
-      success: function (model, response, options) {
+    app.getXHR(this.model.url(), {
+      success: function (err, response, body) {
+        self.model.set(body)
         if(directory.includes('.proj')) {
           self.queryByHook("project-breadcrumb-links").style.display = "block"
           self.queryByHook("model-name-header").style.display = "none"
@@ -94,7 +96,7 @@ let ModelEditor = PageView.extend({
         self.renderSubviews();
         self.model.updateValid()
       }
-    });
+    })
     this.model.reactions.on("change", function (reactions) {
       this.updateSpeciesInUse();
       this.updateParametersInUse();
@@ -205,7 +207,7 @@ let ModelEditor = PageView.extend({
       this.particleViewer = new ParticleViewer({
         model: particle
       });
-      this.registerRenderSubview(this.particleViewer, "me-particle-viewer")
+      app.registerRenderSubview(this, this.particleViewer, "me-particle-viewer")
     }else{
       $(this.queryByHook("me-select-particle")).css("display", "block")
       this.typeQuickViewer = this.renderCollection(
@@ -213,11 +215,10 @@ let ModelEditor = PageView.extend({
         QuickviewDomainTypes,
         this.queryByHook("me-types-quick-view")
       );
-      console.log(this.domainViewer.model.types.models)
     }
   },
   renderSubviews: function () {
-    this.modelSettings = new ModelSettingsView({
+    this.modelSettings = new TimespanSettingsView({
       parent: this,
       model: this.model.modelSettings,
     });
@@ -227,8 +228,8 @@ let ModelEditor = PageView.extend({
     this.renderSpeciesView();
     this.renderParametersView();
     this.renderReactionsView();
-    this.registerRenderSubview(this.modelSettings, 'model-settings-container');
-    this.registerRenderSubview(this.modelStateButtons, 'model-state-buttons-container');
+    app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
+    app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
       $(this.queryByHook("model-editor-advanced-container")).css("display", "none");
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
@@ -242,8 +243,9 @@ let ModelEditor = PageView.extend({
       if(this.model.functionDefinitions.length) {
         var sbmlComponentView = new SBMLComponentView({
           functionDefinitions: this.model.functionDefinitions,
+          viewModel: false
         });
-        this.registerRenderSubview(sbmlComponentView, 'sbml-component-container');
+        app.registerRenderSubview(this, sbmlComponentView, 'sbml-component-container');
       }
       this.renderSystemVolumeView();
     }
@@ -257,10 +259,6 @@ let ModelEditor = PageView.extend({
       e.target.remove()
     });
   },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
-  },
   renderDomainViewer: function(domainPath=null) {
     if(this.domainViewer) {
       this.domainViewer.remove()
@@ -269,14 +267,16 @@ let ModelEditor = PageView.extend({
       let self = this;
       let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath
       let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr
-      xhr({uri: endpoint, json: true}, function (err, resp, body) {
-        let domain = new Domain(body.domain);
-        self.domainViewer = new DomainViewer({
-          parent: self,
-          model: domain,
-          domainPath: domainPath
-        });
-        self.registerRenderSubview(self.domainViewer, 'domain-viewer-container');
+      app.getXHR(endpoint, {
+        always: function (err, response, body) {
+          let domain = new Domain(body.domain);
+          self.domainViewer = new DomainViewer({
+            parent: self,
+            model: domain,
+            domainPath: domainPath
+          });
+          app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
+        }
       });
     }else{
       this.domainViewer = new DomainViewer({
@@ -284,7 +284,7 @@ let ModelEditor = PageView.extend({
         model: this.model.domain,
         domainPath: domainPath
       });
-      this.registerRenderSubview(this.domainViewer, 'domain-viewer-container');
+      app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
     }
   },
   renderSpeciesView: function (mode="edit") {
@@ -296,7 +296,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.speciesEditor = new SpeciesViewer({collection: this.model.species});
     }
-    this.registerRenderSubview(this.speciesEditor, 'species-editor-container');
+    app.registerRenderSubview(this, this.speciesEditor, 'species-editor-container');
   },
   renderInitialConditions: function (mode="edit", opened=false) {
     if(this.initialConditionsEditor) {
@@ -312,18 +312,14 @@ let ModelEditor = PageView.extend({
         collection: this.model.initialConditions
       });
     }
-    this.registerRenderSubview(this.initialConditionsEditor, 'initial-conditions-editor-container');
+    app.registerRenderSubview(this, this.initialConditionsEditor, 'initial-conditions-editor-container');
     },
-  renderParametersView: function (mode="edit", opened=false) {
+  renderParametersView: function () {
     if(this.parametersEditor) {
       this.parametersEditor.remove()
     }
-    if(mode === "edit") {
-      this.parametersEditor = new ParametersEditorView({collection: this.model.parameters, opened: opened});
-    }else{
-      this.parametersEditor = new ParameterViewer({collection: this.model.parameters});
-    }
-    this.registerRenderSubview(this.parametersEditor, 'parameters-editor-container');
+    this.parametersEditor = new ParametersEditorView({collection: this.model.parameters});
+    app.registerRenderSubview(this, this.parametersEditor, 'parameters-editor-container');
   },
   renderReactionsView: function (mode="edit", opened=false) {
     if(this.reactionsEditor) {
@@ -334,7 +330,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.reactionsEditor = new ReactionsViewer({collection: this.model.reactions});
     }
-    this.registerRenderSubview(this.reactionsEditor, 'reactions-editor-container');
+    app.registerRenderSubview(this, this.reactionsEditor, 'reactions-editor-container');
   },
   renderEventsView: function (mode="edit", opened=false) {
     if(this.eventsEditor){
@@ -345,7 +341,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.eventsEditor = new EventsViewer({collection: this.model.eventsCollection});
     }
-    this.registerRenderSubview(this.eventsEditor, 'events-editor-container');
+    app.registerRenderSubview(this, this.eventsEditor, 'events-editor-container');
   },
   renderRulesView: function (mode="edit", opened=false) {
     if(this.rulesEditor){
@@ -356,7 +352,7 @@ let ModelEditor = PageView.extend({
     }else{
       this.rulesEditor = new RulesViewer({collection: this.model.rules})
     }
-    this.registerRenderSubview(this.rulesEditor, 'rules-editor-container');
+    app.registerRenderSubview(this, this.rulesEditor, 'rules-editor-container');
   },
   renderSystemVolumeView: function () {
     if(this.systemVolumeView) {
@@ -372,19 +368,13 @@ let ModelEditor = PageView.extend({
       valueType: 'number',
       value: this.model.volume,
     });
-    this.registerRenderSubview(this.systemVolumeView, 'volume')
+    app.registerRenderSubview(this, this.systemVolumeView, 'volume')
     if(this.model.defaultMode === "continuous") {
       $(this.queryByHook("system-volume-container")).collapse("hide")
     }
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   },
   togglePreviewPlot: function (e) {
     let action = e.target.innerText

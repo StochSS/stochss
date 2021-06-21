@@ -17,7 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //var config = require('./config.js')(process.env.NODE_ENV);
+let xhr = require('xhr');
+let $ = require('jquery');
 let path = require('path');
+//support files
+let modals = require('./modals');
 
 let routePrefix = 'stochss';
 let apiPrefix =  path.join(routePrefix, 'api');
@@ -77,14 +81,128 @@ var BrowserDetect = {
   ]
 };
 
+let changeCollapseButtonText = (view, e) => {
+  let source = e.target.dataset.hook;
+  let isBtn = $(view.queryByHook(source)).attr("class").includes("btn");
+  let collapseContainer = $(view.queryByHook(source).dataset.target);
+  if(isBtn && !collapseContainer.attr("class").includes("collapsing")) {
+    let collapseBtn = $(view.queryByHook(source));
+    let text = collapseBtn.text();
+    text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
+  }
+};
+
+let registerRenderSubview = (parent, view, hook) => {
+  parent.registerSubview(view);
+  parent.renderSubview(view, parent.queryByHook(hook));
+};
+
+let getXHR = (endpoint, {
+  always = function (err, response, body) {}, success = function (err, response, body) {},
+  error = function (err, response, body) {}}={}) => {
+  xhr({uri: endpoint, json: true}, function (err, response, body) {
+    if(response.statusCode < 400) {
+      success(err, response, body);
+    }else if(response.statusCode < 500) {
+      error(err, response, body);
+    }else{
+      console.log("Critical Error Detected");
+    }
+    always(err, response, body);
+  });
+};
+
+let postXHR = (endpoint, data, {
+  always = function (err, response, body) {}, success = function (err, response, body) {},
+  error = function (err, response, body) {}}={}, isJSON) => {
+  xhr({uri: endpoint, json: isJSON !== undefined ? isJSON : true, method: "post", body: data}, function (err, response, body) {
+    if(response.statusCode < 400) {
+      success(err, response, body);
+    }else if(response.statusCode < 500) {
+      error(err, response, body);
+    }else{
+      console.log("Critical Error Detected");
+    }
+    always(err, response, body);
+  });
+};
+
 let getBrowser = () => {
   BrowserDetect.init();
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
+}
+
+let validateName = (input, rename = false) => {
+  var error = ""
+  if(input.endsWith('/')) {
+    error = 'forward'
+  }
+  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+  if(rename) {
+    invalidChars += "/"
+  }
+  for(var i = 0; i < input.length; i++) {
+    if(invalidChars.includes(input.charAt(i))) {
+      error = error === "" || error === "special" ? "special" : "both"
+    }
+  }
+  return error
+}
+
+let newWorkflow = (parent, mdlPath, isSpatial, type) => {
+  if(document.querySelector('#newWorkflowModal')) {
+    document.querySelector('#newWorkflowModal').remove()
+  }
+  let self = parent;
+  let ext = isSpatial ? /.smdl/g : /.mdl/g
+  let name = mdlPath.split('/').pop().replace(ext, "")
+  let modal = $(modals.newWorkflowHtml(name, type)).modal();
+  let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
+  let input = document.querySelector('#newWorkflowModal #workflowNameInput');
+  okBtn.disabled = false;
+  input.addEventListener("keyup", function (event) {
+    if(event.keyCode === 13){
+      event.preventDefault();
+      okBtn.click();
+    }
+  });
+  input.addEventListener("input", function (e) {
+    let endErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputEndCharError')
+    let charErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputSpecCharError')
+    let error = validateName(input.value)
+    okBtn.disabled = error !== "" || input.value.trim() === ""
+    charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+    endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+  });
+  okBtn.addEventListener('click', function (e) {
+    modal.modal("hide");
+    let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
+    let wkflFile = input.value.trim() + typeCode + ".wkfl";
+    if(mdlPath.includes(".proj") && !mdlPath.includes(".wkgp")){
+      var wkflPath = path.join(path.dirname(mdlPath), "WorkflowGroup1.wkgp", wkflFile);
+    }else{
+      var wkflPath = path.join(path.dirname(mdlPath), wkflFile);
+    }
+    let queryString = "?path=" + wkflPath + "&model=" + mdlPath + "&type=" + type;
+    let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
+    getXHR(endpoint, {
+      success: function (err, response, body) {
+        window.location.href = path.join(getBasePath(), "stochss/workflow/edit") + "?path=" + body.path;
+      }
+    });
+  });
 }
 
 module.exports = {
     routePrefix: routePrefix,
     getApiPath: getApiPath,
     getBasePath: getBasePath,
-    getBrowser: getBrowser
+    getBrowser: getBrowser,
+    registerRenderSubview: registerRenderSubview,
+    changeCollapseButtonText: changeCollapseButtonText,
+    newWorkflow: newWorkflow,
+    getXHR: getXHR,
+    postXHR: postXHR
 };
+
+

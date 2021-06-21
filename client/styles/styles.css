@@ -1,3 +1,21 @@
+/*
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2020 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 body {
   min-width: 650px
 }
@@ -19,6 +37,30 @@ img.quickstart {
   padding-left: 10px
 }
 
+.side-navbar {
+  z-index: 0;
+}
+
+.user-logs {
+  white-space: nowrap;
+  max-height: 250px;
+  padding: 5px;
+  margin-top: 10px;
+  width: auto;
+}
+
+#user-logs {
+  width: auto;
+  font-size: 0.875rem;
+  background-color: #000033;
+  color: white;
+  bottom: 0;
+}
+
+#user-logs:not(.show) {
+  height: 0px;
+}
+
 [role="main"] {
   padding-top: 20px;
 }
@@ -32,10 +74,22 @@ img.quickstart {
   }
   .sidebar-sticky {
     position: fixed;
+    flex: 0 0 11.5%;
+    max-width: 11.5%;
   }
   .nav-flex-column {
     -ms-flex-direction: column !important;
     flex-direction: column !important;
+  }
+  #user-logs:not(.show) {
+    height: 100%;
+    font-size: 0.5rem;
+  }
+  .expand-logs {
+    position: fixed;
+    left: auto;
+    right: auto;
+    width: 60%;
   }
 }
 
@@ -225,7 +279,8 @@ input[type="file"]::-ms-browse {
 }
 
 .body {
-  min-width: 500px !important; 
+  min-width: 500px !important;
+  z-index: 0;
 }
 .plot-preview {
   margin: 10px;
@@ -634,4 +689,11 @@ span.checkbox {
 .particle-view {
   word-break: break-word !important;
   overflow-wrap: break-word !important;
+}
+
+.horizontal-scroll {
+  display: block;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
 }

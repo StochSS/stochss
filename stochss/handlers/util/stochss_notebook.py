@@ -39,31 +39,38 @@ class StochSSNotebook(StochSSBase):
     PARAMETER_SWEEP_2D = 4
     MODEL_EXPLORATION = 5
     MODEL_INFERENCE = 6
-    SOLVER_MAP = {"SSACSolver":"SSA", "NumPySSASolver":"SSA", "VariableSSACSolver":"V-SSA",
+    SOLVER_MAP = {"SSACSolver":"SSA", "NumPySSASolver":"SSA", "ODESolver":"ODE", "Solver":"SSA",
                   "TauLeapingSolver":"Tau-Leaping", "TauHybridSolver":"Hybrid-Tau-Leaping",
-                  "ODESolver":"ODE", "Solver":"SSA"}
+                  "ODECSolver":"ODE", "TauLeapingCSolver":"Tau-Leaping"}
 
     def __init__(self, path, new=False, models=None, settings=None):
-        '''
-        Intitialize a notebook object and if its new create it on the users file system
+        '''Intitialize a notebook object and if its new create it on the users file system
 
         Attributes
         ----------
         path : str
-            Path to the notebook
-        '''
+            Path to the notebook'''
         super().__init__(path=path)
         if new:
             self.is_ssa_c = check_cpp_support()
             self.nb_type = 0
             self.s_model = models["s_model"]
             self.model = models["model"]
-            self.settings = self.get_settings_template() if settings is None else settings
+            if settings is None:
+                self.settings = self.get_settings_template()
+            else:
+                self.settings = settings
+                if "timespanSettings" in settings.keys():
+                    keys = settings['timespanSettings'].keys()
+                    if "endSim" in keys and "timeStep" in keys:
+                        end = settings['timespanSettings']['endSim']
+                        step_size = settings['timespanSettings']['timeStep']
+                        self.s_model['modelSettings']['endSim'] = end
+                        self.s_model['modelSettings']['timeStep'] = step_size
             self.make_parent_dirs()
             n_path, changed = self.get_unique_path(name=self.get_file())
             if changed:
                 self.path = n_path.replace(self.user_dir + '/', "")
-
 
     def __create_common_cells(self, interactive_backend=False):
         cells = [self.__create_import_cell(interactive_backend=interactive_backend),
@@ -78,10 +85,15 @@ class StochSSNotebook(StochSSBase):
         pad = "    "
         config = ["def configure_simulation():"]
         # Add solver instantiation line if the c solver are available
-        instance_solvers = ["SSACSolver", "VariableSSACSolver"]
+        instance_solvers = ["SSACSolver", "ODECSolver", "TauLeapingCSolver"]
         is_automatic = self.settings['simulationSettings']['isAutomatic']
-        if self.is_ssa_c and self.settings['solver'] in instance_solvers:
-            commented = is_automatic and self.settings['solver'] != "VariableSSACSolver"
+        if self.settings['solver'] in instance_solvers:
+            if is_automatic and self.nb_type <= self.ENSEMBLE_SIMULATION:
+                commented = True
+            elif is_automatic and self.settings['solver'] not in instance_solvers:
+                commented = True
+            else:
+                commented = False
             start = f"{pad}# " if commented else pad
             config.append(f"{start}solver = {self.settings['solver']}(model=model)")
         config.append(pad + "kwargs = {")
@@ -91,7 +103,6 @@ class StochSSNotebook(StochSSBase):
             settings = self.__get_gillespy2_run_settings()
         settings_lists = {"ODE":['"solver"', '"integrator_options"'],
                           "SSA":['"solver"', '"seed"', '"number_of_trajectories"'],
-                          "V-SSA":['"solver"', '"seed"', '"number_of_trajectories"'],
                           "Tau-Leaping":['"solver"', '"seed"', '"number_of_trajectories"',
                                          '"tau_tol"'],
                           "Hybrid-Tau-Leaping":['"solver"', '"seed"', '"number_of_trajectories"',
@@ -100,7 +111,8 @@ class StochSSNotebook(StochSSBase):
         is_spatial = self.s_model['is_spatial']
         for setting in settings:
             key = setting.split(':')[0]
-            if self.settings['solver'] == "VariableSSACSolver" and key == '"solver"':
+            if self.nb_type > self.ENSEMBLE_SIMULATION and key == '"solver"' and \
+                                                self.settings['solver'] in instance_solvers:
                 start = pad*2
             elif key not in settings_lists[algorithm]:
                 start = f"{pad*2}# "
@@ -125,10 +137,10 @@ class StochSSNotebook(StochSSBase):
                                                                 pad=pad)
                     a_names = self.__create_event_assignment_strings(assignments=assignments,
                                                                      event=event, pad=pad)
-                    delay = event['delay'] if event['delay'] else None
+                    delay = f"{event['delay']}" if event['delay'] else None
                     ev_str = f'{pad}self.add_event(Event(name="{event["name"]}", '
                     ev_str += f'trigger={t_name}, assignments=[{a_names}], '
-                    ev_str += f'delay="{delay}", priority="{event["priority"]}", '
+                    ev_str += f'delay={delay}, priority="{event["priority"]}", '
                     ev_str += f'use_values_from_trigger_time={event["useValuesFromTriggerTime"]}))'
                     events.append(ev_str)
                 model.extend(triggers)
@@ -137,7 +149,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Events are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     @classmethod
     def __create_event_assignment_strings(cls, assignments, event, pad):
@@ -171,7 +183,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Function definitions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_import_cell(self, interactive_backend=False):
         try:
@@ -193,19 +205,18 @@ class StochSSNotebook(StochSSBase):
             imports.append("from gillespy2 import Model, Species, Parameter, Reaction, Event, \\")
             imports.append("                      EventTrigger, EventAssignment, RateRule, \\")
             imports.append("                      AssignmentRule, FunctionDefinition")
-            ssa = "SSACSolver" if self.is_ssa_c else "NumPySSASolver"
-            algorithm_map = {'SSA': f'from gillespy2 import {ssa}',
-                             'V-SSA': 'from gillespy2 import VariableSSACSolver',
-                             'Tau-Leaping': 'from gillespy2 import TauLeapingSolver',
-                             'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridSolver',
-                             'ODE': 'from gillespy2 import ODESolver'}
+            ssa_import = f'from gillespy2 import {self.model.get_best_solver_algo("SSA").name}'
+            tau_import = 'from gillespy2 import '
+            tau_import += f'{self.model.get_best_solver_algo("Tau-Leaping").name}'
+            ode_import = f'from gillespy2 import {self.model.get_best_solver_algo("ODE").name}'
+            algorithm_map = {'SSA': ssa_import, 'Tau-Leaping': tau_import, 'ODE': ode_import,
+                             'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridSolver'}
             algorithm = self.settings['simulationSettings']['algorithm']
-            if self.nb_type > self.ENSEMBLE_SIMULATION and algorithm == "SSA":
-                algorithm = "V-SSA"
             for name, alg_import in algorithm_map.items():
                 if not is_automatic and name == algorithm:
                     imports.append(alg_import)
-                elif name == algorithm and algorithm == "V-SSA":
+                elif name == algorithm and self.nb_type > self.ENSEMBLE_SIMULATION and \
+                                                            name == "SSA":
                     imports.append(alg_import)
                 else:
                     imports.append(f"# {alg_import}")
@@ -213,7 +224,7 @@ class StochSSNotebook(StochSSBase):
         except KeyError as err:
             message = "Workflow settings are not properly formatted or "
             message += f"are referenced incorrectly for notebooks: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_initial_condition_strings(self, model, pad):
         if self.s_model['initialConditions']:
@@ -234,12 +245,13 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Initial conditions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_mesh_string(self, model, pad):
         mesh = ["", f"{pad}# Domain",
                 f"{pad}mesh = Mesh.read_stochss_domain('{self.s_model['path']}')",
-                f"{pad}self.add_mesh(mesh)"]
+                f"{pad}self.add_mesh(mesh)",
+                "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
         model.extend(mesh)
 
     def __create_model_cell(self):
@@ -253,7 +265,6 @@ class StochSSNotebook(StochSSBase):
             self.__create_initial_condition_strings(model=model, pad=pad)
             self.__create_parameter_strings(model=model, pad=pad)
             self.__create_reaction_strings(model=model, pad=pad)
-            self.__create_tspan_string(model=model, pad=pad)
         else:
             model = [f"class {self.__get_class_name()}(Model):",
                      "    def __init__(self, parameter_values=None):",
@@ -265,7 +276,7 @@ class StochSSNotebook(StochSSBase):
             self.__create_event_strings(model=model, pad=pad)
             self.__create_rules_strings(model=model, pad=pad)
             self.__create_function_definition_strings(model=model, pad=pad)
-            self.__create_tspan_string(model=model, pad=pad)
+        self.__create_tspan_string(model=model, pad=pad)
         return nbf.new_code_cell("\n".join(model))
 
     def __create_parameter_strings(self, model, pad):
@@ -289,7 +300,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Parameters are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_ps_post_process_cells(self):
         pad = "    "
@@ -337,7 +348,7 @@ class StochSSNotebook(StochSSBase):
 
     def __create_ps1d_config_cell(self):
         pad = "    "
-        if self.settings['solver'] == "VariableSSACSolver":
+        if self.settings['solver'] == "SSACSolver":
             model_str = f"{pad}model = {self.__get_class_name()}()"
         else:
             model_str = f"{pad}ps_class = {self.__get_class_name()}"
@@ -346,21 +357,23 @@ class StochSSNotebook(StochSSBase):
         settings = self.settings['parameterSweepSettings']
         eval_str = "float(eval(model.get_parameter(p1).expression))"
         number_of_trajectories = self.settings['simulationSettings']['realizations']
-        if not settings['parameterOne']:
+        if not settings['parameters']:
             param = self.s_model['parameters'][0]
             p_min = f"0.5 * {eval_str}"
             p_max = f"1.5 * {eval_str}"
+            p_steps = "11"
             spec_of_interest = self.s_model['species'][0]
         else:
-            param = settings['parameterOne']
-            p_min = settings['p1Min']
-            p_max = settings['p1Max']
+            param = settings['parameters'][0]
+            p_min = param['min']
+            p_max = param['max']
+            p_steps = param['steps']
             spec_of_interest = settings['speciesOfInterest']
         config_cell.extend([f"{pad}# ENTER PARAMETER HERE", f"{pad}p1 = '{param['name']}'",
                             f"{pad}# ENTER START VALUE FOR P1 RANGE HERE", f"{pad}p1_min = {p_min}",
                             f"{pad}# ENTER END VALUE FOR P1 RANGE HERE", f"{pad}p1_max = {p_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P1 HERE",
-                            f"{pad}p1_steps = {settings['p1Steps']}",
+                            f"{pad}p1_steps = {p_steps}",
                             f"{pad}p1_range = np.linspace(p1_min, p1_max, p1_steps)",
                             f"{pad}# ENTER VARIABLE OF INTEREST HERE",
                             f"{pad}variable_of_interest = '{spec_of_interest['name']}'",
@@ -401,7 +414,7 @@ class StochSSNotebook(StochSSBase):
                     f"{pad*2}data = np.zeros((len(c.p1_range), 2)) # mean and std",
                     f"{pad*2}for i, v1 in enumerate(c.p1_range):"]
         res_str = f"{pad*4}tmp_results = "
-        if self.settings['solver'] == "VariableSSACSolver":
+        if self.settings['solver'] == "SSACSolver":
             res_str += "model.run(**kwargs, variables={c.p1:v1})"
         else:
             res_str += "tmp_model.run(**kwargs)"
@@ -444,7 +457,7 @@ class StochSSNotebook(StochSSBase):
 
     def __create_ps2d_config_cell(self):
         pad = "    "
-        if self.settings['solver'] == "VariableSSACSolver":
+        if self.settings['solver'] == "SSACSolver":
             model_str = f"{pad}model = {self.__get_class_name()}()"
         else:
             model_str = f"{pad}ps_class = {self.__get_class_name()}"
@@ -454,7 +467,7 @@ class StochSSNotebook(StochSSBase):
         p1_eval_str = "float(eval(model.get_parameter(p1).expression))"
         p2_eval_str = "float(eval(model.get_parameter(p2).expression))"
         number_of_trajectories = self.settings['simulationSettings']['realizations']
-        if not settings['parameterOne']:
+        if not settings['parameters']:
             param1 = self.s_model['parameters'][0]
             p1_min = f"0.5 * {p1_eval_str}"
             p1_max = f"1.5 * {p1_eval_str}"
@@ -463,12 +476,12 @@ class StochSSNotebook(StochSSBase):
             p2_max = f"1.5 * {p2_eval_str}"
             spec_of_interest = self.s_model['species'][0]
         else:
-            param1 = settings['parameterOne']
-            p1_min = settings['p1Min']
-            p1_max = settings['p1Max']
-            param2 = settings['parameterTwo']
-            p2_min = settings['p2Min']
-            p2_max = settings['p2Max']
+            param1 = settings['parameters'][0]
+            p1_min = param1['min']
+            p1_max = param1['max']
+            param2 = settings['parameters'][1]
+            p2_min = param2['min']
+            p2_max = param2['max']
             spec_of_interest = settings['speciesOfInterest']
         config_cell.extend([f"{pad}# ENTER PARAMETER 1 HERE", f"{pad}p1 = '{param1['name']}'",
                             f"{pad}# ENTER PARAMETER 2 HERE", f"{pad}p2 = '{param2['name']}'",
@@ -476,13 +489,13 @@ class StochSSNotebook(StochSSBase):
                             f"{pad}p1_min = {p1_min}",
                             f"{pad}# ENTER END VALUE FOR P1 RANGE HERE", f"{pad}p1_max = {p1_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P1 HERE",
-                            f"{pad}p1_steps = {settings['p1Steps']}",
+                            f"{pad}p1_steps = {param1['steps'] if settings['parameters'] else 11}",
                             f"{pad}p1_range = np.linspace(p1_min, p1_max, p1_steps)",
                             f"{pad}# ENTER START VALUE FOR P2 RANGE HERE",
                             f"{pad}p2_min = {p2_min}",
                             f"{pad}# ENTER END VALUE FOR P2 RANGE HERE", f"{pad}p2_max = {p2_max}",
                             f"{pad}# ENTER THE NUMBER OF STEPS FOR P2 HERE",
-                            f"{pad}p2_steps = {settings['p2Steps']}",
+                            f"{pad}p2_steps = {param2['steps'] if settings['parameters'] else 11}",
                             f"{pad}p2_range = np.linspace(p2_min, p2_max, p2_steps)",
                             f"{pad}# ENTER VARIABLE OF INTEREST HERE",
                             f"{pad}variable_of_interest = '{spec_of_interest['name']}'",
@@ -521,7 +534,7 @@ class StochSSNotebook(StochSSBase):
                     f"{pad*2}for i, v1 in enumerate(c.p1_range):",
                     f"{pad*3}for j, v2 in enumerate(c.p2_range):"]
         res_str = f"{pad*5}tmp_results = "
-        if self.settings['solver'] == "VariableSSACSolver":
+        if self.settings['solver'] == "SSACSolver":
             res_str += "model.run(**kwargs, variables={c.p1:v1, c.p2:v2})"
         else:
             res_str += "tmp_model.run(**kwargs)"
@@ -569,7 +582,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Reactions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_rules_strings(self, model, pad):
         if self.s_model['rules']:
@@ -593,7 +606,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Rules are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     @classmethod
     def __create_sme_expres_cells(cls):
@@ -684,7 +697,7 @@ class StochSSNotebook(StochSSBase):
         pad = "    "
         comment = f"{pad}# params - array, need to have the same order as model.listOfParameters"
         loop = f"{pad}for e, pname in enumerate(model.listOfParameters.keys()):"
-        if self.settings['solver'] == "VariableSSACSolver":
+        if self.settings['solver'] == "SSACSolver":
             comment += "\n"+ pad +"variables = {}"
             func_def = "def get_variables(params, model):"
             body = f"{pad*2}variables[pname] = params[e]"
@@ -737,7 +750,7 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Species are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc())
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __create_stoich_spec_string(self, stoich_species):
         species = {}
@@ -758,7 +771,7 @@ class StochSSNotebook(StochSSBase):
         end = self.s_model['modelSettings']['endSim']
         step = self.s_model['modelSettings']['timeStep']
         tspan = ["", f"{pad}# Timespan"]
-        ts_str = f'{pad}self.timespan(np.arange(0, {end}, {step})'
+        ts_str = f'{pad}self.timespan(np.arange(0, {end + step}, {step})'
         if self.s_model['is_spatial']:
             ts_str += f", timestep_size={step})"
         else:
@@ -787,10 +800,11 @@ class StochSSNotebook(StochSSBase):
             settings['realizations'] = 1
         # Map algorithm for GillesPy2
         ssa_solver = "solver" if self.is_ssa_c else "NumPySSASolver"
+        ode_solver = "solver" if self.is_ssa_c else "ODESolver"
+        tau_solver = "solver" if self.is_ssa_c else "TauLeapingSolver"
         solver_map = {"SSA":f'"solver":{ssa_solver}',
-                      "V-SSA":'"solver":solver',
-                      "ODE":'"solver":ODESolver',
-                      "Tau-Leaping":'"solver":TauLeapingSolver',
+                      "ODE":f'"solver":{ode_solver}',
+                      "Tau-Leaping":f'"solver":{tau_solver}',
                       "Hybrid-Tau-Leaping":'"solver":TauHybridSolver'}
         # Map algorithm settings for GillesPy2. GillesPy2 requires snake case, remap camelCase
         settings_map = {"number_of_trajectories":settings['realizations'],
@@ -812,18 +826,14 @@ class StochSSNotebook(StochSSBase):
         return [f'"{key}":{val}' for key, val in settings_map.items()]
 
     def __get_gillespy2_solver_name(self):
-        precompile = self.nb_type > self.ENSEMBLE_SIMULATION
         if self.settings['simulationSettings']['isAutomatic']:
-            solver = self.model.get_best_solver(precompile=precompile).name
+            solver = self.model.get_best_solver().name
             self.settings['simulationSettings']['algorithm'] = self.SOLVER_MAP[solver]
             return solver
-        algorithm_map = {'SSA': "SSACSolver" if self.is_ssa_c else "NumPySSASolver",
-                         'V-SSA': 'VariableSSACSolver',
-                         'Tau-Leaping': 'TauLeapingSolver',
+        algorithm_map = {'SSA': self.model.get_best_solver_algo("SSA").name,
+                         'Tau-Leaping': self.model.get_best_solver_algo("Tau-Leaping").name,
                          'Hybrid-Tau-Leaping': 'TauHybridSolver',
-                         'ODE': 'ODESolver'}
-        if precompile and self.settings['simulationSettings']['algorithm'] == "SSA":
-            return algorithm_map["V-SSA"]
+                         'ODE': self.model.get_best_solver_algo("ODE").name}
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
 
     def create_1dps_notebook(self):
@@ -966,16 +976,13 @@ class StochSSNotebook(StochSSBase):
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
     def load(self):
-        '''Read the notebook file and return as a dict
-
-        Attributes
-        ----------'''
+        '''Read the notebook file and return as a dict'''
         try:
             with open(self.get_path(full=True), "r") as notebook_file:
                 return json.load(notebook_file)
         except FileNotFoundError as err:
             message = f"Could not find the notebook file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
     def write_notebook_file(self, cells):
         '''Write the new notebook file to disk

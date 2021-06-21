@@ -16,19 +16,57 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let path = require('path');
+//Support Files
+let app = require('../app.js');
 //collections
+let Jobs = require('./jobs');
 //models
-var State = require('ampersand-state');
+let Job = require('./job');
+let Model = require('ampersand-model');
+let Settings = require('./settings');
 
-module.exports = State.extend({
+module.exports = Model.extend({
+  url: function () {
+    return path.join(app.getApiPath(), "workflow/load-workflow") + "?path=" + this.directory;
+  },
   props: {
-    path: 'string',
-    annotation: 'string',
-    outputs: 'object',
-    type: 'string'
+    model: 'string'
+  },
+  children: {
+    settings: Settings,
+    activeJob: Job
+  },
+  collections: {
+    jobs: Jobs
   },
   session: {
+    annotation: 'string',
+    directory: 'string',
     name: 'string',
-    status: 'string'
+    status: 'string',
+    type: 'string',
+    newFormat: 'boolean'
+  },
+  derived: {
+    elementID: {
+      deps: ["collection"],
+      fn: function () {
+        if(this.collection) {
+          return this.collection.parent.elementID + "W" + (this.collection.indexOf(this) + 1)
+        }
+        return "W-"
+      }
+    },
+    open: {
+      deps: ["directory", "type"],
+      fn: function () {
+        if(this.type === "Notebook") {
+          return path.join(app.getBasePath(), "notebooks", this.directory)
+        }
+        let queryStr = "?path=" + this.directory + "&type=none"
+        return path.join(app.getBasePath(), "stochss/workflow/edit") + queryStr
+      }
+    }
   }
 });

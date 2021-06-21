@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var $ = require('jquery');
 //support files
+let app = require('../app');
 var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
@@ -35,6 +36,7 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.sbmlComponentsEditor
     this.functionDefinitions = attrs.functionDefinitions;
+    this.viewMode = attrs.viewMode;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -57,12 +59,6 @@ module.exports = View.extend({
     });
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   },
 });

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var $ = require('jquery');
 //support files
+let app = require('../app');
 var modals = require('../modals');
 var Tooltips = require('../tooltips');
 //views
@@ -136,16 +137,18 @@ module.exports = View.extend({
   },
   setAllSpeciesModes: function (defaultMode, cb) {
     this.collection.parent.defaultMode = defaultMode;
+    this.collection.forEach(function (specie) { 
+      specie.mode = defaultMode
+      if(cb) {
+        cb(specie)
+      }
+    });
     if(!this.collection.parent.is_spatial) {
       if(defaultMode === "continuous") {
         $(this.parent.queryByHook("system-volume-container")).collapse("hide")
       }else{
         $(this.parent.queryByHook("system-volume-container")).collapse("show")
       }
-      this.collection.map(function (specie) { 
-        specie.mode = defaultMode
-        cb(specie)
-      });
       if(defaultMode === "dynamic"){
         this.renderSpeciesAdvancedView()
         $(this.queryByHook('advanced-species')).collapse('show');
@@ -225,12 +228,6 @@ module.exports = View.extend({
     this.parent.renderSpeciesView(mode="view");
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   }
 });

@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
-let xhr = require('xhr');
 let path = require('path');
 //support files
 let app = require('../app');
@@ -42,15 +41,9 @@ let usersHomePage = PageView.extend({
     PageView.prototype.initialize.apply(this, arguments)
     let urlParams = new URLSearchParams(window.location.search)
     if(urlParams.has("open")){
-      let uploadPath = urlParams.get("open")
-      let endpoint = path.join(app.getApiPath(), 'file/upload-from-link')+"?path="+uploadPath
-      let self = this
-      xhr({uri:endpoint, json:true}, function (err, response, body) {
-        if(response.statusCode < 400) {
-          self.responsePath = body.responsePath
-          self.getUploadResponse()
-        }
-      })
+      let queryString = "?path=" + urlParams.get("open") + "&action=open";
+      let endpoint = path.join(app.getBasePath(), 'stochss/loading-page') + queryString;
+      window.location.href = endpoint;
     }
   },
   render: function (attrs, options) {
@@ -58,27 +51,6 @@ let usersHomePage = PageView.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
-  },
-  getUploadResponse: function () {
-    let self = this
-    setTimeout(function () {
-      let endpoint = path.join(app.getApiPath(), 'file/upload-from-link')+"?path="+self.responsePath+"&cmd=read"
-      xhr({uri: endpoint, json: true}, function (err, response, body) {
-        if(response.statusCode >= 400 || Object.keys(body).includes("reason")) {
-          let model = $(modals.projectExportErrorHtml(body.reason, body.message)).modal()
-        }else if(body.done) {
-          if(body.file_path.endsWith(".proj")){
-            window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+body.file_path
-          }else if(body.file_path.endsWith(".mdl")){
-            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+body.file_path
-          }else if(body.file_path.endsWith(".ipynb")){
-            window.open(path.join(app.getBasePath(), "notebooks", body.file_path))
-          }
-        }else{
-          self.getUploadResponse()
-        }
-      })
-    }, 1000)
   },
   validateName(input) {
     var error = ""
@@ -122,16 +94,18 @@ let usersHomePage = PageView.extend({
         let modelPath = input.value + '.mdl'
         let queryString = "?path="+modelPath
         let existEP = path.join(app.getApiPath(), "model/exists")+queryString
-        xhr({uri: existEP, json: true}, function (err, response, body) {
-          if(body.exists) {
-            let title = "Model Already Exists"
-            let message = "A model already exists with that name"
-            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal()
-          }else{
-            let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString
-            self.navToPage(endpoint)
+        app.getXHR(existEP, {
+          always: function (err, response, body) {
+            if(body.exists) {
+              let title = "Model Already Exists";
+              let message = "A model already exists with that name";
+              let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+            }else{
+              let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+queryString;
+              self.navToPage(endpoint);
+            }
           }
-        })
+        });
       }
     });
   },
@@ -164,13 +138,14 @@ let usersHomePage = PageView.extend({
         let projectPath = input.value + ".proj"
         let queryString = "?path="+projectPath
         let endpoint = path.join(app.getApiPath(), "project/new-project")+queryString
-        xhr({uri:endpoint, json:true}, function (err, response, body) {
-          if(response.statusCode < 400) {
-            let projectQS = "?path="+body.path
-            let projectEP = path.join(app.getBasePath(), "stochss/project/manager")+projectQS
-            self.navToPage(projectEP)
-          }else{
-            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal()
+        app.getXHR(endpoint, {
+          success: function (err, response, body) {
+            let projectQS = "?path="+body.path;
+            let projectEP = path.join(app.getBasePath(), "stochss/project/manager")+projectQS;
+            self.navToPage(projectEP);
+          },
+          error: function (err, response, body) {
+            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal();
           }
         });
       }

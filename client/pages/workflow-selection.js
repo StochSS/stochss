@@ -16,18 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
-var xhr = require('xhr');
-var path = require('path');
+let $ = require('jquery');
+let path = require('path');
 //support files
 var app = require('../app');
-var Tooltips = require('../tooltips');
 //models
-var Model = require('../models/model');
+let Model = require('../models/model');
 //views
-var PageView = require('./base');
+let PageView = require('./base');
 //templates
-var template = require('../templates/pages/workflowSelection.pug');
+let template = require('../templates/pages/workflowSelection.pug');
 
 import initPage from './page.js';
 
@@ -39,128 +37,76 @@ let workflowSelection = PageView.extend({
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=twod-parameter-sweep]" : "notebookWorkflow",
     "click [data-hook=sciope-model-exploration]" : "notebookWorkflow",
-    "click [data-hook=model-inference]" : "notebookWorkflow",
-    "click [data-hook=stochss-es]" : "handleEnsembleSimulationClick",
-    "click [data-hook=stochss-ps]" : "handleParameterSweepClick"
+    "click [data-hook=model-inference]" : "notebookWorkflow"
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
-    var self = this
-    let urlParams = new URLSearchParams(window.location.search)
+    let self = this;
+    let urlParams = new URLSearchParams(window.location.search);
     this.modelDir = urlParams.get('path');
     if(urlParams.has('parentPath')){
-      this.parentPath = urlParams.get('parentPath')
+      this.parentPath = urlParams.get('parentPath');
     }else{
-      this.parentPath = path.dirname(this.modelDir)
+      this.parentPath = path.dirname(this.modelDir);
     }
     if(this.modelDir.includes(".proj")) {
-      this.projectPath = path.dirname(this.modelDir)
-      this.projectName = this.projectPath.split('/').pop().split('.')[0]
-      this.workflowGroupName = this.parentPath.split('/').pop().split('.')[0]
+      this.projectPath = path.dirname(this.modelDir);
+      if(this.modelDir.includes(".wkgp")) {
+        this.projectPath = path.dirname(this.projectPath);
+      }
+      this.projectName = this.projectPath.split('/').pop().split('.proj')[0];
+      this.workflowGroupName = this.parentPath.split('/').pop().split('.wkgp')[0];
     }
-    this.tooltips = Tooltips.workflowSelection
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
-    });
-    this.modelFile = this.getFileName(this.modelDir)
-    var isSpatial = this.modelDir.endsWith('.smdl');
     this.model = new Model({
-      name: this.modelFile,
       directory: this.modelDir,
-      is_spatial: isSpatial,
       isPreview: false,
       for: "wkfl",
     });
-    this.model.fetch({
-      success: function (model, response, options) {
+    app.getXHR(this.model.url(), {
+      success: function (err, response, body) {
+        self.model.set(body)
+        $(self.queryByHook("wkfl-selection-header")).text("Workflow Selection for " + self.model.name);
         if(self.modelDir.includes(".proj")) {
-          self.queryByHook("workflow-selection-breadcrumb-links").style.display = "block"
+          self.queryByHook("workflow-selection-breadcrumb-links").style.display = "block";
         }
         self.validateWorkflows()
       }
     });
   },
-  getFileName: function (file) {
-    if(file.endsWith('/')) {
-      file.slice(0, -1)
-    }
-    if(file.includes('/')) {
-      file = file.split('/').pop()
-    }
-    if(!file.includes('.')) {
-      return file
-    }
-    return file.split('.').slice(0, -1).join('.')
+  notebookWorkflow: function (e) {
+    let type = e.target.dataset.type;
+    let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath
+    let endpoint = path.join(app.getApiPath(), "workflow/notebook") + queryString
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        let notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
+        window.open(notebookPath, "_blank")
+        window.history.back();
+      }
+    })
   },
   validateWorkflows: function () {
-    let modelInvalid = this.checkForErrors()
-    if(this.model.species.length < 1 || (this.model.reactions.length < 1 && this.model.eventsCollection.length < 1 && this.model.rules.length < 1) || modelInvalid){
-      $(this.queryByHook('stochss-es')).prop('disabled', true)
-      $(this.queryByHook('stochss-ps')).prop('disabled', true)
-      $(this.queryByHook('ensemble-simulation')).prop('disabled', true)
-      $(this.queryByHook('spatial-simulation')).prop('disabled', true)
-      $(this.queryByHook('model-inference')).prop('disabled', true)
-      $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
-      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
-      $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
-      if(modelInvalid) {
-        let endpoint = path.join(app.getBasePath(), "stochss/models/edit")+'?path='+this.model.directory
-        $(this.queryByHook('invalid-model-message')).html('Errors were detected in you model <a href="'+endpoint+'">click here to fix your model<a/>')
-      }
-      $(this.queryByHook('invalid-model-message')).css('display', 'block')
-    }else if(this.model.is_spatial){
-      $(this.queryByHook('stochss-es')).prop('disabled', true)
-      $(this.queryByHook('stochss-ps')).prop('disabled', true)
-      $(this.queryByHook('ensemble-simulation')).prop('disabled', true)
-      $(this.queryByHook('model-inference')).prop('disabled', true)
-      $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
-      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
-      $(this.queryByHook('sciope-model-exploration')).prop('disabled', true)
-    }else if(this.model.parameters.length < 1){
-      $(this.queryByHook('oned-parameter-sweep')).prop('disabled', true)
-      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
-      $(this.queryByHook('stochss-ps')).prop('disabled', true)
-      $(this.queryByHook('psweep-workflow-message')).css('display', 'block')
-    }else if(this.model.parameters.length < 2){
-      $(this.queryByHook('twod-parameter-sweep')).prop('disabled', true)
-      $(this.queryByHook('psweep-workflow-message')).text('2D Parameter Sweep workflows require at least two parameters')
-      $(this.queryByHook('psweep-workflow-message')).css('display', 'block')
+    this.model.updateValid();
+    let invalid = !this.model.valid;
+    if(invalid) {
+      let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + this.model.directory;
+      let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
+      $(this.queryByHook('invalid-model-message')).html(message);
+      $(this.queryByHook('invalid-model-message')).css('display', 'block');
     }
-  },
-  checkForErrors: function (e) {
-    let invalidParams = this.model.parameters.filter(function (parameter) {
-      if(typeof parameter.expression === "string") return true
-    })
-    if(invalidParams.length) {return true}
-  },
-  notebookWorkflow: function (e) {
-    var type = e.target.dataset.type;
-    this.toNotebook(type);
-  },
-  toNotebook: function (type) {
-    let queryString = "?type="+type+"&path="+this.modelDir+"&parentPath="+this.parentPath
-    var endpoint = path.join(app.getApiPath(), "workflow/notebook")+queryString
-    xhr({uri:endpoint, json:true}, function (err, response, body) {
-      if(response.statusCode < 400){
-        var notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
-        window.open(notebookPath, "_blank")
+    let dimensions = this.model.parameters.length;
+    if(dimensions < 2) {
+      $(this.queryByHook('psweep-workflow-message')).css('display', 'block');
+      if(dimensions === 1) {
+        $(this.queryByHook('psweep-workflow-message')).text('2D Parameter Sweep workflows require at least two parameters');
       }
-    });
-  },
-  handleEnsembleSimulationClick: function (e) {
-    this.launchStochssWorkflow("gillespy")
-  },
-  handleParameterSweepClick: function (e) {
-    this.launchStochssWorkflow("parameterSweep")
-  },
-  launchStochssWorkflow: function (type) {
-    let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath
-    let endpoint = path.join(app.getBasePath(), "stochss/workflow/edit")+queryString
-    window.location.href = endpoint
+    }
+    $(this.queryByHook('ensemble-simulation')).prop('disabled', invalid || this.model.is_spatial);
+    $(this.queryByHook('spatial-simulation')).prop('disabled', invalid || !this.model.is_spatial);
+    $(this.queryByHook('model-inference')).prop('disabled', invalid || this.model.is_spatial);
+    $(this.queryByHook('oned-parameter-sweep')).prop('disabled', invalid || this.model.is_spatial || dimensions < 1);
+    $(this.queryByHook('twod-parameter-sweep')).prop('disabled', invalid || this.model.is_spatial || dimensions < 2);
+    $(this.queryByHook('sciope-model-exploration')).prop('disabled', invalid || this.model.is_spatial);
   }
 });
 

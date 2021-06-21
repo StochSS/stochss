@@ -1,0 +1,52 @@
+div
+
+  div.ml-1.row
+
+    div.col-md-5
+
+      a.btn.btn-outline-secondary.box-shadow.text-break(href=this.model.open role="button" style="width: 100%;")=this.model.name
+
+    div.col-md-4
+
+      button.btn.btn-outline-secondary.inline.dropdown-toggle.box-shadow(
+        id=this.model.elementID + "-workflow-btn",
+        data-hook=this.model.elementID + "-workflow-btn",
+        data-toggle="dropdown",
+        aria-haspopup="true",
+        aria-expanded="false",
+        type="button"
+      ) New Workflow Using Model <span class="caret"></span>
+
+      ul.dropdown-menu(aria-labelledby=this.model.elementID + "-workflow-btn")
+        if(!this.model.is_spatial)
+          li.dropdown-item(id=this.model.elementID + "-ensemble-simulation") Ensemble Simulation
+          li.dropdown-item(id=this.model.elementID + "-parameter-sweep") Parameter Sweep
+        li.dropdown-item
+
+          a.btn(id=this.model.elementID + "-jupyter-notebook" data-hook=this.model.elementID + "-jupyter-notebook" style="padding: 0;") Jupyter Notebook
+
+    div.col-md-2
+
+      button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook=this.model.elementID + "-notes-btn") Edit Notes
+
+    div.col-md-1
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-remove") <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash-alt" class="svg-inline--fa fa-trash-alt fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"></path></svg>
+
+  div.mx-5.mt-4.collapse(data-hook=this.model.elementID + "-notes-container")
+
+    div.col-md-2.inline.align-top
+
+      div.inline
+
+        h5 Notes:
+
+      div.inline
+
+        button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "-annotation-container" data-hook=this.model.elementID + "-annotation-btn") +
+
+    div.collapse.col-md-10.inline(id=this.model.elementID + "-annotation-container")
+
+        div: textarea(id=this.model.elementID + "-annotation" data-hook=this.model.elementID + "-annotation" rows="7" style="width: 100%;")=this.model.annotation
+
+  hr

@@ -1,0 +1,45 @@
+{
+    "model": "Examples/Example SIR Epidemic Project.proj/SIR Epidemic Model.wkgp/SIR Epidemic Model.mdl",
+    "settings": {
+        "parameterSweepSettings": {
+            "parameters": [
+                {
+                    "max": 0.01245,
+                    "min": 0.00415,
+                    "name": "beta",
+                    "paramID": 4,
+                    "steps": 11
+                }
+            ],
+            "speciesOfInterest": {
+                "annotation": "Initial population of a species that are infected\n",
+                "compID": 2,
+                "isSwitchTol": true,
+                "mode": "discrete",
+                "name": "Infected",
+                "switchMin": 100,
+                "switchTol": 0.03,
+                "value": 1
+            }
+        },
+        "resultsSettings": {
+            "mapper": "final",
+            "outputs": [],
+            "reducer": "avg"
+        },
+        "simulationSettings": {
+            "absoluteTol": 1e-06,
+            "algorithm": "SSA",
+            "isAutomatic": false,
+            "realizations": 20,
+            "relativeTol": 0.001,
+            "seed": -1,
+            "tauTol": 0.03
+        },
+        "timespanSettings": {
+            "endSim": 20,
+            "timeStep": 0.05
+        }
+    },
+    "type": "Parameter Sweep"
+}

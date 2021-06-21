@@ -17,18 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import copy
+import logging
+import traceback
 
 import numpy
 import plotly
 import matplotlib
 import mpl_toolkits
 
+log = logging.getLogger("stochss")
+
 class ParameterSweep2D():
     '''
     ################################################################################################
-    StochSS 2D parameter sweep workflow object
+    StochSS 2D parameter sweep job object
     ################################################################################################
     '''
+    name = "ParameterSweep2D"
 
     MAPPER_KEYS = ["min", "max", "avg", "var", "final"]
     REDUCER_KEYS = ["min", "max", "avg", "var"]
@@ -50,8 +55,7 @@ class ParameterSweep2D():
         self.settings = settings
         self.list_of_species = model.get_all_species().keys()
         self.params = params
-        self.logs = []
-        self.ts_results = []
+        self.ts_results = {}
         self.results = {}
 
 
@@ -64,12 +68,12 @@ class ParameterSweep2D():
                 else:
                     m_data = [func_map[m_key](x[species]) for x in results]
                 if verbose:
-                    print(f'  {m_key} population {species}={m_data}')
+                    log.debug('  %s population %s=%s', m_key, species, m_data)
                 for r_key in self.REDUCER_KEYS:
                     r_data = func_map[r_key](m_data)
                     self.results[species][m_key][r_key][i_ndx, j_ndx] = r_data
                     if verbose:
-                        print(f'    {r_key} of ensemble = {r_data}')
+                        log.debug('    %s of ensemble = %s', r_key, r_data)
 
 
     def __feature_extraction(self, results, i_ndx, j_ndx, verbose=False):
@@ -83,13 +87,13 @@ class ParameterSweep2D():
                     data = func_map[key](spec_res)
                 self.results[species][key][i_ndx, j_ndx] = data
                 if verbose:
-                    print(f'  {key} population {species}={data}')
+                    log.debug('  %s population %s=%s', key, species, data)
 
 
-    def __setup_results(self):
+    def __setup_results(self, solver_name):
         for species in self.list_of_species:
             spec_res = {}
-            if self.settings['number_of_trajectories'] > 1:
+            if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
                 for m_key in self.MAPPER_KEYS:
                     spec_res[m_key] = {}
                     for r_key in self.REDUCER_KEYS:
@@ -136,20 +140,6 @@ class ParameterSweep2D():
         return trace_list
 
 
-    def log(self, level, message):
-        '''
-        Add a log to the objects internal logs
-
-        Attribute
-        ---------
-        level : str
-            Level of the log
-        message : string
-            Message to be logged
-        '''
-        self.logs.append({"level":level, "message":message})
-
-
     def plot(self, keys=None):
         '''
         Plot the results based on the keys using matplotlib
@@ -178,18 +168,21 @@ class ParameterSweep2D():
         _ = matplotlib.pyplot.colorbar(ax=axis, cax=cax)
 
 
-    def run(self, verbose=False):
+    def run(self, job_id, verbose=False):
         '''
-        Run a 2D parameter sweep workflow
+        Run a 2D parameter sweep job
 
         Attributes
         ----------
         '''
-        self.__setup_results()
+        if "solver" in self.settings.keys():
+            solver_name = self.settings['solver'].name
+        else:
+            solver_name = self.model.get_best_solver().name
+        self.__setup_results(solver_name=solver_name)
         for i, val1 in enumerate(self.params[0]['range']):
             for j, val2 in enumerate(self.params[1]['range']):
-                if "solver" in self.settings.keys() and \
-                            self.settings['solver'].name == "VariableSSACSolver":
+                if solver_name in ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]:
                     tmp_mdl = self.model
                     variables = {self.params[0]['parameter']:val1, self.params[1]['parameter']:val2}
                     self.settings['variables'] = variables
@@ -198,16 +191,23 @@ class ParameterSweep2D():
                     tmp_mdl.listOfParameters[self.params[0]['parameter']].set_expression(val1)
                     tmp_mdl.listOfParameters[self.params[1]['parameter']].set_expression(val2)
                 if verbose:
-                    message = f"running {self.params[0]['parameter']}={val1}, "
+                    message = f"{job_id} --> running: {self.params[0]['parameter']}={val1}, "
                     message += f"{self.params[1]['parameter']}={val2}"
-                    print(message)
-                tmp_res = tmp_mdl.run(**self.settings)
-                self.ts_results.append(tmp_res)
-                if self.settings['number_of_trajectories'] > 1:
-                    self.__ensemble_feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j,
-                                                       verbose=verbose)
+                    log.info(message)
+                try:
+                    tmp_res = tmp_mdl.run(**self.settings)
+                except Exception as err:
+                    log.error("%s\n%s", err, traceback.format_exc())
                 else:
-                    self.__feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j, verbose=verbose)
+                    key = f"{self.params[0]['parameter']}:{val1},"
+                    key += f"{self.params[1]['parameter']}:{val2}"
+                    self.ts_results[key] = tmp_res
+                    if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
+                        self.__ensemble_feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j,
+                                                           verbose=verbose)
+                    else:
+                        self.__feature_extraction(results=tmp_res, i_ndx=i, j_ndx=j,
+                                                  verbose=verbose)
 
 
     def to_csv(self, keys, csv_writer):

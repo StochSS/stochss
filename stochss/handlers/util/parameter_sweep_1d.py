@@ -17,17 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import copy
+import logging
+import traceback
 
 import numpy
 import plotly
 import matplotlib
 
+log = logging.getLogger("stochss")
+
 class ParameterSweep1D():
     '''
     ################################################################################################
-    StochSS 1D parameter sweep workflow object
+    StochSS 1D parameter sweep job object
     ################################################################################################
     '''
+    name = "ParameterSweep1D"
 
     MAPPER_KEYS = ["min", "max", "avg", "var", "final"]
     REDUCER_KEYS = ["min", "max", "avg", "var"]
@@ -50,8 +55,7 @@ class ParameterSweep1D():
         self.param = param
         self.list_of_species = model.get_all_species().keys()
         self.results = {}
-        self.ts_results = []
-        self.logs = []
+        self.ts_results = {}
 
 
     def __ensemble_feature_extraction(self, results, index, verbose=False):
@@ -63,14 +67,14 @@ class ParameterSweep1D():
                 else:
                     m_data = [func_map[m_key](x[species]) for x in results]
                 if verbose:
-                    print(f'  {m_key} population {species}={m_data}')
+                    log.debug('  %s population %s=%s', m_key, species, m_data)
                 std = numpy.std(m_data)
                 for r_key in self.REDUCER_KEYS:
                     r_data = func_map[r_key](m_data)
                     self.results[species][m_key][r_key][index, 0] = r_data
                     self.results[species][m_key][r_key][index, 1] = std
                     if verbose:
-                        print(f'    {r_key} std of ensemble m:{r_data} s:{std}')
+                        log.debug('    %s std of ensemble m:%s s:%s', r_key, r_data, std)
 
 
     def __feature_extraction(self, results, index, verbose=False):
@@ -84,13 +88,13 @@ class ParameterSweep1D():
                     data = func_map[key](spec_res)
                 self.results[species][key][index, 0] = data
                 if verbose:
-                    print(f'  {key} population {species}={data}')
+                    log.debug('  %s population %s=%s', key, species, data)
 
 
-    def __setup_results(self):
+    def __setup_results(self, solver_name):
         for species in self.list_of_species:
             spec_res = {}
-            if self.settings['number_of_trajectories'] > 1:
+            if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
                 for m_key in self.MAPPER_KEYS:
                     spec_res[m_key] = {}
                     for r_key in self.REDUCER_KEYS:
@@ -113,7 +117,7 @@ class ParameterSweep1D():
         if "xaxis_label" not in plt_data:
             plt_data['xaxis_label'] = f"<b>{self.param['parameter']}</b>"
         if "yaxis_label" not in plt_data:
-            plt_data['xaxis_label'] = "<b>Population</b>"
+            plt_data['yaxis_label'] = "<b>Population</b>"
 
 
     def get_plotly_traces(self, keys):
@@ -130,26 +134,13 @@ class ParameterSweep1D():
         else:
             results = self.results[keys[0]][keys[1]]
 
-        visible = self.settings['number_of_trajectories'] > 1
+        visible = "number_of_trajectories" in self.settings.keys() and \
+                                    self.settings['number_of_trajectories'] > 1
         error_y = dict(type="data", array=results[:, 1], visible=visible)
 
         trace_list = [plotly.graph_objs.Scatter(x=self.param['range'],
                                                 y=results[:, 0], error_y=error_y)]
         return trace_list
-
-
-    def log(self, level, message):
-        '''
-        Add a log to the objects internal logs
-
-        Attribute
-        ---------
-        level : str
-            Level of the log
-        message : string
-            Message to be logged
-        '''
-        self.logs.append({"level":level, "message":message})
 
 
     def plot(self, keys=None):
@@ -174,30 +165,38 @@ class ParameterSweep1D():
         matplotlib.pyplot.ylabel("Population", fontsize=16, fontweight='bold')
 
 
-    def run(self, verbose=False):
+    def run(self, job_id, verbose=False):
         '''
-        Run a 1D parameter sweep workflow
+        Run a 1D parameter sweep job
 
         Attributes
         ----------
         '''
-        self.__setup_results()
+        if "solver" in self.settings.keys():
+            solver_name = self.settings['solver'].name
+        else:
+            solver_name = self.model.get_best_solver().name
+        self.__setup_results(solver_name=solver_name)
         for i, val in enumerate(self.param['range']):
-            if "solver" in self.settings.keys() and \
-                            self.settings['solver'].name == "VariableSSACSolver":
+            if solver_name in ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]:
                 tmp_mdl = self.model
                 self.settings['variables'] = {self.param['parameter']:val}
             else:
                 tmp_mdl = copy.deepcopy(self.model)
                 tmp_mdl.listOfParameters[self.param['parameter']].set_expression(val)
             if verbose:
-                print(f"running {self.param['parameter']}={val}")
-            tmp_res = tmp_mdl.run(**self.settings)
-            self.ts_results.append(tmp_res)
-            if self.settings['number_of_trajectories'] > 1:
-                self.__ensemble_feature_extraction(results=tmp_res, index=i, verbose=verbose)
+                log.info("%s --> running: %s=%s", job_id, self.param['parameter'], val)
+            try:
+                tmp_res = tmp_mdl.run(**self.settings)
+            except Exception as err:
+                log.error("%s\n%s", err, traceback.format_exc())
             else:
-                self.__feature_extraction(results=tmp_res, index=i, verbose=verbose)
+                key = f"{self.param['parameter']}:{val}"
+                self.ts_results[key] = tmp_res
+                if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
+                    self.__ensemble_feature_extraction(results=tmp_res, index=i, verbose=verbose)
+                else:
+                    self.__feature_extraction(results=tmp_res, index=i, verbose=verbose)
 
 
     def to_csv(self, keys, csv_writer):

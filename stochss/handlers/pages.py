@@ -19,11 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import logging
 from tornado import web
-from notebook.base.handlers import IPythonHandler
+from notebook.base.handlers import IPythonHandler, APIHandler
+# APIHandler documentation:
+# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
+# Note APIHandler.finish() sets Content-Type handler to 'application/json'
+# Use finish() for json, write() for text
 
 log = logging.getLogger('stochss')
 
 # pylint: disable=abstract-method
+# pylint: disable=too-few-public-methods
 class PageHandler(IPythonHandler):
     '''
     ################################################################################################
@@ -224,3 +229,65 @@ class ProjectManagerHandler(PageHandler):
         ----------
         '''
         self.render("stochss-project-manager.html", server_path=self.get_server_path())
+
+
+class LoadingPageHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Loading Page Page Handler
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Render the StochSS loading page.
+
+        Attributes
+        ----------
+        '''
+        self.render("stochss-loading-page.html", server_path=self.get_server_path())
+
+
+class MultiplePlotsHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Multiple Plots Page Handler
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Render the StochSS multiple plots page.
+
+        Attributes
+        ----------
+        '''
+        self.render("multiple-plots-page.html", server_path=self.get_server_path())
+
+
+class UserLogsAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting the user logs
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Return the contents of the user log file.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        log_num = self.get_query_arguments(name="logNum")[0]
+        user_dir = os.path.expanduser("~")
+        path = os.path.join(user_dir, ".user-logs.txt")
+        try:
+            with open(path, "r") as log_file:
+                logs = log_file.read().strip().split("\n")[int(log_num):]
+        except FileNotFoundError:
+            open(path, "w").close()
+            logs = []
+        self.write({"logs":logs})
+        self.finish()

@@ -17,6 +17,7 @@
         "x_lim": [0, 0],
         "y_lim": [0, 0],
         "z_lim": [0, 0],
+        "static": true,
         "boundary_condition": {
         	"reflect_x": true,
         	"reflect_y": true,

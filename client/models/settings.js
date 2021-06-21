@@ -18,12 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //models
 var State = require('ampersand-state');
+let TimespanSettings = require('./timespan-settings');
 var SimulationSettings = require('./simulation-settings');
 var ParameterSweepSettings = require('./parameter-sweep-settings');
 var ResultsSettings = require('./results-settings');
 
 module.exports = State.extend({
   children: {
+  	timespanSettings: TimespanSettings,
     simulationSettings: SimulationSettings,
     parameterSweepSettings: ParameterSweepSettings,
     resultsSettings: ResultsSettings

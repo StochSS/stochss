@@ -1,57 +1,73 @@
 div#project-meta-data.card.card-body
 
-  h3 Metadata
-
-  div(id="file-select-view" data-hook="file-select-view")
-
   div
 
-    span(for="description-input-view") Description:
+    h3.inline Metadata
 
-    textarea(id="description-input-view" data-hook="description-input-view" rows="5" style="width: 100%;")
+    div.inline
 
-  table.table
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#metadata-section" id="metadata-collapse-btn" data-hook="metadata-collapse-btn") +
 
-    thead
+  div.collapse(id="metadata-section")
 
-      tr
+    div(id="file-select-view" data-hook="file-select-view")
 
-        th(scope="col") Given Name
+    div
 
-        th(scope="col") Family Name
+      span(for="description-input-view") Description:
 
-        th(scope="col") E-Mail
+      textarea(id="description-input-view" data-hook="description-input-view" rows="5" style="width: 100%;")
 
-        th(scope="col") Organization
+    table.table
 
-        th(scpoe="col") Remove
+      thead
 
-    tbody(id="list-of-creators" data-hook="list-of-creators")
+        tr
 
-  hr
+          th(scope="col") Given Name
 
-  p Add a new creator or update an existing creators information by selecting the appropriate 'creator' option and entering their information below.
+          th(scope="col") Family Name
 
-  div(id="creator-select-view" data-hook="creator-select-view")
+          th(scope="col") E-Mail
 
-  div.inline
+          th(scope="col") Organization
 
-    div.inline(id="given-name-input-view" data-hook="given-name-input-view")
+          th(scpoe="col") Remove
 
-    div.inline(id="family-name-input-view" data-hook="family-name-input-view")
+      tbody(id="list-of-creators" data-hook="list-of-creators")
 
-    div.inline(id="email-input-view" data-hook="email-input-view")
+    hr
 
-    div.inline(id="organization-input-view" data-hook="organization-input-view")
+    p Add a new creator or update an existing creators information by selecting the appropriate 'creator' option and entering their information below.
 
-  div
+    div(id="creator-select-view" data-hook="creator-select-view")
 
-    button.btn.btn-outline-secondary.box-shadow(id="add-creator-btn" data-hook="add-creator-btn" disabled) Add
+    div.inline
 
-  hr
+      div.inline(id="given-name-input-view" data-hook="given-name-input-view")
 
-  div.inline
+      div.inline(id="family-name-input-view" data-hook="family-name-input-view")
 
-    button.btn.btn-primary.box-shadow(id="save-meta-data-button" data-hook="save-meta-data-button") Save
+      div.inline(id="email-input-view" data-hook="email-input-view")
 
-    button.btn.btn-primary.box-shadow(id="submit-meta-data-button" data-hook="submit-meta-data-button") Submit
+      div.inline(id="organization-input-view" data-hook="organization-input-view")
+
+    div
+
+      button.btn.btn-outline-secondary.box-shadow(id="add-creator-btn" data-hook="add-creator-btn" disabled) Add
+
+    hr
+
+    div.inline
+
+      button.btn.btn-primary.box-shadow(id="save-meta-data-button" data-hook="save-meta-data-button") Save
+
+    div.mdl-edit-btn.saving-status.inline(data-hook="md-in-progress")
+
+      div.spinner-grow.mr-2
+
+      span(data-hook="sd-action-in-progress") Saving
+
+    div.mdl-edit-btn.saved-status.inline(data-hook="md-complete")
+
+      span(data-hook="md-action-complete") Saved

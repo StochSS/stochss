@@ -54,6 +54,7 @@ class StochSSSpatialModel(StochSSBase):
         if new:
             if model is None:
                 model = self.get_model_template()
+            if not model['is_spatial']:
                 model['is_spatial'] = True
             if isinstance(model, str):
                 model = json.loads(model)
@@ -63,7 +64,7 @@ class StochSSSpatialModel(StochSSBase):
             if changed:
                 self.path = new_path.replace(self.user_dir + '/', "")
             with open(new_path, "w") as smdl_file:
-                json.dump(model, smdl_file)
+                json.dump(model, smdl_file, indent=4, sort_keys=True)
         else:
             self.model = None
 
@@ -134,10 +135,11 @@ class StochSSSpatialModel(StochSSBase):
             mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
             self.__convert_particles(mesh=mesh)
             model.add_mesh(mesh)
+            model.staticDomain = self.model['domain']['static']
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_initial_conditions(self, model):
@@ -161,19 +163,19 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_model_settings(self, model):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
-            tspan = numpy.arange(0, end, step_size)
+            tspan = numpy.arange(0, end + step_size, step_size)
             model.timespan(tspan, timestep_size=step_size)
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_parameters(self, model):
@@ -184,7 +186,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model parameters are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_particles(self, mesh):
@@ -195,7 +197,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model domain particle properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_reactions(self, model):
@@ -223,7 +225,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model reactions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_species(self, model):
@@ -236,7 +238,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model species are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -263,7 +265,7 @@ class StochSSSpatialModel(StochSSBase):
         except KeyError as err:
             message = "Spatial model stoich species are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -291,13 +293,13 @@ class StochSSSpatialModel(StochSSBase):
             return self.__build_stochss_domain(s_domain=s_domain)
         except FileNotFoundError as err:
             message = f"Could not find the domain file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"The domain file is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
         except MeshError as err:
             message = f"The domain file is not in proper format: {str(err)}"
-            raise DomainFormatError(message, traceback.format_exc())
+            raise DomainFormatError(message, traceback.format_exc()) from err
 
 
     def __read_model_file(self):
@@ -306,10 +308,10 @@ class StochSSSpatialModel(StochSSBase):
                 self.model = json.load(smdl_file)
         except FileNotFoundError as err:
             message = f"Could not find the spatial model file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"The spatial model is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     def convert_to_model(self):
@@ -322,8 +324,15 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             s_model = self.load()
         s_model['is_spatial'] = False
-        m_path = self.path.replace(".smdl", ".mdl")
-        m_file = self.get_file(path=m_path)
+        if ".wkgp" in self.path:
+            wkgp_path = self.get_dir_name()
+            wkgp_path, _ = self.get_unique_path(name=self.get_file(path=wkgp_path),
+                                                dirname=os.path.dirname(wkgp_path))
+            m_file = self.get_file(path=wkgp_path).replace(".wkgp", ".mdl")
+            m_path = os.path.join(wkgp_path, m_file)
+        else:
+            m_path = self.path.replace(".smdl", ".mdl")
+            m_file = self.get_file(path=m_path)
         message = f"{self.get_file()} was successfully convert to {m_file}!"
         return {"Message":message, "File":m_file}, {"model":s_model, "path":m_path}
 
@@ -440,7 +449,7 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def get_particles_from_remote(cls, mesh, data):
+    def get_particles_from_remote(cls, mesh, data, types):
         '''
         Get a list of stochss particles from a mesh
 
@@ -450,17 +459,28 @@ class StochSSSpatialModel(StochSSBase):
             Mesh containing particle data
         data : dict
             Property and location data to be applied to each particle
+        types : list
+            List of type discriptions (lines from an uploaded file)
         '''
         file = tempfile.NamedTemporaryFile()
         with open(file.name, "w") as mesh_file:
             mesh_file.write(mesh)
         s_domain = Mesh.read_xml_mesh(filename=file.name)
         domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
+        if types is not None:
+            type_data = cls.get_types_from_file(lines=types)
+            for t_data in type_data['types']:
+                if t_data['particle_id'] < len(domain['particles']):
+                    domain['particles'][t_data['particle_id']]['type'] = t_data['typeID']
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
-        return {"particles":domain['particles'], "limits":limits}
+        resp = {"particles":domain['particles'], "limits":limits}
+        if types is not None:
+            resp['types'] = type_data['names']
+        return resp
 
 
-    def get_types_from_file(self, path):
+    @classmethod
+    def get_types_from_file(cls, path=None, lines=None):
         '''
         Get the type descriptions from the .txt file
 
@@ -468,10 +488,13 @@ class StochSSSpatialModel(StochSSBase):
         ----------
         path : str
             Path to the types description file
+        lines : list
+            Lines from an uploaded file
         '''
-        path = os.path.join(self.user_dir, path)
-        with open(path, "r") as types_file:
-            lines = types_file.readlines()
+        if lines is None:
+            path = os.path.join(cls.user_dir, path)
+            with open(path, "r") as types_file:
+                lines = types_file.readlines()
         types = []
         names = []
         for line in lines:
@@ -500,13 +523,18 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             self.__read_model_file()
         self.model['name'] = self.get_name()
-        if "domain" not in self.model.keys():
+        if not self.model['defaultMode']:
+            self.model['defaultMode'] = "discrete"
+        if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
             self.model['domain'] = self.get_model_template()['domain']
+        elif "static" not in self.model['domain'].keys():
+            self.model['domain']['static'] = True
         for species in self.model['species']:
             if "types" not in species.keys():
                 species['types'] = list(range(1, len(self.model['domain']['types'])))
             if "diffusionConst" not in species.keys():
-                species['diffusionConst'] = species['diffusionCoeff']
+                diff = 0.0 if "diffusionCoeff" not in species.keys() else species['diffusionCoeff']
+                species['diffusionConst'] = diff
         for reaction in self.model['reactions']:
             if "types" not in reaction.keys():
                 reaction['types'] = list(range(1, len(self.model['domain']['types'])))

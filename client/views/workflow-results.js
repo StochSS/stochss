@@ -16,357 +16,368 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
-var path = require('path');
-var xhr = require('xhr');
+let $ = require('jquery');
+let path = require('path');
 //support files
-var Plotly = require('../lib/plotly');
-var app = require('../app');
-var Tooltips = require('../tooltips');
+let app = require('../app');
+let Tooltips = require('../tooltips');
+let Plotly = require('../lib/plotly');
 //views
-var View = require('ampersand-view');
-var InputView = require('./input');
-var SelectView = require('ampersand-select-view');
+let InputView = require('./input');
+let View = require('ampersand-view');
+let SelectView = require('ampersand-select-view');
+let SweepParametersView = require('./sweep-parameter-range');
 //templates
-var gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
-var gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
-var parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResults.pug');
+let gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
+let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
+let parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResults.pug');
+let parameterScanTemplate = require('../templates/includes/parameterScanResults.pug');
 
 module.exports = View.extend({
   events: {
-    'click [data-hook=collapse-stddevrange]' : 'handleCollapseStddevrangeClick',
-    'click [data-hook=collapse-trajectories]' : 'handleCollapseTrajectoriesClick',
-    'click [data-hook=collapse-stddev]' : 'handleCollapseStddevClick',
-    'click [data-hook=collapse-trajmean]' : 'handleCollapseTrajmeanClick',
-    'click [data-hook=collapse-psweep]' : 'handleCollapsePsweepClick',
-    'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
     'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
-    'click [data-hook=plot]' : function (e) {
-      $(this.queryByHook("edit-plot-args")).collapse("show");
-      $(document).ready(function () {
-      $("html, body").animate({ 
-          scrollTop: $("#edit-plot-args").offset().top - 50
-      }, false);
-    });
-    },
-    'click [data-hook=download-png-custom]' : function (e) {
-      var type = e.target.id;
-      this.clickDownloadPNGButton(type)
-    },
-    'click [data-hook=download-json]' : function (e) {
-      var type = e.target.id;
-      this.exportToJsonFile(this.plots[type], type)
-    },
-    'click [data-hook=save-plot]' : function (e) {
-      var type = e.target.id;
-      e.target.disabled = true
-      $("button[data-hook=save-plot]").filter("#"+type).text('Saved Plot to Project Viewer')
-      this.savePlot(type)
-    },
-    'click [data-hook=download-results-csv]' : 'handlerDownloadResultsCsvClick',
+    'change [data-hook=plot-type-select]' : 'getTSPlotForType',
+    'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
+    'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
+    'click [data-target=edit-plot]' : 'openPlotArgsSection',
+    'click [data-hook=multiple-plots]' : 'plotMultiplePlots',
+    'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
+    'click [data-target=download-json]' : 'handleDownloadJSONClick',
+    'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
+    'click [data-hook=download-results-csv]' : 'handleDownloadResultsCsvClick'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = Tooltips.parameterSweepResults
-    this.trajectories = attrs.trajectories;
-    this.status = attrs.status;
-    this.species = attrs.species;
-    this.type = attrs.type;
-    this.speciesOfInterest = attrs.speciesOfInterest;
-    this.featureExtractor = "final";
-    this.ensembleAggragator = "avg";
-    this.plots = {}
-    this.plotArgs = {}
-    this.savedPlots = this.parent.settings.resultsSettings.outputs
+    this.tooltips = Tooltips.parameterSweepResults;
+    this.plots = {};
+    this.plotArgs = {};
   },
-  render: function () {
-    if(this.type === "parameterSweep"){
-      this.template = parameterSweepResultsTemplate
+  render: function (attrs, options) {
+    let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
+                     this.model.settings.simulationSettings.algorithm !== "ODE";
+    let isParameterScan = this.model.settings.parameterSweepSettings.parameters.length > 2
+    if(this.parent.model.type === "Parameter Sweep"){
+      this.template = isParameterScan ? parameterScanTemplate : parameterSweepResultsTemplate;
     }else{
-      this.template = this.trajectories > 1 ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate
+      this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
     }
     View.prototype.render.apply(this, arguments);
-    if(this.status === 'complete'){
-      this.expandContainer()
-    }
-    var speciesNames = this.species.map(function (specie) { return specie.name});
-    var featureExtractors = ["Minimum of population", "Maximum of population", "Average of population", "Variance of population", "Population at last time point"]
-    var ensembleAggragators = ["Minimum of ensemble", "Maximum of ensemble", "Average of ensemble", "Variance of ensemble"]
-    var speciesOfInterestView = new SelectView({
-      label: '',
-      name: 'species-of-interest',
-      required: true,
-      idAttribute: 'cid',
-      options: speciesNames,
-      value: this.speciesOfInterest
-    });
-    var featureExtractorView = new SelectView({
-      label: '',
-      name: 'feature-extractor',
-      requires: true,
-      idAttribute: 'cid',
-      options: featureExtractors,
-      value: "Population at last time point"
-    });
-    var ensembleAggragatorView = new SelectView({
-      label: '',
-      name: 'ensemble-aggragator',
-      requires: true,
-      idAttribute: 'cid',
-      options: ensembleAggragators,
-      value: "Average of ensemble"
-    });
-    if(this.type === "parameterSweep"){
-      this.registerRenderSubview(speciesOfInterestView, 'specie-of-interest-list');
-      this.registerRenderSubview(featureExtractorView, 'feature-extraction-list');
-      this.registerRenderSubview(ensembleAggragatorView, 'ensemble-aggragator-list');
-      if(this.trajectories <= 1){
-        $(this.queryByHook('ensemble-aggragator-container')).collapse()
-      }else{
-        $(this.queryByHook('ensemble-aggragator-container')).addClass("inline")
+    if(this.parent.model.type === "Ensemble Simulation") {
+      var type = isEnsemble ? "stddevran" : "trajectories";
+    }else{
+      this.tsPlotData = {"parameters":{}};
+      var type = "ts-psweep";
+      if(!isParameterScan) {
+        this.renderSpeciesOfInterestView();
+        this.renderFeatureExtractionView();
+        if(isEnsemble) {
+          this.renderEnsembleAggragatorView();
+        }else{
+          $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
+        }
+        this.getPlot("psweep");
       }
+      if(isEnsemble) {
+        this.renderPlotTypeSelectView();
+        this.tsPlotData["type"] = "stddevran"
+      }else{
+        $(this.queryByHook('plot-type-header')).css("display", "none");
+        this.tsPlotData["type"] = "trajectories"
+      }
+      this.renderSweepParameterView();
     }
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-       });
-    });
-  },
-  update: function () {
-  },
-  updateValid: function () {
+    this.getPlot(type);
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   },
-  setTitle: function (e) {
-    this.plotArgs['title'] = e.target.value
-    for (var type in this.plots) {
-      var fig = this.plots[type]
-      fig.layout.title.text = e.target.value
-      this.plotFigure(fig, type)
+  cleanupPlotContainer: function (type) {
+    let el = this.queryByHook(type + "-plot");
+    Plotly.purge(el);
+    $(this.queryByHook(type + "-plot")).empty();
+    if(type === "ts-psweep" || type === "psweep"){
+      $(this.queryByHook(type + "-edit-plot")).prop("disabled", true);
+      $(this.queryByHook(type + "-download-png-custom")).prop("disabled", true);
+      $(this.queryByHook(type + "-download-json")).prop("disabled", true);
+      $(this.queryByHook("multiple-plots")).prop("disabled", true);
     }
-  },
-  setYAxis: function (e) {
-    this.plotArgs['yaxis'] = e.target.value
-    for (var type in this.plots) {
-      var fig = this.plots[type]
-      fig.layout.yaxis.title.text = e.target.value
-      this.plotFigure(fig, type)
-    }
-  },
-  setXAxis: function (e) {
-    this.plotArgs['xaxis'] = e.target.value
-    for (var type in this.plots) {
-      var fig = this.plots[type]
-      fig.layout.xaxis.title.text = e.target.value
-      this.plotFigure(fig, type)
-    }
+    $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
   },
   getPlot: function (type) {
-    var self = this;
-    var el = this.queryByHook(type)
-    Plotly.purge(el)
-    this.queryAll("#"+type).filter(function (el) {return el.dataset.hook === "plot-spinner"})[0].style.display = "block"
-    var data = {}
+    let self = this;
+    this.cleanupPlotContainer(type);
+    let data = this.getPlotData(type);
+    if(type === "psweep" && Boolean(this.plots[data.plt_key])) {
+      this.plotFigure(this.plots[data.plt_key], type);
+    }else if(type === "ts-psweep" && Boolean(this.plots[data.plt_type + data.plt_key])) {
+      this.plotFigure(this.plots[data.plt_type + data.plt_key], type);
+    }else{
+      let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
+      let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
+          if(type === "psweep") {
+            self.plots[data.plt_key] = body;
+          }else if(type === "ts-psweep"){
+            self.plots[data.plt_type + data.plt_key] = body;
+          }else{
+            self.plots[type] = body;
+          }
+          self.plotFigure(body, type);
+        },
+        error: function (err, response, body) {
+          $(self.queryByHook(type + "-plot-spinner")).css("display", "none");
+          let message = "<p>" + body.Message + "</p><p><b>Please re-run this job to get this plot</b></p>";
+          $(self.queryByHook(type + "-plot")).html(message);
+        }
+      });
+    }
+  },
+  getPlotData: function (type) {
+    let data = {};
     if(type === 'psweep'){
-      let key = this.getPsweepKey()
+      let key = this.getPsweepKey();
       data['plt_key'] = key;
+    }else if(type === "ts-psweep" || type === "ts-psweep-mp") {
+      if(type === "ts-psweep-mp"){
+        data['plt_type'] = "mltplplt";
+      }else{
+        data['plt_type'] = this.tsPlotData['type'];
+      }
+      let key = this.getTSPsweepKey()
+      data['plt_key'] = key;
+    }else if(type === "mltplplt"){
+      data['plt_type'] = type;
+      data['plt_key'] = null;
     }else{
       data['plt_key'] = type;
     }
     if(Object.keys(this.plotArgs).length){
-      data['plt_data'] = this.plotArgs
+      data['plt_data'] = this.plotArgs;
     }else{
-      data['plt_data'] = "None"
+      data['plt_data'] = null;
     }
-    var endpoint = path.join(app.getApiPath(), "workflow/plot-results")+"?path="+this.parent.wkflPath+"&data="+JSON.stringify(data);
-    xhr({url: endpoint, json: true}, function (err, response, body){
-      if(response.statusCode >= 400){
-        $(self.queryByHook(type)).html(body.Message)
-      }else{
-        self.plots[type] = body
-        self.plotFigure(body, type);
-        let plotSaved = Boolean(self.savedPlots.filter(function (plot) {
-          if(plot.key === data.plt_key)
-            return true
-        }).length > 0)
-        let saveBtn = $("button[data-hook=save-plot]").filter("#"+type)
-        if(!self.parent.wkflPath.includes('.proj')) {
-          saveBtn.hide()
-        }else if(plotSaved) {
-          saveBtn.prop('disabled', true)
-          saveBtn.text('Plot Saved to Project Viewer')
-        } 
+    return data
+  },
+  getPlotForEnsembleAggragator: function (e) {
+    this.model.settings.resultsSettings.reducer = e.target.value;
+    this.getPlot('psweep')
+  },
+  getPlotForFeatureExtractor: function (e) {
+    this.model.settings.resultsSettings.mapper = e.target.value;
+    this.getPlot('psweep')
+  },
+  getPlotForSpecies: function (e) {
+    let species = this.model.model.species.filter(function (spec) {
+      return spec.name === e.target.value;
+    })[0];
+    this.model.settings.parameterSweepSettings.speciesOfInterest = species;
+    this.getPlot('psweep')
+  },
+  getPsweepKey: function () {
+    let speciesOfInterest = this.model.settings.parameterSweepSettings.speciesOfInterest.name;
+    let featureExtractor = this.model.settings.resultsSettings.mapper;
+    let key = speciesOfInterest + "-" + featureExtractor
+    let realizations = this.model.settings.simulationSettings.realizations;
+    let algorithm = this.model.settings.simulationSettings.algorithm;
+    if(algorithm !== "ODE" && realizations > 1){
+      let ensembleAggragator = this.model.settings.resultsSettings.reducer;
+      key += ("-" + ensembleAggragator);
+    }
+    return key;
+  },
+  getTSPlotForType: function (e) {
+    this.tsPlotData['type'] = e.target.value;
+    let display = this.tsPlotData['type'] === "trajectories" ? "inline-block" : "none";
+    $(this.queryByHook("multiple-plots")).css("display", display);
+    this.getPlot("ts-psweep");
+  },
+  getTSPsweepKey: function () {
+    let self = this;
+    let strs = Object.keys(this.tsPlotData.parameters).map(function (key) {
+      return key + ":" + self.tsPlotData.parameters[key]
+    });
+    let key = strs.join(",");
+    return key;
+  },
+  handleCollapsePlotContainerClick: function (e) {
+    app.changeCollapseButtonText(this, e);
+    let type = e.target.dataset.type;
+    if(!this.plots[type]){
+      this.getPlot(type);
+    }
+  },
+  handleConvertToNotebookClick: function (e) {
+    let self = this;
+    if(this.parent.model.type === "Ensemble Simulation") {
+      var type = "gillespy";
+    }else if(this.parent.model.type === "Parameter Sweep" && this.model.settings.parameterSweepSettings.parameters.length > 1) {
+      var type = "2d_parameter_sweep";
+    }else{
+      var type = "1d_parameter-sweep";
+    }
+    let queryStr = "?path=" + this.model.directory + "&type=" + type;
+    let endpoint = path.join(app.getApiPath(), "workflow/notebook") + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        window.open(path.join(app.getBasePath(), "notebooks", body.FilePath));
       }
     });
   },
-  plotFigure: function (figure, type) {
-    var self = this;
-    var hook = type;
-    var el = this.queryByHook(hook)
-    Plotly.newPlot(el, figure)
-    this.queryAll("#" + type).forEach(function (el) {
-      if(el.dataset.hook === "plot-spinner"){
-        el.style.display = "none"
-      }else if(el.disabled){
-        el.disabled = false;
-      }
-    });
-  },
-  clickDownloadPNGButton: function (type) {
-    var pngButton = $('div[data-hook='+type+'] a[data-title*="Download plot as a png"]')[0]
-    pngButton.click()
-  },
-  exportToJsonFile: function (jsonData, plotType) {
+  handleDownloadJSONClick: function (e) {
+    let type = e.target.dataset.type;
+    let jsonData = this.plots[type];
     let dataStr = JSON.stringify(jsonData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    let exportFileDefaultName = plotType + '-plot.json';
+    let exportFileDefaultName = type + '-plot.json';
 
     let linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataURI);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
   },
-  handlerDownloadResultsCsvClick: function (e) {
-    let path = this.parent.wkflPath
-    this.getExportData(path)
+  handleDownloadPNGClick: function (e) {
+    let type = e.target.dataset.type;
+    let pngButton = $('div[data-hook=' + type + '-plot] a[data-title*="Download plot as a png"]')[0];
+    pngButton.click();
   },
-  getExportData: function (wkflPath) {
-    var self = this;
-    var endpoint = path.join(app.getApiPath(), "file/download-zip")+"?path="+wkflPath+"&action=resultscsv"
-    xhr({uri: endpoint, json: true}, function (err, response, body) {
-      if(response.statusCode < 400) {
-        self.exportToZipFile(body.Path)
+  handleDownloadResultsCsvClick: function (e) {
+    let self = this;
+    let queryStr = "?path=" + this.model.directory + "&action=resultscsv";
+    let endpoint = path.join(app.getApiPath(), "file/download-zip") + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        window.open(path.join("files", body.Path));
       }
     });
   },
-  exportToZipFile: function (resultsPath) {
-    var endpoint = path.join("files", resultsPath);
-    window.open(endpoint)
+  openPlotArgsSection: function (e) {
+    $(this.queryByHook("edit-plot-args")).collapse("show");
+    $(document).ready(function () {
+      $("html, body").animate({ 
+          scrollTop: $("#edit-plot-args").offset().top - 50
+      }, false);
+    });
   },
-  expandContainer: function () {
-    $(this.queryByHook('workflow-results')).collapse('show');
-    let collapseBtn = $(this.queryByHook('collapse'));
-    collapseBtn.prop('disabled', false)
-    collapseBtn.click()
-    if(this.type === "parameterSweep"){
-      this.getPlot("psweep")
-    }else{
-      this.trajectories > 1 ? this.getPlot("stddevran") : this.getPlot("trajectories")
+  plotFigure: function (figure, type) {
+    let self = this;
+    let hook = type + "-plot";
+    let el = this.queryByHook(hook);
+    Plotly.newPlot(el, figure);
+    $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
+    $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
+    $(this.queryByHook(type + "-download-png-custom")).prop("disabled", false);
+    $(this.queryByHook(type + "-download-json")).prop("disabled", false);
+    if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
+      $(this.queryByHook("multiple-plots")).prop("disabled", false);
     }
   },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
+  plotMultiplePlots: function (e) {
+    let type = e.target.dataset.type;
+    let data = this.getPlotData(type);
+    var queryStr = "?path=" + this.model.directory + "&wkfl=" + this.parent.model.name;
+    queryStr += "&job=" + this.model.name + "&data=" + JSON.stringify(data);
+    let endpoint = path.join(app.getBasePath(), "stochss/multiple-plots") + queryStr;
+    window.open(endpoint);
   },
-  getPlotForSpecies: function (e) {
-    this.speciesOfInterest = e.target.selectedOptions.item(0).text;
-    this.getPlot('psweep')
+  renderEnsembleAggragatorView: function () {
+    let ensembleAggragators = [
+      ["min", "Minimum of ensemble"],
+      ["max", "Maximum of ensemble"],
+      ["avg", "Average of ensemble"],
+      ["var", "Variance of ensemble"]
+    ];
+    let ensembleAggragatorView = new SelectView({
+      name: 'ensemble-aggragator',
+      requires: true,
+      idAttribute: 'cid',
+      options: ensembleAggragators,
+      value: this.model.settings.resultsSettings.reducer
+    });
+    app.registerRenderSubview(this, ensembleAggragatorView, 'ensemble-aggragator-list');
   },
-  getPlotForFeatureExtractor: function (e) {
-    var featureExtractors = {"Minimum of population":"min", 
-                             "Maximum of population":"max", 
-                             "Average of population":"avg", 
-                             "Variance of population":"var", 
-                             "Population at last time point":"final"}
-    var value = e.target.selectedOptions.item(0).text;
-    this.featureExtractor = featureExtractors[value]
-    this.getPlot('psweep')
+  renderFeatureExtractionView: function () {
+    let featureExtractors = [
+      ["min", "Minimum of population"],
+      ["max", "Maximum of population"], 
+      ["avg", "Average of population"], 
+      ["var", "Variance of population"], 
+      ["final", "Population at last time point"]
+    ];
+    let featureExtractionView = new SelectView({
+      name: 'feature-extractor',
+      requires: true,
+      idAttribute: 'cid',
+      options: featureExtractors,
+      value: this.model.settings.resultsSettings.mapper
+    });
+    app.registerRenderSubview(this, featureExtractionView, 'feature-extraction-list');
   },
-  getPlotForEnsembleAggragator: function (e) {
-    var ensembleAggragators = {"Minimum of ensemble":"min", 
-                               "Maximum of ensemble":"max", 
-                               "Average of ensemble":"avg", 
-                               "Variance of ensemble":"var"}
-    var value = e.target.selectedOptions.item(0).text;
-    this.ensembleAggragator = ensembleAggragators[value]
-    this.getPlot('psweep')
+  renderPlotTypeSelectView: function () {
+    let options = [
+      ["stddevran", "Mean and Standard Deviation"],
+      ["trajectories", "Trajectories"],
+      ["stddev", "Standard Deviation"],
+      ["avg", "Trajectory Mean"]
+    ];
+    let plotTypeSelectView = new SelectView({
+      name: 'plot-type',
+      required: true,
+      idAttribute: 'cid',
+      options: options,
+      value: "stddevran"
+    });
+    app.registerRenderSubview(this, plotTypeSelectView, "plot-type-select");
   },
-  getPsweepKey: function () {
-    let key = this.speciesOfInterest + "-" + this.featureExtractor
-    if(this.trajectories > 1){
-      key += ("-" + this.ensembleAggragator)
-    }
-    return key
+  renderSpeciesOfInterestView: function () {
+    let speciesNames = this.model.model.species.map(function (specie) { return specie.name});
+    let speciesOfInterestView = new SelectView({
+      name: 'species-of-interest',
+      required: true,
+      idAttribute: 'cid',
+      options: speciesNames,
+      value: this.model.settings.parameterSweepSettings.speciesOfInterest.name
+    });
+    app.registerRenderSubview(this, speciesOfInterestView, "specie-of-interest-list");
   },
-  savePlot: function (type) {
-    var species = []
-    if(type === "psweep"){
-      type = this.getPsweepKey()
-      species = [this.speciesOfInterest]
-    }else{
-      species = this.species.map(function (specie) { return specie.name; });
-    }
-    let stamp = this.getTimeStamp()
-    var plotInfo = {"key":type, "stamp":stamp, "species":species};
-    plotInfo = Object.assign({}, plotInfo, this.plotArgs)
-    this.savedPlots.push(plotInfo)
-    let queryString = "?path="+path.join(this.parent.wkflPath, "settings.json")
-    let endpoint = path.join(app.getApiPath(), "workflow/save-plot")+queryString
-    xhr({uri: endpoint, method: "post", json: true, body: plotInfo}, function (err, response, body) {
-      if(response.statusCode > 400) {
-        console.log(body.message)
-      }
-    })
+  renderSweepParameterView: function () {
+    let sweepParameterView = this.renderCollection(
+      this.model.settings.parameterSweepSettings.parameters,
+      SweepParametersView,
+      this.queryByHook("parameter-ranges")
+    );
   },
-  getTimeStamp: function () {
-    var date = new Date()
-    let year = date.getFullYear().toString().slice(-2)
-    let month = date.getMonth() >= 10 ? date.getMonth().toString() : "0" + date.getMonth()
-    let day = date.getDate() >= 10 ? date.getDate().toString() : "0" + date.getDate()
-    let hour = date.getHours() >= 10 ? date.getHours().toString() : "0" + date.getHours()
-    let minutes = date.getMinutes() >= 10 ? date.getMinutes().toString() : "0" + date.getMinutes()
-    let seconds = date.getSeconds() >= 10 ? date.getSeconds().toString() : "0" + date.getSeconds()
-    return parseInt(year+month+day+hour+minutes+seconds)
-  },
-  handleCollapseStddevrangeClick: function (e) {
-    this.changeCollapseButtonText(e)
-    let type = "stddevran"
-    if(!this.plots[type]){
-      this.getPlot(type);
-    }
-  },
-  handleCollapseTrajectoriesClick: function (e) {
-    this.changeCollapseButtonText(e)
-    let type = "trajectories"
-    if(!this.plots[type]){
-      this.getPlot(type);
-    }
-  },
-  handleCollapseStddevClick: function (e) {
-    this.changeCollapseButtonText(e)
-    let type = "stddev"
-    if(!this.plots[type]){
-      this.getPlot(type);
+  setTitle: function (e) {
+    this.plotArgs['title'] = e.target.value
+    for (var type in this.plots) {
+      let fig = this.plots[type]
+      fig.layout.title.text = e.target.value
+      this.plotFigure(fig, type)
     }
   },
-  handleCollapseTrajmeanClick: function (e) {
-    this.changeCollapseButtonText(e)
-    let type = "avg"
-    if(!this.plots[type]){
-      this.getPlot(type);
+  setXAxis: function (e) {
+    this.plotArgs['xaxis'] = e.target.value
+    for (var type in this.plots) {
+      let fig = this.plots[type]
+      fig.layout.xaxis.title.text = e.target.value
+      this.plotFigure(fig, type)
     }
   },
-  handleCollapsePsweepClick: function (e) {
-    this.changeCollapseButtonText(e)
-    let type = "psweep"
-    if(!this.plots[type]){
-      this.getPlot(type);
+  setYAxis: function (e) {
+    this.plotArgs['yaxis'] = e.target.value
+    for (var type in this.plots) {
+      let fig = this.plots[type]
+      fig.layout.yaxis.title.text = e.target.value
+      this.plotFigure(fig, type)
     }
   },
+  update: function () {},
+  updateValid: function () {},
   subviews: {
     inputTitle: {
       hook: 'title',
@@ -375,13 +386,10 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'title',
-          label: '',
-          tests: '',
-          modelKey: null,
           valueType: 'string',
-          value: this.plotArgs.title || "",
+          value: this.plotArgs.title || ""
         });
-      },
+      }
     },
     inputXAxis: {
       hook: 'xaxis',
@@ -390,13 +398,10 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'xaxis',
-          label: '',
-          tests: '',
-          modelKey: null,
           valueType: 'string',
-          value: this.plotArgs.xaxis || "",
+          value: this.plotArgs.xaxis || ""
         });
-      },
+      }
     },
     inputYAxis: {
       hook: 'yaxis',
@@ -405,13 +410,10 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'yaxis',
-          label: '',
-          tests: '',
-          modelKey: null,
           valueType: 'string',
-          value: this.plotArgs.yaxis || "",
+          value: this.plotArgs.yaxis || ""
         });
-      },
-    },
-  },
+      }
+    }
+  }
 });

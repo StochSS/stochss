@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var xhr = require('xhr');
 var $ = require('jquery');
 let path = require('path');
 var _ = require('underscore');
@@ -55,6 +54,7 @@ let DomainEditor = PageView.extend({
     'click [data-hook=save-to-file]' : 'handleSaveToFile',
     'click [data-hook=import-particles-btn]' : 'handleImportMesh',
     'click [data-hook=set-particle-types-btn]' : 'getTypesFromFile',
+    'change [data-hook=static-domain]' : 'setStaticDomain',
     'change [data-hook=density]' : 'setDensity',
     'change [data-target=gravity]' : 'setGravity',
     'change [data-hook=pressure]' : 'setPressure',
@@ -88,44 +88,50 @@ let DomainEditor = PageView.extend({
   importMesh: function (data) {
     let self = this;
     let file = $("#meshfile").prop("files")[0];
+    let typeFiles = $("#typefile").prop("files")
     let formData = new FormData();
     formData.append("datafile", file);
     formData.append("particleData", JSON.stringify(data));
+    if(typeFiles.length) {
+      formData.append("typefile", typeFiles[0]);
+    }
     let endpoint = path.join(app.getApiPath(), 'spatial-model/import-mesh');
-    let req = new XMLHttpRequest();
-    req.open("POST", endpoint);
-    req.onload = function (e) {
-      var resp = JSON.parse(req.response);
-      if(req.status < 400) {
-        self.addParticles(resp.particles);
-        if(self.domain.x_lim[0] > resp.limits.x_lim[0]) {
-          self.domain.x_lim[0] = resp.limits.x_lim[0]
+    app.postXHR(endpoint, formData, {
+      success: function (err, response, body) {
+        body = JSON.parse(body);
+        if(body.types) {
+          self.addMissingTypes(body.types)
         }
-        if(self.domain.y_lim[0] > resp.limits.y_lim[0]) {
-          self.domain.y_lim[0] = resp.limits.y_lim[0]
+        self.addParticles(body.particles);
+        if(self.domain.x_lim[0] > body.limits.x_lim[0]) {
+          self.domain.x_lim[0] = body.limits.x_lim[0]
         }
-        if(self.domain.z_lim[0] > resp.limits.z_lim[0]) {
-          self.domain.z_lim[0] = resp.limits.z_lim[0]
+        if(self.domain.y_lim[0] > body.limits.y_lim[0]) {
+          self.domain.y_lim[0] = body.limits.y_lim[0]
         }
-        if(self.domain.x_lim[1] < resp.limits.x_lim[1]) {
-          self.domain.x_lim[1] = resp.limits.x_lim[1]
+        if(self.domain.z_lim[0] > body.limits.z_lim[0]) {
+          self.domain.z_lim[0] = body.limits.z_lim[0]
         }
-        if(self.domain.y_lim[1] < resp.limits.y_lim[1]) {
-          self.domain.y_lim[1] = resp.limits.y_lim[1]
+        if(self.domain.x_lim[1] < body.limits.x_lim[1]) {
+          self.domain.x_lim[1] = body.limits.x_lim[1]
         }
-        if(self.domain.z_lim[1] < resp.limits.z_lim[1]) {
-          self.domain.z_lim[1] = resp.limits.z_lim[1]
+        if(self.domain.y_lim[1] < body.limits.y_lim[1]) {
+          self.domain.y_lim[1] = body.limits.y_lim[1]
+        }
+        if(self.domain.z_lim[1] < body.limits.z_lim[1]) {
+          self.domain.z_lim[1] = body.limits.z_lim[1]
         }
         self.renderDomainLimitations();
         self.completeAction("Mesh successfully imported", "im")
         $('html, body').animate({
             scrollTop: $("#domain-plot").offset().top
         }, 20);
-      }else{
-        self.errorAction(resp.Message, "im")
+      },
+      error: function (err, response, body) {
+        body = JSON.parse(body);
+        self.errorAction(body.Message, "im")
       }
-    }
-    req.send(formData)
+    }, false)
   },
   handleSetDefaults: function (e) {
     let mass = Number($(this.queryByHook("td-mass")).find('input')[0].value);
@@ -209,7 +215,6 @@ let DomainEditor = PageView.extend({
       $(this.queryByHook("type-location-container")).css("display", "none");
       var disabled = true;
     }
-    console.log(disabled)
     $(this.queryByHook("set-particle-types-btn")).prop("disabled", disabled);
   },
   handleSelectTypeLocation: function (e) {
@@ -240,13 +245,15 @@ let DomainEditor = PageView.extend({
       this.queryStr += "domain_path=" + domainPath
     }
     let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + this.queryStr
-    xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      self.domain = new Domain(body.domain);
-      self.domain.directory = domainPath
-      self.domain.dirname = newDomain && !modelPath ? domainPath : null
-      self.model = self.buildModel(body.model, modelPath);
-      self.actPart = {"part":null, "tn":0, "pn":0};
-      self.renderSubviews();
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.domain = new Domain(body.domain);
+        self.domain.directory = domainPath
+        self.domain.dirname = newDomain && !modelPath ? domainPath : null
+        self.model = self.buildModel(body.model, modelPath);
+        self.actPart = {"part":null, "tn":0, "pn":0};
+        self.renderSubviews();
+      }
     });
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
@@ -265,8 +272,6 @@ let DomainEditor = PageView.extend({
     if(!fromImport) {
       this.renderDomainTypes();
       this.updatePlot();
-    }else{
-      console.log("From Imports")
     }
     if(cb) {
       cb();
@@ -313,13 +318,7 @@ let DomainEditor = PageView.extend({
     return model;
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
+    app.changeCollapseButtonText(this, e);
   },
   changeParticleLocation: function (x, y, z) {
     this.domain.particles.get(this.actPart.part.particle_id, "particle_id").point = [x, y, z];
@@ -429,6 +428,9 @@ let DomainEditor = PageView.extend({
     if(this.model) {
       data.model = {"name":this.model.name, "href":mdlEP + this.model.directory};
       let dirname = path.dirname(this.model.directory);
+      if(dirname.includes(".wkgp")) {
+        dirname = path.dirname(dirname);
+      }
       if(dirname.endsWith(".proj")) {
         let name = dirname.split("/").pop().split(".proj")[0];
         data.project = {"name":name, "href":projEP + dirname};
@@ -464,14 +466,15 @@ let DomainEditor = PageView.extend({
     let self = this;
     let queryStr = "?path=" + this.typeDescriptionsFile;
     let endpoint = path.join(app.getApiPath(), "spatial-model/particle-types") + queryStr;
-    xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      if(resp.statusCode < 400) {
-        self.addMissingTypes(body.names)
-        self.changeParticleTypes(body.types)
-        self.completeAction("Types set", "st")
-      }else{
-        self.errorAction(body.Message, "st")
-        console.log(err)
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.addMissingTypes(body.names);
+        self.changeParticleTypes(body.types);
+        self.completeAction("Types set", "st");
+      },
+      error: function (err, response, body) {
+        self.errorAction(body.Message, "st");
+        console.log(err);
       }
     });
   },
@@ -492,7 +495,7 @@ let DomainEditor = PageView.extend({
       parent: this,
       model: this.domain
     });
-    this.registerRenderSubview(this.create3DDomainView, "add-3d-domain");
+    app.registerRenderSubview(this, this.create3DDomainView, "add-3d-domain");
   },
   renderDomainLimitations: function () {
     if(this.xLimMinView) {
@@ -506,53 +509,54 @@ let DomainEditor = PageView.extend({
     this.xLimMinView = new InputView({parent: this, required: true,
                                      name: 'x-lim-min', valueType: 'number',
                                      value: this.domain.x_lim[0] || 0});
-    this.registerRenderSubview(this.xLimMinView, "x_lim-min");
+    app.registerRenderSubview(this, this.xLimMinView, "x_lim-min");
     this.yLimMinView = new InputView({parent: this, required: true,
                                      name: 'y-lim-min', valueType: 'number',
                                      value: this.domain.y_lim[0] || 0});
-    this.registerRenderSubview(this.yLimMinView, "y_lim-min");
+    app.registerRenderSubview(this, this.yLimMinView, "y_lim-min");
     this.zLimMinView = new InputView({parent: this, required: true,
                                      name: 'z-lim-min', valueType: 'number',
                                      value: this.domain.z_lim[0] || 0});
-    this.registerRenderSubview(this.zLimMinView, "z_lim-min");
+    app.registerRenderSubview(this, this.zLimMinView, "z_lim-min");
     this.xLimMaxView = new InputView({parent: this, required: true,
                                      name: 'x-lim-max', valueType: 'number',
                                      value: this.domain.x_lim[1] || 0});
-    this.registerRenderSubview(this.xLimMaxView, "x_lim-max");
+    app.registerRenderSubview(this, this.xLimMaxView, "x_lim-max");
     this.yLimMaxView = new InputView({parent: this, required: true,
                                      name: 'y-lim-max', valueType: 'number',
                                      value: this.domain.y_lim[1] || 0});
-    this.registerRenderSubview(this.yLimMaxView, "y_lim-max");
+    app.registerRenderSubview(this, this.yLimMaxView, "y_lim-max");
     this.zLimMaxView = new InputView({parent: this, required: true,
                                      name: 'z-lim-max', valueType: 'number',
                                      value: this.domain.z_lim[1] || 0});
-    this.registerRenderSubview(this.zLimMaxView, "z_lim-max");
+    app.registerRenderSubview(this, this.zLimMaxView, "z_lim-max");
   },
   renderDomainProperties: function () {
+    $(this.queryByHook("static-domain")).prop("checked", this.domain.static);
     let densityView = new InputView({parent: this, required: true,
                                      name: 'density', valueType: 'number',
                                      value: this.domain.rho_0 || 1});
-    this.registerRenderSubview(densityView, "density");
+    app.registerRenderSubview(this, densityView, "density");
     let gravityXView = new InputView({parent: this, required: true,
                                      name: 'gravity-x', valueType: 'number',
                                      value: this.domain.gravity[0], label: "X:  "});
-    this.registerRenderSubview(gravityXView, "gravity-x");
+    app.registerRenderSubview(this, gravityXView, "gravity-x");
     let gravityYView = new InputView({parent: this, required: true,
                                      name: 'gravity-y', valueType: 'number',
                                      value: this.domain.gravity[1], label: "Y:  "});
-    this.registerRenderSubview(gravityYView, "gravity-y");
+    app.registerRenderSubview(this, gravityYView, "gravity-y");
     let gravityZView = new InputView({parent: this, required: true,
                                      name: 'gravity-z', valueType: 'number',
                                      value: this.domain.gravity[2], label: "Z:  "});
-    this.registerRenderSubview(gravityZView, "gravity-z");
+    app.registerRenderSubview(this, gravityZView, "gravity-z");
     let pressureView = new InputView({parent: this, required: true,
                                       name: 'pressure', valueType: 'number',
                                       value: this.domain.p_0 || 0});
-    this.registerRenderSubview(pressureView, "pressure");
+    app.registerRenderSubview(this, pressureView, "pressure");
     let speedView = new InputView({parent: this, required: true,
                                    name: 'speed', valueType: 'number', 
                                    value: this.domain.c_0 || 0});
-    this.registerRenderSubview(speedView, "speed");
+    app.registerRenderSubview(this, speedView, "speed");
   },
   renderDomainTypes: function () {
     if(this.domainTypesView) {
@@ -599,15 +603,15 @@ let DomainEditor = PageView.extend({
     this.massView = new InputView({parent: this, required: true,
                                   name: 'mass', valueType: 'number',
                                   value: type.mass});
-    this.registerRenderSubview(this.massView, "td-mass");
+    app.registerRenderSubview(this, this.massView, "td-mass");
     this.volView = new InputView({parent: this, required: true,
                                  name: 'volume', valueType: 'number',
                                  value: type.volume});
-    this.registerRenderSubview(this.volView, "td-vol");
+    app.registerRenderSubview(this, this.volView, "td-vol");
     this.nuView = new InputView({parent: this, required: true,
                                 name: 'viscosity', valueType: 'number',
                                 value: type.nu});
-    this.registerRenderSubview(this.nuView, "td-nu");
+    app.registerRenderSubview(this, this.nuView, "td-nu");
     $(this.queryByHook("td-fixed")).prop("checked", type.fixed);
     $(this.queryByHook("edit-defaults")).css("display", "block");
   },
@@ -624,21 +628,21 @@ let DomainEditor = PageView.extend({
       model: particle,
       newParticle: false,
     });
-    this.registerRenderSubview(this.editParticleView, "edit-particle");
+    app.registerRenderSubview(this, this.editParticleView, "edit-particle");
   },
   renderMeshTransformations: function () {
     let xtrans = new InputView({parent: this, required: true,
                                 name: 'x-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(xtrans, "mesh-x-trans");
+    app.registerRenderSubview(this, xtrans, "mesh-x-trans");
     let ytrans = new InputView({parent: this, required: true,
                                 name: 'y-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(ytrans, "mesh-y-trans");
+    app.registerRenderSubview(this, ytrans, "mesh-y-trans");
     let ztrans = new InputView({parent: this, required: true,
                                 name: 'z-transformation', valueType: 'number',
                                 value: 0});
-    this.registerRenderSubview(ztrans, "mesh-z-trans");
+    app.registerRenderSubview(this, ztrans, "mesh-z-trans");
   },
   renderMeshTypeDefaults: function (id) {
     let type = this.domain.types.get(id, "typeID")
@@ -656,11 +660,7 @@ let DomainEditor = PageView.extend({
       model: particle,
       newParticle: true,
     });
-    this.registerRenderSubview(this.newParticleView, "new-particle");
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    return this.renderSubview(view, this.queryByHook(hook));
+    app.registerRenderSubview(this, this.newParticleView, "new-particle");
   },
   renderSubviews: function () {
     let breadData = this.getBreadcrumbData();
@@ -669,19 +669,28 @@ let DomainEditor = PageView.extend({
       let projBC = $(this.queryByHook("grandparent-breadcrumb"));
       projBC.text(breadData.project.name);
       projBC.prop("href", breadData.project.href);
+      $(this.queryByHook("return-to-project")).prop("href", breadData.project.href);
       let mdlBC = $(this.queryByHook("parent-two-breadcrumb"));
       mdlBC.text(breadData.model.name);
       mdlBC.prop("href", breadData.model.href);
+      $(this.queryByHook("return-to-model")).prop("href", breadData.model.href);
     }else if(breadData.model || breadData.project) {
       $(this.queryByHook("one-parent-breadcrumb-links")).css("display", "block");
       let breadcrumb = $(this.queryByHook("parent-one-breadcrumb"));
       if(breadData.project) {
         breadcrumb.text(breadData.project.name)
         breadcrumb.prop("href", breadData.project.href);
+        $(this.queryByHook("return-to-project")).prop("href", breadData.project.href);
+        $(this.queryByHook("return-to-model")).css("display", "none");
       }else {
         breadcrumb.text(breadData.model.name)
         breadcrumb.prop("href", breadData.model.href);
+        $(this.queryByHook("return-to-project")).css("display", "none");
+        $(this.queryByHook("return-to-model")).prop("href", breadData.model.href);
       }
+    }else{
+      $(this.queryByHook("return-to-model")).css("display", "none");
+      $(this.queryByHook("return-to-project")).css("display", "none");
     }
     this.renderDomainProperties();
     this.renderDomainLimitations();
@@ -698,9 +707,11 @@ let DomainEditor = PageView.extend({
     this.renderCreate3DDomain();
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
-    xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      self.plot = body.fig;
-      self.displayDomain();
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.plot = body.fig;
+        self.displayDomain();
+      }
     });
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -717,17 +728,19 @@ let DomainEditor = PageView.extend({
   renderTypesFileSelect: function () {
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/types-list");
-    xhr({uri: endpoint, json:true}, function (err, resp, body) {
-      self.typeDescriptions = body.paths;
-      var typesSelectView = new SelectView({
-        label: '',
-        name: 'type-files',
-        required: false,
-        idAttributes: 'cid',
-        options: body.files,
-        unselectedText: "-- Select Type File --",
-      });
-      self.registerRenderSubview(typesSelectView, "types-file-select")
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.typeDescriptions = body.paths;
+        var typesSelectView = new SelectView({
+          label: '',
+          name: 'type-files',
+          required: false,
+          idAttributes: 'cid',
+          options: body.files,
+          unselectedText: "-- Select Type File --",
+        });
+        app.registerRenderSubview(self, typesSelectView, "types-file-select");
+      }
     });
   },
   renderTypesLocationSelect: function (options) {
@@ -742,7 +755,7 @@ let DomainEditor = PageView.extend({
       options: options,
       unselectedText: "-- Select Location --"
     });
-    this.registerRenderSubview(this.typesLocationSelectView, "types-file-location-select")
+    app.registerRenderSubview(this, this.typesLocationSelectView, "types-file-location-select")
   },
   renderTypeSelectView: function () {
     if(this.typeView) {
@@ -758,7 +771,7 @@ let DomainEditor = PageView.extend({
       options: this.domain.types,
       value: this.domain.types.get(0, "typeID")
     });
-    this.registerRenderSubview(this.typeView, "mesh-type-select")
+    app.registerRenderSubview(this, this.typeView, "mesh-type-select")
   },
   saveDomain: function (name=null) {
     let domain = this.domain.toJSON();
@@ -771,12 +784,13 @@ let DomainEditor = PageView.extend({
     }
     let self = this;
     let endpoint = path.join(app.getApiPath(), "file/json-data") + "?path=" + domainPath;
-    xhr({uri: endpoint, method: "post", json: true, body: domain}, function (err, response, body) {
-      if(response.statusCode >= 400) {
-        self.errorAction(body.Message, "sd");
-        console.log(body.message)
-      }else{
+    app.postXHR(endpoint, domain, {
+      success: function (err, response, body) {
         self.completeAction("Domain save to file (.domn)", "sd");
+      },
+      error: function (err, response, body) {
+        self.errorAction(body.Message, "sd");
+        console.log(body.message);
       }
     });
   },
@@ -820,6 +834,10 @@ let DomainEditor = PageView.extend({
   setSpeed: function (e) {
     let value = Number(e.target.value)
     this.domain.c_0 = value;
+  },
+  setStaticDomain: function (e) {
+    let value = e.target.checked;
+    this.domain.statis = value;
   },
   startAction: function (action, src) {
     $(this.queryByHook(src + "-complete")).css("display", "none");

@@ -18,10 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var app = require('../app');
 var path = require('path');
-var xhr = require('xhr');
 //models
 var Model = require('ampersand-model');
-var ModelSettings = require('./model-settings');
+var TimespanSettings = require('./timespan-settings');
 var Domain = require('./domain');
 //collections
 var Species = require('./species');
@@ -53,7 +52,7 @@ module.exports = Model.extend({
     functionDefinitions: FunctionDefinitions
   },
   children: {
-    modelSettings: ModelSettings,
+    modelSettings: TimespanSettings,
     domain: Domain
   },
   session: {
@@ -64,6 +63,24 @@ module.exports = Model.extend({
     for: 'string',
     valid: 'boolean',
     error: 'object'
+  },
+  derived: {
+    elementID: {
+      deps: ["collection"],
+      fn: function () {
+        if(this.collection) {
+          return "M" + (this.collection.indexOf(this) + 1);
+        }
+        return "M-";
+      }
+    },
+    open: {
+      deps: ["directory"],
+      fn: function () {
+        let queryStr = "?path=" + this.directory;
+        return path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+      }
+    }
   },
   initialize: function (attrs, options){
     Model.prototype.initialize.apply(this, arguments);
@@ -119,9 +136,9 @@ module.exports = Model.extend({
       self.parameters.trigger('update-parameters', parameter.compID, parameter);
     });
     if(cb) {
-      this.save({success: cb});
+      app.postXHR(this.url(), this.toJSON(), { success: cb });
     }else{
-      this.save()
+      app.postXHR(this.url(), this.toJSON());
     }
   },
 });

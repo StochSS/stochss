@@ -19,13 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var _ = require('underscore');
 var $ = require('jquery');
 //var setFavicon = require('favicon-setter');
-var app = require('ampersand-app');
-var View = require('ampersand-view');
-var ViewSwitcher = require('ampersand-view-switcher');
+var App = require('ampersand-app');
 var localLinks = require('local-links');
 var domify = require('domify');
 var path = require('path');
-
+// support files
+let app = require("../app");
+//views
+var View = require('ampersand-view');
+var ViewSwitcher = require('ampersand-view-switcher');
+//templates
 var headTemplate = require('!pug-loader!../templates/head.pug');
 var bodyTemplate = require('!pug-loader!../templates/body.pug');
 
@@ -94,10 +97,11 @@ module.exports = View.extend({
   template: bodyTemplate,
   autoRender: true,
   initialize: function () {
-      this.listenTo(app, 'page', this.handleNewPage);
+      this.listenTo(App, 'page', this.handleNewPage);
   },
   events: {
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
+    'click [data-hook=user-logs-collapse]' : 'collapseExpandLogs'
     //'click a[href]': 'handleLinkClick'
   },
   render: function () {
@@ -114,16 +118,107 @@ module.exports = View.extend({
         document.title = _.result(newView, 'pageTitle') || 'StochSS';
         document.scrollTop = 0;
         
-        app.currentPage = newView;
+        App.currentPage = newView;
       }
     });
 
     var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/home"
     $(this.queryByHook("home-link")).prop('href', homePath);
-
+    let self = this;
+    let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
+    $("#user-logs").html(message)
+    this.logBlock = [];
+    this.logs = [];
+    this.getUserLogs();
+    this.scrolled = false;
+    this.scrollCount = 0;
+    $("#user-logs").on("mousewheel", function(e) {
+      self.scrolled = true;
+      self.scrollCount = 0;
+    });
     return this;
   },
-  
+  addNewLogBlock: function () {
+    if(this.logBlock.length > 0) {
+      let logBlock = this.logBlock.join("<br>");
+      this.logBlock = [];
+      $("#user-logs").append("<p class='mb-1' style='white-space:pre'>" + logBlock + "</p>")
+      return ""
+    }
+    return "<br>"
+  },
+  addNewLogs: function (newLogs) {
+    let self = this;
+    let logList = newLogs.map(function (log) {
+      if(log.includes("$ ")){
+        let head = self.addNewLogBlock();
+        var newLog = self.formatLog(log);
+        $("#user-logs").append(head + newLog);
+      }else{
+        var newLog = log;
+        if(newLog.trim()) {
+          self.logBlock.push(newLog);
+        }
+      }
+      self.logs.push(newLog);
+    });
+    this.addNewLogBlock();
+  },
+  collapseExpandLogs: function (e) {
+    let logs = $("#user-logs");
+    let classes = logs.attr("class").split(/\s+/);
+    if(classes.includes("show")) {
+      logs.removeClass("show");
+      $(this.queryByHook(e.target.dataset.hook)).html("+");
+      $(".user-logs").removeClass("expand-logs");
+      $(".side-navbar").css("z-index", 0);
+    }else{
+      logs.addClass("show");
+      $(this.queryByHook(e.target.dataset.hook)).html("-");
+      if($(".sidebar-sticky").css("position") === "fixed") {
+        $(".user-logs").addClass("expand-logs");
+        $(".side-navbar").css("z-index", 1);
+      }
+    }
+    let element = document.querySelector("#user-logs");
+    element.scrollTop = element.scrollHeight;
+  },
+  getUserLogs: function () {
+    let self = this;
+    let queryStr = "?logNum=" + this.logs.length;
+    let endpoint = path.join(app.getApiPath(), "user-logs") + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        if(body) {
+          let scrolled = self.scrolled;
+          self.addNewLogs(body.logs);
+          if(!self.scrolled){
+            let element = document.querySelector("#user-logs");
+            element.scrollTop = element.scrollHeight;
+          }else if(self.scrollCount < 60) {
+            self.scrollCount += 1;
+          }else{
+            self.scrolled = false;
+            self.scrollCount = 0;
+          }
+        }
+        self.updateUserLogs();
+      }
+    });
+  },
+  formatLog: function (log) {
+    var time = log.split('$ ')[0];
+    let date = new Date(time);
+    let months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+    var stamp = months[date.getMonth()] + " ";
+    stamp += date.getDate() + ", ";
+    stamp += date.getFullYear() + "  ";
+    let hours = date.getHours();
+    stamp += (hours < 10 ? "0" + hours : hours) + ":";
+    let minutes = date.getMinutes();
+    stamp += (minutes < 10 ? '0' + minutes : minutes) + ":";
+    return log.replace(time, stamp);
+  },
   handleNewPage: function (view) {
     this.pageSwitcher.set(view);
     //this.updateActiveNav();
@@ -145,5 +240,8 @@ module.exports = View.extend({
 
   navigate: function (page) {
     window.location = url;
+  },
+  updateUserLogs: function () {
+    setTimeout(_.bind(this.getUserLogs, this), 1000);
   }
 });

@@ -275,7 +275,7 @@ class StochSSSBMLModel(StochSSBase):
         return g_model, errors
 
 
-    def convert_to_model(self, name=None):
+    def convert_to_model(self, name=None, wkgp=False):
         '''
         Convert the sbml model to a stochss model and return it with mdl path
 
@@ -291,7 +291,14 @@ class StochSSSBMLModel(StochSSBase):
             return {"message":message, "errors":errors, "model":None}
 
         s_file = f"{g_model.name}.mdl" if name is None else f"{name}.mdl"
-        s_path = os.path.join(self.get_dir_name(), s_file)
+        if wkgp:
+            wkgp_path, changed = self.get_unique_path(name=f"{self.get_name(path=s_file)}.wkgp",
+                                                      dirname=self.get_dir_name())
+            if changed:
+                s_file = s_file.replace(self.get_name(path=s_file), self.get_name(path=wkgp_path))
+            s_path = os.path.join(wkgp_path, s_file)
+        else:
+            s_path = os.path.join(self.get_dir_name(), s_file)
 
         self.__convert_species(model=s_model, species=g_model.get_all_species())
         self.__convert_parameters(model=s_model, parameters=g_model.get_all_parameters())

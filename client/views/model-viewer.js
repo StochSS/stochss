@@ -16,18 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var path = require('path');
-var $ = require('jquery');
+//support files
+let app = require('../app');
 //views
-var View = require('ampersand-view');
-var SpeciesViewer = require('./species-viewer');
-var ParametersViewer = require('./parameters-viewer');
-var ReactionsViewer = require('./reactions-viewer');
-var EventsViewer = require('./events-viewer');
-var RulesViewer = require('./rules-viewer');
-var ModelSettingsViewer = require('./model-settings-viewer');
+let View = require('ampersand-view');
+let RulesViewer = require('./rules-viewer');
+let EventsViewer = require('./events-viewer');
+let SpeciesViewer = require('./species-viewer');
+let ReactionsViewer = require('./reactions-viewer');
+let ParametersEditor = require('./parameters-editor');
+let SBMLComponentsView = require('./sbml-component-editor');
 //templates
-var template = require('../templates/includes/modelViewer.pug');
+let template = require('../templates/includes/modelViewer.pug');
 
 module.exports = View.extend({
   template: template,
@@ -36,50 +36,55 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    if(attrs.status) {
-      this.status = attrs.status;
-    }else{
-      this.status = "complete"
-    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    var speciesViewer = new SpeciesViewer({
-      collection: this.model.species,
-    });
-    var parametersViewer = new ParametersViewer({
-      collection: this.model.parameters,
-    });
-    var reactionsViewer = new ReactionsViewer({
-      collection: this.model.reactions,
-    });
-    var eventsViewer = new EventsViewer({
-      collection: this.model.eventsCollection,
-    });
-    var rulesViewer = new RulesViewer({
-      collection: this.model.rules,
-    });
-    var modelSettingsViewer = new ModelSettingsViewer({
-      model: this.model.modelSettings,
-    });
-    this.registerRenderSubview(speciesViewer, "species-viewer-container");
-    this.registerRenderSubview(parametersViewer, "parameters-viewer-container");
-    this.registerRenderSubview(reactionsViewer, "reactions-viewer-container");
-    this.registerRenderSubview(eventsViewer, "events-viewer-container");
-    this.registerRenderSubview(rulesViewer, "rules-viewer-container");
-    this.registerRenderSubview(modelSettingsViewer, "model-settings-viewer-container");
+    this.renderSpeciesView();
+    this.renderParametersView();
+    this.renderReactionsView();
+    this.renderEventsView();
+    this.renderRulesView();
+    this.renderSBMLComponentsView();
   },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
+  renderEventsView: function () {
+    let eventsViewer = new EventsViewer({
+      collection: this.model.eventsCollection
+    });
+    app.registerRenderSubview(this, eventsViewer, "events-viewer-container");
+  },
+  renderParametersView: function () {
+    let parametersViewer = new ParametersEditor({
+      collection: this.model.parameters,
+      readOnly: true
+    });
+    app.registerRenderSubview(this, parametersViewer, "parameters-viewer-container");
+  },
+  renderReactionsView: function () {
+    let reactionsViewer = new ReactionsViewer({
+      collection: this.model.reactions
+    });
+    app.registerRenderSubview(this, reactionsViewer, "reactions-viewer-container");
+  },
+  renderRulesView: function () {
+    let rulesViewer = new RulesViewer({
+      collection: this.model.rules
+    });
+    app.registerRenderSubview(this, rulesViewer, "rules-viewer-container");
+  },
+  renderSBMLComponentsView: function () {
+    let sbmlComponentsView = new SBMLComponentsView({
+      functionDefinitions: this.model.functionDefinitions,
+      viewMode: true
+    });
+    app.registerRenderSubview(this, sbmlComponentsView, "sbml-components-viewer-container");
+  },
+  renderSpeciesView: function () {
+    let speciesViewer = new SpeciesViewer({
+      collection: this.model.species
+    });
+    app.registerRenderSubview(this, speciesViewer, "species-viewer-container");
   },
   changeCollapseButtonText: function (e) {
-    let source = e.target.dataset.hook
-    let collapseContainer = $(this.queryByHook(source).dataset.target)
-    if(!collapseContainer.length || !collapseContainer.attr("class").includes("collapsing")) {
-      let collapseBtn = $(this.queryByHook(source))
-      let text = collapseBtn.text();
-      text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
-    }
-  },
+    app.changeCollapseButtonText(this, e);
+  }
 });

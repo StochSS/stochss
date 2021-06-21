@@ -69,6 +69,10 @@ class StochSSAPIError(Exception):
         self.traceback = trace
 
 
+    def __str__(self):
+        return f"{self.message}: \n{self.traceback}"
+
+
 
 ####################################################################################################
 # File System Errors
@@ -135,6 +139,27 @@ class StochSSPermissionsError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(403, "Permission Denied", msg, trace)
+
+
+class StochSSUnzipError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Un-Zip Zip Archive API Handler Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that a problem occured during the extraction process for the zip archive
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "Unable to Extract Contents", msg, trace)
 
 ####################################################################################################
 # Model Errors
@@ -203,19 +228,19 @@ class DomainFormatError(StochSSAPIError):
         super().__init__(406, "Domain File Not In Proper Format", msg, trace)
 
 ####################################################################################################
-# Workflow Errors
+# Job Errors
 ####################################################################################################
 
-class StochSSWorkflowError(StochSSAPIError):
+class StochSSJobError(StochSSAPIError):
     '''
     ################################################################################################
-    StochSS Workflow Errored During Run Time
+    StochSS Job Errored During Run Time
     ################################################################################################
     '''
 
     def __init__(self, msg, trace=None):
         '''
-        Indicates that the workflow experienced an error during run
+        Indicates that the job experienced an error during run
 
         Attributes
         ----------
@@ -224,19 +249,19 @@ class StochSSWorkflowError(StochSSAPIError):
         trace : str
             Error traceback for the error
         '''
-        super().__init__(403, "Workflow Errored on Run", msg, trace)
+        super().__init__(403, "Job Errored on Run", msg, trace)
 
 
-class StochSSWorkflowNotCompleteError(StochSSAPIError):
+class StochSSJobNotCompleteError(StochSSAPIError):
     '''
     ################################################################################################
-    StochSS Workflow Has Not Completed
+    StochSS Job Has Not Completed
     ################################################################################################
     '''
 
     def __init__(self, msg, trace=None):
         '''
-        Indicates that the action requires a workflow to finish running before it can be executed
+        Indicates that the action requires a job to finish running before it can be executed
 
         Attributes
         ----------
@@ -245,7 +270,7 @@ class StochSSWorkflowNotCompleteError(StochSSAPIError):
         trace : str
             Error traceback for the error
         '''
-        super().__init__(403, "Workflow Run Not Complete", msg, trace)
+        super().__init__(403, "Job Run Not Complete", msg, trace)
 
 
 class PlotNotAvailableError(StochSSAPIError):
@@ -267,3 +292,24 @@ class PlotNotAvailableError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(406, "Plot Figure Not Available", msg, trace)
+
+
+class StochSSJobResultsError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Job Results Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the job results object was corrupted
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(500, "Job Results Error", msg, trace)

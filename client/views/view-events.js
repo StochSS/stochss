@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var $ = require('jquery');
+//support files
+let app = require('../app');
 //views
 var View = require('ampersand-view');
 var AssignmentsViewer = require('./event-assignments-viewer');
@@ -46,15 +48,11 @@ module.exports = View.extend({
     var assignmentsViewer = new AssignmentsViewer({
       collection: this.model.eventAssignments
     });
-    this.registerRenderSubview(assignmentsViewer, 'assignment-viewer');
+    app.registerRenderSubview(this, assignmentsViewer, 'assignment-viewer');
     if(this.model.useValuesFromTriggerTime) {
       $(this.queryByHook("trigger-time")).prop('checked', true)
     }else{
       $(this.queryByHook("assignment-time")).prop('checked', true)
     }
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
-  },
+  }
 });

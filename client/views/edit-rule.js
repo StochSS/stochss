@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var $ = require('jquery');
 //support files
+let app = require('../app');
 var tests = require('./tests');
 var modals = require('../modals');
 //views
@@ -60,8 +61,8 @@ module.exports = View.extend({
       options: varOptions,
       value: this.model.variable.name,
     });
-    this.registerRenderSubview(typeSelectView, "rule-type");
-    this.registerRenderSubview(variableSelectView, 'rule-variable');
+    app.registerRenderSubview(this, typeSelectView, "rule-type");
+    app.registerRenderSubview(this, variableSelectView, 'rule-variable');
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
@@ -104,10 +105,6 @@ module.exports = View.extend({
     var speciesNames = species.map(function (specie) { return specie.name });
     var parameterNames = parameters.map(function (parameter) { return parameter.name });
     return speciesNames.concat(parameterNames);
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
   },
   selectRuleType: function (e) {
     var type = e.target.selectedOptions.item(0).text;

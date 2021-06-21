@@ -1,0 +1,96 @@
+{
+    "parameterSweepSettings": {
+        "parameters": [
+            {
+                "max": 0.01245,
+                "min": 0.00415,
+                "name": "beta",
+                "paramID": 4,
+                "range": [
+                    0.00415,
+                    0.00498,
+                    0.005809999999999999,
+                    0.006639999999999999,
+                    0.007469999999999999,
+                    0.008299999999999998,
+                    0.00913,
+                    0.009959999999999998,
+                    0.010789999999999998,
+                    0.011619999999999998,
+                    0.01245
+                ],
+                "steps": 11
+            },
+            {
+                "max": 0.44999999999999996,
+                "min": 0.15,
+                "name": "gamma",
+                "paramID": 5,
+                "range": [
+                    0.15,
+                    0.18,
+                    0.20999999999999996,
+                    0.23999999999999996,
+                    0.26999999999999996,
+                    0.29999999999999993,
+                    0.32999999999999996,
+                    0.35999999999999993,
+                    0.3899999999999999,
+                    0.41999999999999993,
+                    0.44999999999999996
+                ],
+                "steps": 11
+            }
+        ],
+        "speciesOfInterest": {
+            "annotation": "Initial population of a species that are infected\n",
+            "compID": 2,
+            "isSwitchTol": true,
+            "mode": "discrete",
+            "name": "Infected",
+            "switchMin": 100,
+            "switchTol": 0.03,
+            "value": 1
+        }
+    },
+    "resultsSettings": {
+        "mapper": "final",
+        "outputs": [
+            {
+                "key": "Recovered-max-var",
+                "species": [
+                    "Recovered"
+                ],
+                "stamp": 200727163621
+            },
+            {
+                "key": "Infected-max-var",
+                "species": [
+                    "Infected"
+                ],
+                "stamp": 200727163636
+            },
+            {
+                "key": "Infected-avg-var",
+                "species": [
+                    "Infected"
+                ],
+                "stamp": 200727163726
+            }
+        ],
+        "reducer": "avg"
+    },
+    "simulationSettings": {
+        "absoluteTol": 1e-06,
+        "algorithm": "SSA",
+        "isAutomatic": false,
+        "realizations": 20,
+        "relativeTol": 0.001,
+        "seed": -1,
+        "tauTol": 0.03
+    },
+    "timespanSettings": {
+        "endSim": 20,
+        "timeStep": 0.05
+    }
+}

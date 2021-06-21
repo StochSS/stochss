@@ -16,387 +16,288 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var _ = require('underscore');
-var $ = require('jquery');
-var path = require('path');
-var xhr = require('xhr');
+let $ = require('jquery');
+let path = require('path');
+let _ = require('underscore');
 //support files
-var app = require('../app');
-var tests = require('../views/tests');
-var modals = require('../modals')
-//views
-var PageView = require('./base');
-var WorkflowEditorView = require('../views/workflow-editor');
-var WorkflowStatusView = require('../views/workflow-status');
-var WorkflowResultsView = require('../views/workflow-results');
-var ModelViewer = require('../views/model-viewer');
-var InfoView = require('../views/workflow-info');
-var InputView = require('../views/input');
-var SelectView = require('ampersand-select-view');
+let app = require('../app');
+let modals = require('../modals');
 //models
-var Model = require('../models/model')
+let Workflow = require('../models/workflow');
+//views
+let PageView = require('./base');
+let SettingsView = require('../views/settings');
+let LogsView = require('../views/workflow-info');
+let SelectView = require('ampersand-select-view');
+let StatusView = require('../views/workflow-status');
+let JobListingView = require('../views/job-listing');
+let ModelViewerView = require('../views/model-viewer');
+let ResultsView = require('../views/workflow-results');
+let SettingsViewerView = require('../views/settings-viewer');
 //templates
-var template = require('../templates/pages/workflowManager.pug');
+let template = require('../templates/pages/workflowManager.pug');
 
 import initPage from './page.js';
 
 let WorkflowManager = PageView.extend({
   template: template,
   events: {
-    'change [data-hook=workflow-name]' : 'setWorkflowName',
-    'input [data-hook=workflow-name' : 'validateWorkflowName',
-    'change [data-hook=model-path]' : 'updateWkflModel',
-    'input [data-hook=model-path]' : 'validateModelPath',
-    'click [data-hook=edit-workflow-help]' : function () {
-      let modal = $(modals.operationInfoModalHtml('wkfl-manager')).modal();
-    },
-    'click [data-hook=project-breadcrumb]' : 'handleReturnToProjectClick',
-    'click [data-hook=return-to-project-btn]' : 'handleReturnToProjectClick'
+    'change [data-hook=model-file]' : 'handleModelSelect',
+    'change [data-hook=model-location]' : 'handleLocationSelect',
+    'click [data-hook=project-breadcrumb]' : 'handleReturnToProject',
+    'click [data-hook=save-model]' : 'handleSaveWorkflow',
+    'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
+    'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
-    var self = this;
-    $(document).on('hidden.bs.modal', function (e) {
-      if(e.target.id === "modelNotFoundModal")
-        $(self.queryByHook("model-path")).find('input').focus();
+    let urlParams = new URLSearchParams(window.location.search);
+    this.model = new Workflow({
+      directory: urlParams.get('path')
     });
-    this.url = decodeURI(document.URL)
-    let urlParams = new URLSearchParams(window.location.search)
-    let type = urlParams.get('type');
-    this.urlPathParam = urlParams.get('path');
-    var stamp = this.getCurrentDate();
-    this.titleType = "Loading ...";
-    this.startLoadingDisplay();
-    var queryStr = "?stamp="+stamp+"&type="+type+"&path="+this.urlPathParam
-    if(urlParams.has('parentPath')) {
-      queryStr += ("&parentPath=" + urlParams.get('parentPath'))
-    }
-    var endpoint = path.join(app.getApiPath(), "workflow/load-workflow")+queryStr
-    xhr({uri: endpoint, json: true}, function (err, resp, body) {
-      self.stopLoadingDisplay();
-      if(resp.statusCode < 400) {
-        self.settings = body.settings
-        self.type = body.type
-        self.titleType = body.titleType
-        self.modelDirectory = body.mdlPath
-        self.wkflDirectory = body.wkflDir
-        self.workflowDate = body.timeStamp
-        self.workflowName = body.wkflName
-        self.status = body.status
-        self.startTime = body.startTime
-        self.wkflParPath = body.wkflParPath
-        self.wkflPath = path.join(self.wkflParPath, self.wkflDirectory)
-        self.buildWkflModel(body)
-        self.renderSubviews();
-        if(self.wkflPath.includes('.proj')) {
-          self.projectPath = path.dirname(self.wkflParPath)
-          $(self.queryByHook('project-breadcrumb')).text(self.projectPath.split('/').pop().split('.')[0])
-          $(self.queryByHook('workflow-breadcrumb')).text(self.workflowName)
-          self.queryByHook("project-breadcrumb-links").style.display = "block"
-          self.queryByHook("return-to-project-btn").style.display = "inline-block"
+    let self = this;
+    app.getXHR(this.model.url(), {
+      success: function (err, response, body) {
+        self.model.set(body)
+        $("#page-title").text("Workflow: " + self.model.name);
+        if(self.model.directory.includes('.proj')) {
+          let index = self.model.directory.indexOf('.proj') + 5;
+          self.projectPath = self.model.directory.slice(0, index);
+          $(self.queryByHook('project-breadcrumb')).text(self.projectPath.split('/').pop().split('.proj')[0]);
+          $(self.queryByHook('workflow-breadcrumb')).text(self.model.name);
+          self.queryByHook("project-breadcrumb-links").style.display = "block";
+          self.queryByHook("return-to-project-btn").style.display = "inline-block";
         }
-      }else{
-        self.renderLoadError(resp.body);
+        if(body.models){
+          self.renderModelSelectView(body.models);
+        }
+        self.renderSubviews();
+        if(!self.model.newFormat) {
+          let modal = $(modals.updateFormatHtml("Workflow")).modal();
+          let yesBtn = document.querySelector("#updateWorkflowFormatModal .yes-modal-btn");
+          yesBtn.addEventListener("click", function (e) {
+            modal.modal("hide");
+            let queryStr = "?path=" + self.model.directory + "&action=update-workflow";
+            let endpoint = path.join(app.getBasePath(), "stochss/loading-page") + queryStr;
+            window.location.href = endpoint;
+          });
+        }
       }
     });
   },
-  buildWkflModel: function (data) {
-    let model = data.model
-    this.model = new Model(model)
-    this.model.name = this.modelDirectory.split('/').pop().split('.')[0]
-    this.model.directory = this.modelDirectory
-    this.model.is_spatial = this.modelDirectory.endsWith(".smdl")
-    this.model.isPreview = false
-    this.model.for = "wkfl"
-    if(!model) {
-      this.modelLoadError = true
-      this.wkflModelNotFound(data.error)
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  handleLocationSelect: function (e) {
+    let value = e.srcElement.value;
+    if(value) {
+      this.model.model = value;
+    }
+  },
+  handleModelSelect: function (e) {
+    let value = e.srcElement.value;
+    if(value) {
+      if(this.models.paths[value].length == 1) {
+        $("#model-location-info").css("display", "none");
+        if(this.modelLocationSelectView) {
+          this.modelLocationSelectView.remove();
+        }
+        this.model.model = this.models.paths[value][0];
+      }else{
+        $("#model-location-info").css("display", "block");
+        this.renderModelLocationSelectView(value);
+      }
+    }
+  },
+  handleReturnToProject: function (e) {
+    if(this.model.activeJob.model.directory){
+      this.handleSaveWorkflow(e, _.bind(function () {
+        let queryStr = "?path=" + this.projectPath;
+        let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+        window.location.href = endpoint;
+      }, this));
     }else{
-      this.modelLoadError = false
+      let queryStr = "?path=" + this.projectPath;
+      let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+      window.location.href = endpoint;
     }
   },
-  wkflModelNotFound: function (error) {
-    let modal = $(modals.modelNotFoundHtml(error.Reason, error.Message)).modal()
+  handleSaveWorkflow: function (e, cb) {
+    let self = this;
+    let endpoint = this.model.url();
+    app.postXHR(endpoint, this.model.toJSON(), {
+      success: function (err, response, body) {
+        if(cb) {
+          cb();
+        }else{
+          $(self.queryByHook("src-model")).css("display", "none");
+          let oldFormRdyState = !self.model.newFormat && self.model.activeJob.status === "ready";
+          if(oldFormRdyState || self.model.newFormat) {
+            self.renderSettingsView();
+          }
+        }
+      }
+    });
   },
-  update: function () {
-  },
-  updateValid: function () {
-  },
-  getCurrentDate: function () {
-    var date = new Date();
-    var year = date.getFullYear();
-    var month = date.getMonth() + 1;
-    if(month < 10){
-      month = "0" + month
+  removeActiveJob: function () {
+    $(this.queryByHook("active-job-header-container")).css("display", "none");
+    if(this.resultsView) {
+      this.resultsView.remove();
     }
-    var day = date.getDate();
-    if(day < 10){
-      day = "0" + day
+    if(this.logsView) {
+      this.logsView.remove();
+      this.modelViewerView.remove();
+      this.settingsViewerView.remove();
     }
-    var hours = date.getHours();
-    if(hours < 10){
-      hours = "0" + hours
-    }
-    var minutes = date.getMinutes();
-    if(minutes < 10){
-      minutes = "0" + minutes
-    }
-    var seconds = date.getSeconds();
-    if(seconds < 10){
-      seconds = "0" + seconds
-    }
-    return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
-  startLoadingDisplay: function () {
-  },
-  stopLoadingDisplay: function () {
-  },
-  renderLoadError: function (resp) {
-    $(this.queryByHook("page-title")).text("Workflow: Load Error")
-    $(this.queryByHook("load-wkfl-error")).css('display', 'block')
-    $(this.queryByHook("reason")).text(resp.Reason)
-    $(this.queryByHook("message")).text(resp.Message)
-    $(this.queryByHook("traceback")).text(resp.Traceback)
-  },
-  renderSubviews: function () {
-    $(this.queryByHook("page-title")).text('Workflow: '+this.titleType)
-    this.renderWkflNameInputView();
-    this.renderMdlPathInputView();
-    this.renderWorkflowEditor();
-    if(this.status !== "new" && this.status !== "ready") {
-      this.renderWorkflowStatusView();
-      this.renderModelViewer();
+  renderActiveJob: function () {
+    if(this.model.newFormat) {
+      $(this.queryByHook("active-job-header")).text("Job: " + this.model.activeJob.name);
+      $(this.queryByHook("active-job-header-container")).css("display", "block");
     }
-    if(this.status === "error" || this.status === "complete") {
+    if(this.model.activeJob.status !== "error") {
       this.renderResultsView();
-      this.renderInfoView();
     }
-    if(this.status === 'running'){
-      this.getWorkflowStatus();
+    this.renderLogsView();
+    this.renderSettingsViewerView();
+    this.renderModelViewerView();
+  },
+  renderJobListingView: function () {
+    if(this.jobListingView) {
+      this.jobListingView.remove();
     }
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
+    this.jobListingView = this.renderCollection(
+      this.model.jobs,
+      JobListingView,
+      this.queryByHook("job-listing")
+    );
+  },
+  renderLogsView: function () {
+    if(this.logsView) {
+      this.logsView.remove();
+    }
+    this.logsView = new LogsView({
+      logs: this.model.activeJob.logs
     });
+    app.registerRenderSubview(this, this.logsView, "workflow-info-container");
   },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    return this.renderSubview(view, this.queryByHook(hook));
-  },
-  renderWkflNameInputView: function () {
-    let inputName = new InputView({
-      parent: this,
+  renderModelLocationSelectView: function (model) {
+    if(this.modelLocationSelectView) {
+      this.modelLocationSelectView.remove();
+    }
+    this.modelLocationSelectView = new SelectView({
+      label: 'Location: ',
+      name: 'source-model-location',
       required: true,
-      name: 'name',
-      label: 'Workflow Name: ',
-      tests: '',
-      modelKey: null,
-      valueType: 'string',
-      value: this.workflowName,
+      idAttributes: 'cid',
+      options: this.models.paths[model],
+      unselectedText: "-- Select Location --"
     });
-    this.registerRenderSubview(inputName, 'workflow-name');
-    if(this.status !== "new") {
-      $(this.queryByHook('workflow-name')).find('input').prop('disabled', true);
-    }
+    app.registerRenderSubview(this, this.modelLocationSelectView, "model-location");
   },
-  renderMdlPathInputView: function () {
-    let modelPathInput = new InputView({
-      parent: this,
+  renderModelSelectView: function (models) {
+    this.models = models;
+    $(this.queryByHook("src-model")).css("display", "block");
+    let modelSelectView = new SelectView({
+      label: 'Model: ',
+      name: 'source-model',
       required: true,
-      name: 'name',
-      label: 'Model Path: ',
-      tests: "",
-      modelKey: 'directory',
-      valueType: 'string',
-      value: this.model.directory,
+      idAttributes: 'cid',
+      options: models.files,
+      unselectedText: "-- Select Model --"
     });
-    this.registerRenderSubview(modelPathInput, "model-path");
-    if(this.status !== "new" && this.status !== "ready") {
-      $(this.queryByHook('model-path')).find('input').prop('disabled', true);
-    }
+    app.registerRenderSubview(this, modelSelectView, "model-file");
   },
-  renderWorkflowEditor: function () {
-    if(this.workflowEditorView){
-      this.workflowEditorView.remove()
+  renderModelViewerView: function () {
+    if(this.modelViewerView) {
+      this.modelViewerView.remove();
     }
-    this.workflowEditor = new WorkflowEditorView({
-      model: this.model,
-      settings: this.settings,
-      type: this.type,
-      status: this.status,
+    this.modelViewerView = new ModelViewerView({
+      model: this.model.activeJob.model
     });
-    this.workflowEditorView = this.registerRenderSubview(this.workflowEditor, 'workflow-editor-container');
-  },
-  renderWorkflowStatusView: function () {
-    if(this.workflowStatusView){
-      this.workflowStatusView.remove();
-    }
-    var statusView = new WorkflowStatusView({
-      startTime: this.startTime,
-      status: this.status,
-    });
-    this.workflowStatusView = this.registerRenderSubview(statusView, 'workflow-status-container');
+    app.registerRenderSubview(this, this.modelViewerView, "model-viewer-container");
   },
   renderResultsView: function () {
-    if(this.workflowResultsView){
-      this.workflowResultsView.remove();
+    if(this.resultsView) {
+      this.resultsView.remove();
     }
-    var resultsView = new WorkflowResultsView({
-      parent: this,
-      trajectories: this.settings.simulationSettings.realizations,
-      status: this.status,
-      species: this.model.species,
-      type: this.type,
-      speciesOfInterest: this.settings.parameterSweepSettings.speciesOfInterest.name
+    this.resultsView = new ResultsView({
+      model: this.model.activeJob
     });
-    this.workflowResultsView = this.registerRenderSubview(resultsView, 'workflow-results-container');
+    app.registerRenderSubview(this, this.resultsView, "workflow-results-container");
   },
-  renderInfoView: function () {
-    if(this.infoView){
-      this.infoView.remove();
+  renderStatusView: function () {
+    if(this.statusView) {
+      this.statusView.remove();
     }
-    this.infoView = new InfoView({
-      status: this.status,
-      logsPath: path.join(this.wkflPath, "logs.txt")
+    this.statusView = new StatusView({
+      model: this.model.activeJob
     });
-    this.registerRenderSubview(this.infoView, 'workflow-info-container')
+    app.registerRenderSubview(this, this.statusView, "status-container");
   },
-  renderModelViewer: function (){
-    if(this.modelViewer){
-      this.modelViewer.remove();
+  renderSettingsView: function () {
+    if(this.settingsView) {
+      this.settingsView.remove();
     }
-    this.modelViewer = new ModelViewer({
-      model: this.model,
-      status: this.status,
-      type: this.type
+    this.settingsView = new SettingsView({
+      model: this.model.settings
     });
-    this.registerRenderSubview(this.modelViewer, 'model-viewer-container')
+    app.registerRenderSubview(this, this.settingsView, "settings-container");
   },
-  getWorkflowStatus: function () {
-    var self = this;
-    var endpoint = path.join(app.getApiPath(), "workflow/workflow-status")+"?path="+this.wkflPath;
-    xhr({uri: endpoint}, function (err, response, body) {
-      if(self.status !== body )
-        self.status = body;
-      if(self.status === 'running')
-        setTimeout(_.bind(self.getWorkflowStatus, self), 1000);
-      else{
-        self.renderWorkflowStatusView()
-        self.renderInfoView();
-      }
-      if(self.status === 'complete') {
-        self.renderWorkflowEditor();
-        self.renderResultsView();
-        self.renderModelViewer();
-      }
+  renderSettingsViewerView: function () {
+    if(this.settingsViewerView) {
+      this.settingsViewerView.remove();
+    }
+    this.settingsViewerView = new SettingsViewerView({
+      model: this.model.activeJob.settings
     });
+    app.registerRenderSubview(this, this.settingsViewerView, "settings-viewer-container");
   },
-  validateName(input, rename = false) {
-    var error = ""
-    if(input.endsWith('/')) {
-      error = 'forward'
+  renderSubviews: function () {
+    let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";
+    let newFormNotArchive = this.model.newFormat && this.model.model;
+    if(!this.models && (oldFormRdyState || newFormNotArchive)) {
+      this.renderSettingsView();
+    }else if(this.settingsView) {
+      this.settingsView.remove();
     }
-    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-    if(rename) {
-      invalidChars += "/"
+    if(this.model.newFormat) {
+      $(this.queryByHook("jobs-container")).css("display", "block");
+      this.renderJobListingView();
+    }else if(this.model.activeJob.status !== "ready") {
+      this.renderStatusView();
     }
-    for(var i = 0; i < input.length; i++) {
-      if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both"
-      }
-    }
-    return error
-  },
-  validateWorkflowName: function (e) {
-    if(this.validateName(e.target.value, true) !== ""){
-      document.querySelector("#workflowNameSpecialCharError").style.display = "block"
-    }else{
-      document.querySelector("#workflowNameSpecialCharError").style.display = "none"
+    let detailsStatus = ["error", "complete"]
+    if(this.model.activeJob && detailsStatus.includes(this.model.activeJob.status)) {
+      this.renderActiveJob();
     }
   },
-  validateModelPath: function (e) {
-    if(this.validateName(e.target.value) !== ""){
-      document.querySelector("#modelPathSpecialCharError").style.display = "block"
-    }else{
-      document.querySelector("#modelPathSpecialCharError").style.display = "none"
-    }
+  setActiveJob: function (job) {
+    this.model.activeJob = job;
+    this.removeActiveJob();
+    this.renderActiveJob();
   },
-  setWorkflowName: function(e) {
-    var newWorkflowName = e.target.value.trim();
-    if(this.validateName(newWorkflowName) === "") {
-      if(newWorkflowName.endsWith(this.workflowDate)){
-        this.workflowName = newWorkflowName
-      }else{
-        this.workflowName = newWorkflowName + this.workflowDate
-        e.target.value = this.workflowName
-      }
-      $(this.queryByHook('workflow-breadcrumb')).text(this.workflowName)
-      this.wkflDirectory = this.workflowName + ".wkfl"
-      let queryStr = "?path=" + this.wkflPath + "&name=" + this.wkflDirectory;
-      this.wkflPath = path.join(this.wkflParPath, this.wkflDirectory)
-      let endpoint = path.join(app.getApiPath(), "file/rename") + queryStr
-      xhr({uri: endpoint, json: true}, function (err, resp, body) {});
-    }else{
-      e.target.value = this.workflowName
-      setTimeout(function (e) {
-        document.querySelector("#workflowNameSpecialCharError").style.display = "none"
-      }, 5000)
-    }
-  },
-  updateWkflModel: function (e) {
-    if(this.validateName(e.target.value) === "") {
-      let self = this;
-      let parPath = path.dirname(self.modelDirectory)
-      if(parPath.endsWith(".proj") && parPath !== path.dirname(e.target.value)) {
-        self.model.directory = self.modelDirectory
-        $(self.queryByHook("model-path")).find('input').val(self.modelDirectory)
-        let mdlPathErr = $(modals.wkflModelPathErrorHtml()).modal()
-      }else{
-        self.modelDirectory = e.target.value
-        this.model.directory = e.target.value
-        this.model.fetch({
-          json: true,
-          success: function (model, response, options) {
-            self.modelLoadError = false
-            self.renderWorkflowEditor()
-          },
-          error: function (model, response, options) {
-            self.modelLoadError = true
-            self.renderWorkflowEditor()
-            self.wkflModelNotFound(response.body)
-          }
-        });
-      }
-    }else{
-      e.target.value = this.modelDirectory
-      setTimeout(function (e) {
-        document.querySelector("#modelPathSpecialCharError").style.display = "none"
-      }, 5000)
-    }
-  },
-  reloadWkfl: function () {
+  updateWorkflow: function (newJob) {
     let self = this;
-    if(self.status === 'new') {
-      // Need to refactor this
-      let mdlParPath = path.dirname(this.modelDirectory)
-      if(mdlParPath !== "."){
-        let replaceText = this.wkflPath.split(mdlParPath+'/').slice(1).join(mdlParPath)
-        this.url = this.url.replace(this.modelDirectory.split('/').pop(), replaceText)
-      }else{
-        this.url = this.url.replace(this.modelDirectory, this.wkflPath)
-      }
-      window.location.href = this.url
-    }
-    else
-      window.location.reload()
-  },
-  handleReturnToProjectClick: function(e) {
-    let self = this
-    if((this.status === 'ready' || this.status === 'new') && !this.modelLoadError){
-      this.workflowEditorView.workflowStateButtons.clickSaveHandler(e, function (e) {
-        window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
-      })
-    }else{
-      window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+self.projectPath
+    if(this.model.newFormat) {
+      let hadActiveJob = Boolean(this.model.activeJob.status)
+      app.getXHR(this.model.url(), {
+        success: function (err, response, body) {
+          self.model.set(body);
+          if(!Boolean(self.model.activeJob.status)){
+            self.removeActiveJob();
+          }else if(!hadActiveJob && Boolean(self.model.activeJob.status)) {
+            self.renderActiveJob();
+          }
+        }
+      });
+    }else if(!this.model.newFormat){
+      app.getXHR(this.model.url(), {
+        success: function (err, response, body) {
+          self.model.set(body)
+          self.renderSubviews();
+        }
+      });
     }
   }
 });

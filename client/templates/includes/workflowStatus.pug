@@ -4,30 +4,23 @@ div#workflow-status.card.card-body
 
     h3.inline Status
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-status", data-hook="collapse", disabled) +
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-status" data-hook="collapse") -
 
-  div.collapse(id="collapse-status", data-hook="workflow-status")
+  div.collapse.show(id="collapse-status" data-hook="workflow-status")
 
     table.table
       thead
         tr
-
           th(scope="col") Date
           th(scope="col") Status
 
       tbody
         tr
-
-          td: div=this.startTime
+          td
+            div=this.model.fmtStartTime
+          
           td
             div
-              div.inline=this.status
+              div.inline=this.model.status
               div.inline.spinner-border.status(data-hook="running-spinner")
 
-    div(style="display: none;")
-
-      button.btn.btn-outline-primary.box-shadow(data-hook="stop-workflow", type="button", disabled)
-        | Stop Workflow
-
-      button.btn.btn-outline-primary.box-shadow(data-hook="restart-workflow", type="button", disabled)
-        | Restart Workflow

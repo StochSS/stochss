@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+//support files
+let app = require('../app');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -67,11 +69,7 @@ module.exports = View.extend({
     let nameView = new InputView({parent: this, required: true,
                                   name: 'name', valueType: 'string',
                                   value: this.model.name});
-    this.registerRenderSubview(nameView, "type-" + this.model.typeID);
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    return this.renderSubview(view, this.queryByHook(hook));
+    app.registerRenderSubview(this, nameView, "type-" + this.model.typeID);
   },
   update: function () {},
   updateValid: function () {}

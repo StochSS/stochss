@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var $ = require('jquery');
+//support files
+let app = require('../app');
 //views
 var View = require('ampersand-view');
 var InputView = require('./input');
@@ -44,7 +46,7 @@ module.exports = View.extend({
       options: options,
       value: this.model.variable.name,
     });
-    this.registerRenderSubview(variableSelectView, 'event-assignment-variable');
+    app.registerRenderSubview(this, variableSelectView, 'event-assignment-variable');
     var inputField = this.queryByHook('event-assignment-Expression').children[0].children[1];
     $(inputField).attr("placeholder", "---No Expression Entered---");
   },
@@ -63,10 +65,6 @@ module.exports = View.extend({
     var speciesNames = species.map(function (specie) { return specie.name });
     var parameterNames = parameters.map(function (parameter) { return parameter.name });
     return speciesNames.concat(parameterNames);
-  },
-  registerRenderSubview: function (view, hook) {
-    this.registerSubview(view);
-    this.renderSubview(view, this.queryByHook(hook));
   },
   selectAssignmentVariable: function (e) {
     var species = this.model.collection.parent.collection.parent.species;

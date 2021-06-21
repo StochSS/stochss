@@ -23,7 +23,7 @@ import traceback
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
-                            StochSSFileExistsError
+                            StochSSFileExistsError, StochSSUnzipError
 
 class StochSSFile(StochSSBase):
     '''
@@ -64,10 +64,10 @@ class StochSSFile(StochSSBase):
             return "The file {0} was successfully deleted.".format(self.get_file())
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You do not have permission to delete this file: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def duplicate(self):
@@ -79,7 +79,12 @@ class StochSSFile(StochSSBase):
         '''
         src_path = self.get_path(full=True)
         self.log("debug", f"Full path to the file: {src_path}")
-        dst_path = self.get_unique_copy_path()
+        if ".proj" in src_path and ".wkgp" in src_path and not src_path.endswith(".ipynb"):
+            wkgp = self.get_unique_copy_path(path=self.get_dir_name())
+            os.mkdir(wkgp)
+            dst_path = os.path.join(wkgp, f"{self.get_name(path=wkgp)}.{src_path.split('.').pop()}")
+        else:
+            dst_path = self.get_unique_copy_path()
         self.log("debug", f"Full destination path: {dst_path}")
         try:
             shutil.copyfile(src_path, dst_path)
@@ -88,10 +93,10 @@ class StochSSFile(StochSSBase):
             return {"Message":message, "File":cp_name}
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You do not have permission to copy this file: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def move(self, location):
@@ -113,10 +118,10 @@ class StochSSFile(StochSSBase):
             return f"Success! {self.get_file()} was moved to {self.get_dir_name()}."
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc)
+            raise StochSSFileNotFoundError(message, traceback.format_exc) from err
         except PermissionError as err:
             message = f"You do not have permission to move this file: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def read(self):
@@ -134,10 +139,10 @@ class StochSSFile(StochSSBase):
             return resp
         except FileNotFoundError as err:
             message = f"Could not find the file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
-    def unzip(self):
+    def unzip(self, from_upload=True):
         '''
         Extract the contents of a zip archive
 
@@ -146,7 +151,6 @@ class StochSSFile(StochSSBase):
         '''
         if not self.path.endswith(".zip"):
             return []
-
         try:
             path = self.get_path(full=True)
             dirname = self.get_dir_name(full=True)
@@ -162,6 +166,12 @@ class StochSSFile(StochSSBase):
                 zip_file.extractall(dirname)
             if "__MACOSX" in os.listdir(dirname):
                 shutil.rmtree(os.path.join(dirname, "__MACOSX"))
-            return []
+            if from_upload:
+                return []
+            message = "Successfully extracted the contents of"
+            return {"message": f"{message} {self.get_file()} to {self.get_dir_name()}"}
         except zipfile.BadZipFile as err:
-            return [str(err)]
+            message = f"{str(err)} so it could not be unzipped."
+            if not from_upload:
+                raise StochSSUnzipError(message, traceback.format_exc()) from err
+            return [message]

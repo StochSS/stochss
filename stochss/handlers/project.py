@@ -18,30 +18,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import os
-import ast
 import json
-import shutil
 import logging
-
-# from shutil import copyfile, copytree, rmtree
 from tornado import web
 from notebook.base.handlers import APIHandler
+# APIHandler documentation:
+# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
+# Note APIHandler.finish() sets Content-Type handler to 'application/json'
+# Use finish() for json, write() for text
 
-# from .util.rename import get_unique_file_name, get_file_name
-# from .util.workflow_status import get_status
-# from .util.generate_zip_file import download_zip
-
-from .util import StochSSBase, StochSSAPIError, report_error
+from .util import StochSSFolder, StochSSProject, StochSSModel, StochSSSpatialModel, \
+                  StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
 
 # pylint: disable=abstract-method
+# pylint: disable=too-few-public-methods
 class LoadProjectBrowserAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for loading all of the users projects
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     async def get(self):
@@ -51,213 +49,50 @@ class LoadProjectBrowserAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        self.set_header('Content-Type', 'application/json')
-        projects = []
-        self.get_projects_from_directory(user_dir, projects)
-        log.debug("List of projects: %s", projects)
-        resp = {"projects":projects}
-        self.write(resp)
-        self.finish()
-
-
-    @classmethod
-    def get_projects_from_directory(cls, path, projects):
-        '''
-        Get the projects in the directory if any exist.
-
-        Attributes
-        ----------
-        path : string
-            Path the target directory
-        projects : list
-            List of project dictionaries
-        '''
-        for item in os.listdir(path):
-            new_path = os.path.join(path, item)
-            if item.endswith('.proj'):
-                projects.append({'directory': new_path.replace("/home/jovyan/", ""),
-                                 'parentDir': os.path.dirname(new_path.replace("/home/jovyan/",
-                                                                               "")),
-                                 'elementID': "p{}".format(len(projects) + 1)})
-            elif not item.startswith('.') and os.path.isdir(new_path):
-                cls.get_projects_from_directory(new_path, projects)
-
-
-class LoadProjectAPIHandler(APIHandler):
-    '''
-    ##############################################################################
-    Handler for creating new StochSS Projects
-    ##############################################################################
-    '''
-    @web.authenticated
-    def get(self):
-        '''
-        Create a new project directory and the path to the directory if needed.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path")
-        log.debug("The path to the new project directory: %s", path)
         try:
-            project = {"models": [], "workflowGroups": [], "trash_empty": True}
-            for item in os.listdir(path):
-                if item == "README.md":
-                    readme_path = os.path.join(path, item)
-                    with open(readme_path, 'r') as readme_file:
-                        project['annotation'] = readme_file.read()
-                elif item.endswith('.mdl') or item.endswith('.smdl'):
-                    mdl_dir = os.path.join(path, item)
-                    with open(mdl_dir, 'r') as mdl_file:
-                        model = json.load(mdl_file)
-                        base = StochSSBase(path=item)
-                        model['name'] = base.get_name()
-                        model['directory'] = mdl_dir
-                        self.update_model_data(model)
-                        project['models'].append(model)
-                elif item.endswith('.wkgp'):
-                    name = item.split('.')[0]
-                    workflows = []
-                    for workflow in os.listdir(os.path.join(path, item)):
-                        if workflow.endswith('.wkfl'):
-                            self.get_stochss_workflow(project, workflows,
-                                                      os.path.join(path, item, workflow),
-                                                      workflow)
-                        elif workflow.endswith('.ipynb'):
-                            self.get_notebook_workflow(workflows,
-                                                       os.path.join(path, item, workflow),
-                                                       workflow)
-                    project['workflowGroups'].append({"name":name, "workflows":workflows})
-                elif item == "trash":
-                    project['trash_empty'] = len(os.listdir(os.path.join(path, item))) == 0
-            log.debug("Contents of the project: %s", project)
-            self.write(project)
+            self.set_header('Content-Type', 'application/json')
+            folder = StochSSFolder(path="")
+            data = folder.get_project_list()
+            log.debug("List of projects: %s", data)
+            self.write(data)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
 
 
-    @classmethod
-    def update_model_data(cls, data):
-        param_ids = []
-        for param in data['parameters']:
-            param_ids.append(param['compID'])
-            if isinstance(param['expression'], str):
-                try:
-                    param['expression'] = ast.literal_eval(param['expression'])
-                except ValueError:
-                    pass
-        for reaction in data['reactions']:
-            if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
-                try:
-                    value = ast.literal_eval(reaction['rate']['expression'])
-                    reaction['rate']['expression'] = value
-                except ValueError:
-                    pass
-        for event in data['eventsCollection']:
-            for assignment in event['eventAssignments']:
-                if assignment['variable']['compID'] in param_ids:
-                    try:
-                        value = ast.literal_eval(assignment['variable']['expression'])
-                        assignment['variable']['expression'] = value
-                    except ValueError:
-                        pass
-        for rule in data['rules']:
-            if rule['variable']['compID'] in param_ids:
-                try:
-                    value = ast.literal_eval(rule['variable']['expression'])
-                    rule['variable']['expression'] = value
-                except ValueError:
-                    pass
-
-
-    @classmethod
-    def get_workflow_info(cls, wkfl_dict):
+class LoadProjectAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for creating new StochSS Projects
+    ################################################################################################
+    '''
+    @web.authenticated
+    def get(self):
         '''
-        Add the necessary workflow info elements to the workflow model
+        Create a new project directory and the path to the directory if needed.
 
         Attributes
         ----------
-        wkfl_dict : dict
-            JSON representation of a workflow
         '''
-        with open(os.path.join(wkfl_dict["path"], "info.json"), 'r') as info_file:
-            info = json.load(info_file)
-            types = {'gillespy': 'Ensemble Simulation', 'parameterSweep':'Parameter Sweep'}
-            wkfl_dict['type'] = types[info['type']]
-            if not 'annotation' in info.keys():
-                wkfl_dict['annotation'] = ""
-            else:
-                wkfl_dict['annotation'] = info['annotation']
-
-
-    @classmethod
-    def get_notebook_workflow(cls, workflows, path, workflow):
-        '''
-        Get the info for the notebook workflow
-
-        Attributes
-        ----------
-        workflows: list
-            List of workflows
-        path : string
-            Path to the workflow
-        workflow : string
-            Name of the workflow directory
-        '''
-        wkfl_dict = {"path":path, "name":workflow.split('.')[0],
-                     "status":"", "outputs":[], "annotation":""}
-        with open(path, "r") as nb_file:
-            file_data = nb_file.read()
-        if "Traceback (most recent call last)" in file_data:
-            wkfl_dict['status'] = 'error'
-        else:
-            wkfl_dict['status'] = 'ready'
-        wkfl_dict['type'] = "notebook"
-        workflows.append(wkfl_dict)
-
-
-    def get_stochss_workflow(self, project, workflows, path, workflow):
-        '''
-        Get the info for the StochSS Workflow
-
-        Attributes
-        ----------
-        project : dict
-            Dictionary representation of the stochss project
-        workflows: list
-            List of workflows
-        path : string
-            Path to the workflow
-        workflow : string
-            Name of the workflow directory
-        '''
-        wkfl_dict = {"path":path, "name":workflow.split('.')[0]}
-        base = StochSSBase(path=wkfl_dict['path'])
-        wkfl_dict['status'] = base.get_status()
-        with open(os.path.join(wkfl_dict['path'],
-                               'settings.json'), 'r') as settings_file:
-            outputs = json.load(settings_file)['resultsSettings']['outputs']
-            if outputs:
-                output = max(outputs, key=lambda output: output['stamp'])
-                if "plot" in project.keys():
-                    if output['stamp'] > project['plot']['output']['stamp']:
-                        project['plot']['path'] = wkfl_dict['path']
-                        project['plot']['output'] = output
-                else:
-                    project['plot'] = {"path":wkfl_dict['path'], "output":output}
-            wkfl_dict['outputs'] = outputs
-        self.get_workflow_info(wkfl_dict)
-        workflows.append(wkfl_dict)
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the project directory: %s", path)
+        log.info("Loading project data")
+        try:
+            project = StochSSProject(path=path)
+            s_project = project.load()
+            log.debug("Contents of the project: %s", s_project)
+            self.write(s_project)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
 
 
 class NewProjectAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for creating new StochSS Projects
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
@@ -270,60 +105,48 @@ class NewProjectAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug("The path to the new project directory: %s", path)
+        log.info("Creating %s project", path.split('/').pop())
         try:
-            os.makedirs(path)
-            os.mkdir(os.path.join(path, "trash"))
-            os.mkdir(os.path.join(path, "WorkflowGroup1.wkgp"))
-            resp = {"message":"Successfully created the project: {0}\
-                              ".format(path.split('/').pop()),
-                    "path":path}
+            project = StochSSProject(path=path, new=True)
+            resp = {"message":f"Successfully created the project: {project.get_file()}",
+                    "path":project.path}
+            log.debug("Response: %s", resp)
+            log.info("Successfully created %s project", project.get_file())
             self.write(resp)
-        except FileExistsError as err:
-            self.set_status(406)
-            error = {"Reason":"Project Already Exists",
-                     "Message":"Could not create your project: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
-class NewWorkflowGroupAPIHandler(APIHandler):
+class NewModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
-    Handler for creating new StochSS Workflow Groups
-    ##############################################################################
+    ################################################################################################
+    Handler for creating new StochSS Models in StochSS Projects
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
         '''
-        Create a new workflow group directory.
+        Create a new model in the project.
 
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the new workflow group directory: %s", path)
+        log.debug("Path to the project: %s", path)
+        file = self.get_query_argument(name="mdlFile")
+        log.debug("Name to the file: %s", file)
         try:
-            os.mkdir(path)
-            proj_file = os.path.dirname(path).split('/').pop()
-            exp_file = path.split('/').pop()
-            resp = {"message":"The {} was successfully created in {}".format(exp_file, proj_file),
-                    "path":path}
+            project = StochSSProject(path=path)
+            resp = project.add_model(file=file, new=True)
+            project.print_logs(log)
+            log.debug("Response: %s", resp)
             self.write(resp)
-        except FileExistsError as err:
-            self.set_status(406)
-            error = {"Reason":"Workflow Group Already Exists",
-                     "Message":"Could not create your workflow group: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            error = {"Reason":"Dirctory Not Found",
-                     "Message":"Workflow Groups can only be created in a StochSS Project: \
-                                {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        log.setLevel(logging.WARNING)
         self.finish()
 
 
@@ -341,23 +164,19 @@ class AddExistingModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        path = self.get_query_argument(name="path")
         log.debug("Path to the model: %s", path)
-        models = []
-        for root, _, files in os.walk("/home/jovyan"):
-            if path not in root and "/." not in root and ".wkfl" not in root:
-                root = root.replace(user_dir+"/", "")
-                files = list(filter(lambda file: (file.endswith(".smdl") or
-                                                  file.endswith(".mdl")), files))
-                for file in files:
-                    if root == user_dir:
-                        models.append(file)
-                    else:
-                        models.append(os.path.join(root, file))
-        log.debug("List of model that can be added to the project: %s", models)
-        self.write({"models": models})
+        try:
+            folder = StochSSFolder(path="")
+            # file will be excluded if test passes
+            test = lambda ext, root, file: bool(".wkfl" in root or f"{path}" in root or \
+                                                "trash" in root.split("/"))
+            data = folder.get_file_list(ext=[".mdl", ".smdl"], test=test)
+            log.debug("List of models: %s", data)
+            self.write(data)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
@@ -369,49 +188,32 @@ class AddExistingModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        mdl_path = os.path.join(user_dir, self.get_query_argument(name="mdlPath"))
+        path = self.get_query_argument(name="path")
         log.debug("Path to the project: %s", path)
+        mdl_path = self.get_query_argument(name="mdlPath")
         log.debug("Path to the model: %s", mdl_path)
-        if mdl_path.endswith('.mdl') or mdl_path.endswith('.smdl'):
-            try:
-                base = StochSSBase(path=os.path.join(path, mdl_path.split("/").pop()))
-                unique_path, changed = base.get_unique_path(mdl_path.split("/").pop())
-                shutil.copyfile(mdl_path, unique_path)
-                resp = {"message": "The model {0} was successfully move into \
-                                    {1}".format(mdl_path.split('/').pop(), path.split("/").pop())}
-                if changed:
-                    resp['message'] += " as {0}".format(unique_path.split('/').pop())
-                log.debug("Response message: %s", resp)
-                self.write(resp)
-            except IsADirectoryError as err:
-                self.set_status(406)
-                error = {"Reason":"Not A Model",
-                         "Message":"Cannot move directories into StochSS Projects: {0}".format(err)}
-                log.error("Exception Information: %s", error)
-                self.write(error)
-            except FileNotFoundError as err:
-                self.set_status(404)
-                error = {"Reason":"Model Not Found",
-                         "Message":"Could not find the model: {0}".format(err)}
-                log.error("Exception Information: %s", error)
-                self.write(error)
-        else:
-            self.set_status(406)
-            error = {"Reason":"Not A Model",
-                     "Message":"Cannot move non-model files into StochSS Projects"}
-            log.error("Exception Information: %s", error)
-            self.write(error)
+        try:
+            project = StochSSProject(path=path)
+            log.info("Loading model data")
+            model_class = StochSSModel if mdl_path.endswith(".mdl") else StochSSSpatialModel
+            model = model_class(path=mdl_path)
+            log.info("Adding %s to %s", model.get_file(), project.get_file())
+            resp = project.add_model(file=model.get_file(), model=model.load())
+            project.print_logs(log)
+            log.info("Successfully added %s to %s", model.get_file(), project.get_file())
+            log.debug("Response: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
 class ExtractModelAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for extracting models from a project
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
@@ -421,38 +223,33 @@ class ExtractModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
+        src_path = self.get_query_argument(name="srcPath")
         log.debug("Path to the target model: %s", src_path)
-        dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
+        dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path for the target model: %s", dst_path)
         try:
-            base = StochSSBase(path=dst_path)
-            unique_path, changed = base.get_unique_path(dst_path.split('/').pop())
-            shutil.copyfile(src_path, unique_path)
-            export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
-                           if os.path.dirname(unique_path) != user_dir else "/")
-            resp = "The Model {0} was extracted to {1} in files\
-                                ".format(src_path.split('/').pop(), export_path)
-            if changed:
-                resp += " as {0}".format(unique_path.split('/').pop())
-            log.debug("Response message: %s", resp)
-            self.write(resp)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            error = {"Reason":"Model Not Found",
-                     "Message":"Could not find the model: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
+            src_model = StochSSModel(path=src_path)
+            log.info("Extracting %s", src_model.get_file())
+            dst_model = StochSSModel(path=dst_path, new=True, model=src_model.load())
+            dirname = dst_model.get_dir_name()
+            if not dirname:
+                dirname = "/"
+            message = f"The Model {src_model.get_file()} was extracted to "
+            message += f"{dirname} in files as {dst_model.get_file()}"
+            log.debug("Response message: %s", message)
+            log.info("Successfully extracted %s to %s", src_model.get_file(), dirname)
+            self.write(message)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
 class ExtractWorkflowAPIHandler(APIHandler):
     '''
-    ##############################################################################
+    ################################################################################################
     Handler for extracting workflows from a project
-    ##############################################################################
+    ################################################################################################
     '''
     @web.authenticated
     def get(self):
@@ -462,94 +259,20 @@ class ExtractWorkflowAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        src_path = os.path.join(user_dir, self.get_query_argument(name="srcPath"))
+        self.set_header('Content-Type', 'application/json')
+        src_path = self.get_query_argument(name="srcPath")
         log.debug("Path to the target model: %s", src_path)
-        dst_path = os.path.join(user_dir, self.get_query_argument(name="dstPath"))
+        dst_path = self.get_query_argument(name="dstPath")
         log.debug("Destination path for the target model: %s", dst_path)
         try:
-            base = StochSSBase(path=src_path)
-            if base.get_status() != "running":
-                base.path = dst_path
-                unique_path, changed = base.get_unique_path(dst_path.split('/').pop())
-                shutil.copytree(src_path, unique_path)
-                base.path = unique_path
-                if base.get_status() != "ready":
-                    self.update_workflow_path(unique_path)
-                export_path = (os.path.dirname(unique_path).replace(user_dir+"/", "")
-                               if os.path.dirname(unique_path) != user_dir else "/")
-                resp = "The Workflow {0} was exported to {1} in files\
-                                ".format(src_path.split('/').pop(), export_path)
-                if changed:
-                    resp += " as {0}".format(unique_path.split('/').pop())
-                log.debug("Response message: %s", resp)
-                self.write(resp)
-        except FileNotFoundError as err:
-            self.set_status(404)
-            self.set_header('Content-Type', 'application/json')
-            error = {"Reason":"Workflow Not Found",
-                     "Message":"Could not find the workflow: {0}".format(err)}
-            log.error("Exception Information: %s", error)
-            self.write(error)
+            log.info("Extracting %s", src_path.split('/').pop())
+            project = StochSSProject(path=os.path.dirname(os.path.dirname(src_path)))
+            resp = project.extract_workflow(src=src_path, dst=dst_path)
+            project.print_logs(log)
+            log.debug("Response message: %s", resp)
+            self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        self.finish()
-
-
-    @classmethod
-    def update_workflow_path(cls, dst):
-        '''
-        Update the path to the workflows model
-
-        Attributes
-        ----------
-        dst : string
-            Destination path for the workflow
-        '''
-        with open(os.path.join(dst, "info.json"), "r+") as info_file:
-            info = json.load(info_file)
-            log.debug("Old workflow info: %s", info)
-            new_path = os.path.join(dst, info['wkfl_model'].split('/').pop())
-            info['wkfl_model'] = new_path.replace("/home/jovyan/", "")
-            log.debug("New workflow info: %s", info)
-            info_file.seek(0)
-            json.dump(info, info_file)
-            info_file.truncate()
-
-
-class EmptyTrashAPIHandler(APIHandler):
-    '''
-    ##############################################################################
-    Handler for a projects trash directory
-    ##############################################################################
-    '''
-    @web.authenticated
-    def get(self):
-        '''
-        Empty the trash directory.
-
-        Attributes
-        ----------
-        '''
-        user_dir = "/home/jovyan"
-        self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the trash directory: %s", path)
-        try:
-            for item in os.listdir(path):
-                item_path = os.path.join(path, item)
-                if os.path.isdir(item_path):
-                    shutil.rmtree(item_path)
-                else:
-                    os.remove(item_path)
-            resp = "Successfully emptied the trash"
-            log.debug("Response message: %s", resp)
-            self.write(resp)
-        except FileNotFoundError:
-            os.mkdir(path)
-            resp = "The trash directory was removed."
-            log.debug("Response message: %s", resp)
-            self.write(resp)
         self.finish()
 
 
@@ -560,42 +283,6 @@ class ProjectMetaDataAPIHandler(APIHandler):
     ##############################################################################
     '''
     @web.authenticated
-    def get(self):
-        '''
-        Get the projects meta data if it exists else create a meta data dictionary.
-
-        Attributes
-        ----------
-        '''
-        user_dir = "/home/jovyan"
-        self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
-        log.debug("Path to the project directory: %s", path)
-        files = self.get_query_argument(name="files").split(',')
-        log.debug("List of files: %s", files)
-        md_path = os.path.join(path, ".meta-data.json")
-        log.debug("Path to the meta-data file: %s", md_path)
-        if os.path.exists(md_path):
-            with open(md_path, "r") as md_file:
-                data = json.load(md_file)
-                meta_data = data['meta-data']
-                creators = data['creators']
-        else:
-            meta_data = {}
-            creators = {}
-
-        for file in files:
-            if file not in meta_data.keys():
-                meta_data[file] = {"description":"", "creators":[]}
-        log.debug("Meta-data for the project: %s", meta_data)
-        log.debug("Creators for the project: %s", creators)
-        resp = {"meta_data":meta_data, "creators":creators}
-        log.debug("Response Message: %s", resp)
-        self.write(resp)
-        self.finish()
-
-
-    @web.authenticated
     def post(self):
         '''
         Save the projects meta data.
@@ -603,14 +290,18 @@ class ProjectMetaDataAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
         self.set_header('Content-Type', 'application/json')
-        path = os.path.join(user_dir, self.get_query_argument(name="path"))
+        path = self.get_query_argument(name="path")
         log.debug("Path to the project directory: %s", path)
-        data = self.request.body.decode()
+        data = json.loads(self.request.body.decode())
         log.debug("Meta-data to be saved: %s", data)
-        with open(os.path.join(path, ".meta-data.json"), "w") as md_file:
-            md_file.write(data)
+        try:
+            log.info("Saving metadata for %s", path.split('/').pop())
+            project = StochSSProject(path=path)
+            project.update_meta_data(data=data)
+            log.info("Successfully saved the metadata")
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()
 
 
@@ -628,6 +319,8 @@ class ExportAsCombineAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Export as combine function has not been cleaned up")
+        self.finish()
 
 
     @web.authenticated
@@ -638,6 +331,8 @@ class ExportAsCombineAPIHandler(APIHandler):
         Attributes
         ----------
         '''
+        log.warning("Export as combine w/meta data function has not been cleaned up")
+        self.finish()
 
 
 class UpdateAnnotationAPIHandler(APIHandler):
@@ -654,12 +349,39 @@ class UpdateAnnotationAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        user_dir = "/home/jovyan"
-        path = os.path.join(user_dir, self.get_query_argument(name="path"), "README.md")
+        path = self.get_query_argument(name="path")
         log.debug("Path to the project directory: %s", path)
         data = json.loads(self.request.body.decode())['annotation'].strip()
         log.debug("Annotation to be saved: %s", data)
-        log.debug(type(data))
-        with open(path, 'w') as readme_file:
-            readme_file.write(data)
+        try:
+            log.info("Saving the annotation for %s", path.split('/').pop())
+            project = StochSSProject(path=path)
+            project.update_annotation(annotation=data)
+            log.info("Successfully saved the annotation")
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class UpadteProjectAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for updating project format.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Updates the project and its workflows to the new format.
+
+        Attributes
+        ----------
+        '''
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the project: %s", path)
+        try:
+            proj = StochSSProject(path=path)
+            proj.update_project_format()
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()

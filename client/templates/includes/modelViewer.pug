@@ -3,9 +3,10 @@ div.card.card-body
   div(id="model-viewer-header")
 
     h3.inline="Review Model: "+this.model.name
-    button.btn.btn-outline-collapse(id=this.model.name, data-toggle="collapse", data-target="#collapse-model"+this.model.name.replace(/ /g, ''), data-hook="collapse-model") +
 
-  div.collapse(id="collapse-model"+this.model.name.replace(/ /g, ''))
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-model" data-hook="collapse-model") +
+
+  div.collapse(id="collapse-model")
 
     div(data-hook="species-viewer-container")
 
@@ -17,6 +18,6 @@ div.card.card-body
 
     div(data-hook="rules-viewer-container")
 
-    div.card.card-body="System Volume: "+this.model.volume
+    div(data-hook="sbml-components-viewer-container")
 
-    div(data-hook="model-settings-viewer-container")
+    div.card.card-body="System Volume: "+this.model.volume

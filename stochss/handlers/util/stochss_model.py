@@ -28,7 +28,7 @@ from gillespy2 import Model, Species, Parameter, Reaction, Event, EventTrigger, 
                       RateRule, AssignmentRule, FunctionDefinition
 
 from .stochss_base import StochSSBase
-from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, \
+from .stochss_errors import StochSSAPIError, StochSSFileNotFoundError, FileNotJSONFormatError, \
                             StochSSModelFormatError
 
 class StochSSModel(StochSSBase):
@@ -63,7 +63,7 @@ class StochSSModel(StochSSBase):
             if changed:
                 self.path = new_path.replace(self.user_dir + '/', "")
             with open(new_path, "w") as mdl_file:
-                json.dump(model, mdl_file)
+                json.dump(model, mdl_file, indent=4, sort_keys=True)
         else:
             self.model = None
 
@@ -81,10 +81,11 @@ class StochSSModel(StochSSBase):
                     g_assignment = EventAssignment(variable=var,
                                                    expression=assignment['expression'])
                     assignments.append(g_assignment)
+            return assignments
         except KeyError as err:
             message = "Event assignments are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -113,7 +114,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Events are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_function_definitions(self, model):
@@ -126,18 +127,18 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Function definitions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_model_settings(self):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
-            return numpy.arange(0, end, step_size)
+            return numpy.arange(0, end + step_size, step_size)
         except KeyError as err:
             message = "Model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_parameters(self, model):
@@ -149,7 +150,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Parameters are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_reactions(self, model):
@@ -172,15 +173,15 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Reactions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_rules(self, model):
         try:
             for rule in self.model['rules']:
                 if rule['expression'].strip() != "":
-                    G_Rule = RateRule if rule['type'] == "Rate Rule" else AssignmentRule
-                    g_rule = G_Rule(name=rule['name'].strip(),
+                    rule_class = RateRule if rule['type'] == "Rate Rule" else AssignmentRule
+                    g_rule = rule_class(name=rule['name'].strip(),
                                     variable=rule['variable']['name'],
                                     formula=rule['expression'].strip())
                     if rule['type'] == "Rate Rule":
@@ -190,7 +191,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Rules are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __convert_species(self, model):
@@ -208,7 +209,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Species are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -232,7 +233,7 @@ class StochSSModel(StochSSBase):
         except KeyError as err:
             message = "Reactants or products are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
     def __read_model_file(self):
@@ -241,10 +242,10 @@ class StochSSModel(StochSSBase):
                 self.model = json.load(mdl_file)
         except FileNotFoundError as err:
             message = f"Could not find the model file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"The model is not JSON decobable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -320,25 +321,29 @@ class StochSSModel(StochSSBase):
         Attributes
         ----------
         '''
-        if self.model is None:
-            _ = self.load()
-        name = self.get_name()
-        tspan = self.__convert_model_settings()
         try:
-            g_model = Model(name=name, volume=self.model['volume'], tspan=tspan,
-                            annotation=self.model['annotation'])
-        except KeyError as err:
-            message = "Model properties are not properly formatted or "
-            message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc())
-        self.__convert_species(model=g_model)
-        self.__convert_parameters(model=g_model)
-        self.__convert_reactions(model=g_model)
-        self.__convert_events(model=g_model)
-        self.__convert_rules(model=g_model)
-        self.__convert_function_definitions(model=g_model)
-        self.log("debug", str(g_model))
-        return g_model
+            if self.model is None:
+                _ = self.load()
+            name = self.get_name()
+            tspan = self.__convert_model_settings()
+            try:
+                g_model = Model(name=name, volume=self.model['volume'], tspan=tspan,
+                                annotation=self.model['annotation'])
+            except KeyError as err:
+                message = "Model properties are not properly formatted or "
+                message += f"are referenced incorrectly: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+            self.__convert_species(model=g_model)
+            self.__convert_parameters(model=g_model)
+            self.__convert_reactions(model=g_model)
+            self.__convert_events(model=g_model)
+            self.__convert_rules(model=g_model)
+            self.__convert_function_definitions(model=g_model)
+            self.log("debug", str(g_model))
+            return g_model
+        except Exception as err:
+            message = f"An un-expected error occured: {str(err)}"
+            raise StochSSAPIError(500, "Server Error", message, traceback.format_exc()) from err
 
 
     def convert_to_sbml(self):
@@ -350,7 +355,10 @@ class StochSSModel(StochSSBase):
         '''
         name = self.get_name()
         s_file = f"{name}.sbml"
-        s_path = os.path.join(self.get_dir_name(), s_file)
+        dirname = self.get_dir_name()
+        if ".proj" in dirname and ".wkgp" in dirname:
+            dirname = os.path.dirname(dirname)
+        s_path = os.path.join(dirname, s_file)
 
         g_model = self.convert_to_gillespy2()
         tmp_path = export(g_model, path=tempfile.NamedTemporaryFile().name)
@@ -376,12 +384,19 @@ class StochSSModel(StochSSBase):
             model['domain'] = self.get_model_template()['domain']
         for species in model['species']:
             if "types" not in species.keys():
-                species['types'] = list(range(1, len(model['domain']['type_names'])))
+                species['types'] = list(range(1, len(model['domain']['types'])))
         for reaction in model['reactions']:
             if "types" not in reaction.keys():
-                reaction['types'] = list(range(1, len(model['domain']['type_names'])))
-        s_path = self.path.replace(".mdl", ".smdl")
-        s_file = self.get_file(path=s_path)
+                reaction['types'] = list(range(1, len(model['domain']['types'])))
+        if ".wkgp" in self.path:
+            wkgp_path = self.get_dir_name()
+            wkgp_path, _ = self.get_unique_path(name=self.get_file(path=wkgp_path),
+                                                dirname=os.path.dirname(wkgp_path))
+            s_file = self.get_file(path=wkgp_path).replace(".wkgp", ".smdl")
+            s_path = os.path.join(wkgp_path, s_file)
+        else:
+            s_path = self.path.replace(".mdl", ".smdl")
+            s_file = self.get_file(path=s_path)
         message = f"{self.get_file()} was successfully convert to {s_file}!"
         return {"Message":message, "File":s_file}, {"spatial":model, "path":s_path}
 
@@ -439,6 +454,8 @@ class StochSSModel(StochSSBase):
         self.__update_reactions()
         self.__update_events(param_ids=param_ids)
         self.__update_rules(param_ids=param_ids)
+        self.model['name'] = self.get_name()
+        self.model['directory'] = self.path
         return self.model
 
 

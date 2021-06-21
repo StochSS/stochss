@@ -46,6 +46,47 @@ class StochSSBase():
         self.logs = []
 
 
+    @classmethod
+    def check_project_format(cls, path):
+        '''
+        Determine if the format of the project is out of date
+
+        Attributes
+        ----------
+        '''
+        files = os.listdir(path)
+        model_test = lambda file: file.endswith(".mdl") or file.endswith(".smdl")
+        wkgp_test = lambda file: file.endswith(".wkgp")
+        models = list(filter(model_test, files))
+        wkgps = list(filter(wkgp_test, files))
+        if len(models) > 0:
+            return False
+        if len(wkgps) == 1 and wkgps[0] == "WorkflowGroup1.wkgp":
+            return False
+        return True
+
+
+    @classmethod
+    def check_workflow_format(cls, path):
+        '''
+        Determine if the format of the workflow is out of date
+
+        Attributes
+        ----------
+        path : str
+            Path to the workflow.
+        '''
+        path = os.path.join(cls.user_dir, path)
+        files = os.listdir(path)
+        old_files = ["info.json", "logs.txt", "results", "RUNNING", "ERROR", "COMPLETE"]
+        for file in old_files:
+            if file in files:
+                return False
+        if len(list(filter(lambda file: file.endswith(".mdl"), files))) > 0:
+            return False
+        return True
+
+
     def get_new_path(self, dst_path):
         '''
         Gets the proper destination path for the file object to be moved
@@ -56,6 +97,8 @@ class StochSSBase():
             New path for the file object from the users home directory
         '''
         new_path = os.path.join(self.user_dir, dst_path)
+        if dst_path.startswith("trash/") and not "trash" in os.listdir(self.user_dir):
+            os.mkdir(os.path.join(self.user_dir, "trash"))
         if new_path.split().pop().replace('.', '', 5).isdigit():
             return new_path.replace(new_path.split().pop(), "").strip()
         if "trash/" in new_path and os.path.exists(new_path):
@@ -95,10 +138,10 @@ class StochSSBase():
                 return json.load(template)
         except FileNotFoundError as err:
             message = f"Could not find the model template file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"Model template data is not JSON decodeable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     def get_settings_template(self, as_string=False):
@@ -119,10 +162,10 @@ class StochSSBase():
                 return json.load(template)
         except FileNotFoundError as err:
             message = f"Could not find the settings template file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except json.decoder.JSONDecodeError as err:
             message = f"Settings template data is not JSON decodeable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc())
+            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
     def get_name(self, path=None):
@@ -194,10 +237,10 @@ class StochSSBase():
             return "ready"
         except FileNotFoundError as err:
             message = f"Could not find the workflow: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
-    def get_unique_path(self, name):
+    def get_unique_path(self, name, dirname=None):
         '''
         Get a unique path for the file object with the target name
 
@@ -206,8 +249,9 @@ class StochSSBase():
         name : str
             New name for the target file
         '''
-        dirname = self.get_dir_name(full=True)
-        exists = name in os.listdir(dirname)
+        if dirname is None:
+            dirname = self.get_dir_name(full=True)
+        exists = name in os.listdir(dirname if dirname else self.user_dir)
 
         i = 1
         if exists:
@@ -221,7 +265,7 @@ class StochSSBase():
                         i = 2
         while exists:
             proposed_name = ''.join([name, f"({i})", ext])
-            exists = proposed_name in os.listdir(dirname)
+            exists = proposed_name in os.listdir(dirname if dirname else self.user_dir)
             i += 1
 
         changed = i > 1
@@ -230,18 +274,20 @@ class StochSSBase():
         return os.path.join(dirname, name), changed
 
 
-    def get_unique_copy_path(self):
+    def get_unique_copy_path(self, path=None):
         '''
         Gets a unique name for the file object being copied.
         Accounts for files that are already copies.
 
         Attributes
         ----------
+        path : str
+            Path to the file object
         '''
-        file = self.get_file()
-        dirname = self.get_dir_name()
+        file = self.get_file(path=path)
+        dirname = self.get_dir_name() if path is None else os.path.dirname(path)
         ext = '.' + file.split('.').pop() if '.' in file else ''
-        name = file.split('-copy')[0] if '-copy' in file else self.get_name()
+        name = file.split('-copy')[0] if '-copy' in file else self.get_name(path=path)
 
         # Check if the file object is an original or at least the second copy
         if not '-copy' in file or '-copy(' in file:
@@ -316,8 +362,8 @@ class StochSSBase():
         file = self.get_file()
         new_path, changed = self.get_unique_path(name)
         try:
-            dst = shutil.move(path, new_path)
-            self.path = dst.replace(self.user_dir + '/', '')
+            shutil.move(path, new_path)
+            self.path = new_path.replace(self.user_dir + '/', '')
             new_file = self.get_file()
             if changed:
                 message = f"A file already exists with that name, {file} was renamed to "
@@ -327,7 +373,7 @@ class StochSSBase():
             return {"message":message, "_path":self.path, "changed":changed}
         except FileNotFoundError as err:
             message = f"Could not find the file or directory: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
             message = f"You don not have permission to rename this file or directory: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc())
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
