@@ -102,7 +102,7 @@ module.exports = View.extend({
     });
   },
   toggleAddRuleButton: function () {
-    // this.renderEditRules();
+    this.renderEditRules();
     var numSpecies = this.collection.parent.species.length;
     var numParameters = this.collection.parent.parameters.length;
     var disabled = numSpecies <= 0 && numParameters <= 0
@@ -111,7 +111,7 @@ module.exports = View.extend({
   addRule: function (e) {
     var type = e.target.dataset.name
     this.collection.addRule(type);
-    $(document).ready(function () {
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
