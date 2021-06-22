@@ -40,7 +40,18 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEditFunctionDefinitionView();
+    if(this.readOnly) {
+      $(this.queryByHook('function-definitions-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('function-definitions-view-tab')).tab('show');
+      $(this.queryByHook('edit-function-definitions')).removeClass('active');
+      $(this.queryByHook('view-function-definitions')).addClass('active');
+    }else {
+      this.renderEditFunctionDefinitionView();
+    }
     this.renderViewFunctionDefinitionView();
   },
   renderEditFunctionDefinitionView: function () {
