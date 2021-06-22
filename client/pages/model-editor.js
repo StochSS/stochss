@@ -252,8 +252,7 @@ let ModelEditor = PageView.extend({
       this.renderRulesView();
       if(this.model.functionDefinitions.length) {
         var sbmlComponentView = new SBMLComponentView({
-          functionDefinitions: this.model.functionDefinitions,
-          viewModel: false
+          functionDefinitions: this.model.functionDefinitions
         });
         app.registerRenderSubview(this, sbmlComponentView, 'sbml-component-container');
       }

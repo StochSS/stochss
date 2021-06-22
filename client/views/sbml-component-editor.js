@@ -36,22 +36,58 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.sbmlComponentsEditor
     this.functionDefinitions = attrs.functionDefinitions;
-    this.viewMode = attrs.viewMode;
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEdirFunctionDefinitionView();
+    if(this.readOnly) {
+      $(this.queryByHook('function-definitions-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('function-definitions-view-tab')).tab('show');
+      $(this.queryByHook('edit-function-definitions')).removeClass('active');
+      $(this.queryByHook('view-function-definitions')).addClass('active');
+    }else {
+      this.renderEditFunctionDefinitionView();
+    }
+    this.renderViewFunctionDefinitionView();
   },
-  renderEdirFunctionDefinitionView: function () {
+  renderEditFunctionDefinitionView: function () {
     if(this.editFunctionDefinitionView){
       this.editFunctionDefinitionView.remove();
     }
     this.editFunctionDefinitionView = this.renderCollection(
       this.functionDefinitions,
       EditFunctionDefinition,
-      this.queryByHook('function-definition-list')
+      this.queryByHook('edit-function-definition-list')
     );
-    $(document).ready(function () {
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderViewFunctionDefinitionView: function () {
+    if(this.viewFunctionDefinitionView) {
+      this.viewFunctionDefinitionView.remove();
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.containsMdlWithAnn = this.functionDefinitions.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("function-definition-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("function-definition-annotation-header")).css("display", "block");
+    }
+    this.viewFunctionDefinitionView = this.renderCollection(
+      this.functionDefinitions,
+      EditFunctionDefinition,
+      this.queryByHook('view-function-definition-list'),
+      options
+    );
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
         $('[data-toggle="tooltip"]').tooltip("hide");

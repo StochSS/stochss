@@ -76,7 +76,7 @@ module.exports = View.extend({
   renderSBMLComponentsView: function () {
     let sbmlComponentsView = new SBMLComponentsView({
       functionDefinitions: this.model.functionDefinitions,
-      viewMode: true
+      readOnly: true
     });
     app.registerRenderSubview(this, sbmlComponentsView, "sbml-components-viewer-container");
   },
