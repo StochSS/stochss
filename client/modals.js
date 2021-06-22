@@ -424,15 +424,26 @@ module.exports = {
 
         return templates.select(modalID, selectID, title, label, options)
     },
-    selectSpeciesHTML : (species) => {
-      let modalID = "speciesSelectModal";
-      let selectID = "speciesSelectList";
-      let title = "Preview Variable Selection";
-      let label = "Select a variable to preview: ";
+    selectPreviewTargetHTML : (species) => {
+      let modalID = "previewTargetSelectModal";
+      let selectID = "previewTargetSelectList";
+      let title = "Preview Target Selection";
+      let label = "Select a variable or property to preview: ";
       var options = species.map(function (name) {
         return `<option value="${name}">${name}</option>`
       });
-      options = options.join(" ");
+      options = `<optgroup label='Variables'>
+                     ${options.join(" ")}
+                 </optgroup>
+                 <optgroup label='Properties'>
+                     <option value='type'>Type</option>
+                     <option value='v1'>X Velocity</option>
+                     <option value='v2'>Y Velocity</option>
+                     <option value='v3'>Z Velocity</option>
+                     <option value='rho'>Density</option>
+                     <option value='mass'>Mass</option>
+                     <option value='nu'>Viscosity</option>
+                 </optgroup>`;
 
       return templates.select(modalID, selectID, title, label, options)
     },
