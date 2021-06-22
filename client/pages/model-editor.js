@@ -342,6 +342,7 @@ let ModelEditor = PageView.extend({
     if(this.eventsEditor){
       this.eventsEditor.remove();
     }
+    this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection});
     app.registerRenderSubview(this, this.eventsEditor, 'events-editor-container');
   },
   renderRulesView: function (mode="edit", opened=false) {
