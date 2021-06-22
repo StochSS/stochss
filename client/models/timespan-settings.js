@@ -22,7 +22,8 @@ var State = require('ampersand-state');
 module.exports = State.extend({
   props: {
     endSim: 'any',
-    timeStep: 'any'
+    timeStep: 'any',
+    timestepSize: 'number'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
