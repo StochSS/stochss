@@ -41,6 +41,7 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderEditFunctionDefinitionView();
+    this.renderViewFunctionDefinitionView();
   },
   renderEditFunctionDefinitionView: function () {
     if(this.editFunctionDefinitionView){
@@ -49,9 +50,33 @@ module.exports = View.extend({
     this.editFunctionDefinitionView = this.renderCollection(
       this.functionDefinitions,
       EditFunctionDefinition,
-      this.queryByHook('function-definition-list')
+      this.queryByHook('edit-function-definition-list')
     );
-    $(document).ready(function () {
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderViewFunctionDefinitionView: function () {
+    if(this.viewFunctionDefinitionView) {
+      this.viewFunctionDefinitionView.remove();
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.containsMdlWithAnn = this.functionDefinitions.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("function-definition-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("function-definition-annotation-header")).css("display", "block");
+    }
+    this.viewFunctionDefinitionView = this.renderCollection(
+      this.functionDefinitions,
+      EditFunctionDefinition,
+      this.queryByHook('view-function-definition-list'),
+      options
+    );
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
         $('[data-toggle="tooltip"]').tooltip("hide");
