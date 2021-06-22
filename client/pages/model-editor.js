@@ -37,7 +37,6 @@ var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
 var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
-var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
