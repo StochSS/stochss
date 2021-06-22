@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+//support files
+let app = require('../app');
 //views
 var View = require('ampersand-view');
 var EditEventAssignment = require('./edit-event-assignment');
@@ -26,7 +28,8 @@ var template = require('../templates/includes/eventAssignmentsEditor.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=add-event-assignment]' : 'addAssignment',
+    'click [data-hook=collapse-assignments]' : 'changeCollapseButtonText',
+    'click [data-hook=add-event-assignment]' : 'addAssignment'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -43,6 +46,13 @@ module.exports = View.extend({
     }else{
       this.renderEditEventAssignment();
     }
+  },
+  addAssignment: function () {
+    this.collection.addEventAssignment();
+    this.collection.parent.collection.trigger('change')
+  },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
   },
   renderEditEventAssignment: function () {
     if(this.editEventAssignments) {
@@ -69,9 +79,5 @@ module.exports = View.extend({
   update: function () {
   },
   updateValid: function () {
-  },
-  addAssignment: function () {
-    this.collection.addEventAssignment();
-    this.collection.parent.collection.trigger('change')
-  },
+  }
 })
