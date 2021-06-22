@@ -237,11 +237,9 @@ module.exports = View.extend({
     return ReactionTypes[type].label
   },
   toggleProcessError: function () {
-    let errorMsg = $(this.queryByHook('process-component-error'))
-    if(this.collection.parent.is_spatial){
-      errorMsg.html("<p class='text-danger'>A model must have at least one reaction</p>")
-    }
     let model = this.collection.parent
+    if(model.is_spatial) {return};
+    let errorMsg = $(this.queryByHook('process-component-error'))
     if(this.collection.length <= 0 && model.eventsCollection.length <= 0 && model.rules.length <= 0) {
       errorMsg.addClass('component-invalid')
       errorMsg.removeClass('component-valid')
