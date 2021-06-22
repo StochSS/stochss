@@ -54,16 +54,12 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderEventAssignments();
-    var triggerExpressionField = this.queryByHook('event-trigger-expression').children[0].children[1];
-    $(triggerExpressionField).attr("placeholder", "---No Expression Entered---");
-    var delayField = this.queryByHook('event-delay').children[0].children[1];
-    $(delayField).attr("placeholder", "---No Expression Entered---");
     if(this.model.useValuesFromTriggerTime){
       $(this.queryByHook('edit-trigger-time')).prop('checked', true)
     }else{
       $(this.queryByHook('edit-assignment-time')).prop('checked', true)
     }
-    $(document).ready(function () {
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
@@ -112,8 +108,7 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'delay',
-          label: '',
-          tests: '',
+          placeholder: '---No Expression Entered---',
           modelKey: 'delay',
           valueType: 'string',
           value: this.model.delay,
@@ -127,8 +122,6 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'priority',
-          label: '',
-          tests: '',
           modelKey: 'priority',
           valueType: 'string',
           value: this.model.priority,
@@ -142,8 +135,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'trigger-expression',
-          label: '',
-          tests: '',
+          placeholder: '---No Expression Entered---',
           modelKey: 'triggerExpression',
           valueType: 'string',
           value: this.model.triggerExpression,
