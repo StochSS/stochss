@@ -157,7 +157,7 @@ module.exports = View.extend({
     $(this.parent.queryByHook('model-run-container')).css("display", "block")
     var model = this.model
     var queryStr = "?cmd=start&outfile=none&path="+model.directory
-    if(species) {
+    if(target) {
       queryStr += "&target=" + target;
     }
     var endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;

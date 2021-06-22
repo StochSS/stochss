@@ -437,9 +437,9 @@ module.exports = {
                  </optgroup>
                  <optgroup label='Properties'>
                      <option value='type'>Type</option>
-                     <option value='v1'>X Velocity</option>
-                     <option value='v2'>Y Velocity</option>
-                     <option value='v3'>Z Velocity</option>
+                     <option value='v[1]'>X Velocity</option>
+                     <option value='v[2]'>Y Velocity</option>
+                     <option value='v[3]'>Z Velocity</option>
                      <option value='rho'>Density</option>
                      <option value='mass'>Mass</option>
                      <option value='nu'>Viscosity</option>
