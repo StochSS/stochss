@@ -26,10 +26,10 @@ var View = require('ampersand-view');
 var InputView = require('./input');
 var SelectView = require('ampersand-select-view');
 //templates
-var template = require('../templates/includes/editRule.pug');
+var editTemplate = require('../templates/includes/editRule.pug');
+let viewTemplate = require('../templates/includes/viewRules.pug');
 
 module.exports = View.extend({
-  template: template,
   events: {
     'change [data-hook=rule-type]' : 'selectRuleType',
     'change [data-hook=rule-variable]' : 'selectRuleVariable',
@@ -38,31 +38,11 @@ module.exports = View.extend({
   },
   initiailize: function (attrs, options) {
     View.prototype.initiailize.apply(this, arguments);
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
   },
   render: function () {
-    this.renderWithTemplate();
-    var inputField = this.queryByHook('rule-expression').children[0].children[1];
-    $(inputField).attr("placeholder", "---No Expression Entered---");
-    var varOptions = this.getOptions();
-    var typeOptions = ['Rate Rule', 'Assignment Rule']
-    var typeSelectView = new SelectView({
-      label: '',
-      name: 'type',
-      required: true,
-      idAttributes: 'cid',
-      options: typeOptions,
-      value: this.model.type,
-    });
-    var variableSelectView = new SelectView({
-      label: '',
-      name: 'variable',
-      required: true,
-      idAttributes: 'cid',
-      options: varOptions,
-      value: this.model.variable.name,
-    });
-    app.registerRenderSubview(this, typeSelectView, "rule-type");
-    app.registerRenderSubview(this, variableSelectView, 'rule-variable');
+    this.template = this.viewMode ? viewTemplate : editTemplate;
+    View.prototype.render.apply(this, arguments);
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
@@ -95,33 +75,38 @@ module.exports = View.extend({
     });
     okBtn.addEventListener('click', function (e) {
       self.model.annotation = input.value.trim();
-      self.parent.renderRules();
+      self.parent.renderEditRules();
       modal.modal('hide');
     });
   },
   getOptions: function () {
     var species = this.model.collection.parent.species;
     var parameters = this.model.collection.parent.parameters;
-    var speciesNames = species.map(function (specie) { return specie.name });
-    var parameterNames = parameters.map(function (parameter) { return parameter.name });
-    return speciesNames.concat(parameterNames);
+    var specs = species.map(function (specie) {
+      return [specie.compID, specie.name];
+    });
+    var params = parameters.map(function (parameter) {
+      return [parameter.compID, parameter.name];
+    });
+    let options = [{groupName: "Variables", options: specs},
+                   {groupName: "Parameters", options: params}];
+    return options;
   },
   selectRuleType: function (e) {
-    var type = e.target.selectedOptions.item(0).text;
-    this.model.type = type;
+    this.model.type = e.target.value;
   },
   selectRuleVariable: function (e) {
     var species = this.model.collection.parent.species;
     var parameters = this.model.collection.parent.parameters;
-    var val = e.target.selectedOptions.item(0).text;
+    var compID = e.target.value;
     var ruleVar = species.filter(function (specie) {
-      if(specie.name === val) {
+      if(specie.compID === compID) {
         return specie;
       }
     });
     if(!ruleVar.length) {
       ruleVar = parameters.filter(function (parameter) {
-        if(parameter.name === val) {
+        if(parameter.compID === compID) {
           return parameter;
         }
       });
@@ -145,7 +130,33 @@ module.exports = View.extend({
           valueType: 'string',
           value: this.model.name,
         });
-      },
+      }
+    },
+    selectType: {
+      hook: 'rule-type',
+      prepareView: function (el) {
+        let options = ['Rate Rule', 'Assignment Rule'];
+        return new SelectView({
+          name: 'type',
+          required: true,
+          idAttributes: 'cid',
+          options: options,
+          value: this.model.type,
+        });
+      }
+    },
+    selectTarget: {
+      hook: 'rule-variable',
+      prepareView: function(el) {
+        let options = this.getOptions();
+        return new SelectView({
+          name: 'variable',
+          required: true,
+          idAttributes: 'cid',
+          groupOptions: options,
+          value: this.model.variable.compID,
+        });
+      }
     },
     inputRule: {
       hook: 'rule-expression',
@@ -154,14 +165,12 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'rule-expression',
-          label: '',
-          tests: '',
           modelKey: 'expression',
           valueType: 'string',
           value: this.model.expression,
           placeholder: "--No Formula Entered--"
         });
-      },
-    },
-  },
+      }
+    }
+  }
 });
