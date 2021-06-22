@@ -36,8 +36,8 @@ module.exports = View.extend({
     'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
     'click [data-hook=remove]' : 'removeRule',
   },
-  initiailize: function (attrs, options) {
-    View.prototype.initiailize.apply(this, arguments);
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
   },
   render: function () {

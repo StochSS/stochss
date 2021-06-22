@@ -31,7 +31,6 @@ module.exports = View.extend({
   events: {
     'click [data-hook=rate-rule]' : 'addRule',
     'click [data-hook=assignment-rule]' : 'addRule',
-    'click [data-hook=save-rules]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (args) {
@@ -39,21 +38,18 @@ module.exports = View.extend({
     this.collection.parent.species.on('add remove', this.toggleAddRuleButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleAddRuleButton, this);
     this.tooltips = Tooltips.rulesEditor
-    this.opened = args.opened
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderRules();
-    this.toggleAddRuleButton()
-    if(this.opened) {
-      this.openRulesContainer();
-    }
+    this.renderEditRules();
+    this.toggleAddRuleButton();
+    this.renderViewRules();
   },
   update: function () {
   },
   updateValid: function () {
   },
-  renderRules: function () {
+  renderEditRules: function () {
     if(this.rulesView) {
       this.rulesView.remove();
     }
@@ -62,7 +58,31 @@ module.exports = View.extend({
       RuleView,
       this.queryByHook('edit-rule-list-container')
     );
-    $(document).ready(function () {
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderViewRules: function () {
+    if(this.viewRulesView) {
+      this.viewRulesView.remove();
+    }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("rules-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("rules-annotation-header")).css("display", "block");
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.viewRulesView = this.renderCollection(
+      this.collection,
+      RuleView,
+      this.queryByHook('view-rules-list-container'),
+      options
+    );
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
         $('[data-toggle="tooltip"]').tooltip("hide");
@@ -70,7 +90,7 @@ module.exports = View.extend({
     });
   },
   toggleAddRuleButton: function () {
-    this.renderRules();
+    // this.renderEditRules();
     var numSpecies = this.collection.parent.species.length;
     var numParameters = this.collection.parent.parameters.length;
     var disabled = numSpecies <= 0 && numParameters <= 0
@@ -86,15 +106,6 @@ module.exports = View.extend({
 
        });
     });
-  },
-  switchToViewMode: function (e) {
-    this.parent.modelStateButtons.clickSaveHandler(e);
-    this.parent.renderRulesView(mode="view");
-  },
-  openRulesContainer: function () {
-    $(this.queryByHook('rules-list-container')).collapse('show');
-    let collapseBtn = $(this.queryByHook('collapse'))
-    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
