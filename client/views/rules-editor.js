@@ -33,16 +33,28 @@ module.exports = View.extend({
     'click [data-hook=assignment-rule]' : 'addRule',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
-  initialize: function (args) {
+  initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.collection.parent.species.on('add remove', this.toggleAddRuleButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleAddRuleButton, this);
     this.tooltips = Tooltips.rulesEditor
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEditRules();
-    this.toggleAddRuleButton();
+    if(this.readOnly) {
+      $(this.queryByHook('rules-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('rules-view-tab')).tab('show');
+      $(this.queryByHook('edit-rules')).removeClass('active');
+      $(this.queryByHook('view-rules')).addClass('active');
+    }else {
+      this.renderEditRules();
+      this.toggleAddRuleButton();
+    }
     this.renderViewRules();
   },
   update: function () {
