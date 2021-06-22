@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var $ = require('jquery');
+let _ = require('underscore');
 //support files
 let app = require('../app');
 var tests = require('./tests');
@@ -43,6 +44,9 @@ module.exports = View.extend({
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
+    if(!this.viewMode){
+      this.model.on('change', _.bind(this.updateViewer, this))
+    }
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
@@ -98,7 +102,7 @@ module.exports = View.extend({
   selectRuleVariable: function (e) {
     var species = this.model.collection.parent.species;
     var parameters = this.model.collection.parent.parameters;
-    var compID = e.target.value;
+    var compID = Number(e.target.value);
     var ruleVar = species.filter(function (specie) {
       if(specie.compID === compID) {
         return specie;
@@ -115,6 +119,9 @@ module.exports = View.extend({
   },
   removeRule: function () {
     this.model.collection.removeRule(this.model);
+  },
+  updateViewer: function () {
+    this.parent.renderViewRules();
   },
   subviews: {
     inputName: {
