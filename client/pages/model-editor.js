@@ -37,7 +37,6 @@ var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
 var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
-var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
@@ -350,15 +349,11 @@ let ModelEditor = PageView.extend({
     }
     app.registerRenderSubview(this, this.eventsEditor, 'events-editor-container');
   },
-  renderRulesView: function (mode="edit", opened=false) {
+  renderRulesView: function () {
     if(this.rulesEditor){
       this.rulesEditor.remove();
     }
-    if(mode === "edit") {
-      this.rulesEditor = new RulesEditorView({collection: this.model.rules, opened: opened});
-    }else{
-      this.rulesEditor = new RulesViewer({collection: this.model.rules})
-    }
+    this.rulesEditor = new RulesEditorView({collection: this.model.rules});
     app.registerRenderSubview(this, this.rulesEditor, 'rules-editor-container');
   },
   renderSystemVolumeView: function () {
