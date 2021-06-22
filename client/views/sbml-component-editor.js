@@ -36,13 +36,13 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.sbmlComponentsEditor
     this.functionDefinitions = attrs.functionDefinitions;
-    this.viewMode = attrs.viewMode;
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEdirFunctionDefinitionView();
+    this.renderEditFunctionDefinitionView();
   },
-  renderEdirFunctionDefinitionView: function () {
+  renderEditFunctionDefinitionView: function () {
     if(this.editFunctionDefinitionView){
       this.editFunctionDefinitionView.remove();
     }

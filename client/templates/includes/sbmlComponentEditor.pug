@@ -10,28 +10,56 @@ div#sbml-components.card
 
     div.card-body
 
-      div
+      div#function-definitions.card
 
-        h5.inline Function Definitions
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-function-definitions", data-hook="collapse-function-definitions") -
+        div.card-header.pb-0
 
-      div.collapse(class="show", id="collapse-function-definitions")
+          h5.inline.mr-3 Function Definitions
 
-        table.table
+          div.inline.mr-3
 
-          thead
-        
-            tr
-        
-              th(scope="col") Signature
+            ul.nav.nav-tabs.card-header-tabs(id="function-definitions-tabs")
 
-              th(scope="col") 
-                div
-                  div.inline Annotation
+              li.nav-item
+
+                a.nav-link.tab.active(data-hook="function-definitions-edit-tab" data-toggle="tab" href="#edit-function-definitions") Edit
+
+              li.nav-item
+
+                a.nav-link.tab(data-hook="function-definitions-view-tab" data-toggle="tab" href="#view-function-definitions") View
+
+          button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-function-definitions" data-hook="collapse-function-definitions") -
+
+        div.card-body
+          p.mb-0
+            | Object representation defining an evaluable function to be used during simulation.
+
+          div.collapse.tab-content(class="show" id="collapse-function-definitions")
+
+            div.tab-pane.active(id="edit-function-definitions" data-hook="edit-function-definitions")
+
+              hr
+
+              div.mx-1.row.head.align-items-baseline
+
+                div.col-sm-8
+
+                  h6 <b>Signature</b>
+
+                div.col-sm-2
+
+                  h6.inline <b>Annotation</b>
 
                   div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-              if(!this.viewMode)
-                th(scope="col") Remove
-        
-          tbody(data-hook="function-definition-list")
+                div.col-sm-2
+
+                  h6 <b>Remove</b>
+
+              div.my-3(data-hook="function-definition-list")
+
+            div.tab-pane(id="view-function-definitions" data-hook="view-function-definitions")
+
+              hr
+
+              div.mx-1.row.head.align-items-baseline
