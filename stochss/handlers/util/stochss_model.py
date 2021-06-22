@@ -134,7 +134,7 @@ class StochSSModel(StochSSBase):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
-            return numpy.arange(0, end, step_size)
+            return numpy.arange(0, end + step_size, step_size)
         except KeyError as err:
             message = "Model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -380,6 +380,8 @@ class StochSSModel(StochSSBase):
         if self.model is None:
             model = self.load()
         model['is_spatial'] = True
+        if "timestepSize" not in self.model['modelSettings'].keys():
+            self.model['modelSettings']['timestepSize'] = self.model['modelSettings']['timeStep']
         if "domain" not in model.keys():
             model['domain'] = self.get_model_template()['domain']
         for species in model['species']:

@@ -22,9 +22,9 @@ let app = require('../app');
 let View = require('ampersand-view');
 let RulesViewer = require('./rules-viewer');
 let EventsViewer = require('./events-viewer');
-let SpeciesViewer = require('./species-viewer');
-let ReactionsViewer = require('./reactions-viewer');
-let ParametersViewer = require('./parameters-viewer');
+let SpeciesViewer = require('./species-editor');
+let ReactionsViewer = require('./reactions-editor');
+let ParametersViewer = require('./parameters-editor');
 let SBMLComponentsView = require('./sbml-component-editor');
 //templates
 let template = require('../templates/includes/modelViewer.pug');
@@ -54,13 +54,15 @@ module.exports = View.extend({
   },
   renderParametersView: function () {
     let parametersViewer = new ParametersViewer({
-      collection: this.model.parameters
+      collection: this.model.parameters,
+      readOnly: true
     });
     app.registerRenderSubview(this, parametersViewer, "parameters-viewer-container");
   },
   renderReactionsView: function () {
     let reactionsViewer = new ReactionsViewer({
-      collection: this.model.reactions
+      collection: this.model.reactions,
+      readOnly: true
     });
     app.registerRenderSubview(this, reactionsViewer, "reactions-viewer-container");
   },
@@ -79,7 +81,10 @@ module.exports = View.extend({
   },
   renderSpeciesView: function () {
     let speciesViewer = new SpeciesViewer({
-      collection: this.model.species
+      collection: this.model.species,
+      spatial: this.model.is_spatial,
+      defaultMode: this.model.defaultMode,
+      readOnly: true
     });
     app.registerRenderSubview(this, speciesViewer, "species-viewer-container");
   },

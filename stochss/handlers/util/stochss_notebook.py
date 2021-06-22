@@ -265,7 +265,6 @@ class StochSSNotebook(StochSSBase):
             self.__create_initial_condition_strings(model=model, pad=pad)
             self.__create_parameter_strings(model=model, pad=pad)
             self.__create_reaction_strings(model=model, pad=pad)
-            self.__create_tspan_string(model=model, pad=pad)
         else:
             model = [f"class {self.__get_class_name()}(Model):",
                      "    def __init__(self, parameter_values=None):",
@@ -277,7 +276,7 @@ class StochSSNotebook(StochSSBase):
             self.__create_event_strings(model=model, pad=pad)
             self.__create_rules_strings(model=model, pad=pad)
             self.__create_function_definition_strings(model=model, pad=pad)
-            self.__create_tspan_string(model=model, pad=pad)
+        self.__create_tspan_string(model=model, pad=pad)
         return nbf.new_code_cell("\n".join(model))
 
     def __create_parameter_strings(self, model, pad):
@@ -770,13 +769,14 @@ class StochSSNotebook(StochSSBase):
 
     def __create_tspan_string(self, model, pad):
         end = self.s_model['modelSettings']['endSim']
-        step = self.s_model['modelSettings']['timeStep']
+        output_freq = self.s_model['modelSettings']['timeStep']
+        step_size = self.s_model['modelSettings']['timestepSize']
         tspan = ["", f"{pad}# Timespan"]
-        ts_str = f'{pad}self.timespan(np.arange(0, {end}, {step})'
         if self.s_model['is_spatial']:
-            ts_str += f", timestep_size={step})"
+            ts_str = f'{pad}self.timespan(np.arange(0, {end + step_size}, {output_freq})'
+            ts_str += f", timestep_size={step_size})"
         else:
-            ts_str += ")"
+            ts_str = f'{pad}self.timespan(np.arange(0, {end + output_freq}, {output_freq}))'
         tspan.append(ts_str)
         model.extend(tspan)
 

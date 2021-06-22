@@ -31,15 +31,29 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
-  },
-  bindings: {
+    'input [data-hook=timestep-size-slider]' : 'viewTimestepValue',
+    'change [data-hook=preview-time]' : 'updateViewer',
+    'change [data-hook=time-units]' : 'updateViewer',
+    'change [data-hook=timestep-size-slider]' : 'setTimestepSize'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.modelSettings
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    if(this.readOnly) {
+      $(this.queryByHook('timespan-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('timespan-view-tab')).tab('show');
+      $(this.queryByHook('edit-timespan')).removeClass('active');
+      $(this.queryByHook('view-timespan')).addClass('active');
+    }
+    $(this.queryByHook("timestep-size-value")).html(this.model.timestepSize);
   },
   update: function (e) {
   },
@@ -48,6 +62,18 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  setTimestepSize: function (e) {
+    this.model.timestepSize = Number(e.target.value);
+    $(this.queryByHook("view-timestep-size")).html(this.model.timestepSize);
+  },
+  updateViewer: function (e) {
+    $(this.queryByHook("view-end-sim")).html("0 to " + this.model.endSim);
+    $(this.queryByHook("view-time-step")).html(this.model.timeStep);
+  },
+  viewTimestepValue: function (e) {
+    let value = e.target.value;
+    $(this.queryByHook("timestep-size-value")).html(value);
   },
   subviews: {
     inputSimEnd: {
