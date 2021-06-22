@@ -60,7 +60,7 @@ module.exports = View.extend({
     this.rulesView = this.renderCollection(
       this.collection,
       RuleView,
-      this.queryByHook('rule-list-container')
+      this.queryByHook('edit-rule-list-container')
     );
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
