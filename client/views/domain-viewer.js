@@ -25,7 +25,7 @@ var Plotly = require('../lib/plotly');
 var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
-var TypesViewer = require('./view-domain-types');
+var TypesViewer = require('./edit-domain-type');
 var SelectView = require('ampersand-select-view');
 var ParticleViewer = require('./view-particle');
 //templates
@@ -171,9 +171,9 @@ module.exports = View.extend({
       this.model.types,
       TypesViewer,
       this.queryByHook("domain-types-list"),
-      {"filter": function (model) {
+      {filter: function (model) {
         return model.typeID != 0;
-      }}
+      }, viewOptions: {viewMode: true}}
     );
   },
   displayDomain: function () {
