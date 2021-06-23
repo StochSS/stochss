@@ -34,8 +34,10 @@ var template = require('../templates/includes/domainViewer.pug');
 module.exports = View.extend({
   template: template,
   events: {
+    'click [data-hook=domain-edit-tab]' : 'toggleViewExternalDomainBtn',
+    'click [data-hook=domain-view-tab]' : 'toggleViewExternalDomainBtn',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
-    'click [data-hook=edit-domain]' : 'editDomain',
+    'click [data-hook=edit-domain-btn]' : 'editDomain',
     'click [data-hook=create-domain]' : 'editDomain',
     'click [data-hook=save-to-model]' : 'saveDomainToModel',
     'click [data-hook=select-external-domain]' : 'handleLoadExternalDomain',
@@ -211,6 +213,16 @@ module.exports = View.extend({
     }else{
       errorMsg.addClass('component-valid')
       errorMsg.removeClass('component-invalid')
+    }
+  },
+  toggleViewExternalDomainBtn: function (e) {
+    if(e) {
+      if(!e.target.classList.contains("active")) {
+        let display = e.target.text === "View" ? "none" : "block"
+        $(this.queryByHook("external-domains-container")).css("display", display);
+      }
+    }else{
+      console.log("TODO: handle initial state")
     }
   },
   changeCollapseButtonText: function (e) {
