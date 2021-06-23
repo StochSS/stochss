@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let app = require('../app');
 //views
 let View = require('ampersand-view');
+let EventsViewer = require('./events-editor');
 let RulesViewer = require('./rules-editor');
-let EventsViewer = require('./events-viewer');
 let SpeciesViewer = require('./species-editor');
 let ReactionsViewer = require('./reactions-editor');
 let ParametersViewer = require('./parameters-editor');
@@ -48,7 +48,8 @@ module.exports = View.extend({
   },
   renderEventsView: function () {
     let eventsViewer = new EventsViewer({
-      collection: this.model.eventsCollection
+      collection: this.model.eventsCollection,
+      readOnly: true
     });
     app.registerRenderSubview(this, eventsViewer, "events-viewer-container");
   },
