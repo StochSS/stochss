@@ -1,113 +1,146 @@
-div#domain-viewer.card.card-body
+div#domain-viewer.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Domain
+    h3.inline.mr-3 Domain
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="domain-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="domain-edit-tab" data-toggle="tab" href="#edit-domain") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="domain-view-tab" data-toggle="tab" href="#view-domain") View
 
     button.btn.btn-outline-collapse(id="-btn" data-toggle="collapse" data-target="#collapse-domain" data-hook="collapse") +
 
   div.collapse(id="collapse-domain" data-hook="domain-container")
 
-    div
+    div.card-body.tab-content
 
-      button.btn.btn-outline-secondary.box-shadow.mb-3(data-hook="select-external-domain") View External Domain
+      div(data-hook="external-domains-container")
 
-      div(data-hook="external-domain-select" style="display: none")
+        button.btn.btn-outline-secondary.box-shadow.mb-3(data-hook="select-external-domain") View External Domain
 
-        div.text-info(data-hook="select-location-message" style="display: none")
-          | There are multiple domain files with that name, please select a location
+        div(data-hook="external-domain-select" style="display: none")
 
-        span.inline Select External Domain: 
+          div.text-info(data-hook="select-location-message" style="display: none")
+            | There are multiple domain files with that name, please select a location
 
-        div.inline(data-hook="select-domain")
+          span.inline Select External Domain: 
 
-        div.inline.ml-3(data-hook="select-domain-location" style="display: none")
+          div.inline(data-hook="select-domain")
 
-          span.inline Location:
+          div.inline.ml-3(data-hook="select-domain-location" style="display: none")
 
-          div.inline(data-hook="select-location")
+            span.inline Location:
 
-    div.row
+            div.inline(data-hook="select-location")
 
-      div.col-md-4
+      div.row
 
-        h4 Domain Properties
+        div.col-md-4
 
-        table.table
-          tbody
-            tr
-              th(scope="row") Static Domain
-              td: input(type="checkbox" id="static-domain" data-hook="static-domain" checked=this.model.static disabled)
-            tr
-              th(scope="row") Density
-              td=this.model.rho_0
-            tr
-              th(scope="row") Gravity
-              td=this.gravity
-            tr
-              th(scope="row") Pressure
-              td=this.model.p_0
-            tr
-              th(scope="row") Speed of Sound
-              td=this.model.c_0
+          h4 Domain Properties
 
-      div.col-md-8
+          hr.mt-2
+          div.row
+            div.col-sm-6: h6.pl-2 <b>Static Domain</b>
+            div.col-sm-6: input(type="checkbox" id="static-domain" data-hook="static-domain" checked=this.model.static disabled)
 
-        h4 Domain Limits
+          hr.mt-2
+          div.row
+            div.col-sm-6: h6.pl-2 <b>Density</b>
+            div.col-sm-6=this.model.rho_0
 
-        table.table
-          thead
-            tr
-              th(scope="col")
-              th(scope="col") Minimum
-              th(scope="col") Minimum
-              th(scope="col") Reflect
+          hr.mt-2
+          div.row
+            div.col-sm-6: h6.pl-2 <b>Gravity</b>
+            div.col-sm-6=this.gravity
 
-          tbody
-            tr
-              th(scope="row") X-Axis
-              td=this.model.x_lim[0]
-              td=this.model.x_lim[1]
-              td: input(type="checkbox" checked=this.model.boundary_condition.reflect_x disabled)
-            tr
-              th(scope="row") Y-Axis
-              td=this.model.y_lim[0]
-              td=this.model.y_lim[1]
-              td: input(type="checkbox" checked=this.model.boundary_condition.reflect_y disabled)
-            tr
-              th(scope="row") Z-Axis
-              td=this.model.z_lim[0]
-              td=this.model.z_lim[1]
-              td: input(type="checkbox" checked=this.model.boundary_condition.reflect_z disabled)
+          hr.mt-2
+          div.row
+            div.col-sm-6: h6.pl-2 <b>Pressure</b>
+            div.col-sm-6=this.model.p_0
 
-    div
+          hr.mt-2
+          div.row
+            div.col-sm-6: h6.pl-2 <b>Speed of Sound</b>
+            div.col-sm-6=this.model.c_0
 
-      h4 Types
+        div.col-md-8
 
-      hr
+          h4 Domain Limits
 
-      h6="Number of Un-Assigned Particles: " + this.model.types.get(0, "typeID").numParticles
+          hr.mt-2
+          div.row.head.mx-1
+            div.col-sm-3
+            div.col-sm-3.pb-1: h6 <b>Minimum</b>
+            div.col-sm-3: h6 <b>Minimum</b>
+            div.col-sm-3: h6 <b>Reflect</b>
 
-      div(data-hook="domain-error"): p.text-danger A domain cannot have any un-assigned particles.
+          div.row.mt-3
+            div.col-sm-3: h6.pl-2 <b>X-Axis</b>
+            div.col-sm-3=this.model.x_lim[0]
+            div.col-sm-3=this.model.x_lim[1]
+            div.col-sm-3: input(type="checkbox" checked=this.model.boundary_condition.reflect_x disabled)
 
-      table.table
-        thead
-          tr
-            th(scope="col") Name
-            th(scope="col") Number of Particles
-            th(scope="col") Mass
-            th(scope="col") Volume
-            th(scope="col") Viscosity
-            th(scope="col") Fixed
+          hr.mt-2
+          div.row
+            div.col-sm-3: h6.pl-2 <b>Y-Axis</b>
+            div.col-sm-3=this.model.y_lim[0]
+            div.col-sm-3=this.model.y_lim[1]
+            div.col-sm-3: input(type="checkbox" checked=this.model.boundary_condition.reflect_y disabled)
 
-        tbody(data-hook="domain-types-list")
+          hr.mt-2
+          div.row
+            div.col-sm-3: h6.pl-2 <b>Z-Axis</b>
+            div.col-sm-3=this.model.z_lim[0]
+            div.col-sm-3=this.model.z_lim[1]
+            div.col-sm-3: input(type="checkbox" checked=this.model.boundary_condition.reflect_z disabled)
 
-    hr
+      div.mt-3
 
-    div
+        h4 Types
 
-      button.btn.btn-outline-primary.box-shadow(data-hook="edit-domain") Edit Domain
+        hr
 
-      button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="create-domain") Build New Domain
+        h6="Number of Un-Assigned Particles: " + this.model.types.get(0, "typeID").numParticles
 
-      button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Import into Model
+        div(data-hook="domain-error"): p.text-danger A domain cannot have any un-assigned particles.
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-2: h6.pl-2 <b>Name</b>
+
+          div.col-sm-2: h6 <b>Number of Particles</b>
+
+          div.col-sm-2: h6 <b>Mass</b>
+
+          div.col-sm-2: h6 <b>Volume</b>
+
+          div.col-sm-2: h6 <b>Viscosity</b>
+
+          div.col-sm-2: h6 <b>Fixed</b>
+
+        div(data-hook="domain-types-list")
+
+      div.tab-pane.active(id="edit-domain" data-hook="edit-domain")
+
+        hr
+
+        div
+
+          button.btn.btn-outline-primary.box-shadow(data-hook="edit-domain") Edit Domain
+
+          button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="create-domain") Build New Domain
+
+          button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Import into Model
+
+      div.tab-pane(id="view-domain" data-hook="view-domain")
