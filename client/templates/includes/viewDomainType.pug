@@ -1,13 +1,22 @@
-tr
+div.mx-1
 
-  td=this.model.name
+  if(this.model.collection.indexOf(this.model) !== 1)
+    hr
 
-  td=this.model.numParticles
+  div.row
 
-  td=this.model.mass
+    div.col-sm-2
 
-  td=this.model.volume
+      div.pl-2=this.model.name
 
-  td=this.model.nu
+    div.col-sm-2=this.model.numParticles
 
-  td: input(type="checkbox" checked=this.model.fixed disabled)
+    div.col-sm-2=this.model.mass
+
+    div.col-sm-2=this.model.volume
+
+    div.col-sm-2=this.model.nu
+
+    div.col-sm-2
+
+      input(type="checkbox" checked=this.model.fixed disabled)

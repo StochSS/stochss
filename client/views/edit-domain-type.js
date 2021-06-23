@@ -36,7 +36,6 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
-    console.log(this.model.typeID)
   },
   render: function (attrs, options) {
     this.template = this.viewMode ? viewTemplate : editTemplate;
