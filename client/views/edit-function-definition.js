@@ -22,18 +22,20 @@ var modals = require('../modals');
 //views
 var View = require('ampersand-view');
 //templates
-var template = require('../templates/includes/editFunctionDefinition.pug');
+var editTemplate = require('../templates/includes/editFunctionDefinition.pug');
+let viewTemplate = require('../templates/includes/viewFunctionDefinition.pug');
 
 module.exports = View.extend({
-  template: template,
   events: {
     'click [data-hook=remove]' : 'removeFunctionDefinition',
     'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
   },
   render: function () {
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
@@ -57,7 +59,7 @@ module.exports = View.extend({
     });
     okBtn.addEventListener('click', function (e) {
       self.model.annotation = input.value.trim();
-      self.parent.renderEdirFunctionDefinitionView();
+      self.parent.renderEditFunctionDefinitionView();
       modal.modal('hide');
     });
   },

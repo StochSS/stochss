@@ -17,6 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 module.exports = {
+  modelEditor: {
+    modelMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
+        "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
+
+    spatialModelMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
+        "using discrete (integer count) values."
+  },
   speciesEditor: {
     name: "Unique identifier for Variable. Cannot share a name with other model components.",
 
@@ -26,12 +33,6 @@ module.exports = {
 
     remove: "A variables may only be removed if it is not a part of any reaction, event assignment, or rule.",
     
-    speciesMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
-        "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
-
-    spatialSpeciesMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
-        "using discrete (integer count) values.",
-
     mode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
         "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
 

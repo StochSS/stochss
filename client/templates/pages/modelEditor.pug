@@ -26,6 +26,26 @@ section.page
         ol.breadcrumb
           li.breadcrumb-item.active(aria-current="page")=this.model.name
 
+  div.card
+    
+    div.card-header.pb-0
+    
+      h3.inline Model Mode
+
+      div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.modelMode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+    div.card-body
+      div.row
+        div.col-sm-4
+          input.mr-2(type="radio" name="default-mode" data-hook="all-continuous" data-name="continuous")
+          span Concentration
+        div.col-sm-4
+          input.mr-2(type="radio" name="default-mode" data-hook="all-discrete" data-name="discrete")
+          span Population
+        div.col-sm-4(data-hook="advaced-model-mode")
+          input.mr-2(type="radio" name="default-mode" data-hook="advanced" data-name="dynamic")
+          span Hybrid Concentration/Population
+  
   div(data-hook="domain-viewer-container")
 
   div(data-hook="species-editor-container")
@@ -36,9 +56,9 @@ section.page
 
   div(data-hook="reactions-editor-container")
 
-  div.card.card-body(data-hook="model-editor-advanced-container")
+  div.card(data-hook="model-editor-advanced-container")
 
-    div
+    div.card-header.pb-0
 
       h3.inline Advanced
 
@@ -46,28 +66,54 @@ section.page
 
     div.collapse(id="me-advanced-section", data-hook="me-advanced-section")
 
-      div(data-hook="events-editor-container")
+      div.card-body
 
-      div(data-hook="rules-editor-container")
+        div(data-hook="events-editor-container")
 
-      div(data-hook="sbml-component-container")
+        div(data-hook="rules-editor-container")
 
-      div(data-hook="boundary-conditions-container")
+        div(data-hook="boundary-conditions-container")
 
-      div.card.card-body.collapse.show(data-hook="system-volume-container")
+        div(data-hook="sbml-component-container")
 
-        div
+        div.card.collapse.show(data-hook="system-volume-container")
 
-          h3.inline System Volume
-          button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
+          div.card-header.pb-0
 
-        div.collapse(id="collapse-system-volume" data-hook="system-volume-section")
-  
-          p System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.
+            h3.inline.mr-3 System Volume
 
-          hr
+            div.inline.mr-3
 
-          div(data-hook="volume")
+              ul.nav.nav-tabs.card-header-tabs(id="volume-tabs")
+
+                li.nav-item
+
+                  a.nav-link.tab.active(data-hook="volume-edit-tab" data-toggle="tab" href="#edit-system-volume") Edit
+
+                li.nav-item
+
+                  a.nav-link.tab(data-hook="volume-view-tab" data-toggle="tab" href="#view-system-volume") View
+
+            button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
+
+          div.card-body
+    
+            p.mb-0
+              | System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.  In most cases this should not be changed.  please review your model requirements carefully before changing this property.
+
+            div.collapse.tab-content(id="collapse-system-volume" data-hook="system-volume-section")
+
+              div.tab-pane.active(id="edit-system-volume" data-hook="edit-system-volume")
+
+                hr
+
+                div(data-hook="edit-volume")
+
+              div.tab-pane(id="view-system-volume" data-hook="view-system-volume")
+
+                hr
+
+                div(data-hook="view-volume")
 
   div(data-hook="model-settings-container")
 

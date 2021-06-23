@@ -798,13 +798,14 @@ class StochSSNotebook(StochSSBase):
 
     def __create_tspan_string(self, model, pad):
         end = self.s_model['modelSettings']['endSim']
-        step = self.s_model['modelSettings']['timeStep']
+        output_freq = self.s_model['modelSettings']['timeStep']
+        step_size = self.s_model['modelSettings']['timestepSize']
         tspan = ["", f"{pad}# Timespan"]
-        ts_str = f'{pad}self.timespan(np.arange(0, {end + step}, {step})'
         if self.s_model['is_spatial']:
-            ts_str += f", timestep_size={step})"
+            ts_str = f'{pad}self.timespan(np.arange(0, {end + step_size}, {output_freq})'
+            ts_str += f", timestep_size={step_size})"
         else:
-            ts_str += ")"
+            ts_str = f'{pad}self.timespan(np.arange(0, {end + output_freq}, {output_freq}))'
         tspan.append(ts_str)
         model.extend(tspan)
 
