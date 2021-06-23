@@ -44,6 +44,55 @@ module.exports = View.extend({
     'change [data-hook=select-domain]' : 'handleSelectDomain',
     'change [data-hook=select-location]' : 'handleSelectDomainLocation'
   },
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
+    this.tooltips = Tooltips.domainEditor;
+    this.domainPath = attrs.domainPath;
+    let self = this;
+    this.model.particles.forEach(function (particle) {
+      self.model.types.get(particle.type, "typeID").numParticles += 1;
+    });
+    this.gravity = this.getGravityString()
+  },
+  render: function () {
+    View.prototype.render.apply(this, arguments);
+    let self = this;
+    var queryStr = "?path=" + this.parent.model.directory
+    if(this.readOnly) {
+      $(this.queryByHook('domain-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('domain-view-tab')).tab('show');
+      $(this.queryByHook('edit-domain')).removeClass('active');
+      $(this.queryByHook('view-domain')).addClass('active');
+      this.toggleViewExternalDomainBtn();
+    }else {
+      this.renderDomainSelectView();
+      if(this.domainPath) {
+        $(this.queryByHook("domain-container")).collapse("show")
+        $(this.queryByHook("collapse")).text("-")
+        if(this.domainPath !== "viewing") {
+          $(this.queryByHook("save-to-model")).prop("disabled", false)
+          $(this.queryByHook("external-domain-select")).css("display", "block")
+          $(this.queryByHook("select-external-domain")).text("View Model's Domain")
+          queryStr += "&domain_path=" + this.domainPath
+        }
+      }
+      this.toggleDomainError();
+    }
+    this.renderTypesViewer();
+    this.parent.renderParticleViewer(null);
+    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + queryStr;
+    app.getXHR(endpoint, {
+      always: function (err, response, body) {
+        self.plot = body.fig;
+        self.displayDomain();
+      }
+    });
+  },
   handleLoadExternalDomain: function (e) {
     let text = e.target.textContent
     if(text === "View External Domain") {
@@ -80,47 +129,11 @@ module.exports = View.extend({
       this.parent.renderDomainViewer(domainPath);
     }
   },
-  initialize: function (attrs, options) {
-    View.prototype.initialize.apply(this, arguments);
-    this.tooltips = Tooltips.domainEditor;
-    this.domainPath = attrs.domainPath;
-    let self = this;
-    this.model.particles.forEach(function (particle) {
-      self.model.types.get(particle.type, "typeID").numParticles += 1;
-    });
-    this.gravity = this.getGravityString()
-  },
   getGravityString: function () {
     var gravity = "(X: " + this.model.gravity[0];
     gravity += ", Y: " + this.model.gravity[1];
     gravity += ", Z: " + this.model.gravity[2] + ")";
     return gravity;
-  },
-  render: function () {
-    View.prototype.render.apply(this, arguments);
-    this.renderDomainSelectView();
-    this.renderTypesViewer();
-    let self = this;
-    var queryStr = "?path=" + this.parent.model.directory
-    if(this.domainPath) {
-      $(this.queryByHook("domain-container")).collapse("show")
-      $(this.queryByHook("collapse")).text("-")
-      if(this.domainPath !== "viewing") {
-        $(this.queryByHook("save-to-model")).prop("disabled", false)
-        $(this.queryByHook("external-domain-select")).css("display", "block")
-        $(this.queryByHook("select-external-domain")).text("View Model's Domain")
-        queryStr += "&domain_path=" + this.domainPath
-      }
-    }
-    this.parent.renderParticleViewer(null);
-    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + queryStr;
-    app.getXHR(endpoint, {
-      always: function (err, response, body) {
-        self.plot = body.fig;
-        self.displayDomain();
-      }
-    });
-    this.toggleDomainError();
   },
   renderDomainSelectView: function () {
     let self = this;
@@ -218,11 +231,12 @@ module.exports = View.extend({
   toggleViewExternalDomainBtn: function (e) {
     if(e) {
       if(!e.target.classList.contains("active")) {
-        let display = e.target.text === "View" ? "none" : "block"
+        let display = e.target.text === "View" ? "none" : "block";
         $(this.queryByHook("external-domains-container")).css("display", display);
       }
     }else{
-      console.log("TODO: handle initial state")
+      let display = this.readOnly ? "none" : "block";
+      $(this.queryByHook("external-domains-container")).css("display", display);
     }
   },
   changeCollapseButtonText: function (e) {
