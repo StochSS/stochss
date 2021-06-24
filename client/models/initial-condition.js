@@ -23,6 +23,7 @@ var Specie = require('./specie');
 module.exports = State.extend({
   props: {
     icType: 'string',
+    annotation: 'string',
     count: 'number',
     types: 'object',
     x: 'number',

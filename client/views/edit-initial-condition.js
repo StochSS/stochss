@@ -41,6 +41,9 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    if(!this.model.annotation){
+      $(this.queryByHook('edit-annotation-btn')).text('Add')
+    }
     var self = this;
     var options = ['Scatter', 'Place', 'Distribute Uniformly per Voxel'];
     var typeSelectView = new SelectView({
