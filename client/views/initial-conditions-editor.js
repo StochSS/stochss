@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var $ = require('jquery');
 //support files
 let app = require('../app');
+let Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var EditInitialCondition = require('./edit-initial-condition');
@@ -36,22 +37,12 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.opened = attrs.opened;
+    this.tooltips = Tooltips.initialConditionEditor;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(
-      this.collection,
-      EditInitialCondition,
-      this.queryByHook('initial-conditions-collection')
-    );
-    if(this.opened) {
-      this.openInitialConditionContainer();
-    }
-  },
-  update: function () {
-  },
-  updateValid: function () {
+    this.renderEditInitialConditionsView();
+    this.renderViewInitialConditionsView();
   },
   addInitialCondition: function (e) {
     var initialConditionType = e.target.textContent;
@@ -63,19 +54,33 @@ module.exports = View.extend({
     }else {
       var types = [];
     }
-    console.log(initialConditionType, types)
     this.collection.addInitialCondition(initialConditionType, types);
-  },
-  switchToViewMode: function (e) {
-    this.parent.modelStateButtons.clickSaveHandler(e);
-    this.parent.renderInitialConditions(mode="view");
-  },
-  openInitialConditionContainer: function () {
-    $(this.queryByHook('initial-conditions')).collapse('show');
-    let collapseBtn = $(this.queryByHook('initial-condition-button'))
-    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
-  }
+  },
+  renderEditInitialConditionsView: function () {
+    if(this.editInitialConditionView) {
+      this.editInitialConditionView.remove()
+    }
+    this.editInitialConditionView = this.renderCollection(
+      this.collection,
+      EditInitialCondition,
+      this.queryByHook('edit-initial-conditions-collection')
+    );
+  },
+  renderViewInitialConditionsView: function () {
+    if(this.viewInitialConditionView) {
+      this.viewInitialConditionView.remove()
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.viewInitialConditionView = this.renderCollection(
+      this.collection,
+      EditInitialCondition,
+      this.queryByHook('view-initial-conditions-collection'),
+      options
+    );
+  },
+  update: function () {},
+  updateValid: function () {}
 });
