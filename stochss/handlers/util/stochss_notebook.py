@@ -137,7 +137,7 @@ class StochSSNotebook(StochSSBase):
                                                                 pad=pad)
                     a_names = self.__create_event_assignment_strings(assignments=assignments,
                                                                      event=event, pad=pad)
-                    delay = f"{event['delay']}" if event['delay'] else None
+                    delay = f'"{event["delay"]}"' if event['delay'] else None
                     ev_str = f'{pad}self.add_event(Event(name="{event["name"]}", '
                     ev_str += f'trigger={t_name}, assignments=[{a_names}], '
                     ev_str += f'delay={delay}, priority="{event["priority"]}", '
@@ -770,9 +770,9 @@ class StochSSNotebook(StochSSBase):
     def __create_tspan_string(self, model, pad):
         end = self.s_model['modelSettings']['endSim']
         output_freq = self.s_model['modelSettings']['timeStep']
-        step_size = self.s_model['modelSettings']['timestepSize']
         tspan = ["", f"{pad}# Timespan"]
         if self.s_model['is_spatial']:
+            step_size = self.s_model['modelSettings']['timestepSize']
             ts_str = f'{pad}self.timespan(np.arange(0, {end + step_size}, {output_freq})'
             ts_str += f", timestep_size={step_size})"
         else:
