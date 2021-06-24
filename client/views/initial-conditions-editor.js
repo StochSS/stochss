@@ -37,7 +37,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = Tooltips.initialConditionEditor;
+    this.tooltips = Tooltips.initialConditionsEditor;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -72,6 +72,12 @@ module.exports = View.extend({
   renderViewInitialConditionsView: function () {
     if(this.viewInitialConditionView) {
       this.viewInitialConditionView.remove()
+    }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("initial-conditions-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("initial-conditions-annotation-header")).css("display", "block");
     }
     let options = {viewOptions: {viewMode: true}};
     this.viewInitialConditionView = this.renderCollection(
