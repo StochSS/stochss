@@ -572,7 +572,7 @@ class StochSSNotebook(StochSSBase):
                     if reac['reactionType'] == 'custom-propensity':
                         reac_str += f'propensity_function="{reac["propensity"]}")'
                     else:
-                        reac_str += f'rate=self.listOfParameters["{reac["rate"]["name"]}"])'
+                        reac_str += f'rate="{reac["rate"]["name"]}")'
                     if not self.s_model['is_spatial']:
                         reac_str += ")"
                     reactions.append(reac_str)
