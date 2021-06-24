@@ -37,54 +37,89 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.eventsEditor
-    this.opened = attrs.opened
-    this.collection.on("select", function (event) {
-      this.setSelectedEvent(event);
-      this.setDetailsView(event);
-    }, this);
-    this.collection.on("remove", function (event) {
-      // Select the last event by default
-      // But only if there are other events other than the one we're removing
-      if (event.detailsView)
-        event.detailsView.remove();
-      this.collection.removeEvent(event);
-      if (this.collection.length) {
-        var selected = this.collection.at(this.collection.length-1);
-        this.collection.trigger("select", selected);
-      }
-    }, this);
-    this.collection.parent.species.on('add remove', this.toggleAddEventButton, this);
-    this.collection.parent.parameters.on('add remove', this.toggleAddEventButton, this);
+    if(!this.readOnly) {
+      this.collection.on("select", function (event) {
+        this.setSelectedEvent(event);
+        this.setDetailsView(event);
+      }, this);
+      this.collection.on("remove", function (event) {
+        // Select the last event by default
+        // But only if there are other events other than the one we're removing
+        if (event.detailsView)
+          event.detailsView.remove();
+        this.collection.removeEvent(event);
+        if (this.collection.length) {
+          var selected = this.collection.at(this.collection.length-1);
+          this.collection.trigger("select", selected);
+        }
+      }, this);
+      this.collection.parent.species.on('add remove', this.toggleAddEventButton, this);
+      this.collection.parent.parameters.on('add remove', this.toggleAddEventButton, this);
+    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEventListingsView();
-    this.detailsContainer = this.queryByHook('event-details-container');
-    this.detailsViewSwitcher = new ViewSwitcher({
-      el: this.detailsContainer,
-    });
-    if (this.collection.length) {
-      this.setSelectedEvent(this.collection.at(0));
-      this.collection.trigger("select", this.selectedEvent);
+    if(this.readOnly) {
+      $(this.queryByHook('events-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('events-view-tab')).tab('show');
+      $(this.queryByHook('edit-events')).removeClass('active');
+      $(this.queryByHook('view-events')).addClass('active');
+    }else {
+      this.renderEditEventListingsView();
+      this.detailsContainer = this.queryByHook('event-details-container');
+      this.detailsViewSwitcher = new ViewSwitcher({
+        el: this.detailsContainer,
+      });
+      if(this.collection.length) {
+        this.setSelectedEvent(this.collection.at(0));
+        this.collection.trigger("select", this.selectedEvent);
+      }
+      this.toggleAddEventButton()
     }
-    this.toggleAddEventButton()
-    if(this.opened) {
-      this.openEventsContainer();
-    }
+    this.renderViewEventListingView();
   },
   update: function () {
   },
   updateValid: function () {
   },
-  renderEventListingsView: function () {
-    if(this.eventListingsView){
-      this.eventListingsView.remove();
+  renderEditEventListingsView: function () {
+    if(this.editEventListingsView){
+      this.editEventListingsView.remove();
     }
-    this.eventListingsView = this.renderCollection(
+    this.editEventListingsView = this.renderCollection(
       this.collection,
       EventListings,
-      this.queryByHook('event-listing-container')
+      this.queryByHook('edit-event-listing-container')
+    );
+    $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderViewEventListingView: function () {
+    if(this.viewEventListingsView) {
+      this.viewEventListingsView.remove();
+    }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("events-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("events-annotation-header")).css("display", "block");
+    }
+    let options = {viewOptions: {parent: this, viewMode: true}};
+    this.viewEventListingsView = this.renderCollection(
+      this.collection,
+      EventListings,
+      this.queryByHook('view-event-listing-container'),
+      options
     );
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -133,11 +168,6 @@ module.exports = View.extend({
   switchToViewMode: function (e) {
     this.parent.modelStateButtons.clickSaveHandler(e);
     this.parent.renderEventsView(mode="view");
-  },
-  openEventsContainer: function () {
-    $(this.queryByHook('events')).collapse('show');
-    let collapseBtn = $(this.queryByHook('collapse'))
-    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);

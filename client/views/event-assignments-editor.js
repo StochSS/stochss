@@ -16,6 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery');
+//support files
+let app = require('../app');
 //views
 var View = require('ampersand-view');
 var EditEventAssignment = require('./edit-event-assignment');
@@ -25,25 +28,56 @@ var template = require('../templates/includes/eventAssignmentsEditor.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=add-event-assignment]' : 'addAssignment',
+    'click [data-hook=collapse-assignments]' : 'changeCollapseButtonText',
+    'click [data-hook=add-event-assignment]' : 'addAssignment'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
+    this.tooltips = attrs.tooltips;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(
-      this.collection,
-      EditEventAssignment,
-      this.queryByHook('event-assignments-container')
-    );
-  },
-  update: function () {
-  },
-  updateValid: function () {
+    if(this.readOnly) {
+      $(this.queryByHook('edit-event-assignments')).removeClass('active');
+      $(this.queryByHook('view-event-assignments')).addClass('active');
+      $(this.queryByHook('event-assignments-header')).css("display", "none");
+      this.renderViewEventAssignment();
+    }else{
+      this.renderEditEventAssignment();
+    }
   },
   addAssignment: function () {
     this.collection.addEventAssignment();
     this.collection.parent.collection.trigger('change')
   },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  renderEditEventAssignment: function () {
+    if(this.editEventAssignments) {
+      this.editEventAssignments.remove();
+    }
+    this.editEventAssignments = this.renderCollection(
+      this.collection,
+      EditEventAssignment,
+      this.queryByHook('edit-event-assignments-container')
+    );
+  },
+  renderViewEventAssignment: function () {
+    if(this.viewEventAssignments) {
+      this.viewEventAssignments.remove();
+    }
+    let options = {viewOptions: {viewMode: true}}
+    this.viewEventAssignments = this.renderCollection(
+      this.collection,
+      EditEventAssignment,
+      this.queryByHook('view-event-assignments-container'),
+      options
+    );
+  },
+  update: function () {
+  },
+  updateValid: function () {
+  }
 })
