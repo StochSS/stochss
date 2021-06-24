@@ -1,51 +1,68 @@
-div#initial-conditions.card.card-body
+div#initial-conditions.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Initial Conditions
+    h3.inline.mr-3 Initial Conditions
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="initial-conditions-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="initial-conditions-edit-tab" data-toggle="tab" href="#edit-initial-conditions") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="initial-conditions-view-tab" data-toggle="tab" href="#view-initial-conditions") View
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#initial-condition" data-hook="initial-condition-button") +
 
-  div.collapse(id="initial-condition" data-hook="initial-conditions")
-
-    p
+  div.card-body
+    p.mb-0
       | Define the initial conditions for a spatial simulation
-    ul
+    ul.mb-0
       li A <b>'Scatter'</b> initial condition distributes <i>Count</i> particles over the chosen types.
       li A <b>'Place'</b> initial condition places <i>Count</i> particles at a given X, Y, Z coordinate.
       li A <b>'Distribute Uniformly per Voxel'</b> initial condition puts <i>Count</i> particles in each voxel of the chosen types.
 
-    table.table
+    div.collapse.tab-content(id="initial-condition" data-hook="initial-conditions")
 
-      thead
-    
-        tr
-    
-          th(scope="col") Type
-    
-          th(scope="col") Variable
+      div.tab-pane.active(id="edit-initial-conditions" data-hook="edit-initial-conditions")
 
-          th(scope="col") Count
-    
-          th(scope="col") Details
-    
-          th(scope="col") Remove
+        hr
 
-      tbody(data-hook="initial-conditions-collection")
+        div.mx-1.row.head.align-items-baseline
 
-    div.dropdown.inline
+          div.col-sm-2: h6 <b>Type</b>
 
-      button.btn.btn-outline-primary.box-shadow.dropdown-toggle#addInitialConditionBtn(
-        data-hook='add-initial-condition',
-        data-toggle='dropdown',
-        aria-haspopup='true',
-        aria-expanded='false',
-        type='button'
-      ) Add Initial Condition <span class="caret"></span>
+          div.col-sm-2: h6 <b>Variable</b>
 
-      ul.dropdown-menu(aria-labelledby='addInitialConditionBtn')
-        li.dropdown-item(data-hook='scatter') Scatter
-        li.dropdown-item(data-hook='place') Place
-        li.dropdown-item(data-hook='distribute-uniformly') Distribute Uniformly per Voxel
+          div.col-sm-3: h6 <b>Count</b>
 
-    button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-initial-conditions") Save Initial Conditions
+          div.col-sm-3: h6 <b>Details</b>
+
+          div.col-sm-2: h6 <b>Remove</b>
+
+        div.my-3(data-hook="initial-conditions-collection")
+
+        div.dropdown.inline
+
+          button.btn.btn-outline-primary.box-shadow.dropdown-toggle#addInitialConditionBtn(
+            data-hook='add-initial-condition',
+            data-toggle='dropdown',
+            aria-haspopup='true',
+            aria-expanded='false',
+            type='button'
+          ) Add Initial Condition <span class="caret"></span>
+
+          ul.dropdown-menu(aria-labelledby='addInitialConditionBtn')
+            li.dropdown-item(data-hook='scatter') Scatter
+            li.dropdown-item(data-hook='place') Place
+            li.dropdown-item(data-hook='distribute-uniformly') Distribute Uniformly per Voxel
+
+      div.tab-pane(id="view-initial-conditions" data-hook="view-initial-conditions")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline

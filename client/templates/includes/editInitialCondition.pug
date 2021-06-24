@@ -1,21 +1,30 @@
-tr
+div.mx-1
 
-  td: div(data-hook="initial-condition-type")
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
 
-  td: div(data-hook="initial-condition-species")
+  div.row
 
-  td: div(data-hook="count-container")
+    div.col-sm-2
 
-  td
+      div.pl-2(data-hook="initial-condition-type")
 
-    div(data-hook="place-details")
-      span <b>Location:</b>
-      div
-        div.inline(data-hook="x-container")
-        div.inline(data-hook="y-container")
-        div.inline(data-hook="z-container")
-    div(data-hook="scatter-details")
-      span <b>Active in Types:</b>
-      div(data-hook="initial-condition-types")
+    div.col-sm-2(data-hook="initial-condition-species")
 
-  td: button.btn.btn-outline-secondary(data-hook="remove") X
+    div.col-sm-3(data-hook="count-container")
+
+    div.col-sm-3
+
+      div(data-hook="place-details")
+        span <b>Location:</b>
+        div
+          div.inline(data-hook="x-container")
+          div.inline(data-hook="y-container")
+          div.inline(data-hook="z-container")
+      div(data-hook="scatter-details")
+        span <b>Active in Types:</b>
+        div(data-hook="initial-condition-types")
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary(data-hook="remove") X
