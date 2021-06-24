@@ -55,8 +55,8 @@ module.exports = Collection.extend({
     this.remove(specie);
     this.parent.updateValid()
   },
-  validateCollection: function () {
-    if(this.length <= 0) {
+  validateCollection: function (isSpatial) {
+    if(this.length <= 0 && !isSpatial) {
       this.parent.error = {'type':'species'}
       return false;
     }

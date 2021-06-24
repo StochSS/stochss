@@ -178,6 +178,7 @@ module.exports = View.extend({
     });
   },
   toggleSpeciesCollectionError: function () {
+    if(this.spatial) {return};
     let errorMsg = $(this.queryByHook('species-collection-error'))
     if(this.collection.length <= 0) {
       errorMsg.addClass('component-invalid')

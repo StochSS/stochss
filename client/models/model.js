@@ -91,12 +91,12 @@ module.exports = Model.extend({
     this.rules.on('add change remove', this.updateValid, this);
   },
   validateModel: function () {
-    if(!this.species.validateCollection()) return false;
+    if(!this.species.validateCollection(this.is_spatial)) return false;
     if(!this.parameters.validateCollection()) return false;
     if(!this.reactions.validateCollection()) return false;
     if(!this.eventsCollection.validateCollection()) return false;
     if(!this.rules.validateCollection()) return false;
-    if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
+    if(!this.is_spatial && this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
       this.error = {"type":"process"}
       return false;
     }
