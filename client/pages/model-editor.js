@@ -257,7 +257,8 @@ let ModelEditor = PageView.extend({
       }
       this.renderSystemVolumeView();
     }
-    $(document).ready(function () {
+    this.model.autoSave();
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
