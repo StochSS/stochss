@@ -38,10 +38,22 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.initialConditionsEditor;
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderEditInitialConditionsView();
+    if(this.readOnly) {
+      $(this.queryByHook('initial-conditions-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('initial-conditions-view-tab')).tab('show');
+      $(this.queryByHook('edit-initial-conditions')).removeClass('active');
+      $(this.queryByHook('view-initial-conditions')).addClass('active');
+    }else{
+      this.renderEditInitialConditionsView();
+    }
     this.renderViewInitialConditionsView();
   },
   addInitialCondition: function (e) {
