@@ -27,10 +27,10 @@ var InputView = require('./input');
 var SelectView = require('ampersand-select-view');
 var TypesView = require('./component-types');
 //templates
-var template = require('../templates/includes/editInitialCondition.pug');
+let editTemplate = require('../templates/includes/editInitialCondition.pug');
+let viewTemplate = require('../templates/includes/viewInitialCondition.pug');
 
 module.exports = View.extend({
-  template: template,
   events: {
     'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
     'click [data-hook=remove]' : 'removeInitialCondition',
@@ -40,8 +40,18 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.modelType = "initial-condition";
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    if(this.viewMode) {
+      let self = this;
+      this.types = [];
+      this.model.types.forEach(function (index) {
+        let type = self.model.collection.parent.domain.types.get(index, "typeID");
+        self.types.push(type.name)
+      });
+    }
   },
   render: function () {
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
