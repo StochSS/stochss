@@ -25,7 +25,7 @@ os.chdir('/stochss')
 class TestModelTemplate(unittest.TestCase):
     '''
     ################################################################################################
-    Unit tests for model template complete ness.
+    Unit tests for model template completeness.
     ################################################################################################
     '''
     def setUp(self):
@@ -40,7 +40,7 @@ class TestModelTemplate(unittest.TestCase):
 
     def test_model_elements(self):
         '''
-        Check if the model template has all of the properties currently in the model.
+        Check if the model template has all of the properties currently in the model model.
         '''
         template_keys = sorted(list(self.template.keys()))
         model_path = "client/models/model.js"
@@ -61,7 +61,7 @@ class TestModelTemplate(unittest.TestCase):
     def test_timespan_settings_elements(self):
         '''
         Check if the timespan settings in the model template has
-        all of the properties currently in the timespan settings.
+        all of the properties currently in the timespan settings model.
         '''
         template_keys = sorted(list(self.template['modelSettings'].keys()))
         mdl_settings_path = "client/models/timespan-settings.js"
@@ -76,7 +76,7 @@ class TestModelTemplate(unittest.TestCase):
     def test_model_domain_elements(self):
         '''
         Check if the domain in the model template has all of the
-        properties currently in the domain.
+        properties currently in the domain model.
         '''
         template_keys = sorted(list(self.template['domain'].keys()))
         domain_path = "client/models/domain.js"
