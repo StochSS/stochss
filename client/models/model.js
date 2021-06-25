@@ -124,7 +124,10 @@ module.exports = Model.extend({
     return id;
   },
   autoSave: function () {
-    //TODO: implement auto save
+    let self = this;
+    setTimeout(function () {
+      app.postXHR(self.url(), self.toJSON(), { success: self.autoSave });
+    }, 120000);
   },
   //called when save button is clicked
   saveModel: function (cb=null) {
