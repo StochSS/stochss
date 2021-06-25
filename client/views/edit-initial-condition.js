@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let _ = require('underscore');
 //support files
 let app = require('../app');
 var tests = require('./tests');
@@ -53,6 +54,9 @@ module.exports = View.extend({
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
+    if(!this.viewMode) {
+      this.model.on('change', _.bind(this.updateViewer, this));
+    }
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
     });
@@ -99,13 +103,14 @@ module.exports = View.extend({
     var name = e.target.selectedOptions.item(0).text;
     var specie = this.getSpecieFromSpecies(name);
     this.model.specie = specie || this.model.specie;
+    this.model.trigger('change');
   },
   selectInitialConditionType: function (e) {
     var currentType = this.model.icType;
     var newType = e.target.selectedOptions.item(0).text;
     this.model.icType = newType;
     if(currentType === "Place" || newType === "Place"){
-      this.renderDetailsView();
+      this.toggleDetailsView();
     }
   },
   toggleDetailsView: function () {
@@ -119,6 +124,9 @@ module.exports = View.extend({
   },
   update: function () {},
   updateValid: function () {},
+  updateViewer: function () {
+    this.parent.renderViewInitialConditionsView();
+  },
   subviews: {
     selectICType: {
       hook: 'initial-condition-type',
