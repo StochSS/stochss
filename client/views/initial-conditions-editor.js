@@ -68,6 +68,12 @@ module.exports = View.extend({
       EditInitialCondition,
       this.queryByHook('edit-initial-conditions-collection')
     );
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   renderViewInitialConditionsView: function () {
     if(this.viewInitialConditionView) {
@@ -86,6 +92,12 @@ module.exports = View.extend({
       this.queryByHook('view-initial-conditions-collection'),
       options
     );
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
   },
   update: function () {},
   updateValid: function () {}
