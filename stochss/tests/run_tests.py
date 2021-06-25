@@ -34,7 +34,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(os.path.dirname(__file__))
 
-    # import test_model_template
+    import test_model_template
     # import test_settings_template
     # import test_convert_sbml
     # import test_upload_file
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # import test_duplicate
 
     modules = [
-        # test_model_template,
+        test_model_template,
         # test_settings_template,
         # test_convert_sbml,
         # test_rename,
