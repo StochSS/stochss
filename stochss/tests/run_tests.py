@@ -36,29 +36,17 @@ if __name__ == "__main__":
 
     import test_model_template
     import test_settings_template
-    # import test_convert_sbml
-    # import test_upload_file
-    # import test_rename
-    # import test_generate_zip_file
-    # import test_workflow_status
-    # import test_ls
-    # import test_duplicate
+    import test_stochss_base
 
     modules = [
         test_model_template,
         test_settings_template,
-        # test_convert_sbml,
-        # test_rename,
-        # test_upload_file,
-        # test_generate_zip_file,
-        # test_workflow_status,
-        # test_ls,
-        # test_duplicate
+        test_stochss_base
     ]
 
     for module in modules:
         suite = unittest.TestLoader().loadTestsFromModule(module)
-        runner = unittest.TextTestRunner(failfast=args.mode == 'staging')
+        runner = unittest.TextTestRunner(failfast=args.mode == 'staging', verbosity=1)
 
         print("Executing: {}".format(module))
         result = runner.run(suite)
