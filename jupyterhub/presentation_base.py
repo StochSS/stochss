@@ -26,7 +26,7 @@ class StochSSBase():
     '''
     user_dir = os.path.expanduser("~") # returns the path to the users home directory
 
-    def __init__(self, path):
+    def __init__(self, path=None):
         '''
         Intitialize a file object
 
@@ -37,24 +37,6 @@ class StochSSBase():
         '''
         self.path = path
         self.logs = []
-
-
-    def get_name(self, path=None):
-        '''
-        Get the name from the file object's path or provided path
-
-        Attributes
-        ----------
-        path : str
-            Path to a file object
-        '''
-        name = self.path if path is None else path
-        if name.endswith("/"):
-            name = name[:-1]
-        name = name.split('/').pop()
-        if "." not in name:
-            return name
-        return '.'.join(name.split('.')[:-1])
 
 
     def print_logs(self, log):

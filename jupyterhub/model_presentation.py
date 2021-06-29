@@ -26,6 +26,7 @@ import tempfile
 import docker
 from jupyterhub.handlers.base import BaseHandler
 
+from presentation_base import StochSSBase
 from presentation_error import StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
@@ -122,7 +123,7 @@ def get_presentation_from_user(owner, file):
         return json.load(mdl_file)
 
 
-class StochSSModel():
+class StochSSModel(StochSSBase):
     '''
     ################################################################################################
     StochSS model object
@@ -138,6 +139,7 @@ class StochSSModel():
         model : dict
             Existing model data
         '''
+        super().__init__()
         self.model = model
 
 
@@ -228,7 +230,7 @@ class StochSSModel():
         return self.model
 
 
-class StochSSSpatialModel():
+class StochSSSpatialModel(StochSSBase):
     '''
     ################################################################################################
     StochSS spatial model object
@@ -244,6 +246,7 @@ class StochSSSpatialModel():
         model : dict
             Existing model data
         '''
+        super().__init__()
         self.model = model
 
 
