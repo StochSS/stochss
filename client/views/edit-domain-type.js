@@ -22,16 +22,24 @@ let app = require('../app');
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
-var template = require('../templates/includes/editDomainType.pug');
+let editTemplate = require('../templates/includes/editDomainType.pug');
+let viewTemplate = require('../templates/includes/viewDomainType.pug');
 
 module.exports = View.extend({
-  template: template,
   events: {
     'click [data-hook=unassign-all]' : 'handleUnassignParticles',
     'click [data-hook=delete-type]' : 'handleDeleteType',
     'click [data-hook=delete-all]' : 'handleDeleteTypeAndParticle',
     'click [data-hook=edit-defaults-btn]' : 'handleEditDefaults',
     'change [data-target=type-name]' : 'handleRenameType'
+  },
+  initialize: function (attrs, options) {
+    View.prototype.initialize.apply(this, arguments);
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+  },
+  render: function (attrs, options) {
+    this.template = this.viewMode ? viewTemplate : editTemplate;
+    View.prototype.render.apply(this, arguments);
   },
   handleDeleteType: function (e) {
     let type = Number(e.target.dataset.type);
@@ -58,19 +66,21 @@ module.exports = View.extend({
     this.parent.unassignAllParticles(type);
     this.parent.renderDomainTypes();
   },
-  initialize: function (attrs, options) {
-    View.prototype.initialize.apply(this, arguments);
-  },
-  render: function (attrs, options) {
-    View.prototype.render.apply(this, arguments);
-    this.renderNameView();
-  },
-  renderNameView: function () {
-    let nameView = new InputView({parent: this, required: true,
-                                  name: 'name', valueType: 'string',
-                                  value: this.model.name});
-    app.registerRenderSubview(this, nameView, "type-" + this.model.typeID);
-  },
   update: function () {},
-  updateValid: function () {}
+  updateValid: function () {},
+  subviews: {
+    inputName: {
+      waitFor: "model.typeID",
+      prepareView: function (el) {
+        return new InputView({
+          el: "type-" + this.model.typeID,
+          parent: this,
+          required: true,
+          name: 'name',
+          valueType: 'string',
+          value: this.model.name
+        });
+      }
+    }
+  }
 });
