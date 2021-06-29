@@ -30,7 +30,7 @@ class SpatialSimulation(StochSSJob):
 
     TYPE = "spatial"
 
-    def __init__(self, path, preview=False, species=None):
+    def __init__(self, path, preview=False, target=None):
         '''
         Intitialize a spatial ensemble simulation job object
 
@@ -38,13 +38,17 @@ class SpatialSimulation(StochSSJob):
         ----------
         path : str
             Path to the spatial ensemble simulation job
+        preview : bool
+            Indicates whether or not the simulation is a preview.
+        target : string
+            Results data target used for ploting
         '''
         super().__init__(path=path)
         if not preview:
             self.settings = self.load_settings()
             self.s_py_model, self.s_model = self.load_models()
         else:
-            self.species = species
+            self.target = target
 
 
     def __get_run_settings(self):
@@ -67,14 +71,20 @@ class SpatialSimulation(StochSSJob):
             if verbose:
                 self.log("info", "Running a preview spatial ensemble simulation")
             results = self.s_py_model.run(timeout=60)
-            # if self.species is None:
-            #     self.species = list(self.s_py_model.get_all_species().keys())[0]
+            properties = ["type", "rho", "mass", "nu"]
             t_ndx_list = list(range(len(os.listdir(results.result_dir)) - 1))
-            plot = results.plot_species(species=self.species, t_ndx_list=t_ndx_list, animated=True,
-                                        concentration=self.s_model['defaultMode'] == "continuous",
-                                        deterministic=self.s_model['defaultMode'] == "discrete",
-                                        width=None, height=None, return_plotly_figure=True,
-                                        f_duration=100, t_duration=100)
+            kwargs = {"t_ndx_list": t_ndx_list, "animated": True, "width": None, "height": None,
+                      "return_plotly_figure": True, "f_duration": 100, "t_duration": 100}
+            if self.target in properties or self.target.startswith("v["):
+                if self.target.startswith("v["):
+                    kwargs['p_ndx'] = int(self.target[2])
+                    self.target = "v"
+                plot = results.plot_property(property_name=self.target, **kwargs)
+            else:
+                concentration = self.s_model['defaultMode'] == "continuous"
+                deterministic = self.s_model['defaultMode'] == "discrete"
+                plot = results.plot_species(species=self.target, concentration=concentration,
+                                            deterministic=deterministic, **kwargs)
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot

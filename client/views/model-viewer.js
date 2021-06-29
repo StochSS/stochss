@@ -21,8 +21,8 @@ let $ = require('jquery');
 let app = require('../app');
 //views
 let View = require('ampersand-view');
-let RulesViewer = require('./rules-viewer');
-let EventsViewer = require('./events-viewer');
+let EventsViewer = require('./events-editor');
+let RulesViewer = require('./rules-editor');
 let SpeciesViewer = require('./species-editor');
 let ReactionsViewer = require('./reactions-editor');
 let ParametersViewer = require('./parameters-editor');
@@ -53,7 +53,8 @@ module.exports = View.extend({
   },
   renderEventsView: function () {
     let eventsViewer = new EventsViewer({
-      collection: this.model.eventsCollection
+      collection: this.model.eventsCollection,
+      readOnly: true
     });
     app.registerRenderSubview(this, eventsViewer, "events-viewer-container");
   },
@@ -73,14 +74,15 @@ module.exports = View.extend({
   },
   renderRulesView: function () {
     let rulesViewer = new RulesViewer({
-      collection: this.model.rules
+      collection: this.model.rules,
+      readOnly: true
     });
     app.registerRenderSubview(this, rulesViewer, "rules-viewer-container");
   },
   renderSBMLComponentsView: function () {
     let sbmlComponentsView = new SBMLComponentsView({
       functionDefinitions: this.model.functionDefinitions,
-      viewMode: true
+      readOnly: true
     });
     app.registerRenderSubview(this, sbmlComponentsView, "sbml-components-viewer-container");
   },

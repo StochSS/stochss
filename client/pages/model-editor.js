@@ -35,13 +35,12 @@ var ParametersEditorView = require('../views/parameters-editor');
 var ParticleViewer = require('../views/view-particle');
 var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
-var EventsViewer = require('../views/events-viewer');
 var RulesEditorView = require('../views/rules-editor');
-var RulesViewer = require('../views/rules-viewer');
 var SBMLComponentView = require('../views/sbml-component-editor');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 var QuickviewDomainTypes = require('../views/quickview-domain-types');
+let BoundaryConditionsView = require('../views/boundary-conditions-editor');
 //models
 var Model = require('../models/model');
 var Domain = require('../models/domain');
@@ -241,11 +240,12 @@ let ModelEditor = PageView.extend({
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
     app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
+      $(this.queryByHook("system-volume-container")).css("display", "none");
       $(this.queryByHook("advaced-model-mode")).css("display", "none");
-      $(this.queryByHook("model-editor-advanced-container")).css("display", "none");
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
       this.renderDomainViewer();
       this.renderInitialConditions();
+      this.renderBoundaryConditionsView();
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
     }else {
@@ -253,14 +253,14 @@ let ModelEditor = PageView.extend({
       this.renderRulesView();
       if(this.model.functionDefinitions.length) {
         var sbmlComponentView = new SBMLComponentView({
-          functionDefinitions: this.model.functionDefinitions,
-          viewModel: false
+          functionDefinitions: this.model.functionDefinitions
         });
         app.registerRenderSubview(this, sbmlComponentView, 'sbml-component-container');
       }
       this.renderSystemVolumeView();
     }
-    $(document).ready(function () {
+    this.model.autoSave();
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
@@ -269,6 +269,15 @@ let ModelEditor = PageView.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
+  },
+  renderBoundaryConditionsView: function() {
+    if(this.boundaryConditionsView) {
+      this.boundaryConditionsView.remove();
+    }
+    this.boundaryConditionsView = new BoundaryConditionsView({
+      collection: this.model.boundaryConditions
+    });
+    app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
   },
   renderDomainViewer: function(domainPath=null) {
     if(this.domainViewer) {
@@ -339,26 +348,18 @@ let ModelEditor = PageView.extend({
     this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions});
     app.registerRenderSubview(this, this.reactionsEditor, 'reactions-editor-container');
   },
-  renderEventsView: function (mode="edit", opened=false) {
+  renderEventsView: function () {
     if(this.eventsEditor){
       this.eventsEditor.remove();
     }
-    if(mode === "edit") {
-      this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection, opened: opened});
-    }else{
-      this.eventsEditor = new EventsViewer({collection: this.model.eventsCollection});
-    }
+    this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection});
     app.registerRenderSubview(this, this.eventsEditor, 'events-editor-container');
   },
-  renderRulesView: function (mode="edit", opened=false) {
+  renderRulesView: function () {
     if(this.rulesEditor){
       this.rulesEditor.remove();
     }
-    if(mode === "edit") {
-      this.rulesEditor = new RulesEditorView({collection: this.model.rules, opened: opened});
-    }else{
-      this.rulesEditor = new RulesViewer({collection: this.model.rules})
-    }
+    this.rulesEditor = new RulesEditorView({collection: this.model.rules});
     app.registerRenderSubview(this, this.rulesEditor, 'rules-editor-container');
   },
   renderSystemVolumeView: function () {

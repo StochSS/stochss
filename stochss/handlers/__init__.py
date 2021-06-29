@@ -76,6 +76,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/model/run\/?", RunModelAPIHandler),
         (r"/stochss/api/model/exists\/?", ModelExistsAPIHandler),
         (r"/stochss/api/model/presentation\/?", ModelPresentationAPIHandler),
+        (r"/stochss/api/model/new-bc\/?", CreateNewBoundCondAPIHandler),
         (r"/stochss/api/spatial-model/domain-list\/?", LoadExternalDomains),
         (r"/stochss/api/spatial-model/types-list\/?", LoadParticleTypesDescriptions),
         (r"/stochss/api/spatial-model/domain-plot\/?", LoadDomainAPIHandler),

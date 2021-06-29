@@ -30,6 +30,7 @@ var Reactions = require('./reactions');
 var Rules = require('./rules');
 var Events = require('./events');
 var FunctionDefinitions = require('./function-definitions');
+var BoundaryConditions = require('./boundary-conditions');
 
 module.exports = Model.extend({
   url: function () {
@@ -49,7 +50,8 @@ module.exports = Model.extend({
     reactions: Reactions,
     rules: Rules,
     eventsCollection: Events,
-    functionDefinitions: FunctionDefinitions
+    functionDefinitions: FunctionDefinitions,
+    boundaryConditions: BoundaryConditions
   },
   children: {
     modelSettings: TimespanSettings,
@@ -91,12 +93,12 @@ module.exports = Model.extend({
     this.rules.on('add change remove', this.updateValid, this);
   },
   validateModel: function () {
-    if(!this.species.validateCollection()) return false;
+    if(!this.species.validateCollection(this.is_spatial)) return false;
     if(!this.parameters.validateCollection()) return false;
     if(!this.reactions.validateCollection()) return false;
     if(!this.eventsCollection.validateCollection()) return false;
     if(!this.rules.validateCollection()) return false;
-    if(this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
+    if(!this.is_spatial && this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
       this.error = {"type":"process"}
       return false;
     }
@@ -124,7 +126,10 @@ module.exports = Model.extend({
     return id;
   },
   autoSave: function () {
-    //TODO: implement auto save
+    let self = this;
+    setTimeout(function () {
+      app.postXHR(self.url(), self.toJSON(), { success: self.autoSave });
+    }, 120000);
   },
   //called when save button is clicked
   saveModel: function (cb=null) {

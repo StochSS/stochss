@@ -69,7 +69,7 @@ module.exports = View.extend({
     Plotly.purge(el)
     $(this.parent.queryByHook('preview-plot-buttons')).css("display", "none");
     if(this.model.is_spatial) {
-      this.saveModel(this.getPreviewSpecies.bind(this));
+      this.saveModel(this.getPreviewTarget.bind(this));
     }else{
       this.saveModel(this.runModel.bind(this));
     }
@@ -100,19 +100,19 @@ module.exports = View.extend({
       window.location.href = endpoint
     })
   },
-  getPreviewSpecies: function () {
+  getPreviewTarget: function () {
     this.endAction("save");
     let species = this.model.species.map(function (species) {
       return species.name
     });
     let self = this;
-    let modal = $(modals.selectSpeciesHTML(species)).modal();
-    let okBtn = document.querySelector("#speciesSelectModal .ok-model-btn");
-    let select = document.querySelector("#speciesSelectModal #speciesSelectList");
+    let modal = $(modals.selectPreviewTargetHTML(species)).modal();
+    let okBtn = document.querySelector("#previewTargetSelectModal .ok-model-btn");
+    let select = document.querySelector("#previewTargetSelectModal #previewTargetSelectList");
     okBtn.addEventListener('click', function (e) {
       modal.modal('hide');
-      let specie = select.value;
-      self.runModel(specie);
+      let target = select.value;
+      self.runModel(target);
     });
   },
   togglePreviewWorkflowBtn: function () {
@@ -181,16 +181,16 @@ module.exports = View.extend({
       msg.css("display", "none");
     }, 5000);
   },
-  runModel: function (species=null) {
-    if(typeof species !== "string") {
+  runModel: function (target=null) {
+    if(typeof target !== "string") {
       this.endAction("save");
     }
     this.running();
     $(this.parent.queryByHook('model-run-container')).css("display", "block")
     var model = this.model
     var queryStr = "?cmd=start&outfile=none&path="+model.directory
-    if(species) {
-      queryStr += "&species=" + species;
+    if(target) {
+      queryStr += "&target=" + target;
     }
     var endpoint = path.join(app.getApiPath(), 'model/run')+queryStr;
     var self = this;

@@ -1,67 +1,109 @@
-div#rules-editor.card.card-body
+div#rules-editor.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Rules
+    h3.inline.mr-3 Rules
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="rules-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="rules-edit-tab" data-toggle="tab" href="#edit-rules") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="rules-view-tab" data-toggle="tab" href="#view-rules") View
 
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-rules", data-hook="collapse") +
 
-  div.collapse(id="collapse-rules" data-hook="rules-list-container")
-    p
+  div.card-body
+    p.mb-0
      | Equations that determine the value (assignment rule) or rates of change (rate rule) of <i>Variables</i> or <i>Parameter</i>.
 
-    table.table
+    div.collapse.tab-content(id="collapse-rules" data-hook="rules-list-container")
+      
+      div.tab-pane.active(id="edit-rules" data-hook="edit-rules")
 
-      thead
+        hr
 
-        tr
+        div.mx-1.row.head.align-items-baseline
 
-          th(scope="col")
-            div
-              div.inline Name
+          div.col-sm-2
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            h6.inline <b>Name</b>
 
-          th(scope="col") 
-            div
-              div.inline Type
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.type) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+          div.col-sm-2
 
-          th(scope="col")
-            div
-              div.inline Target
+            h6.inline <b>Type</b>
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.variable) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.type) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          th(scope="col")
-            div
-              div.inline Formula
+          div.col-sm-2
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.expression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            h6.inline <b>Target</b>
 
-          th(scope="col")
-            div
-              div.inline Annotation
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.variable) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+          div.col-sm-2
 
-          th(scope="col") Remove
+            h6.inline <b>Formula</b>
 
-      tbody(data-hook="rule-list-container")
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.expression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-    div.dropdown.inline
+          div.col-sm-2
 
-      button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addRuleBtn(
-        data-hook="add-rule",
-        data-toggle="dropdown",
-        aria-haspopup="true",
-        aria-expanded="false",
-        type="button"
-      ) Add Rule <span class="caret"></span>
+            h6.inline <b>Annotation</b>
 
-      ul.dropdown-menu(aria-labelledby="addRuleBtn")
-        li.dropdown-item(data-hook="rate-rule" data-name="Rate Rule") Rate Rule
-        li.dropdown-item(data-hook="assignment-rule" data-name="Assignment Rule") Assignment Rule
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-    button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-rules") Save Rules
+          div.col-sm-2
+
+            h6 <b>Remove</b>
+
+        div.my-3(data-hook="edit-rule-list-container")
+
+        div.dropdown
+
+          button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addRuleBtn(
+            data-hook="add-rule",
+            data-toggle="dropdown",
+            aria-haspopup="true",
+            aria-expanded="false",
+            type="button"
+          ) Add Rule <span class="caret"></span>
+
+          ul.dropdown-menu(aria-labelledby="addRuleBtn")
+            li.dropdown-item(data-hook="rate-rule" data-name="Rate Rule") Rate Rule
+            li.dropdown-item(data-hook="assignment-rule" data-name="Assignment Rule") Assignment Rule
+
+      div.tab-pane(id="view-rules" data-hook="view-rules")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-2
+
+            h6.inline <b>Name</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Type</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Target</b>
+
+          div.col-sm-4
+
+            h6.inline <b>Formula</b>
+
+          div.col-sm-2(data-hook="rules-annotation-header")
+
+            h6.inline <b>Annotation</b>
+
+        div.mt-3(data-hook="view-rules-list-container")

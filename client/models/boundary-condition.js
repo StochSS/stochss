@@ -16,11 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//views
-var View = require('ampersand-view');
-//templates
-var template = require('../templates/includes/viewEventAssignments.pug');
+//models
+var State = require('ampersand-state');
 
-module.exports = View.extend({
-  template: template,
+module.exports = State.extend({
+  props: {
+    compID: 'number',
+    name: 'string',
+    expression: 'string',
+    annotation: 'string'
+  }
 });

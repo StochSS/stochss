@@ -16,11 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//views
-var View = require('ampersand-view');
-//templates
-var template = require('../templates/includes/viewRules.pug');
+//collections
+var Collection = require('ampersand-collection');
+//models
+var BoundaryCondition = require('./boundary-condition');
 
-module.exports = View.extend({
-  template: template,
+module.exports = Collection.extend({
+  model: BoundaryCondition,
+  addNewBoundaryCondition: function (name, expression) {
+    let id = this.parent.getDefaultID();
+    let boundaryCondition = this.add({
+      compID: id,
+      name: name,
+      expression: expression,
+      annotation: ""
+    });
+  }
 });
