@@ -59,9 +59,9 @@ div#preview-settings.card
 
                 div.row
 
-                  div.col-sm-3
+                  div.col-sm-1
                     
-                    span.inline 1e-5
+                    span.inline 1
 
                   div.col-sm-8
 
@@ -69,16 +69,16 @@ div#preview-settings.card
 
                     div.inline(data-hook="timestep-size-value")
 
-                  div.col-sm-1.d-flex.justify-content-end
+                  div.col-sm-3.d-flex.justify-content-end
 
-                    span.inline 1
+                    span.inline 1e-5
 
                 input.custom-range(
                   type="range"
-                  min="1e-5"
-                  max="1"
-                  step="1e-5"
-                  value=this.model.timestepSize
+                  min="0"
+                  max="5"
+                  step="1"
+                  value=this.tssValue
                   data-hook="timestep-size-slider"
                 )
 
