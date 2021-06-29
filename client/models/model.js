@@ -30,6 +30,7 @@ var Reactions = require('./reactions');
 var Rules = require('./rules');
 var Events = require('./events');
 var FunctionDefinitions = require('./function-definitions');
+var BoundaryConditions = require('./boundary-conditions');
 
 module.exports = Model.extend({
   url: function () {
@@ -49,7 +50,8 @@ module.exports = Model.extend({
     reactions: Reactions,
     rules: Rules,
     eventsCollection: Events,
-    functionDefinitions: FunctionDefinitions
+    functionDefinitions: FunctionDefinitions,
+    boundaryConditions: BoundaryConditions
   },
   children: {
     modelSettings: TimespanSettings,

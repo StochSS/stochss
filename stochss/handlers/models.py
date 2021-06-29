@@ -406,3 +406,31 @@ class GetParticlesTypesAPIHandler(APIHandler):
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
+
+
+class CreateNewBoundCondAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler creating new boundary conditions.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Creates a new restricted boundary condition.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        kwargs = json.loads(self.request.body.decode())
+        log.debug("Args passed to the boundary condition constructor: %s", kwargs)
+        try:
+            log.info("Creating the new boundary condition")
+            resp = StochSSSpatialModel.create_boundary_condition(kwargs)
+            log.info("Successfully created the new boundary condition")
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()

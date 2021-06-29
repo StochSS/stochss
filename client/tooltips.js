@@ -179,5 +179,8 @@ module.exports = {
     pressure: "Atmospheric or background pressure.",
 
     speed: "Approximate or artificial speed of sound"
+  },
+  boundaryConditionsEditor: {
+    annotation: "An optional note about a boundary condition."
   }
 }
