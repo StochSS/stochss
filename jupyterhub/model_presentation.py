@@ -24,11 +24,7 @@ import tarfile
 import tempfile
 
 import docker
-from notebook.base.handlers import APIHandler
-# APIHandler documentation:
-# https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py#L583
-# Note APIHandler.finish() sets Content-Type handler to 'application/json'
-# Use finish() for json, write() for text
+from jupyterhub.handlers.base import BaseHandler
 
 from presentation_error import StochSSAPIError, report_error
 
@@ -36,7 +32,7 @@ log = logging.getLogger('stochss')
 
 # pylint: disable=abstract-method
 # pylint: disable=too-few-public-methods
-class JsonFileAPIHandler(APIHandler):
+class JsonFileAPIHandler(BaseHandler):
     '''
     ################################################################################################
     Base Handler for getting model presentations from user containers.
@@ -69,7 +65,7 @@ class JsonFileAPIHandler(APIHandler):
         self.finish()
 
 
-class DownModelPresentationAPIHandler(APIHandler):
+class DownModelPresentationAPIHandler(BaseHandler):
     '''
     ################################################################################################
     Base Handler for downloading model presentations from user containers.
