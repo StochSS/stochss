@@ -24,11 +24,11 @@ module.exports = State.extend({
   props: {
     icType: 'string',
     annotation: 'string',
-    count: 'number',
+    count: 'any',
     types: 'object',
-    x: 'number',
-    y: 'number',
-    z: 'number',
+    x: 'any',
+    y: 'any',
+    z: 'any',
   },
   children: {
     specie: Specie,
