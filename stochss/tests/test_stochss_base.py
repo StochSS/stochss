@@ -54,8 +54,8 @@ class TestStochSSBaseObject(unittest.TestCase):
     def tearDown(self):
         ''' Cleanup the temp directory after each test. '''
         self.tempdir.cleanup()
-        if os.path.exists(os.path.join(self.user_dir, "trash")):
-            shutil.rmtree(os.path.join(self.user_dir, "trash"))
+        if StochSSBase.user_dir != os.path.expanduser("~"):
+            StochSSBase.user_dir = os.path.expanduser("~")
 
     ################################################################################################
     # Unit tests for the StochSS base class check_project_format function.
@@ -142,8 +142,10 @@ class TestStochSSBaseObject(unittest.TestCase):
     def test_get_new_path__no_trash_folder(self):
         ''' Check if the trash directory is created. '''
         test_dst_path = os.path.join("trash", "test_file")
+        StochSSBase.user_dir = self.test_folderpath
         StochSSBase.get_new_path(dst_path=test_dst_path)
-        self.assertTrue(os.path.exists(os.path.join(self.user_dir, "trash")))
+        self.assertTrue(os.path.exists(os.path.join(self.test_folderpath, "trash")))
+
 
 
     def test_get_new_path__remove_trash_datetime_stamp(self):
