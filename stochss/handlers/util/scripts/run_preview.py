@@ -2,7 +2,7 @@
 
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ def get_parsed_args():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('path', help="The path from the user directory to the model.")
     parser.add_argument('outfile', help="The temp file used to hold the results.")
-    parser.add_argument('--species', help="Spatial species to preview.", default=None)
+    parser.add_argument('--target', help="Spatial species or property to preview.", default=None)
     return parser.parse_args()
 
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     is_spatial = args.path.endswith(".smdl")
     if is_spatial:
         model = StochSSSpatialModel(path=args.path)
-        wkfl = SpatialSimulation(path="", preview=True, species=args.species)
+        wkfl = SpatialSimulation(path="", preview=True, target=args.target)
         wkfl.s_py_model = model.convert_to_spatialpy()
         wkfl.s_model = model.model
     else:
