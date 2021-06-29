@@ -55,3 +55,19 @@ class StochSSBase():
         if "." not in name:
             return name
         return '.'.join(name.split('.')[:-1])
+
+
+    def print_logs(self, log):
+        '''
+        Display all internal logs to the console
+
+        Attributes
+        ----------
+        log : obj
+            Logging object
+        '''
+        displays = {"debug":log.debug, "info":log.info, "warning":log.warning,
+                    "error":log.error, "critical":log.critical}
+        for entry in self.logs:
+            log_display = displays[entry["level"]]
+            log_display(entry["message"])
