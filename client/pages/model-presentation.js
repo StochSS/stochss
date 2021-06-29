@@ -26,8 +26,8 @@ let app = require('../app');
 let Model = require('../models/model');
 //views
 let PageView = require('./base');
-let Rules = require('../views/rules-viewer');
-let Events = require('../views/events-viewer');
+let Rules = require('../views/rules-editor');
+let Events = require('../views/events-editor');
 let Species = require('../views/species-editor');
 let Reactions = require('../views/reactions-editor');
 let Parameters = require('../views/parameters-editor');
@@ -72,7 +72,8 @@ let ModelPresentationPage = PageView.extend({
   },
   renderEventsContainer: function () {
     let events = new Events({
-      collection: this.model.eventsCollection
+      collection: this.model.eventsCollection,
+      readOnly: true
     });
     app.registerRenderSubview(this, events, "model-events");
   },
@@ -93,6 +94,7 @@ let ModelPresentationPage = PageView.extend({
   renderRulesContainer: function () {
     let rules = new Rules({
       collection: this.model.rules
+      readOnly: true
     });
     app.registerRenderSubview(this, rules, "model-rules");
   },
