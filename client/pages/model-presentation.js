@@ -62,7 +62,7 @@ let ModelPresentationPage = PageView.extend({
     this.open = "open.stochss.org?open=" + this.model.directory;
   },
   renderSubviews: function () {
-    PageView.prototype.render.apply(this, options);
+    PageView.prototype.render.apply(this, arguments);
     this.renderSpeciesContainer();
     this.renderParametersContainer();
     this.renderReactionsContainer();
