@@ -1,0 +1,22 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 1)
+    hr
+
+  div.row
+
+    div.col-sm-2
+
+      div.pl-2=this.model.name
+
+    div.col-sm-2=this.model.numParticles
+
+    div.col-sm-2=this.model.mass
+
+    div.col-sm-2=this.model.volume
+
+    div.col-sm-2=this.model.nu
+
+    div.col-sm-2
+
+      input(type="checkbox" checked=this.model.fixed disabled)

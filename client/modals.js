@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -424,15 +424,26 @@ module.exports = {
 
         return templates.select(modalID, selectID, title, label, options)
     },
-    selectSpeciesHTML : (species) => {
-      let modalID = "speciesSelectModal";
-      let selectID = "speciesSelectList";
-      let title = "Preview Variable Selection";
-      let label = "Select a variable to preview: ";
+    selectPreviewTargetHTML : (species) => {
+      let modalID = "previewTargetSelectModal";
+      let selectID = "previewTargetSelectList";
+      let title = "Preview Target Selection";
+      let label = "Select a variable or property to preview: ";
       var options = species.map(function (name) {
         return `<option value="${name}">${name}</option>`
       });
-      options = options.join(" ");
+      options = `<optgroup label='Variables'>
+                     ${options.join(" ")}
+                 </optgroup>
+                 <optgroup label='Properties'>
+                     <option value='type'>Type</option>
+                     <option value='v[1]'>X Velocity</option>
+                     <option value='v[2]'>Y Velocity</option>
+                     <option value='v[3]'>Z Velocity</option>
+                     <option value='rho'>Density</option>
+                     <option value='mass'>Mass</option>
+                     <option value='nu'>Viscosity</option>
+                 </optgroup>`;
 
       return templates.select(modalID, selectID, title, label, options)
     },

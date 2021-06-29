@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ var Reactions = require('./reactions');
 var Rules = require('./rules');
 var Events = require('./events');
 var FunctionDefinitions = require('./function-definitions');
+var BoundaryConditions = require('./boundary-conditions');
 
 module.exports = Model.extend({
   url: function () {
@@ -49,7 +50,8 @@ module.exports = Model.extend({
     reactions: Reactions,
     rules: Rules,
     eventsCollection: Events,
-    functionDefinitions: FunctionDefinitions
+    functionDefinitions: FunctionDefinitions,
+    boundaryConditions: BoundaryConditions
   },
   children: {
     modelSettings: TimespanSettings,
