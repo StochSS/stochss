@@ -85,7 +85,6 @@ module.exports = View.extend({
     }
     let data = {model_path: this.collection.parent.directory,
                 kwargs: this.newBC}
-    console.log(data)
     app.postXHR(endpoint, data, {
       success: function (err, response, body) {
         self.collection.addNewBoundaryCondition(self.newBCName, body.expression);
