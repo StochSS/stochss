@@ -101,7 +101,7 @@ let ModelPresentationPage = PageView.extend({
     app.registerRenderSubview(this, rules, "model-rules");
   },
   renderSBMLComponents: function () {
-    let sbmlComponents = new SBMLComponentsView({
+    let sbmlComponents = new SBMLComponents({
       functionDefinitions: this.model.functionDefinitions,
       viewMode: true
     });
