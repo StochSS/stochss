@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -209,14 +209,14 @@ class RunModelAPIHandler(APIHandler):
         if outfile == 'none':
             outfile = str(uuid.uuid4()).replace("-", "_")
         log.debug("Temporary outfile: %s", outfile)
-        species = self.get_query_argument(name="species", default=None)
+        target = self.get_query_argument(name="target", default=None)
         resp = {"Running":False, "Outfile":outfile, "Results":""}
         if run_cmd == "start":
             exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
                         f'{path}', f'{outfile}']
-            if species is not None:
-                exec_cmd.insert(1, "--species")
-                exec_cmd.insert(2, f"{species}")
+            if target is not None:
+                exec_cmd.insert(1, "--target")
+                exec_cmd.insert(2, f"{target}")
             log.debug("Script commands for running a preview: %s", exec_cmd)
             subprocess.Popen(exec_cmd)
             resp['Running'] = True
@@ -402,6 +402,34 @@ class GetParticlesTypesAPIHandler(APIHandler):
             model = StochSSSpatialModel(path="")
             resp = model.get_types_from_file(path=path)
             log.debug("Number of Particles: %s", len(resp['types']))
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class CreateNewBoundCondAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler creating new boundary conditions.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Creates a new restricted boundary condition.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        kwargs = json.loads(self.request.body.decode())
+        log.debug("Args passed to the boundary condition constructor: %s", kwargs)
+        try:
+            log.info("Creating the new boundary condition")
+            resp = StochSSSpatialModel.create_boundary_condition(kwargs)
+            log.info("Successfully created the new boundary condition")
+            log.debug("Response Message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)

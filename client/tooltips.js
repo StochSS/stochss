@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,6 +39,9 @@ module.exports = {
     switchValue: "Switching Tolerance - Tolerance level for considering a dynamic variables deterministically, value is compared to an estimated sd/mean population "+
         "of a variables after a given time step. This value will be used if a 'Minimum Value' not provided.<br>Minimum Value For Switching - Minimum population value "+
         "at which variables will be represented as Concentration."
+  },
+  initialConditionsEditor: {
+    annotation: "An optional note about the initial conditions."
   },
   parametersEditor: {
     name: "Unique identifier for Parameter. Cannot share a name with other model components.",
@@ -179,5 +182,8 @@ module.exports = {
     pressure: "Atmospheric or background pressure.",
 
     speed: "Approximate or artificial speed of sound"
+  },
+  boundaryConditionsEditor: {
+    annotation: "An optional note about a boundary condition."
   }
 }

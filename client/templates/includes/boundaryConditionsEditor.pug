@@ -1,0 +1,127 @@
+div#boundary-conditions.card
+
+  div.card-header.pb-0
+
+    h3.inline.mr-3 Boundary Conditions
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="bc-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="bc-edit-tab" data-toggle="tab" href="#edit-boundary-conditions") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="bc-view-tab" data-toggle="tab" href="#view-boundary-conditions") View
+
+    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-boundary-conditions", data-hook="collapse-bc") +
+
+  div.card-body
+
+    p.mb-0
+      | Set spatial regions of the domain where a property of particles are held constant.
+
+    div.collapse.tab-content(id="collapse-boundary-conditions")
+
+      div.tab-pane.active(id="edit-boundary-conditions" data-hook="edit-boundary-conditions")
+
+        hr
+
+        div.mx-1.row.head
+
+          div.col-sm-3: h6 <b>Name</b>
+
+          div.col-sm-5: h6 <b>Expression</b>
+
+          div.col-sm-2
+
+            div.inline <b>Annotation</b>
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          div.col-sm-2: h6 <b>Remove</b>
+
+        div.mt-3(data-hook="edit-boundary-conditions-list")
+
+        div.card.mt-3
+
+          div.card-header
+
+            h4.inline New Boundary Condition
+
+            button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-new-boundary-conditions" data-hook="collapse-new-bc") +
+
+          div.card-body.mx-1.collapse(id="collapse-new-boundary-conditions")
+
+            div.row.head
+
+              div.col-sm-2: h6 <b>Name</b>
+
+              div.col-sm-4: h6 <b>Target</b>
+
+              div.col-sm-6: h6 <b>Conditions</b>
+
+            div.row.mt-3
+
+              div.col-sm-2(data-hook="new-bc-name" data-target="name")
+
+              div.col-sm-4
+
+                table.table
+                  tbody
+                    tr
+                      th(scope="row") Property/Variable
+                      td(data-hook="new-bc-target")
+                    tr
+                      th(scope="row") Value
+                      td(data-hook="new-bc-value" data-target="value")
+                    tr
+                      th(scope="row") Concentration
+                      td
+                        input(type="checkbox" checked=this.newBC.deterministic data-hook="new-bc-deterministic" disabled)
+
+              div.col-sm-6
+
+                div
+
+                  span.inline.mr-3(for="new-bc-type") <b>Type</b>: 
+                  div.inline(id="new-bc-type" data-hook="new-bc-type" data-target="type_id")
+
+                table.table
+                  thead
+                    tr
+                      th(scope="col")
+                      th(scope="col") X-Axis
+                      th(scope="col") Y-Axis
+                      th(scope="col") Z-Axis
+                  tbody
+                    tr
+                      th(scope="row") Min
+                      td: div(data-hook="new-bc-x-min" data-target="xmin")
+                      td: div(data-hook="new-bc-y-min" data-target="ymin")
+                      td: div(data-hook="new-bc-z-min" data-target="zmin")
+                    tr
+                      th(scope="row") Max
+                      td: div(data-hook="new-bc-x-max" data-target="xmax")
+                      td: div(data-hook="new-bc-y-max" data-target="ymax")
+                      td: div(data-hook="new-bc-z-max" data-target="zmax")
+
+            button.btn.btn-outline-primary.box-shadow(data-hook="add-new-bc") Add New Boundary Condition
+
+      div.tab-pane(id="view-boundary-conditions" data-hook="view-boundary-conditions")
+
+        hr
+
+        div.mx-1.row.head
+
+          div.col-sm-3: h6 <b>Name</b>
+
+          div.col-sm-7: h6 <b>Expression</b>
+
+          div.col-sm-2(data-hook="bc-annotation-header")
+
+            h6 <b>Annotation</b>
+
+        div.mt-3(data-hook="view-boundary-conditions-list")
