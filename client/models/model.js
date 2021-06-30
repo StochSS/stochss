@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let _ = require('underscore');
+//support files
 var app = require('../app');
 var path = require('path');
 //models
@@ -30,6 +32,7 @@ var Reactions = require('./reactions');
 var Rules = require('./rules');
 var Events = require('./events');
 var FunctionDefinitions = require('./function-definitions');
+var BoundaryConditions = require('./boundary-conditions');
 
 module.exports = Model.extend({
   url: function () {
@@ -49,7 +52,8 @@ module.exports = Model.extend({
     reactions: Reactions,
     rules: Rules,
     eventsCollection: Events,
-    functionDefinitions: FunctionDefinitions
+    functionDefinitions: FunctionDefinitions,
+    boundaryConditions: BoundaryConditions
   },
   children: {
     modelSettings: TimespanSettings,
@@ -124,7 +128,10 @@ module.exports = Model.extend({
     return id;
   },
   autoSave: function () {
-    //TODO: implement auto save
+    let self = this;
+    setTimeout(function () {
+      app.postXHR(self.url(), self.toJSON(), { success: _.bind(self.autoSave, self) });
+    }, 120000);
   },
   //called when save button is clicked
   saveModel: function (cb=null) {
