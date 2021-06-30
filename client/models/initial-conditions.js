@@ -26,6 +26,7 @@ module.exports = Collection.extend({
   addInitialCondition: function (initialConditionType, types) {
     var initialCondition = new InitialCondition({
       icType: initialConditionType,
+      annotation: "",
       types: types,
       count: 0,
       x: 0,
