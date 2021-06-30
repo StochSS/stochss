@@ -389,8 +389,7 @@ class StochSSSpatialModel(StochSSBase):
         return s_model
 
 
-    @classmethod
-    def create_boundary_condition(cls, kwargs):
+    def create_boundary_condition(self, kwargs):
         '''
         Create a new boundary condition using spatialpy.BoundaryCondition
 
@@ -399,7 +398,8 @@ class StochSSSpatialModel(StochSSBase):
         kwargs : dict
             Arguments passed to the spatialpy.BoundaryCondition constructor
         '''
-        new_bc = BoundaryCondition(**kwargs)
+        model = self.convert_to_spatialpy()
+        new_bc = BoundaryCondition(model=model, **kwargs)
         expression = new_bc.expression()
         return {"expression": expression}
 
