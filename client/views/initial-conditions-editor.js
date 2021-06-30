@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var $ = require('jquery');
 //support files
 let app = require('../app');
+let Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
 var EditInitialCondition = require('./edit-initial-condition');
@@ -36,22 +37,24 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.opened = attrs.opened;
+    this.tooltips = Tooltips.initialConditionsEditor;
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(
-      this.collection,
-      EditInitialCondition,
-      this.queryByHook('initial-conditions-collection')
-    );
-    if(this.opened) {
-      this.openInitialConditionContainer();
+    if(this.readOnly) {
+      $(this.queryByHook('initial-conditions-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('initial-conditions-view-tab')).tab('show');
+      $(this.queryByHook('edit-initial-conditions')).removeClass('active');
+      $(this.queryByHook('view-initial-conditions')).addClass('active');
+    }else{
+      this.renderEditInitialConditionsView();
     }
-  },
-  update: function () {
-  },
-  updateValid: function () {
+    this.renderViewInitialConditionsView();
   },
   addInitialCondition: function (e) {
     var initialConditionType = e.target.textContent;
@@ -63,19 +66,51 @@ module.exports = View.extend({
     }else {
       var types = [];
     }
-    console.log(initialConditionType, types)
     this.collection.addInitialCondition(initialConditionType, types);
-  },
-  switchToViewMode: function (e) {
-    this.parent.modelStateButtons.clickSaveHandler(e);
-    this.parent.renderInitialConditions(mode="view");
-  },
-  openInitialConditionContainer: function () {
-    $(this.queryByHook('initial-conditions')).collapse('show');
-    let collapseBtn = $(this.queryByHook('initial-condition-button'))
-    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
-  }
+  },
+  renderEditInitialConditionsView: function () {
+    if(this.editInitialConditionView) {
+      this.editInitialConditionView.remove()
+    }
+    this.editInitialConditionView = this.renderCollection(
+      this.collection,
+      EditInitialCondition,
+      this.queryByHook('edit-initial-conditions-collection')
+    );
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderViewInitialConditionsView: function () {
+    if(this.viewInitialConditionView) {
+      this.viewInitialConditionView.remove()
+    }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("initial-conditions-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("initial-conditions-annotation-header")).css("display", "block");
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.viewInitialConditionView = this.renderCollection(
+      this.collection,
+      EditInitialCondition,
+      this.queryByHook('view-initial-conditions-collection'),
+      options
+    );
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  update: function () {},
+  updateValid: function () {}
 });

@@ -40,6 +40,9 @@ module.exports = {
         "of a variables after a given time step. This value will be used if a 'Minimum Value' not provided.<br>Minimum Value For Switching - Minimum population value "+
         "at which variables will be represented as Concentration."
   },
+  initialConditionsEditor: {
+    annotation: "An optional note about the initial conditions."
+  },
   parametersEditor: {
     name: "Unique identifier for Parameter. Cannot share a name with other model components.",
     

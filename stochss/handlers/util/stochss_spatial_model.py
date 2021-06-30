@@ -572,7 +572,7 @@ class StochSSSpatialModel(StochSSBase):
         if not self.model['defaultMode']:
             self.model['defaultMode'] = "discrete"
         if "timestepSize" not in self.model['modelSettings'].keys():
-            self.model['modelSettings']['timestepSize'] = self.model['modelSettings']['timeStep']
+            self.model['modelSettings']['timestepSize'] = 1e-5
         if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
             self.model['domain'] = self.get_model_template()['domain']
         elif "static" not in self.model['domain'].keys():
