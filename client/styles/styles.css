@@ -706,3 +706,8 @@ span.checkbox {
 .card-header {
   background-color: rgba(0, 0, 0, 0.1);
 }
+
+.presentation-header {
+  margin-top: 32px;
+  padding: 20px 16px;
+}

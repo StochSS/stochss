@@ -59,7 +59,9 @@ let ModelPresentationPage = PageView.extend({
         self.renderSubviews();
       }
     });
-    this.open = "open.stochss.org?open=" + this.model.directory;
+    let downloadStart = "https://live.stochss.org/stochss/download_presentation";
+    this.downloadLink = path.join(downloadStart, owner, file);
+    this.openLink = "open.stochss.org?open=" + this.downloadLink;
   },
   renderSubviews: function () {
     PageView.prototype.render.apply(this, arguments);

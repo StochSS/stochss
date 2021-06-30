@@ -2,7 +2,9 @@ section.page
 
     div#model-presentation.container
 
-      h2=this.model.name
+      div.presentation-header
+
+        h1=<b>this.model.name</b>
 
       div(data-hook="model-species")
 
@@ -18,4 +20,8 @@ section.page
 
       div.card.card-body="System Volume: "+this.model.volume
 
-      a.btn.btn-outline-secondary.box-shadow.text-break(href=this.open role="button") Open in StochSS
+      div.mt-3
+
+        a.btn.btn-outline-secondary.box-shadow.text-break(href=this.openLink role="button") Open in StochSS
+
+        a.btn.btn-outline-secondary.box-shadow.text-break(href=this.downloadLink role="button") Download (.mdl)
