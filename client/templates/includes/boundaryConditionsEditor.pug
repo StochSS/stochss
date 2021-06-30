@@ -76,7 +76,13 @@ div#boundary-conditions.card
                       td(data-hook="new-bc-target")
                     tr
                       th(scope="row") Value
-                      td(data-hook="new-bc-value" data-target="value")
+                      td
+                        div(data-hook="new-bc-velocity-value")
+                          div(data-hook="new-bc-value-x" data-target="value")
+                          div(data-hook="new-bc-value-y" data-target="value")
+                          div(data-hook="new-bc-value-z" data-target="value")
+                        div(data-hook="new-bc-other-value" style="display: none")
+                          div(data-hook="new-bc-value" data-target="value")
                     tr
                       th(scope="row") Concentration
                       td
@@ -84,7 +90,7 @@ div#boundary-conditions.card
 
               div.col-sm-6
 
-                div
+                div(style="display: flex;")
 
                   span.inline.mr-3(for="new-bc-type") <b>Type</b>: 
                   div.inline(id="new-bc-type" data-hook="new-bc-type" data-target="type_id")

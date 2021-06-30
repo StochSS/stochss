@@ -456,11 +456,15 @@ class CreateNewBoundCondAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        kwargs = json.loads(self.request.body.decode())
+        self.set_header('Content-Type', 'application/json')
+        data = json.loads(self.request.body.decode())
+        path = data['model_path']
+        kwargs = data['kwargs']
         log.debug("Args passed to the boundary condition constructor: %s", kwargs)
         try:
             log.info("Creating the new boundary condition")
-            resp = StochSSSpatialModel.create_boundary_condition(kwargs)
+            model = StochSSSpatialModel(path=path)
+            resp = model.create_boundary_condition(kwargs)
             log.info("Successfully created the new boundary condition")
             log.debug("Response Message: %s", resp)
             self.write(resp)

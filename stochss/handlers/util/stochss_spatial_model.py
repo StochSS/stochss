@@ -389,8 +389,7 @@ class StochSSSpatialModel(StochSSBase):
         return s_model
 
 
-    @classmethod
-    def create_boundary_condition(cls, kwargs):
+    def create_boundary_condition(self, kwargs):
         '''
         Create a new boundary condition using spatialpy.BoundaryCondition
 
@@ -399,7 +398,8 @@ class StochSSSpatialModel(StochSSBase):
         kwargs : dict
             Arguments passed to the spatialpy.BoundaryCondition constructor
         '''
-        new_bc = BoundaryCondition(**kwargs)
+        model = self.convert_to_spatialpy()
+        new_bc = BoundaryCondition(model=model, **kwargs)
         expression = new_bc.expression()
         return {"expression": expression}
 
@@ -572,7 +572,7 @@ class StochSSSpatialModel(StochSSBase):
         if not self.model['defaultMode']:
             self.model['defaultMode'] = "discrete"
         if "timestepSize" not in self.model['modelSettings'].keys():
-            self.model['modelSettings']['timestepSize'] = self.model['modelSettings']['timeStep']
+            self.model['modelSettings']['timestepSize'] = 1e-5
         if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
             self.model['domain'] = self.get_model_template()['domain']
         elif "static" not in self.model['domain'].keys():
