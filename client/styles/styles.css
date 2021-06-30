@@ -702,3 +702,7 @@ span.checkbox {
   overflow-y: hidden;
   white-space: nowrap;
 }
+
+.card-header {
+  background-color: rgba(0, 0, 0, 0.1);
+}

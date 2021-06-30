@@ -40,6 +40,8 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.modelSettings
+    let tssValues = {1e-5: 5, 1e-4: 4, 1e-3: 3, 1e-2: 2, 1e-1: 1, 1: 0}
+    this.tssValue = tssValues[this.model.timestepSize]
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -64,7 +66,7 @@ module.exports = View.extend({
     app.changeCollapseButtonText(this, e);
   },
   setTimestepSize: function (e) {
-    this.model.timestepSize = Number(e.target.value);
+    this.model.timestepSize = Number("1e-" + e.target.value);
     $(this.queryByHook("view-timestep-size")).html(this.model.timestepSize);
   },
   updateViewer: function (e) {
@@ -72,7 +74,7 @@ module.exports = View.extend({
     $(this.queryByHook("view-time-step")).html(this.model.timeStep);
   },
   viewTimestepValue: function (e) {
-    let value = e.target.value;
+    let value = Number("1e-" + e.target.value);
     $(this.queryByHook("timestep-size-value")).html(value);
   },
   subviews: {

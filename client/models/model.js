@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let _ = require('underscore');
+//support files
 var app = require('../app');
 var path = require('path');
 //models
@@ -128,7 +130,7 @@ module.exports = Model.extend({
   autoSave: function () {
     let self = this;
     setTimeout(function () {
-      app.postXHR(self.url(), self.toJSON(), { success: self.autoSave });
+      app.postXHR(self.url(), self.toJSON(), { success: _.bind(self.autoSave, self) });
     }, 120000);
   },
   //called when save button is clicked
