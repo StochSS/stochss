@@ -87,7 +87,8 @@ class StochSSBase():
         return True
 
 
-    def get_new_path(self, dst_path):
+    @classmethod
+    def get_new_path(cls, dst_path):
         '''
         Gets the proper destination path for the file object to be moved
 
@@ -96,9 +97,9 @@ class StochSSBase():
         dst_path : string
             New path for the file object from the users home directory
         '''
-        new_path = os.path.join(self.user_dir, dst_path)
-        if dst_path.startswith("trash/") and not "trash" in os.listdir(self.user_dir):
-            os.mkdir(os.path.join(self.user_dir, "trash"))
+        new_path = os.path.join(cls.user_dir, dst_path)
+        if dst_path.startswith("trash/") and not "trash" in os.listdir(cls.user_dir):
+            os.mkdir(os.path.join(cls.user_dir, "trash"))
         if new_path.split().pop().replace('.', '', 5).isdigit():
             return new_path.replace(new_path.split().pop(), "").strip()
         if "trash/" in new_path and os.path.exists(new_path):
@@ -292,14 +293,16 @@ class StochSSBase():
         # Check if the file object is an original or at least the second copy
         if not '-copy' in file or '-copy(' in file:
             cp_file = ''.join([name, '-copy', ext])
-            if cp_file not in os.listdir(dirname if dirname else self.user_dir):
+            if cp_file not in os.listdir(os.path.join(self.user_dir, dirname) \
+                                                    if dirname else self.user_dir):
                 return os.path.join(dirname, cp_file)
 
         i = 2
         cp_file = ''.join([name, f"-copy({i})", ext])
         # Check if a copy exists with '-copy(2)' in the name
         # If copy_file is still not unique iterate i until a unique name is found
-        while cp_file in os.listdir(dirname if dirname else self.user_dir):
+        while cp_file in os.listdir(os.path.join(self.user_dir, dirname) \
+                                                if dirname else self.user_dir):
             i += 1
             cp_file = ''.join([name, f"-copy({i})", ext])
 
