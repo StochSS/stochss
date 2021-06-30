@@ -1,45 +1,51 @@
-tr
+div.mx-1
 
-  td: div.name=this.model.name
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
 
-  td=this.model.triggerExpression
+  div.row
 
-  td: div(data-hook="assignment-viewer")
+    div.col-sm-2
 
-  td 
+      div.pl-2=this.model.name
 
-    div="Delay: "+this.delay
+    div.col-sm-2=this.model.triggerExpression
 
-    div="Priority: "+this.model.priority
+    div.col-sm-4(data-hook="assignment-viewer")
 
-    div
+    div.col-sm-2
 
-      span.checkbox(for="initial-value") Initial Value: 
+      div="Delay: "+this.delay
 
-      input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value" disabled)
+      div="Priority: "+this.model.priority
 
-    div
+      div
 
-      span.checkbox(for="persistent") Persistent: 
+        span.checkbox(for="initial-value") Initial Value: 
 
-      input(type="checkbox", id="persistent", data-hook="event-trigger-persistent" disabled)
+        input(type="checkbox", id="initial-value", data-hook="event-trigger-init-value" disabled)
 
-    div.event-adv-header <b>Use Values From</b>
+      div
 
-    div
+        span.checkbox(for="persistent") Persistent: 
 
-      input(type="radio", id="trigger-time", name="use-values-from" data-hook="trigger-time" disabled)
+        input(type="checkbox", id="persistent", data-hook="event-trigger-persistent" disabled)
 
-      span.inline.horizontal-space(for="trigger-time") Trigger Time
+      div.event-adv-header <b>Use Values From</b>
 
-    div
+      div
 
-      input(type="radio", id="assignment-time", name="use-values-from" data-hook="assignment-time" disabled)
+        input(type="radio", id="trigger-time", name="view-use-values-from" data-hook="view-trigger-time" disabled)
 
-      span.inline.horizontal-space(for="assignment-time") Assignment Time
+        span.inline.horizontal-space(for="trigger-time") Trigger Time
 
-  if this.model.annotation
-    td: div.tooltip-icon-large(data-hook="annotation-tooltip" data-html="true" data-toggle="tooltip" title=this.model.annotation || "Click 'Add' to add an annotation") <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-alt" class="svg-inline--fa fa-file-alt fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm64 236c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-64c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-72v8c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12zm96-114.1v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"></path></svg>
+      div
 
-  if this.parent.containsMdlWithAnn && !this.model.annotation
-    td: div
+        input(type="radio", id="assignment-time", name="view-use-values-from" data-hook="view-assignment-time" disabled)
+
+        span.inline.horizontal-space(for="assignment-time") Assignment Time
+
+    div.col-sm-2
+
+      if this.model.annotation
+        div.tooltip-icon-large(data-hook="annotation-tooltip" data-html="true" data-toggle="tooltip" title=this.model.annotation || "Click 'Add' to add an annotation") <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-alt" class="svg-inline--fa fa-file-alt fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm64 236c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-64c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-72v8c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12zm96-114.1v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"></path></svg>

@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,38 +31,70 @@ module.exports = View.extend({
   events: {
     'click [data-hook=rate-rule]' : 'addRule',
     'click [data-hook=assignment-rule]' : 'addRule',
-    'click [data-hook=save-rules]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
-  initialize: function (args) {
+  initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.collection.parent.species.on('add remove', this.toggleAddRuleButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleAddRuleButton, this);
     this.tooltips = Tooltips.rulesEditor
-    this.opened = args.opened
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderRules();
-    this.toggleAddRuleButton()
-    if(this.opened) {
-      this.openRulesContainer();
+    if(this.readOnly) {
+      $(this.queryByHook('rules-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('rules-view-tab')).tab('show');
+      $(this.queryByHook('edit-rules')).removeClass('active');
+      $(this.queryByHook('view-rules')).addClass('active');
+    }else {
+      this.renderEditRules();
+      this.toggleAddRuleButton();
     }
+    this.renderViewRules();
   },
   update: function () {
   },
   updateValid: function () {
   },
-  renderRules: function () {
+  renderEditRules: function () {
     if(this.rulesView) {
       this.rulesView.remove();
     }
     this.rulesView = this.renderCollection(
       this.collection,
       RuleView,
-      this.queryByHook('rule-list-container')
+      this.queryByHook('edit-rule-list-container')
     );
-    $(document).ready(function () {
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderViewRules: function () {
+    if(this.viewRulesView) {
+      this.viewRulesView.remove();
+    }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("rules-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("rules-annotation-header")).css("display", "block");
+    }
+    let options = {viewOptions: {viewMode: true}};
+    this.viewRulesView = this.renderCollection(
+      this.collection,
+      RuleView,
+      this.queryByHook('view-rules-list-container'),
+      options
+    );
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
         $('[data-toggle="tooltip"]').tooltip("hide");
@@ -70,7 +102,7 @@ module.exports = View.extend({
     });
   },
   toggleAddRuleButton: function () {
-    this.renderRules();
+    this.renderEditRules();
     var numSpecies = this.collection.parent.species.length;
     var numParameters = this.collection.parent.parameters.length;
     var disabled = numSpecies <= 0 && numParameters <= 0
@@ -79,22 +111,13 @@ module.exports = View.extend({
   addRule: function (e) {
     var type = e.target.dataset.name
     this.collection.addRule(type);
-    $(document).ready(function () {
+    $(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
           $('[data-toggle="tooltip"]').tooltip("hide");
 
        });
     });
-  },
-  switchToViewMode: function (e) {
-    this.parent.modelStateButtons.clickSaveHandler(e);
-    this.parent.renderRulesView(mode="view");
-  },
-  openRulesContainer: function () {
-    $(this.queryByHook('rules-list-container')).collapse('show');
-    let collapseBtn = $(this.queryByHook('collapse'))
-    collapseBtn.trigger('click')
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);

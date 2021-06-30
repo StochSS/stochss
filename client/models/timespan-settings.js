@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@ var State = require('ampersand-state');
 module.exports = State.extend({
   props: {
     endSim: 'any',
-    timeStep: 'any'
+    timeStep: 'any',
+    timestepSize: 'number'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)

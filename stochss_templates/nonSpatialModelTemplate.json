@@ -6,7 +6,8 @@
 	"volume": 1,
 	"modelSettings": {
 		"endSim": 20,
-		"timeStep": 0.05
+		"timeStep": 0.05,
+		"timestepSize": 1e-5
 	},
 	"domain": {
 		"size": null,
@@ -40,5 +41,6 @@
 	"reactions": [],
 	"rules": [],
 	"eventsCollection": [],
-	"functionDefinitions": []
+	"functionDefinitions": [],
+	"boundaryConditions": []
 }

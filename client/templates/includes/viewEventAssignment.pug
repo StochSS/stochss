@@ -1,0 +1,14 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-3
+
+      div.pl-2=this.model.variable.name
+
+    div.col-sm-7
+
+      div=this.model.expression

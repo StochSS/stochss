@@ -1,15 +1,24 @@
-tr
-  td=this.model.name
+div.mx-1
 
-  td: div(data-hook="summary")
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
 
-  td=this.rate
+  div.row.align-items-baseline
 
-  if this.model.collection.parent.is_spatial
-    td: div=this.types.join(', ')
+    div.col-md-2
 
-  if this.model.annotation
-    td: div.tooltip-icon-large(data-hook="annotation-tooltip" data-html="true" data-toggle="tooltip" title=this.model.annotation || "Click 'Add' to add an annotation") <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-alt" class="svg-inline--fa fa-file-alt fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm64 236c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-64c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-72v8c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12zm96-114.1v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"></path></svg>
+      div.pl-2=this.model.name
 
-  if this.parent.containsMdlWithAnn && !this.model.annotation
-    td: div
+    div.col-md-3(data-hook="summary")
+
+    div.col-md-3=this.rate
+
+    if this.model.collection.parent.is_spatial
+      div.col-md-2(data-hook="reaction-types")
+
+        div=this.types.join(', ')
+    
+    div.col-md-2(data-hook="reaction-annotation-header")
+
+      if this.model.annotation
+        div.tooltip-icon-large(data-hook="annotation-tooltip" data-html="true" data-toggle="tooltip" title=this.model.annotation) <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-alt" class="svg-inline--fa fa-file-alt fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm64 236c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-64c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-72v8c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12zm96-114.1v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"></path></svg>

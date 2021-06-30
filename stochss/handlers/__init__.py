@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -75,6 +75,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/model/to-sbml\/?", ModelToSBMLAPIHandler),
         (r"/stochss/api/model/run\/?", RunModelAPIHandler),
         (r"/stochss/api/model/exists\/?", ModelExistsAPIHandler),
+        (r"/stochss/api/model/new-bc\/?", CreateNewBoundCondAPIHandler),
         (r"/stochss/api/spatial-model/domain-list\/?", LoadExternalDomains),
         (r"/stochss/api/spatial-model/types-list\/?", LoadParticleTypesDescriptions),
         (r"/stochss/api/spatial-model/domain-plot\/?", LoadDomainAPIHandler),

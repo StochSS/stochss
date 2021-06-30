@@ -114,7 +114,7 @@ build:  deps webpack
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	  	-t $(DOCKER_STOCHSS_IMAGE):latest .
 
-test:   build
+test:   create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
@@ -123,6 +123,8 @@ test:   build
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
                 /stochss/stochss/tests/run_tests.py
+
+build_and_test: build test
 
 run:    create_working_dir
 	docker run --rm \

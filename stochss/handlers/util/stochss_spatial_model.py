@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import traceback
 
 import numpy
 import plotly
-from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, \
+from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
 
 from .stochss_base import StochSSBase
@@ -67,6 +67,23 @@ class StochSSSpatialModel(StochSSBase):
                 json.dump(model, smdl_file, indent=4, sort_keys=True)
         else:
             self.model = None
+
+
+    @classmethod
+    def __build_boundary_condition(cls, boundary_condition):
+        class NewBC(BoundaryCondition): # pylint: disable=too-few-public-methods
+            '''
+            ########################################################################################
+            Custom SpatialPy Boundary Condition
+            ########################################################################################
+            '''
+            __class__ = f"__main__.{boundary_condition['name']}"
+            def expression(self): # pylint: disable=no-self-use
+                '''
+                Custom expression for boundary condition
+                '''
+                return boundary_condition['expression']
+        return NewBC()
 
 
     @classmethod
@@ -121,6 +138,17 @@ class StochSSSpatialModel(StochSSBase):
         return particles
 
 
+    def __convert_boundary_conditions(self, model):
+        try:
+            for boundary_condition in self.model['boundaryConditions']:
+                s_bound_cond = self.__build_boundary_condition(boundary_condition)
+                model.add_boundary_condition(s_bound_cond)
+        except KeyError as err:
+            message = "Spatial model boundary conditions are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
+
     def __convert_domain(self, model):
         try:
             xlim = tuple(self.model['domain']['x_lim'])
@@ -161,7 +189,7 @@ class StochSSSpatialModel(StochSSBase):
                     s_ic = UniformInitialCondition(species, count, types=types)
                 model.add_initial_condition(s_ic)
         except KeyError as err:
-            message = "Spatial model domain properties are not properly formatted or "
+            message = "Spatial model initial conditions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
@@ -169,8 +197,9 @@ class StochSSSpatialModel(StochSSBase):
     def __convert_model_settings(self, model):
         try:
             end = self.model['modelSettings']['endSim']
-            step_size = self.model['modelSettings']['timeStep']
-            tspan = numpy.arange(0, end + step_size, step_size)
+            output_freq = self.model['modelSettings']['timeStep']
+            step_size = self.model['modelSettings']['timestepSize']
+            tspan = numpy.arange(0, end + step_size, output_freq)
             model.timespan(tspan, timestep_size=step_size)
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
@@ -350,12 +379,29 @@ class StochSSSpatialModel(StochSSBase):
         s_model = Model(name=name)
         self.__convert_model_settings(model=s_model)
         self.__convert_domain(model=s_model)
+        if "boundaryConditions" in self.model.keys():
+            self.__convert_boundary_conditions(model=s_model)
         self.__convert_species(model=s_model)
         self.__convert_initial_conditions(model=s_model)
         self.__convert_parameters(model=s_model)
         self.__convert_reactions(model=s_model)
         # self.log("debug", str(s_model))
         return s_model
+
+
+    def create_boundary_condition(self, kwargs):
+        '''
+        Create a new boundary condition using spatialpy.BoundaryCondition
+
+        Attributes
+        ----------
+        kwargs : dict
+            Arguments passed to the spatialpy.BoundaryCondition constructor
+        '''
+        model = self.convert_to_spatialpy()
+        new_bc = BoundaryCondition(model=model, **kwargs)
+        expression = new_bc.expression()
+        return {"expression": expression}
 
 
     def get_domain(self, path=None, new=False):
@@ -514,10 +560,14 @@ class StochSSSpatialModel(StochSSBase):
         self.model['name'] = self.get_name()
         if not self.model['defaultMode']:
             self.model['defaultMode'] = "discrete"
+        if "timestepSize" not in self.model['modelSettings'].keys():
+            self.model['modelSettings']['timestepSize'] = 1e-5
         if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
             self.model['domain'] = self.get_model_template()['domain']
         elif "static" not in self.model['domain'].keys():
             self.model['domain']['static'] = True
+        if "boundaryConditions" not in self.model.keys():
+            self.model['boundaryConditions'] = []
         for species in self.model['species']:
             if "types" not in species.keys():
                 species['types'] = list(range(1, len(self.model['domain']['types'])))
