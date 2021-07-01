@@ -193,6 +193,19 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   });
 }
 
+tooltipSetup = () => {
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').click(function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+     });
+  });
+}
+
+documentSetup = () => {
+  documentSetup();
+}
+
 module.exports = {
     routePrefix: routePrefix,
     getApiPath: getApiPath,
@@ -202,7 +215,9 @@ module.exports = {
     changeCollapseButtonText: changeCollapseButtonText,
     newWorkflow: newWorkflow,
     getXHR: getXHR,
-    postXHR: postXHR
+    postXHR: postXHR,
+    tooltipSetup: tooltipSetup,
+    documentSetup: documentSetup
 };
 
 
