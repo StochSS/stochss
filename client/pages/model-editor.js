@@ -28,7 +28,6 @@ let Tooltips = require("../tooltips");
 var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
 var InputView = require('../views/input');
-var DomainViewer = require('../views/domain-viewer');
 var SpeciesEditorView = require('../views/species-editor');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
@@ -88,6 +87,7 @@ let ModelEditor = PageView.extend({
     app.getXHR(this.model.url(), {
       success: function (err, response, body) {
         self.model.set(body)
+        self.modelLoaded = true
         if(directory.includes('.proj')) {
           self.queryByHook("project-breadcrumb-links").style.display = "block"
           self.queryByHook("model-name-header").style.display = "none"
@@ -210,13 +210,20 @@ let ModelEditor = PageView.extend({
     }else{
       $(this.queryByHook("me-select-particle")).css("display", "block")
       this.typeQuickViewer = this.renderCollection(
-        this.domainViewer.model.types,
+        this.modelView.domainViewer.model.types,
         QuickviewDomainTypes,
         this.queryByHook("me-types-quick-view")
       );
     }
   },
+  renderModelView: function () {
+    this.modelView = new ModelView({
+      model: this.model
+    });
+    app.registerRenderSubview(this, this.modelView, "model-view-container")
+  },
   renderSubviews: function () {
+    this.renderModelView()
     this.modelSettings = new TimespanSettingsView({
       parent: this,
       model: this.model.modelSettings,
@@ -232,7 +239,6 @@ let ModelEditor = PageView.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("system-volume-container")).css("display", "none");
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
-      this.renderDomainViewer();
       this.renderInitialConditions();
       this.renderBoundaryConditionsView();
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
@@ -267,34 +273,6 @@ let ModelEditor = PageView.extend({
       collection: this.model.boundaryConditions
     });
     app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
-  },
-  renderDomainViewer: function(domainPath=null) {
-    if(this.domainViewer) {
-      this.domainViewer.remove()
-    }
-    if(domainPath && domainPath !== "viewing") {
-      let self = this;
-      let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath
-      let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr
-      app.getXHR(endpoint, {
-        always: function (err, response, body) {
-          let domain = new Domain(body.domain);
-          self.domainViewer = new DomainViewer({
-            parent: self,
-            model: domain,
-            domainPath: domainPath
-          });
-          app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
-        }
-      });
-    }else{
-      this.domainViewer = new DomainViewer({
-        parent: this,
-        model: this.model.domain,
-        domainPath: domainPath
-      });
-      app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
-    }
   },
   renderSpeciesView: function () {
     if(this.speciesEditor) {
@@ -441,17 +419,6 @@ let ModelEditor = PageView.extend({
   },
   updateVolumeViewer: function (e) {
     $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
-  },
-  subviews: {
-    modelView: {
-      waitFor: 'model.defaultMode',
-      hook: 'model-view-container',
-      prepareView: function (el) {
-        return new ModelView({
-          model: this.model
-        });
-      }
-    }
   }
 });
 

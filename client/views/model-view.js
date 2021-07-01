@@ -17,10 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let path = require('path');
 //support files
+let app = require('../app');
 let modals = require('../modals');
+//models
+let Domain = require('../models/domain');
 //views
 let View = require('ampersand-view');
+let DomainViewer = require('../views/domain-viewer');
 //templates
 let template = require('../templates/includes/modelView.pug');
 
@@ -52,6 +57,9 @@ module.exports = View.extend({
         }
       }
     }
+    if(this.model.is_spatial) {
+      this.renderDomainViewer();
+    }
   },
   getInitialDefaultMode: function () {
     let self = this;
@@ -71,6 +79,36 @@ module.exports = View.extend({
     dynamic.addEventListener('click', function (e) {
       self.setInitialDefaultMode(modal, "dynamic");
     });
+  },
+  renderDomainViewer: function(domainPath=null) {
+    if(this.domainViewer) {
+      this.domainViewer.remove();
+    }
+    if(domainPath && domainPath !== "viewing") {
+      let self = this;
+      let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath;
+      let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr;
+      app.getXHR(endpoint, {
+        always: function (err, response, body) {
+          let domain = new Domain(body.domain);
+          self.domainViewer = new DomainViewer({
+            parent: self,
+            model: domain,
+            domainPath: domainPath,
+            readOnly: self.readOnly
+          });
+          app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
+        }
+      });
+    }else{
+      this.domainViewer = new DomainViewer({
+        parent: this,
+        model: this.model.domain,
+        domainPath: domainPath,
+        readOnly: this.readOnly
+      });
+      app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
+    }
   },
   setDefaultMode: function (e) {
     let prevMode = this.model.defaultMode;
