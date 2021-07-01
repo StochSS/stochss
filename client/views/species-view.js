@@ -34,12 +34,12 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.spatial = attrs.spatial
+    this.spatial = attrs.spatial;
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.template = this.spatial ? spatialSpeciesTemplate : speciesTemplate;
     this.tooltips = Tooltips.speciesEditor;
     this.defaultMode = attrs.defaultMode;
-    let self = this
+    let self = this;
     this.collection.on('update-species', function (compID, specie, isNameUpdate, isDefaultMode) {
       self.collection.parent.reactions.forEach(function (reaction) {
         reaction.reactants.forEach(function (reactant) {
@@ -103,19 +103,13 @@ module.exports = View.extend({
       var types = this.parent.model.domain.types.map(function (type) {
         return type.typeID;
       });
-      types.shift()
+      types.shift();
     }else{
-      var types = []
+      var types = [];
     }
     this.collection.addSpecie(types);
-    this.toggleSpeciesCollectionError()
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
-    });
+    this.toggleSpeciesCollectionError();
+    app.tooltipSetup();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -139,13 +133,7 @@ module.exports = View.extend({
       SpecieView,
       this.queryByHook('edit-specie-list')
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
-    });
+    app.tooltipSetup();
   },
   renderViewSpeciesView: function () {
     if(this.viewSpeciesView){
@@ -169,23 +157,17 @@ module.exports = View.extend({
       this.queryByHook('view-specie-list'),
       options
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
-    });
+    app.tooltipSetup();
   },
   toggleSpeciesCollectionError: function () {
     if(this.spatial) {return};
-    let errorMsg = $(this.queryByHook('species-collection-error'))
+    let errorMsg = $(this.queryByHook('species-collection-error'));
     if(this.collection.length <= 0) {
-      errorMsg.addClass('component-invalid')
-      errorMsg.removeClass('component-valid')
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
     }else{
-      errorMsg.addClass('component-valid')
-      errorMsg.removeClass('component-invalid')
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
     }
   }
 });
