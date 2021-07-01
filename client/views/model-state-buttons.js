@@ -294,9 +294,9 @@ module.exports = View.extend({
     }
   },
   openSpeciesSection: function () {
-    let specSection = $(this.parent.speciesEditor.queryByHook("species-list-container"))
+    let specSection = $(this.parent.modelView.speciesView.queryByHook("species-list-container"))
     if(!specSection.hasClass("show")) {
-      let specCollapseBtn = $(this.parent.speciesEditor.queryByHook("collapse"))
+      let specCollapseBtn = $(this.parent.modelView.speciesView.queryByHook("collapse"))
       specCollapseBtn.click()
       specCollapseBtn.html('-')
     }

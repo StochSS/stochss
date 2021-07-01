@@ -24,8 +24,8 @@ let Tooltips = require('../tooltips');
 let View = require('ampersand-view');
 let SpecieView = require('./edit-species');
 //templates
-let speciesTemplate = require('../templates/includes/speciesEditor.pug');
-let spatialSpeciesTemplate = require('../templates/includes/spatialSpeciesEditor.pug');
+let speciesTemplate = require('../templates/includes/speciesView.pug');
+let spatialSpeciesTemplate = require('../templates/includes/spatialSpeciesView.pug');
 
 module.exports = View.extend({
   events: {

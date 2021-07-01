@@ -28,7 +28,6 @@ let Tooltips = require("../tooltips");
 var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
 var InputView = require('../views/input');
-var SpeciesEditorView = require('../views/species-editor');
 var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
 var ParticleViewer = require('../views/view-particle');
@@ -231,7 +230,6 @@ let ModelEditor = PageView.extend({
     this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
-    this.renderSpeciesView();
     this.renderParametersView();
     this.renderReactionsView();
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
@@ -273,17 +271,6 @@ let ModelEditor = PageView.extend({
       collection: this.model.boundaryConditions
     });
     app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
-  },
-  renderSpeciesView: function () {
-    if(this.speciesEditor) {
-      this.speciesEditor.remove()
-    }
-    this.speciesEditor = new SpeciesEditorView({
-      collection: this.model.species,
-      spatial: this.model.is_spatial,
-      defaultMode: this.model.defaultMode
-    });
-    app.registerRenderSubview(this, this.speciesEditor, 'species-editor-container');
   },
   renderInitialConditions: function () {
     if(this.initialConditionsEditor) {
@@ -394,19 +381,6 @@ let ModelEditor = PageView.extend({
   clickDownloadPNGButton: function (e) {
     let pngButton = $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
-  },
-  setAllSpeciesModes: function (prevMode) {
-    let self = this;
-    this.model.species.forEach(function (specie) { 
-      specie.mode = self.model.defaultMode;
-      self.model.species.trigger('update-species', specie.compID, specie, false, true);
-    });
-    let switchToDynamic = (!Boolean(prevMode) || prevMode !== "dynamic") && this.model.defaultMode === "dynamic";
-    let switchFromDynamic = Boolean(prevMode) && prevMode === "dynamic" && this.model.defaultMode !== "dynamic";
-    if(switchToDynamic || switchFromDynamic) {
-      this.speciesEditor.renderEditSpeciesView();
-      this.speciesEditor.renderViewSpeciesView();
-    }
   },
   toggleVolumeContainer: function () {
     if(!this.model.is_spatial) {

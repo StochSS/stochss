@@ -25,6 +25,7 @@ let modals = require('../modals');
 let Domain = require('../models/domain');
 //views
 let View = require('ampersand-view');
+let SpeciesView = require('../views/species-view');
 let DomainViewer = require('../views/domain-viewer');
 //templates
 let template = require('../templates/includes/modelView.pug');
@@ -110,11 +111,24 @@ module.exports = View.extend({
       app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
     }
   },
+  setAllSpeciesModes: function (prevMode) {
+    let self = this;
+    this.model.species.forEach(function (specie) { 
+      specie.mode = self.model.defaultMode;
+      self.model.species.trigger('update-species', specie.compID, specie, false, true);
+    });
+    let switchToDynamic = (!Boolean(prevMode) || prevMode !== "dynamic") && this.model.defaultMode === "dynamic";
+    let switchFromDynamic = Boolean(prevMode) && prevMode === "dynamic" && this.model.defaultMode !== "dynamic";
+    if(switchToDynamic || switchFromDynamic) {
+      this.speciesView.renderEditSpeciesView();
+      this.speciesView.renderViewSpeciesView();
+    }
+  },
   setDefaultMode: function (e) {
     let prevMode = this.model.defaultMode;
     this.model.defaultMode = e.target.dataset.name;
-    this.parent.speciesEditor.defaultMode = e.target.dataset.name;
-    this.parent.setAllSpeciesModes(prevMode);
+    this.speciesView.defaultMode = e.target.dataset.name;
+    this.setAllSpeciesModes(prevMode);
     this.parent.toggleVolumeContainer();
   },
   setInitialDefaultMode: function (modal, mode) {
@@ -122,8 +136,8 @@ module.exports = View.extend({
     modal.modal('hide');
     $(this.queryByHook(dataHooks[mode])).prop('checked', true);
     this.model.defaultMode = mode;
-    this.parent.speciesEditor.defaultMode = mode;
-    this.parent.setAllSpeciesModes();
+    this.speciesView.defaultMode = mode;
+    this.setAllSpeciesModes();
     this.parent.toggleVolumeContainer();
   },
   setReadOnlyMode: function (component) {
@@ -135,5 +149,17 @@ module.exports = View.extend({
     $(this.queryByHook(component + '-view-tab')).tab('show');
     $(this.queryByHook('edit-' + component)).removeClass('active');
     $(this.queryByHook('view-' + component)).addClass('active');
+  },
+  subviews: {
+    speciesView: {
+      hook: "species-view-container",
+      prepareView: function (el) {
+        return new SpeciesView({
+          collection: this.model.species,
+          spatial: this.model.is_spatial,
+          defaultMode: this.model.defaultMode
+        });
+      }
+    }
   }
 });
