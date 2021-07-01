@@ -84,7 +84,7 @@ module.exports = View.extend({
       this.toggleDomainError();
     }
     this.renderTypesViewer();
-    this.parent.renderParticleViewer(null);
+    this.parent.parent.renderParticleViewer(null);
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + queryStr;
     app.getXHR(endpoint, {
       always: function (err, response, body) {
@@ -119,7 +119,7 @@ module.exports = View.extend({
   },
   reloadDomain: function (domainPath) {
     if(this.domainPath !== domainPath || domainPath === "viewing") {
-      var el = this.parent.queryByHook("domain-plot-container");
+      var el = this.parent.parent.queryByHook("domain-plot-container");
       el.removeListener('plotly_click', this.selectParticle);
       Plotly.purge(el);
       this.plot = null;
@@ -193,14 +193,14 @@ module.exports = View.extend({
   },
   displayDomain: function () {
     let self = this;
-    var domainPreview = this.parent.queryByHook("domain-plot-container");
+    var domainPreview = this.parent.parent.queryByHook("domain-plot-container");
     Plotly.newPlot(domainPreview, this.plot);
     domainPreview.on('plotly_click', _.bind(this.selectParticle, this));
   },
   selectParticle: function (data) {
     let point = data.points[0];
     let particle = this.model.particles.get(point.id, "particle_id");
-    this.parent.renderParticleViewer(particle);
+    this.parent.parent.renderParticleViewer(particle);
   },
   editDomain: function (e) {
     var queryStr = "?path=" + this.parent.model.directory;

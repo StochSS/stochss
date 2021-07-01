@@ -304,7 +304,7 @@ module.exports = View.extend({
   openDomainSection: function () {
     let domainSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
     if(!domainSection.hasClass("show")) {
-      let domainCollapseBtn = $(this.parent.domainViewer.queryByHook("collapse"))
+      let domainCollapseBtn = $(this.parent.modelView.domainViewer.queryByHook("collapse"))
       domainCollapseBtn.click()
       domainCollapseBtn.html('-')
     }
