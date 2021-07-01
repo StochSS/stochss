@@ -22,7 +22,7 @@ let app = require('../app');
 let Tooltips = require('../tooltips');
 //views
 let View = require('ampersand-view');
-let SpecieView = require('./edit-species');
+let SpecieView = require('./specie-view');
 //templates
 let speciesTemplate = require('../templates/includes/speciesView.pug');
 let spatialSpeciesTemplate = require('../templates/includes/spatialSpeciesView.pug');
