@@ -1,0 +1,50 @@
+div#model-view
+
+  div.card
+    
+    div.card-header.pb-0
+    
+      h3.inline.mr-3 Model Mode
+
+      div.inline.mr-3
+
+        ul.nav.nav-tabs.card-header-tabs(id="model-mode-tabs")
+
+          li.nav-item
+
+            a.nav-link.tab.active(data-hook="model-mode-edit-tab" data-toggle="tab" href="#edit-model-mode") Edit
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="model-mode-view-tab" data-toggle="tab" href="#view-model-mode") View
+
+    div.card-body
+
+      p.mb-0
+        | <b>Concentration</b> - Variables will only be represented using continuous (floating point) values.</br>
+        | <b>Population</b> - Variables will only be represented using discrete (integer count) values.</br>
+        if !this.model.is_spatial
+          | <b>Hybrid Concentration/Population</b> - Allows a variables to be represented using continuous and/or discrete values.
+
+      div.tab-content(id="model-mode-section" data-hook="model-mode-section")
+
+        div.tab-pane.active(id="edit-model-mode" data-hook="edit-model-mode")
+          
+          hr
+
+          div.row
+            div.col-sm-4
+              input.mr-2(type="radio" name="default-mode" data-hook="all-continuous" data-name="continuous")
+              span Concentration
+            div.col-sm-4
+              input.mr-2(type="radio" name="default-mode" data-hook="all-discrete" data-name="discrete")
+              span Population
+            div.col-sm-4(data-hook="advanced-model-mode")
+              input.mr-2(type="radio" name="default-mode" data-hook="advanced" data-name="dynamic")
+              span Hybrid Concentration/Population
+
+        div.tab-pane(id="view-model-mode" data-hook="view-model-mode")
+
+          hr
+
+          div="Model Mode: " + this.modelMode
