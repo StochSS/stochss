@@ -31,7 +31,7 @@ var View = require('ampersand-view');
 var ReactionListingView = require('./reaction-listing');
 var ReactionDetailsView = require('./reaction-details');
 //templates
-var template = require('../templates/includes/reactionsEditor.pug');
+var template = require('../templates/includes/reactionsView.pug');
 
 module.exports = View.extend({
   template: template,
