@@ -39,7 +39,8 @@ module.exports = View.extend({
   events: {
     'change [data-hook=all-continuous]' : 'setDefaultMode',
     'change [data-hook=all-discrete]' : 'setDefaultMode',
-    'change [data-hook=advanced]' : 'setDefaultMode'
+    'change [data-hook=advanced]' : 'setDefaultMode',
+    'click [data-hook=collapse-mv-advanced-section]' : 'changeCollapseButtonText'
   },
   initialize: function(attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -77,6 +78,9 @@ module.exports = View.extend({
     if(this.model.is_spatial) {
       this.renderDomainViewer();
     }
+  },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
   },
   getInitialDefaultMode: function () {
     let self = this;

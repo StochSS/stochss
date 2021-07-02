@@ -58,3 +58,15 @@ div#model-view
   div(data-hook="parameters-view-container")
 
   div(data-hook="reactions-view-container")
+
+  div.card(data-hook="model-view-advanced-container")
+
+    div.card-header.pb-0
+
+      h3.inline Advanced
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#mv-advanced-section" data-hook="collapse-mv-advanced-section") +
+
+    div.collapse(id="mv-advanced-section" data-hook="mv-advanced-section")
+
+      div.card-body

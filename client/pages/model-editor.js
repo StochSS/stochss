@@ -51,7 +51,6 @@ let ModelEditor = PageView.extend({
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
     'change [data-hook=edit-volume]' : 'updateVolumeViewer',
-    'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
     'click [data-hook=toggle-preview-domain]' : 'toggleDomainPlot',

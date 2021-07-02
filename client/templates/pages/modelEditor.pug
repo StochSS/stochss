@@ -28,64 +28,52 @@ section.page
 
   div(data-hook="model-view-container")
 
-  div.card(data-hook="model-editor-advanced-container")
+  div(data-hook="events-editor-container")
+
+  div(data-hook="rules-editor-container")
+
+  div(data-hook="boundary-conditions-container")
+
+  div(data-hook="sbml-component-container")
+
+  div.card.collapse.show(data-hook="system-volume-container")
 
     div.card-header.pb-0
 
-      h3.inline Advanced
+      h3.inline.mr-3 System Volume
 
-      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#me-advanced-section", data-hook="collapse-me-advanced-section") +
+      div.inline.mr-3
 
-    div.collapse(id="me-advanced-section", data-hook="me-advanced-section")
+        ul.nav.nav-tabs.card-header-tabs(id="volume-tabs")
 
-      div.card-body
+          li.nav-item
 
-        div(data-hook="events-editor-container")
+            a.nav-link.tab.active(data-hook="volume-edit-tab" data-toggle="tab" href="#edit-system-volume") Edit
 
-        div(data-hook="rules-editor-container")
+          li.nav-item
 
-        div(data-hook="boundary-conditions-container")
+            a.nav-link.tab(data-hook="volume-view-tab" data-toggle="tab" href="#view-system-volume") View
 
-        div(data-hook="sbml-component-container")
+      button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
 
-        div.card.collapse.show(data-hook="system-volume-container")
+    div.card-body
 
-          div.card-header.pb-0
+      p.mb-0
+        | System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.  In most cases this should not be changed.  please review your model requirements carefully before changing this property.
 
-            h3.inline.mr-3 System Volume
+      div.collapse.tab-content(id="collapse-system-volume" data-hook="system-volume-section")
 
-            div.inline.mr-3
+        div.tab-pane.active(id="edit-system-volume" data-hook="edit-system-volume")
 
-              ul.nav.nav-tabs.card-header-tabs(id="volume-tabs")
+          hr
 
-                li.nav-item
+          div(data-hook="edit-volume")
 
-                  a.nav-link.tab.active(data-hook="volume-edit-tab" data-toggle="tab" href="#edit-system-volume") Edit
+        div.tab-pane(id="view-system-volume" data-hook="view-system-volume")
 
-                li.nav-item
+          hr
 
-                  a.nav-link.tab(data-hook="volume-view-tab" data-toggle="tab" href="#view-system-volume") View
-
-            button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
-
-          div.card-body
-    
-            p.mb-0
-              | System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.  In most cases this should not be changed.  please review your model requirements carefully before changing this property.
-
-            div.collapse.tab-content(id="collapse-system-volume" data-hook="system-volume-section")
-
-              div.tab-pane.active(id="edit-system-volume" data-hook="edit-system-volume")
-
-                hr
-
-                div(data-hook="edit-volume")
-
-              div.tab-pane(id="view-system-volume" data-hook="view-system-volume")
-
-                hr
-
-                div(data-hook="view-volume")
+          div(data-hook="view-volume")
 
   div(data-hook="model-settings-container")
 
