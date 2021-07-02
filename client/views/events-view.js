@@ -32,7 +32,6 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=add-event]' : 'addEvent',
-    'click [data-hook=save-events]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
@@ -164,10 +163,6 @@ module.exports = View.extend({
     var detailsView = new EventDetails({ model: event });
     detailsView.parent = this;
     return detailsView
-  },
-  switchToViewMode: function (e) {
-    this.parent.modelStateButtons.clickSaveHandler(e);
-    this.parent.renderEventsView(mode="view");
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);

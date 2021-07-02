@@ -340,9 +340,9 @@ module.exports = View.extend({
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let evtSection = $(this.eventsEditor.queryByHook("events"))
+    let evtSection = $(this.parent.modelView.eventsEditor.queryByHook("events"))
     if(!evtSection.hasClass("show")) {
-      let evtCollapseBtn = $(this.parent.eventsEditor.queryByHook("collapse"))
+      let evtCollapseBtn = $(this.parent.modelView.eventsEditor.queryByHook("collapse"))
       evtCollapseBtn.click()
       evtCollapseBtn.html('-')
     }

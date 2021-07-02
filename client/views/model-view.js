@@ -26,6 +26,7 @@ let modals = require('../modals');
 let Domain = require('../models/domain');
 //views
 let View = require('ampersand-view');
+let EventsView = require('../views/events-view');
 let SpeciesView = require('../views/species-view');
 let DomainViewer = require('../views/domain-viewer');
 let ReactionsView = require('../views/reactions-view');
@@ -263,6 +264,16 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new ReactionsView({
           collection: this.model.reactions,
+          readOnly: this.readOnly
+        });
+      }
+    },
+    eventsView: {
+      waitFor: "model.not_spatial",
+      hook: "events-view-container",
+      prepareView: function (el) {
+        return new EventsView({
+          collection: this.model.eventsCollection,
           readOnly: this.readOnly
         });
       }
