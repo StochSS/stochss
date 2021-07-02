@@ -20,13 +20,13 @@ let $ = require('jquery');
 let _ = require('underscore');
 //support files
 let app = require('../app');
-var tests = require('./tests');
+let tests = require('./tests');
 let modals = require('../modals');
 //views
-var View = require('ampersand-view');
-var InputView = require('./input');
-var SelectView = require('ampersand-select-view');
-var TypesView = require('./component-types');
+let InputView = require('./input');
+let View = require('ampersand-view');
+let TypesView = require('./component-types');
+let SelectView = require('ampersand-select-view');
 //templates
 let editTemplate = require('../templates/includes/editInitialCondition.pug');
 let viewTemplate = require('../templates/includes/viewInitialCondition.pug');
@@ -47,31 +47,26 @@ module.exports = View.extend({
       this.types = [];
       this.model.types.forEach(function (index) {
         let type = self.model.collection.parent.domain.types.get(index, "typeID");
-        self.types.push(type.name)
+        self.types.push(type.name);
       });
     }
   },
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
+    app.documentSetup();
     if(!this.viewMode) {
       this.model.on('change', _.bind(this.updateViewer, this));
     }
-    $(document).on('shown.bs.modal', function (e) {
-      $('[autofocus]', e.target).focus();
-    });
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
-    });
     if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+      $(this.queryByHook('edit-annotation-btn')).text('Add');
     }
     this.toggleDetailsView();
   },
   editAnnotation: function () {
-    var self = this;
-    var name = this.model.name;
-    var annotation = this.model.annotation;
+    let self = this;
+    let name = this.model.name;
+    let annotation = this.model.annotation;
     if(document.querySelector('#initialConditionAnnotationModal')) {
       document.querySelector('#initialConditionAnnotationModal').remove();
     }
@@ -115,11 +110,11 @@ module.exports = View.extend({
   },
   toggleDetailsView: function () {
     if(this.model.icType === "Place") {
-      $(this.queryByHook("scatter-details")).css("display", "none")
-      $(this.queryByHook("place-details")).css("display", "block")
+      $(this.queryByHook("scatter-details")).css("display", "none");
+      $(this.queryByHook("place-details")).css("display", "block");
     }else {
-      $(this.queryByHook("place-details")).css("display", "none")
-      $(this.queryByHook("scatter-details")).css("display", "block")
+      $(this.queryByHook("place-details")).css("display", "none");
+      $(this.queryByHook("scatter-details")).css("display", "block");
     }
   },
   update: function () {},

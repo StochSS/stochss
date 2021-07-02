@@ -203,7 +203,13 @@ tooltipSetup = () => {
 }
 
 documentSetup = () => {
-  documentSetup();
+  tooltipSetup();
+  $(document).on('shown.bs.modal', function (e) {
+    $('[autofocus]', e.target).focus();
+  });
+  $(document).on('hide.bs.modal', '.modal', function (e) {
+    e.target.remove()
+  });
 }
 
 module.exports = {

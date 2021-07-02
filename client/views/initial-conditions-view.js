@@ -16,15 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 //support files
 let app = require('../app');
 let Tooltips = require('../tooltips');
 //views
-var View = require('ampersand-view');
-var EditInitialCondition = require('./initial-condition-view');
+let View = require('ampersand-view');
+let InitialConditionView = require('./initial-condition-view');
 //templates
-var template = require('../templates/includes/initialConditionsView.pug');
+let template = require('../templates/includes/initialConditionsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -73,23 +73,18 @@ module.exports = View.extend({
   },
   renderEditInitialConditionsView: function () {
     if(this.editInitialConditionView) {
-      this.editInitialConditionView.remove()
+      this.editInitialConditionView.remove();
     }
     this.editInitialConditionView = this.renderCollection(
       this.collection,
-      EditInitialCondition,
+      InitialConditionView,
       this.queryByHook('edit-initial-conditions-collection')
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
   },
   renderViewInitialConditionsView: function () {
     if(this.viewInitialConditionView) {
-      this.viewInitialConditionView.remove()
+      this.viewInitialConditionView.remove();
     }
     this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
     if(!this.containsMdlWithAnn) {
@@ -100,16 +95,11 @@ module.exports = View.extend({
     let options = {viewOptions: {viewMode: true}};
     this.viewInitialConditionView = this.renderCollection(
       this.collection,
-      EditInitialCondition,
+      InitialConditionView,
       this.queryByHook('view-initial-conditions-collection'),
       options
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
   },
   update: function () {},
   updateValid: function () {}
