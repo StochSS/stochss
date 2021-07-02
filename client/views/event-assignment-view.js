@@ -16,16 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 //support files
 let app = require('../app');
 //views
-var View = require('ampersand-view');
-var InputView = require('./input');
-var SelectView = require('ampersand-select-view');
+let InputView = require('./input');
+let View = require('ampersand-view');
+let SelectView = require('ampersand-select-view');
 //templates
-var editTemplate = require('../templates/includes/editEventAssignment.pug');
-var viewTemplate = require('../templates/includes/viewEventAssignment.pug');
+let editTemplate = require('../templates/includes/editEventAssignment.pug');
+let viewTemplate = require('../templates/includes/viewEventAssignment.pug');
 
 module.exports = View.extend({
   events: {
@@ -41,27 +41,23 @@ module.exports = View.extend({
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
   },
-  update: function () {
-  },
-  updateValid: function () {
-  },
-  removeAssignment: function () {
-    this.remove();
-    this.collection.removeEventAssignment(this.model)
-    this.collection.parent.collection.trigger('change')
-  },
   getOptions: function () {
     var species = this.model.collection.parent.collection.parent.species;
     var parameters = this.model.collection.parent.collection.parent.parameters;
     var specs = species.map(function (specie) {
-      return [specie.compID, specie.name]
+      return [specie.compID, specie.name];
     });
     var params = parameters.map(function (parameter) {
-      return [parameter.compID, parameter.name]
+      return [parameter.compID, parameter.name];
     });
-    let options = [{groupName: "Variables", options: specs},
-                   {groupName: "Parameters", options: params}]
+    let options = [{groupName: Boolean(specs) ? "Variables" : "Variables (empty)", options: specs},
+                   {groupName: Boolean(params) ? "Parameters" : "Parameters (empty)", options: params}];
     return options;
+  },
+  removeAssignment: function () {
+    this.remove();
+    this.collection.removeEventAssignment(this.model);
+    this.collection.parent.collection.trigger('change');
   },
   selectAssignmentVariable: function (e) {
     var species = this.model.collection.parent.collection.parent.species;
@@ -83,6 +79,8 @@ module.exports = View.extend({
     this.updateViewer();
     this.model.collection.parent.collection.trigger('change');
   },
+  update: function () {},
+  updateValid: function () {},
   updateViewer: function () {
     this.model.collection.parent.trigger('change');
   },
@@ -97,9 +95,9 @@ module.exports = View.extend({
           placeholder: "---No Expression Entered---",
           modelKey: 'expression',
           valueType: 'string',
-          value: this.model.expression,
+          value: this.model.expression
         });
-      },
+      }
     },
     variableSelectView: {
       hook: 'event-assignment-variable',
@@ -110,7 +108,7 @@ module.exports = View.extend({
           required: true,
           idAttributes: 'cid',
           groupOptions: options,
-          value: this.model.variable.compID,
+          value: this.model.variable.compID
         });
       }
     }

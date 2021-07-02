@@ -16,19 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 let _ = require('underscore');
 //support files
 let app = require('../app');
-var tests = require('./tests');
-var modals = require('../modals');
+let tests = require('./tests');
+let modals = require('../modals');
 //views
-var View = require('ampersand-view');
-var InputView = require('./input');
-var EventAssignment = require('./event-assignments-editor');
+let InputView = require('./input');
+let View = require('ampersand-view');
+let EventAssignment = require('./event-assignments-view');
 //templates
-var editTemplate = require('../templates/includes/eventListings.pug');
 let viewTemplate = require('../templates/includes/viewEvents.pug');
+let editTemplate = require('../templates/includes/eventListings.pug');
 
 module.exports = View.extend({
   bindings: {
@@ -41,18 +41,18 @@ module.exports = View.extend({
     'model.initialValue': {
       hook: 'event-trigger-init-value',
       type: 'booleanAttribute',
-      name: 'checked',
+      name: 'checked'
     },
     'model.persistent': {
       hook: 'event-trigger-persistent',
       type: 'booleanAttribute',
-      name: 'checked',
+      name: 'checked'
     }
   },
   events: {
     'click [data-hook=select]'  : 'selectEvent',
     'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
-    'click [data-hook=remove]' : 'removeEvent',
+    'click [data-hook=remove]' : 'removeEvent'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -66,17 +66,11 @@ module.exports = View.extend({
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
-    $(document).on('shown.bs.modal', function (e) {
-      $('[autofocus]', e.target).focus();
-    });
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
-    });
+    app.documentSetup();
     if(!this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Add');
     }
     if(this.viewMode) {
-      this.renderViewEventAssignments();
       if(this.model.useValuesFromTriggerTime) {
         $(this.queryByHook("view-trigger-time")).prop('checked', true);
       }else{
@@ -84,20 +78,13 @@ module.exports = View.extend({
       }
     }
   },
-  update: function () {
-  },
-  updateValid: function () {
-  },
-  selectEvent: function (e) {
-    this.model.collection.trigger("select", this.model);
-  },
   editAnnotation: function () {
-    var self = this;
-    var name = this.model.name;
-    var annotation = this.model.annotation;
     if(document.querySelector('#eventAnnotationModal')) {
       document.querySelector('#eventAnnotationModal').remove();
     }
+    let self = this;
+    let name = this.model.name;
+    let annotation = this.model.annotation;
     let modal = $(modals.annotationModalHtml("event", name, annotation)).modal();
     let okBtn = document.querySelector('#eventAnnotationModal .ok-model-btn');
     let input = document.querySelector('#eventAnnotationModal #eventAnnotationInput');
@@ -117,17 +104,11 @@ module.exports = View.extend({
     this.remove();
     this.collection.removeEvent(this.model);
   },
-  renderViewEventAssignments: function () {
-    if(this.viewEventAssignmentsView){
-      this.viewEventAssignmentsView.remove()
-    }
-    this.viewEventAssignmentsView = new EventAssignment({
-      collection: this.model.eventAssignments,
-      tooltips: this.parent.tooltips,
-      readOnly: true
-    });
-    app.registerRenderSubview(this, this.viewEventAssignmentsView, 'assignment-viewer');
+  selectEvent: function (e) {
+    this.model.collection.trigger("select", this.model);
   },
+  update: function () {},
+  updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewEventListingView();
   },
@@ -139,13 +120,22 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'name',
-          label: '',
           tests: tests.nameTests,
           modelKey: 'name',
           valueType: 'string',
-          value: this.model.name,
+          value: this.model.name
         });
-      },
+      }
     },
-  },
+    viewEventAssignmentsView: {
+      hook: "assignment-viewer",
+      prepareView: function (el) {
+        return new EventAssignment({
+          collection: this.model.eventAssignments,
+          tooltips: this.parent.tooltips,
+          readOnly: true
+        });
+      }
+    }
+  }
 });

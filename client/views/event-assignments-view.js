@@ -21,9 +21,9 @@ let $ = require('jquery');
 let app = require('../app');
 //views
 var View = require('ampersand-view');
-var EditEventAssignment = require('./edit-event-assignment');
+var EditEventAssignment = require('./event-assignment-view');
 //templates
-var template = require('../templates/includes/eventAssignmentsEditor.pug');
+var template = require('../templates/includes/eventAssignmentsView.pug');
 
 module.exports = View.extend({
   template: template,

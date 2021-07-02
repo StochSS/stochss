@@ -16,16 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 //support files
 let app = require('../app');
-var tests = require('./tests');
+let tests = require('./tests');
 //views
-var View = require('ampersand-view');
-var InputView = require('./input');
-var EventAssignment = require('./event-assignments-editor');
+let InputView = require('./input');
+let View = require('ampersand-view');
+let EventAssignment = require('./event-assignments-view');
 //templates
-var template = require('../templates/includes/eventDetails.pug');
+let template = require('../templates/includes/eventDetails.pug');
 
 module.exports = View.extend({
   template: template,
@@ -33,12 +33,12 @@ module.exports = View.extend({
     'model.initialValue': {
       hook: 'event-trigger-init-value',
       type: 'booleanAttribute',
-      name: 'checked',
+      name: 'checked'
     },
     'model.persistent': {
       hook: 'event-trigger-persistent',
       type: 'booleanAttribute',
-      name: 'checked',
+      name: 'checked'
     },
   },
   events: {
@@ -46,7 +46,7 @@ module.exports = View.extend({
     'change [data-hook=event-trigger-persistent]' : 'setTriggerPersistent',
     'change [data-hook=edit-trigger-time]' : 'setUseValuesFromTriggerTime',
     'change [data-hook=edit-assignment-time]' : 'setUseValuesFromTriggerTime',
-    'click [data-hook=advanced-event-button]' : 'changeCollapseButtonText',
+    'click [data-hook=advanced-event-button]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -55,38 +55,31 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     this.renderEventAssignments();
     if(this.model.useValuesFromTriggerTime){
-      $(this.queryByHook('edit-trigger-time')).prop('checked', true)
+      $(this.queryByHook('edit-trigger-time')).prop('checked', true);
     }else{
-      $(this.queryByHook('edit-assignment-time')).prop('checked', true)
+      $(this.queryByHook('edit-assignment-time')).prop('checked', true);
     }
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
-    });
+    app.tooltipSetup();
   },
-  update: function () {
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
   },
-  updateValid: function () {
+  openAdvancedSection: function () {
+    if(this.model.advanced_error && !$(this.queryByHook("advanced-event-section")).hasClass('show')) {
+      let advCollapseBtn = $(this.queryByHook("advanced-event-button"));
+      advCollapseBtn.click();
+      advCollapseBtn.html('-');
+    }
   },
   renderEventAssignments: function () {
     if(this.eventAssignmentsView){
-      this.eventAssignmentsView.remove()
+      this.eventAssignmentsView.remove();
     }
     this.eventAssignmentsView = new EventAssignment({
       collection: this.model.eventAssignments,
       tooltips: this.parent.tooltips
     });
     app.registerRenderSubview(this, this.eventAssignmentsView, 'event-assignments');
-  },
-  openAdvancedSection: function () {
-    if(this.model.advanced_error && !$(this.queryByHook("advanced-event-section")).hasClass('show')) {
-      let advCollapseBtn = $(this.queryByHook("advanced-event-button"))
-      advCollapseBtn.click()
-      advCollapseBtn.html('-')
-    }
   },
   setTriggerInitialValue: function (e) {
     this.model.initialValue = e.target.checked;
@@ -97,9 +90,8 @@ module.exports = View.extend({
   setUseValuesFromTriggerTime: function (e) {
     this.model.useValuesFromTriggerTime = e.target.dataset.name === "trigger";
   },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
-  },
+  update: function () {},
+  updateValid: function () {},
   subviews: {
     inputDelay: {
       hook: 'event-delay',
@@ -111,9 +103,9 @@ module.exports = View.extend({
           placeholder: '---No Expression Entered---',
           modelKey: 'delay',
           valueType: 'string',
-          value: this.model.delay,
+          value: this.model.delay
         });
-      },
+      }
     },
     inputPriority: {
       hook: 'event-priority',
@@ -124,9 +116,9 @@ module.exports = View.extend({
           name: 'priority',
           modelKey: 'priority',
           valueType: 'string',
-          value: this.model.priority,
+          value: this.model.priority
         });
-      },
+      }
     },
     inputTriggerExpression: {
       hook: 'event-trigger-expression',
@@ -138,9 +130,9 @@ module.exports = View.extend({
           placeholder: '---No Expression Entered---',
           modelKey: 'triggerExpression',
           valueType: 'string',
-          value: this.model.triggerExpression,
+          value: this.model.triggerExpression
         });
-      },
-    },
-  },
+      }
+    }
+  }
 });

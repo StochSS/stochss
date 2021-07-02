@@ -16,28 +16,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var ViewSwitcher = require('ampersand-view-switcher');
-var $ = require('jquery');
+let $ = require('jquery');
 //support files
 let app = require('../app');
-var Tooltips = require("../tooltips");
+let Tooltips = require("../tooltips");
 //views
-var View = require('ampersand-view');
-var EventListings = require('./event-listings');
-var EventDetails = require('./event-details');
+let View = require('ampersand-view');
+let EventDetails = require('./event-details');
+let EventListings = require('./event-listings');
+let ViewSwitcher = require('ampersand-view-switcher');
 //templates
-var template = require('../templates/includes/eventsView.pug');
+let template = require('../templates/includes/eventsView.pug');
 
 module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=add-event]' : 'addEvent',
-    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
-    this.tooltips = Tooltips.eventsEditor
+    this.tooltips = Tooltips.eventsEditor;
     if(!this.readOnly) {
       this.collection.on("select", function (event) {
         this.setSelectedEvent(event);
@@ -46,11 +46,12 @@ module.exports = View.extend({
       this.collection.on("remove", function (event) {
         // Select the last event by default
         // But only if there are other events other than the one we're removing
-        if (event.detailsView)
+        if (event.detailsView){
           event.detailsView.remove();
+        }
         this.collection.removeEvent(event);
         if (this.collection.length) {
-          var selected = this.collection.at(this.collection.length-1);
+          let selected = this.collection.at(this.collection.length-1);
           this.collection.trigger("select", selected);
         }
       }, this);
@@ -73,19 +74,29 @@ module.exports = View.extend({
       this.renderEditEventListingsView();
       this.detailsContainer = this.queryByHook('event-details-container');
       this.detailsViewSwitcher = new ViewSwitcher({
-        el: this.detailsContainer,
+        el: this.detailsContainer
       });
       if(this.collection.length) {
         this.setSelectedEvent(this.collection.at(0));
         this.collection.trigger("select", this.selectedEvent);
       }
-      this.toggleAddEventButton()
+      this.toggleAddEventButton();
     }
     this.renderViewEventListingView();
   },
-  update: function () {
+  addEvent: function () {
+    let event = this.collection.addEvent();
+    event.detailsView = this.newDetailsView(event);
+    this.collection.trigger("select", event);
+    app.tooltipSetup();
   },
-  updateValid: function () {
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  newDetailsView: function (event) {
+    let detailsView = new EventDetails({ model: event });
+    detailsView.parent = this;
+    return detailsView;
   },
   renderEditEventListingsView: function () {
     if(this.editEventListingsView){
@@ -96,12 +107,7 @@ module.exports = View.extend({
       EventListings,
       this.queryByHook('edit-event-listing-container')
     );
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
   },
   renderViewEventListingView: function () {
     if(this.viewEventListingsView) {
@@ -120,51 +126,28 @@ module.exports = View.extend({
       this.queryByHook('view-event-listing-container'),
       options
     );
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
   },
-  toggleAddEventButton: function () {
-    this.collection.map(function (event) {
-      if(event.detailsView && event.selected){
-        event.detailsView.renderEventAssignments();
-      }
-    })
-    var numSpecies = this.collection.parent.species.length;
-    var numParameters = this.collection.parent.parameters.length;
-    var disabled = numSpecies <= 0 && numParameters <= 0
-    $(this.queryByHook('add-event')).prop('disabled', disabled);
+  setDetailsView: function (event) {
+    event.detailsView = event.detailsView || this.newDetailsView(event);
+    this.detailsViewSwitcher.set(event.detailsView);
   },
   setSelectedEvent: function (event) {
     this.collection.each(function (m) { m.selected = false; });
     event.selected = true;
     this.selectedEvent = event;
   },
-  setDetailsView: function (event) {
-    event.detailsView = event.detailsView || this.newDetailsView(event);
-    this.detailsViewSwitcher.set(event.detailsView);
-  },
-  addEvent: function () {
-    var event = this.collection.addEvent();
-    event.detailsView = this.newDetailsView(event);
-    this.collection.trigger("select", event);
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
+  toggleAddEventButton: function () {
+    this.collection.map(function (event) {
+      if(event.detailsView && event.selected){
+        event.detailsView.renderEventAssignments();
+      }
     });
+    let numSpecies = this.collection.parent.species.length;
+    let numParameters = this.collection.parent.parameters.length;
+    let disabled = numSpecies <= 0 && numParameters <= 0;
+    $(this.queryByHook('add-event')).prop('disabled', disabled);
   },
-  newDetailsView: function (event) {
-    var detailsView = new EventDetails({ model: event });
-    detailsView.parent = this;
-    return detailsView
-  },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
-  },
-})
+  update: function () {},
+  updateValid: function () {}
+});
