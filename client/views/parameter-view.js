@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 let _ = require('underscore');
 //support files
+let app = require('../app');
 let tests = require('./tests');
 let modals = require('../modals')
 //views

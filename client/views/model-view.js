@@ -41,7 +41,7 @@ module.exports = View.extend({
   },
   initialize: function(attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.readOnly = attrs.readOnly ? attrs.readOnly : true;
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     let modeMap = {continuous: "Concentration", discrete: "Population", dynamic: "Hybrid Concentration/Population"};
     this.modelMode = modeMap[this.model.defaultMode]
   },
