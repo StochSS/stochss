@@ -302,7 +302,7 @@ module.exports = View.extend({
     }
   },
   openDomainSection: function () {
-    let domainSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
+    let domainSection = $(this.parent.modelView.domainViewer.queryByHook("domain-container"))
     if(!domainSection.hasClass("show")) {
       let domainCollapseBtn = $(this.parent.modelView.domainViewer.queryByHook("collapse"))
       domainCollapseBtn.click()
@@ -310,9 +310,9 @@ module.exports = View.extend({
     }
   },
   openParametersSection: function () {
-    let paramSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
+    let paramSection = $(this.parent.modelView.parametersView.queryByHook("parameters-list-container"))
     if(!paramSection.hasClass("show")) {
-      let paramCollapseBtn = $(this.parent.parametersEditor.queryByHook("collapse"))
+      let paramCollapseBtn = $(this.parent.modelView.parametersView.queryByHook("collapse"))
       paramCollapseBtn.click()
       paramCollapseBtn.html('-')
     }

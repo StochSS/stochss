@@ -28,7 +28,6 @@ let Tooltips = require("../tooltips");
 var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
 var InputView = require('../views/input');
-var ParametersEditorView = require('../views/parameters-view');
 var ParticleViewer = require('../views/view-particle');
 var ReactionsEditorView = require('../views/reactions-editor');
 var EventsEditorView = require('../views/events-editor');
@@ -229,7 +228,6 @@ let ModelEditor = PageView.extend({
     this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
-    this.renderParametersView();
     this.renderReactionsView();
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
     app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
@@ -269,13 +267,6 @@ let ModelEditor = PageView.extend({
       collection: this.model.boundaryConditions
     });
     app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
-  },
-  renderParametersView: function () {
-    if(this.parametersEditor) {
-      this.parametersEditor.remove()
-    }
-    this.parametersEditor = new ParametersEditorView({collection: this.model.parameters});
-    app.registerRenderSubview(this, this.parametersEditor, 'parameters-editor-container');
   },
   renderReactionsView: function () {
     if(this.reactionsEditor) {

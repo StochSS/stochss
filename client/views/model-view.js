@@ -27,6 +27,7 @@ let Domain = require('../models/domain');
 let View = require('ampersand-view');
 let SpeciesView = require('../views/species-view');
 let DomainViewer = require('../views/domain-viewer');
+let ParametersView = require('../views/parameters-view');
 let InitialConditionsView = require('../views/initial-conditions-view');
 //templates
 let template = require('../templates/includes/modelView.pug');
@@ -40,7 +41,7 @@ module.exports = View.extend({
   },
   initialize: function(attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
+    this.readOnly = attrs.readOnly ? attrs.readOnly : true;
     let modeMap = {continuous: "Concentration", discrete: "Population", dynamic: "Hybrid Concentration/Population"};
     this.modelMode = modeMap[this.model.defaultMode]
   },
@@ -169,6 +170,15 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new InitialConditionsView({
           collection: this.model.initialConditions,
+          readOnly: this.readOnly
+        });
+      }
+    },
+    parametersView: {
+      hook: "parameters-view-container",
+      prepareView: function (el) {
+        return new ParametersView({
+          collection: this.model.parameters,
           readOnly: this.readOnly
         });
       }
