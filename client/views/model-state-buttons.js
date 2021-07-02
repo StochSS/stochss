@@ -319,9 +319,9 @@ module.exports = View.extend({
   },
   openReactionsSection: function (isCollection = false) {
     let error = this.model.error
-    let reacSection = $(this.parent.modelView.reactionsEditor.queryByHook("reactions-list-container"))
+    let reacSection = $(this.parent.modelView.reactionsView.queryByHook("reactions-list-container"))
     if(!reacSection.hasClass("show")) {
-      let reacCollapseBtn = $(this.parent.modelView.reactionsEditor.queryByHook("collapse"))
+      let reacCollapseBtn = $(this.parent.modelView.reactionsView.queryByHook("collapse"))
       reacCollapseBtn.click()
       reacCollapseBtn.html('-')
     }
@@ -340,9 +340,9 @@ module.exports = View.extend({
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let evtSection = $(this.parent.modelView.eventsEditor.queryByHook("events"))
+    let evtSection = $(this.parent.modelView.eventsView.queryByHook("events"))
     if(!evtSection.hasClass("show")) {
-      let evtCollapseBtn = $(this.parent.modelView.eventsEditor.queryByHook("collapse"))
+      let evtCollapseBtn = $(this.parent.modelView.eventsView.queryByHook("collapse"))
       evtCollapseBtn.click()
       evtCollapseBtn.html('-')
     }
