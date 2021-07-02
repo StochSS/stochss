@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 let path = require('path');
+let _ = require('underscore');
 //support files
 let app = require('../app');
 let modals = require('../modals');
@@ -27,6 +28,7 @@ let Domain = require('../models/domain');
 let View = require('ampersand-view');
 let SpeciesView = require('../views/species-view');
 let DomainViewer = require('../views/domain-viewer');
+let ReactionsView = require('../views/reactions-view');
 let ParametersView = require('../views/parameters-view');
 let InitialConditionsView = require('../views/initial-conditions-view');
 //templates
@@ -59,6 +61,18 @@ module.exports = View.extend({
           $(this.queryByHook("advanced-model-mode")).css("display", "none");
         }
       }
+      this.model.reactions.on("change", function (reactions) {
+        this.updateSpeciesInUse();
+        this.updateParametersInUse();
+      }, this);
+      this.model.eventsCollection.on("add change remove", function (){
+        this.updateSpeciesInUse();
+        this.updateParametersInUse();
+      }, this);
+      this.model.rules.on("add change remove", function() {
+        this.updateSpeciesInUse();
+        this.updateParametersInUse();
+      }, this);
     }
     if(this.model.is_spatial) {
       this.renderDomainViewer();
@@ -152,6 +166,63 @@ module.exports = View.extend({
     $(this.queryByHook('edit-' + component)).removeClass('active');
     $(this.queryByHook('view-' + component)).addClass('active');
   },
+  updateParametersInUse: function () {
+    var parameters = this.model.parameters;
+    var reactions = this.model.reactions;
+    var events = this.model.eventsCollection;
+    var rules = this.model.rules;
+    parameters.forEach(function (param) { param.inUse = false; });
+    var updateInUse = function (param) {
+      _.where(parameters.models, { compID: param.compID })
+       .forEach(function (param) {
+         param.inUse = true;
+       });
+    }
+    reactions.forEach(function (reaction) {
+      if(reaction.reactionType !== "custom-propensity"){
+        updateInUse(reaction.rate);
+      }
+    });
+    events.forEach(function (event) {
+      event.eventAssignments.forEach(function (assignment) {
+        updateInUse(assignment.variable)
+      });
+    });
+    rules.forEach(function (rule) {
+      updateInUse(rule.variable);
+    });
+  },
+  updateSpeciesInUse: function () {
+    var species = this.model.species;
+    var reactions = this.model.reactions;
+    var events = this.model.eventsCollection;
+    var rules = this.model.rules;
+    species.forEach(function (specie) { specie.inUse = false; });
+    var updateInUseForReaction = function (stoichSpecie) {
+      _.where(species.models, { compID: stoichSpecie.specie.compID })
+       .forEach(function (specie) {
+          specie.inUse = true;
+        });
+    }
+    var updateInUseForOther = function (specie) {
+      _.where(species.models, { compID: specie.compID })
+       .forEach(function (specie) {
+         specie.inUse = true;
+       });
+    }
+    reactions.forEach(function (reaction) {
+      reaction.products.forEach(updateInUseForReaction);
+      reaction.reactants.forEach(updateInUseForReaction);
+    });
+    events.forEach(function (event) {
+      event.eventAssignments.forEach(function (assignment) {
+        updateInUseForOther(assignment.variable)
+      });
+    });
+    rules.forEach(function (rule) {
+      updateInUseForOther(rule.variable);
+    });
+  },
   subviews: {
     speciesView: {
       hook: "species-view-container",
@@ -179,6 +250,15 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new ParametersView({
           collection: this.model.parameters,
+          readOnly: this.readOnly
+        });
+      }
+    },
+    reactionsView: {
+      hook: "reactions-view-container",
+      prepareView: function (el) {
+        return new ReactionsView({
+          collection: this.model.reactions,
           readOnly: this.readOnly
         });
       }

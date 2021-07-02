@@ -29,7 +29,6 @@ var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
 var InputView = require('../views/input');
 var ParticleViewer = require('../views/view-particle');
-var ReactionsEditorView = require('../views/reactions-view');
 var EventsEditorView = require('../views/events-editor');
 var RulesEditorView = require('../views/rules-editor');
 var SBMLComponentView = require('../views/sbml-component-editor');
@@ -93,18 +92,6 @@ let ModelEditor = PageView.extend({
         self.model.updateValid()
       }
     })
-    this.model.reactions.on("change", function (reactions) {
-      this.updateSpeciesInUse();
-      this.updateParametersInUse();
-    }, this);
-    this.model.eventsCollection.on("add change remove", function (){
-      this.updateSpeciesInUse();
-      this.updateParametersInUse();
-    }, this);
-    this.model.rules.on("add change remove", function() {
-      this.updateSpeciesInUse();
-      this.updateParametersInUse();
-    }, this);
     window.addEventListener("pageshow", function (event) {
       var navType = window.performance.navigation.type
       if(navType === 2){
@@ -133,63 +120,6 @@ let ModelEditor = PageView.extend({
       let endpoint = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+this.projectPath
       window.location.href = endpoint
     }, this))
-  },
-  updateSpeciesInUse: function () {
-    var species = this.model.species;
-    var reactions = this.model.reactions;
-    var events = this.model.eventsCollection;
-    var rules = this.model.rules;
-    species.forEach(function (specie) { specie.inUse = false; });
-    var updateInUseForReaction = function (stoichSpecie) {
-      _.where(species.models, { compID: stoichSpecie.specie.compID })
-       .forEach(function (specie) {
-          specie.inUse = true;
-        });
-    }
-    var updateInUseForOther = function (specie) {
-      _.where(species.models, { compID: specie.compID })
-       .forEach(function (specie) {
-         specie.inUse = true;
-       });
-    }
-    reactions.forEach(function (reaction) {
-      reaction.products.forEach(updateInUseForReaction);
-      reaction.reactants.forEach(updateInUseForReaction);
-    });
-    events.forEach(function (event) {
-      event.eventAssignments.forEach(function (assignment) {
-        updateInUseForOther(assignment.variable)
-      });
-    });
-    rules.forEach(function (rule) {
-      updateInUseForOther(rule.variable);
-    });
-  },
-  updateParametersInUse: function () {
-    var parameters = this.model.parameters;
-    var reactions = this.model.reactions;
-    var events = this.model.eventsCollection;
-    var rules = this.model.rules;
-    parameters.forEach(function (param) { param.inUse = false; });
-    var updateInUse = function (param) {
-      _.where(parameters.models, { compID: param.compID })
-       .forEach(function (param) {
-         param.inUse = true;
-       });
-    }
-    reactions.forEach(function (reaction) {
-      if(reaction.reactionType !== "custom-propensity"){
-        updateInUse(reaction.rate);
-      }
-    });
-    events.forEach(function (event) {
-      event.eventAssignments.forEach(function (assignment) {
-        updateInUse(assignment.variable)
-      });
-    });
-    rules.forEach(function (rule) {
-      updateInUse(rule.variable);
-    });
   },
   renderParticleViewer: function (particle=null) {
     if(this.particleViewer) {
@@ -228,7 +158,6 @@ let ModelEditor = PageView.extend({
     this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
-    this.renderReactionsView();
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
     app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
@@ -267,13 +196,6 @@ let ModelEditor = PageView.extend({
       collection: this.model.boundaryConditions
     });
     app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
-  },
-  renderReactionsView: function () {
-    if(this.reactionsEditor) {
-      this.reactionsEditor.remove()
-    }
-    this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions});
-    app.registerRenderSubview(this, this.reactionsEditor, 'reactions-editor-container');
   },
   renderEventsView: function () {
     if(this.eventsEditor){

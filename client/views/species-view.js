@@ -55,7 +55,7 @@ module.exports = View.extend({
         if(isNameUpdate) {
           reaction.buildSummary();
           if(reaction.selected) {
-            self.parent.reactionsEditor.setDetailsView(reaction);
+            self.parent.reactionsView.setDetailsView(reaction);
           }
         }else if(!isDefaultMode || specie.compID === self.collection.models[self.collection.length-1].compID){
           reaction.checkModes();

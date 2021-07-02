@@ -319,9 +319,9 @@ module.exports = View.extend({
   },
   openReactionsSection: function (isCollection = false) {
     let error = this.model.error
-    let reacSection = $(this.parent.reactionsEditor.queryByHook("reactions-list-container"))
+    let reacSection = $(this.parent.modelView.reactionsEditor.queryByHook("reactions-list-container"))
     if(!reacSection.hasClass("show")) {
-      let reacCollapseBtn = $(this.parent.reactionsEditor.queryByHook("collapse"))
+      let reacCollapseBtn = $(this.parent.modelView.reactionsEditor.queryByHook("collapse"))
       reacCollapseBtn.click()
       reacCollapseBtn.html('-')
     }
