@@ -236,7 +236,6 @@ let ModelEditor = PageView.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("system-volume-container")).css("display", "none");
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
-      this.renderInitialConditions();
       this.renderBoundaryConditionsView();
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
@@ -270,15 +269,6 @@ let ModelEditor = PageView.extend({
       collection: this.model.boundaryConditions
     });
     app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
-  },
-  renderInitialConditions: function () {
-    if(this.initialConditionsEditor) {
-      this.initialConditionsEditor.remove();
-    }
-    this.initialConditionsEditor = new InitialConditionsEditorView({
-      collection: this.model.initialConditions,
-    });
-    app.registerRenderSubview(this, this.initialConditionsEditor, 'initial-conditions-editor-container');
   },
   renderParametersView: function () {
     if(this.parametersEditor) {

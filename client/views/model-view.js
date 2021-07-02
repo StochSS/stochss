@@ -27,7 +27,7 @@ let Domain = require('../models/domain');
 let View = require('ampersand-view');
 let SpeciesView = require('../views/species-view');
 let DomainViewer = require('../views/domain-viewer');
-let InitialConditionsEditorView = require('../views/initial-conditions-view');
+let InitialConditionsView = require('../views/initial-conditions-view');
 //templates
 let template = require('../templates/includes/modelView.pug');
 
@@ -158,7 +158,18 @@ module.exports = View.extend({
         return new SpeciesView({
           collection: this.model.species,
           spatial: this.model.is_spatial,
-          defaultMode: this.model.defaultMode
+          defaultMode: this.model.defaultMode,
+          readOnly: this.readOnly
+        });
+      }
+    },
+    initialConditionsView: {
+      waitFor: "model.is_spatial",
+      hook: "initial-conditions-view-container",
+      prepareView: function (el) {
+        return new InitialConditionsView({
+          collection: this.model.initialConditions,
+          readOnly: this.readOnly
         });
       }
     }
