@@ -22,9 +22,9 @@ let app = require('../app');
 let Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
-var EditInitialCondition = require('./edit-initial-condition');
+var EditInitialCondition = require('./initial-condition-view');
 //templates
-var template = require('../templates/includes/initialConditionsEditor.pug');
+var template = require('../templates/includes/initialConditionsView.pug');
 
 module.exports = View.extend({
   template: template,

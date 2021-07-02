@@ -27,6 +27,7 @@ let Domain = require('../models/domain');
 let View = require('ampersand-view');
 let SpeciesView = require('../views/species-view');
 let DomainViewer = require('../views/domain-viewer');
+let InitialConditionsEditorView = require('../views/initial-conditions-view');
 //templates
 let template = require('../templates/includes/modelView.pug');
 

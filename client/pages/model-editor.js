@@ -28,7 +28,6 @@ let Tooltips = require("../tooltips");
 var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
 var InputView = require('../views/input');
-var InitialConditionsEditorView = require('../views/initial-conditions-editor');
 var ParametersEditorView = require('../views/parameters-editor');
 var ParticleViewer = require('../views/view-particle');
 var ReactionsEditorView = require('../views/reactions-editor');
