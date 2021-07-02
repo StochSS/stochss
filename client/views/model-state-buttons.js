@@ -334,9 +334,9 @@ module.exports = View.extend({
   },
   openEventsSection: function () {
     let error = this.model.error
-    let advSection = $(this.parent.queryByHook("me-advanced-section"))
+    let advSection = $(this.parent.modelView.queryByHook("mv-advanced-section"))
     if(!advSection.hasClass("show")) {
-      let advCollapseBtn = $(this.parent.queryByHook("collapse-me-advanced-section"))
+      let advCollapseBtn = $(this.parent.modelView.queryByHook("collapse-mv-advanced-section"))
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }

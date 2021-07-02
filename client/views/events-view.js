@@ -26,7 +26,7 @@ var View = require('ampersand-view');
 var EventListings = require('./event-listings');
 var EventDetails = require('./event-details');
 //templates
-var template = require('../templates/includes/eventsEditor.pug');
+var template = require('../templates/includes/eventsView.pug');
 
 module.exports = View.extend({
   template: template,

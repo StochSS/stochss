@@ -29,7 +29,7 @@ var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
 var InputView = require('../views/input');
 var ParticleViewer = require('../views/view-particle');
-var EventsEditorView = require('../views/events-editor');
+var EventsEditorView = require('../views/events-view');
 var RulesEditorView = require('../views/rules-editor');
 var SBMLComponentView = require('../views/sbml-component-editor');
 var TimespanSettingsView = require('../views/timespan-settings');
@@ -82,7 +82,6 @@ let ModelEditor = PageView.extend({
     app.getXHR(this.model.url(), {
       success: function (err, response, body) {
         self.model.set(body)
-        self.modelLoaded = true
         if(directory.includes('.proj')) {
           self.queryByHook("project-breadcrumb-links").style.display = "block"
           self.queryByHook("model-name-header").style.display = "none"
