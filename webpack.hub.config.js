@@ -7,7 +7,7 @@ module.exports = {
     home: './client/pages/home.js',
     jobPresentation: './client/pages/job-presentation.js',
     modelPresentation: './client/pages/model-presentation.js',
-    notebookPresentation: '.client/pages/notebook-presentation.js'
+    notebookPresentation: './client/pages/notebook-presentation.js'
   },
   output: {
     filename: 'stochss-[name].bundle.js',
