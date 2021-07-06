@@ -44,7 +44,7 @@ let ModelPresentationPage = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
-    let owner = urlParams.get("owner")
+    let owner = urlParams.get("owner");
     let file = urlParams.get("file");
     this.model = new Model({
       directory: file,

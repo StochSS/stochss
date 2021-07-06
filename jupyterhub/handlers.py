@@ -69,3 +69,20 @@ class ModelPresentationHandler(BaseHandler):
         '''
         html = self.render_template("stochss-model-presentation.html")
         self.finish(html)
+
+
+class NotebookPresentationHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Handler for rendering jupyterhub notebook presentation page.
+    ################################################################################################
+    '''
+    async def get(self):
+        '''
+        Render the jupyterhub notebook presentation page.
+
+        Attributes
+        ----------
+        '''
+        html = self.render_template("stochss-notebook-presentation.html")
+        self.finish(html)
