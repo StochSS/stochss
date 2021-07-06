@@ -137,8 +137,9 @@ c.JupyterHub.services = [
         },
         {
                 'name': 'nbviewer',
+                'admin': True,
                 'url': 'http://127.0.0.1:9000',
-                'command': ['python', '-m', 'nbviewer']
+                'command': [sys.executable, '/srv/jupyterhub/notbook_presentation.py']
         }
 ]
 
