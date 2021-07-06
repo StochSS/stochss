@@ -33,6 +33,8 @@ from stochss.handlers.util.stochss_errors import StochSSFileNotFoundError, FileN
 
 os.chdir('/stochss')
 
+# pylint: disable=too-many-public-methods
+# pylint: disable=line-too-long
 class TestStochSSBaseObject(unittest.TestCase):
     '''
     ################################################################################################
