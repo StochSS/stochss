@@ -134,6 +134,11 @@ c.JupyterHub.services = [
                 'name': 'cull-idle',
                 'admin': True,
                 'command': [sys.executable, '/srv/jupyterhub/cull_idle_servers.py', '--timeout=28800'],
+        },
+        {
+                'name': 'nbviewer',
+                'url': 'http://127.0.0.1:9000',
+                'command': ['python', '-m', 'nbviewer']
         }
 ]
 
