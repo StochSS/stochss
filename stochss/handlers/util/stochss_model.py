@@ -486,10 +486,10 @@ class StochSSModel(StochSSBase):
                 message = "A presentation with this name already exists"
                 raise StochSSFileExistsError(message)
             query_str = f"?owner={hostname}&file={file}"
-            present_link = f"https://live.stochss.org/stochss/present-model{query_str}"
-            download_link = os.path.join("https://live.stochss.org/stochss/download_presentation",
+            present_link = f"https://staging.stochss.org/stochss/present-model{query_str}"
+            download_link = os.path.join("https://staging.stochss.org/stochss/download_presentation",
                                          hostname, file)
-            open_link = f"https://live.stochss.org?open={download_link}"
+            open_link = f"https://staging.stochss.org?open={download_link}"
             links = {"presentation": present_link, "download": download_link, "open": open_link}
             data = {"path": dst, "new":True, "model":self.model}
             return links, data
