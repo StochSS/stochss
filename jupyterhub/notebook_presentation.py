@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 '''
 StochSS is a platform for simulating biochemical systems
 Copyright (C) 2019-2021 StochSS developers.
@@ -28,6 +26,33 @@ from nbviewer.render import render_notebook
 from nbconvert.exporters import HTMLExporter
 
 import docker
+
+from jupyterhub.handlers.base import BaseHandler
+
+# pylint: disable=abstract-method
+# pylint: disable=too-few-public-methods
+class NotebookAPIHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Base Handler for getting notebook presentations from user containers.
+    ################################################################################################
+    '''
+    async def get(self):
+        '''
+        Load the notebook presentation from User's presentations directory.
+
+        Attributes
+        ----------
+        '''
+        owner = self.get_query_argument(name="owner")
+        log.debug("Container id of the owner: %s", owner)
+        file = self.get_query_argument(name="file")
+        log.debug("Name to the file: %s", file)
+        notebook = get_presentation_from_user(owner=owner, file=file)
+        html = convert_notebook_to_html(notebook=notebook)
+        self.write(html)
+        self.finish()
+
 
 def convert_notebook_to_html(notebook):
     '''
@@ -73,8 +98,3 @@ def get_presentation_from_user(owner, file, as_dict=False):
         if as_dict:
             return json.load(nb_file)
         return nbformat.read(nb_file, as_version=4)
-
-
-if __main__ == "__name__":
-    nb = get_presentation_from_user()
-    return convert_notebook_to_html(notebook=nb)
