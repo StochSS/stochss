@@ -19,11 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import ast
 import json
+import string
 import hashlib
 import tempfile
 import traceback
 
 import numpy
+from escapism import escape
 from gillespy2.sbml.SBMLexport import export
 from gillespy2 import Model, Species, Parameter, Reaction, Event, EventTrigger, EventAssignment, \
                       RateRule, AssignmentRule, FunctionDefinition
@@ -474,7 +476,9 @@ class StochSSModel(StochSSBase):
             os.mkdir(present_dir)
         try:
             self.load()
-            hostname = os.uname()[1]
+            safe_chars = set(string.ascii_letters + string.digits)
+            hostname = escape(os.environ.get('JUPYTER_USER'),
+                              safe_chars=safe_chars, escape_char="-").lower()
             model = json.dumps(self.model, sort_keys=True)
             # replace with gillespy2.Model.to_json
             file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl"

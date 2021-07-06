@@ -24,10 +24,11 @@ import tarfile
 import tempfile
 
 import docker
-from jupyterhub.handlers.base import BaseHandler
 
 from presentation_base import StochSSBase
 from presentation_error import StochSSAPIError, report_error
+
+from jupyterhub.handlers.base import BaseHandler
 
 log = logging.getLogger('stochss')
 
@@ -106,7 +107,7 @@ def get_presentation_from_user(owner, file):
     '''
     client = docker.from_env()
     containers = client.containers.list()
-    user_container = list(filter(lambda container: container.id.startswith(owner),
+    user_container = list(filter(lambda container: container.name == f"jupyter-{owner}",
                                  containers))[0]
     user_model_path = f'/home/jovyan/.presentations/{file}'
     tar_mdl = tempfile.TemporaryFile()
