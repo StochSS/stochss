@@ -47,7 +47,7 @@ let NotebookPresentationPage = PageView.extend({
 });
 
 domReady(() => {
-  let p = new ModelPresentationPage({
+  let p = new NotebookPresentationPage({
     el: document.body
   });
   p.render();
