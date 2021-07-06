@@ -84,7 +84,9 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
         (r"/stochss/present-job\/?", JobPresentationHandler),
         (r"/stochss/present-model\/?", ModelPresentationHandler),
+        (r"/stochss/present-notebook\/?", NotebookPresentationHandler),
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
+        (r"/stochss/api/notebook/load\/?", NotebookAPIHandler),
         (r"/stochss/presentation-download/(\w+)/(.+)\/?", DownModelPresentationAPIHandler)
 ]
 
@@ -134,12 +136,6 @@ c.JupyterHub.services = [
                 'name': 'cull-idle',
                 'admin': True,
                 'command': [sys.executable, '/srv/jupyterhub/cull_idle_servers.py', '--timeout=28800'],
-        },
-        {
-                'name': 'nbviewer',
-                'admin': True,
-                'url': 'http://127.0.0.1:9000',
-                'command': [sys.executable, '/srv/jupyterhub/notbook_presentation.py']
         }
 ]
 
