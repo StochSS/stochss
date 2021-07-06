@@ -477,8 +477,7 @@ class StochSSModel(StochSSBase):
         try:
             self.load()
             safe_chars = set(string.ascii_letters + string.digits)
-            hostname = escape(os.environ.get('JUPYTER_USER'),
-                              safe_chars=safe_chars, escape_char="-").lower()
+            hostname = escape(os.environ.get('JUPYTER_USER'), safe=safe_chars).lower()
             model = json.dumps(self.model, sort_keys=True)
             # replace with gillespy2.Model.to_json
             file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl"
