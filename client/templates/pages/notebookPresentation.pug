@@ -1,4 +1,4 @@
-section.page
+section.page.pb-0
 
     div#notebook-presentation.container
 
@@ -6,6 +6,12 @@ section.page
 
         h1=this.name
 
-      div.iframe-container
+      div.iframe-container.card.card-body
 
-        iframe(src=this.loadLink width="100%" height="100%" frameborder="0")
+        iframe(src=this.loadLink width="100%" height="90%" frameborder="0")
+
+      div.mt-3
+
+        a.btn.btn-outline-secondary.box-shadow.text-break.mr-3(href=this.openLink role="button") Open in StochSS
+
+        a.btn.btn-outline-secondary.box-shadow.text-break(href=this.downloadLink role="button") Download (.ipynb)
