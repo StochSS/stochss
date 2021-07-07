@@ -711,3 +711,8 @@ span.checkbox {
   margin-top: 32px;
   padding: 20px 16px;
 }
+
+.iframe-container {
+  max-height: 100% !important;
+  display: grid;
+}
