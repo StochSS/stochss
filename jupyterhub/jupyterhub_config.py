@@ -29,7 +29,7 @@ sys.path.append('/srv/jupyterhub/')
 from handlers import *
 # API Handlers
 from model_presentation import JsonFileAPIHandler, DownModelPresentationAPIHandler
-from notebook_presentation import NotebookAPIHandler
+from notebook_presentation import NotebookAPIHandler, DownNotebookPresentationAPIHandler
 
 ## Class for authenticating users.
 #
@@ -87,8 +87,9 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/present-model\/?", ModelPresentationHandler),
         (r"/stochss/present-notebook\/?", NotebookPresentationHandler),
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
+        (r"/stochss/presentation-download/(\w+)/(.+)\/?", DownModelPresentationAPIHandler),
         (r"/stochss/api/notebook/load\/?", NotebookAPIHandler),
-        (r"/stochss/presentation-download/(\w+)/(.+)\/?", DownModelPresentationAPIHandler)
+        (r"/stochss/notebook/presentation-download/(\w+)/(.+)\/?", DownNotebookPresentationAPIHandler)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
