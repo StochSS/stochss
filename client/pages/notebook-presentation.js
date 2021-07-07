@@ -35,6 +35,7 @@ let NotebookPresentationPage = PageView.extend({
   	let urlParams = new URLSearchParams(window.location.search);
     let owner = urlParams.get("owner");
     let file = urlParams.get("file");
+    this.name = file.split('/').pop().split('.ipynb')[0]
     let queryStr = "?owner=" + owner + "&file=" + file;
     this.loadLink = "https://staging.stochss.org/stochss/api/notebook/load" + queryStr;
     let downloadStart = "https://staging.stochss.org/stochss/download_presentation";
