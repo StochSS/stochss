@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import tarfile
+import logging
 import tempfile
 import nbformat
 
@@ -28,6 +29,8 @@ from nbconvert.exporters import HTMLExporter
 import docker
 
 from jupyterhub.handlers.base import BaseHandler
+
+log = logging.getLogger('stochss')
 
 # pylint: disable=abstract-method
 # pylint: disable=too-few-public-methods
