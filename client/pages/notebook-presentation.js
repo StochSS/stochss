@@ -38,7 +38,7 @@ let NotebookPresentationPage = PageView.extend({
     this.name = file.split('/').pop().split('.ipynb')[0]
     let queryStr = "?owner=" + owner + "&file=" + file;
     this.loadLink = "https://staging.stochss.org/stochss/api/notebook/load" + queryStr;
-    let downloadStart = "https://staging.stochss.org/stochss/download_presentation";
+    let downloadStart = "https://staging.stochss.org/stochss/notebook/download_presentation";
     this.downloadLink = path.join(downloadStart, owner, file);
     this.openLink = "open.stochss.org?open=" + this.downloadLink;
   },
