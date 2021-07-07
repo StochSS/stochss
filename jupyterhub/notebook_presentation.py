@@ -57,6 +57,29 @@ class NotebookAPIHandler(BaseHandler):
         self.finish()
 
 
+class DownNotebookPresentationAPIHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Base Handler for downloading notebook presentations from user containers.
+    ################################################################################################
+    '''
+    async def get(self, owner, file):
+        '''
+        Download the notebook presentation from User's presentations directory.
+
+        Attributes
+        ----------
+        '''
+        log.debug("Container id of the owner: %s", owner)
+        log.debug("Name to the file: %s", file)
+        self.set_header('Content-Type', 'application/json')
+        nb_presentation = get_presentation_from_user(owner=owner, file=file, as_dict=True)
+        self.set_header('Content-Disposition', f'attachment; filename="{nb_presentation['file']}"')
+        log.debug("Contents of the json file: %s", nb_presentation['notebook'])
+        self.write(nb_presentation['notebook'])
+        self.finish()
+
+
 def convert_notebook_to_html(notebook):
     '''
     Convert the notebook object into html.
@@ -98,6 +121,7 @@ def get_presentation_from_user(owner, file, as_dict=False):
     tar_nb.close()
     nb_path = os.path.join(tmp_dir.name, file)
     with open(nb_path, "r") as nb_file:
+        nb_presentation = json.load(nb_file)
         if as_dict:
-            return json.load(nb_file)
-        return nbformat.read(nb_file, as_version=4)
+            return nb_presentation
+        return nbformat.reads(json.dumps(nb_presentation['notebook']), as_version=4)
