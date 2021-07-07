@@ -67,7 +67,7 @@ def convert_notebook_to_html(notebook):
         Notebook read in using nbformat
     '''
     nb_format = {"exporter": HTMLExporter}
-    html, config = render_notebook(format=nb_format, nb=nb)
+    html, config = render_notebook(format=nb_format, nb=notebook)
     return html
 
 
