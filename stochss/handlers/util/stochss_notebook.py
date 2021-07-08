@@ -16,16 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
 import json
 import string
+import hashlib
 import traceback
 import nbformat
+from escapism import escape
 from nbformat import v4 as nbf
 
 from gillespy2.solvers.utilities.cpp_support_test import check_cpp_support
 
 from .stochss_base import StochSSBase
-from .stochss_errors import StochSSFileNotFoundError, StochSSModelFormatError
+from .stochss_errors import StochSSFileNotFoundError, StochSSModelFormatError, \
+                            StochSSPermissionsError, StochSSFileExistsError
 
 class StochSSNotebook(StochSSBase):
     '''
@@ -1020,6 +1024,34 @@ class StochSSNotebook(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the notebook file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+
+    def publish_presentation(self):
+        '''Publish a notebook presentation'''
+        present_dir = os.path.join(self.user_dir, ".presentations")
+        if not os.path.exists(present_dir):
+            os.mkdir(present_dir)
+        try:
+            notebook = self.load()
+            safe_chars = set(string.ascii_letters + string.digits)
+            hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+            nb_str = json.dumps(notebook, sort_keys=True)
+            file = f"{hashlib.md5(nb_str.encode('utf-8')).hexdigest()}.ipynb"
+            dst = os.path.join(present_dir, file)
+            if os.path.exists(dst):
+                message = "A presentation with this name already exists"
+                raise StochSSFileExistsError(message)
+            query_str = f"?owner={hostname}&file={file}"
+            present_link = f"https://staging.stochss.org/stochss/present-notebook{query_str}"
+            download_link = os.path.join("https://staging.stochss.org/stochss/notebook/download_presentation",
+                                         hostname, file)
+            open_link = f"https://staging.stochss.org?open={download_link}"
+            links = {"presentation": present_link, "download": download_link, "open": open_link}
+            with open(dst, "w") as presentation_file:
+                json.dump(notebook, presentation_file)
+            return links
+        except PermissionError as err:
+            message = f"You do not have permission to publish this file: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
     def write_notebook_file(self, cells):
         '''Write the new notebook file to disk
