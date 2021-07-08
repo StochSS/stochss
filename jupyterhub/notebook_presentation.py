@@ -74,7 +74,7 @@ class DownNotebookPresentationAPIHandler(BaseHandler):
         log.debug("Name to the file: %s", file)
         self.set_header('Content-Type', 'application/json')
         nb_presentation = get_presentation_from_user(owner=owner, file=file, as_dict=True)
-        self.set_header('Content-Disposition', f'attachment; filename="{nb_presentation['file']}"')
+        self.set_header('Content-Disposition', f'attachment; filename="{nb_presentation["file"]}"')
         log.debug("Contents of the json file: %s", nb_presentation['notebook'])
         self.write(nb_presentation['notebook'])
         self.finish()
