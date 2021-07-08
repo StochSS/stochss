@@ -17,6 +17,59 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import tarfile
+import tempfile
+
+import docker
+
+
+def get_presentation_from_user(owner, file, process_func, kwargs=None):
+    '''
+    Get the model presentation from the users container
+
+    Attributes
+    ----------
+    owner : str
+        Hostname of the user container
+    file : str
+        Name of the model presentation file
+    process_func : function
+        Function used to process the presentation file
+    kwargs : dict
+        Args to be passed to the process function
+    '''
+    client = docker.from_env()
+    containers = client.containers.list()
+    try:
+        user_container = list(filter(lambda container: container.name == f"jupyter-{owner}",
+                                     containers))[0]
+    except IndexError:
+        volumes = client.volumes.list()
+        user_volume = list(filter(lambda volume: volume.name == f"jupyterhub-user-{owner}",
+                                  volumes))[0]
+        volume_mnts = {user_volume.name: {"bind": "/user_volume", "mode": "ro"},
+                       "/stochss/jupyterhub": {"bind": "/mnt/cache", "mode": "rw"}}
+        command = ['cp', os.path.join('/user_volume/.presentations', file),
+                   '/mnt/cache/presentation_cache/']
+        client.containers.run('stochss-lab', command, volumes=volume_mnts)
+        file_path = os.path.join('/srv/jupyterhub/presentation_cache', file)
+    else:
+        user_file_path = os.path.join('/home/jovyan/.presentations', file)
+        tar_pres = tempfile.TemporaryFile()
+        bits, _ = user_container.get_archive(user_file_path)
+        for chunk in bits:
+            tar_pres.write(chunk)
+        tar_pres.seek(0)
+        tar_file = tarfile.TarFile(fileobj=tar_pres)
+        tmp_dir = tempfile.TemporaryDirectory()
+        tar_file.extractall(tmp_dir.name)
+        tar_pres.close()
+        file_path = os.path.join(tmp_dir.name, file)
+    finally:
+        if kwargs is None:
+            kwargs = {}
+        return process_func(file_path, **kwargs)
+
 
 class StochSSBase():
     '''

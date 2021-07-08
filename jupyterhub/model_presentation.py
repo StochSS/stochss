@@ -16,16 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os
 import ast
 import json
 import logging
-import tarfile
-import tempfile
 
-import docker
-
-from presentation_base import StochSSBase
+from presentation_base import StochSSBase, get_presentation_from_user
 from presentation_error import StochSSAPIError, report_error
 
 from jupyterhub.handlers.base import BaseHandler
@@ -47,20 +42,15 @@ class JsonFileAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         owner = self.get_query_argument(name="owner")
         log.debug("Container id of the owner: %s", owner)
         file = self.get_query_argument(name="file")
         log.debug("Name to the file: %s", file)
         self.set_header('Content-Type', 'application/json')
-        file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
-        ext = file.split(".").pop()
         try:
-            model = get_presentation_from_user(owner=owner, file=file)
-            file_obj = file_objs[ext](model=model)
-            model = file_obj.load()
+            model = get_presentation_from_user(owner=owner, file=file, kwargs={"file": file},
+                                               process_func=process_model_presentation)
             log.debug("Contents of the json file: %s", model)
-            file_obj.print_logs(log)
             self.write(model)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
@@ -83,45 +73,39 @@ class DownModelPresentationAPIHandler(BaseHandler):
         log.debug("Container id of the owner: %s", owner)
         log.debug("Name to the file: %s", file)
         self.set_header('Content-Type', 'application/json')
-        try:
-            model = get_presentation_from_user(owner=owner, file=file)
-            ext = file.split(".").pop()
-            self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
-            log.debug("Contents of the json file: %s", model)
-            self.write(model)
-        except StochSSAPIError as load_err:
-            report_error(self, log, load_err)
+        model = get_presentation_from_user(owner=owner, file=file,
+                                           kwargs={"for_download": True},
+                                           process_func=process_model_presentation)
+        ext = file.split(".").pop()
+        self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
+        log.debug("Contents of the json file: %s", model)
+        self.write(model)
         self.finish()
 
 
-def get_presentation_from_user(owner, file):
+def process_model_presentation(path, file=None, for_download=False):
     '''
-    Get the model presentation from the users container
+    Get the model presentation data from the file.
 
     Attributes
     ----------
-    owner : str
-        Hostname of the user container
+    path : str
+        Path to the model presentation file.
     file : str
-        Name of the model presentation file
+        Name of the presentation file.
+    for_download : bool
+        Whether or not the model presentation is being downloaded.
     '''
-    client = docker.from_env()
-    containers = client.containers.list()
-    user_container = list(filter(lambda container: container.name == f"jupyter-{owner}",
-                                 containers))[0]
-    user_model_path = f'/home/jovyan/.presentations/{file}'
-    tar_mdl = tempfile.TemporaryFile()
-    bits, _ = user_container.get_archive(user_model_path)
-    for chunk in bits:
-        tar_mdl.write(chunk)
-    tar_mdl.seek(0)
-    tar_file = tarfile.TarFile(fileobj=tar_mdl)
-    tmp_dir = tempfile.TemporaryDirectory()
-    tar_file.extractall(tmp_dir.name)
-    tar_mdl.close()
-    mdl_path = os.path.join(tmp_dir.name, file)
-    with open(mdl_path, "r") as mdl_file:
-        return json.load(mdl_file)
+    with open(path, "r") as mdl_file:
+        model = json.load(mdl_file)
+    if for_download:
+        return model
+    file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
+    ext = file.split(".").pop()
+    file_obj = file_objs[ext](model=model)
+    model_pres = file_obj.load()
+    file_obj.print_logs(log)
+    return model_pres
 
 
 class StochSSModel(StochSSBase):
