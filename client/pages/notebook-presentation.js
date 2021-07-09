@@ -62,8 +62,8 @@ let NotebookPresentationPage = PageView.extend({
     }
     if (iframedoc) {
       iframedoc.write(html);
-      iframe.height = iframedoc.body.scrollHeight;
       iframedoc.close();
+      $("#notebook").height($("#notebook").contents().find('html').height());
     }
   }
 });
