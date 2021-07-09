@@ -53,10 +53,23 @@ let NotebookPresentationPage = PageView.extend({
   },
   renderSubviews: function (html) {
   	PageView.prototype.render.apply(this, arguments);
-    var $frame = $('#notebook');
-    var doc = $frame[0].contentWindow.document;
-    var $body = $('html', doc);
-    $body.html(html);;
+    var iframe = document.getElementById('notebook');
+    var iframedoc = iframe.document;
+    if (iframe.contentDocument) {
+      iframedoc = iframe.contentDocument;
+      console.log("iframe has contentDocument");
+    }else if (iframe.contentWindow) {
+      iframedoc = iframe.contentWindow.document;
+      console.log("iframe has contentWindow.document");
+    }
+    if (iframedoc) {
+      //iframedoc.open();
+      iframedoc.write(responseText);
+      iframedoc.close();
+      console.log("iframedoc is not NULL");
+    } else {
+      alert('Cannot inject dynamic contents into iframe.');
+    }
   }
 });
 
