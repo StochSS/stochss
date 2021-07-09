@@ -1040,10 +1040,10 @@ class StochSSNotebook(StochSSBase):
         if not os.path.exists(present_dir):
             os.mkdir(present_dir)
         try:
-            notebook = self.load()
+            notebook_pres = {"notebook": self.load(), "file": self.get_file()}
             safe_chars = set(string.ascii_letters + string.digits)
             hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
-            nb_str = json.dumps(notebook, sort_keys=True)
+            nb_str = json.dumps(notebook_pres['notebook'], sort_keys=True)
             file = f"{hashlib.md5(nb_str.encode('utf-8')).hexdigest()}.ipynb"
             dst = os.path.join(present_dir, file)
             if os.path.exists(dst):
@@ -1051,7 +1051,7 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSFileExistsError(message)
             links = self.__get_presentation_links(hostname, file)
             with open(dst, "w") as presentation_file:
-                json.dump(notebook, presentation_file)
+                json.dump(notebook_pres, presentation_file)
             return links
         except PermissionError as err:
             message = f"You do not have permission to publish this file: {str(err)}"
