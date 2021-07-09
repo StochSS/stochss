@@ -55,7 +55,7 @@ let NotebookPresentationPage = PageView.extend({
   	PageView.prototype.render.apply(this, arguments);
     var $frame = $('#notebook');
     var doc = $frame[0].contentWindow.document;
-    var $body = $('body', doc);
+    var $body = $('html', doc);
     $body.html(html);;
   }
 });
