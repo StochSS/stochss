@@ -53,22 +53,17 @@ let NotebookPresentationPage = PageView.extend({
   },
   renderSubviews: function (html) {
   	PageView.prototype.render.apply(this, arguments);
-    var iframe = document.getElementById('notebook');
-    var iframedoc = iframe.document;
+    let iframe = document.getElementById('notebook');
+    let iframedoc = iframe.document;
     if (iframe.contentDocument) {
       iframedoc = iframe.contentDocument;
-      console.log("iframe has contentDocument");
     }else if (iframe.contentWindow) {
       iframedoc = iframe.contentWindow.document;
-      console.log("iframe has contentWindow.document");
     }
     if (iframedoc) {
-      //iframedoc.open();
       iframedoc.write(html);
       iframedoc.close();
-      console.log("iframedoc is not NULL");
-    } else {
-      alert('Cannot inject dynamic contents into iframe.');
+      iframe.height = iframe.contentWindow.document.body.scrollHeight;
     }
   }
 });
