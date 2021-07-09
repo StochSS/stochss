@@ -942,6 +942,22 @@ module.exports = View.extend({
       }
     });
   },
+  publishNotebookPresentation: function (o) {
+    let queryStr = "?path=" + o.original._path;
+    let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        let title = body.message;
+        let linkHeaders = ["Presentation Link", "Download Link", "Open Link"];
+        let links = body.links;
+        let name = o.original._path.split('/').pop().split('.ipynb')[0];
+        $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
+      },
+      error: function (err, response, body) {
+        $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+      }
+    });
+  },
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -1373,6 +1389,17 @@ module.exports = View.extend({
           }
         }
       }
+      let notebook = {
+        "publishPresentation" : {
+          "label" : "Publish Presentation",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.publishNotebookPresentation(o);
+          }
+        }
+      }
       if (o.type === 'root'){
         return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
       }
@@ -1400,7 +1427,13 @@ module.exports = View.extend({
       if (o.text.endsWith(".zip")) {
         return $.extend(open, extractAll, download, common)
       }
-      if (o.type === 'notebook' || o.type === "other") {
+      if (o.type === 'notebook') {
+        if(app.getBasePath() === "/") {
+          return $.extend(open, download, common)
+        }
+        return $.extend(open, notebook, download, common)
+      }
+      if (o.type === 'other') {
         return $.extend(open, download, common)
       }
       if (o.type === 'sbml-model') {
