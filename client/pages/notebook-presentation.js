@@ -64,7 +64,7 @@ let NotebookPresentationPage = PageView.extend({
     }
     if (iframedoc) {
       //iframedoc.open();
-      iframedoc.write(responseText);
+      iframedoc.write(html);
       iframedoc.close();
       console.log("iframedoc is not NULL");
     } else {
