@@ -44,6 +44,7 @@ class NotebookAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
+        self.set_header('Content-Type', 'application/json')
         owner = self.get_query_argument(name="owner")
         log.debug("Container id of the owner: %s", owner)
         file = self.get_query_argument(name="file")
@@ -97,4 +98,4 @@ def process_notebook_presentation(path, as_dict=False):
     notebook = nbformat.reads(json.dumps(nb_presentation['notebook']), as_version=4)
     nb_format = {"exporter": HTMLExporter}
     html, _ = render_notebook(format=nb_format, nb=notebook)
-    return html
+    return {"file": nb_presentation['file'], "html": html}
