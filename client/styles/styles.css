@@ -554,6 +554,13 @@ span.checkbox {
   border-radius: 1.5rem;
 }
 
+.register-stochss-btn {
+  padding: 1.5rem 1.5rem;
+  font-size: 1.75rem;
+  line-height: 1;
+  border-radius: 1.5rem;
+}
+
 .user-home-btn {
   padding: 1rem 1rem;
   font-size: 1.5rem;
@@ -708,7 +715,7 @@ span.checkbox {
 }
 
 .presentation-header {
-  margin-top: 32px;
+  margin-top: 64px;
   padding: 20px 16px;
 }
 
