@@ -53,7 +53,10 @@ let NotebookPresentationPage = PageView.extend({
   },
   renderSubviews: function (html) {
   	PageView.prototype.render.apply(this, arguments);
-    $("#notebook").contents().find('body').html(html);
+    var $frame = $('#notebook');
+    var doc = $frame[0].contentWindow.document;
+    var $body = $('body', doc);
+    $body.html(html);;
   }
 });
 
