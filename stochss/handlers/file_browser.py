@@ -730,3 +730,34 @@ class UnzipFileAPIHandler(APIHandler):
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
+
+
+class NotebookPresentationAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler publishing notebook presentations.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Publish a notebook presentation.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the file: %s", path)
+        try:
+            notebook = StochSSNotebook(path=path)
+            log.info("Publishing the %s presentation", notebook.get_name())
+            links = notebook.publish_presentation()
+            resp = {"message": f"Successfully published the {notebook.get_name()} presentation",
+                    "links": links}
+            log.info(resp['message'])
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
