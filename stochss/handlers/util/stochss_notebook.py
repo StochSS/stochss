@@ -870,6 +870,15 @@ class StochSSNotebook(StochSSBase):
                          'ODE': self.model.get_best_solver_algo("ODE").name}
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
 
+    @classmethod
+    def __get_presentation_links(cls, hostname, file):
+        query_str = f"?owner={hostname}&file={file}"
+        present_link = f"https://staging.stochss.org/stochss/present-notebook{query_str}"
+        dl_link_base = "https://staging.stochss.org/stochss/notebook/download_presentation"
+        download_link = os.path.join(dl_link_base, hostname, file)
+        open_link = f"https://staging.stochss.org?open={download_link}"
+        return {"presentation": present_link, "download": download_link, "open": open_link}
+
     def create_1dps_notebook(self):
         '''Create a 1D parameter sweep jupiter notebook for a StochSS model/workflow
 
@@ -942,7 +951,7 @@ class StochSSNotebook(StochSSBase):
             species = self.s_model['species'][0]['name']
             plot_str = f"results.plot_species('{species}', animated=True, width=None, height=None)"
         else:
-            plot_str = f"results.plot_property('type', animated=True, width=None, height=None)"
+            plot_str = "results.plot_property('type', animated=True, width=None, height=None)"
         cells = self.__create_common_cells()
         if 'boundaryConditions' in self.s_model.keys():
             bc_cells = self.__create_boundary_condition_cells()
@@ -1040,12 +1049,7 @@ class StochSSNotebook(StochSSBase):
             if os.path.exists(dst):
                 message = "A presentation with this name already exists"
                 raise StochSSFileExistsError(message)
-            query_str = f"?owner={hostname}&file={file}"
-            present_link = f"https://staging.stochss.org/stochss/present-notebook{query_str}"
-            download_link = os.path.join("https://staging.stochss.org/stochss/notebook/download_presentation",
-                                         hostname, file)
-            open_link = f"https://staging.stochss.org?open={download_link}"
-            links = {"presentation": present_link, "download": download_link, "open": open_link}
+            links = self.__get_presentation_links(hostname, file)
             with open(dst, "w") as presentation_file:
                 json.dump(notebook, presentation_file)
             return links

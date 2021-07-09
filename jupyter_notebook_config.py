@@ -184,4 +184,3 @@ c.NotebookApp.allow_remote_access = True
 ## This class manages the configuration.  It's its own singleton class so that we
 #  can share these values across all objects.  It also contains some helper methods
 #   to build request arguments out of the various config options.
-

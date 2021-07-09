@@ -1,8 +1,8 @@
 # Configuration file for jupyterhub.
 
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 
 ## This is an application.
 
@@ -15,21 +15,23 @@
 ## Set the log level by value or name.
 #c.Application.log_level = 30
 
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # JupyterHub(Application) configuration
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 import os
 import os.path
 import sys
 import logging
 
-sys.path.append('/srv/jupyterhub/')
+sys.path.append('/srv/jupyterhub/') # pylint: disable=wrong-import-position
 
-# Page handlers
-from handlers import *
 # API Handlers
 from model_presentation import JsonFileAPIHandler, DownModelPresentationAPIHandler
 from notebook_presentation import NotebookAPIHandler, DownNotebookPresentationAPIHandler
+# Page handlers
+from handlers import (
+    HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler
+)
 
 ## Class for authenticating users.
 #
@@ -89,7 +91,8 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
         (r"/stochss/presentation-download/(\w+)/(.+)\/?", DownModelPresentationAPIHandler),
         (r"/stochss/api/notebook/load\/?", NotebookAPIHandler),
-        (r"/stochss/notebook/presentation-download/(\w+)/(.+)\/?", DownNotebookPresentationAPIHandler)
+        (r"/stochss/notebook/presentation-download/(\w+)/(.+)\/?",
+         DownNotebookPresentationAPIHandler)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
@@ -137,13 +140,14 @@ c.JupyterHub.services = [
         {
                 'name': 'cull-idle',
                 'admin': True,
-                'command': [sys.executable, '/srv/jupyterhub/cull_idle_servers.py', '--timeout=28800'],
+                'command': [sys.executable, '/srv/jupyterhub/cull_idle_servers.py',
+                            '--timeout=28800'],
         }
 ]
 
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # Dockerspawner configuration
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 
 c.DockerSpawner.image = os.environ['DOCKER_STOCHSS_IMAGE']
 # JupyterHub requires a single-user instance of the Notebook server, so we
@@ -151,8 +155,8 @@ c.DockerSpawner.image = os.environ['DOCKER_STOCHSS_IMAGE']
 # jupyter/docker-stacks *-notebook images as the Docker run command when
 # spawning containers.  Optionally, you can override the Docker run command
 # using the DOCKER_SPAWN_CMD environment variable.
-spawn_cmd = "start-singleuser.sh"
-c.DockerSpawner.extra_create_kwargs.update({ 'command': spawn_cmd })
+SPAWN_CMD = "start-singleuser.sh"
+c.DockerSpawner.extra_create_kwargs.update({ 'command': SPAWN_CMD })
 # Connect containers to this Docker network
 network_name = os.environ['DOCKER_NETWORK_NAME']
 c.DockerSpawner.use_internal_ip = True
@@ -180,9 +184,9 @@ c.DockerSpawner.remove_containers = True
 # For debugging arguments passed to spawned containers
 c.DockerSpawner.debug = True
 
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # Spawner(LoggingConfigurable) configuration
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 
 def get_user_cpu_count_or_fail():
     '''
@@ -193,12 +197,15 @@ def get_user_cpu_count_or_fail():
     log.info("RESERVED_CPUS environment variable is set to %s", reserve_count)
     # Round up to an even number of reserved cpus
     if reserve_count % 2 > 0:
-        log.warning("Increasing reserved cpu count by one so it's an even number. This helps allocate logical cpus to users more easily.")
+        message = "Increasing reserved cpu count by one so it's an even number."
+        message += " This helps allocate logical cpus to users more easily."
+        log.warning(message)
         reserve_count += 1
     total_cpus = os.cpu_count()
     log.info("Total cpu count as reported by os.count: %s", total_cpus)
     if reserve_count >= total_cpus:
-        e_message = "RESERVED_CPUS environment cannot be greater than or equal to the number of cpus returned by os.cpu_count()"
+        e_message = "RESERVED_CPUS environment cannot be greater than or equal to the number of"
+        e_message += " cpus returned by os.cpu_count()"
         log.error(e_message)
         raise ValueError(e_message)
     user_cpu_count = total_cpus - reserve_count
@@ -268,7 +275,9 @@ def pre_spawn_hook(spawner):
     avail_cpus = palloc[div:]
     # If <= 4 cpus available then use 1 cpu for each user instead of 2
     if not avail_cpus:
-        log.warning("The host system only has 4 logical cpus, so we'll only reserve one logical cpu per user container, instead of the normal 2")
+        message = "The host system only has 4 logical cpus, so we'll only reserve"
+        message += " one logical cpu per user container, instead of the normal 2"
+        log.warning(message)
         avail_cpus = palloc
         least_used_cpu = min(avail_cpus)
         cpu1_index = avail_cpus.index(least_used_cpu)
@@ -299,7 +308,9 @@ def post_stop_hook(spawner):
         palloc[int(cpu2_index)] -= 1
         log.warning('Reserved CPUs: %s', reserved)
         log.warning('Number of user containers using each logical core: %s', palloc)
-    except:
+    except Exception as err:
+        message = "Exception thrown due to cpuset_cpus not being set (power user)"
+        log.error("%s\n%s", message, err)
         # Exception thrown due to cpuset_cpus not being set (power user)
         pass
 
@@ -312,9 +323,11 @@ c.Spawner.post_stop_hook = post_stop_hook
 #
 #  Example uses:
 #
-#  - You can set `notebook_dir` to `/` and `default_url` to `/tree/home/{username}` to allow people to
-#    navigate the whole filesystem from their notebook server, but still start in their home directory.
-#  - Start with `/notebooks` instead of `/tree` if `default_url` points to a notebook instead of a directory.
+#  - You can set `notebook_dir` to `/` and `default_url` to `/tree/home/{username}` to allow people
+#    to navigate the whole filesystem from their notebook server, but still start in their home
+#    directory.
+#  - Start with `/notebooks` instead of `/tree` if `default_url` points to a notebook instead of a
+#    directory.
 #  - You can set this to `/lab` to have JupyterLab start by default, rather than Jupyter Notebook.
 c.Spawner.default_url = '/stochss/models'
 
@@ -399,9 +412,9 @@ c.Spawner.mem_limit = '4G'
 #  for it to be enforced.
 c.Spawner.mem_guarantee = '2G'
 
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # Authenticator(LoggingConfigurable) configuration
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 
 ## Base class for implementing an authentication provider for JupyterHub
 

@@ -23,6 +23,19 @@ import tempfile
 import docker
 
 
+def __get_presentation_from_volume(client, owner, file):
+    volumes = client.volumes.list()
+    user_volume = list(filter(lambda volume: volume.name == f"jupyterhub-user-{owner}",
+                              volumes))[0]
+    volume_mnts = {user_volume.name: {"bind": "/user_volume", "mode": "ro"},
+                   "/stochss/jupyterhub": {"bind": "/mnt/cache", "mode": "rw"}}
+    command = ['cp', os.path.join('/user_volume/.presentations', file),
+               '/mnt/cache/presentation_cache/']
+    client.containers.run('stochss-lab', command, volumes=volume_mnts)
+    file_path = os.path.join('/srv/jupyterhub/presentation_cache', file)
+    return file_path
+
+
 def get_presentation_from_user(owner, file, process_func, kwargs=None):
     '''
     Get the model presentation from the users container
@@ -44,15 +57,7 @@ def get_presentation_from_user(owner, file, process_func, kwargs=None):
         user_container = list(filter(lambda container: container.name == f"jupyter-{owner}",
                                      containers))[0]
     except IndexError:
-        volumes = client.volumes.list()
-        user_volume = list(filter(lambda volume: volume.name == f"jupyterhub-user-{owner}",
-                                  volumes))[0]
-        volume_mnts = {user_volume.name: {"bind": "/user_volume", "mode": "ro"},
-                       "/stochss/jupyterhub": {"bind": "/mnt/cache", "mode": "rw"}}
-        command = ['cp', os.path.join('/user_volume/.presentations', file),
-                   '/mnt/cache/presentation_cache/']
-        client.containers.run('stochss-lab', command, volumes=volume_mnts)
-        file_path = os.path.join('/srv/jupyterhub/presentation_cache', file)
+        file_path = __get_presentation_from_volume(client, owner, file)
     else:
         user_file_path = os.path.join('/home/jovyan/.presentations', file)
         tar_pres = tempfile.TemporaryFile()
@@ -65,10 +70,9 @@ def get_presentation_from_user(owner, file, process_func, kwargs=None):
         tar_file.extractall(tmp_dir.name)
         tar_pres.close()
         file_path = os.path.join(tmp_dir.name, file)
-    finally:
-        if kwargs is None:
-            kwargs = {}
-        return process_func(file_path, **kwargs)
+    if kwargs is None:
+        kwargs = {}
+    return process_func(file_path, **kwargs)
 
 
 class StochSSBase():
@@ -90,6 +94,20 @@ class StochSSBase():
         '''
         self.path = path
         self.logs = []
+
+
+    def log(self, level, message):
+        '''
+        Add a log to the objects internal logs
+
+        Attribute
+        ---------
+        level : str
+            Level of the log
+        message : string
+            Message to be logged
+        '''
+        self.logs.append({"level":level, "message":message})
 
 
     def print_logs(self, log):
