@@ -1,27 +1,55 @@
 section.page
 
-    div#model-presentation.container
+  nav.navbar.navbar-expand-md.p-1.navbar-light.bg-light.fixed-top
+    a.navbar-brand(href="/hub/spawn")
+      img(style="height: 38px;margin-left: -1.2em;" src="static/stochss-logo.png")
 
-      div.presentation-header
+    button.navbar-toggler(type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation")
+      span.navbar-toggler-icon
 
-        h1=this.model.name
+    div#navbar.collapse.navbar-collapse.justify-content-end(role="navigation")
+      ul.navbar-nav.float-right
+        li.nav-item: a.nav-link(href="http://www.stochss.org", target="_blank")
+          | About
 
-      div(data-hook="model-species")
+        li.nav-item: a.nav-link(href="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform?embedded=true", target="_blank")
+          | Register
 
-      div(data-hook="model-parameters")
+        li.nav-item: a.nav-link(href="http://www.stochss.org/documentation", target="_blank")
+          | Documentation
 
-      div(data-hook="model-reactions")
+        li.nav-item: a.nav-link(href="https://forms.gle/hpGJ1ruxR7wTT43h8" target="_blank")
+          | Submit Feedback
 
-      div(data-hook="model-events")
+        li.nav-item
+          div.dropdown
+            button.dropdown-toggle.nav-item.nav-link.dropbtn Contact
+            div.dropdown-content
+              a.nav-link(href="https://gitter.im/StochSS/community#", target="_blank") Community Chat
+              a.nav-link(href="https://github.com/StochSS/stochss/issues/new", target="_blank") Report Issue
 
-      div(data-hook="model-rules")
+  div#model-presentation.container
 
-      div(data-hook="model-sbml-components")
+    div.presentation-header
 
-      div.card.card-body="System Volume: "+this.model.volume
+      h1=this.model.name
 
-      div.mt-3
+    div(data-hook="model-species")
 
-        a.btn.btn-outline-secondary.box-shadow.text-break.mr-3(href=this.openLink role="button") Open in StochSS
+    div(data-hook="model-parameters")
 
-        a.btn.btn-outline-secondary.box-shadow.text-break(href=this.downloadLink role="button") Download (.mdl)
+    div(data-hook="model-reactions")
+
+    div(data-hook="model-events")
+
+    div(data-hook="model-rules")
+
+    div(data-hook="model-sbml-components")
+
+    div.card.card-body="System Volume: "+this.model.volume
+
+    div.mt-3
+
+      a.btn.btn-outline-secondary.box-shadow.text-break.mr-3(href=this.openLink role="button") Open in StochSS
+
+      a.btn.btn-outline-secondary.box-shadow.text-break(href=this.downloadLink role="button") Download (.mdl)

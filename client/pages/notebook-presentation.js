@@ -35,15 +35,22 @@ let NotebookPresentationPage = PageView.extend({
   	let urlParams = new URLSearchParams(window.location.search);
     let owner = urlParams.get("owner");
     let file = urlParams.get("file");
-    this.name = file.split('/').pop().split('.ipynb')[0]
+    let self = this;
     let queryStr = "?owner=" + owner + "&file=" + file;
-    this.loadLink = "https://staging.stochss.org/stochss/api/notebook/load" + queryStr;
+    let endpoint = "api/notebook/load" + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.name = body.file.split('/').pop().split('.ipynb')[0];
+        self.renderSubviews(body.html);
+      }
+    });
     let downloadStart = "https://staging.stochss.org/stochss/notebook/download_presentation";
     this.downloadLink = path.join(downloadStart, owner, file);
     this.openLink = "open.stochss.org?open=" + this.downloadLink;
   },
-  render: function (attrs, options) {
+  renderSubviews: function (html) {
   	PageView.prototype.render.apply(this, arguments);
+    $("#notebook").contents().find('body').html(html);
   }
 });
 
