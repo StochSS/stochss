@@ -36,7 +36,7 @@ section.page
 
     div.card.card-body
 
-      iframe(id="notebook" width="100%" height="100%" frameborder="0")
+      iframe(id="notebook" width="100%" height="100%" frameborder="0" onload="this.height=this.contentWindow.document.body.scrollHeight;")
 
     div.mt-3
 
