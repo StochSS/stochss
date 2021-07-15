@@ -16,18 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 let _ = require('underscore');
 //support files
 let app = require('../app');
-var tests = require('./tests');
-var modals = require('../modals');
+let tests = require('./tests');
+let modals = require('../modals');
 //views
-var View = require('ampersand-view');
-var InputView = require('./input');
-var SelectView = require('ampersand-select-view');
+let InputView = require('./input');
+let View = require('ampersand-view');
+let SelectView = require('ampersand-select-view');
 //templates
-var editTemplate = require('../templates/includes/editRule.pug');
+let editTemplate = require('../templates/includes/editRule.pug');
 let viewTemplate = require('../templates/includes/viewRules.pug');
 
 module.exports = View.extend({
@@ -35,7 +35,7 @@ module.exports = View.extend({
     'change [data-hook=rule-type]' : 'selectRuleType',
     'change [data-hook=rule-variable]' : 'selectRuleVariable',
     'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
-    'click [data-hook=remove]' : 'removeRule',
+    'click [data-hook=remove]' : 'removeRule'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -45,29 +45,20 @@ module.exports = View.extend({
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
     if(!this.viewMode){
-      this.model.on('change', _.bind(this.updateViewer, this))
+      this.model.on('change', _.bind(this.updateViewer, this));
     }
-    $(document).on('shown.bs.modal', function (e) {
-      $('[autofocus]', e.target).focus();
-    });
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
-    });
+    app.documentSetup();
     if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+      $(this.queryByHook('edit-annotation-btn')).text('Add');
     }
-  },
-  update: function (e) {
-  },
-  updateValid: function () {
   },
   editAnnotation: function () {
-    var self = this;
-    var name = this.model.name;
-    var annotation = this.model.annotation;
     if(document.querySelector('#ruleAnnotationModal')) {
       document.querySelector('#ruleAnnotationModal').remove();
     }
+    let self = this;
+    let name = this.model.name;
+    let annotation = this.model.annotation;
     let modal = $(modals.annotationModalHtml("rule", name, annotation)).modal();
     let okBtn = document.querySelector('#ruleAnnotationModal .ok-model-btn');
     let input = document.querySelector('#ruleAnnotationModal #ruleAnnotationInput');
@@ -84,26 +75,29 @@ module.exports = View.extend({
     });
   },
   getOptions: function () {
-    var species = this.model.collection.parent.species;
-    var parameters = this.model.collection.parent.parameters;
-    var specs = species.map(function (specie) {
+    let species = this.model.collection.parent.species;
+    let parameters = this.model.collection.parent.parameters;
+    let specs = species.map(function (specie) {
       return [specie.compID, specie.name];
     });
-    var params = parameters.map(function (parameter) {
+    let params = parameters.map(function (parameter) {
       return [parameter.compID, parameter.name];
     });
-    let options = [{groupName: "Variables", options: specs},
-                   {groupName: "Parameters", options: params}];
+    let options = [{groupName: Boolean(specs) ? "Variables" : "Variables (empty)", options: specs},
+                   {groupName: Boolean(params) ? "Parameters" : "Parameters (empty)", options: params}];
     return options;
+  },
+  removeRule: function () {
+    this.model.collection.removeRule(this.model);
   },
   selectRuleType: function (e) {
     this.model.type = e.target.value;
   },
   selectRuleVariable: function (e) {
-    var species = this.model.collection.parent.species;
-    var parameters = this.model.collection.parent.parameters;
-    var compID = Number(e.target.value);
-    var ruleVar = species.filter(function (specie) {
+    let species = this.model.collection.parent.species;
+    let parameters = this.model.collection.parent.parameters;
+    let compID = Number(e.target.value);
+    let ruleVar = species.filter(function (specie) {
       if(specie.compID === compID) {
         return specie;
       }
@@ -117,9 +111,8 @@ module.exports = View.extend({
     }
     this.model.variable = ruleVar[0];
   },
-  removeRule: function () {
-    this.model.collection.removeRule(this.model);
-  },
+  update: function (e) {},
+  updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewRules();
   },
@@ -131,11 +124,10 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'rule-name',
-          label: '',
           tests: tests.nameTests,
           modelKey: 'name',
           valueType: 'string',
-          value: this.model.name,
+          value: this.model.name
         });
       }
     },
@@ -148,7 +140,7 @@ module.exports = View.extend({
           required: true,
           idAttributes: 'cid',
           options: options,
-          value: this.model.type,
+          value: this.model.type
         });
       }
     },
@@ -161,7 +153,7 @@ module.exports = View.extend({
           required: true,
           idAttributes: 'cid',
           groupOptions: options,
-          value: this.model.variable.compID,
+          value: this.model.variable.compID
         });
       }
     },
