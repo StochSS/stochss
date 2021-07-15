@@ -90,8 +90,8 @@ module.exports = View.extend({
       if (this.collection.length) {
         this.setSelectedReaction(this.collection.at(0));
         this.collection.trigger("select", this.selectedReaction);
+        this.collection.trigger("change");
       }
-      this.collection.trigger("change");
       this.toggleAddReactionButton();
       if(this.collection.parent.parameters.length > 0){
          $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
