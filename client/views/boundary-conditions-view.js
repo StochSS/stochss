@@ -28,7 +28,7 @@ let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let BoundaryConditionView = require('./boundary-condition-view');
 //templates
-let template = require('../templates/includes/boundaryConditionsEditor.pug');
+let template = require('../templates/includes/boundaryConditionsView.pug');
 
 module.exports = View.extend({
   template: template,
