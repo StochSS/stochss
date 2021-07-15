@@ -33,6 +33,7 @@ let DomainViewer = require('../views/domain-viewer');
 let ReactionsView = require('../views/reactions-view');
 let ParametersView = require('../views/parameters-view');
 let InitialConditionsView = require('../views/initial-conditions-view');
+let BoundaryConditionsView = require('../views/boundary-conditions-view');
 //templates
 let template = require('../templates/includes/modelView.pug');
 
@@ -48,7 +49,7 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     let modeMap = {continuous: "Concentration", discrete: "Population", dynamic: "Hybrid Concentration/Population"};
-    this.modelMode = modeMap[this.model.defaultMode]
+    this.modelMode = modeMap[this.model.defaultMode];
   },
   render: function(attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -285,6 +286,16 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new RulesView({
           collection: this.model.rules,
+          readOnly: this.readOnly
+        });
+      }
+    },
+    boundaryConditionsView: {
+      waitFor: "model.is_spatial",
+      hook: "boundary-conditions-view-container",
+      prepareView: function (el) {
+        return new BoundaryConditionsView({
+          collection: this.model.boundaryConditions,
           readOnly: this.readOnly
         });
       }

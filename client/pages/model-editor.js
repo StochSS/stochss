@@ -33,7 +33,6 @@ var SBMLComponentView = require('../views/sbml-component-editor');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 var QuickviewDomainTypes = require('../views/quickview-domain-types');
-let BoundaryConditionsView = require('../views/boundary-conditions-editor');
 //models
 var Model = require('../models/model');
 var Domain = require('../models/domain');
@@ -159,7 +158,6 @@ let ModelEditor = PageView.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("system-volume-container")).css("display", "none");
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
-      this.renderBoundaryConditionsView();
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
     }else {
@@ -181,15 +179,6 @@ let ModelEditor = PageView.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
-  },
-  renderBoundaryConditionsView: function() {
-    if(this.boundaryConditionsView) {
-      this.boundaryConditionsView.remove();
-    }
-    this.boundaryConditionsView = new BoundaryConditionsView({
-      collection: this.model.boundaryConditions
-    });
-    app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
   },
   renderSystemVolumeView: function () {
     if(this.systemVolumeView) {
