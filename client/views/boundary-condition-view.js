@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
+let app = require('../app');
 let modals = require('../modals');
 //views
 let View = require('ampersand-view');
@@ -33,19 +34,14 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
   	View.prototype.initialize.apply(this, arguments);
-  	this.viewMode = attrs.viewMode ? attrs.viewMode : false
+  	this.viewMode = attrs.viewMode ? attrs.viewMode : false;
   },
   render: function (attrs, options) {
   	this.template = this.viewMode ? viewTemplate : editTemplate;
   	View.prototype.render.apply(this, arguments);
-  	$(document).on('shown.bs.modal', function (e) {
-      $('[autofocus]', e.target).focus();
-    });
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
-    });
+  	app.documentSetup();
     if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+      $(this.queryByHook('edit-annotation-btn')).text('Add');
     }
   },
   editAnnotation: function () {
