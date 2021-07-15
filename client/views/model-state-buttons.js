@@ -359,9 +359,9 @@ module.exports = View.extend({
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let ruleSection = $(this.rulesEditor.queryByHook("rules-list-container"))
+    let ruleSection = $(this.parent.modelView.rulesView.queryByHook("rules-list-container"))
     if(!ruleSection.hasClass("show")) {
-      let ruleCollapseBtn = $(this.parent.rulesEditor.queryByHook("collapse"))
+      let ruleCollapseBtn = $(this.parent.modelView.rulesView.queryByHook("collapse"))
       ruleCollapseBtn.click()
       ruleCollapseBtn.html('-')
     }

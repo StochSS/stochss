@@ -22,9 +22,9 @@ let app = require('../app');
 var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
-var RuleView = require('./edit-rule');
+var RuleView = require('./rule-view');
 //templates
-var template = require('../templates/includes/ruleEditor.pug');
+var template = require('../templates/includes/rulesView.pug');
 
 module.exports = View.extend({
   template: template,

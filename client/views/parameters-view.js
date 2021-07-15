@@ -57,7 +57,7 @@ module.exports = View.extend({
           rule.variable = parameter;
         }
       });
-      self.parent.renderRulesView();
+      self.parent.rulesView.renderEditRules();
     });
   },
   render: function () {

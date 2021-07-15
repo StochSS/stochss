@@ -29,7 +29,6 @@ var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
 var InputView = require('../views/input');
 var ParticleViewer = require('../views/view-particle');
-var RulesEditorView = require('../views/rules-editor');
 var SBMLComponentView = require('../views/sbml-component-editor');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
@@ -164,7 +163,6 @@ let ModelEditor = PageView.extend({
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
     }else {
-      this.renderRulesView();
       if(this.model.functionDefinitions.length) {
         var sbmlComponentView = new SBMLComponentView({
           functionDefinitions: this.model.functionDefinitions
@@ -192,13 +190,6 @@ let ModelEditor = PageView.extend({
       collection: this.model.boundaryConditions
     });
     app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
-  },
-  renderRulesView: function () {
-    if(this.rulesEditor){
-      this.rulesEditor.remove();
-    }
-    this.rulesEditor = new RulesEditorView({collection: this.model.rules});
-    app.registerRenderSubview(this, this.rulesEditor, 'rules-editor-container');
   },
   renderSystemVolumeView: function () {
     if(this.systemVolumeView) {

@@ -77,7 +77,7 @@ module.exports = View.extend({
         }
       });
       if(isNameUpdate) {
-        self.parent.renderRulesView();
+        self.parent.rulesView.renderEditRules();
       }
     });
   },
