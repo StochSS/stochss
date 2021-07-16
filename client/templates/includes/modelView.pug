@@ -78,3 +78,42 @@ div#model-view
         div(data-hook="boundary-conditions-view-container")
 
         div(data-hook="sbml-components-view-container")
+
+        div.card.collapse.show(data-hook="system-volume-container")
+
+        div.card-header.pb-0
+
+          h3.inline.mr-3 System Volume
+
+          div.inline.mr-3
+
+            ul.nav.nav-tabs.card-header-tabs(id="volume-tabs")
+
+              li.nav-item
+
+                a.nav-link.tab.active(data-hook="system-volume-edit-tab" data-toggle="tab" href="#edit-system-volume") Edit
+
+              li.nav-item
+
+                a.nav-link.tab(data-hook="system-volume-view-tab" data-toggle="tab" href="#view-system-volume") View
+
+          button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
+
+        div.card-body
+
+          p.mb-0
+            | System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.  In most cases this should not be changed.  please review your model requirements carefully before changing this property.
+
+          div.collapse.tab-content(id="collapse-system-volume" data-hook="system-volume-section")
+
+            div.tab-pane.active(id="edit-system-volume" data-hook="edit-system-volume")
+
+              hr
+
+              div(data-hook="edit-volume")
+
+            div.tab-pane(id="view-system-volume" data-hook="view-system-volume")
+
+              hr
+
+              div(data-hook="view-volume")

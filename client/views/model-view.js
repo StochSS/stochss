@@ -22,10 +22,12 @@ let _ = require('underscore');
 //support files
 let app = require('../app');
 let modals = require('../modals');
+let tests = require('../views/tests');
 //models
 let Domain = require('../models/domain');
 //views
 let View = require('ampersand-view');
+let InputView = require('../views/input');
 let RulesView = require('../views/rules-view');
 let EventsView = require('../views/events-view');
 let SpeciesView = require('../views/species-view');
@@ -44,6 +46,7 @@ module.exports = View.extend({
     'change [data-hook=all-continuous]' : 'setDefaultMode',
     'change [data-hook=all-discrete]' : 'setDefaultMode',
     'change [data-hook=advanced]' : 'setDefaultMode',
+    'change [data-hook=edit-volume]' : 'updateVolumeViewer',
     'click [data-hook=collapse-mv-advanced-section]' : 'changeCollapseButtonText'
   },
   initialize: function(attrs, options) {
@@ -65,8 +68,10 @@ module.exports = View.extend({
     this.renderRulesView();
     this.renderBoundaryConditionsView();
     this.renderSbmlComponentView();
+    this.renderSystemVolumeView();
     if(this.readOnly) {
       this.setReadOnlyMode("model-mode");
+      this.setReadOnlyMode("system-volume")
     }else {
       if(this.model.defaultMode === "" && !this.model.is_spatial){
         this.getInitialDefaultMode();
@@ -75,6 +80,7 @@ module.exports = View.extend({
         $(this.queryByHook(dataHooks[this.model.defaultMode])).prop('checked', true);
         if(this.model.is_spatial) {
           $(this.queryByHook("advanced-model-mode")).css("display", "none");
+          $(this.queryByHook("system-volume-container")).css("display", "none");
         }
       }
       this.model.reactions.on("change", function (reactions) {
@@ -239,6 +245,26 @@ module.exports = View.extend({
     let hook = "species-view-container";
     app.registerRenderSubview(this, this.speciesView, hook);
   },
+  renderSystemVolumeView: function () {
+    if(this.systemVolumeView) {
+      this.systemVolumeView.remove();
+    }
+    this.systemVolumeView = new InputView ({
+      parent: this,
+      required: true,
+      name: 'system-volume',
+      label: 'Volume: ',
+      tests: tests.valueTests,
+      modelKey: 'volume',
+      valueType: 'number',
+      value: this.model.volume,
+    });
+    app.registerRenderSubview(this, this.systemVolumeView, 'edit-volume');
+    if(this.model.defaultMode === "continuous") {
+      $(this.queryByHook("system-volume-container")).collapse("hide")
+    }
+    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
+  },
   setAllSpeciesModes: function (prevMode) {
     let self = this;
     this.model.species.forEach(function (specie) { 
@@ -257,7 +283,7 @@ module.exports = View.extend({
     this.model.defaultMode = e.target.dataset.name;
     this.speciesView.defaultMode = e.target.dataset.name;
     this.setAllSpeciesModes(prevMode);
-    this.parent.toggleVolumeContainer();
+    this.toggleVolumeContainer();
   },
   setInitialDefaultMode: function (modal, mode) {
     var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'};
@@ -266,7 +292,7 @@ module.exports = View.extend({
     this.model.defaultMode = mode;
     this.speciesView.defaultMode = mode;
     this.setAllSpeciesModes();
-    this.parent.toggleVolumeContainer();
+    this.toggleVolumeContainer();
   },
   setReadOnlyMode: function (component) {
     $(this.queryByHook(component + '-edit-tab')).addClass("disabled");
@@ -278,6 +304,16 @@ module.exports = View.extend({
     $(this.queryByHook('edit-' + component)).removeClass('active');
     $(this.queryByHook('view-' + component)).addClass('active');
   },
+  toggleVolumeContainer: function () {
+    if(!this.model.is_spatial) {
+      if(this.model.defaultMode === "continuous") {
+        $(this.queryByHook("system-volume-container")).collapse("hide");
+      }else{
+        $(this.queryByHook("system-volume-container")).collapse("show");
+      }
+    }
+  },
+  update: function () {},
   updateParametersInUse: function () {
     var parameters = this.model.parameters;
     var reactions = this.model.reactions;
@@ -335,7 +371,8 @@ module.exports = View.extend({
       updateInUseForOther(rule.variable);
     });
   },
-  // subviews: {
-    
-  // }
+  updateValid: function () {},
+  updateVolumeViewer: function (e) {
+    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume);
+  }
 });

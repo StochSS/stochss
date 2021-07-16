@@ -22,12 +22,10 @@ let path = require('path');
 //support files
 var app = require('../app');
 var modals = require('../modals');
-var tests = require('../views/tests');
 let Tooltips = require("../tooltips");
 //views
 var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
-var InputView = require('../views/input');
 var ParticleViewer = require('../views/view-particle');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
@@ -46,7 +44,6 @@ let ModelEditor = PageView.extend({
     'click [data-hook=edit-model-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
-    'change [data-hook=edit-volume]' : 'updateVolumeViewer',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
     'click [data-hook=toggle-preview-domain]' : 'toggleDomainPlot',
@@ -92,10 +89,6 @@ let ModelEditor = PageView.extend({
         window.location.reload()
       }
     });
-  },
-  update: function () {
-  },
-  updateValid: function () {
   },
   getFileName: function (file) {
     if(file.endsWith('/')) {
@@ -155,12 +148,9 @@ let ModelEditor = PageView.extend({
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
     app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
-      $(this.queryByHook("system-volume-container")).css("display", "none");
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
-    }else {
-      this.renderSystemVolumeView();
     }
     this.model.autoSave();
     $(function () {
@@ -172,26 +162,6 @@ let ModelEditor = PageView.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
-  },
-  renderSystemVolumeView: function () {
-    if(this.systemVolumeView) {
-      this.systemVolumeView.remove()
-    }
-    this.systemVolumeView = new InputView ({
-      parent: this,
-      required: true,
-      name: 'system-volume',
-      label: 'Volume: ',
-      tests: tests.valueTests,
-      modelKey: 'volume',
-      valueType: 'number',
-      value: this.model.volume,
-    });
-    app.registerRenderSubview(this, this.systemVolumeView, 'edit-volume')
-    if(this.model.defaultMode === "continuous") {
-      $(this.queryByHook("system-volume-container")).collapse("hide")
-    }
-    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -245,18 +215,6 @@ let ModelEditor = PageView.extend({
   clickDownloadPNGButton: function (e) {
     let pngButton = $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
-  },
-  toggleVolumeContainer: function () {
-    if(!this.model.is_spatial) {
-      if(this.model.defaultMode === "continuous") {
-        $(this.queryByHook("system-volume-container")).collapse("hide");
-      }else{
-        $(this.queryByHook("system-volume-container")).collapse("show");
-      }
-    }
-  },
-  updateVolumeViewer: function (e) {
-    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
   }
 });
 
