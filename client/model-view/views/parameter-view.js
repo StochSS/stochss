@@ -19,15 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 let _ = require('underscore');
 //support files
-let app = require('../app');
-let tests = require('./tests');
-let modals = require('../modals')
+let app = require('../../app');
+let tests = require('../../views/tests');
+let modals = require('../../modals');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 //templates
-let editTemplate = require('../templates/includes/editParameter.pug');
-let viewTemplate = require('../templates/includes/viewParameters.pug');
+let editTemplate = require('../templates/editParameter.pug');
+let viewTemplate = require('../templates/viewParameter.pug');
 
 module.exports = View.extend({
   bindings: {
