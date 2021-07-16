@@ -22,9 +22,9 @@ let app = require('../app');
 var Tooltips = require('../tooltips');
 //views
 var View = require('ampersand-view');
-var EditFunctionDefinition = require('./edit-function-definition');
+var EditFunctionDefinition = require('./function-definition-view');
 //templates
-var template = require('../templates/includes/sbmlComponentEditor.pug');
+var template = require('../templates/includes/sbmlComponentsView.pug');
 
 module.exports = View.extend({
   template: template,
