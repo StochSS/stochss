@@ -16,15 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 //support files
 let app = require('../app');
-var Tooltips = require('../tooltips');
+let Tooltips = require('../tooltips');
 //views
-var View = require('ampersand-view');
-var EditFunctionDefinition = require('./function-definition-view');
+let View = require('ampersand-view');
+let EditFunctionDefinition = require('./function-definition-view');
 //templates
-var template = require('../templates/includes/sbmlComponentsView.pug');
+let template = require('../templates/includes/sbmlComponentsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -54,6 +54,9 @@ module.exports = View.extend({
     }
     this.renderViewFunctionDefinitionView();
   },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
   renderEditFunctionDefinitionView: function () {
     if(this.editFunctionDefinitionView){
       this.editFunctionDefinitionView.remove();
@@ -63,12 +66,7 @@ module.exports = View.extend({
       EditFunctionDefinition,
       this.queryByHook('edit-function-definition-list')
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
   },
   renderViewFunctionDefinitionView: function () {
     if(this.viewFunctionDefinitionView) {
@@ -87,14 +85,6 @@ module.exports = View.extend({
       this.queryByHook('view-function-definition-list'),
       options
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
-  },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
-  },
+    app.tooltipSetup();
+  }
 });
