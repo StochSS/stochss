@@ -20,15 +20,15 @@ let $ = require('jquery');
 let katex = require('katex');
 let _ = require('underscore');
 //support files
-let app = require('../app');
-let tests = require('./tests');
-let modals = require('../modals');
+let app = require('../../app');
+let tests = require('../../views/tests');
+let modals = require('../../modals');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 //templates
-let viewTemplate = require('../templates/includes/viewReactions.pug');
-let editTemplate = require('../templates/includes/reactionListing.pug');
+let viewTemplate = require('../templates/viewReactions.pug');
+let editTemplate = require('../templates/reactionListing.pug');
 
 module.exports = View.extend({
   bindings: {

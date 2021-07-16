@@ -32,13 +32,13 @@ let RulesView = require('../views/rules-view');
 let EventsView = require('../views/events-view');
 let SpeciesView = require('./views/species-view');
 let DomainViewer = require('../views/domain-viewer');
-let ReactionsView = require('../views/reactions-view');
+let ReactionsView = require('./views/reactions-view');
 let ParametersView = require('../views/parameters-view');
 let SBMLComponentsView = require('../views/sbml-components-view');
 let InitialConditionsView = require('./views/initial-conditions-view');
 let BoundaryConditionsView = require('../views/boundary-conditions-view');
 //templates
-let template = require('../templates/includes/modelView.pug');
+let template = require('./modelView.pug');
 
 module.exports = View.extend({
   template: template,

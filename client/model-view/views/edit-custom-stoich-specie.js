@@ -20,7 +20,7 @@ var $ = require('jquery');
 //views
 var SelectView = require('ampersand-select-view');
 //templates
-var template = require('../templates/includes/editCustomStoichSpecie.pug');
+var template = require('../templates/editCustomStoichSpecie.pug');
 
 module.exports = SelectView.extend({
   // SelectView expects a string template, so pre-render it

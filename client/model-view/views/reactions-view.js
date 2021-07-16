@@ -20,18 +20,18 @@ let $ = require('jquery');
 let katex = require('katex');
 let _ = require('underscore');
 //support files
-let app = require('../app');
-let Tooltips = require('../tooltips');
-let ReactionTypes = require('../reaction-types');
+let app = require('../../app');
+let Tooltips = require('../../tooltips');
+let ReactionTypes = require('../../reaction-types');
 //models
-let StoichSpeciesCollection = require('../models/stoich-species');
+let StoichSpeciesCollection = require('../../models/stoich-species');
 //views
 let View = require('ampersand-view');
 let ViewSwitcher = require('ampersand-view-switcher');
 let ReactionListingView = require('./reaction-listing');
 let ReactionDetailsView = require('./reaction-details');
 //templates
-let template = require('../templates/includes/reactionsView.pug');
+let template = require('../templates/reactionsView.pug');
 
 module.exports = View.extend({
   template: template,

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let View = require('ampersand-view');
 let TypesView = require('./component-types');
 //templates
-let template = require('../templates/includes/reactionTypes.pug');
+let template = require('../templates/reactionTypes.pug');
 
 module.exports = View.extend({
   template: template,

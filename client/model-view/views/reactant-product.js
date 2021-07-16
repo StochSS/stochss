@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //models
-let StoichSpecie = require('../models/stoich-specie');
+let StoichSpecie = require('../../models/stoich-specie');
 //views
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let EditStoichSpecieView = require('./edit-stoich-specie');
 let EditCustomStoichSpecieView = require('./edit-custom-stoich-specie');
 //templates
-let template = require('../templates/includes/reactantProduct.pug');
+let template = require('../templates/reactantProduct.pug');
 
 module.exports = View.extend({
   template: template,
