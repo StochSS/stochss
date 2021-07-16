@@ -25,7 +25,7 @@ var modals = require('../modals');
 let Tooltips = require("../tooltips");
 //views
 var PageView = require('../pages/base');
-let ModelView = require('../views/model-view');
+let ModelView = require('../model-view/model-view');
 var ParticleViewer = require('../views/view-particle');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');

@@ -20,8 +20,8 @@ let $ = require("jquery");
 //views
 var View = require('ampersand-view');
 //templates
-var specTypeTemplate = require('../templates/includes/speciesTypeTemplate.pug');
-var reacTypeTemplate = require('../templates/includes/reactionTypeTemplate.pug');
+var specTypeTemplate = require('../templates/speciesTypeTemplate.pug');
+var reacTypeTemplate = require('../templates/reactionTypeTemplate.pug');
 
 module.exports = View.extend({
   events: {

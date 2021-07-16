@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
-let Tooltips = require('../tooltips');
+let app = require('../../app');
+let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
 let SpecieView = require('./specie-view');
 //templates
-let speciesTemplate = require('../templates/includes/speciesView.pug');
-let spatialSpeciesTemplate = require('../templates/includes/spatialSpeciesView.pug');
+let speciesTemplate = require('../templates/speciesView.pug');
+let spatialSpeciesTemplate = require('../templates/spatialSpeciesView.pug');
 
 module.exports = View.extend({
   events: {

@@ -19,19 +19,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 let _ = require('underscore');
 //support files
-let app = require('../app');
-let tests = require('./tests');
-let modals = require('../modals');
+let app = require('../../app');
+let tests = require('../../views/tests');
+let modals = require('../../modals');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 let TypesView = require('./component-types');
 let SelectView = require('ampersand-select-view');
 //templates
-let editTemplate = require('../templates/includes/editSpecies.pug');
-let editSpatialTemplate = require('../templates/includes/editSpatialSpecies.pug');
-let viewTemplate = require('../templates/includes/viewSpecies.pug');
-let viewSpatialTemplate = require('../templates/includes/viewSpatialSpecies.pug');
+let editTemplate = require('../templates/editSpecies.pug');
+let editSpatialTemplate = require('../templates/editSpatialSpecies.pug');
+let viewTemplate = require('../templates/viewSpecies.pug');
+let viewSpatialTemplate = require('../templates/viewSpatialSpecies.pug');
 
 module.exports = View.extend({
   bindings: {
