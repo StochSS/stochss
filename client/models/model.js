@@ -84,12 +84,6 @@ module.exports = Model.extend({
         let queryStr = "?path=" + this.directory;
         return path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
       }
-    },
-    not_spatial: {
-      deps: ["collection"],
-      fn: function () {
-        return !this.is_spatial
-      }
     }
   },
   initialize: function (attrs, options){

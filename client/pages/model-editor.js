@@ -29,7 +29,6 @@ var PageView = require('../pages/base');
 let ModelView = require('../views/model-view');
 var InputView = require('../views/input');
 var ParticleViewer = require('../views/view-particle');
-var SBMLComponentView = require('../views/sbml-component-editor');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 var QuickviewDomainTypes = require('../views/quickview-domain-types');
@@ -161,12 +160,6 @@ let ModelEditor = PageView.extend({
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
     }else {
-      if(this.model.functionDefinitions.length) {
-        var sbmlComponentView = new SBMLComponentView({
-          functionDefinitions: this.model.functionDefinitions
-        });
-        app.registerRenderSubview(this, sbmlComponentView, 'sbml-component-container');
-      }
       this.renderSystemVolumeView();
     }
     this.model.autoSave();

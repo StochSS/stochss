@@ -32,6 +32,7 @@ let SpeciesView = require('../views/species-view');
 let DomainViewer = require('../views/domain-viewer');
 let ReactionsView = require('../views/reactions-view');
 let ParametersView = require('../views/parameters-view');
+let SBMLComponentsView = require('../views/sbml-components-view');
 let InitialConditionsView = require('../views/initial-conditions-view');
 let BoundaryConditionsView = require('../views/boundary-conditions-view');
 //templates
@@ -53,6 +54,17 @@ module.exports = View.extend({
   },
   render: function(attrs, options) {
     View.prototype.render.apply(this, arguments);
+    this.updateSpeciesInUse();
+    this.updateParametersInUse();
+    this.renderDomainViewer();
+    this.renderSpeciesView();
+    this.renderInitialConditionsView();
+    this.renderParametersView();
+    this.renderReactionsView();
+    this.renderEventsView();
+    this.renderRulesView();
+    this.renderBoundaryConditionsView();
+    this.renderSbmlComponentView();
     if(this.readOnly) {
       this.setReadOnlyMode("model-mode");
     }else {
@@ -78,9 +90,6 @@ module.exports = View.extend({
         this.updateParametersInUse();
       }, this);
     }
-    if(this.model.is_spatial) {
-      this.renderDomainViewer();
-    }
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -104,7 +113,20 @@ module.exports = View.extend({
       self.setInitialDefaultMode(modal, "dynamic");
     });
   },
+  renderBoundaryConditionsView: function () {
+    if(!this.model.is_spatial) { return }
+    if(this.boundaryConditionsView) {
+      this.boundaryConditionsView.remove();
+    }
+    this.boundaryConditionsView = new BoundaryConditionsView({
+      collection: this.model.boundaryConditions,
+      readOnly: this.readOnly
+    });
+    let hook = "boundary-conditions-view-container";
+    app.registerRenderSubview(this, this.boundaryConditionsView, hook);
+  },
   renderDomainViewer: function(domainPath=null) {
+    if(!this.model.is_spatial) { return }
     if(this.domainViewer) {
       this.domainViewer.remove();
     }
@@ -133,6 +155,89 @@ module.exports = View.extend({
       });
       app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
     }
+  },
+  renderEventsView: function () {
+    if(this.model.is_spatial) { return }
+    if(this.eventsView) {
+      this.eventsView.remove();
+    }
+    this.eventsView = new EventsView({
+      collection: this.model.eventsCollection,
+      readOnly: this.readOnly
+    });
+    let hook = "events-view-container";
+    app.registerRenderSubview(this, this.eventsView, hook);
+  },
+  renderInitialConditionsView: function () {
+    if(!this.model.is_spatial) { return }
+    if(this.initialConditionsView) {
+      this.initialConditionsView.remove();
+    }
+    this.initialConditionsView = new InitialConditionsView({
+      collection: this.model.initialConditions,
+      readOnly: this.readOnly
+    });
+    let hook = "initial-conditions-view-container";
+    app.registerRenderSubview(this, this.initialConditionsView, hook);
+  },
+  renderParametersView: function () {
+    if(this.parametersView) {
+      this.parametersView.remove();
+    }
+    this.parametersView = new ParametersView({
+      collection: this.model.parameters,
+      readOnly: this.readOnly
+    });
+    let hook = "parameters-view-container";
+    app.registerRenderSubview(this, this.parametersView, hook);
+  },
+  renderReactionsView: function () {
+    if(this.reactionsView) {
+      this.reactionsView.remove();
+    }
+    this.reactionsView = new ReactionsView({
+      collection: this.model.reactions,
+      readOnly: this.readOnly
+    });
+    let hook = "reactions-view-container";
+    app.registerRenderSubview(this, this.reactionsView, hook);
+  },
+  renderRulesView: function () {
+    if(this.model.is_spatial) { return }
+    if(this.rulesView) {
+      this.rulesView.remove();
+    }
+    this.rulesView = new RulesView({
+      collection: this.model.rules,
+      readOnly: this.readOnly
+    });
+    let hook = "rules-view-container";
+    app.registerRenderSubview(this, this.rulesView, hook);
+  },
+  renderSbmlComponentView: function () {
+    if(this.model.is_spatial || !this.model.functionDefinitions.length) { return }
+    if(this.sbmlComponentView) {
+      this.sbmlComponentView.remove();
+    }
+    this.sbmlComponentView = new SBMLComponentsView({
+      functionDefinitions: this.model.functionDefinitions,
+      readOnly: this.readOnly
+    });
+    let hook = "sbml-components-view-container";
+    app.registerRenderSubview(this, this.sbmlComponentView, hook);
+  },
+  renderSpeciesView: function () {
+    if(this.speciesView) {
+      this.speciesView.remove();
+    }
+    this.speciesView = new SpeciesView({
+      collection: this.model.species,
+      spatial: this.model.is_spatial,
+      defaultMode: this.model.defaultMode,
+      readOnly: this.readOnly
+    });
+    let hook = "species-view-container";
+    app.registerRenderSubview(this, this.speciesView, hook);
   },
   setAllSpeciesModes: function (prevMode) {
     let self = this;
@@ -230,75 +335,7 @@ module.exports = View.extend({
       updateInUseForOther(rule.variable);
     });
   },
-  subviews: {
-    speciesView: {
-      hook: "species-view-container",
-      prepareView: function (el) {
-        return new SpeciesView({
-          collection: this.model.species,
-          spatial: this.model.is_spatial,
-          defaultMode: this.model.defaultMode,
-          readOnly: this.readOnly
-        });
-      }
-    },
-    initialConditionsView: {
-      waitFor: "model.is_spatial",
-      hook: "initial-conditions-view-container",
-      prepareView: function (el) {
-        return new InitialConditionsView({
-          collection: this.model.initialConditions,
-          readOnly: this.readOnly
-        });
-      }
-    },
-    parametersView: {
-      hook: "parameters-view-container",
-      prepareView: function (el) {
-        return new ParametersView({
-          collection: this.model.parameters,
-          readOnly: this.readOnly
-        });
-      }
-    },
-    reactionsView: {
-      hook: "reactions-view-container",
-      prepareView: function (el) {
-        return new ReactionsView({
-          collection: this.model.reactions,
-          readOnly: this.readOnly
-        });
-      }
-    },
-    eventsView: {
-      waitFor: "model.not_spatial",
-      hook: "events-view-container",
-      prepareView: function (el) {
-        return new EventsView({
-          collection: this.model.eventsCollection,
-          readOnly: this.readOnly
-        });
-      }
-    },
-    rulesView: {
-      waitFor: "model.not_spatial",
-      hook: "rules-view-container",
-      prepareView: function (el) {
-        return new RulesView({
-          collection: this.model.rules,
-          readOnly: this.readOnly
-        });
-      }
-    },
-    boundaryConditionsView: {
-      waitFor: "model.is_spatial",
-      hook: "boundary-conditions-view-container",
-      prepareView: function (el) {
-        return new BoundaryConditionsView({
-          collection: this.model.boundaryConditions,
-          readOnly: this.readOnly
-        });
-      }
-    }
-  }
+  // subviews: {
+    
+  // }
 });
