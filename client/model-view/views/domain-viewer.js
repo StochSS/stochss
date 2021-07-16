@@ -20,16 +20,16 @@ var $ = require('jquery');
 let path = require('path');
 var _ = require('underscore');
 //support files
-var app = require('../app');
-var Plotly = require('../lib/plotly');
-var Tooltips = require('../tooltips');
+var app = require('../../app');
+var Plotly = require('../../lib/plotly');
+var Tooltips = require('../../tooltips');
 //views
 var View = require('ampersand-view');
-var TypesViewer = require('./edit-domain-type');
+var TypesViewer = require('../../views/edit-domain-type');
 var SelectView = require('ampersand-select-view');
-var ParticleViewer = require('./view-particle');
+var ParticleViewer = require('../../views/view-particle');
 //templates
-var template = require('../templates/includes/domainViewer.pug');
+var template = require('../templates/domainViewer.pug');
 
 module.exports = View.extend({
   template: template,
