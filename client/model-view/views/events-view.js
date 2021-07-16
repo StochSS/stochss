@@ -18,15 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
-let Tooltips = require("../tooltips");
+let app = require('../../app');
+let Tooltips = require("../../tooltips");
 //views
 let View = require('ampersand-view');
 let EventDetails = require('./event-details');
-let EventListings = require('./event-listings');
+let EventListings = require('./event-listing');
 let ViewSwitcher = require('ampersand-view-switcher');
 //templates
-let template = require('../templates/includes/eventsView.pug');
+let template = require('../templates/eventsView.pug');
 
 module.exports = View.extend({
   template: template,

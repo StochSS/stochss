@@ -28,10 +28,10 @@ let View = require('ampersand-view');
 let TypesView = require('./component-types');
 let SelectView = require('ampersand-select-view');
 //templates
-let editTemplate = require('../templates/editSpecies.pug');
-let editSpatialTemplate = require('../templates/editSpatialSpecies.pug');
-let viewTemplate = require('../templates/viewSpecies.pug');
-let viewSpatialTemplate = require('../templates/viewSpatialSpecies.pug');
+let editTemplate = require('../templates/editSpecie.pug');
+let editSpatialTemplate = require('../templates/editSpatialSpecie.pug');
+let viewTemplate = require('../templates/viewSpecie.pug');
+let viewSpatialTemplate = require('../templates/viewSpatialSpecie.pug');
 
 module.exports = View.extend({
   bindings: {

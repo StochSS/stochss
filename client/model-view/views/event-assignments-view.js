@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
+let app = require('../../app');
 //views
 var View = require('ampersand-view');
 var EditEventAssignment = require('./event-assignment-view');
 //templates
-var template = require('../templates/includes/eventAssignmentsView.pug');
+var template = require('../templates/eventAssignmentsView.pug');
 
 module.exports = View.extend({
   template: template,
