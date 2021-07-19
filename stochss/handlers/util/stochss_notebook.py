@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -72,6 +72,34 @@ class StochSSNotebook(StochSSBase):
             if changed:
                 self.path = n_path.replace(self.user_dir + '/', "")
 
+    def __create_boundary_condition_cells(self):
+        pad = "    "
+        bc_cells = []
+        try:
+            for boundary_condition in self.s_model['boundaryConditions']:
+                bc_cell = [f'class {boundary_condition["name"]}(BoundaryCondition):',
+                           f'{pad}def expression(self):',
+                           f'{pad*2}return """{boundary_condition["expression"]}"""']
+                bc_cells.append(nbf.new_code_cell("\n".join(bc_cell)))
+            return bc_cells
+        except KeyError as err:
+            message = "Boundary conditions are not properly formatted or "
+            message += f"are referenced incorrectly for notebooks: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
+    def __create_boundary_condition_string(self, model, pad):
+        if self.s_model['boundaryConditions']:
+            bound_conds = ["", f"{pad}# Boundary Conditions"]
+            try:
+                for bound_cond in self.s_model['boundaryConditions']:
+                    bc_str = f"{pad}self.add_boundary_condition({bound_cond['name']}())"
+                    bound_conds.append(bc_str)
+                model.extend(bound_conds)
+            except KeyError as err:
+                message = "Boundary conditions are not properly formatted or "
+                message += f"are referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
     def __create_common_cells(self, interactive_backend=False):
         cells = [self.__create_import_cell(interactive_backend=interactive_backend),
                  nbf.new_markdown_cell(f"# {self.get_name()}"),
@@ -137,7 +165,7 @@ class StochSSNotebook(StochSSBase):
                                                                 pad=pad)
                     a_names = self.__create_event_assignment_strings(assignments=assignments,
                                                                      event=event, pad=pad)
-                    delay = f"{event['delay']}" if event['delay'] else None
+                    delay = f'"{event["delay"]}"' if event['delay'] else None
                     ev_str = f'{pad}self.add_event(Event(name="{event["name"]}", '
                     ev_str += f'trigger={t_name}, assignments=[{a_names}], '
                     ev_str += f'delay={delay}, priority="{event["priority"]}", '
@@ -261,6 +289,7 @@ class StochSSNotebook(StochSSBase):
                      "    def __init__(self):",
                      f'{pad}Model.__init__(self, name="{self.get_name()}")']
             self.__create_mesh_string(model=model, pad=pad)
+            self.__create_boundary_condition_string(model=model, pad=pad)
             self.__create_species_strings(model=model, pad=pad)
             self.__create_initial_condition_strings(model=model, pad=pad)
             self.__create_parameter_strings(model=model, pad=pad)
@@ -769,13 +798,14 @@ class StochSSNotebook(StochSSBase):
 
     def __create_tspan_string(self, model, pad):
         end = self.s_model['modelSettings']['endSim']
-        step = self.s_model['modelSettings']['timeStep']
+        output_freq = self.s_model['modelSettings']['timeStep']
         tspan = ["", f"{pad}# Timespan"]
-        ts_str = f'{pad}self.timespan(np.arange(0, {end + step}, {step})'
         if self.s_model['is_spatial']:
-            ts_str += f", timestep_size={step})"
+            step_size = self.s_model['modelSettings']['timestepSize']
+            ts_str = f'{pad}self.timespan(np.arange(0, {end + step_size}, {output_freq})'
+            ts_str += f", timestep_size={step_size})"
         else:
-            ts_str += ")"
+            ts_str = f'{pad}self.timespan(np.arange(0, {end + output_freq}, {output_freq}))'
         tspan.append(ts_str)
         model.extend(tspan)
 
@@ -904,9 +934,16 @@ class StochSSNotebook(StochSSBase):
         self.nb_type = self.SPATIAL_SIMULATION
         self.settings['solver'] = "Solver"
         run_str = "kwargs = configure_simulation()\nresults = model.run(**kwargs)"
-        species = self.s_model['species'][0]['name']
-        plot_str = f"results.plot_species('{species}', animated=True, width=None, height=None)"
+        if self.s_model['species']:
+            species = self.s_model['species'][0]['name']
+            plot_str = f"results.plot_species('{species}', animated=True, width=None, height=None)"
+        else:
+            plot_str = f"results.plot_property('type', animated=True, width=None, height=None)"
         cells = self.__create_common_cells()
+        if 'boundaryConditions' in self.s_model.keys():
+            bc_cells = self.__create_boundary_condition_cells()
+            for i, bc_cell in enumerate(bc_cells):
+                cells.insert(2 + i, bc_cell)
         cells.extend([nbf.new_code_cell(run_str),
                       nbf.new_markdown_cell("# Visualization"),
                       nbf.new_code_cell(plot_str)])

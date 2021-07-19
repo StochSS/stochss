@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,11 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//views
-var View = require('ampersand-view');
-//templates
-var template = require('../templates/includes/viewEventAssignments.pug');
+//models
+var State = require('ampersand-state');
 
-module.exports = View.extend({
-  template: template,
+module.exports = State.extend({
+  props: {
+    compID: 'number',
+    name: 'string',
+    expression: 'string',
+    annotation: 'string'
+  }
 });

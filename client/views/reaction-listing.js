@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var $ = require('jquery');
 var katex = require('katex');
+let _ = require('underscore');
 //support files
 var tests = require('./tests');
 var modals = require('../modals');
@@ -25,10 +26,10 @@ var modals = require('../modals');
 var View = require('ampersand-view');
 var InputView = require('./input');
 //templates
-var template = require('../templates/includes/reactionListing.pug');
+var editTemplate = require('../templates/includes/reactionListing.pug');
+let viewTemplate = require('../templates/includes/viewReactions.pug');
 
 module.exports = View.extend({
-  template: template,
   bindings: {
     'model.name' : {
       type: 'value',
@@ -58,8 +59,23 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    if(this.viewMode) {
+      this.rate = this.model.reactionType === "custom-propensity" ? this.model.propensity : this.model.rate.name;
+      this.types = [];
+      let self = this;
+      if(this.model.types) {
+        this.model.types.forEach(function (index) {
+          let type = self.model.collection.parent.domain.types.get(index, "typeID");
+          self.types.push(type.name)
+        });
+      }
+    }else{
+      this.model.on('change', _.bind(this.updateViewer, this));
+    }
   },
   render: function () {
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
     $(document).on('shown.bs.modal', function (e) {
       $('[autofocus]', e.target).focus();
@@ -100,9 +116,12 @@ module.exports = View.extend({
     });
     okBtn.addEventListener('click', function (e) {
       self.model.annotation = input.value.trim();
-      self.parent.renderReactionListingView();
+      self.parent.renderEditReactionListingView();
       modal.modal('hide');
     });
+  },
+  updateViewer: function () {
+    this.parent.renderViewReactionView();
   },
   subviews: {
     inputName: {

@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,69 +45,83 @@ module.exports = View.extend({
     'click [data-hook=four]'                   : 'handleAddReactionClick',
     'click [data-hook=custom-massaction]'      : 'handleAddReactionClick',
     'click [data-hook=custom-propensity]'      : 'handleAddReactionClick',
-    'click [data-hook=save-reactions]' : 'switchToViewMode',
     'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.reactionsEditor
-    this.opened = attrs.opened
-    this.collection.on("select", function (reaction) {
-      this.setSelectedReaction(reaction);
-      this.setDetailsView(reaction);
-    }, this);
-    this.collection.on("remove", function (reaction) {
-      // Select the last reaction by default
-      // But only if there are other reactions other than the one we're removing
-      if (reaction.detailsView)
-        reaction.detailsView.remove();
-      this.collection.removeReaction(reaction);
-      if (this.collection.length) {
-        var selected = this.collection.at(this.collection.length-1);
-        this.collection.trigger("select", selected);
-      }
-    }, this);
-    this.collection.parent.species.on('add remove', this.toggleAddReactionButton, this);
-    this.collection.parent.parameters.on('add remove', this.toggleReactionTypes, this);
-    this.collection.parent.on('change', this.toggleProcessError, this)
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
+    if(!this.readOnly) {
+      this.collection.on("select", function (reaction) {
+        this.setSelectedReaction(reaction);
+        this.setDetailsView(reaction);
+      }, this);
+      this.collection.on("remove", function (reaction) {
+        // Select the last reaction by default
+        // But only if there are other reactions other than the one we're removing
+        if (reaction.detailsView)
+          reaction.detailsView.remove();
+        this.collection.removeReaction(reaction);
+        if (this.collection.length) {
+          var selected = this.collection.at(this.collection.length-1);
+          this.collection.trigger("select", selected);
+        }
+      }, this);
+      this.collection.parent.species.on('add remove', this.toggleAddReactionButton, this);
+      this.collection.parent.parameters.on('add remove', this.toggleReactionTypes, this);
+      this.collection.parent.on('change', this.toggleProcessError, this)
+    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderReactionListingView();
-    this.detailsContainer = this.queryByHook('reaction-details-container');
-    this.detailsViewSwitcher = new ViewSwitcher({
-      el: this.detailsContainer,
-    });
-    if (this.collection.length) {
-      this.setSelectedReaction(this.collection.at(0));
-      this.collection.trigger("select", this.selectedReaction);
+    if(this.readOnly) {
+      this.renderViewReactionView()
+      $(this.queryByHook('reactions-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('reactions-view-tab')).tab('show');
+      $(this.queryByHook('edit-reactions')).removeClass('active');
+      $(this.queryByHook('view-reactions')).addClass('active');
+    }else{
+      this.renderReactionListingViews();
+      this.detailsContainer = this.queryByHook('reaction-details-container');
+      this.detailsViewSwitcher = new ViewSwitcher({
+        el: this.detailsContainer,
+      });
+      if (this.collection.length) {
+        this.setSelectedReaction(this.collection.at(0));
+        this.collection.trigger("select", this.selectedReaction);
+      }
+      this.collection.trigger("change");
+      this.toggleAddReactionButton();
+      if(this.collection.parent.parameters.length > 0){
+         $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
+      }
+      else{
+        $(this.queryByHook('add-reaction-full')).prop('hidden', true);
+      }
+      this.renderReactionTypes();
+      katex.render("\\emptyset", this.queryByHook('emptyset'), {
+        displayMode: false,
+        output: 'html',
+      });
+      this.toggleProcessError()
+      $(this.queryByHook('massaction-message')).prop('hidden', this.collection.parent.parameters.length > 0);
     }
-    this.collection.trigger("change");
-    this.toggleAddReactionButton();
-    if(this.collection.parent.parameters.length > 0){
-       $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
-    }
-    else{
-      $(this.queryByHook('add-reaction-full')).prop('hidden', true);
-    }
-    this.renderReactionTypes();
-    katex.render("\\emptyset", this.queryByHook('emptyset'), {
-      displayMode: false,
-      output: 'html',
-    });
-    if(this.opened) {
-      this.openReactionsContainer();
-    }
-    this.toggleProcessError()
-    $(this.queryByHook('massaction-message')).prop('hidden', this.collection.parent.parameters.length > 0);
   },
   update: function () {
   },
   updateValid: function () {
   },
-  renderReactionListingView: function () {
-    if(this.reactionListingView){
-      this.reactionListingView.remove();
+  renderReactionListingViews: function () {
+    this.renderEditReactionListingView();
+    this.renderViewReactionView();
+  },
+  renderEditReactionListingView: function () {
+    if(this.editReactionListingView){
+      this.editReactionListingView.remove();
     }
     if(this.collection.parent.parameters.length <= 0) {
       for(var i = 0; i < this.collection.length; i++) {
@@ -116,10 +130,10 @@ module.exports = View.extend({
         }
       }
     }
-    this.reactionListingView = this.renderCollection(
+    this.editReactionListingView = this.renderCollection(
       this.collection,
       ReactionListingView,
-      this.queryByHook('reaction-list')
+      this.queryByHook('edit-reaction-list')
     );
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -127,6 +141,27 @@ module.exports = View.extend({
         $('[data-toggle="tooltip"]').tooltip("hide");
       });
     });
+  },
+  renderViewReactionView: function () {
+    if(this.viewReactionListingView){
+      this.viewReactionListingView.remove();
+    }
+    if(!this.collection.parent.is_spatial){
+      $(this.queryByHook("reaction-types-header")).css("display", "none");
+    }
+    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
+    if(!this.containsMdlWithAnn) {
+      $(this.queryByHook("reaction-annotation-header")).css("display", "none");
+    }else{
+      $(this.queryByHook("reaction-annotation-header")).css("display", "block");
+    }
+    let options = {viewOptions: {viewMode: true, hasAnnotations: this.containsMdlWithAnn}}
+    this.viewReactionListingView = this.renderCollection(
+      this.collection,
+      ReactionListingView,
+      this.queryByHook('view-reaction-list'),
+      options
+    );
   },
   toggleAddReactionButton: function () {
     $(this.queryByHook('add-reaction-full')).prop('disabled', (this.collection.parent.species.length <= 0));
@@ -186,10 +221,6 @@ module.exports = View.extend({
     detailsView.parent = this;
     return detailsView
   },
-  switchToViewMode: function (e) {
-    this.parent.modelStateButtons.clickSaveHandler(e);
-    this.parent.renderReactionsView(mode="view");
-  },
   openReactionsContainer: function () {
     $(this.queryByHook('reactions-list-container')).collapse('show');
     let collapseBtn = $(this.queryByHook('collapse'))
@@ -206,8 +237,9 @@ module.exports = View.extend({
     return ReactionTypes[type].label
   },
   toggleProcessError: function () {
-    let errorMsg = $(this.queryByHook('process-component-error'))
     let model = this.collection.parent
+    if(model.is_spatial) {return};
+    let errorMsg = $(this.queryByHook('process-component-error'))
     if(this.collection.length <= 0 && model.eventsCollection.length <= 0 && model.rules.length <= 0) {
       errorMsg.addClass('component-invalid')
       errorMsg.removeClass('component-valid')

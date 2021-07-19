@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -380,6 +380,8 @@ class StochSSModel(StochSSBase):
         if self.model is None:
             model = self.load()
         model['is_spatial'] = True
+        if "timestepSize" not in self.model['modelSettings'].keys():
+            self.model['modelSettings']['timestepSize'] = 1e-5
         if "domain" not in model.keys():
             model['domain'] = self.get_model_template()['domain']
         for species in model['species']:

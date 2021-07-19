@@ -1,78 +1,117 @@
-div#reactions-editor.card.card-body
+div#reactions-editor.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline 
-      div
-        div.inline Reactions
+    h3.inline.mr-3 Reactions
 
-        button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-reaction", data-hook="collapse") +
+    div.inline.mr-3
 
-  div.collapse(id="collapse-reaction" data-hook="reactions-list-container")
+      ul.nav.nav-tabs.card-header-tabs(id="reactions-tabs")
 
-    p
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="reactions-edit-tab" data-toggle="tab" href="#edit-reactions") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="reactions-view-tab" data-toggle="tab" href="#view-reactions") View
+      
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-reaction" data-hook="collapse") +
+
+  div.card-body
+
+    p.mb-0
       | A process that transforms a set of <i>Variable</i>s (reactants) into a set of <i>Variable</i>s (products) at a rate set by a <i>Parameter</i>. Select from the given reaction templates, or use the custom types. The symbol <span data-hook="emptyset"></span> represents null or empty set. 
 
-    div.row
-      div.col-md-7.container-part: table.table
-        thead: tr
-          th(scope="col") Edit
-          th(scope="col")
-           div
-             div.inline Name
+    div.collapse.tab-content(id="collapse-reaction" data-hook="reactions-list-container")
 
-             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-                 
-          th(scope="col") Summary
-          th(scope="col")
-            div
-              div.inline Annotation
+      div.tab-pane.active(id="edit-reactions" data-hook="edit-reactions")
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+        div.row.mb-3
+          
+          div.col-md-7.container-part
+          
+            hr
 
-          th(scope="col") Remove
+            div.mx-1.row.head.align-items-baseline
+          
+              div.col-md-2: h6.align-bottom <b>Edit</b>
+              
+              div.col-md-2
 
-        tbody(data-hook="reaction-list")
+                h6.inline <b>Name</b>
 
-      div.col-md-5.container-part(data-hook="reaction-details-container")
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-    div(data-hook="massaction-message"): p.text-info To add a mass action reaction the model must have at least one parameter
-      
-    div(data-hook="process-component-error"): p.text-danger A model must have at least one reaction, event, or rule
+              div.col-md-3: h6 <b>Summary</b>
 
-    div.dropdown.inline
+              div.col-md-3
 
-      button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addReactionBtn(
-        data-hook="add-reaction-full",
-        data-toggle="dropdown",
-        aria-haspopup="true",
-        aria-expanded="false",
-        type="button"
-      ) Add Reaction <span class="caret"></span>
+                div.inline
 
-      ul.dropdown-menu(aria-labelledby="addReactionBtn")
-        li.dropdown-item(data-hook="creation") <span data-hook=creation-lb1></span><span class=reaction-lb2>Creation Reaction</span>
-        li.dropdown-item(data-hook="destruction") <span data-hook=destruction-lb1></span><span class=reaction-lb2>Destruction Reaction</span>
-        li.dropdown-item(data-hook="change") <span data-hook=change-lb1></span><span class=reaction-lb2>Transformation Reaction</span>
-        li.dropdown-item(data-hook="dimerization") <span data-hook=dimerization-lb1></span><span class=reaction-lb2>Dimerization Reaction</span>
-        li.dropdown-item(data-hook="merge") <span data-hook=merge-lb1></span><span class=reaction-lb2>Merge Reaction</span>
-        li.dropdown-item(data-hook="split") <span data-hook=split-lb1></span><span class=reaction-lb2>Split Reaction</span>
-        li.dropdown-item(data-hook="four") <span data-hook=four-lb1></span><span class=reaction-lb2>Four Reaction</span>
-        li.dropdown-divider
-        li.dropdown-item(data-hook="custom-massaction") Custom mass action
-        li.dropdown-item(data-hook="custom-propensity") Custom propensity
+                  h6 <b>Annotation</b>
 
-    div.dropdown.inline
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+              
+              div.col-md-2: h6 <b>Remove</b>
 
-      button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addReactionBtn(
-        data-hook="add-reaction-partial",
-        data-toggle="dropdown",
-        aria-haspopup="true",
-        aria-expanded="false",
-        type="button"
-      ) Add Reaction <span class="caret"></span>
+            div.mt-3(data-hook="edit-reaction-list")
 
-      ul.dropdown-menu(aria-labelledby="addReactionBtn")
-        li.dropdown-item(data-hook="custom-propensity") Custom propensity
+          div.col-md-5.container-part(data-hook="reaction-details-container")
 
-    button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-reactions") Save Reactions
+        div(data-hook="massaction-message"): p.text-info To add a mass action reaction the model must have at least one parameter
+          
+        div.component-valid(data-hook="process-component-error"): p.text-danger A model must have at least one reaction, event, or rule
+
+        div.dropdown.inline
+
+          button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addReactionBtn(
+            data-hook="add-reaction-full",
+            data-toggle="dropdown",
+            aria-haspopup="true",
+            aria-expanded="false",
+            type="button"
+          ) Add Reaction <span class="caret"></span>
+
+          ul.dropdown-menu(aria-labelledby="addReactionBtn")
+            li.dropdown-item(data-hook="creation") <span data-hook=creation-lb1></span><span class=reaction-lb2>Creation Reaction</span>
+            li.dropdown-item(data-hook="destruction") <span data-hook=destruction-lb1></span><span class=reaction-lb2>Destruction Reaction</span>
+            li.dropdown-item(data-hook="change") <span data-hook=change-lb1></span><span class=reaction-lb2>Transformation Reaction</span>
+            li.dropdown-item(data-hook="dimerization") <span data-hook=dimerization-lb1></span><span class=reaction-lb2>Dimerization Reaction</span>
+            li.dropdown-item(data-hook="merge") <span data-hook=merge-lb1></span><span class=reaction-lb2>Merge Reaction</span>
+            li.dropdown-item(data-hook="split") <span data-hook=split-lb1></span><span class=reaction-lb2>Split Reaction</span>
+            li.dropdown-item(data-hook="four") <span data-hook=four-lb1></span><span class=reaction-lb2>Four Reaction</span>
+            li.dropdown-divider
+            li.dropdown-item(data-hook="custom-massaction") Custom mass action
+            li.dropdown-item(data-hook="custom-propensity") Custom propensity
+
+        div.dropdown.inline
+
+          button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addReactionBtn(
+            data-hook="add-reaction-partial",
+            data-toggle="dropdown",
+            aria-haspopup="true",
+            aria-expanded="false",
+            type="button"
+          ) Add Reaction <span class="caret"></span>
+
+          ul.dropdown-menu(aria-labelledby="addReactionBtn")
+            li.dropdown-item(data-hook="custom-propensity") Custom propensity
+
+      div.tab-pane(id="view-reactions" data-hook="view-reactions")
+
+        hr
+
+        div.mx-1.row.head
+
+          div.col-md-2: h6 <b>Name</b>
+
+          div.col-md-3: h6 <b>Summary</b>
+
+          div.col-md-3: h6 <b>Rate/Propensity</b>
+
+          div.col-md-2(data-hook="reaction-types-header"): h6 <b>Active in Types</b>
+          
+          div.col-md-2(data-hook="reaction-annotation-header"): h6 <b>Annotation</b>
+
+        div.mt-3(data-hook="view-reaction-list")

@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2020 StochSS developers.
+Copyright (C) 2019-2021 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,6 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 module.exports = {
+  modelEditor: {
+    modelMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
+        "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
+
+    spatialModelMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
+        "using discrete (integer count) values."
+  },
   speciesEditor: {
     name: "Unique identifier for Variable. Cannot share a name with other model components.",
 
@@ -26,18 +33,15 @@ module.exports = {
 
     remove: "A variables may only be removed if it is not a part of any reaction, event assignment, or rule.",
     
-    speciesMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
-        "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
-
-    spatialSpeciesMode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
-        "using discrete (integer count) values.",
-
     mode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
         "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
 
     switchValue: "Switching Tolerance - Tolerance level for considering a dynamic variables deterministically, value is compared to an estimated sd/mean population "+
         "of a variables after a given time step. This value will be used if a 'Minimum Value' not provided.<br>Minimum Value For Switching - Minimum population value "+
         "at which variables will be represented as Concentration."
+  },
+  initialConditionsEditor: {
+    annotation: "An optional note about the initial conditions."
   },
   parametersEditor: {
     name: "Unique identifier for Parameter. Cannot share a name with other model components.",
@@ -178,5 +182,8 @@ module.exports = {
     pressure: "Atmospheric or background pressure.",
 
     speed: "Approximate or artificial speed of sound"
+  },
+  boundaryConditionsEditor: {
+    annotation: "An optional note about a boundary condition."
   }
 }
