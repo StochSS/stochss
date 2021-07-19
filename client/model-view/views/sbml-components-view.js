@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
-let Tooltips = require('../tooltips');
+let app = require('../../app');
+let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
 let EditFunctionDefinition = require('./function-definition-view');
 //templates
-let template = require('../templates/includes/sbmlComponentsView.pug');
+let template = require('../templates/sbmlComponentsView.pug');
 
 module.exports = View.extend({
   template: template,
