@@ -19,16 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 let path = require('path');
 //support files
-let app = require('../app');
-let tests = require('./tests');
-let Tooltips = require('../tooltips');
+let app = require('../../app');
+let tests = require('../../views/tests');
+let Tooltips = require('../../tooltips');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let BoundaryConditionView = require('./boundary-condition-view');
 //templates
-let template = require('../templates/includes/boundaryConditionsView.pug');
+let template = require('../templates/boundaryConditionsView.pug');
 
 module.exports = View.extend({
   template: template,

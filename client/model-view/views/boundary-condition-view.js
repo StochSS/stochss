@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
-let modals = require('../modals');
+let app = require('../../app');
+let modals = require('../../modals');
 //views
 let View = require('ampersand-view');
 //templates
-let editTemplate = require('../templates/includes/editBoundaryCondition.pug');
-let viewTemplate = require('../templates/includes/viewBoundaryCondition.pug');
+let editTemplate = require('../templates/editBoundaryCondition.pug');
+let viewTemplate = require('../templates/viewBoundaryCondition.pug');
 
 module.exports = View.extend({
   events: {

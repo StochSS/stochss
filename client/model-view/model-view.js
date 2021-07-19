@@ -36,7 +36,7 @@ let ReactionsView = require('./views/reactions-view');
 let ParametersView = require('./views/parameters-view');
 let SBMLComponentsView = require('./views/sbml-components-view');
 let InitialConditionsView = require('./views/initial-conditions-view');
-let BoundaryConditionsView = require('../views/boundary-conditions-view');
+let BoundaryConditionsView = require('./views/boundary-conditions-view');
 //templates
 let template = require('./modelView.pug');
 
