@@ -19,16 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 let _ = require('underscore');
 //support files
-let app = require('../app');
-let tests = require('./tests');
-let modals = require('../modals');
+let app = require('../../app');
+let tests = require('../../views/tests');
+let modals = require('../../modals');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 //templates
-let editTemplate = require('../templates/includes/editRule.pug');
-let viewTemplate = require('../templates/includes/viewRules.pug');
+let editTemplate = require('../templates/editRule.pug');
+let viewTemplate = require('../templates/viewRule.pug');
 
 module.exports = View.extend({
   events: {

@@ -28,7 +28,7 @@ let Domain = require('../models/domain');
 //views
 let View = require('ampersand-view');
 let InputView = require('../views/input');
-let RulesView = require('../views/rules-view');
+let RulesView = require('./views/rules-view');
 let EventsView = require('./views/events-view');
 let SpeciesView = require('./views/species-view');
 let DomainViewer = require('./views/domain-viewer');
