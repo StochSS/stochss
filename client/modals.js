@@ -238,7 +238,7 @@ let templates = {
                   <div class="modal-body">
                     <h4><u>${headers[0]}</u></h4>
                     <div>
-                      <a href="${links.presentation} target="_blank"> Open ${name} Presentation</a>
+                      <a href="${links.presentation}" target="_blank"> View ${name} Presentation</a>
                     </div>
                     <hr>
                     <h4><u>${headers[1]}</u></h4>
@@ -248,7 +248,7 @@ let templates = {
                     <hr>
                     <h4><u>${headers[2]}</u></h4>
                     <div>
-                      <a href="${links.open} target="_blank""> Open ${name} Presentation</a>
+                      <a href="${links.open}" target="_blank"> Open ${name} Presentation</a>
                     </div>
                   </div>
                   <div class="modal-footer">
