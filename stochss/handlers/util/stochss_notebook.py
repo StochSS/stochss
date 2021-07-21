@@ -29,7 +29,7 @@ from gillespy2.solvers.utilities.cpp_support_test import check_cpp_support
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, StochSSModelFormatError, \
-                            StochSSPermissionsError, StochSSFileExistsError
+                            StochSSPermissionsError
 
 class StochSSNotebook(StochSSBase):
     '''
@@ -1047,12 +1047,13 @@ class StochSSNotebook(StochSSBase):
             file = f"{hashlib.md5(nb_str.encode('utf-8')).hexdigest()}.ipynb"
             dst = os.path.join(present_dir, file)
             if os.path.exists(dst):
-                message = "A presentation with this name already exists"
-                raise StochSSFileExistsError(message)
+                exists = True
+            else:
+                exists = False
+                with open(dst, "w") as presentation_file:
+                    json.dump(notebook_pres, presentation_file)
             links = self.__get_presentation_links(hostname, file)
-            with open(dst, "w") as presentation_file:
-                json.dump(notebook_pres, presentation_file)
-            return links
+            return links, exists
         except PermissionError as err:
             message = f"You do not have permission to publish this file: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc()) from err

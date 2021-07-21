@@ -431,9 +431,12 @@ class ModelPresentationAPIHandler(APIHandler):
             model = file_objs[ext](path=path)
             log.info("Publishing the %s presentation", model.get_name())
             links, data = model.publish_presentation()
-            file_objs[ext](**data)
-            resp = {"message": f"Successfully published the {model.get_name()} presentation",
-                    "links": links}
+            if data is None:
+                message = f"A presentation for {model.get_name()} already exists."
+            else:
+                message = f"Successfully published the {model.get_name()} presentation."
+                file_objs[ext](**data)
+            resp = {"message": message, "links": links}
             log.info(resp['message'])
             log.debug("Response Message: %s", resp)
             self.write(resp)

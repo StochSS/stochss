@@ -752,9 +752,12 @@ class NotebookPresentationAPIHandler(APIHandler):
         try:
             notebook = StochSSNotebook(path=path)
             log.info("Publishing the %s presentation", notebook.get_name())
-            links = notebook.publish_presentation()
-            resp = {"message": f"Successfully published the {notebook.get_name()} presentation",
-                    "links": links}
+            links, exists = notebook.publish_presentation()
+            if exists:
+                message = f"A presentation for {notebook.get_name()} already exists."
+            else:
+                message = f"Successfully published the {notebook.get_name()} presentation"
+            resp = {"message": message, "links": links}
             log.info(resp['message'])
             log.debug("Response Message: %s", resp)
             self.write(resp)
