@@ -196,7 +196,7 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
 tooltipSetup = () => {
   $(function () {
     $('[data-toggle="tooltip"]').tooltip();
-    $('[data-toggle="tooltip"]').click(function () {
+    $('[data-toggle="tooltip"]').on('click ', function () {
         $('[data-toggle="tooltip"]').tooltip("hide");
      });
   });
