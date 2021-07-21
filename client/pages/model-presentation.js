@@ -95,7 +95,7 @@ let ModelPresentationPage = PageView.extend({
   },
   renderRulesContainer: function () {
     let rules = new Rules({
-      collection: this.model.rules
+      collection: this.model.rules,
       readOnly: true
     });
     app.registerRenderSubview(this, rules, "model-rules");
