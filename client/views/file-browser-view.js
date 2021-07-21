@@ -1390,8 +1390,8 @@ module.exports = View.extend({
         }
       }
       let notebook = {
-        "publishPresentation" : {
-          "label" : "Publish Presentation",
+        "publish" : {
+          "label" : "Publish",
           "_disabled" : false,
           "separator_before" : false,
           "separator_after" : false,
