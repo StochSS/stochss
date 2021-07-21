@@ -51,7 +51,7 @@ module.exports = View.extend({
     'click [data-target=download-json]' : 'handleDownloadJSONClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
     'click [data-hook=download-results-csv]' : 'handleDownloadResultsCsvClick',
-    'click [data-hook=job-presentation]' : 'handlePresentationClick'
+    // 'click [data-hook=job-presentation]' : 'handlePresentationClick'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
