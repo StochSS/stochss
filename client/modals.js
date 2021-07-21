@@ -237,13 +237,19 @@ let templates = {
                   </div>
                   <div class="modal-body">
                     <h4><u>${headers[0]}</u></h4>
-                    <a href="${links.presentation}"> Open ${name} Presentation</a>
+                    <div>
+                      <a href="${links.presentation} target="_blank"> Open ${name} Presentation</a>
+                    </div>
                     <hr>
                     <h4><u>${headers[1]}</u></h4>
-                    <a href="${links.download}"> Download ${name} Presentation</a>
+                    <div>
+                      <a href="${links.download}"> Download ${name} Presentation</a>
+                    </div>
                     <hr>
                     <h4><u>${headers[2]}</u></h4>
-                    <a href="${links.open}"> Open ${name} Presentation</a>
+                    <div>
+                      <a href="${links.open} target="_blank""> Open ${name} Presentation</a>
+                    </div>
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary box-shadow close-btn" data-dismiss="modal">Close</button>

@@ -91,7 +91,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
         (r"/stochss/presentation-download/(\w+)/(.+)\/?", DownModelPresentationAPIHandler),
         (r"/stochss/api/notebook/load\/?", NotebookAPIHandler),
-        (r"/stochss/notebook/presentation-download/(\w+)/(.+)\/?",
+        (r"/stochss/notebook/download_presentation/(\w+)/(.+)\/?",
          DownNotebookPresentationAPIHandler)
 ]
 

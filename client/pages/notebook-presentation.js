@@ -48,8 +48,8 @@ let NotebookPresentationPage = PageView.extend({
       }
     });
     let downloadStart = "https://staging.stochss.org/stochss/notebook/download_presentation";
-    this.downloadLink = path.join(downloadStart, owner, file);
-    this.openLink = "open.stochss.org?open=" + this.downloadLink;
+    this.downloadLink = downloadStart + "/" + owner + "/" + file;
+    this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
   },
   renderSubviews: function (html) {
   	PageView.prototype.render.apply(this, arguments);
