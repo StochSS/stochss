@@ -37,10 +37,12 @@ if __name__ == "__main__":
     import test_model_template
     import test_settings_template
     import test_stochss_base
+    import test_gillespy2
 
     modules = [
         test_model_template,
         test_settings_template,
+        test_gillespy2,
         test_stochss_base
     ]
 
