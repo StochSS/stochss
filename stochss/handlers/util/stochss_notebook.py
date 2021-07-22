@@ -72,6 +72,7 @@ class StochSSNotebook(StochSSBase):
             if changed:
                 self.path = n_path.replace(self.user_dir + '/', "")
 
+
     def __create_boundary_condition_cells(self):
         pad = "    "
         bc_cells = []
@@ -87,6 +88,7 @@ class StochSSNotebook(StochSSBase):
             message += f"are referenced incorrectly for notebooks: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
+
     def __create_boundary_condition_string(self, model, pad):
         if self.s_model['boundaryConditions']:
             bound_conds = ["", f"{pad}# Boundary Conditions"]
@@ -99,6 +101,7 @@ class StochSSNotebook(StochSSBase):
                 message = "Boundary conditions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
 
     def __create_configuration_cell(self):
         pad = "    "
@@ -145,6 +148,7 @@ class StochSSNotebook(StochSSBase):
         config.extend([pad + "}", f"{pad}return kwargs"])
         return nbf.new_code_cell("\n".join(config))
 
+
     def __create_event_strings(self, model, pad):
         if self.s_model['eventsCollection']:
             triggers = ["", f"{pad}# Event Triggers"]
@@ -170,6 +174,7 @@ class StochSSNotebook(StochSSBase):
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
+
     @classmethod
     def __create_event_assignment_strings(cls, assignments, event, pad):
         names = []
@@ -181,6 +186,7 @@ class StochSSNotebook(StochSSBase):
             assignments.append(assign_str)
         return ', '.join(names)
 
+
     @classmethod
     def __create_event_trigger_string(cls, triggers, event, pad):
         name = f'{event["name"]}_trig'
@@ -188,6 +194,7 @@ class StochSSNotebook(StochSSBase):
         trig_str += f'initial_value={event["initialValue"]}, persistent={event["persistent"]})'
         triggers.append(trig_str)
         return name
+
 
     def __create_function_definition_strings(self, model, pad):
         if self.s_model['functionDefinitions']:
@@ -203,6 +210,7 @@ class StochSSNotebook(StochSSBase):
                 message = "Function definitions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
 
     def __create_import_cell(self):
         try:
@@ -240,6 +248,7 @@ class StochSSNotebook(StochSSBase):
             message += f"are referenced incorrectly for notebooks: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
+
     def __create_initial_condition_strings(self, model, pad):
         if self.s_model['initialConditions']:
             ic_types = {"Place":"PlaceInitialCondition", "Scatter":"ScatterInitialCondition",
@@ -261,12 +270,14 @@ class StochSSNotebook(StochSSBase):
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
+
     def __create_mesh_string(self, model, pad):
         mesh = ["", f"{pad}# Domain",
                 f"{pad}mesh = Mesh.read_stochss_domain('{self.s_model['path']}')",
                 f"{pad}self.add_mesh(mesh)",
                 "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
         model.extend(mesh)
+
 
     def __create_model_cell(self):
         pad = '        '
@@ -294,6 +305,7 @@ class StochSSNotebook(StochSSBase):
         self.__create_tspan_string(model=model, pad=pad)
         return nbf.new_code_cell("\n".join(model))
 
+
     def __create_parameter_strings(self, model, pad):
         if self.s_model['parameters']:
             parameters = ["", f"{pad}# Parameters"]
@@ -316,6 +328,7 @@ class StochSSNotebook(StochSSBase):
                 message = "Parameters are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
 
     def __create_reaction_strings(self, model, pad):
         if self.s_model['reactions']:
@@ -349,6 +362,7 @@ class StochSSNotebook(StochSSBase):
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
+
     def __create_rules_strings(self, model, pad):
         if self.s_model['rules']:
             rate_rules = ["", f"{pad}# Rate Rules"]
@@ -372,6 +386,7 @@ class StochSSNotebook(StochSSBase):
                 message = "Rules are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
 
     def __create_species_strings(self, model, pad):
         if self.s_model['species']:
@@ -402,6 +417,7 @@ class StochSSNotebook(StochSSBase):
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
+
     def __create_stoich_spec_string(self, stoich_species):
         species = {}
         for stoich_spec in stoich_species:
@@ -417,6 +433,7 @@ class StochSSNotebook(StochSSBase):
             spec_list.append(f"{name}: {ratio}")
         return "{" + ", ".join(spec_list) + "}"
 
+
     def __create_tspan_string(self, model, pad):
         end = self.s_model['modelSettings']['endSim']
         output_freq = self.s_model['modelSettings']['timeStep']
@@ -429,6 +446,7 @@ class StochSSNotebook(StochSSBase):
             ts_str = f'{pad}self.timespan(np.arange(0, {end + output_freq}, {output_freq}))'
         tspan.append(ts_str)
         model.extend(tspan)
+
 
     def __get_gillespy2_run_settings(self):
         is_automatic = self.settings['simulationSettings']['isAutomatic']
@@ -458,12 +476,14 @@ class StochSSNotebook(StochSSBase):
         run_settings.extend(algorithm_settings)
         return run_settings
 
+
     def __get_spatialpy_run_setting(self):
         self.settings['simulationSettings']['realizations'] = 1
         settings = self.settings['simulationSettings']
         settings_map = {"number_of_trajectories":settings['realizations'],
                         "seed":settings['seed'] if settings['seed'] != -1 else None}
         return [f'"{key}":{val}' for key, val in settings_map.items()]
+
 
     def create_common_cells(self):
         ''' Create the cells common to all notebook types. '''
@@ -474,6 +494,7 @@ class StochSSNotebook(StochSSBase):
                  nbf.new_markdown_cell("# Simulation Parameters"),
                  self.__create_configuration_cell()]
         return cells
+
 
     def create_es_notebook(self):
         '''Create an ensemble simulation jupiter notebook for a StochSS model/workflow
@@ -490,6 +511,7 @@ class StochSSNotebook(StochSSBase):
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
 
     def create_ses_notebook(self):
         '''Create a spetial ensemble simulation jupiter notebook for a StochSS model/workflow
@@ -517,6 +539,7 @@ class StochSSNotebook(StochSSBase):
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
+
     def get_class_name(self):
         ''' Get the python style class name, '''
         name = self.get_name()
@@ -528,6 +551,7 @@ class StochSSNotebook(StochSSBase):
         if l_char in string.ascii_lowercase:
             return name.replace(l_char, l_char.upper(), 1)
         return name
+
 
     def get_gillespy2_solver_name(self):
         ''' Get the name of the gillespy2 solver. '''
@@ -541,6 +565,7 @@ class StochSSNotebook(StochSSBase):
                          'ODE': self.model.get_best_solver_algo("ODE").name}
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
 
+
     def load(self):
         '''Read the notebook file and return as a dict'''
         try:
@@ -549,6 +574,7 @@ class StochSSNotebook(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the notebook file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+
 
     def write_notebook_file(self, cells):
         '''Write the new notebook file to disk
