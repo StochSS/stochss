@@ -47,7 +47,7 @@ let NotebookPresentationPage = PageView.extend({
         self.renderSubviews(body.html);
       }
     });
-    let downloadStart = "https://staging.stochss.org/stochss/notebook/download_presentation";
+    let downloadStart = "https://live.stochss.org/stochss/notebook/download_presentation";
     this.downloadLink = downloadStart + "/" + owner + "/" + file;
     this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
   },
