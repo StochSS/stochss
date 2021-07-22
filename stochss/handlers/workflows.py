@@ -28,7 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
-                  StochSSParamSweepNotebook, StochSSAPIError, report_error
+                  StochSSParamSweepNotebook, StochSSSciopeNotebook, StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -289,12 +289,14 @@ class WorkflowNotebookHandler(APIHandler):
                 notebook = StochSSParamSweepNotebook(**kwargs)
                 notebooks = {"1d_parameter_sweep":notebook.create_1d_notebook,
                              "2d_parameter_sweep":notebook.create_2d_notebook}
+            elif wkfl_type in ("sciope_model_exploration", "model_inference"):
+                notebook = StochSSSciopeNotebook(**kwargs)
+                notebooks = {"sciope_model_exploration":notebook.create_me_notebook,
+                             "model_inference":notebook.create_mi_notebook}
             else:
                 notebook = StochSSNotebook(**kwargs)
                 notebooks = {"gillespy":notebook.create_es_notebook,
-                             "spatial":notebook.create_ses_notebook,
-                             "sciope_model_exploration":notebook.create_sme_notebook,
-                             "model_inference":notebook.create_smi_notebook}
+                             "spatial":notebook.create_ses_notebook}
             resp = notebooks[wkfl_type]()
             notebook.print_logs(log)
             log.debug("Response: %s", resp)
