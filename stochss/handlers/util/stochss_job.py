@@ -30,7 +30,7 @@ from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
 from .parameter_sweep_1d import ParameterSweep1D
-# from .parameter_sweep_2d import ParameterSweep2D
+from .parameter_sweep_2d import ParameterSweep2D
 from .stochss_spatial_model import StochSSSpatialModel
 from .stochss_errors import StochSSJobError, StochSSJobNotCompleteError, \
                             StochSSFileNotFoundError, StochSSFileExistsError, \
@@ -447,7 +447,7 @@ class StochSSJob(StochSSBase):
         else:
             kwargs['params'] = params
             kwargs['results'] = self.__get_filtered_2d_results(f_keys, params[0])
-            # fig = ParameterSweep2D.plot(**kwargs)
+            fig = ParameterSweep2D.plot(**kwargs)
         if add_config:
             fig['config'] = {"responsive": True}
         return fig

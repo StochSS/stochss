@@ -179,8 +179,8 @@ class ParameterSweep2D():
             List of GillesPy2 results objects.
         species : str
             Species of interest name.
-        param : dict
-            StochSS sweep parameter dictionary.
+        params : list
+            List of StochSS sweep parameter dictionaries.
         mapper : str
             Key indicating the feature extraction function to use.
         reducer : str
@@ -191,11 +191,21 @@ class ParameterSweep2D():
         data = []
         for p_results in results:
             map_results = [[func_map[mapper](traj[species]) for traj in result]
-                           for result in p_results]
+                            for result in p_results]
             if len(map_results[0]) > 1:
                 red_results = [func_map[reducer](map_result) for map_result in map_results]
             data.append(red_results)
         data = numpy.array(data)
+        
+        trace_list = [plotly.graph_objs.Heatmap(z=data, x=params[0]['range'],
+                                                y=params[1]['range'])]
+        
+        title = f"<b>Parameter Sweep - Variable: {species}</b>"
+        layout = plotly.graph_objs.Layout(title=dict(text=title, x=0.5),
+                                          xaxis=dict(title=f"<b>{params[0]['name']}</b>"),
+                                          yaxis=dict(title=f"<b>{params[1]['name']}</b>"))
+        fig = dict(data=trace_list, layout=layout)
+        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
 
 
     def run(self, job_id, verbose=False):
