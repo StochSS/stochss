@@ -16,39 +16,36 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
-//support files
-let app = require('../app');
+let $ = require("jquery");
 //views
 var View = require('ampersand-view');
-var ViewInitialCondition = require('./view-initial-condition');
 //templates
-var template = require('../templates/includes/initialConditionsViewer.pug');
+var specTypeTemplate = require('../templates/speciesTypeTemplate.pug');
+var reacTypeTemplate = require('../templates/reactionTypeTemplate.pug');
 
 module.exports = View.extend({
-  template: template,
   events: {
-    'click [data-hook=initial-condition-button]' : 'changeCollapseButtonText',
-    'click [data-hook=edit-species]' : 'switchToEditMode'
+    'change [data-hook=species-types]' : 'updateTypes',
+    'change [data-hook=reaction-types]' : 'updateTypes'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0
   },
   render: function () {
+    this.template = this.parent.modelType !== "reaction" ? specTypeTemplate : reacTypeTemplate;
     View.prototype.render.apply(this, arguments);
-    this.renderCollection(this.collection, ViewInitialCondition, this.queryByHook('initial-conditions-collection'))
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    let hooks = {"species":"species-types", "reaction":"reaction-types", "initial-condition":"species-types"}
+    let hook = hooks[this.parent.modelType];
+    $(this.queryByHook(hook)).prop("checked", this.parent.model.types.includes(this.model.typeID))
   },
-  switchToEditMode: function (e) {
-    this.parent.renderInitialConditions("edit", true);
-  },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
-  },
+  updateTypes: function (e) {
+    let typeID = Number(e.target.dataset.target);
+    if(e.target.checked) {
+      this.parent.model.types.push(typeID);
+    }else{
+      let index = this.parent.model.types.indexOf(typeID);
+      this.parent.model.types.splice(index, 1);
+    }
+    this.parent.model.trigger('change');
+  }
 });

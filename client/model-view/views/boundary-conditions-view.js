@@ -19,16 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 let path = require('path');
 //support files
-let app = require('../app');
-let tests = require('./tests');
-let Tooltips = require('../tooltips');
+let app = require('../../app');
+let tests = require('../../views/tests');
+let Tooltips = require('../../tooltips');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let BoundaryConditionView = require('./boundary-condition-view');
 //templates
-let template = require('../templates/includes/boundaryConditionsEditor.pug');
+let template = require('../templates/boundaryConditionsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -78,13 +78,13 @@ module.exports = View.extend({
     app.changeCollapseButtonText(this, e);
   },
   handleAddBCClick: function (e) {
-    let endpoint = path.join(app.getApiPath(), "model/new-bc")
+    let endpoint = path.join(app.getApiPath(), "model/new-bc");
     let self = this;
     if(this.newBC.property === "v") {
-      this.newBC.value = this.newBCVector
+      this.newBC.value = this.newBCVector;
     }
     let data = {model_path: this.collection.parent.directory,
-                kwargs: this.newBC}
+                kwargs: this.newBC};
     app.postXHR(endpoint, data, {
       success: function (err, response, body) {
         self.collection.addNewBoundaryCondition(self.newBCName, body.expression);
@@ -112,7 +112,7 @@ module.exports = View.extend({
       $(this.queryByHook("new-bc-deterministic")).prop("disabled", true);
     }else{
       let species = this.collection.parent.species.filter(function (specie) {
-        return specie.compID === Number(target)
+        return specie.compID === Number(target);
       })[0].name;
       this.newBC.property = null;
       this.newBC.species = species;
@@ -129,13 +129,13 @@ module.exports = View.extend({
         this.newBC[key] = this.validateNewBCCondition(key, value);
       }else if(key === "value") {
         if(e.delegateTarget.dataset.hook.endsWith("x")) {
-          this.newBCVector[0] = value === "" ? 0 : value
+          this.newBCVector[0] = value === "" ? 0 : value;
         }else if(e.delegateTarget.dataset.hook.endsWith("y")) {
-          this.newBCVector[1] = value === "" ? 0 : value
+          this.newBCVector[1] = value === "" ? 0 : value;
         }else if(e.delegateTarget.dataset.hook.endsWith("z")) {
-          this.newBCVector[2] = value === "" ? 0 : value
+          this.newBCVector[2] = value === "" ? 0 : value;
         }else{
-          this.newBC[key] = value === "" ? null : value
+          this.newBC[key] = value === "" ? null : value;
         }
       }
     }
@@ -150,12 +150,7 @@ module.exports = View.extend({
       BoundaryConditionView,
       this.queryByHook("edit-boundary-conditions-list")
     );
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
   },
   renderViewBoundaryConditionView: function () {
     if(this.viewBoundaryConditionView) {
@@ -174,6 +169,7 @@ module.exports = View.extend({
       this.queryByHook("view-boundary-conditions-list"),
       options
     );
+    app.tooltipSetup();
   },
   resetNewBCViews: function () {
     $(this.queryByHook("new-bc-deterministic")).prop("checked", this.newBC.deterministic);
@@ -194,19 +190,19 @@ module.exports = View.extend({
     this.newBCName = "";
     this.newBC = {"species": null, "property": "v", "value": null, "deterministic": true, "type_id": null,
                   "xmin": null, "ymin": null, "zmin": null, "xmax": null, "ymax": null, "zmax": null};
-    this.newBCVector = [0, 0, 0]
+    this.newBCVector = [0, 0, 0];
     this.setConditions = [];
   },
   toggleAddNewBCButton: function () {
-    let invalidName = this.newBCName === ""
-    let invalidValue = this.newBC.property === "v" ? this.newBCVector === [0, 0, 0] : this.newBC.value === null
+    let invalidName = this.newBCName === "";
+    let invalidValue = this.newBC.property === "v" ? this.newBCVector === [0, 0, 0] : this.newBC.value === null;
     let disabled = invalidName || invalidValue || !this.setConditions.length;
     $(this.queryByHook("add-new-bc")).prop("disabled", disabled);
   },
   update: function (e) {},
   validateNewBCCondition: function(key, value) {
     if((value === 0 && key === "type_id") || value === "") {
-      value = null
+      value = null;
       if(this.setConditions.includes(key)){
         let index = this.setConditions.indexOf(key);
         this.setConditions.splice(index, 1);
@@ -233,11 +229,11 @@ module.exports = View.extend({
       hook: "new-bc-target",
       prepareView: function (el) {
         let species = this.collection.parent.species.map(function (specie) {
-          return [specie.compID, specie.name]
+          return [specie.compID, specie.name];
         });
-        let properties = [["v", "Velocity"], ["nu", "Viscosity"], ["rho", "Density"]]
+        let properties = [["v", "Velocity"], ["nu", "Viscosity"], ["rho", "Density"]];
         let options = [{groupName: "Properties", options: properties},
-                       {groupName: "Variables", options: species}]
+                       {groupName: Boolean(species) ? "Variables" : "Variables (empty)", options: species}];
         return new SelectView({
           parent: this,
           required: false,
@@ -256,7 +252,7 @@ module.exports = View.extend({
           required: false,
           name: 'value',
           tests: tests.valueTests,
-          valueType: 'number',
+          valueType: 'number'
         });
       }
     },
@@ -308,7 +304,7 @@ module.exports = View.extend({
           name: 'xmin',
           tests: tests.valueTests,
           valueType: 'number',
-          value: this.newBC.xmin,
+          value: this.newBC.xmin
         });
       }
     },
@@ -321,7 +317,7 @@ module.exports = View.extend({
           name: 'ymin',
           tests: tests.valueTests,
           valueType: 'number',
-          value: this.newBC.ymin,
+          value: this.newBC.ymin
         });
       }
     },
@@ -334,7 +330,7 @@ module.exports = View.extend({
           name: 'zmin',
           tests: tests.valueTests,
           valueType: 'number',
-          value: this.newBC.zmin,
+          value: this.newBC.zmin
         });
       }
     },
@@ -347,7 +343,7 @@ module.exports = View.extend({
           name: 'xmax',
           tests: tests.valueTests,
           valueType: 'number',
-          value: this.newBC.xmax,
+          value: this.newBC.xmax
         });
       }
     },
@@ -360,7 +356,7 @@ module.exports = View.extend({
           name: 'ymax',
           tests: tests.valueTests,
           valueType: 'number',
-          value: this.newBC.ymax,
+          value: this.newBC.ymax
         });
       }
     },
@@ -373,7 +369,7 @@ module.exports = View.extend({
           name: 'zmax',
           tests: tests.valueTests,
           valueType: 'number',
-          value: this.newBC.zmax,
+          value: this.newBC.zmax
         });
       }
     },
@@ -386,7 +382,7 @@ module.exports = View.extend({
           name: 'type',
           tests: tests.valueTests,
           valueType: 'number',
-          value: this.newBC.type_id,
+          value: this.newBC.type_id
         });
       }
     }

@@ -16,18 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
-var katex = require('katex');
+let $ = require('jquery');
+let katex = require('katex');
 let _ = require('underscore');
 //support files
-var tests = require('./tests');
-var modals = require('../modals');
+let app = require('../../app');
+let tests = require('../../views/tests');
+let modals = require('../../modals');
 //views
-var View = require('ampersand-view');
-var InputView = require('./input');
+let InputView = require('../../views/input');
+let View = require('ampersand-view');
 //templates
-var editTemplate = require('../templates/includes/reactionListing.pug');
-let viewTemplate = require('../templates/includes/viewReactions.pug');
+let viewTemplate = require('../templates/viewReaction.pug');
+let editTemplate = require('../templates/reactionListing.pug');
 
 module.exports = View.extend({
   bindings: {
@@ -40,10 +41,10 @@ module.exports = View.extend({
         katex.render(this.model.summary, this.queryByHook('summary'), {
           displayMode: true,
           output: 'html',
-          maxSize: 5,
+          maxSize: 5
         });
       },
-      hook: 'summary',
+      hook: 'summary'
     },
     'model.selected' : {
       type: function (el, value, previousValue) {
@@ -67,7 +68,7 @@ module.exports = View.extend({
       if(this.model.types) {
         this.model.types.forEach(function (index) {
           let type = self.model.collection.parent.domain.types.get(index, "typeID");
-          self.types.push(type.name)
+          self.types.push(type.name);
         });
       }
     }else{
@@ -77,34 +78,18 @@ module.exports = View.extend({
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
-    $(document).on('shown.bs.modal', function (e) {
-      $('[autofocus]', e.target).focus();
-    });
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
-    });
+    app.documentSetup();
     if(!this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Add')
+      $(this.queryByHook('edit-annotation-btn')).text('Add');
     }
   },
-  update: function () {
-  },
-  updateValid: function () {
-  },
-  selectReaction: function (e) {
-    this.model.collection.trigger("select", this.model);
-  },
-  removeReaction: function (e) {
-    this.collection.removeReaction(this.model);
-    this.parent.collection.trigger("change");
-  },
   editAnnotation: function () {
-    var self = this;
-    var name = this.model.name;
-    var annotation = this.model.annotation;
     if(document.querySelector('#reactionAnnotationModal')) {
       document.querySelector('#reactionAnnotationModal').remove();
     }
+    let self = this;
+    let name = this.model.name;
+    let annotation = this.model.annotation;
     let modal = $(modals.annotationModalHtml("reaction", name, annotation)).modal();
     let okBtn = document.querySelector('#reactionAnnotationModal .ok-model-btn');
     let input = document.querySelector('#reactionAnnotationModal #reactionAnnotationInput');
@@ -120,6 +105,15 @@ module.exports = View.extend({
       modal.modal('hide');
     });
   },
+  removeReaction: function (e) {
+    this.collection.removeReaction(this.model);
+    this.parent.collection.trigger("change");
+  },
+  selectReaction: function (e) {
+    this.model.collection.trigger("select", this.model);
+  },
+  update: function () {},
+  updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewReactionView();
   },
@@ -131,13 +125,12 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'name',
-          label: '',
           tests: tests.nameTests,
           modelKey: 'name',
           valueType: 'string',
-          value: this.model.name,
+          value: this.model.name
         });
-      },
-    },
-  },
+      }
+    }
+  }
 });

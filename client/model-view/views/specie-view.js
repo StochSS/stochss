@@ -19,19 +19,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 let _ = require('underscore');
 //support files
-let app = require('../app');
-let tests = require('./tests');
-let modals = require('../modals');
+let app = require('../../app');
+let tests = require('../../views/tests');
+let modals = require('../../modals');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 let TypesView = require('./component-types');
 let SelectView = require('ampersand-select-view');
 //templates
-let editTemplate = require('../templates/includes/editSpecies.pug');
-let editSpatialTemplate = require('../templates/includes/editSpatialSpecies.pug');
-let viewTemplate = require('../templates/includes/viewSpecies.pug');
-let viewSpatialTemplate = require('../templates/includes/viewSpatialSpecies.pug');
+let editTemplate = require('../templates/editSpecie.pug');
+let editSpatialTemplate = require('../templates/editSpatialSpecie.pug');
+let viewTemplate = require('../templates/viewSpecie.pug');
+let viewSpatialTemplate = require('../templates/viewSpatialSpecie.pug');
 
 module.exports = View.extend({
   bindings: {
@@ -196,38 +196,38 @@ module.exports = View.extend({
     if(this.viewMode || this.parent.spatial) {return}
     // Update validation requirements and re-run tests for inputSwitchTol.
     // This removes error reporting not using switching tolerance
-    let shouldValidateTol = this.model.mode === "dynamic" && this.model.isSwitchTol
+    let shouldValidateTol = this.model.mode === "dynamic" && this.model.isSwitchTol;
     this.inputSwitchTol.required = shouldValidateTol;
-    this.inputSwitchTol.tests = shouldValidateTol ? tests.valueTests : []
-    this.inputSwitchTol.runTests()
+    this.inputSwitchTol.tests = shouldValidateTol ? tests.valueTests : [];
+    this.inputSwitchTol.runTests();
     // Update validation requirements and re-run tests for inputSwitchMin.
     // This removes error reporting when not using minimum value for switching.
-    let shouldValidateMin = this.model.mode === "dynamic" && !this.model.isSwitchTol
+    let shouldValidateMin = this.model.mode === "dynamic" && !this.model.isSwitchTol;
     this.inputSwitchMin.required = shouldValidateMin;
-    this.inputSwitchMin.tests = shouldValidateMin ? tests.valueTests : []
-    this.inputSwitchMin.runTests()
+    this.inputSwitchMin.tests = shouldValidateMin ? tests.valueTests : [];
+    this.inputSwitchMin.runTests();
     // Add/Remove 'input-invalid' class from inputSwitchTol and inputSwitchMin based on whether
     // the user is using switching tolerance or minimum value for switching
-    let tolInput = $(this.queryByHook('switching-tolerance')).find('input')[0]
-    let minInput = $(this.queryByHook('switching-threshold')).find('input')[0]
+    let tolInput = $(this.queryByHook('switching-tolerance')).find('input')[0];
+    let minInput = $(this.queryByHook('switching-threshold')).find('input')[0];
     if(this.model.mode !== "dynamic") {
-      $(tolInput).removeClass('input-invalid')
-      $(minInput).removeClass('input-invalid')
+      $(tolInput).removeClass('input-invalid');
+      $(minInput).removeClass('input-invalid');
     }else if(this.model.isSwitchTol){
-      $(minInput).removeClass('input-invalid')
+      $(minInput).removeClass('input-invalid');
       if(this.model.switchTol === "" || isNaN(this.model.switchTol)){
-        $(tolInput).addClass('input-invalid')
+        $(tolInput).addClass('input-invalid');
       }
     }else{
-      $(tolInput).removeClass('input-invalid')
+      $(tolInput).removeClass('input-invalid');
       if(this.model.switchMin === "" || isNaN(this.model.switchMin)){
-        $(minInput).addClass('input-invalid')
+        $(minInput).addClass('input-invalid');
       }
     }
   },
   updateValid: function (e) {},
   updateViewer: function () {
-    this.parent.renderViewSpeciesView()
+    this.parent.renderViewSpeciesView();
   },
   subviews: {
     inputName: {

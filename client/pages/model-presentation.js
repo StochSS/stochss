@@ -26,12 +26,7 @@ let app = require('../app');
 let Model = require('../models/model');
 //views
 let PageView = require('./base');
-let Rules = require('../views/rules-editor');
-let Events = require('../views/events-editor');
-let Species = require('../views/species-editor');
-let Reactions = require('../views/reactions-editor');
-let Parameters = require('../views/parameters-editor');
-let SBMLComponents = require('../views/sbml-component-editor');
+let ModelView = require('../model-view/model-view');
 //templates
 let template = require('../templates/pages/modelPresentation.pug');
 
@@ -65,54 +60,14 @@ let ModelPresentationPage = PageView.extend({
   },
   renderSubviews: function () {
     PageView.prototype.render.apply(this, arguments);
-    this.renderSpeciesContainer();
-    this.renderParametersContainer();
-    this.renderReactionsContainer();
-    this.renderEventsContainer();
-    this.renderRulesContainer();
-    this.renderSBMLComponents();
+    this.renderModelView();
   },
-  renderEventsContainer: function () {
-    let events = new Events({
-      collection: this.model.eventsCollection,
+  renderModelView: function () {
+    let modelView = ModelView({
+      model: this.model,
       readOnly: true
     });
-    app.registerRenderSubview(this, events, "model-events");
-  },
-  renderParametersContainer: function () {
-    let parameters = new Parameters({
-      collection: this.model.parameters,
-      readOnly: true
-    });
-    app.registerRenderSubview(this, parameters, "model-parameters");
-  },
-  renderReactionsContainer: function () {
-    let reactions = new Reactions({
-      collection: this.model.reactions,
-      readOnly: true
-    });
-    app.registerRenderSubview(this, reactions, "model-reactions");
-  },
-  renderRulesContainer: function () {
-    let rules = new Rules({
-      collection: this.model.rules,
-      readOnly: true
-    });
-    app.registerRenderSubview(this, rules, "model-rules");
-  },
-  renderSBMLComponents: function () {
-    let sbmlComponents = new SBMLComponents({
-      functionDefinitions: this.model.functionDefinitions,
-      viewMode: true
-    });
-    app.registerRenderSubview(this, sbmlComponents, "model-sbml-components");
-  },
-  renderSpeciesContainer: function () {
-    let species = new Species({
-      collection: this.model.species,
-      readOnly: true
-    });
-    app.registerRenderSubview(this, species, "model-species");
+    app.registerRenderSubview(this, modelView, "model-view");
   }
 });
 

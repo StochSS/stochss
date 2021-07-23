@@ -16,22 +16,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var ViewSwitcher = require('ampersand-view-switcher');
-var katex = require('katex');
-var _ = require('underscore');
-var $ = require('jquery');
+let $ = require('jquery');
+let katex = require('katex');
+let _ = require('underscore');
 //support files
-let app = require('../app');
-var ReactionTypes = require('../reaction-types');
-var Tooltips = require('../tooltips');
+let app = require('../../app');
+let Tooltips = require('../../tooltips');
+let ReactionTypes = require('../../reaction-types');
 //models
-var StoichSpeciesCollection = require('../models/stoich-species');
+let StoichSpeciesCollection = require('../../models/stoich-species');
 //views
-var View = require('ampersand-view');
-var ReactionListingView = require('./reaction-listing');
-var ReactionDetailsView = require('./reaction-details');
+let View = require('ampersand-view');
+let ViewSwitcher = require('ampersand-view-switcher');
+let ReactionListingView = require('./reaction-listing');
+let ReactionDetailsView = require('./reaction-details');
 //templates
-var template = require('../templates/includes/reactionsEditor.pug');
+let template = require('../templates/reactionsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -49,7 +49,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.tooltips = Tooltips.reactionsEditor
+    this.tooltips = Tooltips.reactionsEditor;
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     if(!this.readOnly) {
       this.collection.on("select", function (reaction) {
@@ -59,23 +59,24 @@ module.exports = View.extend({
       this.collection.on("remove", function (reaction) {
         // Select the last reaction by default
         // But only if there are other reactions other than the one we're removing
-        if (reaction.detailsView)
+        if (reaction.detailsView){
           reaction.detailsView.remove();
+        }
         this.collection.removeReaction(reaction);
         if (this.collection.length) {
-          var selected = this.collection.at(this.collection.length-1);
+          let selected = this.collection.at(this.collection.length-1);
           this.collection.trigger("select", selected);
         }
       }, this);
       this.collection.parent.species.on('add remove', this.toggleAddReactionButton, this);
       this.collection.parent.parameters.on('add remove', this.toggleReactionTypes, this);
-      this.collection.parent.on('change', this.toggleProcessError, this)
+      this.collection.parent.on('change', this.toggleProcessError, this);
     }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
-      this.renderViewReactionView()
+      this.renderViewReactionView();
       $(this.queryByHook('reactions-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
         e.preventDefault();
@@ -86,20 +87,14 @@ module.exports = View.extend({
       $(this.queryByHook('view-reactions')).addClass('active');
     }else{
       this.renderReactionListingViews();
-      this.detailsContainer = this.queryByHook('reaction-details-container');
-      this.detailsViewSwitcher = new ViewSwitcher({
-        el: this.detailsContainer,
-      });
       if (this.collection.length) {
         this.setSelectedReaction(this.collection.at(0));
         this.collection.trigger("select", this.selectedReaction);
       }
-      this.collection.trigger("change");
       this.toggleAddReactionButton();
       if(this.collection.parent.parameters.length > 0){
          $(this.queryByHook('add-reaction-partial')).prop('hidden', true);
-      }
-      else{
+      }else {
         $(this.queryByHook('add-reaction-full')).prop('hidden', true);
       }
       this.renderReactionTypes();
@@ -107,17 +102,47 @@ module.exports = View.extend({
         displayMode: false,
         output: 'html',
       });
-      this.toggleProcessError()
+      this.toggleProcessError();
       $(this.queryByHook('massaction-message')).prop('hidden', this.collection.parent.parameters.length > 0);
     }
   },
-  update: function () {
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
   },
-  updateValid: function () {
+  getAnnotation: function (type) {
+    return ReactionTypes[type].label;
   },
-  renderReactionListingViews: function () {
-    this.renderEditReactionListingView();
-    this.renderViewReactionView();
+  getDefaultSpecie: function () {
+    return this.collection.parent.species.models[0];
+  },
+  getStoichArgsForReactionType: function(type) {
+    return ReactionTypes[type];
+  },
+  handleAddReactionClick: function (e) {
+    let reactionType = e.delegateTarget.dataset.hook;
+    let stoichArgs = this.getStoichArgsForReactionType(reactionType);
+    if(this.parent.model.domain.types) {
+      var types = this.parent.model.domain.types.map(function (type) {
+        return type.typeID;
+      });
+      types.shift();
+    }else{
+      var types = [];
+    }
+    let reaction = this.collection.addReaction(reactionType, stoichArgs, types);
+    reaction.detailsView = this.newDetailsView(reaction);
+    this.collection.trigger("select", reaction);
+    app.tooltipSetup();
+  },
+  newDetailsView: function (reaction) {
+    let detailsView = new ReactionDetailsView({ model: reaction });
+    detailsView.parent = this;
+    return detailsView;
+  },
+  openReactionsContainer: function () {
+    $(this.queryByHook('reactions-list-container')).collapse('show');
+    let collapseBtn = $(this.queryByHook('collapse'));
+    collapseBtn.trigger('click');
   },
   renderEditReactionListingView: function () {
     if(this.editReactionListingView){
@@ -126,7 +151,7 @@ module.exports = View.extend({
     if(this.collection.parent.parameters.length <= 0) {
       for(var i = 0; i < this.collection.length; i++) {
         if(this.collection.models[i].reactionType !== "custom-propensity"){
-          this.collection.models[i].reactionType = "custom-propensity"
+          this.collection.models[i].reactionType = "custom-propensity";
         }
       }
     }
@@ -135,12 +160,24 @@ module.exports = View.extend({
       ReactionListingView,
       this.queryByHook('edit-reaction-list')
     );
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
+  },
+  renderReactionListingViews: function () {
+    this.renderEditReactionListingView();
+    this.renderViewReactionView();
+  },
+  renderReactionTypes: function () {
+    let options = {
+      displayMode: false,
+      output: 'html'
+    }
+    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation-lb1'), options);
+    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction-lb1'), options);
+    katex.render(ReactionTypes['change'].label, this.queryByHook('change-lb1'), options);
+    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization-lb1'), options);
+    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge-lb1'), options);
+    katex.render(ReactionTypes['split'].label, this.queryByHook('split-lb1'), options);
+    katex.render(ReactionTypes['four'].label, this.queryByHook('four-lb1'), options);
   },
   renderViewReactionView: function () {
     if(this.viewReactionListingView){
@@ -163,9 +200,30 @@ module.exports = View.extend({
       options
     );
   },
+  setDetailsView: function (reaction) {
+    reaction.detailsView = this.newDetailsView(reaction);
+    this.detailsViewSwitcher.set(reaction.detailsView);
+  },
+  setSelectedReaction: function (reaction) {
+    this.collection.each(function (m) { m.selected = false; });
+    reaction.selected = true;
+    this.selectedReaction = reaction;
+  },
   toggleAddReactionButton: function () {
     $(this.queryByHook('add-reaction-full')).prop('disabled', (this.collection.parent.species.length <= 0));
     $(this.queryByHook('add-reaction-partial')).prop('disabled', (this.collection.parent.species.length <= 0));
+  },
+  toggleProcessError: function () {
+    let model = this.collection.parent;
+    if(model.is_spatial) {return};
+    let errorMsg = $(this.queryByHook('process-component-error'));
+    if(this.collection.length <= 0 && model.eventsCollection.length <= 0 && model.rules.length <= 0) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
+    }
   },
   toggleReactionTypes: function (e, prev, curr) {
     if(curr && curr.add && this.collection.parent.parameters.length === 1){
@@ -178,87 +236,19 @@ module.exports = View.extend({
       $(this.queryByHook('add-reaction-partial')).prop('hidden', false);
     }
     if(this.selectedReaction){
-      this.selectedReaction.detailsView.renderReactionTypesSelectView()
+      this.selectedReaction.detailsView.renderReactionTypesSelectView();
     }
   },
-  setSelectedReaction: function (reaction) {
-    this.collection.each(function (m) { m.selected = false; });
-    reaction.selected = true;
-    this.selectedReaction = reaction;
-  },
-  setDetailsView: function (reaction) {
-    reaction.detailsView = this.newDetailsView(reaction);
-    this.detailsViewSwitcher.set(reaction.detailsView);
-  },
-  handleAddReactionClick: function (e) {
-    var reactionType = e.delegateTarget.dataset.hook;
-    var stoichArgs = this.getStoichArgsForReactionType(reactionType);
-    if(this.parent.model.domain.types) {
-      var types = this.parent.model.domain.types.map(function (type) {
-        return type.typeID;
-      });
-      types.shift()
-    }else{
-      var types = []
+  update: function () {},
+  updateValid: function () {},
+  subviews: {
+    detailsViewSwitcher: {
+      hook: "reaction-details-container",
+      prepareView: function (el) {
+        return new ViewSwitcher({
+          el: el
+        });
+      }
     }
-    var reaction = this.collection.addReaction(reactionType, stoichArgs, types);
-    reaction.detailsView = this.newDetailsView(reaction);
-    this.collection.trigger("select", reaction);
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
-    });
-  },
-  getStoichArgsForReactionType: function(type) {
-    var args = ReactionTypes[type];
-    return args;
-  },
-  newDetailsView: function (reaction) {
-    var detailsView = new ReactionDetailsView({ model: reaction });
-    detailsView.parent = this;
-    return detailsView
-  },
-  openReactionsContainer: function () {
-    $(this.queryByHook('reactions-list-container')).collapse('show');
-    let collapseBtn = $(this.queryByHook('collapse'))
-    collapseBtn.trigger('click')
-  },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
-  },
-  getDefaultSpecie: function () {
-    var value = this.collection.parent.species.models[0];
-    return value;
-  },
-  getAnnotation: function (type) {
-    return ReactionTypes[type].label
-  },
-  toggleProcessError: function () {
-    let model = this.collection.parent
-    if(model.is_spatial) {return};
-    let errorMsg = $(this.queryByHook('process-component-error'))
-    if(this.collection.length <= 0 && model.eventsCollection.length <= 0 && model.rules.length <= 0) {
-      errorMsg.addClass('component-invalid')
-      errorMsg.removeClass('component-valid')
-    }else{
-      errorMsg.addClass('component-valid')
-      errorMsg.removeClass('component-invalid')
-    }
-  },
-  renderReactionTypes: function () {
-    var options = {
-      displayMode: false,
-      output: 'html',
-    }
-    katex.render(ReactionTypes['creation'].label, this.queryByHook('creation-lb1'), options);
-    katex.render(ReactionTypes['destruction'].label, this.queryByHook('destruction-lb1'), options);
-    katex.render(ReactionTypes['change'].label, this.queryByHook('change-lb1'), options);
-    katex.render(ReactionTypes['dimerization'].label, this.queryByHook('dimerization-lb1'), options);
-    katex.render(ReactionTypes['merge'].label, this.queryByHook('merge-lb1'), options);
-    katex.render(ReactionTypes['split'].label, this.queryByHook('split-lb1'), options);
-    katex.render(ReactionTypes['four'].label, this.queryByHook('four-lb1'), options);
   }
 });

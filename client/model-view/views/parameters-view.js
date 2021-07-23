@@ -16,15 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 //support files
-let app = require('../app');
-var Tooltips = require('../tooltips');
+let app = require('../../app');
+let Tooltips = require('../../tooltips');
 //views
-var View = require('ampersand-view');
-var EditParameterView = require('./edit-parameter');
+let View = require('ampersand-view');
+let EditParameterView = require('./parameter-view');
 //templates
-var template = require('../templates/includes/parametersEditor.pug');
+let template = require('../templates/parametersView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -33,10 +33,10 @@ module.exports = View.extend({
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
   },
   initialize: function (attrs, options) {
-    var self = this;
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
-    this.tooltips = Tooltips.parametersEditor
+    this.tooltips = Tooltips.parametersEditor;
+    let self = this;
     this.collection.on('update-parameters', function (compID, parameter) {
       self.collection.parent.reactions.map(function (reaction) {
         if(reaction.rate && reaction.rate.compID === compID){
@@ -57,7 +57,7 @@ module.exports = View.extend({
           rule.variable = parameter;
         }
       });
-      self.parent.renderRulesView();
+      self.parent.rulesView.renderEditRules();
     });
   },
   render: function () {
@@ -76,9 +76,12 @@ module.exports = View.extend({
     }
     this.renderViewParameter();
   },
-  update: function () {
+  addParameter: function () {
+    this.collection.addParameter();
+    app.tooltipSetup();
   },
-  updateValid: function () {
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
   },
   renderEditParameter: function () {
     if(this.editParameterView){
@@ -89,12 +92,6 @@ module.exports = View.extend({
       EditParameterView,
       this.queryByHook('edit-parameter-list')
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
   },
   renderViewParameter: function () {
     if(this.viewParameterView) {
@@ -114,17 +111,6 @@ module.exports = View.extend({
       options
     );
   },
-  addParameter: function () {
-    this.collection.addParameter();
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
-    });
-  },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
-  },
+  update: function () {},
+  updateValid: function () {}
 });
