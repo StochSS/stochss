@@ -16,29 +16,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 //support files
-let app = require('../app');
-var Tooltips = require('../tooltips');
+let app = require('../../app');
+let Tooltips = require('../../tooltips');
 //views
-var View = require('ampersand-view');
-var RuleView = require('./edit-rule');
+let View = require('ampersand-view');
+let RuleView = require('./rule-view');
 //templates
-var template = require('../templates/includes/ruleEditor.pug');
+let template = require('../templates/rulesView.pug');
 
 module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=rate-rule]' : 'addRule',
     'click [data-hook=assignment-rule]' : 'addRule',
-    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.collection.parent.species.on('add remove', this.toggleAddRuleButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleAddRuleButton, this);
-    this.tooltips = Tooltips.rulesEditor
+    this.tooltips = Tooltips.rulesEditor;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -57,9 +57,13 @@ module.exports = View.extend({
     }
     this.renderViewRules();
   },
-  update: function () {
+  addRule: function (e) {
+    let type = e.target.dataset.name;
+    this.collection.addRule(type);
+    app.tooltipSetup();
   },
-  updateValid: function () {
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
   },
   renderEditRules: function () {
     if(this.rulesView) {
@@ -70,12 +74,7 @@ module.exports = View.extend({
       RuleView,
       this.queryByHook('edit-rule-list-container')
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
   },
   renderViewRules: function () {
     if(this.viewRulesView) {
@@ -94,32 +93,15 @@ module.exports = View.extend({
       this.queryByHook('view-rules-list-container'),
       options
     );
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    app.tooltipSetup();
   },
   toggleAddRuleButton: function () {
     this.renderEditRules();
-    var numSpecies = this.collection.parent.species.length;
-    var numParameters = this.collection.parent.parameters.length;
-    var disabled = numSpecies <= 0 && numParameters <= 0
+    let numSpecies = this.collection.parent.species.length;
+    let numParameters = this.collection.parent.parameters.length;
+    let disabled = numSpecies <= 0 && numParameters <= 0;
     $(this.queryByHook('add-rule')).prop('disabled', disabled);
   },
-  addRule: function (e) {
-    var type = e.target.dataset.name
-    this.collection.addRule(type);
-    $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-
-       });
-    });
-  },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
-  },
+  update: function () {},
+  updateValid: function () {}
 });

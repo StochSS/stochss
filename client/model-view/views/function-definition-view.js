@@ -16,19 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 //support files
-var modals = require('../modals');
+let app = require('../../app');
+let modals = require('../../modals');
 //views
-var View = require('ampersand-view');
+let View = require('ampersand-view');
 //templates
-var editTemplate = require('../templates/includes/editFunctionDefinition.pug');
-let viewTemplate = require('../templates/includes/viewFunctionDefinition.pug');
+let editTemplate = require('../templates/editFunctionDefinition.pug');
+let viewTemplate = require('../templates/viewFunctionDefinition.pug');
 
 module.exports = View.extend({
   events: {
     'click [data-hook=remove]' : 'removeFunctionDefinition',
-    'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
+    'click [data-hook=edit-annotation-btn]' : 'editAnnotation'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -37,9 +38,7 @@ module.exports = View.extend({
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
-    });
+    app.documentSetup();
   },
   editAnnotation: function () {
     var self = this;
@@ -65,5 +64,5 @@ module.exports = View.extend({
   },
   removeFunctionDefinition: function () {
     this.model.collection.remove(this.model);
-  },
+  }
 });

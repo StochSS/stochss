@@ -1,0 +1,119 @@
+div#model-view
+
+  div.card
+    
+    div.card-header.pb-0
+    
+      h3.inline.mr-3 Model Mode
+
+      div.inline.mr-3
+
+        ul.nav.nav-tabs.card-header-tabs(id="model-mode-tabs")
+
+          li.nav-item
+
+            a.nav-link.tab.active(data-hook="model-mode-edit-tab" data-toggle="tab" href="#edit-model-mode") Edit
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="model-mode-view-tab" data-toggle="tab" href="#view-model-mode") View
+
+    div.card-body
+
+      p.mb-0
+        | <b>Concentration</b> - Variables will only be represented using continuous (floating point) values.</br>
+        | <b>Population</b> - Variables will only be represented using discrete (integer count) values.</br>
+        if !this.model.is_spatial
+          | <b>Hybrid Concentration/Population</b> - Allows a variables to be represented using continuous and/or discrete values.
+
+      div.tab-content(id="model-mode-section" data-hook="model-mode-section")
+
+        div.tab-pane.active(id="edit-model-mode" data-hook="edit-model-mode")
+          
+          hr
+
+          div.row
+            div.col-sm-4
+              input.mr-2(type="radio" name="default-mode" data-hook="all-continuous" data-name="continuous")
+              span Concentration
+            div.col-sm-4
+              input.mr-2(type="radio" name="default-mode" data-hook="all-discrete" data-name="discrete")
+              span Population
+            div.col-sm-4(data-hook="advanced-model-mode")
+              input.mr-2(type="radio" name="default-mode" data-hook="advanced" data-name="dynamic")
+              span Hybrid Concentration/Population
+
+        div.tab-pane(id="view-model-mode" data-hook="view-model-mode")
+
+          hr
+
+          div="Model Mode: " + this.modelMode
+
+  div(data-hook="domain-viewer-container")
+  
+  div(data-hook="species-view-container")
+
+  div(data-hook="initial-conditions-view-container")
+
+  div(data-hook="parameters-view-container")
+
+  div(data-hook="reactions-view-container")
+
+  div.card(data-hook="model-view-advanced-container")
+
+    div.card-header.pb-0
+
+      h3.inline Advanced
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#mv-advanced-section" data-hook="collapse-mv-advanced-section") +
+
+    div.collapse(id="mv-advanced-section" data-hook="mv-advanced-section")
+
+      div.card-body
+
+        div(data-hook="events-view-container")
+
+        div(data-hook="rules-view-container")
+
+        div(data-hook="boundary-conditions-view-container")
+
+        div(data-hook="sbml-components-view-container")
+
+        div.card.collapse.show(data-hook="system-volume-container")
+
+        div.card-header.pb-0
+
+          h3.inline.mr-3 System Volume
+
+          div.inline.mr-3
+
+            ul.nav.nav-tabs.card-header-tabs(id="volume-tabs")
+
+              li.nav-item
+
+                a.nav-link.tab.active(data-hook="system-volume-edit-tab" data-toggle="tab" href="#edit-system-volume") Edit
+
+              li.nav-item
+
+                a.nav-link.tab(data-hook="system-volume-view-tab" data-toggle="tab" href="#view-system-volume") View
+
+          button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-system-volume", data-hook="collapse-system-volume") +
+
+        div.card-body
+
+          p.mb-0
+            | System volume affects custom propensities or stochastic reactions with two reactants. The volume sets the implicit parameter 'vol' which can be used in custom propensity functions. A single well-mixed volume is assumed. Compartments are not currently supported.  In most cases this should not be changed.  please review your model requirements carefully before changing this property.
+
+          div.collapse.tab-content(id="collapse-system-volume" data-hook="system-volume-section")
+
+            div.tab-pane.active(id="edit-system-volume" data-hook="edit-system-volume")
+
+              hr
+
+              div(data-hook="edit-volume")
+
+            div.tab-pane(id="view-system-volume" data-hook="view-system-volume")
+
+              hr
+
+              div(data-hook="view-volume")

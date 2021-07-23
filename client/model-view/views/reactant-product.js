@@ -16,16 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var $ = require('jquery');
+let $ = require('jquery');
 //models
-var StoichSpecie = require('../models/stoich-specie');
+let StoichSpecie = require('../../models/stoich-specie');
 //views
-var View = require('ampersand-view');
-var SelectView = require('ampersand-select-view');
-var EditStoichSpecieView = require('./edit-stoich-specie');
-var EditCustomStoichSpecieView = require('./edit-custom-stoich-specie');
+let View = require('ampersand-view');
+let SelectView = require('ampersand-select-view');
+let EditStoichSpecieView = require('./edit-stoich-specie');
+let EditCustomStoichSpecieView = require('./edit-custom-stoich-specie');
 //templates
-var template = require('../templates/includes/reactantProduct.pug');
+let template = require('../templates/reactantProduct.pug');
 
 module.exports = View.extend({
   template: template,
@@ -43,37 +43,41 @@ module.exports = View.extend({
     this.fieldTitle = args.fieldTitle;
   },
   render: function () {
-    var self = this;
     View.prototype.render.apply(this, arguments);
-    var args = {
+    let args = {
       viewOptions: {
         name: 'stoich-specie',
-        label: '',
         required: true,
         textAttribute: 'name',
         eagerValidate: true,
-        // Set idAttribute to name. Models may not be saved yet so id is unreliable (so is cid).
-        // Use name since it *should be* unique.
         idAttribute: 'name',
-        options: self.species
+        options: this.species
       }
     };
-    var type = self.reactionType;
-    var StoichSpeciesView = (type.startsWith('custom')) ? EditCustomStoichSpecieView : EditStoichSpecieView
-    self.renderCollection(
-        self.collection,
+    let type = this.reactionType;
+    let StoichSpeciesView = (type.startsWith('custom')) ? EditCustomStoichSpecieView : EditStoichSpecieView;
+    this.renderCollection(
+        this.collection,
         StoichSpeciesView,
-        self.queryByHook('reactants-editor'),
+        this.queryByHook('reactants-editor'),
         args
     );
     if(this.reactionType.startsWith('custom')) {
-      $(this.queryByHook('collapse')).collapse()
+      $(this.queryByHook('collapse')).collapse();
     }
     this.toggleAddSpecieButton();
     if(this.fieldTitle === "Reactants"){
-      $(this.queryByHook('field-title-tooltip')).prop('title', this.parent.parent.tooltips.reactant)
+      $(this.queryByHook('field-title-tooltip')).prop('title', this.parent.parent.tooltips.reactant);
     }else{
-      $(this.queryByHook('field-title-tooltip')).prop('title', this.parent.parent.tooltips.product)
+      $(this.queryByHook('field-title-tooltip')).prop('title', this.parent.parent.tooltips.product);
+    }
+  },
+  addSelectedSpecie: function () {
+    var specieName = this.specieName ? this.specieName : 'Pick a variable';
+    if(this.validateAddSpecie()) {
+      this.collection.addStoichSpecie(specieName);
+      this.toggleAddSpecieButton();
+      this.collection.parent.trigger('change-reaction');
     }
   },
   selectSpecie: function (e) {
@@ -85,14 +89,6 @@ module.exports = View.extend({
     }
     this.toggleAddSpecieButton();
   },
-  addSelectedSpecie: function () {
-    var specieName = this.specieName ? this.specieName : 'Pick a variable';
-    if(this.validateAddSpecie()) {
-      this.collection.addStoichSpecie(specieName);
-      this.toggleAddSpecieButton();
-      this.collection.parent.trigger('change-reaction')
-    }
-  },
   toggleAddSpecieButton: function () {
     if(!this.validateAddSpecie()){
       $(this.queryByHook('add-selected-specie')).prop('disabled', true);
@@ -103,13 +99,10 @@ module.exports = View.extend({
   },
   validateAddSpecie: function () {
     if(this.hasSelectedSpecie){
-      if(!this.collection.length)  return true;
-      if(this.collection.length < 2 && this.collection.at(0).ratio < 2)
-        return true;
-      if(this.reactionType !== 'custom-massaction')
-        return true;
-      if(!this.isReactants)
-        return true;
+      if(!this.collection.length) { return true; }
+      if(this.collection.length < 2 && this.collection.at(0).ratio < 2) { return true; }
+      if(this.reactionType !== 'custom-massaction') { return true; }
+      if(!this.isReactants) { return true; }
       return false;
     }
     return false;
@@ -120,17 +113,14 @@ module.exports = View.extend({
       prepareView: function (el) {
         return new SelectView({
           name: 'stoich-specie',
-          label: '',
           required: false,
           textAttribute: 'name',
           eagerValidate: false,
-          // Set idAttribute to name. Models may not be saved yet so id is unreliable (so is cid).
-          // Use name since it *should be* unique.
           idAttribute: 'name',
           options: this.species,
-          unselectedText: this.unselectedText,
+          unselectedText: this.unselectedText
         });
       }
     }
-  },
+  }
 });

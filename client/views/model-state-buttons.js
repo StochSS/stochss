@@ -294,34 +294,34 @@ module.exports = View.extend({
     }
   },
   openSpeciesSection: function () {
-    let specSection = $(this.parent.speciesEditor.queryByHook("species-list-container"))
+    let specSection = $(this.parent.modelView.speciesView.queryByHook("species-list-container"))
     if(!specSection.hasClass("show")) {
-      let specCollapseBtn = $(this.parent.speciesEditor.queryByHook("collapse"))
+      let specCollapseBtn = $(this.parent.modelView.speciesView.queryByHook("collapse"))
       specCollapseBtn.click()
       specCollapseBtn.html('-')
     }
   },
   openDomainSection: function () {
-    let domainSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
+    let domainSection = $(this.parent.modelView.domainViewer.queryByHook("domain-container"))
     if(!domainSection.hasClass("show")) {
-      let domainCollapseBtn = $(this.parent.domainViewer.queryByHook("collapse"))
+      let domainCollapseBtn = $(this.parent.modelView.domainViewer.queryByHook("collapse"))
       domainCollapseBtn.click()
       domainCollapseBtn.html('-')
     }
   },
   openParametersSection: function () {
-    let paramSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
+    let paramSection = $(this.parent.modelView.parametersView.queryByHook("parameters-list-container"))
     if(!paramSection.hasClass("show")) {
-      let paramCollapseBtn = $(this.parent.parametersEditor.queryByHook("collapse"))
+      let paramCollapseBtn = $(this.parent.modelView.parametersView.queryByHook("collapse"))
       paramCollapseBtn.click()
       paramCollapseBtn.html('-')
     }
   },
   openReactionsSection: function (isCollection = false) {
     let error = this.model.error
-    let reacSection = $(this.parent.reactionsEditor.queryByHook("reactions-list-container"))
+    let reacSection = $(this.parent.modelView.reactionsView.queryByHook("reactions-list-container"))
     if(!reacSection.hasClass("show")) {
-      let reacCollapseBtn = $(this.parent.reactionsEditor.queryByHook("collapse"))
+      let reacCollapseBtn = $(this.parent.modelView.reactionsView.queryByHook("collapse"))
       reacCollapseBtn.click()
       reacCollapseBtn.html('-')
     }
@@ -334,15 +334,15 @@ module.exports = View.extend({
   },
   openEventsSection: function () {
     let error = this.model.error
-    let advSection = $(this.parent.queryByHook("me-advanced-section"))
+    let advSection = $(this.parent.modelView.queryByHook("mv-advanced-section"))
     if(!advSection.hasClass("show")) {
-      let advCollapseBtn = $(this.parent.queryByHook("collapse-me-advanced-section"))
+      let advCollapseBtn = $(this.parent.modelView.queryByHook("collapse-mv-advanced-section"))
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let evtSection = $(this.eventsEditor.queryByHook("events"))
+    let evtSection = $(this.parent.modelView.eventsView.queryByHook("events"))
     if(!evtSection.hasClass("show")) {
-      let evtCollapseBtn = $(this.parent.eventsEditor.queryByHook("collapse"))
+      let evtCollapseBtn = $(this.parent.modelView.eventsView.queryByHook("collapse"))
       evtCollapseBtn.click()
       evtCollapseBtn.html('-')
     }
@@ -359,9 +359,9 @@ module.exports = View.extend({
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let ruleSection = $(this.rulesEditor.queryByHook("rules-list-container"))
+    let ruleSection = $(this.parent.modelView.rulesView.queryByHook("rules-list-container"))
     if(!ruleSection.hasClass("show")) {
-      let ruleCollapseBtn = $(this.parent.rulesEditor.queryByHook("collapse"))
+      let ruleCollapseBtn = $(this.parent.modelView.rulesView.queryByHook("collapse"))
       ruleCollapseBtn.click()
       ruleCollapseBtn.html('-')
     }
