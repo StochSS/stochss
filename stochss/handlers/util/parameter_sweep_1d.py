@@ -16,13 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import json
 import copy
 import logging
 import traceback
 
 import numpy
 import plotly
-import matplotlib
+# import matplotlib
 
 log = logging.getLogger("stochss")
 
@@ -165,25 +166,43 @@ class ParameterSweep1D():
     #     matplotlib.pyplot.ylabel("Population", fontsize=16, fontweight='bold')
 
 
-    classmethod
+    @classmethod
     def plot(cls, results, species, param, mapper="final", reducer="avg"):
+        '''
+        Plot the results with error bar from time series results.
+
+        Attributes
+        ----------
+        results : list
+            List of GillesPy2 results objects.
+        species : str
+            Species of interest name.
+        param : dict
+            StochSS sweep parameter dictionary.
+        mapper : str
+            Key indicating the feature extraction function to use.
+        reducer : str
+            Key indicating the ensemble aggragation function to use.
+        '''
         func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
                     "var": numpy.var, "final": lambda res: res[-1]}
         map_results = [[func_map[mapper](traj[species]) for traj in result] for result in results]
-        if len(map_res[0]) > 1:
-            data = [[func_map[reducer](map_result), numpy.std(map_result)] for map_result in map_results]
+        if len(map_results[0]) > 1:
+            data = [[func_map[reducer](map_result),
+                     numpy.std(map_result)] for map_result in map_results]
             visible = True
         else:
             data = [[map_result[0], 0] for map_result in map_results]
             visible = False
+        data = numpy.array(data)
 
         error_y = dict(type="data", array=data[:, 1], visible=visible)
-        trace_list = [plotly.graph_objs.Scatter(x=self.param['range'],
+        trace_list = [plotly.graph_objs.Scatter(x=param['range'],
                                                 y=data[:, 0], error_y=error_y)]
 
         title = f"<b>Parameter Sweep - Variable: {species}</b>"
         layout = plotly.graph_objs.Layout(title=dict(text=title, x=0.5),
-                                          xaxis=dict(title=f"<b>{param}</b>"),
+                                          xaxis=dict(title=f"<b>{param['name']}</b>"),
                                           yaxis=dict(title="<b>Population</b>"))
 
         fig = dict(data=trace_list, layout=layout)

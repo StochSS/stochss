@@ -29,10 +29,13 @@ import plotly
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
+from .parameter_sweep_1d import ParameterSweep1D
+# from .parameter_sweep_2d import ParameterSweep2D
 from .stochss_spatial_model import StochSSSpatialModel
 from .stochss_errors import StochSSJobError, StochSSJobNotCompleteError, \
                             StochSSFileNotFoundError, StochSSFileExistsError, \
-                            FileNotJSONFormatError, PlotNotAvailableError
+                            FileNotJSONFormatError, PlotNotAvailableError, \
+                            StochSSJobResultsError
 
 class StochSSJob(StochSSBase):
     '''
@@ -70,7 +73,7 @@ class StochSSJob(StochSSBase):
         path = self.get_path(full=True)
         try:
             os.mkdir(path)
-            os.mkdir(self.get_results_path(full=True))
+            os.mkdir(self.__get_results_path(full=True))
             info = {"source_model":mdl_path, "wkfl_model":None, "type":self.type, "start_time":None}
             self.update_info(new_info=info, new=True)
             open(os.path.join(path, "logs.txt"), "w").close()
@@ -154,6 +157,8 @@ class StochSSJob(StochSSBase):
                             break
                     if passed:
                         p_results.append(result)
+            f_results.append(p_results)
+        return f_results
 
 
     @classmethod
@@ -161,25 +166,39 @@ class StochSSJob(StochSSBase):
         p_len = len(settings['parameterSweepSettings']['parameters'])
         dims = p_len - len(fixed.keys())
         if dims <= 0:
-            message = "Too many fixed parameters were provided.  At least one variable parameter is required."
+            message = "Too many fixed parameters were provided."
+            message += "At least one variable parameter is required."
             raise StochSSJobResultsError(message)
         if dims > 2:
-            message = "Not enough fixed parameters were provided.  Variable parameters cannot exceed 2."
+            message = "Not enough fixed parameters were provided."
+            message += "Variable parameters cannot exceed 2."
             raise StochSSJobResultsError(message)
-        f_keys = [f"{name}:{value}" for name, value in fixed.keys()]
+        f_keys = [f"{name}:{value}" for name, value in fixed.items()]
         return dims, f_keys
 
 
     def __get_pickled_results(self):
-        path = os.path.join(self.get_results_path(full=True), "results.p")
+        path = os.path.join(self.__get_results_path(full=True), "results.p")
         with open(path, "rb") as results_file:
             return pickle.load(results_file)
+
+
+    def __get_results_path(self, full=False):
+        '''
+        Return the path to the results directory
+
+        Attributes
+        ----------
+        full : bool
+            Indicates whether or not to get the full path or local path
+        '''
+        return os.path.join(self.get_path(full=full), "results")
 
 
     def __is_csv_dir(self, file):
         if "results_csv" not in file:
             return False
-        path = os.path.join(self.get_results_path(), file)
+        path = os.path.join(self.__get_results_path(), file)
         if not os.path.isdir(path):
             return False
         return True
@@ -288,7 +307,7 @@ class StochSSJob(StochSSBase):
         Attributes
         ----------
         '''
-        res_path = self.get_results_path(full=full)
+        res_path = self.__get_results_path(full=full)
         if not os.path.exists(res_path):
             message = f"Could not find the results directory: {res_path}"
             raise StochSSFileNotFoundError(message, traceback.format_exc())
@@ -388,7 +407,7 @@ class StochSSJob(StochSSBase):
         self.log("debug", f"Key identifying the plot to generate: {plt_type}")
         try:
             self.log("info", "Loading the results...")
-            results = self.__get_pickled_results()
+            result = self.__get_pickled_results()
             if plt_key is not None:
                 result = result[plt_key]
             self.log("info", "Generating the plot...")
@@ -419,31 +438,19 @@ class StochSSJob(StochSSBase):
         ''' Generate and return the parameter sweep plot form the time series results. '''
         settings = self.load_settings()
         dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
-        params = list(filter(lambda param: param['name'] not in fixed.keys(), settings['parameterSweepSettings']['parameters']))
-        var_params = list(map(lambda param: param['name'], params))
+        params = list(filter(lambda param: param['name'] not in fixed.keys(),
+                             settings['parameterSweepSettings']['parameters']))
         if dims == 1:
-            kwargs['param'] = var_params[0]
+            kwargs['param'] = params[0]
             kwargs['results'] = self.__get_filtered_1d_results(f_keys)
             fig = ParameterSweep1D.plot(**kwargs)
         else:
-            kwargs['params'] = var_params
-            kwargs['results'] = self.__get_filtered_2d_results(f_keys, var_params[0])
-            fig = ParameterSweep2D.plot(**kwargs)
+            kwargs['params'] = params
+            kwargs['results'] = self.__get_filtered_2d_results(f_keys, params[0])
+            # fig = ParameterSweep2D.plot(**kwargs)
         if add_config:
             fig['config'] = {"responsive": True}
         return fig
-
-
-    def get_results_path(self, full=False):
-        '''
-        Return the path to the results directory
-
-        Attributes
-        ----------
-        full : bool
-            Indicates whether or not to get the full path or local path
-        '''
-        return os.path.join(self.get_path(full=full), "results")
 
 
     def get_results_plot(self, plt_key, plt_data, fig=None):
@@ -459,7 +466,7 @@ class StochSSJob(StochSSBase):
         '''
         self.log("debug", f"Key identifying the requested plot: {plt_key}")
         self.log("debug", f"Title and axis data for the plot: {plt_data}")
-        path = os.path.join(self.get_results_path(full=True), "plots.json")
+        path = os.path.join(self.__get_results_path(full=True), "plots.json")
         self.log("debug", f"Path to the job result plot file: {path}")
         try:
             if fig is None:

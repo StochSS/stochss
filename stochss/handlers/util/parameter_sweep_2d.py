@@ -22,8 +22,8 @@ import traceback
 
 import numpy
 import plotly
-import matplotlib
-import mpl_toolkits
+# import matplotlib
+# import mpl_toolkits
 
 log = logging.getLogger("stochss")
 
@@ -170,9 +170,32 @@ class ParameterSweep2D():
 
     @classmethod
     def plot(cls, results, species, params, mapper="final", reducer="avg"):
+        '''
+        Plot the results with error bar from time series results.
+
+        Attributes
+        ----------
+        results : list
+            List of GillesPy2 results objects.
+        species : str
+            Species of interest name.
+        param : dict
+            StochSS sweep parameter dictionary.
+        mapper : str
+            Key indicating the feature extraction function to use.
+        reducer : str
+            Key indicating the ensemble aggragation function to use.
+        '''
         func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
                     "var": numpy.var, "final": lambda res: res[-1]}
-        map_results = 
+        data = []
+        for p_results in results:
+            map_results = [[func_map[mapper](traj[species]) for traj in result]
+                           for result in p_results]
+            if len(map_results[0]) > 1:
+                red_results = [func_map[reducer](map_result) for map_result in map_results]
+            data.append(red_results)
+        data = numpy.array(data)
 
 
     def run(self, job_id, verbose=False):
