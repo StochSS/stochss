@@ -39,7 +39,9 @@ RUN python3 -m pip install --no-cache-dir \
         jupyterhub==1.1.0 \
         oauthenticator==0.11.* \
         dockerspawner==0.11.* \
-        psycopg2==2.7.*
+        psycopg2==2.7.* \
+        nbviewer==1.0.1 \
+        notebook
 
 COPY static/*    /usr/local/share/jupyterhub/static/
 

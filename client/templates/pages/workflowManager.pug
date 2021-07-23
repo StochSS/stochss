@@ -69,9 +69,19 @@ section.page
 
   div(data-hook="settings-viewer-container")
 
-  div(data-hook="model-viewer-container")
+  div.card
 
-  div(data-hook="computational-resources-container")
+    div.card-header
+
+      h3.inline(id="model-viewer-header") "Review Model: "
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-model" data-hook="collapse-model") +
+
+    div.collapse(id="collapse-model")
+
+      div.card-body(data-hook="model-viewer-container")
+
+  div.mb-2(data-hook="computational-resources-container")
 
   button.btn.btn-primary.box-shadow(data-hook="return-to-project-btn" style="display: none;") Return to Project
 

@@ -53,6 +53,8 @@ c.NotebookApp.disable_check_xsrf = True
 ## The default URL to redirect to from `/`
 c.NotebookApp.default_url = '/stochss/home'
 
+c.NotebookApp.allow_remote_access = True
+
 #------------------------------------------------------------------------------
 # KernelManager(ConnectionFileMixin) configuration
 #------------------------------------------------------------------------------
@@ -182,4 +184,3 @@ c.NotebookApp.default_url = '/stochss/home'
 ## This class manages the configuration.  It's its own singleton class so that we
 #  can share these values across all objects.  It also contains some helper methods
 #   to build request arguments out of the various config options.
-

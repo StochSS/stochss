@@ -1,14 +1,22 @@
 div.mdl-edit-btn
   
-  div.mdl-edit-btn.saving-status(data-hook="saving-mdl")
+  div.mdl-edit-btn.saving-status(data-hook="mdl-action-start")
 
     div.spinner-grow
 
-    span Saving...
+    span(data-hook="saving" style="display: none") Saving ...
 
-  div.mdl-edit-btn.saved-status(data-hook="saved-mdl")
+    span(data-hook="publishing" style="display: none") Publishing ...
 
-    span Saved
+  div.mdl-edit-btn.saved-status(data-hook="mdl-action-end")
+
+    span(data-hook="saved" style="display: none") Saved
+
+    span(data-hook="published" style="display: none") Published
+
+  div.mdl-edit-btn.save-error-status(data-hook="mdl-action-err")
+
+    span Error
   
   button.btn.btn-primary.box-shadow(data-hook="save") Save
 
@@ -29,4 +37,6 @@ div.mdl-edit-btn
     li.dropdown-item(id="stochss-es" data-hook="stochss-es" data-type="ensemble") Ensemble Simulation
     li.dropdown-item(id="stochss-ps" data-hook="stochss-ps" data-type="psweep") Parameter Sweep
     li.dropdown-item(data-hook="new-workflow" data-type="notebook") Jupyter Notebook
+
+  button.btn.btn-primary.box-shadow(data-hook="presentation") Publish
   

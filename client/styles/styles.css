@@ -339,10 +339,9 @@ input[type="file"]::-ms-browse {
 
 .btn-outline-collapse {
   color: #000;
-  padding: 0px 10px;
+  padding: 0px 10px 6px 10px;
   font-size: 20px;
   vertical-align: middle;
-  margin-bottom: 0.75rem;
 }
 
 .btn-outline-collapse:hover {
@@ -554,6 +553,13 @@ span.checkbox {
   border-radius: 1.5rem;
 }
 
+.register-stochss-btn {
+  padding: 1.5rem 1.5rem;
+  font-size: 1.75rem;
+  line-height: 1;
+  border-radius: 1.5rem;
+}
+
 .user-home-btn {
   padding: 1rem 1rem;
   font-size: 1.5rem;
@@ -705,4 +711,9 @@ span.checkbox {
 
 .card-header {
   background-color: rgba(0, 0, 0, 0.1);
+}
+
+.presentation-header {
+  margin-top: 64px;
+  padding: 20px 16px;
 }
