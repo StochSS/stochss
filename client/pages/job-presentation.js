@@ -26,7 +26,7 @@ let app = require("../app");
 let Job = require("../models/job");
 //views
 let PageView = require('./base');
-let ModelView = require('../views/model-viewer');
+let ModelView = require('../model-view/model-view');
 let ResultsView = require('../views/workflow-results');
 let SettingsView = require('../views/settings-viewer');
 //templates
@@ -67,7 +67,6 @@ let JobPresentationPage = PageView.extend({
   renderModelContainer: function () {
     let modelView = new ModelView({
       model: this.model.model,
-      mode: "presentation"
     });
     app.registerRenderSubview(this, modelView, "job-model");
   },
