@@ -143,26 +143,51 @@ class ParameterSweep1D():
         return trace_list
 
 
-    def plot(self, keys=None):
-        '''
-        Plot the results based on the keys using matplotlib
+    # def plot(self, keys=None):
+    #     '''
+    #     Plot the results based on the keys using matplotlib
 
-        Attributes
-        ----------
-        key : list
-            Identifiers for the results data
-        '''
-        if len(keys) > 2:
-            results = self.results[keys[0]][keys[1]][keys[2]]
+    #     Attributes
+    #     ----------
+    #     key : list
+    #         Identifiers for the results data
+    #     '''
+    #     if len(keys) > 2:
+    #         results = self.results[keys[0]][keys[1]][keys[2]]
+    #     else:
+    #         results = self.results[keys[0]][keys[1]]
+
+    #     matplotlib.pyplot.subplots(figsize=(8, 8))
+    #     matplotlib.pyplot.title(f"Parameter Sweep - Variable: {keys[0]}")
+    #     matplotlib.pyplot.errorbar(self.param['range'], results[:, 0], results[:, 1])
+    #     matplotlib.pyplot.xlabel(self.param['parameter'],
+    #                              fontsize=16, fontweight='bold')
+    #     matplotlib.pyplot.ylabel("Population", fontsize=16, fontweight='bold')
+
+
+    classmethod
+    def plot(cls, results, species, param, mapper="final", reducer="avg"):
+        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
+                    "var": numpy.var, "final": lambda res: res[-1]}
+        map_results = [[func_map[mapper](traj[species]) for traj in result] for result in results]
+        if len(map_res[0]) > 1:
+            data = [[func_map[reducer](map_result), numpy.std(map_result)] for map_result in map_results]
+            visible = True
         else:
-            results = self.results[keys[0]][keys[1]]
+            data = [[map_result[0], 0] for map_result in map_results]
+            visible = False
 
-        matplotlib.pyplot.subplots(figsize=(8, 8))
-        matplotlib.pyplot.title(f"Parameter Sweep - Variable: {keys[0]}")
-        matplotlib.pyplot.errorbar(self.param['range'], results[:, 0], results[:, 1])
-        matplotlib.pyplot.xlabel(self.param['parameter'],
-                                 fontsize=16, fontweight='bold')
-        matplotlib.pyplot.ylabel("Population", fontsize=16, fontweight='bold')
+        error_y = dict(type="data", array=data[:, 1], visible=visible)
+        trace_list = [plotly.graph_objs.Scatter(x=self.param['range'],
+                                                y=data[:, 0], error_y=error_y)]
+
+        title = f"<b>Parameter Sweep - Variable: {species}</b>"
+        layout = plotly.graph_objs.Layout(title=dict(text=title, x=0.5),
+                                          xaxis=dict(title=f"<b>{param}</b>"),
+                                          yaxis=dict(title="<b>Population</b>"))
+
+        fig = dict(data=trace_list, layout=layout)
+        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
 
 
     def run(self, job_id, verbose=False):

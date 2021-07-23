@@ -140,32 +140,39 @@ class ParameterSweep2D():
         return trace_list
 
 
-    def plot(self, keys=None):
-        '''
-        Plot the results based on the keys using matplotlib
+    # def plot(self, keys=None):
+    #     '''
+    #     Plot the results based on the keys using matplotlib
 
-        Attributes
-        ----------
-        key : list
-            Identifiers for the results data
-        '''
-        if len(keys) <= 2:
-            results = self.results[keys[0]][keys[1]]
-        else:
-            results = self.results[keys[0]][keys[1]][keys[2]]
+    #     Attributes
+    #     ----------
+    #     key : list
+    #         Identifiers for the results data
+    #     '''
+    #     if len(keys) <= 2:
+    #         results = self.results[keys[0]][keys[1]]
+    #     else:
+    #         results = self.results[keys[0]][keys[1]][keys[2]]
 
-        _, axis = matplotlib.pyplot.subplots(figsize=(8, 8))
-        matplotlib.pyplot.imshow(results)
-        axis.set_xticks(numpy.arange(results.shape[1])+0.5, minor=False)
-        axis.set_yticks(numpy.arange(results.shape[0])+0.5, minor=False)
-        matplotlib.pyplot.title(f"Parameter Sweep - Variable: {keys[0]}")
-        axis.set_xticklabels(self.params[0]['range'], minor=False, rotation=90)
-        axis.set_yticklabels(self.params[1]['range'], minor=False)
-        axis.set_xlabel(self.params[0]['parameter'], fontsize=16, fontweight='bold')
-        axis.set_ylabel(self.params[1]['parameter'], fontsize=16, fontweight='bold')
-        divider = mpl_toolkits.axes_grid1.make_axes_locatable(axis)
-        cax = divider.append_axes("right", size="5%", pad=0.2)
-        _ = matplotlib.pyplot.colorbar(ax=axis, cax=cax)
+    #     _, axis = matplotlib.pyplot.subplots(figsize=(8, 8))
+    #     matplotlib.pyplot.imshow(results)
+    #     axis.set_xticks(numpy.arange(results.shape[1])+0.5, minor=False)
+    #     axis.set_yticks(numpy.arange(results.shape[0])+0.5, minor=False)
+    #     matplotlib.pyplot.title(f"Parameter Sweep - Variable: {keys[0]}")
+    #     axis.set_xticklabels(self.params[0]['range'], minor=False, rotation=90)
+    #     axis.set_yticklabels(self.params[1]['range'], minor=False)
+    #     axis.set_xlabel(self.params[0]['parameter'], fontsize=16, fontweight='bold')
+    #     axis.set_ylabel(self.params[1]['parameter'], fontsize=16, fontweight='bold')
+    #     divider = mpl_toolkits.axes_grid1.make_axes_locatable(axis)
+    #     cax = divider.append_axes("right", size="5%", pad=0.2)
+    #     _ = matplotlib.pyplot.colorbar(ax=axis, cax=cax)
+
+
+    @classmethod
+    def plot(cls, results, species, params, mapper="final", reducer="avg"):
+        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
+                    "var": numpy.var, "final": lambda res: res[-1]}
+        map_results = 
 
 
     def run(self, job_id, verbose=False):
