@@ -80,3 +80,18 @@ div#workflow-results.card.card-body
 
             div.mt-2(data-hook="parameter-ranges")
 
+    button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish Presentation
+
+    div.saving-status(data-hook="job-action-start")
+
+      div.spinner-grow
+
+      span Publishing ...
+
+    div.saved-status(data-hook="job-action-end")
+
+      span Published
+
+    div.save-error-status(data-hook="job-action-err")
+
+      span Error
