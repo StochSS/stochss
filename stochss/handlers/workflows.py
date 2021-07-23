@@ -28,7 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
-                  StochSSAPIError, report_error
+                  StochSSFolder, StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -389,6 +389,37 @@ class UpadteWorkflowAPIHandler(APIHandler):
         try:
             wkfl = StochSSWorkflow(path=path)
             resp = wkfl.update_wkfl_format()
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class JobPresentationAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for publishing job presentations.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Publish a job presentation.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the job: %s", path)
+        name = self.get_query_argument(name="name")
+        log.debug("Name of the job presentation: %s", name)
+        try:
+            folder = StochSSFolder(path=path)
+            log.info("Publishing the %s presentation", folder.get_name())
+            resp = folder.publish_presentation(name=name)
+            log.info(resp['message'])
             log.debug("Response Message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
