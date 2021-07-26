@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import json
 import copy
 import logging
 import traceback
@@ -196,10 +197,10 @@ class ParameterSweep2D():
                 red_results = [func_map[reducer](map_result) for map_result in map_results]
             data.append(red_results)
         data = numpy.array(data)
-        
+
         trace_list = [plotly.graph_objs.Heatmap(z=data, x=params[0]['range'],
                                                 y=params[1]['range'])]
-        
+
         title = f"<b>Parameter Sweep - Variable: {species}</b>"
         layout = plotly.graph_objs.Layout(title=dict(text=title, x=0.5),
                                           xaxis=dict(title=f"<b>{params[0]['name']}</b>"),
