@@ -876,7 +876,7 @@ class StochSSNotebook(StochSSBase):
         present_link = f"https://live.stochss.org/stochss/present-notebook{query_str}"
         dl_link_base = "https://live.stochss.org/stochss/notebook/download_presentation"
         download_link = os.path.join(dl_link_base, hostname, file)
-        open_link = f"https://live.stochss.org?open={download_link}"
+        open_link = f"https://open.stochss.org?open={download_link}"
         return {"presentation": present_link, "download": download_link, "open": open_link}
 
     def create_1dps_notebook(self):
