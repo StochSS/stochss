@@ -195,6 +195,8 @@ class ParameterSweep2D():
                             for result in p_results]
             if len(map_results[0]) > 1:
                 red_results = [func_map[reducer](map_result) for map_result in map_results]
+            else:
+                red_results = [map_result[0] for map_result in map_results]
             data.append(red_results)
         data = numpy.array(data)
 
