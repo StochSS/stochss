@@ -47,7 +47,8 @@ module.exports = View.extend({
     'change [data-hook=all-discrete]' : 'setDefaultMode',
     'change [data-hook=advanced]' : 'setDefaultMode',
     'change [data-hook=edit-volume]' : 'updateVolumeViewer',
-    'click [data-hook=collapse-mv-advanced-section]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse-mv-advanced-section]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-system-volume]' : 'changeCollapseButtonText'
   },
   initialize: function(attrs, options) {
     View.prototype.initialize.apply(this, arguments);
