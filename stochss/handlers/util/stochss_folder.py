@@ -450,6 +450,7 @@ class StochSSFolder(StochSSBase):
                 file = f"{json.loads(body)['name']}.{ext}"
             elif ext == "ipynb":
                 file = json.loads(body)['file']
+                body = json.dumps(json.loads(body)['notebook'])
         else:
             file = self.get_file(path=remote_path)
         path = self.get_new_path(dst_path=file)

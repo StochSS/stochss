@@ -236,19 +236,10 @@ let templates = {
                     </button>
                   </div>
                   <div class="modal-body">
-                    <h4><u>${headers[0]}</u></h4>
+                    <h4><u>${headers}</u></h4>
                     <div>
-                      <a href="${links.presentation}" target="_blank"> View ${name} Presentation</a>
-                    </div>
-                    <hr>
-                    <h4><u>${headers[1]}</u></h4>
-                    <div>
-                      <a href="${links.download}"> Download ${name} Presentation</a>
-                    </div>
-                    <hr>
-                    <h4><u>${headers[2]}</u></h4>
-                    <div>
-                      <a href="${links.open}" target="_blank"> Open ${name} Presentation</a>
+                      <a class="inline" data-hook="view-present-link" href="${links.presentation}" target="_blank"> View ${name} Presentation</a>
+                      <button type="button" class="btn btn-primary box-shadow inline" id="copy-to-clipboard">Copy Link</button>
                     </div>
                   </div>
                   <div class="modal-footer">
