@@ -5,7 +5,7 @@
 # @website https://github.com/stochss/stochss
 # =============================================================================
 
-__version__ = '2.3.8'
+__version__ = '2.3.9'
 __title__ = 'StochSS'
 __description__ = 'StochSS is an integrated development environment (IDE) \
                     for simulation of biochemical networks.'
