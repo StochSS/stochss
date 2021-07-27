@@ -445,7 +445,7 @@ class StochSSFolder(StochSSBase):
         '''
         ext = remote_path.split('.').pop()
         body = requests.get(remote_path, allow_redirects=True).content
-        if "download-presentation" in remote_path:
+        if "download_presentation" in remote_path:
             if ext in ("mdl", "smdl"):
                 file = f"{json.loads(body)['name']}.{ext}"
             elif ext == "ipynb":
