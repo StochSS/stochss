@@ -63,7 +63,7 @@ let ModelPresentationPage = PageView.extend({
     this.renderModelView();
   },
   renderModelView: function () {
-    let modelView = ModelView({
+    let modelView = new ModelView({
       model: this.model,
       readOnly: true
     });
