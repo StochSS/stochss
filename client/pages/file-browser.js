@@ -904,7 +904,7 @@ let FileBrowser = PageView.extend({
     app.getXHR(endpoint, {
       success: function (err, response, body) {
         let title = body.message;
-        let linkHeaders = "Sharable Presentation Link";
+        let linkHeaders = "Shareable Presentation Link";
         let links = body.links;
         let name = o.original._path.split('/').pop().split('.ipynb')[0];
         $(modals.presentationLinks(title, name, linkHeaders, links)).modal();

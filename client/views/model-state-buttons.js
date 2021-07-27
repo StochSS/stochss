@@ -308,7 +308,7 @@ module.exports = View.extend({
         success: function (err, response, body) {
           self.endAction("publish");
           let title = body.message;
-          let linkHeaders = "Sharable Presentation Link";
+          let linkHeaders = "Shareable Presentation Link";
           let links = body.links;
           let name = self.model.name
           $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
