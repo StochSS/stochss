@@ -391,41 +391,40 @@ class StochSSJob(StochSSBase):
         return {"kwargs":kwargs, "type":wkfl_type}
 
 
-    def get_plot_from_results(self, plt_key, plt_data, plt_type):
+    def get_plot_from_results(self, data_keys, plt_key, add_config=False):
         '''
         Get the plotly figure for the results of a job
 
         Attributes
         ----------
+        data_keys : dict
+            Dictionary of param names and values used to identify the correct data.
         plt_key : str
-            Indentifier for the requested plot figure
-        plt_data : dict
-            Title and axes data for the plot
-        plt_type : str
             Type of plot to generate.
         '''
-        self.log("debug", f"Key identifying the plot to generate: {plt_type}")
+        self.log("debug", f"Key identifying the plot to generate: {plt_key}")
         try:
             self.log("info", "Loading the results...")
             result = self.__get_pickled_results()
-            if plt_key is not None:
-                result = result[plt_key]
+            if data_keys:
+                key = [f"{name}:{value}" for name, value in data_keys.items()]
+                key = ','.join(key)
+                result = result[key]
             self.log("info", "Generating the plot...")
-            if plt_type == "mltplplt":
+            if plt_key == "mltplplt":
                 fig = result.plotplotly(return_plotly_figure=True, multiple_graphs=True)
-            elif plt_type == "stddevran":
+            elif plt_key == "stddevran":
                 fig = result.plotplotly_std_dev_range(return_plotly_figure=True)
             else:
-                if plt_type == "stddev":
+                if plt_key == "stddev":
                     result = result.stddev_ensemble()
-                elif plt_type == "avg":
+                elif plt_key == "avg":
                     result = result.average_ensemble()
                 fig = result.plotplotly(return_plotly_figure=True)
-            if plt_type != "mltplplt":
+            if add_config and plt_key != "mltplplt":
                 fig["config"] = {"responsive":True}
             self.log("info", "Loading the plot...")
-            fig = json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
-            return self.get_results_plot(plt_key=None, plt_data=plt_data, fig=fig)
+            return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -435,7 +434,16 @@ class StochSSJob(StochSSBase):
 
 
     def get_psweep_plot_from_results(self, fixed, kwargs, add_config=False):
-        ''' Generate and return the parameter sweep plot form the time series results. '''
+        '''
+        Generate and return the parameter sweep plot form the time series results.
+
+        Attributes
+        ----------
+        fixed : dict
+            Dictionary for parameters that remain at a fixed value.
+        kwarps : dict
+            Dictionary of keys used for post proccessing the results.
+        '''
         settings = self.load_settings()
         dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
         params = list(filter(lambda param: param['name'] not in fixed.keys(),
@@ -450,7 +458,7 @@ class StochSSJob(StochSSBase):
             fig = ParameterSweep2D.plot(**kwargs)
         if add_config:
             fig['config'] = {"responsive": True}
-        return fig
+        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
 
 
     def get_results_plot(self, plt_key, plt_data, fig=None):

@@ -233,17 +233,17 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("The path to the workflow: %s", path)
         body = json.loads(self.get_query_argument(name='data'))
-        if body['plt_data'] == "None":
-            body['plt_data'] = None
         log.debug("Plot args passed to the plot: %s", body)
         try:
-            wkfl = StochSSJob(path=path)
-            if "plt_type" in body.keys():
-                fig = wkfl.get_plot_from_results(**body)
-                wkfl.print_logs(log)
+            job = StochSSJob(path=path)
+            if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
+                fig = job.get_plot_from_results(data_keys=body['data_keys'],
+                                                plt_key=data['plt_key'], add_config=True)
+                job.print_logs(log)
             else:
-                log.info("Loading the plot...")
-                fig = wkfl.get_results_plot(**body)
+                fig = job.get_get_psweep_plot_from_results(fixed=body['data_keys'],
+                                                           kwargs=body['plt_key'], add_config=True)
+                job.print_logs(log)
             log.debug("Plot figure: %s", fig)
             self.write(fig)
         except StochSSAPIError as err:
