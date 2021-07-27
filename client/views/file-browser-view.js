@@ -948,10 +948,14 @@ module.exports = View.extend({
     app.getXHR(endpoint, {
       success: function (err, response, body) {
         let title = body.message;
-        let linkHeaders = ["Presentation Link", "Download Link", "Open Link"];
+        let linkHeaders = "Shareable Presentation Link";
         let links = body.links;
         let name = o.original._path.split('/').pop().split('.ipynb')[0];
         $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
+        let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+        copyBtn.addEventListener('click', function (e) {
+          app.copyToClipboard(links.presentation)
+        });
       },
       error: function (err, response, body) {
         $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
