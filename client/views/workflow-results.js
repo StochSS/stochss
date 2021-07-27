@@ -20,6 +20,7 @@ let $ = require('jquery');
 let path = require('path');
 //support files
 let app = require('../app');
+let modals = require('../modals');
 let Tooltips = require('../tooltips');
 let Plotly = require('../lib/plotly');
 //views
@@ -49,13 +50,15 @@ module.exports = View.extend({
     'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
     'click [data-target=download-json]' : 'handleDownloadJSONClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
-    'click [data-hook=download-results-csv]' : 'handleDownloadResultsCsvClick'
+    'click [data-hook=download-results-csv]' : 'handleDownloadResultsCsvClick',
+    // 'click [data-hook=job-presentation]' : 'handlePresentationClick'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.parameterSweepResults;
     this.plots = {};
     this.plotArgs = {};
+    this.mode = Boolean(attrs.mode) ? attrs.mode : "edit";
   },
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
@@ -67,6 +70,16 @@ module.exports = View.extend({
       this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
     }
     View.prototype.render.apply(this, arguments);
+    if(this.mode === "presentation") {
+      $(this.queryByHook("job-presentation")).css("display", "none");
+      if(!isParameterScan){
+        $(this.queryByHook("convert-to-notebook")).css("display", "none");
+      }
+    }else if(app.getBasePath() === "/") {
+      $(this.queryByHook("job-presentation")).css("display", "none");
+    }else{
+      $(this.queryByHook("job-presentation")).prop("disabled", true);
+    }
     if(this.parent.model.type === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";
     }else{
@@ -95,6 +108,22 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  endAction: function () {
+    $(this.queryByHook("job-action-start")).css("display", "none");
+    let saved = $(this.queryByHook("job-action-end"));
+    saved.css("display", "inline-block");
+    setTimeout(function () {
+      saved.css("display", "none");
+    }, 5000);
+  },
+  errorAction: function () {
+    $(this.queryByHook("job-action-start")).css("display", "none");
+    let error = $(this.queryByHook("job-action-err"));
+    error.css("display", "inline-block");
+    setTimeout(function () {
+      error.css("display", "none");
+    }, 5000);
   },
   cleanupPlotContainer: function (type) {
     let el = this.queryByHook(type + "-plot");
@@ -256,6 +285,22 @@ module.exports = View.extend({
       }
     });
   },
+  handlePresentationClick: function (e) {
+    let self = this;
+    this.startAction();
+    let name = this.parent.model.name + "_" + this.model.name;
+    let queryStr = "?path=" + this.model.directory + "&name=" + name;
+    let endpoint = path.join(app.getApiPath(), "job/presentation") + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.endAction();
+      },
+      error: function (err, response, body) {
+        self.errorAction();
+        $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+      }
+    });
+  },
   openPlotArgsSection: function (e) {
     $(this.queryByHook("edit-plot-args")).collapse("show");
     $(document).ready(function () {
@@ -375,6 +420,11 @@ module.exports = View.extend({
       fig.layout.yaxis.title.text = e.target.value
       this.plotFigure(fig, type)
     }
+  },
+  startAction: function () {
+    $(this.queryByHook("job-action-start")).css("display", "inline-block");
+    $(this.queryByHook("job-action-end")).css("display", "none");
+    $(this.queryByHook("job-action-err")).css("display", "none");
   },
   update: function () {},
   updateValid: function () {},

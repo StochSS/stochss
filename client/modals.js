@@ -223,6 +223,40 @@ let templates = {
                     </div>
                   </div>
                 </div>`
+        },
+        presentationLinks : (modalID, title, name, headers, links) => {
+          return `
+            <div id=${modalID} class="modal" tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content info">
+                  <div class="modal-header">
+                    <h5 class="modal-title"> ${title} </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <h4><u>${headers[0]}</u></h4>
+                    <div>
+                      <a href="${links.presentation}" target="_blank"> View ${name} Presentation</a>
+                    </div>
+                    <hr>
+                    <h4><u>${headers[1]}</u></h4>
+                    <div>
+                      <a href="${links.download}"> Download ${name} Presentation</a>
+                    </div>
+                    <hr>
+                    <h4><u>${headers[2]}</u></h4>
+                    <div>
+                      <a href="${links.open}" target="_blank"> Open ${name} Presentation</a>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary box-shadow close-btn" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>`
         }
     }
 
@@ -541,5 +575,10 @@ module.exports = {
                 </div>
               </div>
             </div>`
+    },
+    presentationLinks : (title, name, headers, links) => {
+      let modalID = "presentationLinksModal"
+
+      return templates.presentationLinks(modalID, title, name, headers, links);
     }
 }
