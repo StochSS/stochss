@@ -23,6 +23,8 @@ from .stochss_model import StochSSModel
 from .stochss_spatial_model import StochSSSpatialModel
 from .stochss_sbml import StochSSSBMLModel
 from .stochss_notebook import StochSSNotebook
+from .parameter_sweep_notebook import StochSSParamSweepNotebook
+from .sciope_notebook import StochSSSciopeNotebook
 from .stochss_workflow import StochSSWorkflow
 from .stochss_job import StochSSJob
 from .stochss_project import StochSSProject

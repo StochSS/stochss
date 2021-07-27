@@ -47,8 +47,7 @@ let ModelEditor = PageView.extend({
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
     'click [data-hook=toggle-preview-domain]' : 'toggleDomainPlot',
-    'click [data-hook=download-png]' : 'clickDownloadPNGButton',
-    'click [data-hook=collapse-system-volume]' : 'changeCollapseButtonText'
+    'click [data-hook=download-png]' : 'clickDownloadPNGButton'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
