@@ -444,42 +444,48 @@ class StochSSJob(StochSSBase):
         kwarps : dict
             Dictionary of keys used for post proccessing the results.
         '''
+        self.log("debug", f"Key identifying the plot to generate: {kwargs}")
         settings = self.load_settings()
-        dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
-        params = list(filter(lambda param: param['name'] not in fixed.keys(),
-                             settings['parameterSweepSettings']['parameters']))
-        if dims == 1:
-            kwargs['param'] = params[0]
-            kwargs['results'] = self.__get_filtered_1d_results(f_keys)
-            fig = ParameterSweep1D.plot(**kwargs)
-        else:
-            kwargs['params'] = params
-            kwargs['results'] = self.__get_filtered_2d_results(f_keys, params[0])
-            fig = ParameterSweep2D.plot(**kwargs)
-        if add_config:
-            fig['config'] = {"responsive": True}
-        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+        try:
+            self.log("info", "Loading the results...")
+            dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
+            params = list(filter(lambda param: param['name'] not in fixed.keys(),
+                                 settings['parameterSweepSettings']['parameters']))
+            if dims == 1:
+                kwargs['param'] = params[0]
+                kwargs['results'] = self.__get_filtered_1d_results(f_keys)
+                self.log("info", "Generating the plot...")
+                fig = ParameterSweep1D.plot(**kwargs)
+            else:
+                kwargs['params'] = params
+                kwargs['results'] = self.__get_filtered_2d_results(f_keys, params[0])
+                self.log("info", "Generating the plot...")
+                fig = ParameterSweep2D.plot(**kwargs)
+            if add_config:
+                fig['config'] = {"responsive": True}
+            self.log("info", "Loading the plot...")
+            return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
-    def get_results_plot(self, plt_key, plt_data, fig=None):
+    def update_fig_layout(self, fig=None, plt_data=None):
         '''
         Get the plotly figure for the results of a job
 
         Attributes
         ----------
-        plt_key : str
-            Indentifier for the requested plot figure
+        fig : dict
+            Plotly figure to be updated
         plt_data : dict
             Title and axes data for the plot
         '''
-        self.log("debug", f"Key identifying the requested plot: {plt_key}")
         self.log("debug", f"Title and axis data for the plot: {plt_data}")
-        path = os.path.join(self.__get_results_path(full=True), "plots.json")
-        self.log("debug", f"Path to the job result plot file: {path}")
         try:
-            if fig is None:
-                with open(path, "r") as plot_file:
-                    fig = json.load(plot_file)[plt_key]
             if plt_data is None:
                 return fig
             for key in plt_data.keys():
@@ -488,12 +494,6 @@ class StochSSJob(StochSSBase):
                 else:
                     fig['layout'][key]['title']['text'] = plt_data[key]
             return fig
-        except FileNotFoundError as err:
-            message = f"Could not find the plots file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
-        except json.decoder.JSONDecodeError as err:
-            message = f"The plots file is not JSON decodable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
         except KeyError as err:
             message = f"The requested plot is not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
