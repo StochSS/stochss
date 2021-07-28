@@ -132,12 +132,7 @@ class StochSSJob(StochSSBase):
         results = self.__get_pickled_results()
         f_results = []
         for key, result in results.items():
-            passed = True
-            for f_key in f_keys:
-                if f_key not in key:
-                    passed = False
-                    break
-            if passed:
+            if self.__is_result_valid(f_keys, key):
                 f_results.append(result)
         return f_results
 
@@ -149,14 +144,8 @@ class StochSSJob(StochSSBase):
             p_key = f"{param['name']}:{value}"
             p_results = []
             for key, result in results.items():
-                if p_key in key:
-                    passed = True
-                    for f_key in f_keys:
-                        if f_key not in key:
-                            passed = False
-                            break
-                    if passed:
-                        p_results.append(result)
+                if p_key in key.split(',') and self.__is_result_valid(f_keys, key):
+                    p_results.append(result)
             f_results.append(p_results)
         return f_results
 
@@ -201,6 +190,14 @@ class StochSSJob(StochSSBase):
         path = os.path.join(self.__get_results_path(), file)
         if not os.path.isdir(path):
             return False
+        return True
+
+
+    @classmethod
+    def __is_result_valid(cls, f_keys, key):
+        for f_key in f_keys:
+            if f_key not in key.split(','):
+                return False
         return True
 
 
