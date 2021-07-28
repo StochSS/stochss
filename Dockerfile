@@ -39,7 +39,6 @@ USER jovyan
 ENV PATH="/usr/local/julia-1.4.2/bin:${PATH}"
 
 RUN julia -e 'using Pkg; Pkg.add("IJulia")'
-RUN julia -e 'using Pkg; Pkg.add("Plots")'
 RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
 
 RUN pip install --no-cache-dir -e .
