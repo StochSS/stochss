@@ -27,12 +27,15 @@ module.exports = View.extend({
   events: function () {
     let events = {};
     events['change [data-hook=' + this.model.elementID + '-slider'] = 'setParameterRangeValue';
+    events['change [data-hook=' + this.model.elementID + '-fixed'] = 'setParameterRangeFixed';
     events['input [data-hook=' + this.model.elementID + '-slider'] = 'viewParameterRangeValue';
     return events;
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     let self = this;
+    this.model.fixed = false;
+    this.showFixed = Boolean(attrs.showFixed) ? attrs.showFixed : false;
     this.parameter = this.parent.model.model.parameters.filter(function (param) {
       return param.compID === self.model.paramID
     })[0];
@@ -41,6 +44,12 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(!this.showFixed){
+      $(this.queryByHook(this.model.elementID + "-fixed-container")).css("display", "none");
+    }
+  },
+  setParameterRangeFixed: function (e) {
+    this.model.fixed = e.target.checked;
   },
   setParameterRangeValue: function (e) {
     var value = this.model.range[e.target.value];

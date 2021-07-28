@@ -5,6 +5,12 @@ div
 
   div
 
+    div.inline.mr-2(data-hook=this.model.elementID + "-fixed-container")
+
+      span(for=this.model.elementID + "-fixed") Fixed: 
+
+      input(type="checkbox" id=this.model.elementID + "-fixed" data-hook=this.model.elementID + "-fixed")
+
     div.inline.mr-2=this.model.name + ":"
 
     div.inline(style="max-width: 100%")
