@@ -239,11 +239,11 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             job = StochSSJob(path=path)
             if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
                 fig = job.get_plot_from_results(data_keys=body['data_keys'],
-                                                plt_key=data['plt_key'], add_config=True)
+                                                plt_key=body['plt_key'], add_config=True)
                 job.print_logs(log)
             else:
-                fig = job.get_get_psweep_plot_from_results(fixed=body['data_keys'],
-                                                           kwargs=body['plt_key'], add_config=True)
+                fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
+                                                       kwargs=body['plt_key'], add_config=True)
                 job.print_logs(log)
             fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
             log.debug("Plot figure: %s", fig)
