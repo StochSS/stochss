@@ -84,24 +84,20 @@ module.exports = View.extend({
       var type = isEnsemble ? "stddevran" : "trajectories";
     }else{
       this.tsPlotData = {"parameters":{}};
+      this.fixedParameters = {};
       var type = "ts-psweep";
-      if(!isParameterScan) {
-        this.renderSpeciesOfInterestView();
-        this.renderFeatureExtractionView();
-        if(isEnsemble) {
-          this.renderEnsembleAggragatorView();
-        }else{
-          $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
-        }
-        this.getPlot("psweep");
-      }
+      this.renderSpeciesOfInterestView();
+      this.renderFeatureExtractionView();
       if(isEnsemble) {
+        this.renderEnsembleAggragatorView();
         this.renderPlotTypeSelectView();
         this.tsPlotData["type"] = "stddevran"
       }else{
+        $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
         $(this.queryByHook('plot-type-header')).css("display", "none");
         this.tsPlotData["type"] = "trajectories"
       }
+      this.getPlot("psweep");
       this.renderSweepParameterView();
     }
     this.getPlot(type);
@@ -125,7 +121,7 @@ module.exports = View.extend({
       error.css("display", "none");
     }, 5000);
   },
-  cleanupPlotContainer: function (type) {
+  cleanupPlotContainer: function (type, data) {
     let el = this.queryByHook(type + "-plot");
     Plotly.purge(el);
     $(this.queryByHook(type + "-plot")).empty();
@@ -135,15 +131,18 @@ module.exports = View.extend({
       $(this.queryByHook(type + "-download-json")).prop("disabled", true);
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
     }
-    $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
+    if(data !== null) {
+      $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
+    }
   },
   getPlot: function (type) {
-    let data = this.getPlotData(type);
-    if(data === null) { return };
     let self = this;
-    this.cleanupPlotContainer(type);
+    let data = this.getPlotData(type);
+    this.cleanupPlotContainer(type, data);
+    if(data === null) { return };
     let storageKey = JSON.stringify(data);
     data['plt_data'] = this.getPlotLayoutData();
+    console.log(data)
     if(Boolean(this.plots[storageKey])) {
       let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt'];
       if(renderTypes.includes(type)) {
@@ -190,7 +189,7 @@ module.exports = View.extend({
     }else if(type === "ts-psweep" || type === "ts-psweep-mp") {
       data['sim_type'] = "GillesPy2_PS";
       data['data_keys'] = this.getDataKeys(true);
-      data['plt_key'] = type === "ts-psweep-mp" ? "mltplplt" : this.tsPlotData['type'];
+      data['plt_key'] = type === "ts-psweep-mp" ? "mltplplt" : this.tsPlotData.type;
     }else {
       data['sim_type'] = "GillesPy2";
       data['data_keys'] = {};
@@ -232,8 +231,8 @@ module.exports = View.extend({
     }
   },
   getTSPlotForType: function (e) {
-    this.tsPlotData['type'] = e.target.value;
-    let display = this.tsPlotData['type'] === "trajectories" ? "inline-block" : "none";
+    this.tsPlotData.type = e.target.value;
+    let display = this.tsPlotData.type === "trajectories" ? "inline-block" : "none";
     $(this.queryByHook("multiple-plots")).css("display", display);
     this.getPlot("ts-psweep");
   },
@@ -243,7 +242,7 @@ module.exports = View.extend({
     let parameters = {};
     this.model.settings.parameterSweepSettings.parameters.forEach(function (param) {
       if(param.fixed){
-        parameters[param.name] = self.tsPlotData[param.name];
+        parameters[param.name] = self.fixedParameters[param.name];
       }
     });
     return parameters;
@@ -252,7 +251,7 @@ module.exports = View.extend({
     let plotData = JSON.parse(storageKey)
     if(plotData.sim_type === "GillesPy2") { return plotData.plt_key }
     if(plotData.sim_type === "GillesPy2_PS") { return "ts-psweep"}
-    return psweep
+    return "psweep"
   },
   handleCollapsePlotContainerClick: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -410,10 +409,17 @@ module.exports = View.extend({
     app.registerRenderSubview(this, speciesOfInterestView, "specie-of-interest-list");
   },
   renderSweepParameterView: function () {
-    let sweepParameterView = this.renderCollection(
+    let tsSweepParameterView = this.renderCollection(
       this.model.settings.parameterSweepSettings.parameters,
       SweepParametersView,
-      this.queryByHook("parameter-ranges")
+      this.queryByHook("ts-parameter-ranges")
+    );
+    let options = {viewOptions: {showFixed: true, parent: this}};
+    let psSweepParameterView = this.renderCollection(
+      this.model.settings.parameterSweepSettings.parameters,
+      SweepParametersView,
+      this.queryByHook("ps-parameter-ranges"),
+      options
     );
   },
   setTitle: function (e) {
