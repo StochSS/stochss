@@ -225,6 +225,12 @@ module.exports = View.extend({
       return this.tsPlotData.parameters;
     }
   },
+  getType: function (storageKey) {
+    let plotData = JSON.parse(storageKey)
+    if(plotData.sim_type === "GillesPy2") { return plotData.plt_key }
+    if(plotData.sim_type === "GillesPy2_PS") { return "ts-psweep"}
+    return psweep
+  },
   handleCollapsePlotContainerClick: function (e) {
     app.changeCollapseButtonText(this, e);
     let type = e.target.dataset.type;
@@ -390,6 +396,7 @@ module.exports = View.extend({
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
     for (var storageKey in this.plots) {
+      let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
       fig.layout.title.text = e.target.value
       this.plotFigure(fig, type)
@@ -398,6 +405,7 @@ module.exports = View.extend({
   setXAxis: function (e) {
     this.plotArgs['xaxis'] = e.target.value
     for (var storageKey in this.plots) {
+      let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
       fig.layout.xaxis.title.text = e.target.value
       this.plotFigure(fig, type)
@@ -406,6 +414,7 @@ module.exports = View.extend({
   setYAxis: function (e) {
     this.plotArgs['yaxis'] = e.target.value
     for (var storageKey in this.plots) {
+      let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
       fig.layout.yaxis.title.text = e.target.value
       this.plotFigure(fig, type)
