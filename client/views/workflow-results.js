@@ -121,7 +121,7 @@ module.exports = View.extend({
       error.css("display", "none");
     }, 5000);
   },
-  cleanupPlotContainer: function (type, data) {
+  cleanupPlotContainer: function (type) {
     let el = this.queryByHook(type + "-plot");
     Plotly.purge(el);
     $(this.queryByHook(type + "-plot")).empty();
@@ -131,18 +131,15 @@ module.exports = View.extend({
       $(this.queryByHook(type + "-download-json")).prop("disabled", true);
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
     }
-    if(data !== null) {
-      $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
-    }
+    $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
   },
   getPlot: function (type) {
     let self = this;
+    this.cleanupPlotContainer(type);
     let data = this.getPlotData(type);
-    this.cleanupPlotContainer(type, data);
     if(data === null) { return };
     let storageKey = JSON.stringify(data);
     data['plt_data'] = this.getPlotLayoutData();
-    console.log(data)
     if(Boolean(this.plots[storageKey])) {
       let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt'];
       if(renderTypes.includes(type)) {
@@ -174,10 +171,12 @@ module.exports = View.extend({
         let dataKeys = this.getDataKeys(false);
         let paramDiff = this.model.settings.parameterSweepSettings.parameters.length - Object.keys(dataKeys).length
         if(paramDiff <= 0) {
+          $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
           $(this.queryByHook("too-many-params")).css("display", "block");
           return null;
         }
         if(paramDiff > 2) {
+          $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
           $(this.queryByHook("too-few-params")).css("display", "block");
           return null;
         }
@@ -414,13 +413,15 @@ module.exports = View.extend({
       SweepParametersView,
       this.queryByHook("ts-parameter-ranges")
     );
-    let options = {viewOptions: {showFixed: true, parent: this}};
-    let psSweepParameterView = this.renderCollection(
-      this.model.settings.parameterSweepSettings.parameters,
-      SweepParametersView,
-      this.queryByHook("ps-parameter-ranges"),
-      options
-    );
+    if(this.model.settings.parameterSweepSettings.parameters.length > 2) {
+      let options = {viewOptions: {showFixed: true, parent: this}};
+      let psSweepParameterView = this.renderCollection(
+        this.model.settings.parameterSweepSettings.parameters,
+        SweepParametersView,
+        this.queryByHook("ps-parameter-ranges"),
+        options
+      );
+    }
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
