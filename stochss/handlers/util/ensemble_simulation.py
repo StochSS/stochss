@@ -18,13 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import os
-import json
 import pickle
 import logging
 import traceback
 
 import numpy
-import plotly
 from gillespy2 import TauHybridSolver
 
 from .stochss_job import StochSSJob
