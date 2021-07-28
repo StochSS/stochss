@@ -138,9 +138,10 @@ module.exports = View.extend({
     $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
   },
   getPlot: function (type) {
+    let data = this.getPlotData(type);
+    if(data === null) { return };
     let self = this;
     this.cleanupPlotContainer(type);
-    let data = this.getPlotData(type);
     let storageKey = JSON.stringify(data);
     data['plt_data'] = this.getPlotLayoutData();
     if(Boolean(this.plots[storageKey])) {
@@ -168,7 +169,23 @@ module.exports = View.extend({
     let data = {};
     if(type === 'psweep'){
       data['sim_type'] = "ParameterSweep";
-      data['data_keys'] = {};
+      if(this.model.settings.parameterSweepSettings.parameters.length <= 2) {
+        data['data_keys'] = {}
+      }else {
+        let dataKeys = this.getDataKeys(false);
+        let paramDiff = this.model.settings.parameterSweepSettings.parameters.length - Object.keys(dataKeys).length
+        if(paramDiff <= 0) {
+          $(this.queryByHook("too-many-params")).css("display", "block");
+          return null;
+        }
+        if(paramDiff > 2) {
+          $(this.queryByHook("too-few-params")).css("display", "block");
+          return null;
+        }
+        $(this.queryByHook("too-few-params")).css("display", "none");
+        $(this.queryByHook("too-many-params")).css("display", "none");
+        data['data_keys'] = dataKeys;
+      }
       data['plt_key'] = this.getPlotKey(type);
     }else if(type === "ts-psweep" || type === "ts-psweep-mp") {
       data['sim_type'] = "GillesPy2_PS";
@@ -221,9 +238,15 @@ module.exports = View.extend({
     this.getPlot("ts-psweep");
   },
   getDataKeys: function (full) {
-    if(full) {
-      return this.tsPlotData.parameters;
-    }
+    if(full) { return this.tsPlotData.parameters; }
+    let self = this;
+    let parameters = {};
+    this.model.settings.parameterSweepSettings.parameters.forEach(function (param) {
+      if(param.fixed){
+        parameters[param.name] = self.tsPlotData[param.name];
+      }
+    });
+    return parameters;
   },
   getType: function (storageKey) {
     let plotData = JSON.parse(storageKey)

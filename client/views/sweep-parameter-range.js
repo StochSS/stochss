@@ -50,6 +50,7 @@ module.exports = View.extend({
   },
   setParameterRangeFixed: function (e) {
     this.model.fixed = e.target.checked;
+    this.parent.getPlot("psweep");
   },
   setParameterRangeValue: function (e) {
     var value = this.model.range[e.target.value];
@@ -57,7 +58,7 @@ module.exports = View.extend({
       value = value.toFixed(1)
     }
     this.parent.tsPlotData.parameters[this.model.name] = value;
-    this.parent.getPlot("ts-psweep");
+    this.parent.getPlot(this.showFixed ? "psweep" : "ts-psweep");
   },
   viewParameterRangeValue: function (e) {
     let value = this.model.range[e.target.value];
