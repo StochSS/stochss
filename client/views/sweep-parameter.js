@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let _ = require('underscore');
 //support files
 let app = require('../app');
 let tests = require('./tests');
@@ -25,21 +26,23 @@ let View = require('ampersand-view');
 let InputView = require('./input');
 let SelectView = require('ampersand-select-view');
 //templates
-let template = require('../templates/includes/sweepParameter.pug');
+let editTemplate = require('../templates/includes/sweepParameter.pug');
+let viewTemplate = require('../templates/includes/viewSweepParameter.pug');
 
 module.exports = View.extend({
-  template: template,
   events: function () {
     let events = {};
     events['change [data-hook=' + this.model.elementID + '-sweep-target]'] = 'setSelectedTarget';
     events['change [data-hook=' + this.model.elementID + '-target-min]'] = 'setHasChangedRange';
     events['change [data-hook=' + this.model.elementID + '-target-max]'] = 'setHasChangedRange';
+    events['change [data-hook=' + this.model.elementID + '-target-steps]'] = 'updateViewer';
     events['click [data-hook=' + this.model.elementID + '-remove'] = 'removeSweepParameter';
     return events;
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     let self = this;
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
     this.parameters = attrs.stochssParams;
     this.parameter = this.parameters.filter(function (param) {
       return param.compID === self.model.paramID;
@@ -48,11 +51,14 @@ module.exports = View.extend({
     this.model.collection.on('add update-target remove', this.renderTargetSelectView, this);
   },
   render: function (attrs, options) {
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
-    this.renderTargetSelectView();
-    this.renderMinValInputView();
-    this.renderMaxValInputView();
-    this.renderStepsInputView();
+    if(!this.viewMode){
+      this.renderTargetSelectView();
+      this.renderMinValInputView();
+      this.renderMaxValInputView();
+      this.renderStepsInputView();
+    }
   },
   getAvailableParameters: function () {
     let variableTargets = this.model.collection.map(function (variable) { return variable.paramID});
@@ -115,23 +121,23 @@ module.exports = View.extend({
     app.registerRenderSubview(this, this.stepsInputView, this.model.elementID + "-target-steps");
   },
   renderTargetSelectView: function (e) {
-    if(this.model.collection) {
-      if(this.targetSelectView) {
-        this.targetSelectView.remove();
-      }
-      let options = this.getAvailableParameters();
-      this.targetSelectView = new SelectView({
-        name: 'variable-target',
-        required: true,
-        idAttribute: 'cid',
-        options: options,
-        value: this.parameter.name
-      });
-      app.registerRenderSubview(this, this.targetSelectView, this.model.elementID + "-sweep-target");
+    if(this.vieWMode) { return }
+    if(this.targetSelectView) {
+      this.targetSelectView.remove();
     }
+    let options = this.getAvailableParameters();
+    this.targetSelectView = new SelectView({
+      name: 'variable-target',
+      required: true,
+      idAttribute: 'cid',
+      options: options,
+      value: this.parameter.name
+    });
+    app.registerRenderSubview(this, this.targetSelectView, this.model.elementID + "-sweep-target");
   },
   setHasChangedRange: function () {
     this.model.hasChangedRange = true;
+    this.updateViewer();
   },
   setSelectedTarget: function (e) {
     let targetName = e.target.value;
@@ -142,8 +148,8 @@ module.exports = View.extend({
     this.model.name = this.parameter.name;
     this.model.hasChangedRange = false
     this.model.updateVariable(this.parameter)
-    this.updateModelFields();
-    this.model.collection.trigger('update-target');
+    this.parent.renderEditSweepParameters()
+    this.updateViewer();
   },
   update: function () {},
   updateModelFields: function () {
@@ -151,6 +157,9 @@ module.exports = View.extend({
     this.renderMinValInputView();
     this.renderMaxValInputView();
     this.renderStepsInputView();
+  },
+  updateViewer: function () {
+    this.parent.renderViewSweepParameters();
   },
   updateValid: function () {}
 });
