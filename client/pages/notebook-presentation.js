@@ -25,6 +25,7 @@ let app = require('../app');
 //views
 let PageView = require('./base');
 //templates
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
 let template = require('../templates/pages/notebookPresentation.pug');
 
 import bootstrapStyles from '../styles/bootstrap.css';
@@ -32,37 +33,43 @@ import styles from '../styles/styles.css';
 import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min.css'
 
 let NotebookPresentationPage = PageView.extend({
-  template: template,
   initialize: function (attrs, options) {
   	PageView.prototype.initialize.apply(this, arguments);
   	let urlParams = new URLSearchParams(window.location.search);
     let owner = urlParams.get("owner");
     let file = urlParams.get("file");
+    this.fileType = "Notebook";
     let self = this;
     let queryStr = "?owner=" + owner + "&file=" + file;
     let endpoint = "api/notebook/load" + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {
         self.name = body.file.split('/').pop().split('.ipynb')[0];
-        self.renderSubviews(body.html);
+        self.renderSubviews(false, body.html);
+      },
+      error: function (err, response, body) {
+        self.renderSubviews(true, null);
       }
     });
     let downloadStart = "https://live.stochss.org/stochss/notebook/download_presentation";
     this.downloadLink = downloadStart + "/" + owner + "/" + file;
     this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
   },
-  renderSubviews: function (html) {
+  renderSubviews: function (notFound, html) {
+    this.template = notFound ? errorTemplate : template;
   	PageView.prototype.render.apply(this, arguments);
-    let iframe = document.getElementById('notebook');
-    let iframedoc = iframe.document;
-    if (iframe.contentDocument) {
-      iframedoc = iframe.contentDocument;
-    }else if (iframe.contentWindow) {
-      iframedoc = iframe.contentWindow.document;
-    }
-    if (iframedoc) {
-      iframedoc.write(html);
-      iframedoc.close();
+    if(!notFound){
+      let iframe = document.getElementById('notebook');
+      let iframedoc = iframe.document;
+      if (iframe.contentDocument) {
+        iframedoc = iframe.contentDocument;
+      }else if (iframe.contentWindow) {
+        iframedoc = iframe.contentWindow.document;
+      }
+      if (iframedoc) {
+        iframedoc.write(html);
+        iframedoc.close();
+      }
     }
   }
 });

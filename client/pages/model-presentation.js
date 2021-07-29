@@ -29,18 +29,19 @@ let PageView = require('./base');
 let ModelView = require('../model-view/model-view');
 //templates
 let template = require('../templates/pages/modelPresentation.pug');
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
 
 import bootstrapStyles from '../styles/bootstrap.css';
 import styles from '../styles/styles.css';
 import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min.css'
 
 let ModelPresentationPage = PageView.extend({
-  template: template,
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
     let owner = urlParams.get("owner");
     let file = urlParams.get("file");
+    this.fileType = file.endsWith(".mdl") ? "Model" : "Spatial Model";
     this.model = new Model({
       directory: file,
       for: "presentation"
@@ -51,16 +52,23 @@ let ModelPresentationPage = PageView.extend({
     app.getXHR(endpoint, {
       success: function (err, response, body) {
         self.model.set(body);
-        self.renderSubviews();
+        self.renderSubviews(false);
+      },
+      error: function (err, response, body) {
+        self.notFound = true;
+        self.renderSubviews(true);
       }
     });
     let downloadStart = "https://live.stochss.org/stochss/download_presentation";
     this.downloadLink = downloadStart + "/" + owner + "/" + file;
     this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
   },
-  renderSubviews: function () {
+  renderSubviews: function (notFound) {
+    this.template = notFound ? errorTemplate : template
     PageView.prototype.render.apply(this, arguments);
-    this.renderModelView();
+    if(!notFound) {
+      this.renderModelView();
+    }
   },
   renderModelView: function () {
     let modelView = new ModelView({
