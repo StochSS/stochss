@@ -46,23 +46,14 @@ cert:
 	@echo "Generating certificate..."
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
 
-webpack:
-	npm run webpack
-
-watch:
-	npm run watch
-
-deps:
-	npm install
-
 build_home_page:
 	npm run build-home
 
-build_hub: deps build_home_page check-files network volumes
+build_hub: build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build
 
-build_hub_clean: deps build_home_page check-files network volumes
+build_hub_clean: build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build --no-cache
 
@@ -99,7 +90,7 @@ clean_notebook_server:
 
 hub: build_hub build run_hub_dev
 
-build_clean: deps webpack
+build_clean:
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	 	--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
@@ -109,7 +100,7 @@ create_working_dir:
 	bash -c "if [ ! -d "$(DOCKER_WORKING_DIR)" ] && [ -z ${DOCKER_WORKING_DIR+"if_var_set"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
 
 
-build:  deps webpack
+build:  
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	  	-t $(DOCKER_STOCHSS_IMAGE):latest .
@@ -146,7 +137,15 @@ run_bash:
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
-
+watch:
+	docker run -it --rm \
+		--name $(DOCKER_STOCHSS_IMAGE) \
+		--env-file .env \
+		-v $(PWD):/stochss \
+		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
+		-p 8888:8888 \
+		$(DOCKER_STOCHSS_IMAGE):latest \
+		bash -c "cd /stochss; npm run watch & sleep 10; cd /home/jovyan; start-notebook.sh "
 
 update:
 	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss
