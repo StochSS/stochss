@@ -24,8 +24,8 @@ let Tooltips = require('../tooltips');
 let Model = require('../models/model');
 //views
 let View = require('ampersand-view');
-let ParameterView = require('./sweep-parameter-view');
 let SelectView = require('ampersand-select-view');
+let ParameterView = require('./sweep-parameter-view');
 //templates
 let template = require('../templates/includes/parameterSettingsView.pug');
 
@@ -41,7 +41,7 @@ module.exports = View.extend({
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.parameterSweepSettings;
     if(this.readOnly) {
-      this.stochssModel = attrs.stochssModel
+      this.stochssModel = attrs.stochssModel;
       this.renderSubviews();
     }else{
       this.stochssModel = new Model({
@@ -50,7 +50,7 @@ module.exports = View.extend({
       let self = this;
       app.getXHR(this.stochssModel.url(), {
         success: function (err, response, body) {
-          self.stochssModel.set(body)
+          self.stochssModel.set(body);
           self.renderSubviews();
         }
       });
@@ -83,22 +83,6 @@ module.exports = View.extend({
       this.model.parameters,
       ParameterView,
       this.queryByHook("ps-parameter-collection"),
-      options
-    );
-  },
-  renderViewSweepParameters: function () {
-    if(this.viewSweepParameters) {
-      this.viewSweepParameters.remove();
-    }
-    let options = {"viewOptions": {
-      parent: this,
-      stochssParams: this.stochssModel.parameters,
-      viewMode: true
-    }}
-    this.viewSweepParameters = this.renderCollection(
-      this.model.parameters,
-      ParameterView,
-      this.queryByHook("view-sweep-parameters"),
       options
     );
   },
@@ -137,13 +121,29 @@ module.exports = View.extend({
       $(this.queryByHook('view-parameter-settings')).addClass('active');
     }else{
       this.model.parameters.on("add remove", function () {
-        let disable = this.model.parameters.length >= 6 || this.model.parameters.length >= this.stochssModel.parameters.length
-        $(this.queryByHook("add-ps-parameter")).prop("disabled", disable)
+        let disable = this.model.parameters.length >= 6 || this.model.parameters.length >= this.stochssModel.parameters.length;
+        $(this.queryByHook("add-ps-parameter")).prop("disabled", disable);
       }, this)
       this.renderSpeciesOfInterestView();
       this.renderEditSweepParameters();
     }
-    this.renderViewSweepParameters()
+    this.renderViewSweepParameters();
+  },
+  renderViewSweepParameters: function () {
+    if(this.viewSweepParameters) {
+      this.viewSweepParameters.remove();
+    }
+    let options = {"viewOptions": {
+      parent: this,
+      stochssParams: this.stochssModel.parameters,
+      viewMode: true
+    }}
+    this.viewSweepParameters = this.renderCollection(
+      this.model.parameters,
+      ParameterView,
+      this.queryByHook("view-sweep-parameters"),
+      options
+    );
   },
   setVariableOfInterest: function (e) {
     let target = e.target.value;
@@ -151,6 +151,6 @@ module.exports = View.extend({
       return specie.compID === Number(target);
     })[0];
     this.model.speciesOfInterest = variable;
-    $("#view-species-of-interest").html(variable.name)
+    $("#view-species-of-interest").html(variable.name);
   }
 });

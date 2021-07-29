@@ -22,8 +22,8 @@ let _ = require('underscore');
 let app = require('../app');
 let tests = require('./tests');
 //views
-let View = require('ampersand-view');
 let InputView = require('./input');
+let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 //templates
 let editTemplate = require('../templates/includes/editSweepParameter.pug');
@@ -73,7 +73,7 @@ module.exports = View.extend({
     return availableParameters;
   },
   removeSweepParameter: function () {
-    this.model.collection.off('add update-target remove', this.renderTargetSelectView, this)
+    this.model.collection.off('add update-target remove', this.renderTargetSelectView, this);
     this.model.collection.removeSweepParameter(this.model);
     this.remove();
   },
@@ -144,24 +144,18 @@ module.exports = View.extend({
   setSelectedTarget: function (e) {
     let targetName = e.target.value;
     this.parameter = this.parameters.filter(function (param) {
-      return param.name === targetName
+      return param.name === targetName;
     })[0];
     this.model.paramID = this.parameter.compID;
     this.model.name = this.parameter.name;
-    this.model.hasChangedRange = false
-    this.model.updateVariable(this.parameter)
-    this.parent.renderEditSweepParameters()
+    this.model.hasChangedRange = false;
+    this.model.updateVariable(this.parameter);
+    this.parent.renderEditSweepParameters();
     this.updateViewer();
   },
   update: function () {},
-  updateModelFields: function () {
-    $(this.queryByHook(this.model.elementID + "-target-value")).text(this.parameter.expression)
-    this.renderMinValInputView();
-    this.renderMaxValInputView();
-    this.renderStepsInputView();
-  },
+  updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewSweepParameters();
-  },
-  updateValid: function () {}
+  }
 });
