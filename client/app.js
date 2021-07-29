@@ -212,13 +212,13 @@ documentSetup = () => {
   });
 }
 
-copyToClipboard = (text) => {
+copyToClipboard = (text, success, error) => {
   if (window.clipboardData && window.clipboardData.setData) {
     // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
     return window.clipboardData.setData("Text", text);
   }
   else {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(text).then(success, error)
   }
 }
 
