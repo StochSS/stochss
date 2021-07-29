@@ -41,6 +41,7 @@ module.exports = View.extend({
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.parameterSweepSettings;
     if(this.readOnly) {
+      this.stochssModel = attrs.stochssModel
       this.renderSubviews();
     }else{
       this.stochssModel = new Model({

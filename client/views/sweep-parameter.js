@@ -47,7 +47,9 @@ module.exports = View.extend({
     this.parameter = this.parameters.filter(function (param) {
       return param.compID === self.model.paramID;
     })[0];
-    this.model.updateVariable(this.parameter);
+    if(!this.viewMode) {
+      this.model.updateVariable(this.parameter);
+    }
     this.model.collection.on('add update-target remove', this.renderTargetSelectView, this);
   },
   render: function (attrs, options) {
