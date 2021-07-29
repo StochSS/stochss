@@ -1,60 +1,117 @@
-div#parameter-settings.card.card-body
+div#parameter-settings.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Parameter Settings
+    h3.inline.mr-3 Parameter Settings
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="parameter-settings-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="parameter-settings-edit-tab" data-toggle="tab" href="#edit-parameter-settings") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="parameter-settings-view-tab" data-toggle="tab" href="#view-parameter-settings") View
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-psweep-settings" data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-psweep-settings")
 
-    div.verticle-space
-      
-      span.inline(for="variable-of-interest") Variable of Interest:
+    div.card-body.tab-content
 
-      div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.species) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+      div.tab-pane.active(id="edit-parameter-settings" data-hook="edit-parameter-settings")
 
-      div.inline(id="variable-of-interest" data-hook="variable-of-interest-list")
+        div.verticle-space
+          
+          span.inline(for="variable-of-interest") Variable of Interest:
 
-    div
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.species) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-      h5 Configure Parameter(s)
+          div.inline(id="variable-of-interest" data-hook="variable-of-interest-list")
 
-      table.table
-        thead
-          tr
-            th(scope="col")
-              div
-                div.inline Sweep Target
+        div
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.variable) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+          h5 Configure Parameter(s)
 
-            th(scope="col")
-              div
-                div.inline Current Value
+          hr
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.value) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+          div.mx-1.row.head.align-items-baseline
 
-            th(scope="col")
-              div
-                div.inline Minimum Value
+            div.col-sm-2
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.min) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+              h6.inline <b>Sweep Target</b>
 
-            th(scope="col")
-              div
-                div.inline Maximum Value
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.variable) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.max) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            div.col-sm-2
 
-            th(scope="col")
-              div
-                div.inline Steps
+              h6.inline <b>Current Value</b>
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.steps) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.value) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-            th(scope="col") Remove
+            div.col-sm-2
 
-        tbody(data-hook="ps-parameter-collection")
+              h6.inline <b>Minimum Value</b>
 
-    button.btn.btn-outline-secondary.box-shadow(data-hook="add-ps-parameter") Add Parameter
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.min) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.col-sm-2
+
+              h6.inline <b>Maximum Value</b>
+
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.max) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.col-sm-2
+
+              h6.inline <b>Steps</b>
+
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.steps) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.col-sm-2
+
+              h6 <b>Remove</b>
+
+          div(data-hook="ps-parameter-collection")
+
+        button.btn.btn-outline-secondary.box-shadow(data-hook="add-ps-parameter") Add Parameter
+
+      div.tab-pane(id="view-parameter-settings" data-hook="view-parameter-settings")
+
+        div
+
+          div.inline.pr-2 Variable of Interest: 
+
+          div.inline=this.model.speciesOfInterest.name
+
+        div
+
+          h5.mt-3 Sweep Parameters
+
+          hr
+
+          div.mx-1.row.head.align-items-baseline
+
+            div.col-sm-3
+
+              h6.inline <b>Sweep Target</b>
+
+            div.col-sm-3
+
+              h6.inline <b>Current Value</b>
+
+            div.col-sm-2
+
+              h6.inline <b>Minimum Value</b>
+
+            div.col-sm-2
+
+              h6.inline <b>Maximum Value</b>
+
+            div.col-sm-2
+
+              h6.inline <b>Steps</b>
+
+            div(data-hook="view-sweep-parameters")
