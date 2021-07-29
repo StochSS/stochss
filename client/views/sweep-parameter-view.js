@@ -26,7 +26,7 @@ let View = require('ampersand-view');
 let InputView = require('./input');
 let SelectView = require('ampersand-select-view');
 //templates
-let editTemplate = require('../templates/includes/sweepParameter.pug');
+let editTemplate = require('../templates/includes/editSweepParameter.pug');
 let viewTemplate = require('../templates/includes/viewSweepParameter.pug');
 
 module.exports = View.extend({

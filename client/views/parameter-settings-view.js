@@ -24,10 +24,10 @@ let Tooltips = require('../tooltips');
 let Model = require('../models/model');
 //views
 let View = require('ampersand-view');
-let ParameterView = require('./sweep-parameter');
+let ParameterView = require('./sweep-parameter-view');
 let SelectView = require('ampersand-select-view');
 //templates
-let template = require('../templates/includes/parameterSettings.pug');
+let template = require('../templates/includes/parameterSettingsView.pug');
 
 module.exports = View.extend({
   template: template,
