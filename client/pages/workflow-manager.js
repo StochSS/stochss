@@ -142,6 +142,7 @@ let WorkflowManager = PageView.extend({
   },
   removeActiveJob: function () {
     $(this.queryByHook("active-job-header-container")).css("display", "none");
+    $("#review-model-section").css("display", "none");
     if(this.resultsView) {
       this.resultsView.remove();
     }
@@ -213,6 +214,7 @@ let WorkflowManager = PageView.extend({
     if(this.modelView) {
       this.modelView.remove();
     }
+    $("#review-model-section").css("display", "block")
     let header = "Review Model: " + this.model.activeJob.model.name;
     $("#model-viewer-header").html(header);
     this.modelView = new ModelView({
