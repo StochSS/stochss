@@ -74,7 +74,7 @@ div#parameter-settings.card
 
               h6 <b>Remove</b>
 
-          div(data-hook="ps-parameter-collection")
+          div.my-3(data-hook="ps-parameter-collection")
 
         button.btn.btn-outline-secondary.box-shadow(data-hook="add-ps-parameter") Add Parameter
 
@@ -84,7 +84,7 @@ div#parameter-settings.card
 
           div.inline.pr-2 Variable of Interest: 
 
-          div.inline=this.model.speciesOfInterest.name
+          div.inline(id="view-species-of-interest")=this.model.speciesOfInterest.name
 
         div
 
@@ -114,4 +114,4 @@ div#parameter-settings.card
 
               h6.inline <b>Steps</b>
 
-            div(data-hook="view-sweep-parameters")
+          div.my-3(data-hook="view-sweep-parameters")
