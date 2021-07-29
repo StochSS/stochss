@@ -1,25 +1,30 @@
-tr
+div.mx-1
 
-  td
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
 
-    div(data-hook=this.model.elementID + "-sweep-target")
+  div.row
 
-  td
+    div.col-sm-2
 
-    div(data-hook=this.model.elementID + "-target-value")=this.parameter.expression
+      div.pl-2(data-hook=this.model.elementID + "-sweep-target")
 
-  td
+    div.col-sm-2
 
-    div(data-hook=this.model.elementID + "-target-min")
+      div(data-hook=this.model.elementID + "-target-value")=this.parameter.expression
 
-  td
+    div.col-sm-2
 
-    div(data-hook=this.model.elementID + "-target-max")
+      div(data-hook=this.model.elementID + "-target-min")
 
-  td
+    div.col-sm-2
 
-    div(data-hook=this.model.elementID + "-target-steps")
+      div(data-hook=this.model.elementID + "-target-max")
 
-  td
+    div.col-sm-2
 
-    button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-remove") X
+      div(data-hook=this.model.elementID + "-target-steps")
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-remove") X
