@@ -35,14 +35,19 @@ let LoadingPage = PageView.extend({
     let urlParams = new URLSearchParams(window.location.search)
     this.filePath = urlParams.get("path");
     this.action = urlParams.get("action");
+    this.homeLink = path.append(app.getBasePath(), 'stochss/home');
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
+    let self = this;
     $(document.querySelector("div[data-hook=side-navbar]")).css("display", "none");
     $(document.querySelector("main[data-hook=page-main]")).removeClass().addClass("col-md-12 body");
     $(this.queryByHook("loading-spinner")).css("display", "block");
     if(this.action === "open") {
       this.uploadFileFromLink(this.filePath);
+      setTimeout(function () {
+        $(self.queryByHook("loading-problem").css("display", "block"));
+      }, 30000);
     }else if(this.action === "update-workflow") {
       this.updateWorkflowFormat(this.filePath);
     }else if(this.action === "update-project") {
@@ -55,11 +60,10 @@ let LoadingPage = PageView.extend({
       let queryStr = "?path=" + self.responsePath + "&cmd=read";
       let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
       let errorCB = function (err, response, body) {
-        $(this.queryByHook("loading-spinner")).css("display", "none");
-        let model = $(modals.projectExportErrorHtml(body.reason, body.message)).modal();
-        let close = document.querySelector("button[data-dismiss=modal]");
-        close.addEventListener("click", function (e) {
-          window.history.back();
+        $(self.queryByHook("loading-spinner")).css("display", "none");
+        let modal = $(modals.projectExportErrorHtml(body.reason, body.message)).modal();
+        modal.on('hidden.bs.modal', function (e) {
+          window.location.href = this.homeLink;
         });
       }
       app.getXHR(endpoint, {
@@ -126,7 +130,7 @@ let LoadingPage = PageView.extend({
   },
   uploadFileFromLink: function (filePath) {
     $(this.queryByHook("loading-header")).html("Uploading file");
-    $(this.queryByHook("loading-target")).html(filePath.split('/').pop());
+    $(this.queryByHook("loading-target")).css("display", "none")
     let message = `If the file is a Project, Workflow, Model, Domain, or Notebook it will be opened when the upload has completed.`;
     $(this.queryByHook("loading-message")).html(message);
     let self = this;

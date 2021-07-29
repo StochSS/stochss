@@ -308,10 +308,14 @@ module.exports = View.extend({
         success: function (err, response, body) {
           self.endAction("publish");
           let title = body.message;
-          let linkHeaders = ["Presentation Link", "Download Link", "Open Link"];
+          let linkHeaders = "Shareable Presentation Link";
           let links = body.links;
           let name = self.model.name
           $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
+          let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+          copyBtn.addEventListener('click', function (e) {
+            app.copyToClipboard(links.presentation)
+          });
         },
         error: function (err, response, body) {
           self.errorAction();
