@@ -68,7 +68,7 @@ def get_presentation_from_user(owner, file, process_func, kwargs=None):
         bits, _ = user_container.get_archive(user_file_path)
     except IndexError:
         file_path = __get_presentation_from_volume(client, owner, file)
-    except docker.errors.NoteFound as err:
+    except docker.errors.NotFound as err:
         message = "This presentation is no longer available."
         raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
     else:
