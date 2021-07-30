@@ -19,21 +19,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import tarfile
 import tempfile
+import traceback
 
 import docker
 
+from presentation_error import StochSSFileNotFoundError
+
 
 def __get_presentation_from_volume(client, owner, file):
-    volumes = client.volumes.list()
-    user_volume = list(filter(lambda volume: volume.name == f"jupyterhub-user-{owner}",
-                              volumes))[0]
-    volume_mnts = {user_volume.name: {"bind": "/user_volume", "mode": "ro"},
-                   "/stochss/jupyterhub": {"bind": "/mnt/cache", "mode": "rw"}}
-    command = ['cp', os.path.join('/user_volume/.presentations', file),
-               '/mnt/cache/presentation_cache/']
-    client.containers.run('stochss-lab', command, volumes=volume_mnts)
-    file_path = os.path.join('/srv/jupyterhub/presentation_cache', file)
-    return file_path
+    try:
+        volumes = client.volumes.list()
+        user_volume = list(filter(lambda volume: volume.name == f"jupyterhub-user-{owner}",
+                                  volumes))[0]
+        volume_mnts = {user_volume.name: {"bind": "/user_volume", "mode": "ro"},
+                       "/stochss/jupyterhub": {"bind": "/mnt/cache", "mode": "rw"}}
+        command = ['cp', os.path.join('/user_volume/.presentations', file),
+                   '/mnt/cache/presentation_cache/']
+        client.containers.run('stochss-lab', command, volumes=volume_mnts)
+        file_path = os.path.join('/srv/jupyterhub/presentation_cache', file)
+        return file_path
+    except docker.errors.ContainerError as err:
+        message = "This presentation is no longer available."
+        raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
 def get_presentation_from_user(owner, file, process_func, kwargs=None):
@@ -56,12 +63,15 @@ def get_presentation_from_user(owner, file, process_func, kwargs=None):
     try:
         user_container = list(filter(lambda container: container.name == f"jupyter-{owner}",
                                      containers))[0]
-    except IndexError:
-        file_path = __get_presentation_from_volume(client, owner, file)
-    else:
         user_file_path = os.path.join('/home/jovyan/.presentations', file)
         tar_pres = tempfile.TemporaryFile()
         bits, _ = user_container.get_archive(user_file_path)
+    except IndexError:
+        file_path = __get_presentation_from_volume(client, owner, file)
+    except docker.errors.NoteFound as err:
+        message = "This presentation is no longer available."
+        raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+    else:
         for chunk in bits:
             tar_pres.write(chunk)
         tar_pres.seek(0)
