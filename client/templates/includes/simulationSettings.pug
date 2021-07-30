@@ -1,106 +1,196 @@
-div#simulation-settings.card.card-body
+div#simulation-settings.card
 
-  div
+  div.card-header.pb-0
 
-    h3.inline Simulation Settings
+    h3.inline.mr-3 Simulation Settings
+    
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="sim-settings-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="sim-settings-edit-tab" data-toggle="tab" href="#edit-sim-settings") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="sim-settings-view-tab" data-toggle="tab" href="#view-sim-settings") View
+
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-settings", data-hook="collapse") -
 
   div.collapse(class="show", id="collapse-settings")
 
-    table.table
-      thead
-        tr
-          th(scope="col", colspan="5")
-            div
-              div.inline Simulation Algorithm
+    div.card-body.tab-content
 
-              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.algorithm) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-              
-      tbody
-        tr
-          td
-            input(type="radio", name="simAlgorithm", data-hook="select-ode", data-name="ODE")
-            |  ODE
+      div.tab-pane.active(id="edit-sim-settings" data-hook="edit-sim-settings")
 
-            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+        div.mx-1.head.align-items-baseline
 
-          td
-            input(type="radio", name="simAlgorithm", data-hook="select-ssa", data-name="SSA")
-            |  SSA
+          h4.inline Simulation Algorithm
+
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.algorithm) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        div.row.my-3
+
+          div.col-sm-2
+
+            input.pl-2.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-ode", data-name="ODE")
+            
+            span.inline ODE
+
+            div.inline.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          div.col-sm-2
+
+            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-ssa", data-name="SSA")
+
+            span.inline SSA
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ssa) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          td
-            input(type="radio", name="simAlgorithm", data-hook="select-tau-leaping", data-name="Tau-Leaping")
-            |  Tau Leaping
+          div.col-sm-2
+
+            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-tau-leaping", data-name="Tau-Leaping")
+
+            span.inline Tau Leaping
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.tauLeaping) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          td
-            input(type="radio", name="simAlgorithm", data-hook="select-hybrid-tau", data-name="Hybrid-Tau-Leaping")
-            |  Hybrid ODE/SSA
+          div.col-sm-3
+
+            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-hybrid-tau", data-name="Hybrid-Tau-Leaping")
+
+            span.inline Hybrid ODE/SSA
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.hybrid) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          td
-            input.inline(type="radio", name="simAlgorithm", data-hook="select-automatic", data-name="Automatic")
-            |  Choose for me
+          div.col-sm-3
+
+            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-automatic", data-name="Automatic")
+
+            span.inline Choose for me
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.chooseForMe) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-      
-    div.row.collapse.show(data-hook="settings-container")
+          
+        div.pt-2.row.collapse.show(data-hook="settings-container")
 
-      div.col-md-5
+          div.col-sm-5
 
-        h5.inline Deterministic Settings
+            h5.inline Deterministic Settings
 
-        table.table
-          thead
-            tr
-              th(scope="col") 
-                div
-                  div.inline Relative Tolerance
+            hr.mt-0
 
-                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.rtol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            div.mx-1.row.head.align-items-baseline
 
-              th(scope="col") 
-                div
-                  div.inline Absolute Tolerance
+              div.col-sm-6
 
-                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.atol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+                h6.inline <b>Relative Tolerance</b>
 
-          tbody
-            tr
-              td: div(data-hook="relative-tolerance")
-              td: div(data-hook="absolute-tolerance")
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.rtol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-      div.col-md-7
-        
-        h5.inline Stochastic Settings
+              div.col-sm-6
 
-        table.table
-          thead
-            tr
-              th(scope="col")
-                div
-                  div.inline Trajectories
+                h6.inline <b>Absolute Tolerance</b>
 
-                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.realizations) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.atol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-              th(scope="col")
-                div
-                  div.inline Seed
+            div.row.my-3
 
-                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.seed) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+              div.col-sm-6
 
-              th(scope="col")
-                div
-                  div.inline Tau Tolerance
+                div.pl-2(data-hook="relative-tolerance")
 
-                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ttol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+              div.col-sm-6(data-hook="absolute-tolerance")
 
-          tbody
-            tr
-              td: div(data-hook="trajectories")
-              td: div(data-hook="seed")
-              td: div(data-hook="tau-tolerance")
+          div.col-sm-7
+            
+            h5.inline Stochastic Settings
+
+            hr.mt-0
+
+            div.mx-1.row.head.align-items-baseline
+
+              dvi.col-sm-4
+
+                h6.inline <b>Trajectories</b>
+
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.realizations) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+              dvi.col-sm-4
+
+                h6.inline <b>Seed</b>
+
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.seed) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+              dvi.col-sm-4
+
+                h6.inline <b>Tau Tolerance</b>
+
+                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ttol) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.row.my-3
+
+              div.col-sm-4(data-hook="trajectories")
+
+              div.col-sm-4(data-hook="seed")
+
+              div.col-sm-4(data-hook="tau-tolerance")
+
+      div.tab-pane(id="view-sim-settings" data-hook="view-sim-settings")
+
+        div
+
+          h6.inline.pr-2 Simulation Algorithm: 
+
+          div.inline=this.algorithm
+
+        div(data-hook="view-deterministic-settings")
+
+          hr
+
+          h5 Deterministic Settings
+
+          hr
+
+          div.row
+
+            div.col-sm-6
+
+              h6.inline.pr-2 Relative Tolerance: 
+
+              div.inline=this.model.relativeTol
+
+            div.col-sm-6
+
+              h6.inline.pr-2 Absolute Tolerance: 
+
+              div.inline=this.model.absoluteTol
+
+        div(data-hook="view-stochastic-settings")
+
+          hr
+
+          h5 Stochastic Settings
+
+          hr
+
+          div.row
+
+            div.col-sm-4
+
+              h6.inline.pr-2 Trajectories: 
+
+              div.inline=this.model.realizations
+
+            div.col-sm-4
+
+              h6.inline.pr-2 Seed: 
+
+              div.inline=this.model.seed
+
+            div.col-sm-4(data-hook="view-tau-tolerance")
+
+              h6.inline.pr-2 Tau Tolerance: 
+
+              div.inline=this.model.tauTol
+
