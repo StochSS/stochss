@@ -2,228 +2,38 @@
 <sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
   <model name="Vilar_Oscillator">
     <listOfCompartments>
-      <compartment id="c" spatialDimensions="3" size="1" constant="true"/>
+      <compartment id="vol" spatialDimensions="3" size="1" constant="true"/>
     </listOfCompartments>
     <listOfSpecies>
-      <species id="Da" compartment="c" initialAmount="1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="Da_prime" compartment="c" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="Ma" compartment="c" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="Dr" compartment="c" initialAmount="1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="Dr_prime" compartment="c" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="Mr" compartment="c" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="C" compartment="c" initialAmount="10" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="A" compartment="c" initialAmount="10" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="R" compartment="c" initialAmount="10" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="Da" compartment="vol" initialAmount="1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="Da_prime" compartment="vol" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="Ma" compartment="vol" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="Dr" compartment="vol" initialAmount="1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="Dr_prime" compartment="vol" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="Mr" compartment="vol" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="C" compartment="vol" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="A" compartment="vol" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="R" compartment="vol" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
-      <parameter id="alpha_a" value="50" constant="true"/>
-      <parameter id="alpha_a_prime" value="500" constant="true"/>
-      <parameter id="alpha_r" value="0.01" constant="true"/>
-      <parameter id="alpha_r_prime" value="50" constant="true"/>
-      <parameter id="beta_a" value="50" constant="true"/>
-      <parameter id="beta_r" value="5" constant="true"/>
-      <parameter id="delta_ma" value="10" constant="true"/>
-      <parameter id="delta_mr" value="0.5" constant="true"/>
-      <parameter id="delta_a" value="1" constant="true"/>
-      <parameter id="delta_r" value="0.2" constant="true"/>
-      <parameter id="gamma_a" value="1" constant="true"/>
-      <parameter id="gamma_r" value="1" constant="true"/>
-      <parameter id="gamma_c" value="2" constant="true"/>
-      <parameter id="theta_a" value="50" constant="true"/>
-      <parameter id="theta_r" value="100" constant="true"/>
+      <parameter id="alphaA" value="50" constant="true"/>
+      <parameter id="alphaA_prime" value="500" constant="true"/>
+      <parameter id="alphaR" value="0.01" constant="true"/>
+      <parameter id="alphaR_prime" value="50" constant="true"/>
+      <parameter id="betaA" value="50" constant="true"/>
+      <parameter id="betaR" value="5" constant="true"/>
+      <parameter id="deltaMA" value="10" constant="true"/>
+      <parameter id="deltaMR" value="0.5" constant="true"/>
+      <parameter id="deltaA" value="1" constant="true"/>
+      <parameter id="deltaR" value="0.2" constant="true"/>
+      <parameter id="gammaA" value="1" constant="true"/>
+      <parameter id="gammaR" value="1" constant="true"/>
+      <parameter id="gammaC" value="2" constant="true"/>
+      <parameter id="thetaA" value="50" constant="true"/>
+      <parameter id="thetaR" value="100" constant="true"/>
     </listOfParameters>
     <listOfReactions>
       <reaction id="r1" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="Da" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> theta_a </ci>
-              <ci> Da_prime </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r2" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Da" stoichiometry="1" constant="true"/>
-          <speciesReference species="A" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> gamma_a </ci>
-              <ci> Da </ci>
-              <ci> A </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r3" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="Dr" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> theta_r </ci>
-              <ci> Dr_prime </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r4" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Dr" stoichiometry="1" constant="true"/>
-          <speciesReference species="A" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> gamma_r </ci>
-              <ci> Dr </ci>
-              <ci> A </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r5" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
-          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> alpha_a_prime </ci>
-              <ci> Da_prime </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r6" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Da" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="Da" stoichiometry="1" constant="true"/>
-          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> alpha_a </ci>
-              <ci> Da </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r7" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> delta_ma </ci>
-              <ci> Ma </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r8" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="A" stoichiometry="1" constant="true"/>
-          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> beta_a </ci>
-              <ci> Ma </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r9" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
-          <speciesReference species="A" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> theta_a </ci>
-              <ci> Da_prime </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r10" reversible="true">
-        <listOfReactants>
-          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
-          <speciesReference species="A" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> theta_a </ci>
-              <ci> Dr_prime </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r11" reversible="true">
-        <listOfReactants>
-          <speciesReference species="A" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> gamma_c </ci>
-              <ci> A </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r12" reversible="true">
         <listOfReactants>
           <speciesReference species="A" stoichiometry="1" constant="true"/>
           <speciesReference species="R" stoichiometry="1" constant="true"/>
@@ -234,46 +44,245 @@
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
+              <divide/>
+              <apply>
+                <times/>
+                <ci> gammaC </ci>
+                <ci> A </ci>
+                <ci> R </ci>
+              </apply>
+              <ci> vol </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r2" reversible="true">
+        <listOfReactants>
+          <speciesReference species="A" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
               <times/>
-              <ci> gamma_c </ci>
+              <ci> deltaA </ci>
               <ci> A </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r3" reversible="true">
+        <listOfReactants>
+          <speciesReference species="C" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="R" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> deltaA </ci>
+              <ci> C </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r4" reversible="true">
+        <listOfReactants>
+          <speciesReference species="R" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> deltaR </ci>
               <ci> R </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r5" reversible="true">
+        <listOfReactants>
+          <speciesReference species="A" stoichiometry="1" constant="true"/>
+          <speciesReference species="Da" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <divide/>
+              <apply>
+                <times/>
+                <ci> gammaA </ci>
+                <ci> A </ci>
+                <ci> Da </ci>
+              </apply>
+              <ci> vol </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r6" reversible="true">
+        <listOfReactants>
+          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="A" stoichiometry="1" constant="true"/>
+          <speciesReference species="Da" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> thetaA </ci>
+              <ci> Da_prime </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r7" reversible="true">
+        <listOfReactants>
+          <speciesReference species="Da" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="Da" stoichiometry="1" constant="true"/>
+          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> alphaA </ci>
+              <ci> Da </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r8" reversible="true">
+        <listOfReactants>
+          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="Da_prime" stoichiometry="1" constant="true"/>
+          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> alphaA_prime </ci>
+              <ci> Da_prime </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r9" reversible="true">
+        <listOfReactants>
+          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> deltaMA </ci>
+              <ci> Ma </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r10" reversible="true">
+        <listOfReactants>
+          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="A" stoichiometry="1" constant="true"/>
+          <speciesReference species="Ma" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> betaA </ci>
+              <ci> Ma </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r11" reversible="true">
+        <listOfReactants>
+          <speciesReference species="A" stoichiometry="1" constant="true"/>
+          <speciesReference species="Dr" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <divide/>
+              <apply>
+                <times/>
+                <ci> gammaR </ci>
+                <ci> A </ci>
+                <ci> Dr </ci>
+              </apply>
+              <ci> vol </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r12" reversible="true">
+        <listOfReactants>
+          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="A" stoichiometry="1" constant="true"/>
+          <speciesReference species="Dr" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> thetaR </ci>
+              <ci> Dr_prime </ci>
             </apply>
           </math>
         </kineticLaw>
       </reaction>
       <reaction id="r13" reversible="true">
         <listOfReactants>
-          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
+          <speciesReference species="Dr" stoichiometry="1" constant="true"/>
         </listOfReactants>
         <listOfProducts>
-          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
+          <speciesReference species="Dr" stoichiometry="1" constant="true"/>
           <speciesReference species="Mr" stoichiometry="1" constant="true"/>
         </listOfProducts>
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> alpha_r_prime </ci>
-              <ci> Dr_prime </ci>
+              <ci> alphaR </ci>
+              <ci> Dr </ci>
             </apply>
           </math>
         </kineticLaw>
       </reaction>
       <reaction id="r14" reversible="true">
         <listOfReactants>
-          <speciesReference species="Dr" stoichiometry="1" constant="true"/>
+          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
         </listOfReactants>
         <listOfProducts>
-          <speciesReference species="Dr" stoichiometry="1" constant="true"/>
+          <speciesReference species="Dr_prime" stoichiometry="1" constant="true"/>
           <speciesReference species="Mr" stoichiometry="1" constant="true"/>
         </listOfProducts>
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> alpha_r </ci>
-              <ci> Dr </ci>
+              <ci> alphaR_prime </ci>
+              <ci> Dr_prime </ci>
             </apply>
           </math>
         </kineticLaw>
@@ -286,7 +295,7 @@
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> delta_mr </ci>
+              <ci> deltaMR </ci>
               <ci> Mr </ci>
             </apply>
           </math>
@@ -304,39 +313,8 @@
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> beta_r </ci>
+              <ci> betaR </ci>
               <ci> Mr </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r17" reversible="true">
-        <listOfReactants>
-          <speciesReference species="R" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> delta_r </ci>
-              <ci> R </ci>
-            </apply>
-          </math>
-        </kineticLaw>
-      </reaction>
-      <reaction id="r18" reversible="true">
-        <listOfReactants>
-          <speciesReference species="C" stoichiometry="1" constant="true"/>
-        </listOfReactants>
-        <listOfProducts>
-          <speciesReference species="R" stoichiometry="1" constant="true"/>
-        </listOfProducts>
-        <kineticLaw>
-          <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-              <times/>
-              <ci> delta_a </ci>
-              <ci> C </ci>
             </apply>
           </math>
         </kineticLaw>
