@@ -237,7 +237,7 @@ class ToggleSwitch(Model):
 
 
 class VilarOscillator(Model):
-    def __init__(self, parameter_values=None):
+    def __init__(self):
         Model.__init__(self, name="Vilar_Oscillator")
         self.volume = 1
 
