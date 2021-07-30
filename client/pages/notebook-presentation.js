@@ -60,6 +60,8 @@ let NotebookPresentationPage = PageView.extend({
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
     $(this.queryByHook("loading-header")).html(`Loading ${this.fileType}`);
+    $(this.queryByHook("loading-spinner")).css("display", "block");
+    $(this.queryByHook("loading-target")).css("display", "none");
     let message = `This ${this.fileType} can be downloaded or opened in your own StochSS Live! account using the buttons at the bottom of the page.`;
     $(this.queryByHook("loading-message")).html(message);
   },
