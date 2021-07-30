@@ -41,6 +41,9 @@ def __get_presentation_from_volume(client, owner, file):
     except docker.errors.ContainerError as err:
         message = "This presentation is no longer available."
         raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+    except IndexError as err:
+        message = "This presentation is no longer available."
+        raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
 def get_presentation_from_user(owner, file, process_func, kwargs=None):
