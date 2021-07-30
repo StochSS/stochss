@@ -25,6 +25,7 @@ let app = require('../app');
 //views
 let PageView = require('./base');
 //templates
+let loadingTemplate = require('../templates/pages/loadingPage.pug');
 let errorTemplate = require('../templates/pages/errorTemplate.pug');
 let template = require('../templates/pages/notebookPresentation.pug');
 
@@ -33,6 +34,7 @@ import styles from '../styles/styles.css';
 import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min.css'
 
 let NotebookPresentationPage = PageView.extend({
+  template: loadingTemplate,
   initialize: function (attrs, options) {
   	PageView.prototype.initialize.apply(this, arguments);
   	let urlParams = new URLSearchParams(window.location.search);
@@ -54,6 +56,12 @@ let NotebookPresentationPage = PageView.extend({
     let downloadStart = "https://live.stochss.org/stochss/notebook/download_presentation";
     this.downloadLink = downloadStart + "/" + owner + "/" + file;
     this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
+  },
+  render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments);
+    $(this.queryByHook("loading-header")).html(`Loading ${this.fileType}`);
+    let message = `This ${this.fileType} can be downloaded or opened in your own StochSS Live! account using the buttons at the bottom of the page.`;
+    $(this.queryByHook("loading-message")).html(message);
   },
   renderSubviews: function (notFound, html) {
     this.template = notFound ? errorTemplate : template;
