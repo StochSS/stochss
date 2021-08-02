@@ -1,6 +1,6 @@
-div#workflow-results.card.card-body
+div#workflow-results.card
 
-  div
+  div.card-header.pb-0
 
     h3.inline Results
 
@@ -8,187 +8,197 @@ div#workflow-results.card.card-body
 
   div.collapse.show(id="collapse-results" data-hook="workflow-results")
 
-    div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
+    div.card-body
 
-      table.table
-        thead
-          tr
-            th(scope="col") Title
-            th(scope="col") X-axis Label
-            th(scope="col") Y-axis Label
+      div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
 
-        tbody
-          tr
-            td: div(id="title" data-hook="title")
-            td: div(id="xaxis" data-hook="xaxis")
-            td: div(id="yaxis" data-hook="yaxis")
+        table.table
+          thead
+            tr
+              th(scope="col") Title
+              th(scope="col") X-axis Label
+              th(scope="col") Y-axis Label
 
-    div.card.card-body
+          tbody
+            tr
+              td: div(id="title" data-hook="title")
+              td: div(id="xaxis" data-hook="xaxis")
+              td: div(id="yaxis" data-hook="yaxis")
 
-      div
+      div.card
 
-        h5.inline Plot Mean and Standard Deviation
+        div.card-header.pb-0
 
-        button.btn.btn-outline-collapse(
-          data-toggle="collapse"
-          data-target="#collapse-stddevrange"
-          id="collapse-stddevrange-btn"
-          data-hook="collapse-stddevrange-btn"
-          data-trigger="collapse-plot-container"
-          data-type="stddevran"
-        ) -
+          h5.inline Plot Mean and Standard Deviation
 
-      div.collapse.show(id="collapse-stddevrange")
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-stddevrange"
+            id="collapse-stddevrange-btn"
+            data-hook="collapse-stddevrange-btn"
+            data-trigger="collapse-plot-container"
+            data-type="stddevran"
+          ) -
 
-        div(data-hook="stddevran-plot")
+        div.collapse.show(id="collapse-stddevrange")
 
-        div.spinner-border.workflow-plot(data-hook="stddevran-plot-spinner")
-        
-        button.btn.btn-primary.box-shadow(data-hook="stddevran-edit-plot" data-target="edit-plot" disabled) Edit Plot
+          div.card-body
 
-        button.btn.btn-primary.box-shadow(
-          data-hook="stddevran-download-png-custom"
-          data-target="download-png-custom"
-          data-type="stddevran"
-          disabled
-        ) Download PNG
+            div(data-hook="stddevran-plot")
 
-        button.btn.btn-primary.box-shadow(
-          data-hook="stddevran-download-json"
-          data-target="download-json"
-          data-type="stddevran"
-          disabled
-        ) Download JSON
+            div.spinner-border.workflow-plot(data-hook="stddevran-plot-spinner")
+            
+            button.btn.btn-primary.box-shadow(data-hook="stddevran-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-    div.card.card-body
+            button.btn.btn-primary.box-shadow(
+              data-hook="stddevran-download-png-custom"
+              data-target="download-png-custom"
+              data-type="stddevran"
+              disabled
+            ) Download PNG
 
-      div
+            button.btn.btn-primary.box-shadow(
+              data-hook="stddevran-download-json"
+              data-target="download-json"
+              data-type="stddevran"
+              disabled
+            ) Download JSON
 
-        h5.inline Plot Trajectories
+      div.card
 
-        button.btn.btn-outline-collapse(
-          data-toggle="collapse"
-          data-target="#collapse-trajectories"
-          id="collapse-trajectories-btn"
-          data-hook="collapse-trajectories-btn"
-          data-trigger="collapse-plot-container"
-          data-type="trajectories"
-        ) +
+        div.card-header.pb-0
 
-      div.collapse(id="collapse-trajectories")
+          h5.inline Plot Trajectories
 
-        div(data-hook="trajectories-plot")
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-trajectories"
+            id="collapse-trajectories-btn"
+            data-hook="collapse-trajectories-btn"
+            data-trigger="collapse-plot-container"
+            data-type="trajectories"
+          ) +
 
-        div.spinner-border.workflow-plot(data-hook="trajectories-plot-spinner")
+        div.collapse(id="collapse-trajectories")
 
-        button.btn.btn-primary.box-shadow(data-hook="trajectories-edit-plot" data-target="edit-plot" disabled) Edit Plot
+          div.card-body
 
-        button.btn.btn-primary.box-shadow(data-hook="multiple-plots", data-type="mltplplt" disabled) Multiple Plots
+            div(data-hook="trajectories-plot")
 
-        button.btn.btn-primary.box-shadow(
-          data-hook="trajectories-download-png-custom"
-          data-target="download-png-custom"
-          data-type="trajectories"
-          disabled
-        ) Download PNG
+            div.spinner-border.workflow-plot(data-hook="trajectories-plot-spinner")
 
-        button.btn.btn-primary.box-shadow(
-          data-hook="trajectories-download-json"
-          data-target="download-json"
-          data-type="trajectories"
-          disabled
-        ) Download JSON
+            button.btn.btn-primary.box-shadow(data-hook="trajectories-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-    div.card.card-body
+            button.btn.btn-primary.box-shadow(data-hook="multiple-plots", data-type="mltplplt" disabled) Multiple Plots
 
-      div
+            button.btn.btn-primary.box-shadow(
+              data-hook="trajectories-download-png-custom"
+              data-target="download-png-custom"
+              data-type="trajectories"
+              disabled
+            ) Download PNG
 
-        h5.inline Plot Standard Deviation
+            button.btn.btn-primary.box-shadow(
+              data-hook="trajectories-download-json"
+              data-target="download-json"
+              data-type="trajectories"
+              disabled
+            ) Download JSON
 
-        button.btn.btn-outline-collapse(
-          data-toggle="collapse"
-          data-target="#collapse-stddev"
-          id="collapse-stddev-btn"
-          data-hook="collapse-stddev-btn"
-          data-trigger="collapse-plot-container"
-          data-type="stddev"
-        ) +
+      div.card
 
-      div.collapse(id="collapse-stddev")
+        div.card-header.pb-0
 
-        div(data-hook="stddev-plot")
+          h5.inline Plot Standard Deviation
 
-        div.spinner-border.workflow-plot(data-hook="stddev-plot-spinner")
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-stddev"
+            id="collapse-stddev-btn"
+            data-hook="collapse-stddev-btn"
+            data-trigger="collapse-plot-container"
+            data-type="stddev"
+          ) +
 
-        button.btn.btn-primary.box-shadow(data-hook="stddev-edit-plot" data-target="edit-plot" disabled) Edit Plot
+        div.collapse(id="collapse-stddev")
 
-        button.btn.btn-primary.box-shadow(
-          data-hook="stddev-download-png-custom"
-          data-target="download-png-custom"
-          data-type="stddev"
-          disabled
-        ) Download PNG
+          div.card-body
 
-        button.btn.btn-primary.box-shadow(
-          data-hook="stddev-download-json"
-          data-target="download-json"
-          data-type="stddev"
-          disabled
-        ) Download JSON
+            div(data-hook="stddev-plot")
 
-    div.card.card-body
+            div.spinner-border.workflow-plot(data-hook="stddev-plot-spinner")
 
-      div
+            button.btn.btn-primary.box-shadow(data-hook="stddev-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-        h5.inline Plot Trajectory Mean
+            button.btn.btn-primary.box-shadow(
+              data-hook="stddev-download-png-custom"
+              data-target="download-png-custom"
+              data-type="stddev"
+              disabled
+            ) Download PNG
 
-        button.btn.btn-outline-collapse(
-          data-toggle="collapse"
-          data-target="#collapse-trajmean"
-          id="collapse-trajmean-btn"
-          data-hook="collapse-trajmean-btn"
-          data-trigger="collapse-plot-container"
-          data-type="avg"
-        ) +
+            button.btn.btn-primary.box-shadow(
+              data-hook="stddev-download-json"
+              data-target="download-json"
+              data-type="stddev"
+              disabled
+            ) Download JSON
 
-      div.collapse(id="collapse-trajmean")
+      div.card
 
-        div(data-hook="avg-plot")
+        div.card-header.pb-0
 
-        div.spinner-border.workflow-plot(data-hook="avg-plot-spinner")
+          h5.inline Plot Trajectory Mean
 
-        button.btn.btn-primary.box-shadow(data-hook="avg-edit-plot" data-target="edit-plot" disabled) Edit Plot
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-trajmean"
+            id="collapse-trajmean-btn"
+            data-hook="collapse-trajmean-btn"
+            data-trigger="collapse-plot-container"
+            data-type="avg"
+          ) +
 
-        button.btn.btn-primary.box-shadow(
-          data-hook="avg-download-png-custom"
-          data-target="download-png-custom"
-          data-type="avg"
-          disabled
-        ) Download PNG
+        div.collapse(id="collapse-trajmean")
 
-        button.btn.btn-primary.box-shadow(
-          data-hook="avg-download-json"
-          data-target="download-json"
-          data-type="avg"
-          disabled
-        ) Download JSON
+          div.card-body
 
-    button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
+            div(data-hook="avg-plot")
 
-    button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
+            div.spinner-border.workflow-plot(data-hook="avg-plot-spinner")
 
-    button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
+            button.btn.btn-primary.box-shadow(data-hook="avg-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-    div.saving-status(data-hook="job-action-start")
+            button.btn.btn-primary.box-shadow(
+              data-hook="avg-download-png-custom"
+              data-target="download-png-custom"
+              data-type="avg"
+              disabled
+            ) Download PNG
 
-      div.spinner-grow
+            button.btn.btn-primary.box-shadow(
+              data-hook="avg-download-json"
+              data-target="download-json"
+              data-type="avg"
+              disabled
+            ) Download JSON
 
-      span Publishing ...
+      button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
 
-    div.saved-status(data-hook="job-action-end")
+      button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
 
-      span Published
+      button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
 
-    div.save-error-status(data-hook="job-action-err")
+      div.saving-status(data-hook="job-action-start")
 
-      span Error
+        div.spinner-grow
+
+        span Publishing ...
+
+      div.saved-status(data-hook="job-action-end")
+
+        span Published
+
+      div.save-error-status(data-hook="job-action-err")
+
+        span Error
