@@ -255,6 +255,7 @@ module.exports = View.extend({
   handleCollapsePlotContainerClick: function (e) {
     app.changeCollapseButtonText(this, e);
     let type = e.target.dataset.type;
+    if(['psweep', 'ts-psweep'].includes(type)) { return }
     for (var storageKey in this.plots) {
       let data = JSON.parse(storageKey)
       if(data.plt_key === type) { return }
