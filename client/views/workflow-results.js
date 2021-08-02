@@ -51,7 +51,7 @@ module.exports = View.extend({
     'click [data-target=download-json]' : 'handleDownloadJSONClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
     'click [data-hook=download-results-csv]' : 'handleDownloadResultsCsvClick',
-    // 'click [data-hook=job-presentation]' : 'handlePresentationClick'
+    'click [data-hook=job-presentation]' : 'handlePresentationClick'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -293,7 +293,16 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), "job/presentation") + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {
-        self.endAction();
+        self.endAction("publish");
+        let title = body.message;
+        let linkHeaders = "Shareable Presentation Link";
+        let links = body.links;
+        let name = self.model.name
+        $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
+        let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+        copyBtn.addEventListener('click', function (e) {
+          app.copyToClipboard(links.presentation)
+        });
       },
       error: function (err, response, body) {
         self.errorAction();
