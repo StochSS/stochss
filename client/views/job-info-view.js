@@ -36,7 +36,7 @@ module.exports = View.extend({
     this.listOfNotes = [];
     let logs = attrs.logs.split("root - ");
     if(logs.length > 1){
-      logs.shift()
+      logs.shift();
     }
     logs.forEach(this.parseLogs, this);
   },
@@ -46,7 +46,7 @@ module.exports = View.extend({
       $(this.queryByHook("job-info")).collapse("show");
       $(this.queryByHook("collapse-info")).html("-");
     }
-    this.expandLogContainers()
+    this.expandLogContainers();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);

@@ -1,6 +1,6 @@
-div#job-info-view.card.card-body
+div#job-info-view.card
 
-  div
+  div.card-header.pb-0
 
     h3.inline Info
 
@@ -8,20 +8,22 @@ div#job-info-view.card.card-body
 
   div.collapse(id="collapse-info" data-hook="job-info")
 
-    div.collapse(data-hook="job-statistics")
+    div.card-body
 
-      h5.inline Statistics
+      div.collapse(data-hook="job-statistics")
 
-      div(data-hook="list-of-notes")
+        h5.inline Statistics
 
-    div.collapse(data-hook="job-warnings")
+        div(data-hook="list-of-notes")
 
-      h5.inline Warnings
+      div.collapse(data-hook="job-warnings")
 
-      div(data-hook="list-of-warnings")
+        h5.inline Warnings
 
-    div.collapse(data-hook="job-errors")
+        div(data-hook="list-of-warnings")
 
-      h5.inline Errors
+      div.collapse(data-hook="job-errors")
 
-      div(data-hook="list-of-errors")
+        h5.inline Errors
+
+        div(data-hook="list-of-errors")
