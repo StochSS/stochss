@@ -25,9 +25,10 @@ import hashlib
 
 import datetime
 import traceback
-import escape
 import numpy
 import plotly
+
+from escapism import escape
 
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
