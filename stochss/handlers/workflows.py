@@ -429,8 +429,10 @@ class JobPresentationAPIHandler(APIHandler):
                 message = f"A presentation for {job.get_name()} already exists."
             else:
                 message = f"Successfully published the {job.get_name()} presentation"
-            log.info(message)
-            self.write(links)
+            resp = {"message": message, "links": links}
+            log.info(resp['message'])
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
