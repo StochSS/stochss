@@ -22,7 +22,7 @@ let app = require('../app');
 //views
 let View = require('ampersand-view');
 //tempates
-let template = require('../templates/includes/workflowInfo.pug');
+let template = require('../templates/includes/jobInfoView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -43,7 +43,7 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     if(this.parent.model.activeJob.status === "error") {
-      $(this.queryByHook("workflow-info")).collapse("show");
+      $(this.queryByHook("job-info")).collapse("show");
       $(this.queryByHook("collapse-info")).html("-");
     }
     this.expandLogContainers()
@@ -53,17 +53,17 @@ module.exports = View.extend({
   },
   expandLogContainers: function () {
     if(this.listOfWarnings.length) {
-      $(this.queryByHook('workflow-warnings')).collapse('show');
+      $(this.queryByHook('job-warnings')).collapse('show');
       let listOfWarnings = "<p>" + this.listOfWarnings.join('<br>') + "</p>";
       $(this.queryByHook('list-of-warnings')).html(listOfWarnings);
     }
     if(this.listOfErrors.length) {
-      $(this.queryByHook('workflow-errors')).collapse('show');
+      $(this.queryByHook('job-errors')).collapse('show');
       let listOfErrors = "<p>" + this.listOfErrors.join('<br>') + "</p>";
       $(this.queryByHook('list-of-errors')).html(listOfErrors);
     }
     if(this.listOfNotes.length) {
-      $(this.queryByHook('workflow-statistics')).collapse('show');
+      $(this.queryByHook('job-statistics')).collapse('show');
       let listOfNotes = "<p>" + this.listOfNotes.join('<br>') + "</p>";
       $(this.queryByHook('list-of-notes')).html(listOfNotes);
     }

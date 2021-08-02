@@ -1,4 +1,4 @@
-div#workflow-info-view.card.card-body
+div#job-info-view.card.card-body
 
   div
 
@@ -6,21 +6,21 @@ div#workflow-info-view.card.card-body
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-info" data-hook="collapse-info") +
 
-  div.collapse(id="collapse-info" data-hook="workflow-info")
+  div.collapse(id="collapse-info" data-hook="job-info")
 
-    div.collapse(data-hook="workflow-statistics")
+    div.collapse(data-hook="job-statistics")
 
       h5.inline Statistics
 
       div(data-hook="list-of-notes")
 
-    div.collapse(data-hook="workflow-warnings")
+    div.collapse(data-hook="job-warnings")
 
       h5.inline Warnings
 
       div(data-hook="list-of-warnings")
 
-    div.collapse(data-hook="workflow-errors")
+    div.collapse(data-hook="job-errors")
 
       h5.inline Errors
 
