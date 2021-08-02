@@ -630,7 +630,8 @@ class StochSSJob(StochSSBase):
             else:
                 exists = False
                 name = self.get_file() if name is None else name
-                with open(self.__get_results_path(), "rb") as results_file:
+                path = os.path.join(self.__get_results_path(), "results.p")
+                with open(path, "rb") as results_file:
                     results = pickle.load(results_file)
                 data = {"name": name, "job": self.job, "results": results}
                 with open(dst, "wb") as presentation_file:
