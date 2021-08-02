@@ -35,11 +35,17 @@ module.exports = View.extend({
     'change [data-hook=select-tau-leaping]' : 'handleSelectSimulationAlgorithmClick',
     'change [data-hook=select-hybrid-tau]' : 'handleSelectSimulationAlgorithmClick',
     'change [data-hook=select-automatic]' : 'handleSelectSimulationAlgorithmClick',
+    'change [data-hook=relative-tolerance]' : 'updateViewRTol',
+    'change [data-hook=absolute-tolerance]' : 'updateViewATol',
+    'change [data-hook=trajectories]' : 'updateViewTraj',
+    'change [data-hook=seed]' : 'updateViewSeed',
+    'change [data-hook=tau-tolerance]' : 'updateViewTauTol',
     'click [data-hook=collapse]' :  'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.simulationSettings;
+    this.algorithm = this.model.isAutomatic ? "The algorithm was chosen based on your model." : this.model.algorithm;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -53,12 +59,8 @@ module.exports = View.extend({
       $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic);
     }
     this.disableInputFieldByAlgorithm();
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
+    this.updateViewer();
+    app.tooltipSetup();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -78,9 +80,11 @@ module.exports = View.extend({
   handleSelectSimulationAlgorithmClick: function (e) {
     let value = e.target.dataset.name;
     if(value === "Automatic"){
+      this.algorithm = "The algorithm was chosen based on your model.";
       this.model.isAutomatic = true;
       $(this.queryByHook('settings-container')).collapse('hide');
     }else{
+      this.algorithm = value;
       this.model.isAutomatic = false;
       this.model.algorithm = value;
       $(this.queryByHook('settings-container')).collapse('show');
@@ -91,9 +95,45 @@ module.exports = View.extend({
       }
       this.disableInputFieldByAlgorithm();
     }
+    this.updateViewer();
   },
   update: function (e) {},
-  updateValid: function () {},
+  updateViewATol: function (e) {
+    $(this.queryByHook("view-a-tol")).html(this.model.absoluteTol)
+  },
+  updateViewRTol: function (e) {
+    $(this.queryByHook("view-r-tol")).html(this.model.relativeTol)
+  },
+  updateViewSeed: function (e) {
+    $(this.queryByHook("view-seed")).html(this.model.seed)
+  },
+  updateViewTauTol: function (e) {
+    $(this.queryByHook("view-tau-tol")).html(this.model.tauTol)
+  },
+  updateViewTraj: function (e) {
+    $(this.queryByHook("view-realizations")).html(this.model.realizations)
+  },
+  updateValid: function (e) {},
+  updateViewer: function () {
+    $(this.queryByHook("view-algorithm")).html(this.algorithm);
+    let hideDeterministic = this.model.isAutomatic || this.model.algorithm === "SSA" || this.model.algorithm === "Tau-Leaping";
+    let hideStochastic = this.model.isAutomatic || this.model.algorithm === "ODE" 
+    if(hideDeterministic) {
+      $(this.queryByHook("view-deterministic-settings")).css("display", "none");
+    }else{
+      $(this.queryByHook("view-deterministic-settings")).css("display", "block");
+    }
+    if(hideStochastic) {
+      $(this.queryByHook("view-stochastic-settings")).css("display", "none");
+    }else {
+      $(this.queryByHook("view-stochastic-settings")).css("display", "block");
+      if(this.model.algorithm === "SSA") {
+        $(this.queryByHook("view-tau-tolerance")).css("display", "none");
+      }else{
+        $(this.queryByHook("view-tau-tolerance")).css("display", "block");
+      }
+    }
+  },
   subviews: {
     inputRelativeTolerance: {
       hook: 'relative-tolerance',

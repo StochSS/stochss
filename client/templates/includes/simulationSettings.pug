@@ -142,7 +142,7 @@ div#simulation-settings.card
 
           h6.inline.pr-2 Simulation Algorithm: 
 
-          div.inline=this.algorithm
+          div.inline(data-hook="view-algorithm")
 
         div(data-hook="view-deterministic-settings")
 
@@ -158,13 +158,13 @@ div#simulation-settings.card
 
               h6.inline.pr-2 Relative Tolerance: 
 
-              div.inline=this.model.relativeTol
+              div.inline(data-hook="view-r-tol")=this.model.relativeTol
 
             div.col-sm-6
 
               h6.inline.pr-2 Absolute Tolerance: 
 
-              div.inline=this.model.absoluteTol
+              div.inline(data-hook="view-a-tol")=this.model.absoluteTol
 
         div(data-hook="view-stochastic-settings")
 
@@ -180,17 +180,17 @@ div#simulation-settings.card
 
               h6.inline.pr-2 Trajectories: 
 
-              div.inline=this.model.realizations
+              div.inline(data-hook="view-realizations")=this.model.realizations
 
             div.col-sm-4
 
               h6.inline.pr-2 Seed: 
 
-              div.inline=this.model.seed
+              div.inline(data-hook="view-seed")=this.model.seed
 
             div.col-sm-4(data-hook="view-tau-tolerance")
 
               h6.inline.pr-2 Tau Tolerance: 
 
-              div.inline=this.model.tauTol
+              div.inline(data-hook="view-tau-tol")=this.model.tauTol
 
