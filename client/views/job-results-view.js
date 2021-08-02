@@ -55,10 +55,10 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : true;
     this.tooltips = Tooltips.parameterSweepResults;
     this.plots = {};
     this.plotArgs = {};
-    this.mode = Boolean(attrs.mode) ? attrs.mode : "edit";
   },
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
@@ -70,7 +70,7 @@ module.exports = View.extend({
       this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
     }
     View.prototype.render.apply(this, arguments);
-    if(this.mode === "presentation") {
+    if(this.readOnly) {
       $(this.queryByHook("job-presentation")).css("display", "none");
       if(!isParameterScan){
         $(this.queryByHook("convert-to-notebook")).css("display", "none");
